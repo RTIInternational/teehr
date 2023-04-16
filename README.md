@@ -22,11 +22,11 @@ Project structure:
 Example usage...
 
 ## How to Use TEEHR
-Most of the code in this repo, particularly the Jupyter Notebooks, were written 
-and run on a Pangeo [https://pangeo.io/] base image on JupyterHub. We created 
-a Dockerfile that installs a few extra packages not in the Pangeo base image.
+Install...
 
-To use it...
+Use Docker...
+`docker build -t localbuild/teehr:latest .`
+`docker run -it --rm --volume $HOME:$HOME -p 8888:8888 localbuild/teehr:latest jupyter lab --ip 0.0.0.0 $HOME`
 
 ## Local Development
 The most common way to use TEEHR is by installing it in a Python virtual 
@@ -59,16 +59,17 @@ PYTHONPATH in it.  You can do so by running the following from within the
 repo root: 
 
 `echo PYTHONPATH=src > .env`
+
 # Cloning 
 
 ## GIT LFS
 Git LFS is used for large files (*.csv, *.nc, etc.)
 
 ## NB Strip Output
-`nbstripoutput` is configured to strip output from notebooks to keep the size down and make diffing files easier.  See https://github.com/kynan/nbstripout.
+`nbstripoutput` is configured to strip output from notebooks to keep the size down and make diffing files easier.  
+See https://github.com/kynan/nbstripout.
 Note, after cloning, you must run `nbstripout --install` in the repo to install `nbstripoutput`.
 The configuraion is stored in the `.gitattributes` file, but the tool must be installed per repo.
 You may need to install it with `conda install nbstripout` or similar depending on your environment.
 
-## To use local conda
  
