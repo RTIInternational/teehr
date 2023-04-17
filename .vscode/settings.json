@@ -2,4 +2,7 @@
     "terminal.integrated.env.linux": {
         "PYTHONPATH": "${workspaceFolder}/src"
     },
+    "python.linting.flake8Enabled": true,
+    "python.linting.enabled": true,
+    "files.trimTrailingWhitespace": true,
 }

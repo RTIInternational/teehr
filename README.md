@@ -24,7 +24,10 @@ Example usage...
 ## How to Use TEEHR
 Install...
 
+`pip ...`
+
 Use Docker...
+
 `docker build -t localbuild/teehr:latest .`
 `docker run -it --rm --volume $HOME:$HOME -p 8888:8888 localbuild/teehr:latest jupyter lab --ip 0.0.0.0 $HOME`
 
