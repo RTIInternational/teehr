@@ -1,8 +1,8 @@
-![alt text]("docs/images/teeher.png")
+![alt text](docs/images/teehr.png)
 # TEEHR - Tools for Exploratory Evaluation in Hydrologic Research
-TEEHR (pronounced "tier") is a python tool set for loading, storing, 
-processing and visualizing hydrlogic data, particularly National Water 
-Model data, for the purpose of exploring and evaluating the datasets to 
+TEEHR (pronounced "tier") is a python tool set for loading, storing,
+processing and visualizing hydrlogic data, particularly National Water
+Model data, for the purpose of exploring and evaluating the datasets to
 assess their skill and performance.
 
 NOTE: THIS PROJECT IS UNDER DEVELOPMENT - EXPECT TO FIND BROKEN AND INCOMPLETE CODE.
@@ -32,12 +32,12 @@ Use Docker...
 `docker run -it --rm --volume $HOME:$HOME -p 8888:8888 localbuild/teehr:latest jupyter lab --ip 0.0.0.0 $HOME`
 
 ## Local Development
-The most common way to use TEEHR is by installing it in a Python virtual 
-environment.  The document covers using a conda virtual environment, but 
+The most common way to use TEEHR is by installing it in a Python virtual
+environment.  The document covers using a conda virtual environment, but
 there is no hard requirement to do so.
 
-Install conda (miniconda3).  You may need to 
-`eval "$(/home/[username]/miniconda3/bin/conda shell.bash hook)"` 
+Install conda (miniconda3).  You may need to
+`eval "$(/home/[username]/miniconda3/bin/conda shell.bash hook)"`
 if you did not make it default when installing.
 
 `conda config --append channels conda-forge`
@@ -48,31 +48,30 @@ If the conda env already exists and needs to be updated:
 
 `conda env update --name evaluation --file package-list.txt --prune`
 
-If you add any packages, run the following to update the package list to 
+If you add any packages, run the following to update the package list to
 commit to the repo:
 
 `conda list -e > package-list.txt`
 
-To add the `src` path to the `PYTHONPATH`, from within the repo root run: 
+To add the `src` path to the `PYTHONPATH`, from within the repo root run:
 
 `conda env config vars set PYTHONPATH=${PWD}/src`
 
-If developing in VSCode, it also helps to create a `.env` file with the 
-PYTHONPATH in it.  You can do so by running the following from within the 
-repo root: 
+If developing in VSCode, it also helps to create a `.env` file with the
+PYTHONPATH in it.  You can do so by running the following from within the
+repo root:
 
 `echo PYTHONPATH=src > .env`
 
-# Cloning 
+# Cloning
 
 ## GIT LFS
 Git LFS is used for large files (*.csv, *.nc, etc.)
 
 ## NB Strip Output
-`nbstripoutput` is configured to strip output from notebooks to keep the size down and make diffing files easier.  
+`nbstripoutput` is configured to strip output from notebooks to keep the size down and make diffing files easier.
 See https://github.com/kynan/nbstripout.
 Note, after cloning, you must run `nbstripout --install` in the repo to install `nbstripoutput`.
 The configuraion is stored in the `.gitattributes` file, but the tool must be installed per repo.
 You may need to install it with `conda install nbstripout` or similar depending on your environment.
 
- 
