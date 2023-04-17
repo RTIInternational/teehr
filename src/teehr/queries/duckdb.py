@@ -28,7 +28,7 @@ def df_to_gdf(df: pd.DataFrame) -> gpd.GeoDataFrame:
     Parameters
     ----------
     df : pd.DataFrame
-        DataFrame with a `geometry` column that has geometry stored as 
+        DataFrame with a `geometry` column that has geometry stored as
         a bytearray.
 
     Returns
