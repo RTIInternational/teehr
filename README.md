@@ -44,39 +44,3 @@ Use Docker (not working yet)...
 $ docker build -t localbuild/teehr:latest .
 $ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 localbuild/teehr:latest jupyter lab --ip 0.0.0.0 $HOME
 ```
-
-
-## Local Development
-The most common way to use TEEHR is by installing it in a Python virtual
-environment.  The document covers using a conda virtual environment, but
-there is no hard requirement to do so.  In this case the packages are not
-installed, so you need to make sure you ass `src/` to your Python path.
-There are two way to do this below, but depending on your development
-environment, your milage may vary.
-
-Install conda (miniconda3).  You may need to
-`eval "$(/home/[username]/miniconda3/bin/conda shell.bash hook)"`
-if you did not make it default when installing.
-
-`conda config --append channels conda-forge`
-`conda create --name teehr --file package-list.txt`
-`conda activate teehr`
-
-If the conda env already exists and needs to be updated:
-
-`conda env update --name evaluation --file package-list.txt --prune`
-
-If you add any packages, run the following to update the package list to
-commit to the repo:
-
-`conda list -e > package-list.txt`
-
-To add the `src` path to the `PYTHONPATH`, from within the repo root run:
-
-`conda env config vars set PYTHONPATH=${PWD}/src`
-
-If developing in VSCode, it also helps to create a `.env` file with the
-PYTHONPATH in it.  You can do so by running the following from within the
-repo root:
-
-`echo PYTHONPATH=src > .env`
