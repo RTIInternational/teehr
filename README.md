@@ -19,22 +19,40 @@ Project structure:
 - `/dashboards`: This directory contains
 
 ## Examples
-Example usage...
+For examples of how to use TEEHR, see the [examples](examples)
 
-## How to Use TEEHR
-Install...
+## How to Install TEEHR
+Install with `pip`.
 
-`pip ...`
+```bash
+# Create and activate python environment, requires python >= 3.10
+$ python3 -m venv .venv
+$ source .venv/bin/activate
+$ python3 -m pip install --upgrade pip
 
-Use Docker...
+# Build and install from source
+$ python3 -m pip install --upgrade build
+$ python -m build
+$ python -m pip install dist/teehr-0.0.1.tar.gz
 
-`docker build -t localbuild/teehr:latest .`
-`docker run -it --rm --volume $HOME:$HOME -p 8888:8888 localbuild/teehr:latest jupyter lab --ip 0.0.0.0 $HOME`
+# Or install from GitHub (not tested)
+$ pip install 'teehr @ git+https://github.com/RTIInternational/teehr/tree/main/src/teehr'
+```
+
+Use Docker (not working yet)...
+```bash
+$ docker build -t localbuild/teehr:latest .
+$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 localbuild/teehr:latest jupyter lab --ip 0.0.0.0 $HOME
+```
+
 
 ## Local Development
 The most common way to use TEEHR is by installing it in a Python virtual
 environment.  The document covers using a conda virtual environment, but
-there is no hard requirement to do so.
+there is no hard requirement to do so.  In this case the packages are not
+installed, so you need to make sure you ass `src/` to your Python path.
+There are two way to do this below, but depending on your development
+environment, your milage may vary.
 
 Install conda (miniconda3).  You may need to
 `eval "$(/home/[username]/miniconda3/bin/conda shell.bash hook)"`
@@ -62,16 +80,3 @@ PYTHONPATH in it.  You can do so by running the following from within the
 repo root:
 
 `echo PYTHONPATH=src > .env`
-
-# Cloning
-
-## GIT LFS
-Git LFS is used for large files (*.csv, *.nc, etc.)
-
-## NB Strip Output
-`nbstripoutput` is configured to strip output from notebooks to keep the size down and make diffing files easier.
-See https://github.com/kynan/nbstripout.
-Note, after cloning, you must run `nbstripout --install` in the repo to install `nbstripoutput`.
-The configuraion is stored in the `.gitattributes` file, but the tool must be installed per repo.
-You may need to install it with `conda install nbstripout` or similar depending on your environment.
-
