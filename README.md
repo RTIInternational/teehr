@@ -35,8 +35,8 @@ $ python3 -m pip install --upgrade build
 $ python -m build
 $ python -m pip install dist/teehr-0.0.1.tar.gz
 
-# Or install from GitHub (not tested)
-$ pip install 'teehr @ git+https://github.com/RTIInternational/teehr/tree/main/src/teehr'
+# Or install from GitHub
+$ pip install 'teehr @ git+https://[PAT]@github.com/RTIInternational/teehr@[BRANCH]'
 ```
 
 Use Docker (not working yet)...
