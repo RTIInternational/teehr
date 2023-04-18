@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "teehr"
+
+authors = [
+    {name = "RTI International"},
+    {name = "Matthew Denno", email = "mdenno@rti.org"},
+    {name = "Katie van Werkhoven", email = "kvanwerkhoven@rti.org"},
+    {name = "Sam Lamont", email = "slamont@rti.org"},
+]
+
+requires-python = ">=3.10"
+keywords = ["hydrology", "evaluation","visualization"]
+license = {text = "GNU v3"}
+
+dynamic = ["version", "readme", "dependencies", "optional-dependencies"]
+
+[metadata]
+description = "Tools for Exploratory Evaluation in Hydrologic Research"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["./requirements/minimum.txt", "./requirements/test.txt"]}
+version = {file = ["./version.txt"]}
+readme = {file = ["README.md"], content-type = "text/markdown"}
+
+# ... other project metadata fields as specified in:
+#     https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
