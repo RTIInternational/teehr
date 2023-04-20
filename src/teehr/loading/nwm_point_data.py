@@ -24,11 +24,13 @@ def fetch_and_format_nwm_points(
     concat_dims=["time"],
 ):
     """
-    Reads in the multifile reference json, subsets the NWM data based on provided IDs
-    and formats and saves the data as a parquet file
+    Reads in the single reference jsons, subsets the NWM data based on provided IDs
+    and formats and saves the data as a parquet files usin Dask
 
     Parameters
     ----------
+    lst_json_paths: list
+        List of the single json reference filepaths
     location_ids : np.array
         Array specifying NWM IDs of interest
     run : str
@@ -49,11 +51,42 @@ def fetch_and_format_nwm_points(
         tzs.append(filename.split(".")[3])
     df_refs = pd.DataFrame({"day": days, "tz": tzs, "filepath": filepaths})
     gps = df_refs.groupby(["day", "tz"])
-    
-    out = dask.compute(*[dask.delayed(fetch_and_format)(gp, location_ids, run, variable_name, output_parquet_dir, concat_dims) for gp in gps], retries=1,)
-        
+    out = dask.compute(
+        *[
+            dask.delayed(fetch_and_format)(
+                gp, location_ids, run, variable_name, output_parquet_dir, concat_dims
+            )
+            for gp in gps
+        ],
+        retries=1,
+    )
 
-def fetch_and_format(gp, location_ids, run, variable_name, output_parquet_dir, concat_dims):
+
+def fetch_and_format(
+    gp,
+    location_ids: np.array,
+    run: str,
+    variable_name: str,
+    output_parquet_dir: str,
+    concat_dims: list,
+) -> None:
+    """Helper function to fetch and format the NWM data using Dask
+
+    Parameters
+    ----------
+    gp : Pandas group
+        Contains a dataframe of reference json filepaths grouped by tz
+    location_ids : np.array
+        Array specifying NWM IDs of interest
+    run : str
+        NWM forecast category
+    variable_name : str
+        Name of the NWM data variable to download
+    output_parquet_dir : str
+        Path to the directory for the final parquet files
+    concat_dims : list
+        List of dimensions to use when concatenating single file jsons to multifile
+    """
     tpl, df = gp
     yrmoday, tz = tpl
     mzz = MultiZarrToZarr(
@@ -66,7 +99,9 @@ def fetch_and_format(gp, location_ids, run, variable_name, output_parquet_dir, c
     # opts = {"skip_instance_cache": True}
     fs = fsspec.filesystem("reference", fo=json)  # , ref_storage_opts=opts
     m = fs.get_mapper("")
-    ds_nwm_subset = xr.open_zarr(m, consolidated=False, chunks={}).sel(feature_id=location_ids)  
+    ds_nwm_subset = xr.open_zarr(m, consolidated=False, chunks={}).sel(
+        feature_id=location_ids
+    )
     # Convert to dataframe and do some reformatting
     df_temp = ds_nwm_subset[variable_name].to_dataframe()
     df_temp.reset_index(inplace=True)
@@ -106,6 +141,27 @@ def nwm_to_parquet(
     json_dir: str,
     output_parquet_dir: str,
 ):
+    """Fetches NWM point data, formats, and downloads to parquet
+
+    Parameters
+    ----------
+    run : str
+        NWM forecast category
+    output_type : str
+        _description_
+    variable_name : str
+        Name of the NWM data variable to download
+    start_date : str
+        Date to begin data ingest
+    ingest_days : int
+        Number of days to ingest data after start date
+    location_ids : np.array
+        Array specifying NWM IDs of interest
+    json_dir : str
+        Directory path for saving json reference files
+    output_parquet_dir : str
+        Path to the directory for the final parquet files
+    """
     validate_run_args(run, output_type, variable_name)
 
     lst_component_paths = build_remote_nwm_filelist(

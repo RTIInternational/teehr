@@ -13,6 +13,16 @@ def build_zarr_references(
     lst_component_paths: list,
     json_dir: str,
 ):
+    """Builds the single file zarr json reference files using kerchunk
+
+    Parameters
+    ----------
+    lst_component_paths : list
+        List of remote filepaths
+    json_dir : str
+        Local directory for caching json files
+    """
+
     def gen_json(u: str, fs: fsspec.filesystem, json_dir: str) -> str:
         """Helper function for creating single-file kerchunk reference jsons"""
         so = dict(
@@ -40,18 +50,32 @@ def build_zarr_references(
 
 
 def validate_run_args(run: str, output_type: str, variable: str):
+    """Validates user-provided NWMv22 run arguments
+
+    Parameters
+    ----------
+    run : str
+        Run type/configuration
+    output_type : str
+        Output component of the configuration
+    variable : str
+        Name of the variable to fetch within the output_type
+
+    Raises
+    ------
+    KeyError
+        Invalid key error
+    """
     try:
         NWM22_RUN_CONFIG[run]
     except Exception as e:
-        print(f"Invalid RUN entry: {str(e)}") 
+        print(f"Invalid RUN entry: {str(e)}")
         raise
-        
     try:
         NWM22_RUN_CONFIG[run][output_type]
     except Exception as e:
         print(f"Invalid OUTPUT_TYPE entry: {str(e)}")
         raise
-
     if variable not in NWM22_RUN_CONFIG[run][output_type]:
         raise KeyError(f"Invalid VARIABLE_NAME entry: {variable}")
 
@@ -59,6 +83,24 @@ def validate_run_args(run: str, output_type: str, variable: str):
 def build_remote_nwm_filelist(
     run: str, output_type: str, start_dt: str, ingest_days: int
 ) -> list:
+    """Assembles a list of remote NWM files in GCS based on specified user parameters
+
+    Parameters
+    ----------
+    run : str
+        Run type/configuration
+    output_type : str
+        Output component of the configuration
+    start_dt : str
+        Date to begin data ingest
+    ingest_days : int
+        Number of days to ingest data after start date
+
+    Returns
+    -------
+    list
+        List of remote filepaths
+    """
     gcs_dir = f"gs://{NWM_BUCKET}"
     fs = fsspec.filesystem("gcs", anon=True)
     lst_component_paths = []
