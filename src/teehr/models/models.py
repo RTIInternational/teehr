@@ -32,7 +32,7 @@ class MetricFilterFieldEnum(str, Enum):
     configuration = "configuration"
     measurement_unit = "measurement_unit"
     variable_name = "variable_name"
-    observed_value = "observed_value"
+    primary_value = "primary_value"
     primary_location_id = "primary_location_id"
     lead_time = "lead_time"
     geometry = "geometry"
