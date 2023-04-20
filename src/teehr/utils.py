@@ -4,17 +4,14 @@ import dask
 import fsspec
 import ujson  # fast json
 from kerchunk.hdf import SingleHdf5ToZarr
-from kerchunk.combine import MultiZarrToZarr
 import pandas as pd
 
-from const import NWM22_RUN_CONFIG, NWM22_ANALYSIS_CONFIG, NWM_BUCKET
+from teehr.const import NWM22_RUN_CONFIG, NWM22_ANALYSIS_CONFIG, NWM_BUCKET
 
 
 def build_zarr_references(
     lst_component_paths: list,
-    multifile_filepath: str,
     json_dir: str,
-    concat_dims=["reference_time", "time"],
 ):
     def gen_json(u: str, fs: fsspec.filesystem, json_dir: str) -> str:
         """Helper function for creating single-file kerchunk reference jsons"""
@@ -39,30 +36,24 @@ def build_zarr_references(
         *[dask.delayed(gen_json)(u, fs, json_dir) for u in lst_component_paths],
         retries=1,
     )
-    json_paths = sorted(json_paths)
-
-    mzz = MultiZarrToZarr(
-        json_paths,
-        remote_protocol="gcs",
-        remote_options={"anon": True},
-        concat_dims=concat_dims,
-    )
-    mzz.translate(multifile_filepath)
+    return sorted(json_paths)
 
 
 def validate_run_args(run: str, output_type: str, variable: str):
     try:
         NWM22_RUN_CONFIG[run]
-    except ValueError as err:
-        print(f"Invalid RUN entry: {str(err)}")
-
+    except Exception as e:
+        print(f"Invalid RUN entry: {str(e)}") 
+        raise
+        
     try:
         NWM22_RUN_CONFIG[run][output_type]
-    except ValueError as err:
-        print(f"Invalid OUTPUT_TYPE entry: {str(err)}")
+    except Exception as e:
+        print(f"Invalid OUTPUT_TYPE entry: {str(e)}")
+        raise
 
     if variable not in NWM22_RUN_CONFIG[run][output_type]:
-        raise ValueError("Invalid VARIABLE_NAME entry")
+        raise KeyError(f"Invalid VARIABLE_NAME entry: {variable}")
 
 
 def build_remote_nwm_filelist(
@@ -90,7 +81,7 @@ def build_remote_nwm_filelist(
         dates = pd.date_range(start=start_dt, periods=ingest_days, freq="1d")
         for dt in dates:
             dt_str = dt.strftime("%Y%m%d")
-            file_path = f"{gcs_dir}/nwm.{dt_str}/{run}/nwm.*.{run}.{output_type}*"
+            file_path = f"{gcs_dir}/nwm.{dt_str}/{run}/nwm.*.{output_type}*"
             lst_component_paths.extend(fs.glob(file_path))
 
     lst_component_paths = sorted([f"gs://{path}" for path in lst_component_paths])
