@@ -248,7 +248,7 @@ if __name__ == "__main__":
         start_date=datetime(2023, 2, 20),
         end_date=datetime(2023, 2, 25),
         output_parquet_dir=Path(Path().home(), "cache"),
-        chunk_by="days"
+        chunk_by="day"
     )
 
     usgs_to_parquet(
