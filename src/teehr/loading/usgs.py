@@ -61,7 +61,8 @@ def _format_df(df: pd.DataFrame) -> pd.DataFrame:
         "value_time",
         "value",
         "variable_name",
-        "measurement_unit"
+        "measurement_unit",
+        "configuration"
     ]]
 
 
