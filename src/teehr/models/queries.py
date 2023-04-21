@@ -14,7 +14,7 @@ class BaseModel(PydanticBaseModel):
         smart_union = True
 
 
-class OperatorEnum(str, Enum):
+class FilterOperatorEnum(str, Enum):
     eq = "="
     gt = ">"
     lt = "<"
@@ -38,22 +38,14 @@ class MetricFilterFieldEnum(str, Enum):
     geometry = "geometry"
 
 
-# class MetricEnum(str, Enum):
-#     value_time = "value_time"
-#     reference_time = "reference_time"
-#     secondary_location_id = "secondary_location_id"
-#     secondary_value = "secondary_value"
-#     configuration = "configuration"
-#     measurement_unit = "measurement_unit"
-#     variable_name = "variable_name"
-#     observed_value = "observed_value"
-#     primary_location_id = "primary_location_id"
-#     lead_time = "lead_time"
-#     geometry = "geometry"
+class ChunkByEnum(str, Enum):
+    day = "day"
+    site = "site"
+
 
 class Filter(BaseModel):
     column: MetricFilterFieldEnum
-    operator: OperatorEnum
+    operator: FilterOperatorEnum
     value: Union[
         str, int, float, datetime,
         List[Union[str, int, float, datetime]]

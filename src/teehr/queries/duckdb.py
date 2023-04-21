@@ -8,7 +8,7 @@ from collections.abc import Iterable
 from datetime import datetime
 from typing import List, Union
 
-from teehr.models import Filter, MetricQuery, JoinedTimeseriesQuery
+from teehr.models.queries import Filter, MetricQuery, JoinedTimeseriesQuery
 
 SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
