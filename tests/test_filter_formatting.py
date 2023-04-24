@@ -7,7 +7,7 @@ import teehr.queries.duckdb as tqd
 
 
 def test_filter_string():
-    filter = tmq.Filter(
+    filter = tmq.JoinedFilter(
         column="secondary_location_id",
         operator="=",
         value="123456"
@@ -17,7 +17,7 @@ def test_filter_string():
 
 
 def test_filter_int():
-    filter = tmq.Filter(
+    filter = tmq.JoinedFilter(
         column="secondary_location_id",
         operator="=",
         value=123456
@@ -27,7 +27,7 @@ def test_filter_int():
 
 
 def test_filter_int_gte():
-    filter = tmq.Filter(
+    filter = tmq.JoinedFilter(
         column="secondary_location_id",
         operator=">=",
         value=123456
@@ -37,7 +37,7 @@ def test_filter_int_gte():
 
 
 def test_filter_int_lt():
-    filter = tmq.Filter(
+    filter = tmq.JoinedFilter(
         column="secondary_location_id",
         operator="<",
         value=123456
@@ -47,7 +47,7 @@ def test_filter_int_lt():
 
 
 def test_filter_float():
-    filter = tmq.Filter(
+    filter = tmq.JoinedFilter(
         column="secondary_location_id",
         operator="=",
         value=123.456
@@ -57,7 +57,7 @@ def test_filter_float():
 
 
 def test_filter_datetime():
-    filter = tmq.Filter(
+    filter = tmq.JoinedFilter(
         column="reference_time",
         operator="=",
         value=datetime(2023, 4, 1, 23, 30)
@@ -68,7 +68,7 @@ def test_filter_datetime():
 
 def test_in_filter_string_wrong_operator():
     with pytest.raises(ValidationError):
-        filter = tmq.Filter(
+        filter = tmq.JoinedFilter(
             column="secondary_location_id",
             operator="=",
             value=["123456", "9876"]
@@ -78,7 +78,7 @@ def test_in_filter_string_wrong_operator():
 
 def test_in_filter_string_wrong_value_type():
     with pytest.raises(ValidationError):
-        filter = tmq.Filter(
+        filter = tmq.JoinedFilter(
             column="secondary_location_id",
             operator="in",
             value="9876"
@@ -87,7 +87,7 @@ def test_in_filter_string_wrong_value_type():
 
 
 def test_in_filter_string():
-    filter = tmq.Filter(
+    filter = tmq.JoinedFilter(
         column="secondary_location_id",
         operator="in",
         value=["123456", "9876"]
@@ -97,7 +97,7 @@ def test_in_filter_string():
 
 
 def test_in_filter_int():
-    filter = tmq.Filter(
+    filter = tmq.JoinedFilter(
         column="secondary_location_id",
         operator="in",
         value=[123456, 9876]
@@ -107,7 +107,7 @@ def test_in_filter_int():
 
 
 def test_in_filter_float():
-    filter = tmq.Filter(
+    filter = tmq.JoinedFilter(
         column="secondary_location_id",
         operator="in",
         value=[123.456, 98.76]
@@ -117,7 +117,7 @@ def test_in_filter_float():
 
 
 def test_in_filter_datetime():
-    filter = tmq.Filter(
+    filter = tmq.JoinedFilter(
         column="reference_time",
         operator="in",
         value=[datetime(2023, 4, 1, 23, 30), datetime(2023, 4, 2, 23, 30)]
