@@ -5,12 +5,12 @@ import teehr.queries.duckdb as tqd
 
 
 def test_multiple_filters():
-    filter_1 = tmq.Filter(
+    filter_1 = tmq.JoinedFilter(
         column="secondary_location_id",
         operator="in",
         value=["123456", "9876543"]
     )
-    filter_2 = tmq.Filter(
+    filter_2 = tmq.JoinedFilter(
         column="reference_time",
         operator="=",
         value=datetime(2023, 1, 1, 0, 0, 0)
