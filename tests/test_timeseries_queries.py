@@ -36,7 +36,6 @@ def test_metric_query_df():
         order_by=["primary_location_id"],
         return_query=False,
     )
-    # print(query_df)
     assert len(query_df) == 3
     assert isinstance(query_df, pd.DataFrame)
 
@@ -70,7 +69,7 @@ def test_metric_query_gdf_2():
         return_query=False,
         include_geometry=True,
     )
-    # print(query_df)
+    print(query_df)
     assert len(query_df) == 9
     assert isinstance(query_df, gpd.GeoDataFrame)
 
@@ -216,7 +215,35 @@ def test_timeseries_char_query_df():
         order_by=["location_id"],
         return_query=False,
     )
-    assert len(query_df) == 3
+    df = pd.DataFrame(
+        {
+            'location_id': {0: 'gage-A', 1: 'gage-B', 2: 'gage-C'},
+            'count': {0: 26, 1: 26, 2: 26},
+            'min': {0: 0.1, 1: 10.1, 2: 0.0},
+            'max': {0: 5.0, 1: 15.0, 2: 180.0},
+            'average': {
+                0: 1.2038461538461542,
+                1: 11.203846153846156,
+                2: 100.38461538461539
+            },
+            'sum': {
+                0: 31.300000000000008,
+                1: 291.30000000000007,
+                2: 2610.0
+            },
+            'variance': {
+                0: 1.9788313609467447,
+                1: 1.9788313609467456,
+                2: 2726.7751479289923
+            },
+            'max_value_time': {
+                0: pd.Timestamp('2022-01-01 15:00:00'),
+                1: pd.Timestamp('2022-01-01 15:00:00'),
+                2: pd.Timestamp('2022-01-01 06:00:00')
+            }
+        }
+    )
+    assert df.equals(query_df)
 
 
 def test_timeseries_char_query_df2():
@@ -226,6 +253,7 @@ def test_timeseries_char_query_df2():
         order_by=["location_id"],
         return_query=False,
     )
+    # print(query_df)
     assert len(query_df) == 9
 
 
@@ -255,14 +283,14 @@ if __name__ == "__main__":
     # test_metric_query_str()
     # test_metric_query_df()
     # test_metric_query_gdf()
-    # test_metric_query_gdf_2()
+    test_metric_query_gdf_2()
     # test_metric_query_gdf_no_geom()
     # test_metric_query_gdf_missing_group_by()
     # test_joined_timeseries_query_df()
     # test_joined_timeseries_query_df_filter()
     # test_timeseries_query_df()
     # test_timeseries_query_df2()
-    test_timeseries_query_one_site_one_ref_df()
+    # test_timeseries_query_one_site_one_ref_df()
     # test_timeseries_char_query_df()
     # test_timeseries_char_query_df2()
     # test_timeseries_char_query_filter_df()

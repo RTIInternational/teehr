@@ -167,6 +167,15 @@ def generate_geometry_select_clause(
     return ""
 
 
+def _join_time_on(join: str, join_to: str, join_on: List[str]):
+    qry = f"""
+        INNER JOIN {join}
+        ON {f" AND ".join([f"{join}.{jo} = {join_to}.{jo}" for jo in join_on])}
+        AND {join}.n = 1
+    """
+    return qry
+
+
 def get_metrics(
     primary_filepath: str,
     secondary_filepath: str,
@@ -273,34 +282,39 @@ def get_metrics(
                 and sf.measurement_unit = pf.measurement_unit
                 and sf.variable_name = pf.variable_name
             {generate_geometry_join_clause(mq)}
-        )
+        ),
+        metrics AS (
+            SELECT
+                {",".join(mq.group_by)},
+                regr_intercept(secondary_value, primary_value) as intercept,
+                covar_pop(secondary_value, primary_value) as covariance,
+                corr(secondary_value, primary_value) as corr,
+                regr_r2(secondary_value, primary_value) as r_squared,
+                count(secondary_value) as secondary_count,
+                count(primary_value) as primary_count,
+                min(secondary_value) as secondary_minimum,
+                min(primary_value) as primary_minimum,
+                max(secondary_value) as secondary_maximum,
+                max(primary_value) as primary_maximum,
+                avg(secondary_value) as secondary_average,
+                avg(primary_value) as primary_average,
+                sum(secondary_value) as secondary_sum,
+                sum(primary_value) as primary_sum,
+                var_pop(secondary_value) as secondary_variance,
+                var_pop(primary_value) as primary_variance,
+                max(secondary_value) - max(primary_value) as max_period_delta,
+                sum(primary_value - secondary_value)/count(*) as bias
+            FROM
+                joined
+            {filters_to_sql(mq.filters)}
+            GROUP BY
+                {",".join(mq.group_by)}
+            ORDER BY
+                {",".join(mq.order_by)}
+        ),
         SELECT
-            {",".join(mq.group_by)},
-            regr_intercept(secondary_value, primary_value) as intercept,
-            covar_pop(secondary_value, primary_value) as covariance,
-            corr(secondary_value, primary_value) as corr,
-            regr_r2(secondary_value, primary_value) as r_squared,
-            count(secondary_value) as secondary_count,
-            count(primary_value) as primary_count,
-            min(secondary_value) as secondary_minimum,
-            min(primary_value) as primary_minimum,
-            max(secondary_value) as secondary_maximum,
-            max(primary_value) as primary_maximum,
-            avg(secondary_value) as secondary_average,
-            avg(primary_value) as primary_average,
-            sum(secondary_value) as secondary_sum,
-            sum(primary_value) as primary_sum,
-            var_pop(secondary_value) as secondary_variance,
-            var_pop(primary_value) as primary_variance,
-            max(secondary_value) - max(primary_value) as max_period_delta,
-            sum(primary_value - secondary_value)/count(*) as bias
-        FROM
-            joined
-        {filters_to_sql(mq.filters)}
-        GROUP BY
-            {",".join(mq.group_by)}
-        ORDER BY
-            {",".join(mq.order_by)}
+            metrics.*
+        FROM metrics
     ;"""
 
     if mq.return_query:
@@ -578,21 +592,51 @@ def get_timeseries_chars(
         }
     )
 
+    join_max_time_on = _join_time_on(
+        join="mxt",
+        join_to="chars",
+        join_on=tcq.group_by
+    )
+
     query = f"""
-        SELECT
-            count(value) as count,
-            min(value) as min,
-            max(value) as max,
-            avg(value) as average,
-            sum(value) as sum,
-            var_pop(value) as variance
-        FROM
+        WITH fts AS (
+            SELECT * FROM
             read_parquet('{str(tcq.timeseries_filepath)}') pf
-        {filters_to_sql(tcq.filters)}
-        GROUP BY
-            {",".join(tcq.group_by)}
-        ORDER BY
-            {",".join(tcq.order_by)}
+            {filters_to_sql(tcq.filters)}
+        ),
+        mxt AS (
+            SELECT
+                {",".join(tcq.group_by)}
+                ,value
+                ,value_time
+                ,ROW_NUMBER() OVER(
+                    PARTITION BY {",".join(tcq.group_by)}
+                    ORDER BY value DESC, value_time
+                ) as n
+            FROM fts
+        ),
+        chars AS (
+            SELECT
+                {",".join(tcq.group_by)}
+                ,count(fts.value) as count
+                ,min(fts.value) as min
+                ,max(fts.value) as max
+                ,avg(fts.value) as average
+                ,sum(fts.value) as sum
+                ,var_pop(fts.value) as variance
+            FROM
+                fts
+            GROUP BY
+                {",".join(tcq.group_by)}
+            ORDER BY
+                {",".join(tcq.order_by)}
+        )
+        SELECT
+            chars.*
+            ,mxt.value_time as max_value_time
+        FROM chars
+        {join_max_time_on}
+
     ;"""
 
     if tcq.return_query:
