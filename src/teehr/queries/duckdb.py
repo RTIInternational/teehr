@@ -311,7 +311,7 @@ def get_metrics(
                 {",".join(mq.group_by)}
             ORDER BY
                 {",".join(mq.order_by)}
-        ),
+        )
         SELECT
             metrics.*
         FROM metrics
