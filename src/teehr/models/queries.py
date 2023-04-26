@@ -113,6 +113,7 @@ class MetricQuery(BaseModel):
     crosswalk_filepath: Union[str, Path]
     group_by: List[JoinedFilterFieldEnum]
     order_by: List[JoinedFilterFieldEnum]
+    include_metrics: Union[List[str], str]
     filters: Optional[List[JoinedFilter]] = []
     return_query: bool
     geometry_filepath: Optional[Union[str, Path]]

@@ -20,6 +20,8 @@ def test_metric_query_str():
         geometry_filepath=GEOMETRY_FILEPATH,
         group_by=["primary_location_id"],
         order_by=["primary_location_id"],
+        include_metrics="all",
+        return_query=True
     )
     # print(query_str)
     assert type(query_str) == str
@@ -33,6 +35,7 @@ def test_metric_query_df():
         crosswalk_filepath=CROSSWALK_FILEPATH,
         group_by=["primary_location_id"],
         order_by=["primary_location_id"],
+        include_metrics="all",
         return_query=False,
     )
     # print(query_df)
@@ -49,6 +52,7 @@ def test_metric_query_gdf():
         geometry_filepath=GEOMETRY_FILEPATH,
         group_by=["primary_location_id"],
         order_by=["primary_location_id"],
+        include_metrics="all",
         return_query=False,
         include_geometry=True,
     )
@@ -66,6 +70,7 @@ def test_metric_query_gdf_2():
         geometry_filepath=GEOMETRY_FILEPATH,
         group_by=["primary_location_id", "reference_time"],
         order_by=["primary_location_id"],
+        include_metrics="all",
         return_query=False,
         include_geometry=True,
     )
@@ -82,6 +87,7 @@ def test_metric_query_gdf_no_geom():
             crosswalk_filepath=CROSSWALK_FILEPATH,
             group_by=["primary_location_id", "reference_time"],
             order_by=["primary_location_id"],
+            include_metrics="all",
             return_query=False,
             include_geometry=True,
         )
@@ -96,51 +102,10 @@ def test_metric_query_gdf_missing_group_by():
             geometry_filepath=GEOMETRY_FILEPATH,
             group_by=["reference_time"],
             order_by=["primary_location_id"],
+            include_metrics="all",
             return_query=False,
             include_geometry=True,
         )
-
-
-def test_timeseries_query_df():
-    query_df = tqd.get_joined_timeseries(
-        primary_filepath=PRIMARY_FILEPATH,
-        secondary_filepath=SECONDARY_FILEPATH,
-        crosswalk_filepath=CROSSWALK_FILEPATH,
-        geometry_filepath=GEOMETRY_FILEPATH,
-        order_by=["primary_location_id", "lead_time"],
-        return_query=False
-    )
-
-    # print(query_df.info())
-    assert len(query_df) == 3 * 3 * 24
-    assert isinstance(query_df, pd.DataFrame)
-
-
-def test_timeseries_query_df_filter():
-    query_df = tqd.get_joined_timeseries(
-        primary_filepath=PRIMARY_FILEPATH,
-        secondary_filepath=SECONDARY_FILEPATH,
-        crosswalk_filepath=CROSSWALK_FILEPATH,
-        geometry_filepath=GEOMETRY_FILEPATH,
-        order_by=["primary_location_id", "lead_time"],
-        return_query=False,
-        filters=[
-            {
-                "column": "reference_time",
-                "operator": "=",
-                "value": "2022-01-01 00:00:00"
-            },
-            {
-                "column": "primary_location_id",
-                "operator": "=",
-                "value": "gage-A"
-            },
-        ]
-    )
-
-    # print(query_df.info())
-    assert len(query_df) == 24
-    assert isinstance(query_df, pd.DataFrame)
 
 
 if __name__ == "__main__":
@@ -150,6 +115,4 @@ if __name__ == "__main__":
     test_metric_query_gdf_2()
     test_metric_query_gdf_no_geom()
     test_metric_query_gdf_missing_group_by()
-    test_timeseries_query_df()
-    test_timeseries_query_df_filter()
     pass

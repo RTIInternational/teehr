@@ -1,19 +1,15 @@
-import warnings
-import duckdb
 import numpy as np
-
 import pandas as pd
 import geopandas as gpd
-import dask.dataframe as dd
+# import dask.dataframe as dd
 
 from hydrotools.metrics import metrics as hm
 
-from collections.abc import Iterable
-from datetime import datetime
 from typing import List, Union
 
 import teehr.models.queries as tmq
 import teehr.queries.duckdb as tqd
+
 
 SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -24,8 +20,9 @@ def get_metrics(
     crosswalk_filepath: str,
     group_by: List[str],
     order_by: List[str],
+    include_metrics: Union[List[str], str],
     filters: Union[List[dict], None] = None,
-    return_query: bool = True,
+    return_query: bool = False,
     geometry_filepath: Union[str, None] = None,
     include_geometry: bool = False,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
@@ -47,6 +44,8 @@ def get_metrics(
     order_by : List[str]
         List of column/field names to order results by.
         Must provide at least one.
+    include_metrics = List[str]
+        List of metrics (see below) for allowable list, or "all" to return all
     filters : Union[List[dict], None] = None
         List of dictionaries describing the "where" clause to limit data that
         is included in metrics.
@@ -61,7 +60,37 @@ def get_metrics(
     -------
     results : Union[str, pd.DataFrame, gpd.GeoDataFrame]
 
-    Examples:
+    Available Metrics
+    -----------------------
+    Basic
+    * primary_count
+    * secondary_count
+    * primary_minimum
+    * secondary_minimum
+    * primary_maximum
+    * secondary_maximum
+    * primary_average
+    * secondary_average
+    * primary_sum
+    * secondary_sum
+    * max_value_delta
+        max(secondary_value) - max(primary_value)
+    * bias
+        sum(primary_value - secondary_value)/count(*)
+    * primary_variance
+    * secondary_variance
+
+    HydroTools Metrics
+    * nash_sutcliffe_efficiency
+    * kling_gupta_efficiency
+    * coefficient_of_extrapolation
+    * coefficient_of_persistence
+    * mean_error
+    * mean_squared_error
+    * root_mean_squared_error
+
+    Examples
+    --------
         group_by = ["lead_time", "primary_location_id"]
         order_by = ["lead_time", "primary_location_id"]
         filters = [
@@ -90,6 +119,7 @@ def get_metrics(
             "crosswalk_filepath": crosswalk_filepath,
             "group_by": group_by,
             "order_by": order_by,
+            "include_metrics": include_metrics,
             "filters": filters,
             "return_query": return_query,
             "include_geometry": include_geometry,
@@ -102,10 +132,6 @@ def get_metrics(
             "`return query` is not a valid option for `dask.get_metrics()`."
         )
 
-    if mq.include_geometry:
-        if "geometry" not in mq.group_by:
-            mq.group_by.append("geometry")
-
     df = tqd.get_joined_timeseries(
         primary_filepath=mq.primary_filepath,
         secondary_filepath=mq.secondary_filepath,
@@ -113,118 +139,200 @@ def get_metrics(
         order_by=mq.order_by,
         filters=mq.filters,
         return_query=False,
-        include_geometry=mq.include_geometry,
-        geometry_filepath=mq.geometry_filepath
     )
 
+    # Pandas DataFrame GroupBy approach (works).
     grouped = df.groupby(mq.group_by, as_index=False)
 
     calculated_metrics = grouped.apply(
-        calculate_metrics_on_groups,
-        metrics="all"
+        calculate_group_metrics,
+        include_metrics=include_metrics
     )
 
+    # Dask DataFrame GroupBy approach (does not work).
     # ddf = dd.from_pandas(df, npartitions=4)
-
     # calculated_metrics = ddf.groupby(mq.group_by).apply(
     #     calculate_metrics_on_groups,
     #     metrics=["primary_count"],
     #     meta={"primary_count": "int"}
     # ).compute()
 
+    if mq.include_geometry:
+        gdf = gpd.read_parquet(mq.geometry_filepath)
+        merged_gdf = gdf.merge(
+            calculated_metrics,
+            left_on="id",
+            right_on="primary_location_id"
+        )
+        return merged_gdf
+
     return calculated_metrics
 
 
-def calculate_metrics_on_groups(
+def calculate_group_metrics(
         group: pd.DataFrame,
-        metrics: Union[List[str], str] = "all"
+        include_metrics: Union[List[str], str]
 ):
-    """Calculate metrics on a pd.DataFrame
+    """Calculate metrics on a pd.DataFrame.
 
-    count(secondary_value) as secondary_count,
-    count(primary_value) as primary_count,
-    min(secondary_value) as secondary_minimum,
-    min(primary_value) as primary_minimum,
-    max(secondary_value) as secondary_maximum,
-    max(primary_value) as primary_maximum,
-    avg(secondary_value) as secondary_average,
-    avg(primary_value) as primary_average,
-    sum(secondary_value) as secondary_sum,
-    sum(primary_value) as primary_sum,
-    max(secondary_value) - max(primary_value) as max_period_delta,
-    sum(primary_value - secondary_value)/count(*) as bias
-    var_pop(secondary_value) as secondary_variance,
-    var_pop(primary_value) as primary_variance,
+    Note this approach to calculating metrics is not as fast as
+    `teehr.queries.duckdb.get_metrics()` but is easier to update
+    and contains more metrics.  It also serves as the reference
+    implementation for the duckdb queries.
 
-    regr_intercept(secondary_value, primary_value) as intercept,
-    covar_pop(secondary_value, primary_value) as covariance,
-    corr(secondary_value, primary_value) as corr,
-    regr_r2(secondary_value, primary_value) as r_squared,
+    Parameters
+    ----------
+    group : pd.DataFrame
+        Represents a population group to calculate the metrics on
+    include_metrics = List[str]
+        List of metrics (see below) for allowable list, or "all" to
+        return all
+
+
+    Returns
+    -------
+    calculated_metrics : pd.DataFrame
+
+
+    Available Metrics
+    -----------------------
+    Basic
+    * primary_count
+    * secondary_count
+    * primary_minimum
+    * secondary_minimum
+    * primary_maximum
+    * secondary_maximum
+    * primary_average
+    * secondary_average
+    * primary_sum
+    * secondary_sum
+    * max_value_delta
+        max(secondary_value) - max(primary_value)
+    * bias
+        sum(primary_value - secondary_value)/count(*)
+    * primary_variance
+    * secondary_variance
+
+    HydroTools Metrics
+    * nash_sutcliffe_efficiency
+    * kling_gupta_efficiency
+    * coefficient_of_extrapolation
+    * coefficient_of_persistence
+    * mean_error
+    * mean_squared_error
+    * root_mean_squared_error
+
     """
     data = {}
 
     # Simple Metrics
-    if metrics == "all" or "primary_count" in metrics:
+    if include_metrics == "all" or "primary_count" in include_metrics:
         data["primary_count"] = len(group["primary_value"])
 
-    if metrics == "all" or "secondary_count" in metrics:
+    if include_metrics == "all" or "secondary_count" in include_metrics:
         data["secondary_count"] = len(group["secondary_value"])
 
-    if metrics == "all" or "primary_min" in metrics:
-        data["primary_min"] = np.min(group["primary_value"])
+    if include_metrics == "all" or "primary_minimum" in include_metrics:
+        data["primary_minimum"] = np.min(group["primary_value"])
 
-    if metrics == "all" or "secondary_min" in metrics:
-        data["secondary_min"] = np.min(group["secondary_value"])
+    if include_metrics == "all" or "secondary_minimum" in include_metrics:
+        data["secondary_minimum"] = np.min(group["secondary_value"])
 
-    if metrics == "all" or "primary_max" in metrics:
-        data["primary_max"] = np.max(group["primary_value"])
+    if include_metrics == "all" or "primary_maximum" in include_metrics:
+        data["primary_maximum"] = np.max(group["primary_value"])
 
-    if metrics == "all" or "secondary_max" in metrics:
-        data["secondary_max"] = np.max(group["secondary_value"])
+    if include_metrics == "all" or "secondary_maximum" in include_metrics:
+        data["secondary_maximum"] = np.max(group["secondary_value"])
 
-    if metrics == "all" or "primary_ave" in metrics:
-        data["primary_ave"] = np.mean(group["primary_value"])
+    if include_metrics == "all" or "primary_average" in include_metrics:
+        data["primary_average"] = np.mean(group["primary_value"])
 
-    if metrics == "all" or "secondary_ave" in metrics:
-        data["secondary_ave"] = np.mean(group["secondary_value"])
+    if include_metrics == "all" or "secondary_average" in include_metrics:
+        data["secondary_average"] = np.mean(group["secondary_value"])
 
-    if metrics == "all" or "primary_sum" in metrics:
+    if include_metrics == "all" or "primary_sum" in include_metrics:
         data["primary_sum"] = np.sum(group["primary_value"])
 
-    if metrics == "all" or "secondary_sum" in metrics:
+    if include_metrics == "all" or "secondary_sum" in include_metrics:
         data["secondary_sum"] = np.sum(group["secondary_value"])
 
-    if metrics == "all" or "primary_variance" in metrics:
+    if include_metrics == "all" or "primary_variance" in include_metrics:
         data["primary_variance"] = np.var(group["primary_value"])
 
-    if metrics == "all" or "secondary_variance" in metrics:
+    if include_metrics == "all" or "secondary_variance" in include_metrics:
         data["secondary_variance"] = np.var(group["secondary_value"])
 
-    if metrics == "all" or "bias" in metrics:
+    if include_metrics == "all" or "bias" in include_metrics:
         group["difference"] = group["primary_value"] - group["secondary_value"]
         data["bias"] = np.sum(group["difference"])/len(group)
 
-    if metrics == "all" or "delta_max" in metrics:
-        data["delta_max"] = (
+    if include_metrics == "all" or "max_value_delta" in include_metrics:
+        data["max_value_delta"] = (
             np.max(group["secondary_value"])
             - np.max(group["primary_value"])
         )
 
     # HydroTools Forecast Metrics
-    if metrics == "all" or "nash_sutcliffe_efficiency" in metrics:
+    if (
+        include_metrics == "all"
+        or "nash_sutcliffe_efficiency" in include_metrics
+    ):
         nse = hm.nash_sutcliffe_efficiency(
             group["primary_value"],
             group["secondary_value"]
         )
         data["nash_sutcliffe_efficiency"] = nse
 
-    if metrics == "all" or "kling_gupta_efficiency(" in metrics:
+    if include_metrics == "all" or "kling_gupta_efficiency" in include_metrics:
         kge = hm.kling_gupta_efficiency(
             group["primary_value"],
             group["secondary_value"]
         )
         data["kling_gupta_efficiency"] = kge
 
+    if (
+        include_metrics == "all"
+        or "coefficient_of_extrapolation" in include_metrics
+    ):
+        coe = hm.coefficient_of_extrapolation(
+            group["primary_value"],
+            group["secondary_value"]
+        )
+        data["coefficient_of_extrapolation"] = coe
 
+    if (
+        include_metrics == "all"
+        or "coefficient_of_persistence" in include_metrics
+    ):
+        cop = hm.coefficient_of_persistence(
+            group["primary_value"],
+            group["secondary_value"]
+        )
+        data["coefficient_of_persistence"] = cop
+
+    if include_metrics == "all" or "mean_error" in include_metrics:
+        me = hm.mean_error(
+            group["primary_value"],
+            group["secondary_value"]
+        )
+        data["mean_error"] = me
+
+    if include_metrics == "all" or "mean_squared_error" in include_metrics:
+        mse = hm.mean_squared_error(
+            group["primary_value"],
+            group["secondary_value"]
+        )
+        data["mean_squared_error"] = mse
+
+    if (
+        include_metrics == "all"
+        or "root_mean_squared_error" in include_metrics
+    ):
+        rmse = hm.root_mean_squared_error(
+            group["primary_value"],
+            group["secondary_value"]
+        )
+        data["root_mean_squared_error"] = rmse
 
     return pd.Series(data)

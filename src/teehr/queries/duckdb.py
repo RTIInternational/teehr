@@ -17,37 +17,15 @@ from teehr.models.queries import (
     TimeseriesCharQuery,
 )
 
+from teehr.queries.utils import (
+    df_to_gdf
+)
+
 SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def get_datetime_list_string(values):
     return [f"'{v.strftime(SQL_DATETIME_STR_FORMAT)}'" for v in values]
-
-
-def df_to_gdf(df: pd.DataFrame) -> gpd.GeoDataFrame:
-    """Convert pd.DataFrame to gpd.GeoDataFrame.
-
-    When the `geometry` column is read from a parquet file using DuckBD
-    it is a bytearray in the resulting pd.DataFrame.  The `geometry` needs
-    to be convert to bytes before GeoPandas can work with it.  This function
-    does that.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        DataFrame with a `geometry` column that has geometry stored as
-        a bytearray.
-
-    Returns
-    -------
-    gdf : gpd.GeoDataFrame
-        GeoDataFrame with a valid `geometry` column.
-
-    """
-    df["geometry"] = gpd.GeoSeries.from_wkb(
-        df["geometry"].apply(lambda x: bytes(x))
-        )
-    return gpd.GeoDataFrame(df, crs="EPSG:4326", geometry="geometry")
 
 
 def format_iterable_value(
@@ -182,8 +160,9 @@ def get_metrics(
     crosswalk_filepath: str,
     group_by: List[str],
     order_by: List[str],
+    include_metrics: Union[List[str], str],
     filters: Union[List[dict], None] = None,
-    return_query: bool = True,
+    return_query: bool = False,
     geometry_filepath: Union[str, None] = None,
     include_geometry: bool = False,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
@@ -205,6 +184,9 @@ def get_metrics(
     order_by : List[str]
         List of column/field names to order results by.
         Must provide at least one.
+    include_metrics = List[str]
+        List of metrics (see below) for allowable list, or "all" to return all
+        Placeholder, currently ignored -> returns "all"
     filters : Union[List[dict], None] = None
         List of dictionaries describing the "where" clause to limit data that
         is included in metrics.
@@ -248,6 +230,7 @@ def get_metrics(
             "crosswalk_filepath": crosswalk_filepath,
             "group_by": group_by,
             "order_by": order_by,
+            "include_metrics": include_metrics,
             "filters": filters,
             "return_query": return_query,
             "include_geometry": include_geometry,
@@ -302,7 +285,7 @@ def get_metrics(
                 sum(primary_value) as primary_sum,
                 var_pop(secondary_value) as secondary_variance,
                 var_pop(primary_value) as primary_variance,
-                max(secondary_value) - max(primary_value) as max_period_delta,
+                max(secondary_value) - max(primary_value) as max_value_delta,
                 sum(primary_value - secondary_value)/count(*) as bias
             FROM
                 joined
@@ -334,7 +317,7 @@ def get_joined_timeseries(
     crosswalk_filepath: str,
     order_by: List[str],
     filters: Union[List[dict], None] = None,
-    return_query: bool = True,
+    return_query: bool = False,
     geometry_filepath: Union[str, None] = None,
     include_geometry: bool = False,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
@@ -453,7 +436,7 @@ def get_timeseries(
     timeseries_filepath: str,
     order_by: List[str],
     filters: Union[List[dict], None] = None,
-    return_query: bool = True,
+    return_query: bool = False,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
     """Retrieve joined timeseries using database query.
 
@@ -532,7 +515,7 @@ def get_timeseries_chars(
     group_by: list[str],
     order_by: List[str],
     filters: Union[List[dict], None] = None,
-    return_query: bool = True,
+    return_query: bool = False,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
     """Retrieve joined timeseries using database query.
 
