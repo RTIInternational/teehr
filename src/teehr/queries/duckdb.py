@@ -401,10 +401,6 @@ def get_joined_timeseries(
         }
     )
 
-    if jtq.include_geometry:
-        if "geometry" not in jtq.group_by:
-            jtq.group_by.append("geometry")
-
     query = f"""
         WITH joined as (
             SELECT
