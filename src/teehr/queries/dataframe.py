@@ -210,12 +210,21 @@ def calculate_metrics_on_groups(
             - np.max(group["primary_value"])
         )
 
-    # Forecast Metrics
+    # HydroTools Forecast Metrics
     if metrics == "all" or "nash_sutcliffe_efficiency" in metrics:
         nse = hm.nash_sutcliffe_efficiency(
             group["primary_value"],
             group["secondary_value"]
         )
         data["nash_sutcliffe_efficiency"] = nse
+
+    if metrics == "all" or "kling_gupta_efficiency(" in metrics:
+        kge = hm.kling_gupta_efficiency(
+            group["primary_value"],
+            group["secondary_value"]
+        )
+        data["kling_gupta_efficiency"] = kge
+
+
 
     return pd.Series(data)
