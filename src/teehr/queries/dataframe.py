@@ -129,9 +129,11 @@ def get_metrics(
 
     if mq.return_query:
         raise ValueError(
-            "`return query` is not a valid option for `dask.get_metrics()`."
+            "`return query` is not a valid option "
+            "for `dataframe.get_metrics()`."
         )
 
+    # This loads all the timeseries in memory
     df = tqd.get_joined_timeseries(
         primary_filepath=mq.primary_filepath,
         secondary_filepath=mq.secondary_filepath,
