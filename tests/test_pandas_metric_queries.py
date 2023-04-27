@@ -86,7 +86,9 @@ def test_metric_query_gdf_limit_metrics():
         "bias",
         "root_mean_squared_error",
         "nash_sutcliffe_efficiency",
-        "kling_gupta_efficiency"
+        "kling_gupta_efficiency",
+        "mean_error",
+        "mean_squared_error",
         ]
     group_by = ["primary_location_id"]
     query_df = tqk.get_metrics(
@@ -111,5 +113,5 @@ if __name__ == "__main__":
     # test_metric_query_df2()
     # test_metric_query_filter_df()
     # test_metric_query_gdf()
-    # test_metric_query_gdf_limit_metrics()
+    test_metric_query_gdf_limit_metrics()
     pass

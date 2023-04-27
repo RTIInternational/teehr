@@ -145,11 +145,30 @@ def generate_geometry_select_clause(
     return ""
 
 
+def generate_metric_geometry_join_clause(
+        q: Union[MetricQuery, JoinedTimeseriesQuery]
+) -> str:
+    """Generate the join clause for"""
+    if q.include_geometry:
+        return f"""JOIN read_parquet('{str(q.geometry_filepath)}') gf
+            on primary_location_id = gf.id
+        """
+    return ""
+
+
 def _join_time_on(join: str, join_to: str, join_on: List[str]):
     qry = f"""
         INNER JOIN {join}
         ON {f" AND ".join([f"{join}.{jo} = {join_to}.{jo}" for jo in join_on])}
         AND {join}.n = 1
+    """
+    return qry
+
+
+def _join_on(join: str, join_to: str, join_on: List[str]):
+    qry = f"""
+        INNER JOIN {join}
+        ON {f" AND ".join([f"{join}.{jo} = {join_to}.{jo}" for jo in join_on])}
     """
     return qry
 
@@ -238,24 +257,24 @@ def get_metrics(
         }
     )
 
-    if mq.include_geometry:
-        if "geometry" not in mq.group_by:
-            mq.group_by.append("geometry")
+    # if mq.include_geometry:
+    #     if "geometry" not in mq.group_by:
+    #         mq.group_by.append("geometry")
 
     query = f"""
         WITH joined as (
             SELECT
-                sf.reference_time,
-                sf.value_time,
-                sf.location_id as secondary_location_id,
-                sf.value as secondary_value,
-                sf.configuration,
-                sf.measurement_unit,
-                sf.variable_name,
-                pf.value as primary_value,
-                pf.location_id as primary_location_id,
-                sf.value_time - sf.reference_time as lead_time
-                {generate_geometry_select_clause(mq)}
+                sf.reference_time
+                , sf.value_time
+                , sf.location_id as secondary_location_id
+                , sf.value as secondary_value
+                , sf.configuration
+                , sf.measurement_unit
+                , sf.variable_name
+                , pf.value as primary_value
+                , pf.location_id as primary_location_id
+                , sf.value_time - sf.reference_time as lead_time
+                , abs(pf.value - sf.value) as absolute_difference
             FROM read_parquet('{str(mq.secondary_filepath)}') sf
             JOIN read_parquet('{str(mq.crosswalk_filepath)}') cf
                 on cf.secondary_location_id = sf.location_id
@@ -264,40 +283,70 @@ def get_metrics(
                 and sf.value_time = pf.value_time
                 and sf.measurement_unit = pf.measurement_unit
                 and sf.variable_name = pf.variable_name
-            {generate_geometry_join_clause(mq)}
+            {filters_to_sql(mq.filters)}
+        ),
+        nse AS (
+            SELECT
+                {",".join(mq.group_by)}
+                , pow(
+                    primary_value - secondary_value, 2
+                ) as primary_minus_secondary_squared
+                , pow(
+                    primary_value
+                    - avg(primary_value)
+                    OVER(PARTITION BY {",".join(mq.group_by)}), 2
+                ) as primary_minus_primary_mean_squared
+            FROM joined
         ),
         metrics AS (
             SELECT
-                {",".join(mq.group_by)},
-                regr_intercept(secondary_value, primary_value) as intercept,
-                covar_pop(secondary_value, primary_value) as covariance,
-                corr(secondary_value, primary_value) as corr,
-                regr_r2(secondary_value, primary_value) as r_squared,
-                count(secondary_value) as secondary_count,
-                count(primary_value) as primary_count,
-                min(secondary_value) as secondary_minimum,
-                min(primary_value) as primary_minimum,
-                max(secondary_value) as secondary_maximum,
-                max(primary_value) as primary_maximum,
-                avg(secondary_value) as secondary_average,
-                avg(primary_value) as primary_average,
-                sum(secondary_value) as secondary_sum,
-                sum(primary_value) as primary_sum,
-                var_pop(secondary_value) as secondary_variance,
-                var_pop(primary_value) as primary_variance,
-                max(secondary_value) - max(primary_value) as max_value_delta,
-                sum(primary_value - secondary_value)/count(*) as bias
+                {",".join([f"joined.{gb}" for gb in mq.group_by])}
+                , regr_intercept(secondary_value, primary_value) as intercept
+                , covar_pop(secondary_value, primary_value) as covariance
+                , corr(secondary_value, primary_value) as corr
+                , regr_r2(secondary_value, primary_value) as r_squared
+                , count(secondary_value) as secondary_count
+                , count(primary_value) as primary_count
+                , min(secondary_value) as secondary_minimum
+                , min(primary_value) as primary_minimum
+                , max(secondary_value) as secondary_maximum
+                , max(primary_value) as primary_maximum
+                , avg(secondary_value) as secondary_average
+                , avg(primary_value) as primary_average
+                , sum(secondary_value) as secondary_sum
+                , sum(primary_value) as primary_sum
+                , var_pop(secondary_value) as secondary_variance
+                , var_pop(primary_value) as primary_variance
+                , max(secondary_value) - max(primary_value) as max_value_delta
+                , sum(primary_value - secondary_value)/count(*) as bias
+                , 1 - (
+                    sum(nse.primary_minus_secondary_squared)
+                    /sum(nse.primary_minus_primary_mean_squared)
+                ) as nash_sutcliffe_efficiency
+                , 1 - sqrt(
+                    pow(corr(secondary_value, primary_value) - 1, 2)
+                    + pow(stddev(secondary_value)
+                        / stddev(primary_value) - 1, 2)
+                    + pow(avg(secondary_value) / avg(primary_value) - 1, 2)
+                ) AS kling_gupta_efficiency
+                , sum(absolute_difference)/count(*) as mean_error
+                , sum(power(absolute_difference, 2))/count(*)
+                    as mean_squared_error
+                , sqrt(sum(power(absolute_difference, 2))/count(*))
+                    as root_mean_squared_error
             FROM
                 joined
-            {filters_to_sql(mq.filters)}
+            {_join_on(join="nse", join_to="joined", join_on=mq.group_by)}
             GROUP BY
-                {",".join(mq.group_by)}
+                {",".join([f"joined.{gb}" for gb in mq.group_by])}
             ORDER BY
-                {",".join(mq.order_by)}
+                {",".join([f"joined.{gb}" for gb in mq.order_by])}
         )
         SELECT
             metrics.*
+            {generate_geometry_select_clause(mq)}
         FROM metrics
+        {generate_metric_geometry_join_clause(mq)}
     ;"""
 
     if mq.return_query:
@@ -586,9 +635,9 @@ def get_timeseries_chars(
         mxt AS (
             SELECT
                 {",".join(tcq.group_by)}
-                ,value
-                ,value_time
-                ,ROW_NUMBER() OVER(
+                , value
+                , value_time
+                , ROW_NUMBER() OVER(
                     PARTITION BY {",".join(tcq.group_by)}
                     ORDER BY value DESC, value_time
                 ) as n
