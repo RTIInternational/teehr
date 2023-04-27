@@ -63,7 +63,7 @@ def build_zarr_references(
     """
     json_dir_obj = Path(json_dir)
     if not json_dir_obj.exists():
-        json_dir_obj.mkdir()
+        json_dir_obj.mkdir(parents=True)
 
     fs = fsspec.filesystem("gcs", anon=True)
 
@@ -206,7 +206,7 @@ def build_remote_nwm_filelist(
     output_type: str,
     start_dt: Union[str, datetime],
     ingest_days: int,
-    t_minus_hours: Optional(Iterable[int]) = None,
+    t_minus_hours: Optional[Iterable[int]] = None,
 ) -> list:
     """Assembles a list of remote NWM files in GCS based on specified user parameters
 
