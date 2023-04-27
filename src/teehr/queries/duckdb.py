@@ -8,7 +8,14 @@ from collections.abc import Iterable
 from datetime import datetime
 from typing import List, Union
 
-from teehr.models import Filter, MetricQuery, JoinedTimeseriesQuery
+from teehr.models.queries import (
+    JoinedFilter,
+    MetricQuery,
+    JoinedTimeseriesQuery,
+    TimeseriesFilter,
+    TimeseriesQuery,
+    TimeseriesCharQuery,
+)
 
 SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -81,13 +88,13 @@ def format_iterable_value(
         return f"""({",".join([f"'{str(v)}'" for v in values])})"""
 
 
-def format_filter_item(filter: Filter) -> str:
+def format_filter_item(filter: Union[JoinedFilter, TimeseriesFilter]) -> str:
     """Returns an SQL formatted string for single filter object.
 
     Parameters
     ----------
-    filter: models.MetricFilter
-        A single MetricFilter object.
+    filter: models.*Filter
+        A single *Filter object.
 
     Returns
     -------
@@ -118,7 +125,7 @@ def format_filter_item(filter: Filter) -> str:
         return f"""{filter.column} {filter.operator} '{str(filter.value)}'"""
 
 
-def filters_to_sql(filters: List[Filter]) -> List[str]:
+def filters_to_sql(filters: List[JoinedFilter]) -> List[str]:
     """Generate SQL where clause string from filters.
 
     Parameters
@@ -146,7 +153,7 @@ def generate_geometry_join_clause(
 ) -> str:
     """Generate the join clause for"""
     if q.include_geometry:
-        return f"""JOIN '{str(q.geometry_filepath)}' gf
+        return f"""JOIN read_parquet('{str(q.geometry_filepath)}') gf
             on pf.location_id = gf.id
         """
     return ""
@@ -158,6 +165,15 @@ def generate_geometry_select_clause(
     if q.include_geometry:
         return ",gf.geometry as geometry"
     return ""
+
+
+def _join_time_on(join: str, join_to: str, join_on: List[str]):
+    qry = f"""
+        INNER JOIN {join}
+        ON {f" AND ".join([f"{join}.{jo} = {join_to}.{jo}" for jo in join_on])}
+        AND {join}.n = 1
+    """
+    return qry
 
 
 def get_metrics(
@@ -225,9 +241,6 @@ def get_metrics(
         ]
     """
 
-    if filters is None:
-        filters = []
-
     mq = MetricQuery.parse_obj(
         {
             "primary_filepath": primary_filepath,
@@ -260,37 +273,48 @@ def get_metrics(
                 pf.location_id as primary_location_id,
                 sf.value_time - sf.reference_time as lead_time
                 {generate_geometry_select_clause(mq)}
-            FROM '{str(mq.secondary_filepath)}' sf
-            JOIN '{str(mq.crosswalk_filepath)}' cf
+            FROM read_parquet('{str(mq.secondary_filepath)}') sf
+            JOIN read_parquet('{str(mq.crosswalk_filepath)}') cf
                 on cf.secondary_location_id = sf.location_id
-            JOIN '{str(mq.primary_filepath)}' pf
+            JOIN read_parquet('{str(mq.primary_filepath)}') pf
                 on cf.primary_location_id = pf.location_id
                 and sf.value_time = pf.value_time
                 and sf.measurement_unit = pf.measurement_unit
                 and sf.variable_name = pf.variable_name
             {generate_geometry_join_clause(mq)}
+        ),
+        metrics AS (
+            SELECT
+                {",".join(mq.group_by)},
+                regr_intercept(secondary_value, primary_value) as intercept,
+                covar_pop(secondary_value, primary_value) as covariance,
+                corr(secondary_value, primary_value) as corr,
+                regr_r2(secondary_value, primary_value) as r_squared,
+                count(secondary_value) as secondary_count,
+                count(primary_value) as primary_count,
+                min(secondary_value) as secondary_minimum,
+                min(primary_value) as primary_minimum,
+                max(secondary_value) as secondary_maximum,
+                max(primary_value) as primary_maximum,
+                avg(secondary_value) as secondary_average,
+                avg(primary_value) as primary_average,
+                sum(secondary_value) as secondary_sum,
+                sum(primary_value) as primary_sum,
+                var_pop(secondary_value) as secondary_variance,
+                var_pop(primary_value) as primary_variance,
+                max(secondary_value) - max(primary_value) as max_period_delta,
+                sum(primary_value - secondary_value)/count(*) as bias
+            FROM
+                joined
+            {filters_to_sql(mq.filters)}
+            GROUP BY
+                {",".join(mq.group_by)}
+            ORDER BY
+                {",".join(mq.order_by)}
         )
         SELECT
-            {",".join(mq.group_by)},
-            regr_intercept(secondary_value, primary_value) as intercept,
-            covar_pop(secondary_value, primary_value) as covariance,
-            corr(secondary_value, primary_value) as corr,
-            regr_r2(secondary_value, primary_value) as r_squared,
-            count(secondary_value) as secondary_count,
-            count(primary_value) as primary_count,
-            avg(secondary_value) as secondary_average,
-            avg(primary_value) as primary_average,
-            var_pop(secondary_value) as secondary_variance,
-            var_pop(primary_value) as primary_variance,
-            max(secondary_value) - max(primary_value) as max_period_delta,
-            sum(primary_value - secondary_value)/count(*) as bias
-        FROM
-            joined
-        {filters_to_sql(mq.filters)}
-        GROUP BY
-            {",".join(mq.group_by)}
-        ORDER BY
-            {",".join(mq.order_by)}
+            metrics.*
+        FROM metrics
     ;"""
 
     if mq.return_query:
@@ -364,9 +388,6 @@ def get_joined_timeseries(
         ]
     """
 
-    if filters is None:
-        filters = []
-
     jtq = JoinedTimeseriesQuery.parse_obj(
         {
             "primary_filepath": primary_filepath,
@@ -398,10 +419,10 @@ def get_joined_timeseries(
                 pf.location_id as primary_location_id,
                 sf.value_time - sf.reference_time as lead_time
                 {generate_geometry_select_clause(jtq)}
-            FROM '{str(jtq.secondary_filepath)}' sf
-            JOIN '{str(jtq.crosswalk_filepath)}' cf
+            FROM read_parquet('{str(jtq.secondary_filepath)}') sf
+            JOIN read_parquet('{str(jtq.crosswalk_filepath)}') cf
                 on cf.secondary_location_id = sf.location_id
-            JOIN '{str(jtq.primary_filepath)}' pf
+            JOIN read_parquet('{str(jtq.primary_filepath)}') pf
                 on cf.primary_location_id = pf.location_id
                 and sf.value_time = pf.value_time
                 and sf.measurement_unit = pf.measurement_unit
@@ -433,11 +454,194 @@ def get_joined_timeseries(
 
 
 def get_timeseries(
-    filepath: str,
+    timeseries_filepath: str,
     order_by: List[str],
     filters: Union[List[dict], None] = None,
     return_query: bool = True,
-    geometry_filepath: Union[str, None] = None,
-    include_geometry: bool = False,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
-    pass
+    """Retrieve joined timeseries using database query.
+
+    Parameters
+    ----------
+    timeseries_filepath : str
+        File path to the timeseries data.  String must include path to file(s)
+        and can include wildcards.  For example, "/path/to/parquet/*.parquet"
+    order_by : List[str]
+        List of column/field names to order results by.
+        Must provide at least one.
+    filters : Union[List[dict], None] = None
+        List of dictionaries describing the "where" clause to limit data that
+        is included in metrics.
+    return_query: bool = False
+        True returns the query string instead of the data
+
+    Returns
+    -------
+    results : Union[str, pd.DataFrame, gpd.GeoDataFrame]
+
+    Examples:
+        order_by = ["lead_time", "primary_location_id"]
+        filters = [
+            {
+                "column": "location_id",
+                "operator": "in",
+                "value": [12345, 54321]
+            },
+        ]
+    """
+    tq = TimeseriesQuery.parse_obj(
+        {
+            "timeseries_filepath": timeseries_filepath,
+            "order_by": order_by,
+            "filters": filters,
+            "return_query": return_query
+        }
+    )
+
+    query = f"""
+        WITH joined as (
+            SELECT
+                pf.reference_time,
+                pf.value_time,
+                pf.location_id,
+                pf.value,
+                pf.configuration,
+                pf.measurement_unit,
+                pf.variable_name
+            FROM
+                read_parquet('{str(tq.timeseries_filepath)}') pf
+        )
+        SELECT * FROM
+            joined
+        {filters_to_sql(tq.filters)}
+        ORDER BY
+            {",".join(tq.order_by)}
+    ;"""
+
+    if tq.return_query:
+        return query
+
+    df = duckdb.query(query).to_df()
+
+    df["location_id"] = df["location_id"].astype("category")
+    df["configuration"] = df["configuration"].astype("category")
+    df["measurement_unit"] = df["measurement_unit"].astype("category")
+    df["variable_name"] = df["variable_name"].astype("category")
+
+    return df
+
+
+def get_timeseries_chars(
+    timeseries_filepath: str,
+    group_by: list[str],
+    order_by: List[str],
+    filters: Union[List[dict], None] = None,
+    return_query: bool = True,
+) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
+    """Retrieve joined timeseries using database query.
+
+    Parameters
+    ----------
+    timeseries_filepath : str
+        File path to the "observed" data.  String must include path to file(s)
+        and can include wildcards.  For example, "/path/to/parquet/*.parquet"
+    order_by : List[str]
+        List of column/field names to order results by.
+        Must provide at least one.
+    group_by : List[str]
+        List of column/field names to group timeseries data by.
+        Must provide at least one.
+    filters : Union[List[dict], None] = None
+        List of dictionaries describing the "where" clause to limit data that
+        is included in metrics.
+    return_query: bool = False
+        True returns the query string instead of the data
+
+    Returns
+    -------
+    results : Union[str, pd.DataFrame, gpd.GeoDataFrame]
+
+    Examples:
+        order_by = ["lead_time", "primary_location_id"]
+        filters = [
+            {
+                "column": "primary_location_id",
+                "operator": "=",
+                "value": "'123456'"
+            },
+            {
+                "column": "reference_time",
+                "operator": "=",
+                "value": "'2022-01-01 00:00'"
+            },
+            {
+                "column": "lead_time",
+                "operator": "<=",
+                "value": "'10 days'"
+            }
+        ]
+    """
+
+    tcq = TimeseriesCharQuery.parse_obj(
+        {
+            "timeseries_filepath": timeseries_filepath,
+            "order_by": order_by,
+            "group_by": group_by,
+            "filters": filters,
+            "return_query": return_query
+        }
+    )
+
+    join_max_time_on = _join_time_on(
+        join="mxt",
+        join_to="chars",
+        join_on=tcq.group_by
+    )
+
+    query = f"""
+        WITH fts AS (
+            SELECT * FROM
+            read_parquet('{str(tcq.timeseries_filepath)}') pf
+            {filters_to_sql(tcq.filters)}
+        ),
+        mxt AS (
+            SELECT
+                {",".join(tcq.group_by)}
+                ,value
+                ,value_time
+                ,ROW_NUMBER() OVER(
+                    PARTITION BY {",".join(tcq.group_by)}
+                    ORDER BY value DESC, value_time
+                ) as n
+            FROM fts
+        ),
+        chars AS (
+            SELECT
+                {",".join(tcq.group_by)}
+                ,count(fts.value) as count
+                ,min(fts.value) as min
+                ,max(fts.value) as max
+                ,avg(fts.value) as average
+                ,sum(fts.value) as sum
+                ,var_pop(fts.value) as variance
+            FROM
+                fts
+            GROUP BY
+                {",".join(tcq.group_by)}
+            ORDER BY
+                {",".join(tcq.order_by)}
+        )
+        SELECT
+            chars.*
+            ,mxt.value_time as max_value_time
+        FROM chars
+        {join_max_time_on}
+
+    ;"""
+
+    if tcq.return_query:
+        return query
+
+    df = duckdb.query(query).to_df()
+
+    return df

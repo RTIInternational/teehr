@@ -1,15 +1,15 @@
 from datetime import datetime
 
-import pandas as pd
 import pytest
-import teehr.models as tm
+import teehr.models.queries as tmq
 from pydantic import ValidationError
 import teehr.queries.duckdb as tqd
 
+
 def test_filter_string():
-    filter = tm.Filter(
-        column="secondary_location_id", 
-        operator="=", 
+    filter = tmq.JoinedFilter(
+        column="secondary_location_id",
+        operator="=",
         value="123456"
     )
     filter_str = tqd.format_filter_item(filter)
@@ -17,9 +17,9 @@ def test_filter_string():
 
 
 def test_filter_int():
-    filter = tm.Filter(
-        column="secondary_location_id", 
-        operator="=", 
+    filter = tmq.JoinedFilter(
+        column="secondary_location_id",
+        operator="=",
         value=123456
     )
     filter_str = tqd.format_filter_item(filter)
@@ -27,9 +27,9 @@ def test_filter_int():
 
 
 def test_filter_int_gte():
-    filter = tm.Filter(
-        column="secondary_location_id", 
-        operator=">=", 
+    filter = tmq.JoinedFilter(
+        column="secondary_location_id",
+        operator=">=",
         value=123456
     )
     filter_str = tqd.format_filter_item(filter)
@@ -37,9 +37,9 @@ def test_filter_int_gte():
 
 
 def test_filter_int_lt():
-    filter = tm.Filter(
-        column="secondary_location_id", 
-        operator="<", 
+    filter = tmq.JoinedFilter(
+        column="secondary_location_id",
+        operator="<",
         value=123456
     )
     filter_str = tqd.format_filter_item(filter)
@@ -47,9 +47,9 @@ def test_filter_int_lt():
 
 
 def test_filter_float():
-    filter = tm.Filter(
-        column="secondary_location_id", 
-        operator="=", 
+    filter = tmq.JoinedFilter(
+        column="secondary_location_id",
+        operator="=",
         value=123.456
     )
     filter_str = tqd.format_filter_item(filter)
@@ -57,10 +57,10 @@ def test_filter_float():
 
 
 def test_filter_datetime():
-    filter = tm.Filter(
-        column="reference_time", 
-        operator="=", 
-        value=datetime(2023,4,1,23,30)
+    filter = tmq.JoinedFilter(
+        column="reference_time",
+        operator="=",
+        value=datetime(2023, 4, 1, 23, 30)
     )
     filter_str = tqd.format_filter_item(filter)
     assert filter_str == "reference_time = '2023-04-01 23:30:00'"
@@ -68,28 +68,28 @@ def test_filter_datetime():
 
 def test_in_filter_string_wrong_operator():
     with pytest.raises(ValidationError):
-        filter = tm.Filter(
-            column="secondary_location_id", 
-            operator="=", 
+        filter = tmq.JoinedFilter(
+            column="secondary_location_id",
+            operator="=",
             value=["123456", "9876"]
         )
-        filter_str = tqd.format_filter_item(filter)
+        tqd.format_filter_item(filter)
 
 
 def test_in_filter_string_wrong_value_type():
     with pytest.raises(ValidationError):
-        filter = tm.Filter(
-            column="secondary_location_id", 
-            operator="in", 
+        filter = tmq.JoinedFilter(
+            column="secondary_location_id",
+            operator="in",
             value="9876"
         )
-        filter_str = tqd.format_filter_item(filter)
+        tqd.format_filter_item(filter)
 
 
 def test_in_filter_string():
-    filter = tm.Filter(
-        column="secondary_location_id", 
-        operator="in", 
+    filter = tmq.JoinedFilter(
+        column="secondary_location_id",
+        operator="in",
         value=["123456", "9876"]
     )
     filter_str = tqd.format_filter_item(filter)
@@ -97,9 +97,9 @@ def test_in_filter_string():
 
 
 def test_in_filter_int():
-    filter = tm.Filter(
-        column="secondary_location_id", 
-        operator="in", 
+    filter = tmq.JoinedFilter(
+        column="secondary_location_id",
+        operator="in",
         value=[123456, 9876]
     )
     filter_str = tqd.format_filter_item(filter)
@@ -107,9 +107,9 @@ def test_in_filter_int():
 
 
 def test_in_filter_float():
-    filter = tm.Filter(
-        column="secondary_location_id", 
-        operator="in", 
+    filter = tmq.JoinedFilter(
+        column="secondary_location_id",
+        operator="in",
         value=[123.456, 98.76]
     )
     filter_str = tqd.format_filter_item(filter)
@@ -117,13 +117,13 @@ def test_in_filter_float():
 
 
 def test_in_filter_datetime():
-    filter = tm.Filter(
-        column="reference_time", 
-        operator="in", 
-        value=[datetime(2023,4,1,23,30), datetime(2023,4,2,23,30)]
+    filter = tmq.JoinedFilter(
+        column="reference_time",
+        operator="in",
+        value=[datetime(2023, 4, 1, 23, 30), datetime(2023, 4, 2, 23, 30)]
     )
     filter_str = tqd.format_filter_item(filter)
-    assert filter_str == "reference_time in ('2023-04-01 23:30:00','2023-04-02 23:30:00')"
+    assert filter_str == "reference_time in ('2023-04-01 23:30:00','2023-04-02 23:30:00')"  # noqa
 
 
 if __name__ == "__main__":

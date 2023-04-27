@@ -2,3 +2,4 @@ pandas
 geopandas
 duckdb
 pydantic
+hydrotools
