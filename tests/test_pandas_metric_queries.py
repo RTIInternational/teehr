@@ -2,7 +2,7 @@ import pandas as pd
 import geopandas as gpd
 # import pytest
 # from pydantic import ValidationError
-import teehr.queries.dataframe as tqk
+import teehr.queries.pandas as tqk
 from pathlib import Path
 
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
@@ -110,8 +110,8 @@ def test_metric_query_gdf_limit_metrics():
 
 if __name__ == "__main__":
     test_metric_query_df()
-    # test_metric_query_df2()
-    # test_metric_query_filter_df()
-    # test_metric_query_gdf()
+    test_metric_query_df2()
+    test_metric_query_filter_df()
+    test_metric_query_gdf()
     test_metric_query_gdf_limit_metrics()
     pass
