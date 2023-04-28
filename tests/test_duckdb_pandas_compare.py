@@ -1,7 +1,4 @@
-import pandas as pd
-import geopandas as gpd
 import numpy as np
-# from pydantic import ValidationError
 import teehr.queries.pandas as tqk
 import teehr.queries.duckdb as tqd
 from pathlib import Path
@@ -17,21 +14,21 @@ def test_metric_compare_1():
     include_metrics = [
         "secondary_count",
         "primary_count",
-        # "secondary_minimum",
-        # "primary_minimum",
-        # "secondary_maximum",
-        # "primary_maximum",
-        # "secondary_average",
-        # "primary_average",
-        # "secondary_sum",
-        # "primary_sum",
-        # "secondary_variance",
-        # "primary_variance",
-        # "max_value_delta",
+        "secondary_minimum",
+        "primary_minimum",
+        "secondary_maximum",
+        "primary_maximum",
+        "secondary_average",
+        "primary_average",
+        "secondary_sum",
+        "primary_sum",
+        "secondary_variance",
+        "primary_variance",
+        "max_value_delta",
         "bias",
-        # "nash_sutcliffe_efficiency",
-        # "kling_gupta_efficiency",
-        # "mean_squared_error",
+        "nash_sutcliffe_efficiency",
+        "kling_gupta_efficiency",
+        "mean_squared_error",
         "root_mean_squared_error"
     ]
     group_by = [
@@ -46,20 +43,15 @@ def test_metric_compare_1():
         "group_by": group_by,
         "order_by": ["primary_location_id"],
         "include_metrics": include_metrics,
-        "return_query": True
+        "return_query": False
     }
-    # pandas_df = tqk.get_metrics(**args)
-    # print(pandas_df)
-    duckdb_df = tqd.get_metrics2(**args)
-    print(duckdb_df)
+    pandas_df = tqk.get_metrics(**args)
+    duckdb_df = tqd.get_metrics(**args)
 
-    # for m in include_metrics:
-    #     print(m)
-    #     duckdb_np = duckdb_df[m].to_numpy()
-    #     pandas_np = pandas_df[m].to_numpy()
-    #     print(duckdb_np)
-    #     print(pandas_np)
-    #     assert np.allclose(duckdb_np, pandas_np)
+    for m in include_metrics:
+        duckdb_np = duckdb_df[m].to_numpy()
+        pandas_np = pandas_df[m].to_numpy()
+        assert np.allclose(duckdb_np, pandas_np)
 
 
 if __name__ == "__main__":
