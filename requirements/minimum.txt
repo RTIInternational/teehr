@@ -3,3 +3,4 @@ geopandas
 duckdb
 pydantic
 hydrotools
+dask
