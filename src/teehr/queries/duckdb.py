@@ -65,6 +65,40 @@ def get_metrics(
     -------
     results : Union[str, pd.DataFrame, gpd.GeoDataFrame]
 
+    Available Metrics
+    -----------------------
+    Basic
+    * primary_count
+    * secondary_count
+    * primary_minimum
+    * secondary_minimum
+    * primary_maximum
+    * secondary_maximum
+    * primary_average
+    * secondary_average
+    * primary_sum
+    * secondary_sum
+    * primary_variance
+    * secondary_variance
+    * max_value_delta
+        max(secondary_value) - max(primary_value)
+    * bias
+        sum(primary_value - secondary_value)/count(*)
+
+    HydroTools Metrics
+    * nash_sutcliffe_efficiency
+    * kling_gupta_efficiency
+    * coefficient_of_extrapolation
+    * coefficient_of_persistence
+    * mean_error
+    * mean_squared_error
+    * root_mean_squared_error
+
+    Time-based Metrics
+    * primary_max_value_time
+    * secondary_max_value_time
+    * max_value_timedelta
+
     Examples:
         group_by = ["lead_time", "primary_location_id"]
         order_by = ["lead_time", "primary_location_id"]

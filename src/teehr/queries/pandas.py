@@ -73,12 +73,12 @@ def get_metrics(
     * secondary_average
     * primary_sum
     * secondary_sum
+    * primary_variance
+    * secondary_variance
     * max_value_delta
         max(secondary_value) - max(primary_value)
     * bias
         sum(primary_value - secondary_value)/count(*)
-    * primary_variance
-    * secondary_variance
 
     HydroTools Metrics
     * nash_sutcliffe_efficiency
@@ -88,6 +88,11 @@ def get_metrics(
     * mean_error
     * mean_squared_error
     * root_mean_squared_error
+
+    Time-based Metrics
+    * primary_max_value_time
+    * secondary_max_value_time
+    * max_value_timedelta
 
     Examples
     --------
@@ -110,6 +115,7 @@ def get_metrics(
                 "value": "'10 days'"
             }
         ]
+        include_metrics=["nash_sutcliffe_efficiency"]
     """
 
     mq = tmq.MetricQuery.parse_obj(
@@ -209,12 +215,12 @@ def calculate_group_metrics(
     * secondary_average
     * primary_sum
     * secondary_sum
+    * primary_variance
+    * secondary_variance
     * max_value_delta
         max(secondary_value) - max(primary_value)
     * bias
         sum(primary_value - secondary_value)/count(*)
-    * primary_variance
-    * secondary_variance
 
     HydroTools Metrics
     * nash_sutcliffe_efficiency
@@ -224,6 +230,11 @@ def calculate_group_metrics(
     * mean_error
     * mean_squared_error
     * root_mean_squared_error
+
+    Time-based Metrics
+    * primary_max_value_time
+    * secondary_max_value_time
+    * max_value_timedelta
 
     """
     data = {}
