@@ -3,7 +3,7 @@ from datetime import datetime
 import pytest
 import teehr.models.queries as tmq
 from pydantic import ValidationError
-import teehr.queries.duckdb as tqd
+import teehr.queries.utils as tqu
 
 
 def test_filter_string():
@@ -12,7 +12,7 @@ def test_filter_string():
         operator="=",
         value="123456"
     )
-    filter_str = tqd.format_filter_item(filter)
+    filter_str = tqu._format_filter_item(filter)
     assert filter_str == "secondary_location_id = '123456'"
 
 
@@ -22,7 +22,7 @@ def test_filter_int():
         operator="=",
         value=123456
     )
-    filter_str = tqd.format_filter_item(filter)
+    filter_str = tqu._format_filter_item(filter)
     assert filter_str == "secondary_location_id = 123456"
 
 
@@ -32,7 +32,7 @@ def test_filter_int_gte():
         operator=">=",
         value=123456
     )
-    filter_str = tqd.format_filter_item(filter)
+    filter_str = tqu._format_filter_item(filter)
     assert filter_str == "secondary_location_id >= 123456"
 
 
@@ -42,7 +42,7 @@ def test_filter_int_lt():
         operator="<",
         value=123456
     )
-    filter_str = tqd.format_filter_item(filter)
+    filter_str = tqu._format_filter_item(filter)
     assert filter_str == "secondary_location_id < 123456"
 
 
@@ -52,7 +52,7 @@ def test_filter_float():
         operator="=",
         value=123.456
     )
-    filter_str = tqd.format_filter_item(filter)
+    filter_str = tqu._format_filter_item(filter)
     assert filter_str == "secondary_location_id = 123.456"
 
 
@@ -62,7 +62,7 @@ def test_filter_datetime():
         operator="=",
         value=datetime(2023, 4, 1, 23, 30)
     )
-    filter_str = tqd.format_filter_item(filter)
+    filter_str = tqu._format_filter_item(filter)
     assert filter_str == "reference_time = '2023-04-01 23:30:00'"
 
 
@@ -73,7 +73,7 @@ def test_in_filter_string_wrong_operator():
             operator="=",
             value=["123456", "9876"]
         )
-        tqd.format_filter_item(filter)
+        tqu._format_filter_item(filter)
 
 
 def test_in_filter_string_wrong_value_type():
@@ -83,7 +83,7 @@ def test_in_filter_string_wrong_value_type():
             operator="in",
             value="9876"
         )
-        tqd.format_filter_item(filter)
+        tqu._format_filter_item(filter)
 
 
 def test_in_filter_string():
@@ -92,7 +92,7 @@ def test_in_filter_string():
         operator="in",
         value=["123456", "9876"]
     )
-    filter_str = tqd.format_filter_item(filter)
+    filter_str = tqu._format_filter_item(filter)
     assert filter_str == "secondary_location_id in ('123456','9876')"
 
 
@@ -102,7 +102,7 @@ def test_in_filter_int():
         operator="in",
         value=[123456, 9876]
     )
-    filter_str = tqd.format_filter_item(filter)
+    filter_str = tqu._format_filter_item(filter)
     assert filter_str == "secondary_location_id in (123456,9876)"
 
 
@@ -112,7 +112,7 @@ def test_in_filter_float():
         operator="in",
         value=[123.456, 98.76]
     )
-    filter_str = tqd.format_filter_item(filter)
+    filter_str = tqu._format_filter_item(filter)
     assert filter_str == "secondary_location_id in (123.456,98.76)"
 
 
@@ -122,7 +122,7 @@ def test_in_filter_datetime():
         operator="in",
         value=[datetime(2023, 4, 1, 23, 30), datetime(2023, 4, 2, 23, 30)]
     )
-    filter_str = tqd.format_filter_item(filter)
+    filter_str = tqu._format_filter_item(filter)
     assert filter_str == "reference_time in ('2023-04-01 23:30:00','2023-04-02 23:30:00')"  # noqa
 
 

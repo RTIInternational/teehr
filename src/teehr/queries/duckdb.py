@@ -1,176 +1,21 @@
-import warnings
 import duckdb
 
 import pandas as pd
 import geopandas as gpd
 
-from collections.abc import Iterable
-from datetime import datetime
 from typing import List, Union
 
 from teehr.models.queries import (
-    JoinedFilter,
     MetricQuery,
     JoinedTimeseriesQuery,
-    TimeseriesFilter,
     TimeseriesQuery,
     TimeseriesCharQuery,
 )
 
-from teehr.queries.utils import (
-    df_to_gdf
-)
+import teehr.queries.utils as tqu
+import teehr.models.queries as tmq
 
 SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
-
-
-def get_datetime_list_string(values):
-    return [f"'{v.strftime(SQL_DATETIME_STR_FORMAT)}'" for v in values]
-
-
-def format_iterable_value(
-        values: Iterable[Union[str, int, float, datetime]]
-) -> str:
-    """Returns an SQL formatted string from list of values.
-
-    Parameters
-    ----------
-    values : Iterable
-        Contains values to be formatted as a string for SQL. Only one type of
-        value (str, int, float, datetime) should be used. First value in list
-        is used to determine value type. Values are not checked for type
-        consistency.
-
-    Returns
-    -------
-    formatted_string : str
-
-    """
-
-    # string
-    if isinstance(values[0], str):
-        return f"""({",".join([f"'{v}'" for v in values])})"""
-    # int or float
-    elif (
-        isinstance(values[0], int)
-        or isinstance(values[0], float)
-    ):
-        return f"""({",".join([f"{v}" for v in values])})"""
-    # datetime
-    elif isinstance(values[0], datetime):
-        return f"""({",".join(get_datetime_list_string(values))})"""
-    else:
-        warnings.warn(
-            "treating value as string because didn't know what else to do."
-        )
-        return f"""({",".join([f"'{str(v)}'" for v in values])})"""
-
-
-def format_filter_item(filter: Union[JoinedFilter, TimeseriesFilter]) -> str:
-    """Returns an SQL formatted string for single filter object.
-
-    Parameters
-    ----------
-    filter: models.*Filter
-        A single *Filter object.
-
-    Returns
-    -------
-    formatted_string : str
-
-    """
-
-    if isinstance(filter.value, str):
-        return f"""{filter.column} {filter.operator} '{filter.value}'"""
-    elif (
-        isinstance(filter.value, int)
-        or isinstance(filter.value, float)
-    ):
-        return f"""{filter.column} {filter.operator} {filter.value}"""
-    elif isinstance(filter.value, datetime):
-        dt_str = filter.value.strftime(SQL_DATETIME_STR_FORMAT)
-        return f"""{filter.column} {filter.operator} '{dt_str}'"""
-    elif (
-        isinstance(filter.value, Iterable)
-        and not isinstance(filter.value, str)
-    ):
-        value = format_iterable_value(filter.value)
-        return f"""{filter.column} {filter.operator} {value}"""
-    else:
-        warnings.warn(
-            "treating value as string because didn't know what else to do."
-        )
-        return f"""{filter.column} {filter.operator} '{str(filter.value)}'"""
-
-
-def filters_to_sql(filters: List[JoinedFilter]) -> List[str]:
-    """Generate SQL where clause string from filters.
-
-    Parameters
-    ----------
-    filters : List[MetricFilter]
-        A list of MetricFilter objects describing the filters.
-
-    Returns
-    -------
-    where_clause : str
-        A where clause formatted string
-    """
-    if len(filters) > 0:
-        filter_strs = []
-        for f in filters:
-            filter_strs.append(format_filter_item(f))
-        qry = f"""WHERE {f" AND ".join(filter_strs)}"""
-        return qry
-
-    return "--no where clause"
-
-
-def generate_geometry_join_clause(
-        q: Union[MetricQuery, JoinedTimeseriesQuery]
-) -> str:
-    """Generate the join clause for"""
-    if q.include_geometry:
-        return f"""JOIN read_parquet('{str(q.geometry_filepath)}') gf
-            on pf.location_id = gf.id
-        """
-    return ""
-
-
-def generate_geometry_select_clause(
-        q: Union[MetricQuery, JoinedTimeseriesQuery]
-) -> str:
-    if q.include_geometry:
-        return ",gf.geometry as geometry"
-    return ""
-
-
-def generate_metric_geometry_join_clause(
-        q: Union[MetricQuery, JoinedTimeseriesQuery]
-) -> str:
-    """Generate the join clause for"""
-    if q.include_geometry:
-        return f"""JOIN read_parquet('{str(q.geometry_filepath)}') gf
-            on primary_location_id = gf.id
-        """
-    return ""
-
-
-def _join_time_on(join: str, join_to: str, join_on: List[str]):
-    qry = f"""
-        INNER JOIN {join}
-        ON {f" AND ".join([f"{join}.{jo} = {join_to}.{jo}" for jo in join_on])}
-        AND {join}.n = 1
-    """
-    return qry
-
-
-def _join_on(join: str, join_to: str, join_on: List[str]):
-    qry = f"""
-        INNER JOIN {join}
-        ON {f" AND ".join([f"{join}.{jo} = {join_to}.{jo}" for jo in join_on])}
-    """
-    return qry
 
 
 def get_metrics(
@@ -179,7 +24,7 @@ def get_metrics(
     crosswalk_filepath: str,
     group_by: List[str],
     order_by: List[str],
-    include_metrics: Union[List[str], str],
+    include_metrics: Union[List[tmq.MetricEnum], "all"],
     filters: Union[List[dict], None] = None,
     return_query: bool = False,
     geometry_filepath: Union[str, None] = None,
@@ -279,58 +124,36 @@ def get_metrics(
                 and sf.value_time = pf.value_time
                 and sf.measurement_unit = pf.measurement_unit
                 and sf.variable_name = pf.variable_name
-            {filters_to_sql(mq.filters)}
-        ),
-        nse AS (
-            SELECT
-                {",".join(mq.group_by)}
-                , value_time
-                , pow(
-                    primary_value - secondary_value, 2
-                ) as primary_minus_secondary_squared
-                , pow(
-                    primary_value
-                    - avg(primary_value)
-                    OVER(PARTITION BY {",".join(mq.group_by)}), 2
-                ) as primary_minus_primary_mean_squared
-            FROM joined
-        ),
-        metrics AS (
+            {tqu._filters_to_sql(mq.filters)}
+        )
+        {tqu._nse_cte(mq)}
+        {tqu._pmxt_cte(mq)}
+        {tqu._smxt_cte(mq)}
+        , metrics AS (
             SELECT
                 {",".join([f"joined.{gb}" for gb in mq.group_by])}
-                , count(secondary_value) as secondary_count
-                , count(primary_value) as primary_count
-                , min(secondary_value) as secondary_minimum
-                , min(primary_value) as primary_minimum
-                , max(secondary_value) as secondary_maximum
-                , max(primary_value) as primary_maximum
-                , avg(secondary_value) as secondary_average
-                , avg(primary_value) as primary_average
-                , sum(secondary_value) as secondary_sum
-                , sum(primary_value) as primary_sum
-                , var_pop(secondary_value) as secondary_variance
-                , var_pop(primary_value) as primary_variance
-                , max(secondary_value) - max(primary_value) as max_value_delta
-                , sum(primary_value - secondary_value)/count(*) as bias
-                , 1 - (
-                    sum(nse.primary_minus_secondary_squared)
-                    /sum(nse.primary_minus_primary_mean_squared)
-                ) as nash_sutcliffe_efficiency
-                , 1 - sqrt(
-                    pow(corr(secondary_value, primary_value) - 1, 2)
-                    + pow(stddev(secondary_value)
-                        / stddev(primary_value) - 1, 2)
-                    + pow(avg(secondary_value) / avg(primary_value) - 1, 2)
-                ) AS kling_gupta_efficiency
-                , sum(absolute_difference)/count(*) as mean_error
-                , sum(power(absolute_difference, 2))/count(*)
-                    as mean_squared_error
-                , sqrt(sum(power(absolute_difference, 2))/count(*))
-                    as root_mean_squared_error
+                {tqu._select_primary_count(mq)}
+                {tqu._select_secondary_count(mq)}
+                {tqu._select_primary_minimum(mq)}
+                {tqu._select_secondary_minimum(mq)}
+                {tqu._select_primary_maximum(mq)}
+                {tqu._select_secondary_maximum(mq)}
+                {tqu._select_primary_average(mq)}
+                {tqu._select_secondary_average(mq)}
+                {tqu._select_primary_sum(mq)}
+                {tqu._select_secondary_sum(mq)}
+                {tqu._select_primary_variance(mq)}
+                {tqu._select_secondary_variance(mq)}
+                {tqu._select_max_value_delta(mq)}
+                {tqu._select_bias(mq)}
+                {tqu._select_nash_sutcliffe_efficiency(mq)}
+                {tqu._select_kling_gupta_efficiency(mq)}
+                {tqu._select_mean_error(mq)}
+                {tqu._select_mean_squared_error(mq)}
+                {tqu._select_root_mean_squared_error(mq)}
             FROM
                 joined
-            {_join_on(join="nse", join_to="joined", join_on=mq.group_by)}
-            AND nse.value_time = joined.value_time
+            {tqu._join_nse_cte(mq)}
             GROUP BY
                 {",".join([f"joined.{gb}" for gb in mq.group_by])}
             ORDER BY
@@ -338,9 +161,14 @@ def get_metrics(
         )
         SELECT
             metrics.*
-            {generate_geometry_select_clause(mq)}
+            {tqu._select_primary_max_value_time(mq)}
+            {tqu._select_secondary_max_value_time(mq)}
+            {tqu._select_max_value_timedelta(mq)}
+            {tqu._geometry_select_clause(mq)}
         FROM metrics
-        {generate_metric_geometry_join_clause(mq)}
+        {tqu._metric_geometry_join_clause(mq)}
+        {tqu._join_primary_join_max_time(mq)}
+        {tqu._join_secondary_join_max_time(mq)}
     ;"""
 
     if mq.return_query:
@@ -349,7 +177,7 @@ def get_metrics(
     df = duckdb.query(query).to_df()
 
     if mq.include_geometry:
-        return df_to_gdf(df)
+        return tqu.df_to_gdf(df)
 
     return df
 
@@ -440,7 +268,7 @@ def get_joined_timeseries(
                 pf.value as primary_value,
                 pf.location_id as primary_location_id,
                 sf.value_time - sf.reference_time as lead_time
-                {generate_geometry_select_clause(jtq)}
+                {tqu._geometry_select_clause(jtq)}
             FROM read_parquet('{str(jtq.secondary_filepath)}') sf
             JOIN read_parquet('{str(jtq.crosswalk_filepath)}') cf
                 on cf.secondary_location_id = sf.location_id
@@ -449,11 +277,11 @@ def get_joined_timeseries(
                 and sf.value_time = pf.value_time
                 and sf.measurement_unit = pf.measurement_unit
                 and sf.variable_name = pf.variable_name
-            {generate_geometry_join_clause(jtq)}
+            {tqu._geometry_join_clause(jtq)}
         )
         SELECT * FROM
             joined
-        {filters_to_sql(jtq.filters)}
+        {tqu._filters_to_sql(jtq.filters)}
         ORDER BY
             {",".join(jtq.order_by)}
     ;"""
@@ -470,7 +298,7 @@ def get_joined_timeseries(
     df["variable_name"] = df["variable_name"].astype("category")
 
     if jtq.include_geometry:
-        return df_to_gdf(df)
+        return tqu.df_to_gdf(df)
 
     return df
 
@@ -535,7 +363,7 @@ def get_timeseries(
         )
         SELECT * FROM
             joined
-        {filters_to_sql(tq.filters)}
+        {tqu._filters_to_sql(tq.filters)}
         ORDER BY
             {",".join(tq.order_by)}
     ;"""
@@ -614,7 +442,7 @@ def get_timeseries_chars(
         }
     )
 
-    join_max_time_on = _join_time_on(
+    join_max_time_on = tqu._join_time_on(
         join="mxt",
         join_to="chars",
         join_on=tcq.group_by
@@ -624,7 +452,7 @@ def get_timeseries_chars(
         WITH fts AS (
             SELECT * FROM
             read_parquet('{str(tcq.timeseries_filepath)}') pf
-            {filters_to_sql(tcq.filters)}
+            {tqu._filters_to_sql(tcq.filters)}
         ),
         mxt AS (
             SELECT

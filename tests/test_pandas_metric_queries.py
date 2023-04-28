@@ -81,7 +81,7 @@ def test_metric_query_gdf():
     assert isinstance(query_df, gpd.GeoDataFrame)
 
 
-def test_metric_query_gdf_limit_metrics():
+def test_metric_query_df_limit_metrics():
     include_metrics = [
         "bias",
         "root_mean_squared_error",
@@ -102,16 +102,41 @@ def test_metric_query_gdf_limit_metrics():
         return_query=False,
         include_geometry=False,
     )
-    print(query_df)
+    # print(query_df)
     assert len(query_df) == 3
     assert len(query_df.columns) == len(group_by) + len(include_metrics)
     assert isinstance(query_df, pd.DataFrame)
 
 
+def test_metric_query_df_time_metrics():
+    include_metrics = [
+        "primary_max_value_time",
+        "secondary_max_value_time",
+        "max_value_timedelta"
+    ]
+    group_by = ["primary_location_id", "reference_time"]
+    query_df = tqk.get_metrics(
+        primary_filepath=PRIMARY_FILEPATH,
+        secondary_filepath=SECONDARY_FILEPATH,
+        crosswalk_filepath=CROSSWALK_FILEPATH,
+        geometry_filepath=GEOMETRY_FILEPATH,
+        group_by=group_by,
+        order_by=["primary_location_id", "reference_time"],
+        include_metrics=include_metrics,
+        return_query=False,
+        include_geometry=False,
+    )
+    # print(query_df)
+    assert len(query_df) == 9
+    assert len(query_df.columns) == len(group_by) + len(include_metrics)
+    assert isinstance(query_df, pd.DataFrame)
+
+
 if __name__ == "__main__":
-    test_metric_query_df()
-    test_metric_query_df2()
-    test_metric_query_filter_df()
-    test_metric_query_gdf()
-    test_metric_query_gdf_limit_metrics()
+    # test_metric_query_df()
+    # test_metric_query_df2()
+    # test_metric_query_filter_df()
+    # test_metric_query_gdf()
+    # test_metric_query_df_limit_metrics()
+    test_metric_query_df_time_metrics()
     pass

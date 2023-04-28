@@ -1,6 +1,6 @@
 import pandas as pd
 import geopandas as gpd
-import teehr.queries.duckdb as tqd
+import teehr.queries.duckdb as tqu
 from pathlib import Path
 from datetime import datetime
 
@@ -12,7 +12,7 @@ GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
 
 
 def test_joined_timeseries_query_df():
-    query_df = tqd.get_joined_timeseries(
+    query_df = tqu.get_joined_timeseries(
         primary_filepath=PRIMARY_FILEPATH,
         secondary_filepath=SECONDARY_FILEPATH,
         crosswalk_filepath=CROSSWALK_FILEPATH,
@@ -27,7 +27,7 @@ def test_joined_timeseries_query_df():
 
 
 def test_joined_timeseries_query_gdf():
-    query_df = tqd.get_joined_timeseries(
+    query_df = tqu.get_joined_timeseries(
         primary_filepath=PRIMARY_FILEPATH,
         secondary_filepath=SECONDARY_FILEPATH,
         crosswalk_filepath=CROSSWALK_FILEPATH,
@@ -43,7 +43,7 @@ def test_joined_timeseries_query_gdf():
 
 
 def test_joined_timeseries_query_df_filter():
-    query_df = tqd.get_joined_timeseries(
+    query_df = tqu.get_joined_timeseries(
         primary_filepath=PRIMARY_FILEPATH,
         secondary_filepath=SECONDARY_FILEPATH,
         crosswalk_filepath=CROSSWALK_FILEPATH,
@@ -70,7 +70,7 @@ def test_joined_timeseries_query_df_filter():
 
 
 def test_timeseries_query_df():
-    query_df = tqd.get_timeseries(
+    query_df = tqu.get_timeseries(
         timeseries_filepath=PRIMARY_FILEPATH,
         order_by=["location_id"],
         return_query=False,
@@ -80,7 +80,7 @@ def test_timeseries_query_df():
 
 
 def test_timeseries_query_df2():
-    query_df = tqd.get_timeseries(
+    query_df = tqu.get_timeseries(
         timeseries_filepath=SECONDARY_FILEPATH,
         order_by=["location_id"],
         return_query=False,
@@ -89,7 +89,7 @@ def test_timeseries_query_df2():
 
 
 def test_timeseries_query_one_site_df():
-    query_df = tqd.get_timeseries(
+    query_df = tqu.get_timeseries(
         timeseries_filepath=PRIMARY_FILEPATH,
         order_by=["location_id"],
         filters=[{
@@ -103,7 +103,7 @@ def test_timeseries_query_one_site_df():
 
 
 def test_timeseries_query_one_site_one_ref_df():
-    query_df = tqd.get_timeseries(
+    query_df = tqu.get_timeseries(
         timeseries_filepath=SECONDARY_FILEPATH,
         order_by=["value_time"],
         filters=[
@@ -124,7 +124,7 @@ def test_timeseries_query_one_site_one_ref_df():
 
 
 def test_timeseries_char_query_df():
-    query_df = tqd.get_timeseries_chars(
+    query_df = tqu.get_timeseries_chars(
         timeseries_filepath=PRIMARY_FILEPATH,
         group_by=["location_id"],
         order_by=["location_id"],
@@ -162,7 +162,7 @@ def test_timeseries_char_query_df():
 
 
 def test_timeseries_char_query_df2():
-    query_df = tqd.get_timeseries_chars(
+    query_df = tqu.get_timeseries_chars(
         timeseries_filepath=SECONDARY_FILEPATH,
         group_by=["location_id", "reference_time"],
         order_by=["location_id"],
@@ -173,7 +173,7 @@ def test_timeseries_char_query_df2():
 
 
 def test_timeseries_char_query_filter_df():
-    query_df = tqd.get_timeseries_chars(
+    query_df = tqu.get_timeseries_chars(
         timeseries_filepath=SECONDARY_FILEPATH,
         group_by=["location_id"],
         order_by=["location_id"],

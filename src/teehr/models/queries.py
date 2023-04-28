@@ -24,6 +24,31 @@ class FilterOperatorEnum(str, Enum):
     isin = "in"
 
 
+class MetricEnum(str, Enum):
+    primary_count = "primary_count"
+    secondary_count = "secondary_count"
+    primary_minimum = "primary_minimum"
+    secondary_minimum = "secondary_minimum"
+    primary_maximum = "primary_maximum"
+    secondary_maximum = "secondary_maximum"
+    primary_average = "primary_average"
+    secondary_average = "secondary_average"
+    primary_sum = "primary_sum"
+    secondary_sum = "secondary_sum"
+    primary_variance = "primary_variance"
+    secondary_variance = "secondary_variance"
+    max_value_delta = "max_value_delta"
+    bias = "bias"
+    nash_sutcliffe_efficiency = "nash_sutcliffe_efficiency"
+    kling_gupta_efficiency = "kling_gupta_efficiency"
+    mean_error = "mean_error"
+    mean_squared_error = "mean_squared_error"
+    root_mean_squared_error = "root_mean_squared_error"
+    primary_max_value_time = "primary_max_value_time"
+    secondary_max_value_time = "secondary_max_value_time"
+    max_value_timedelta = "max_value_timedelta"
+
+
 class JoinedFilterFieldEnum(str, Enum):
     value_time = "value_time"
     reference_time = "reference_time"

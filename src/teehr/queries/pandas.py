@@ -8,7 +8,7 @@ from hydrotools.metrics import metrics as hm
 from typing import List, Union
 
 import teehr.models.queries as tmq
-import teehr.queries.duckdb as tqd
+import teehr.queries.duckdb as tqu
 
 
 SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -20,7 +20,7 @@ def get_metrics(
     crosswalk_filepath: str,
     group_by: List[str],
     order_by: List[str],
-    include_metrics: Union[List[str], str],
+    include_metrics: Union[List[tmq.MetricEnum], "all"],
     filters: Union[List[dict], None] = None,
     return_query: bool = False,
     geometry_filepath: Union[str, None] = None,
@@ -134,7 +134,7 @@ def get_metrics(
         )
 
     # This loads all the timeseries in memory
-    df = tqd.get_joined_timeseries(
+    df = tqu.get_joined_timeseries(
         primary_filepath=mq.primary_filepath,
         secondary_filepath=mq.secondary_filepath,
         crosswalk_filepath=mq.crosswalk_filepath,
@@ -337,4 +337,27 @@ def calculate_group_metrics(
         )
         data["root_mean_squared_error"] = rmse
 
+    # Time-based Metrics
+    time_indexed_df = group.set_index("value_time")
+    if (
+        include_metrics == "all"
+        or "primary_max_value_time" in include_metrics
+    ):
+        pmvt = time_indexed_df["primary_value"].idxmax()
+        data["primary_max_value_time"] = pmvt
+
+    if (
+        include_metrics == "all"
+        or "secondary_max_value_time" in include_metrics
+    ):
+        smvt = time_indexed_df["secondary_value"].idxmax()
+        data["secondary_max_value_time"] = smvt
+
+    if (
+        include_metrics == "all"
+        or "max_value_timedelta" in include_metrics
+    ):
+        pmvt = time_indexed_df["primary_value"].idxmax()
+        smvt = time_indexed_df["secondary_value"].idxmax()
+        data["max_value_timedelta"] = smvt - pmvt
     return pd.Series(data)
