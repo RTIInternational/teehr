@@ -301,10 +301,6 @@ def get_metrics(
         metrics AS (
             SELECT
                 {",".join([f"joined.{gb}" for gb in mq.group_by])}
-                , regr_intercept(secondary_value, primary_value) as intercept
-                , covar_pop(secondary_value, primary_value) as covariance
-                , corr(secondary_value, primary_value) as corr
-                , regr_r2(secondary_value, primary_value) as r_squared
                 , count(secondary_value) as secondary_count
                 , count(primary_value) as primary_count
                 , min(secondary_value) as secondary_minimum
@@ -671,5 +667,162 @@ def get_timeseries_chars(
         return query
 
     df = duckdb.query(query).to_df()
+
+    return df
+
+
+def get_metrics_org(
+    primary_filepath: str,
+    secondary_filepath: str,
+    crosswalk_filepath: str,
+    group_by: List[str],
+    order_by: List[str],
+    include_metrics: Union[List[str], str],
+    filters: Union[List[dict], None] = None,
+    return_query: bool = False,
+    geometry_filepath: Union[str, None] = None,
+    include_geometry: bool = False,
+) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
+    """Calculate performance metrics using database queries.
+
+    Parameters
+    ----------
+    primary_filepath : str
+        File path to the "observed" data.  String must include path to file(s)
+        and can include wildcards.  For example, "/path/to/parquet/*.parquet"
+    secondary_filepath : str
+        File path to the "forecast" data.  String must include path to file(s)
+        and can include wildcards.  For example, "/path/to/parquet/*.parquet"
+    crosswalk_filepath : str
+        File path to single crosswalk file.
+    group_by : List[str]
+        List of column/field names to group timeseries data by.
+        Must provide at least one.
+    order_by : List[str]
+        List of column/field names to order results by.
+        Must provide at least one.
+    include_metrics = List[str]
+        List of metrics (see below) for allowable list, or "all" to return all
+        Placeholder, currently ignored -> returns "all"
+    filters : Union[List[dict], None] = None
+        List of dictionaries describing the "where" clause to limit data that
+        is included in metrics.
+    return_query: bool = False
+        True returns the query string instead of the data
+    include_geometry: bool = True
+        True joins the geometry to the query results.
+        Only works if `primary_location_id`
+        is included as a group_by field.
+
+    Returns
+    -------
+    results : Union[str, pd.DataFrame, gpd.GeoDataFrame]
+
+    Examples:
+        group_by = ["lead_time", "primary_location_id"]
+        order_by = ["lead_time", "primary_location_id"]
+        filters = [
+            {
+                "column": "primary_location_id",
+                "operator": "=",
+                "value": "'123456'"
+            },
+            {
+                "column": "reference_time",
+                "operator": "=",
+                "value": "'2022-01-01 00:00'"
+            },
+            {
+                "column": "lead_time",
+                "operator": "<=",
+                "value": "'10 days'"
+            }
+        ]
+    """
+
+    mq = MetricQuery.parse_obj(
+        {
+            "primary_filepath": primary_filepath,
+            "secondary_filepath": secondary_filepath,
+            "crosswalk_filepath": crosswalk_filepath,
+            "group_by": group_by,
+            "order_by": order_by,
+            "include_metrics": include_metrics,
+            "filters": filters,
+            "return_query": return_query,
+            "include_geometry": include_geometry,
+            "geometry_filepath": geometry_filepath
+        }
+    )
+
+    if mq.include_geometry:
+        if "geometry" not in mq.group_by:
+            mq.group_by.append("geometry")
+
+    query = f"""
+        WITH joined as (
+            SELECT
+                sf.reference_time,
+                sf.value_time,
+                sf.location_id as secondary_location_id,
+                sf.value as secondary_value,
+                sf.configuration,
+                sf.measurement_unit,
+                sf.variable_name,
+                pf.value as primary_value,
+                pf.location_id as primary_location_id,
+                sf.value_time - sf.reference_time as lead_time
+                {generate_geometry_select_clause(mq)}
+            FROM read_parquet('{str(mq.secondary_filepath)}') sf
+            JOIN read_parquet('{str(mq.crosswalk_filepath)}') cf
+                on cf.secondary_location_id = sf.location_id
+            JOIN read_parquet('{str(mq.primary_filepath)}') pf
+                on cf.primary_location_id = pf.location_id
+                and sf.value_time = pf.value_time
+                and sf.measurement_unit = pf.measurement_unit
+                and sf.variable_name = pf.variable_name
+            {generate_geometry_join_clause(mq)}
+        ),
+        metrics AS (
+            SELECT
+                {",".join(mq.group_by)},
+                regr_intercept(secondary_value, primary_value) as intercept,
+                covar_pop(secondary_value, primary_value) as covariance,
+                corr(secondary_value, primary_value) as corr,
+                regr_r2(secondary_value, primary_value) as r_squared,
+                count(secondary_value) as secondary_count,
+                count(primary_value) as primary_count,
+                min(secondary_value) as secondary_minimum,
+                min(primary_value) as primary_minimum,
+                max(secondary_value) as secondary_maximum,
+                max(primary_value) as primary_maximum,
+                avg(secondary_value) as secondary_average,
+                avg(primary_value) as primary_average,
+                sum(secondary_value) as secondary_sum,
+                sum(primary_value) as primary_sum,
+                var_pop(secondary_value) as secondary_variance,
+                var_pop(primary_value) as primary_variance,
+                max(secondary_value) - max(primary_value) as max_value_delta,
+                sum(primary_value - secondary_value)/count(*) as bias
+            FROM
+                joined
+            {filters_to_sql(mq.filters)}
+            GROUP BY
+                {",".join(mq.group_by)}
+            ORDER BY
+                {",".join(mq.order_by)}
+        )
+        SELECT
+            metrics.*
+        FROM metrics
+    ;"""
+
+    if mq.return_query:
+        return query
+
+    df = duckdb.query(query).to_df()
+
+    if mq.include_geometry:
+        return df_to_gdf(df)
 
     return df
