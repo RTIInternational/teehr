@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union, Optional, Iterable
+from typing import Union, Optional, Iterable, List
 from datetime import datetime
 
 import dask
@@ -16,12 +16,16 @@ from teehr.loading.const_nwm import (
 
 
 @dask.delayed
-def gen_json(u: str, fs: fsspec.filesystem, json_dir: str) -> str:
-    """Helper function for creating single-file kerchunk reference jsons.
+def gen_json(
+    remote_path: str,
+    fs: fsspec.filesystem,
+    json_dir: Union[str, Path]
+) -> str:
+    """Helper function for creating single-file kerchunk reference JSONs.
 
     Parameters
     ----------
-    u : str
+    remote_path : str
         Path to the file in the remote location (ie, GCS bucket)
     fs : fsspec.filesystem
         fsspec filesystem mapped to GCS
@@ -39,28 +43,28 @@ def gen_json(u: str, fs: fsspec.filesystem, json_dir: str) -> str:
         default_fill_cache=False,
         default_cache_type="first"
     )
-    with fs.open(u, **so) as infile:
-        h5chunks = SingleHdf5ToZarr(infile, u, inline_threshold=300)
-        p = u.split("/")
+    with fs.open(remote_path, **so) as infile:
+        h5chunks = SingleHdf5ToZarr(infile, remote_path, inline_threshold=300)
+        p = remote_path.split("/")
         date = p[3]
         fname = p[5]
-        outf = f"{json_dir}{date}.{fname}.json"
+        outf = str(Path(json_dir, f"{date}.{fname}.json"))
         with open(outf, "wb") as f:
             f.write(ujson.dumps(h5chunks.translate()).encode())
     return outf
 
 
 def build_zarr_references(
-    component_paths: list[str],
-    json_dir: str,
+    remote_paths: List[str],
+    json_dir: Union[str, Path]
 ) -> list[str]:
     """Builds the single file zarr json reference files using kerchunk.
 
     Parameters
     ----------
-    component_paths : list
+    remote_paths : List[str]
         List of remote filepaths
-    json_dir : str
+    json_dir : str or Path
         Local directory for caching json files
 
     Returns
@@ -68,21 +72,25 @@ def build_zarr_references(
     list[str]
         List of paths to the zarr reference json files
     """
-    json_dir_obj = Path(json_dir)
-    if not json_dir_obj.exists():
-        json_dir_obj.mkdir(parents=True)
+    json_dir_path = Path(json_dir)
+    if not json_dir_path.exists():
+        json_dir_path.mkdir(parents=True)
 
     fs = fsspec.filesystem("gcs", anon=True)
 
     results = []
-    for u in component_paths:
-        results.append(gen_json(u, fs, json_dir))
+    for path in remote_paths:
+        results.append(gen_json(path, fs, json_dir))
     json_paths = dask.compute(results)[0]
 
     return sorted(json_paths)
 
 
-def validate_run_args(run: str, output_type: str, variable: str):
+def validate_run_args(
+        run: str,
+        output_type: str,
+        variable: str
+):
     """Validates user-provided NWMv22 run arguments.
 
     Parameters
@@ -222,7 +230,7 @@ def build_remote_nwm_filelist(
     start_dt: Union[str, datetime],
     ingest_days: int,
     t_minus_hours: Optional[Iterable[int]] = None,
-) -> list:
+) -> List[str]:
     """Assembles a list of remote NWM files in GCS based on specified user
         parameters.
 
@@ -243,7 +251,7 @@ def build_remote_nwm_filelist(
     Returns
     -------
     list
-        List of remote filepaths
+        List of remote filepaths (strings)
     """
     gcs_dir = f"gs://{NWM_BUCKET}"
     fs = fsspec.filesystem("gcs", anon=True)

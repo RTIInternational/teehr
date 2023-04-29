@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union, Iterable, Tuple, Optional
+from typing import Union, Iterable, Tuple, Optional, List
 from datetime import datetime
 
 import fsspec
@@ -18,7 +18,7 @@ from teehr.loading.utils_nwm import (
 
 
 def fetch_and_format_nwm_points(
-    json_paths: list,
+    json_paths: List[str],
     location_ids: Iterable[int],
     run: str,
     variable_name: str,
@@ -42,6 +42,11 @@ def fetch_and_format_nwm_points(
     output_parquet_dir : str
         Path to the directory for the final parquet files
     """
+
+    output_parquet_dir = Path(output_parquet_dir)
+    if not output_parquet_dir.exists():
+        output_parquet_dir.mkdir(parents=True)
+
     # Format file list into a dataframe and group by reference time
     days = []
     z_hours = []
@@ -79,7 +84,7 @@ def fetch_and_format(
     run: str,
     variable_name: str,
     output_parquet_dir: str,
-    concat_dims: list[str],
+    concat_dims: List[str],
 ) -> None:
     """Helper function to fetch and format the NWM data using Dask.
 
@@ -97,7 +102,7 @@ def fetch_and_format(
         Name of the NWM data variable to download
     output_parquet_dir : str
         Path to the directory for the final parquet files
-    concat_dims : list
+    concat_dims : list of strings
         List of dimensions to use when concatenating single file
         jsons to multifile
     """
@@ -138,7 +143,7 @@ def fetch_and_format(
     df_temp["reference_time"] = ref_time
     df_temp["configuration"] = run
     df_temp["variable_name"] = variable_name
-    df_temp["location_id"] = df_temp.location_id.astype(int)
+    df_temp["location_id"] = "nwm22-" + df_temp.location_id.astype(str)
     # Save to parquet
     ref_time_str = pd.to_datetime(ref_time).strftime("%Y%m%dT%HZ")
     parquet_filepath = Path(output_parquet_dir, f"{ref_time_str}.parquet")
@@ -161,12 +166,14 @@ def nwm_to_parquet(
     Parameters
     ----------
     run : str
-        NWM forecast category ("analysis_assim", "short_range", ...)
+        NWM forecast category.
+        (e.g., "analysis_assim", "short_range", ...)
     output_type : str
-        Output component of the configuration ("channel_rt", "reservoir", ...)
+        Output component of the configuration.
+        (e.g., "channel_rt", "reservoir", ...)
     variable_name : str
-        Name of the NWM data variable to download
-        ("streamflow", "velocity", ...)
+        Name of the NWM data variable to download.
+        (e.g., "streamflow", "velocity", ...)
     start_date : str or datetime
         Date to begin data ingest.
         Str formats can include YYYY-MM-DD or MM/DD/YYYY
@@ -191,10 +198,18 @@ def nwm_to_parquet(
     parquet files follow the timeseries data model described here:
     https://github.com/RTIInternational/teehr/blob/main/docs/data_models.md#timeseries  # noqa
     """
-    validate_run_args(run, output_type, variable_name)
+    validate_run_args(
+        run,
+        output_type,
+        variable_name
+    )
 
     component_paths = build_remote_nwm_filelist(
-        run, output_type, start_date, ingest_days, t_minus_hours,
+        run,
+        output_type,
+        start_date,
+        ingest_days,
+        t_minus_hours,
     )
 
     json_paths = build_zarr_references(

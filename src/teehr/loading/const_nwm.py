@@ -19,9 +19,16 @@ NWM22_CHANNEL_RT_VARS_NO_DA = [
     "velocity",
 ]
 
-NWM22_CHANNEL_RT_VARS_LONG = ["nudge", "streamflow", "velocity"]
+NWM22_CHANNEL_RT_VARS_LONG = [
+    "nudge",
+    "streamflow",
+    "velocity"
+]
 
-NWM22_TERRAIN_VARS = ["sfcheadsubrt", "zwattablrt"]
+NWM22_TERRAIN_VARS = [
+    "sfcheadsubrt",
+    "zwattablrt"
+]
 
 NWM22_RESERVOIR_VARS = [
     "inflow",
@@ -48,7 +55,14 @@ NWM22_LAND_VARS_ASSIM = [
     "SOIL_T",
 ]
 
-NWM22_LAND_VARS_SHORT = ["ACCET", "SNOWT_AVG", "SOILSAT_TOP", "FSNO", "SNOWH", "SNEQV"]
+NWM22_LAND_VARS_SHORT = [
+    "ACCET",
+    "SNOWT_AVG",
+    "SOILSAT_TOP",
+    "FSNO",
+    "SNOWH",
+    "SNEQV"
+]
 
 NWM22_LAND_VARS_MEDIUM = [
     "FSA",
