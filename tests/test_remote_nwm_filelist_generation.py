@@ -1,6 +1,5 @@
-import pickle
-
-import pytest
+import pandas as pd
+from pathlib import Path
 from teehr.loading.utils_nwm import build_remote_nwm_filelist
 
 
@@ -20,9 +19,9 @@ def test_remote_filelist():
         t_minus_hours,
     )
 
-    test_list_path = "data/test_remote_list.pkl"
-    with open(test_list_path, "rb") as pkl:
-        test_list = pickle.load(pkl)
+    test_list_path = Path("tests", "data", "test_remote_list.csv")
+    test_df = pd.read_csv(test_list_path)
+    test_list = test_df["filename"].to_list()
 
     test_list.sort()
     component_paths.sort()
