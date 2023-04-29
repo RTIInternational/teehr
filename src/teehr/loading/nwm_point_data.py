@@ -25,9 +25,9 @@ def fetch_and_format_nwm_points(
     output_parquet_dir: str,
     concat_dims=["time"],
 ):
-    """
-    Reads in the single reference jsons, subsets the NWM data based on provided IDs
-    and formats and saves the data as a parquet files usin Dask
+    """Reads in the single reference jsons, subsets the
+        NWM data based on provided IDs and formats and saves
+        the data as a parquet files using Dask.
 
     Parameters
     ----------
@@ -49,13 +49,24 @@ def fetch_and_format_nwm_points(
         filename = Path(path).name
         days.append(filename.split(".")[1])
         z_hours.append(filename.split(".")[3])
-    df_refs = pd.DataFrame({"day": days, "z_hour": z_hours, "filepath": json_paths})
+    df_refs = pd.DataFrame(
+        {
+            "day": days,
+            "z_hour": z_hours,
+            "filepath": json_paths
+        }
+    )
     gps = df_refs.groupby(["day", "z_hour"])
     results = []
     for gp in gps:
         results.append(
             fetch_and_format(
-                gp, location_ids, run, variable_name, output_parquet_dir, concat_dims
+                gp,
+                location_ids,
+                run,
+                variable_name,
+                output_parquet_dir,
+                concat_dims
             )
         )
     dask.compute(results)
@@ -70,13 +81,14 @@ def fetch_and_format(
     output_parquet_dir: str,
     concat_dims: list[str],
 ) -> None:
-    """Helper function to fetch and format the NWM data using Dask
+    """Helper function to fetch and format the NWM data using Dask.
 
     Parameters
     ----------
     gp : Tuple[Tuple[str, str], pd.Dataframe],
-        A tuple containing a tuple of (day, z_hour) and a dataframe of reference json filepaths
-        for a specific z_hour.  Results from pandas dataframe.groupby(["day", "z_hour"])
+        A tuple containing a tuple of (day, z_hour) and a dataframe of
+        reference json filepaths for a specific z_hour.  Results from
+        pandas dataframe.groupby(["day", "z_hour"])
     location_ids : Iterable[int]
         Array specifying NWM IDs of interest
     run : str
@@ -86,10 +98,12 @@ def fetch_and_format(
     output_parquet_dir : str
         Path to the directory for the final parquet files
     concat_dims : list
-        List of dimensions to use when concatenating single file jsons to multifile
+        List of dimensions to use when concatenating single file
+        jsons to multifile
     """
     _, df = gp
-    # Only combine if there is more than one file for this group, otherwise a warning is thrown
+    # Only combine if there is more than one file for this group,
+    # otherwise a warning is thrown
     if len(df.index) > 1:
         mzz = MultiZarrToZarr(
             df.filepath.tolist(),
@@ -151,9 +165,11 @@ def nwm_to_parquet(
     output_type : str
         Output component of the configuration ("channel_rt", "reservoir", ...)
     variable_name : str
-        Name of the NWM data variable to download ("streamflow", "velocity", ...)
+        Name of the NWM data variable to download
+        ("streamflow", "velocity", ...)
     start_date : str or datetime
-        Date to begin data ingest.  str formats can include YYYY-MM-DD or MM/DD/YYYY
+        Date to begin data ingest.
+        Str formats can include YYYY-MM-DD or MM/DD/YYYY
     ingest_days : int
         Number of days to ingest data after start date
     location_ids : Iterable[int]
@@ -163,15 +179,17 @@ def nwm_to_parquet(
     output_parquet_dir : str
         Path to the directory for the final parquet files
     t_minus_hours: Optional[Iterable[int]]
-        Specifies the look-back hours to include if an assimilation run is specified.
+        Specifies the look-back hours to include if an assimilation
+        run is specified.
 
-    The NWM configuration variables, including run, output_type, and variable_name are stored
-    in the NWM22_RUN_CONFIG dictionary in const_nwm.py.
+    The NWM configuration variables, including run, output_type, and
+    variable_name are stored in the NWM22_RUN_CONFIG dictionary in
+    const_nwm.py.
 
-    Forecast and assimilation data is grouped and saved one file per reference time,
-    using the file name convention "YYYYMMDDTHHZ".  The tabular output parquet files follow
-    the timeseries data model described here:
-    https://github.com/RTIInternational/teehr/blob/main/docs/data_models.md#timeseries
+    Forecast and assimilation data is grouped and saved one file per reference
+    time, using the file name convention "YYYYMMDDTHHZ".  The tabular output
+    parquet files follow the timeseries data model described here:
+    https://github.com/RTIInternational/teehr/blob/main/docs/data_models.md#timeseries  # noqa
     """
     validate_run_args(run, output_type, variable_name)
 
@@ -179,7 +197,10 @@ def nwm_to_parquet(
         run, output_type, start_date, ingest_days, t_minus_hours,
     )
 
-    json_paths = build_zarr_references(component_paths, json_dir)
+    json_paths = build_zarr_references(
+        component_paths,
+        json_dir
+    )
 
     fetch_and_format_nwm_points(
         json_paths,
