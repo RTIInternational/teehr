@@ -75,7 +75,7 @@ def test_timeseries_query_df():
         order_by=["location_id"],
         return_query=False,
     )
-    print(query_df)
+    # print(query_df)
     assert len(query_df) == 26*3
 
 
