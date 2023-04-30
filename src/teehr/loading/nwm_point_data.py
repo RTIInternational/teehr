@@ -16,6 +16,10 @@ from teehr.loading.utils_nwm import (
     build_zarr_references,
 )
 
+from teehr.loading.const_nwm import (
+    NWM22_UNIT_LOOKUP
+)
+
 
 def fetch_and_format_nwm_points(
     json_paths: List[str],
@@ -138,7 +142,9 @@ def fetch_and_format(
         inplace=True,
     )
     df_temp.dropna(subset=["value"], inplace=True)
-    df_temp["measurement_unit"] = ds_nwm_subset[variable_name].units
+    nwm22_units = ds_nwm_subset[variable_name].units
+    teehr_units = NWM22_UNIT_LOOKUP.get(nwm22_units, nwm22_units)
+    df_temp["measurement_unit"] = teehr_units
     ref_time = ds_nwm_subset.reference_time.values[0]
     df_temp["reference_time"] = ref_time
     df_temp["configuration"] = run

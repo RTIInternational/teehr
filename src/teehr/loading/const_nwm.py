@@ -319,3 +319,7 @@ NWM22_ANALYSIS_CONFIG = {
         "run_name_in_filepath": "analysis_assim_no_da",
     },
 }
+
+NWM22_UNIT_LOOKUP = {
+    "m3 s-1": "m3/s"
+}
