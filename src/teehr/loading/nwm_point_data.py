@@ -143,7 +143,7 @@ def fetch_and_format(
     df_temp["reference_time"] = ref_time
     df_temp["configuration"] = run
     df_temp["variable_name"] = variable_name
-    df_temp["location_id"] = "nwm22-" + df_temp.location_id.astype(str)
+    df_temp["location_id"] = "nwm22-" + df_temp.location_id.astype(int).astype(str)
     # Save to parquet
     ref_time_str = pd.to_datetime(ref_time).strftime("%Y%m%dT%HZ")
     parquet_filepath = Path(output_parquet_dir, f"{ref_time_str}.parquet")
