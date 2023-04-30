@@ -217,6 +217,7 @@ def test_metric_query_Value_time_filter():
     )
     # print(query_df)
     assert len(query_df) == 3
+    assert query_df["primary_count"].iloc[0] == 13
     assert isinstance(query_df, pd.DataFrame)
 
 
