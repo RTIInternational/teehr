@@ -71,31 +71,36 @@ def _format_filter_item(filter: Union[JoinedFilter, TimeseriesFilter]) -> str:
     formatted_string : str
 
     """
+    column = filter.column
+    if column == "value_time":
+        column = "sf.value_time"
+    if column == "reference_time":
+        column = "sf.reference_time"
 
     if isinstance(filter.value, str):
-        return f"""{filter.column} {filter.operator} '{filter.value}'"""
+        return f"""{column} {filter.operator} '{filter.value}'"""
     elif (
         isinstance(filter.value, int)
         or isinstance(filter.value, float)
     ):
-        return f"""{filter.column} {filter.operator} {filter.value}"""
+        return f"""{column} {filter.operator} {filter.value}"""
     elif isinstance(filter.value, datetime):
         dt_str = filter.value.strftime(SQL_DATETIME_STR_FORMAT)
-        return f"""{filter.column} {filter.operator} '{dt_str}'"""
+        return f"""{column} {filter.operator} '{dt_str}'"""
     elif (
         isinstance(filter.value, Iterable)
         and not isinstance(filter.value, str)
     ):
         value = _format_iterable_value(filter.value)
-        return f"""{filter.column} {filter.operator} {value}"""
+        return f"""{column} {filter.operator} {value}"""
     else:
         warnings.warn(
             "treating value as string because didn't know what else to do."
         )
-        return f"""{filter.column} {filter.operator} '{str(filter.value)}'"""
+        return f"""{column} {filter.operator} '{str(filter.value)}'"""
 
 
-def _filters_to_sql(filters: List[JoinedFilter]) -> List[str]:
+def filters_to_sql(filters: List[JoinedFilter]) -> List[str]:
     """Generate SQL where clause string from filters.
 
     Parameters
@@ -118,7 +123,7 @@ def _filters_to_sql(filters: List[JoinedFilter]) -> List[str]:
     return "--no where clause"
 
 
-def _geometry_join_clause(
+def geometry_join_clause(
         q: Union[MetricQuery, JoinedTimeseriesQuery]
 ) -> str:
     """Generate the join clause for"""
@@ -129,7 +134,7 @@ def _geometry_join_clause(
     return ""
 
 
-def _geometry_select_clause(
+def geometry_select_clause(
         q: Union[MetricQuery, JoinedTimeseriesQuery]
 ) -> str:
     if q.include_geometry:
@@ -137,7 +142,7 @@ def _geometry_select_clause(
     return ""
 
 
-def _metric_geometry_join_clause(
+def metric_geometry_join_clause(
         q: Union[MetricQuery, JoinedTimeseriesQuery]
 ) -> str:
     """Generate the join clause for"""

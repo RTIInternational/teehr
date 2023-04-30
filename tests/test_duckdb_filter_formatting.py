@@ -63,7 +63,7 @@ def test_filter_datetime():
         value=datetime(2023, 4, 1, 23, 30)
     )
     filter_str = tqu._format_filter_item(filter)
-    assert filter_str == "reference_time = '2023-04-01 23:30:00'"
+    assert filter_str == "sf.reference_time = '2023-04-01 23:30:00'"
 
 
 def test_in_filter_string_wrong_operator():
@@ -123,7 +123,7 @@ def test_in_filter_datetime():
         value=[datetime(2023, 4, 1, 23, 30), datetime(2023, 4, 2, 23, 30)]
     )
     filter_str = tqu._format_filter_item(filter)
-    assert filter_str == "reference_time in ('2023-04-01 23:30:00','2023-04-02 23:30:00')"  # noqa
+    assert filter_str == "sf.reference_time in ('2023-04-01 23:30:00','2023-04-02 23:30:00')"  # noqa
 
 
 if __name__ == "__main__":

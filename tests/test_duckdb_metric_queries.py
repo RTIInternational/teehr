@@ -190,6 +190,36 @@ def test_metric_query_df_all():
     assert isinstance(query_df, pd.DataFrame)
 
 
+def test_metric_query_Value_time_filter():
+    group_by = ["primary_location_id", "reference_time"]
+    query_df = tqu.get_metrics(
+        primary_filepath=PRIMARY_FILEPATH,
+        secondary_filepath=SECONDARY_FILEPATH,
+        crosswalk_filepath=CROSSWALK_FILEPATH,
+        geometry_filepath=GEOMETRY_FILEPATH,
+        group_by=group_by,
+        order_by=["primary_location_id", "reference_time"],
+        include_metrics="all",
+        return_query=False,
+        include_geometry=False,
+        filters=[
+            {
+                "column": "value_time",
+                "operator": ">=",
+                "value": f"{'2022-01-01 13:00:00'}"
+            },
+            {
+                "column": "reference_time",
+                "operator": ">=",
+                "value": f"{'2022-01-01 02:00:00'}"
+            }
+        ],
+    )
+    # print(query_df)
+    assert len(query_df) == 3
+    assert isinstance(query_df, pd.DataFrame)
+
+
 if __name__ == "__main__":
     test_metric_query_str()
     test_metric_query_df()
@@ -200,4 +230,5 @@ if __name__ == "__main__":
     test_metric_query_df_2()
     test_metric_query_df_time_metrics()
     test_metric_query_df_all()
+    test_metric_query_Value_time_filter()
     pass
