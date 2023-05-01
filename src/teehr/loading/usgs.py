@@ -54,7 +54,7 @@ def _format_df(df: pd.DataFrame) -> pd.DataFrame:
     df.rename(columns={"usgs_site_code": "location_id"}, inplace=True)
     df["location_id"] = "usgs-" + df["location_id"].astype(str)
     df["configuration"] = "usgs_gage_data"
-    df["reference_time"] = None
+    df["reference_time"] = df["value_time"]
     return df[[
         "location_id",
         "reference_time",
@@ -108,8 +108,8 @@ def _fetch_usgs(
 @validate_arguments()
 def usgs_to_parquet(
     sites: List[str],
-    start_date: datetime,
-    end_date: datetime,
+    start_date: Union[str, datetime, pd.Timestamp],
+    end_date: Union[str, datetime, pd.Timestamp],
     output_parquet_dir: Union[str, Path],
     chunk_by: Union[ChunkByEnum, None] = None,
     filter_to_hourly: bool = True,
@@ -122,6 +122,7 @@ def usgs_to_parquet(
     ----------
     sites : List[str]
         List of USGS gages sites to fetch.
+        Must be string to preserve the leading 0.
     start_date : datetime
         Start time of data to fetch.
     end_date : datetime
@@ -141,13 +142,13 @@ def usgs_to_parquet(
         Multiplies values by 0.3048**3 and sets `measurement_units` to `m3/s`
     """
 
+    start_date = pd.Timestamp(start_date)
+    end_date = pd.Timestamp(end_date)
+
     # Check if output_parquet_dir is an existing dir
     output_dir = Path(output_parquet_dir)
-    if not output_dir.is_dir():
-        raise ValueError(
-            f"output_parquet_dir ({output_parquet_dir}) "
-            "must be an existing directory"
-        )
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True)
 
     # Fetch all at once
     if chunk_by is None:
@@ -205,7 +206,7 @@ def usgs_to_parquet(
             # usgs_df.to_csv(output_filepath)
             # print(usgs_df)
 
-    if chunk_by == "site":
+    if chunk_by == "location_id":
         for site in sites:
             usgs_df = _fetch_usgs(
                 sites=[site],
@@ -230,6 +231,7 @@ def usgs_to_parquet(
 
 
 if __name__ == "__main__":
+    # Examples
     usgs_to_parquet(
         sites=[
             "02449838",
@@ -237,8 +239,8 @@ if __name__ == "__main__":
         ],
         start_date=datetime(2023, 2, 20),
         end_date=datetime(2023, 2, 25),
-        output_parquet_dir=Path(Path().home(), "cache"),
-        chunk_by="site"
+        output_parquet_dir=Path(Path().home(), "temp", "usgs"),
+        chunk_by="location_id"
     )
 
     usgs_to_parquet(
@@ -248,7 +250,7 @@ if __name__ == "__main__":
         ],
         start_date=datetime(2023, 2, 20),
         end_date=datetime(2023, 2, 25),
-        output_parquet_dir=Path(Path().home(), "cache"),
+        output_parquet_dir=Path(Path().home(), "temp", "usgs"),
         chunk_by="day"
     )
 
@@ -259,5 +261,6 @@ if __name__ == "__main__":
         ],
         start_date=datetime(2023, 2, 20),
         end_date=datetime(2023, 2, 25),
-        output_parquet_dir=Path(Path().home(), "cache"),
+        output_parquet_dir=Path(Path().home(), "temp", "usgs"),
     )
+    pass

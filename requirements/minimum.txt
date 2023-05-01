@@ -10,3 +10,4 @@ ujson
 kerchunk
 gcsfs
 s3fs
+zarr
