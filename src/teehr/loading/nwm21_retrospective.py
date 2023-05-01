@@ -44,11 +44,16 @@ def _da_to_df(da: xr.DataArray) -> pd.DataFrame:
     df["configuration"] = "nwm22_retrospective"
     df["reference_time"] = df["time"]
     df.rename(
-        columns={"time": "value_time", "feature_id": "location_id"},
+        columns={
+            "time": "value_time",
+            "feature_id": "location_id",
+            da.name: "value"
+        },
         inplace=True
     )
     df.drop(columns=["latitude", "longitude"], inplace=True)
 
+    df["location_id"] = "nwm22-" + df["location_id"].astype(str)
     df["location_id"] = df["location_id"].astype(str).astype("category")
     df["measurement_unit"] = df["measurement_unit"].astype("category")
     df["variable_name"] = df["variable_name"].astype("category")

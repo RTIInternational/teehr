@@ -160,11 +160,12 @@ def usgs_to_parquet(
             filter_no_data=filter_no_data,
             convert_to_si=convert_to_si
         )
-        output_filepath = Path(output_parquet_dir, "usgs.parquet")
-        usgs_df.to_parquet(output_filepath)
-        # output_filepath = Path(usgs.output_parquet_dir, "usgs.csv")
-        # usgs_df.to_csv(output_filepath)
-        # print(usgs_df)
+        if len(usgs_df) > 0:
+            output_filepath = Path(output_parquet_dir, "usgs.parquet")
+            usgs_df.to_parquet(output_filepath)
+            # output_filepath = Path(usgs.output_parquet_dir, "usgs.csv")
+            # usgs_df.to_csv(output_filepath)
+            # print(usgs_df)
 
     if chunk_by == "day":
         # Determine number of days to fetch
@@ -194,17 +195,18 @@ def usgs_to_parquet(
                 filter_no_data=filter_no_data,
                 convert_to_si=convert_to_si
             )
-            output_filepath = Path(
-                output_parquet_dir,
-                f"{start_dt.strftime('%Y-%m-%d')}.parquet"
-            )
-            usgs_df.to_parquet(output_filepath)
-            # output_filepath = Path(
-            #     usgs.output_parquet_dir,
-            #     f"{start_dt.strftime('%Y-%m-%d')}.csv"
-            # )
-            # usgs_df.to_csv(output_filepath)
-            # print(usgs_df)
+            if len(usgs_df) > 0:
+                output_filepath = Path(
+                    output_parquet_dir,
+                    f"{start_dt.strftime('%Y-%m-%d')}.parquet"
+                )
+                usgs_df.to_parquet(output_filepath)
+                # output_filepath = Path(
+                #     usgs.output_parquet_dir,
+                #     f"{start_dt.strftime('%Y-%m-%d')}.csv"
+                # )
+                # usgs_df.to_csv(output_filepath)
+                # print(usgs_df)
 
     if chunk_by == "location_id":
         for site in sites:
@@ -216,18 +218,18 @@ def usgs_to_parquet(
                 filter_no_data=filter_no_data,
                 convert_to_si=convert_to_si
             )
-
-            output_filepath = Path(
-                output_parquet_dir,
-                f"{site}.parquet"
-            )
-            usgs_df.to_parquet(output_filepath)
-            # output_filepath = Path(
-            #     usgs.output_parquet_dir,
-            #     f"{site}.csv"
-            # )
-            # usgs_df.to_csv(output_filepath)
-            # print(usgs_df)
+            if len(usgs_df) > 0:
+                output_filepath = Path(
+                    output_parquet_dir,
+                    f"{site}.parquet"
+                )
+                usgs_df.to_parquet(output_filepath)
+                # output_filepath = Path(
+                #     usgs.output_parquet_dir,
+                #     f"{site}.csv"
+                # )
+                # usgs_df.to_csv(output_filepath)
+                # print(usgs_df)
 
 
 if __name__ == "__main__":
