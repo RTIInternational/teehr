@@ -157,7 +157,7 @@ def nwm_retro_to_parquet(
             # print(df)
 
     # fetch data by site
-    if chunk_by == "site":
+    if chunk_by == "location_id":
         for location_id in location_ids:
             da = ds[variable_name].sel(
                 feature_id=location_id,
@@ -206,6 +206,6 @@ if __name__ == "__main__":
         end_date=datetime(2000, 1, 2, 23),
         location_ids=LOCATION_IDS,
         output_parquet_dir=Path(Path().home(), "temp", "nwm22_retrospective"),
-        chunk_by="site",
+        chunk_by="location_id",
     )
     pass
