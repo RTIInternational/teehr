@@ -31,9 +31,9 @@ The `location` data model is used to store geographic entities.  This could incl
 The `attributes` data model is used to store other data about the location.  This could possibly replaced by a generic `key:value` table.
 
 - `location_id`: [string] Primary location ID of the location.
-- `attribute_name`: [string] name of threshold
-- `attribute_value`: [string] threshold value
-- `attribute_unit`: [string] threshold value
+- `attribute_name`: [string] Name of attribute (i.e., 2-year flow, eco-region)
+- `attribute_value`: [string | float] Attribute  value
+- `attribute_unit`: [string] Units of attribute value, if any.
 
 ## Data Model Diagram
 The following is a visual representation of the data model structure.
