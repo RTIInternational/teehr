@@ -19,16 +19,9 @@ NWM22_CHANNEL_RT_VARS_NO_DA = [
     "velocity",
 ]
 
-NWM22_CHANNEL_RT_VARS_LONG = [
-    "nudge",
-    "streamflow",
-    "velocity"
-]
+NWM22_CHANNEL_RT_VARS_LONG = ["nudge", "streamflow", "velocity"]
 
-NWM22_TERRAIN_VARS = [
-    "sfcheadsubrt",
-    "zwattablrt"
-]
+NWM22_TERRAIN_VARS = ["sfcheadsubrt", "zwattablrt"]
 
 NWM22_RESERVOIR_VARS = [
     "inflow",
@@ -55,14 +48,7 @@ NWM22_LAND_VARS_ASSIM = [
     "SOIL_T",
 ]
 
-NWM22_LAND_VARS_SHORT = [
-    "ACCET",
-    "SNOWT_AVG",
-    "SOILSAT_TOP",
-    "FSNO",
-    "SNOWH",
-    "SNEQV"
-]
+NWM22_LAND_VARS_SHORT = ["ACCET", "SNOWT_AVG", "SOILSAT_TOP", "FSNO", "SNOWH", "SNEQV"]
 
 NWM22_LAND_VARS_MEDIUM = [
     "FSA",
@@ -99,6 +85,17 @@ NWM22_LAND_VARS_LONG = [
     "CANWAT",
     "SOILSAT_TOP",
     "SOILSAT",
+]
+
+NWM22_FORCING_VARS = [
+    "U2D",
+    "V2D",
+    "T2D",
+    "Q2D",
+    "LWDOWN",
+    "SWDOWN",
+    "RAINRATE",
+    "PSFC",
 ]
 
 NWM22_RUN_CONFIG = {
@@ -255,6 +252,10 @@ NWM22_RUN_CONFIG = {
         "land_4": NWM22_LAND_VARS_LONG,
         "reservoir_4": NWM22_RESERVOIR_VARS,
     },
+    "forcing_medium_range": {"forcing": NWM22_FORCING_VARS},
+    "forcing_short_range": {"forcing": NWM22_FORCING_VARS},
+    "forcing_short_range_hawaii": {"forcing": NWM22_FORCING_VARS},
+    "forcing_short_range_puertorico": {"forcing": NWM22_FORCING_VARS},
 }
 
 NWM22_ANALYSIS_CONFIG = {
@@ -320,6 +321,9 @@ NWM22_ANALYSIS_CONFIG = {
     },
 }
 
-NWM22_UNIT_LOOKUP = {
-    "m3 s-1": "m3/s"
-}
+NWM22_UNIT_LOOKUP = {"m3 s-1": "m3/s"}
+
+NWM22_HUC10_FORCING_WEIGHTS = "shared/rti-eval/org/geo/wbdhu10_forcing_weights.npy"
+NWM22_HUC10_FORCING_INDS = (
+    "shared/rti-eval/org/geo/wbdhu10_medium_range_weights.pkl.json"
+)

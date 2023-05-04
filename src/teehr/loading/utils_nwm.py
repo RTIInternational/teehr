@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union, Optional, Iterable, List
+from typing import Union, Optional, Iterable, List, Dict, Tuple
 from datetime import datetime
 
 import dask
@@ -7,19 +7,64 @@ import fsspec
 import ujson  # fast json
 from kerchunk.hdf import SingleHdf5ToZarr
 import pandas as pd
+import numpy as np
+import xarray as xr
 
 from teehr.loading.const_nwm import (
     NWM22_RUN_CONFIG,
     NWM22_ANALYSIS_CONFIG,
-    NWM_BUCKET
+    NWM_BUCKET,
 )
+
+
+def get_xarray_dataset(zarr_json: str) -> xr.Dataset:
+    """Retrieve a blob from the data service as xarray.Dataset.
+
+    Parameters
+    ----------
+    zarr_json: str, required
+        Name of blob to retrieve.
+
+    Returns
+    -------
+    ds : xarray.Dataset
+        The data stored in the blob.
+
+    """
+    backend_args = {
+        "consolidated": False,
+        "storage_options": {
+            "fo": zarr_json,
+            "remote_protocol": "gcs",
+            "remote_options": {"anon": True},
+        },
+    }
+    ds = xr.open_dataset(
+        "reference://", engine="zarr", backend_kwargs=backend_args
+    )  # noqa
+
+    return ds
+
+
+def list_to_np(l):
+    return tuple([np.array(a) for a in l])
+
+
+def load_zonal_weights(
+    zonal_indices_filepath: str,
+) -> Dict[int, Tuple[Iterable, Iterable]]:
+    """Load dictionary of row/col indices for zones of interest"""
+    with open(zonal_indices_filepath, "r") as f:
+        j = f.read()
+
+    # Back to dict
+    zonal_indices = {k: list_to_np(v) for k, v in ujson.loads(j).items()}
+    return zonal_indices
 
 
 @dask.delayed
 def gen_json(
-    remote_path: str,
-    fs: fsspec.filesystem,
-    json_dir: Union[str, Path]
+    remote_path: str, fs: fsspec.filesystem, json_dir: Union[str, Path]
 ) -> str:
     """Helper function for creating single-file kerchunk reference JSONs.
 
@@ -41,7 +86,7 @@ def gen_json(
         mode="rb",
         anon=True,
         default_fill_cache=False,
-        default_cache_type="first"
+        default_cache_type="first",  # noqa
     )
     with fs.open(remote_path, **so) as infile:
         h5chunks = SingleHdf5ToZarr(infile, remote_path, inline_threshold=300)
@@ -55,8 +100,7 @@ def gen_json(
 
 
 def build_zarr_references(
-    remote_paths: List[str],
-    json_dir: Union[str, Path]
+    remote_paths: List[str], json_dir: Union[str, Path]
 ) -> list[str]:
     """Builds the single file zarr json reference files using kerchunk.
 
@@ -86,11 +130,7 @@ def build_zarr_references(
     return sorted(json_paths)
 
 
-def validate_run_args(
-        run: str,
-        output_type: str,
-        variable: str
-):
+def validate_run_args(run: str, output_type: str, variable: str):
     """Validates user-provided NWMv22 run arguments.
 
     Parameters
@@ -212,8 +252,7 @@ def construct_assim_paths(
                 for tm in t_minus:
                     if cycle_hr2 > 0:
                         dt_add = dt + pd.Timedelta(
-                            cycle_hr + cycle_hr2,
-                            unit="hours"
+                            cycle_hr + cycle_hr2, unit="hours"
                         )
                         hr_add = dt_add.hour
                         if tm > hr_add:
@@ -260,7 +299,9 @@ def build_remote_nwm_filelist(
     if "assim" in run:
         cycle_z_hours = NWM22_ANALYSIS_CONFIG[run]["cycle_z_hours"]
         domain = NWM22_ANALYSIS_CONFIG[run]["domain"]
-        run_name_in_filepath = NWM22_ANALYSIS_CONFIG[run]["run_name_in_filepath"]  # noqa
+        run_name_in_filepath = NWM22_ANALYSIS_CONFIG[run][
+            "run_name_in_filepath"
+        ]  # noqa
         max_lookback = NWM22_ANALYSIS_CONFIG[run]["num_lookback_hrs"]
 
         if max(t_minus_hours) > max_lookback - 1:
@@ -289,6 +330,6 @@ def build_remote_nwm_filelist(
             dt_str = dt.strftime("%Y%m%d")
             file_path = f"{gcs_dir}/nwm.{dt_str}/{run}/nwm.*.{output_type}*"
             component_paths.extend(fs.glob(file_path))
-        component_paths = sorted([f"gs://{path}" for path in component_paths])
+        component_paths = sorted([f"gcs://{path}" for path in component_paths])
 
     return component_paths
