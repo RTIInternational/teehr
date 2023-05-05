@@ -1,11 +1,10 @@
 from pathlib import Path
-from typing import Union, Optional, Iterable, List, Dict, Tuple
+from typing import Union, Optional, Iterable, List
 from datetime import datetime
 
 import dask
 import fsspec
 import ujson  # fast json
-import json
 from kerchunk.hdf import SingleHdf5ToZarr
 import pandas as pd
 import numpy as np
@@ -28,39 +27,32 @@ def np_to_list(t):
     return [a.tolist() for a in t]
 
 
-def save_weights_dict(weights: dict, filepath: str):
-    # To json
-    j = json.dumps({k: np_to_list(v) for k, v in weights.items()})
-
-    # Write to disk
-    with open(filepath, "w") as f:
-        f.write(j)
-
-
 def get_dataset(zarr_json: str) -> xr.Dataset:
     """Retrieve a blob from the data service as xarray.Dataset.
 
     Parameters
     ----------
-    zarr_json: str, required
-        Filepath to the zarr reference json file.
+    blob_name: str, required
+        Name of blob to retrieve.
 
     Returns
     -------
     ds : xarray.Dataset
-        The data stored in the remote blob.
+        The data stored in the blob.
 
     """
     backend_args = {
-        "consolidated": True,
+        "consolidated": False,
         "storage_options": {
             "fo": zarr_json,
             "remote_protocol": "gcs",
             "remote_options": {"anon": True},
         },
-    }  # noqa
+    }
     ds = xr.open_dataset(
-        "reference://", engine="zarr", backend_kwargs=backend_args
+        "reference://",
+        engine="zarr",
+        backend_kwargs=backend_args,
     )
 
     return ds
@@ -68,18 +60,6 @@ def get_dataset(zarr_json: str) -> xr.Dataset:
 
 def list_to_np(lst):
     return tuple([np.array(a) for a in lst])
-
-
-def load_zonal_weights(
-    zonal_indices_filepath: str,
-) -> Dict[int, Tuple[Iterable, Iterable]]:
-    """Load dictionary of row/col indices for zones of interest"""
-    with open(zonal_indices_filepath, "r") as f:
-        j = f.read()
-
-    # Back to dict
-    zonal_indices = {k: list_to_np(v) for k, v in ujson.loads(j).items()}
-    return zonal_indices
 
 
 @dask.delayed

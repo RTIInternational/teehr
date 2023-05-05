@@ -1,7 +1,8 @@
 from pathlib import Path
-from typing import Union, Iterable, Tuple, Optional, List, Dict
+from typing import Union, Iterable, Optional, List
 from datetime import datetime
 
+import xarray as xr
 import numpy as np
 import pandas as pd
 import dask
@@ -11,7 +12,6 @@ from teehr.loading.utils_nwm import (
     validate_run_args,
     build_remote_nwm_filelist,
     build_zarr_references,
-    load_zonal_weights,
     get_dataset,
 )
 
@@ -20,24 +20,11 @@ from teehr.loading.const_nwm import (
 )
 
 
-def compute_zonal_mean(da, weights_filepath) -> pd.DataFrame:
-    # Read in the weights dictionary
-    weights_dict = load_zonal_weights(weights_filepath)
-
-    arr_2d = da.values[0]
-    arr_2d[arr_2d == da.rio.nodata] = np.nan
-
-    mean_dict = {}
-    for huc10, weights in weights_dict.items():
-        mean_dict[huc10] = np.nanmean(arr_2d[weights[0:2]] * weights[2])
-
-    df = pd.DataFrame.from_dict(mean_dict, orient="index", columns=["value"])
-    df.reset_index(inplace=True)
-
-    return df
-
-
-def compute_zonal_mean_parquet(da, weights_filepath) -> pd.DataFrame:
+def compute_zonal_mean(
+    da: xr.DataArray, weights_filepath: str
+) -> pd.DataFrame:
+    """Compute zonal mean for given zones and weights"""
+    # Read weights file
     weights_df = pd.read_parquet(
         weights_filepath, columns=["row", "col", "weight", "zone"]
     )
@@ -52,19 +39,21 @@ def compute_zonal_mean_parquet(da, weights_filepath) -> pd.DataFrame:
     weights_df["value"] = var_values * weights_df.weight.values
     # Compute mean
     df = weights_df.groupby(by="zone")["value"].mean().to_frame()
-
     df.reset_index(inplace=True)
 
     return df
 
 
 @dask.delayed
-def process_single_file(singlefile, run, variable_name, weights_filepath):
-    import xarray as xr
-
-    ds = get_dataset(singlefile))
+def process_single_file(
+    singlefile: str, run: str, variable_name: str, weights_filepath: str
+):
+    """Compute zonal mean for a single json reference file and format
+    to a dataframe using the TEEHR data model"""
+    ds = get_dataset(singlefile)
     ref_time = ds.reference_time.values[0]
-    units = ds[variable_name].attrs["units"]
+    nwm22_units = ds[variable_name].attrs["units"]
+    teehr_units = NWM22_UNIT_LOOKUP.get(nwm22_units, nwm22_units)
     value_time = ds.time.values[0]
     da = ds[variable_name]
 
@@ -73,7 +62,7 @@ def process_single_file(singlefile, run, variable_name, weights_filepath):
 
     df["value_time"] = value_time
     df["reference_time"] = ref_time
-    df["measurement_unit"] = units
+    df["measurement_unit"] = teehr_units
     df["configuration"] = run
     df["variable_name"] = variable_name
 
@@ -86,10 +75,10 @@ def fetch_and_format_nwm_grids(
     variable_name: str,
     output_parquet_dir: str,
     zonal_weights_filepath: str,
-):
+) -> None:
     """
     Reads in the single reference jsons, subsets the NWM data based on
-     provided IDs and formats and saves the data as a parquet files
+    provided IDs and formats and saves the data as a parquet files
     """
     output_parquet_dir = Path(output_parquet_dir)
     if not output_parquet_dir.exists():
@@ -111,7 +100,7 @@ def fetch_and_format_nwm_grids(
         _, df = gp
 
         results = []
-        for i, singlefile in enumerate(df.filepath.tolist()):
+        for singlefile in df.filepath.tolist():
             results.append(
                 process_single_file(
                     singlefile,
@@ -120,18 +109,21 @@ def fetch_and_format_nwm_grids(
                     zonal_weights_filepath,
                 )
             )
-        z_hour_df = dask.compute(results)
+        z_hour_df = pd.concat(dask.compute(results)[0])
 
         # Save to parquet
         yrmoday = df.day.iloc[0]
         z_hour = df.z_hour.iloc[0][1:3]
         ref_time_str = f"{yrmoday}T{z_hour}Z"
-        parquet_filepath = Path(output_parquet_dir, f"{ref_time_str}.parquet")
+        parquet_filepath = Path(
+            Path(output_parquet_dir), f"{ref_time_str}.parquet"
+        )
+        z_hour_df.sort_values(["zone", "value_time"], inplace=True)
         z_hour_df.to_parquet(parquet_filepath)
 
 
 @validate_arguments
-def nwm_to_parquet(
+def nwm_grids_to_parquet(
     run: str,
     output_type: str,
     variable_name: str,
@@ -143,8 +135,8 @@ def nwm_to_parquet(
     t_minus_hours: Optional[Iterable[int]] = None,
 ):
     """
-    Fetches NWM gridded data, calculates zonal statistics (mean) of selected variable
-     for given zones, converts and saves to TEEHR tabular format
+    Fetches NWM gridded data, calculates zonal statistics (mean) of selected
+    variable for given zones, converts and saves to TEEHR tabular format
 
     Parameters
     ----------
@@ -186,10 +178,6 @@ def nwm_to_parquet(
     """
     validate_run_args(run, output_type, variable_name)
 
-    process_single_file(
-        single_filepath, run, variable_name, zonal_weights_filepath
-    )
-
     component_paths = build_remote_nwm_filelist(
         run,
         output_type,
@@ -211,14 +199,7 @@ def nwm_to_parquet(
 
 if __name__ == "__main__":
     # For local testing
-
-    json_paths = [
-        "/home/sam/forcing_json/nwm.20201218.nwm.t00z.medium_range.forcing.f001.conus.nc.json",  # noqa
-        "/home/sam/forcing_json/nwm.20201218.nwm.t00z.medium_range.forcing.f002.conus.nc.json",  # noqa
-    ]
-
     single_filepath = "/mnt/sf_shared/data/ciroh/nwm.20201218_forcing_short_range_nwm.t00z.short_range.forcing.f001.conus.nc"  # noqa
-
     weights_json = (
         "/mnt/sf_shared/data/ciroh/wbdhu10_medium_range_weights_SJL.pkl.json"
     )
