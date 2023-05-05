@@ -48,7 +48,14 @@ NWM22_LAND_VARS_ASSIM = [
     "SOIL_T",
 ]
 
-NWM22_LAND_VARS_SHORT = ["ACCET", "SNOWT_AVG", "SOILSAT_TOP", "FSNO", "SNOWH", "SNEQV"]
+NWM22_LAND_VARS_SHORT = [
+    "ACCET",
+    "SNOWT_AVG",
+    "SOILSAT_TOP",
+    "FSNO",
+    "SNOWH",
+    "SNEQV",
+]
 
 NWM22_LAND_VARS_MEDIUM = [
     "FSA",
@@ -323,7 +330,25 @@ NWM22_ANALYSIS_CONFIG = {
 
 NWM22_UNIT_LOOKUP = {"m3 s-1": "m3/s"}
 
-NWM22_HUC10_FORCING_WEIGHTS = "shared/rti-eval/org/geo/wbdhu10_forcing_weights.npy"
-NWM22_HUC10_FORCING_INDS = (
-    "shared/rti-eval/org/geo/wbdhu10_medium_range_weights.pkl.json"
-)
+# NWM22_HUC10_FORCING_WEIGHTS = (
+#     "shared/rti-eval/org/geo/wbdhu10_forcing_weights.npy"
+# )
+# NWM22_HUC10_FORCING_INDS = (
+#     "shared/rti-eval/org/geo/wbdhu10_medium_range_weights.pkl.json"
+# )
+
+# WKT strings extracted from NWM grids
+CONUS_NWM_WKT = 'PROJCS["Lambert_Conformal_Conic",GEOGCS["GCS_Sphere",DATUM["D_Sphere",SPHEROID["Sphere",6370000.0,0.0]], \
+PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["false_easting",0.0],\
+PARAMETER["false_northing",0.0],PARAMETER["central_meridian",-97.0],PARAMETER["standard_parallel_1",30.0],\
+PARAMETER["standard_parallel_2",60.0],PARAMETER["latitude_of_origin",40.0],UNIT["Meter",1.0]]'
+
+HI_NWM_WKT = 'PROJCS["Lambert_Conformal_Conic",GEOGCS["GCS_Sphere",DATUM["D_Sphere",SPHEROID["Sphere",6370000.0,0.0]],\
+PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["false_easting",0.0],\
+PARAMETER["false_northing",0.0],PARAMETER["central_meridian",-157.42],PARAMETER["standard_parallel_1",10.0],\
+PARAMETER["standard_parallel_2",30.0],PARAMETER["latitude_of_origin",20.6],UNIT["Meter",1.0]]'
+
+PR_NWM_WKT = 'PROJCS["Sphere_Lambert_Conformal_Conic",GEOGCS["GCS_Sphere",DATUM["D_Sphere",SPHEROID["Sphere",6370000.0,0.0]],\
+PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["false_easting",0.0],\
+PARAMETER["false_northing",0.0],PARAMETER["central_meridian",-65.91],PARAMETER["standard_parallel_1",18.1],\
+PARAMETER["standard_parallel_2",18.1],PARAMETER["latitude_of_origin",18.1],UNIT["Meter",1.0]]'

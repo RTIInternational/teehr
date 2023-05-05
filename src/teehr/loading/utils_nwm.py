@@ -5,10 +5,12 @@ from datetime import datetime
 import dask
 import fsspec
 import ujson  # fast json
+import json
 from kerchunk.hdf import SingleHdf5ToZarr
 import pandas as pd
 import numpy as np
 import xarray as xr
+import geopandas as gpd
 
 from teehr.loading.const_nwm import (
     NWM22_RUN_CONFIG,
@@ -17,37 +19,55 @@ from teehr.loading.const_nwm import (
 )
 
 
-def get_xarray_dataset(zarr_json: str) -> xr.Dataset:
+def parquet_to_gdf(parquet_filepath: str) -> gpd.GeoDataFrame:
+    gdf = gpd.read_parquet(parquet_filepath)
+    return gdf
+
+
+def np_to_list(t):
+    return [a.tolist() for a in t]
+
+
+def save_weights_dict(weights: dict, filepath: str):
+    # To json
+    j = json.dumps({k: np_to_list(v) for k, v in weights.items()})
+
+    # Write to disk
+    with open(filepath, "w") as f:
+        f.write(j)
+
+
+def get_dataset(zarr_json: str) -> xr.Dataset:
     """Retrieve a blob from the data service as xarray.Dataset.
 
     Parameters
     ----------
     zarr_json: str, required
-        Name of blob to retrieve.
+        Filepath to the zarr reference json file.
 
     Returns
     -------
     ds : xarray.Dataset
-        The data stored in the blob.
+        The data stored in the remote blob.
 
     """
     backend_args = {
-        "consolidated": False,
+        "consolidated": True,
         "storage_options": {
             "fo": zarr_json,
             "remote_protocol": "gcs",
             "remote_options": {"anon": True},
         },
-    }
+    }  # noqa
     ds = xr.open_dataset(
         "reference://", engine="zarr", backend_kwargs=backend_args
-    )  # noqa
+    )
 
     return ds
 
 
-def list_to_np(l):
-    return tuple([np.array(a) for a in l])
+def list_to_np(lst):
+    return tuple([np.array(a) for a in lst])
 
 
 def load_zonal_weights(

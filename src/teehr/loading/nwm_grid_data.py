@@ -12,7 +12,7 @@ from teehr.loading.utils_nwm import (
     build_remote_nwm_filelist,
     build_zarr_references,
     load_zonal_weights,
-    get_xarray_dataset,
+    get_dataset,
 )
 
 from teehr.loading.const_nwm import (
@@ -28,22 +28,44 @@ def compute_zonal_mean(da, weights_filepath) -> pd.DataFrame:
     arr_2d[arr_2d == da.rio.nodata] = np.nan
 
     mean_dict = {}
-    for huc10, inds in weights_dict.items():
-        mean_dict[huc10] = np.nanmean(arr_2d[inds])
-        # TODO: Apply the weights here as well
+    for huc10, weights in weights_dict.items():
+        mean_dict[huc10] = np.nanmean(arr_2d[weights[0:2]] * weights[2])
 
     df = pd.DataFrame.from_dict(mean_dict, orient="index", columns=["value"])
-    df.reset_index(inplace=True, names="catchment_id")
+    df.reset_index(inplace=True)
+
+    return df
+
+
+def compute_zonal_mean_parquet(da, weights_filepath) -> pd.DataFrame:
+    weights_df = pd.read_parquet(
+        weights_filepath, columns=["row", "col", "weight", "zone"]
+    )
+    # Get variable data
+    arr_2d = da.values[0]
+    arr_2d[arr_2d == da.rio.nodata] = np.nan
+    # Get row/col indices
+    rows = weights_df.row.values
+    cols = weights_df.col.values
+    # Get the values and apply weights
+    var_values = arr_2d[rows, cols]
+    weights_df["value"] = var_values * weights_df.weight.values
+    # Compute mean
+    df = weights_df.groupby(by="zone")["value"].mean().to_frame()
+
+    df.reset_index(inplace=True)
 
     return df
 
 
 @dask.delayed
 def process_single_file(singlefile, run, variable_name, weights_filepath):
-    ds = get_xarray_dataset(singlefile)
+    import xarray as xr
+
+    ds = get_dataset(singlefile))
     ref_time = ds.reference_time.values[0]
     units = ds[variable_name].attrs["units"]
-    value_time = ds.time.values
+    value_time = ds.time.values[0]
     da = ds[variable_name]
 
     # Calculate mean areal of selected variable
@@ -164,20 +186,19 @@ def nwm_to_parquet(
     """
     validate_run_args(run, output_type, variable_name)
 
-    # component_paths = build_remote_nwm_filelist(
-    #     run,
-    #     output_type,
-    #     start_date,
-    #     ingest_days,
-    #     t_minus_hours,
-    # )
+    process_single_file(
+        single_filepath, run, variable_name, zonal_weights_filepath
+    )
 
-    # json_paths = build_zarr_references(component_paths, json_dir)
+    component_paths = build_remote_nwm_filelist(
+        run,
+        output_type,
+        start_date,
+        ingest_days,
+        t_minus_hours,
+    )
 
-    json_paths = [
-        "/home/sam/forcing_json/nwm.20201218.nwm.t00z.medium_range.forcing.f001.conus.nc.json",  # noqa
-        "/home/sam/forcing_json/nwm.20201218.nwm.t00z.medium_range.forcing.f002.conus.nc.json",  # noqa
-    ]
+    json_paths = build_zarr_references(component_paths, json_dir)
 
     fetch_and_format_nwm_grids(
         json_paths,
@@ -190,23 +211,26 @@ def nwm_to_parquet(
 
 if __name__ == "__main__":
     # For local testing
+
+    json_paths = [
+        "/home/sam/forcing_json/nwm.20201218.nwm.t00z.medium_range.forcing.f001.conus.nc.json",  # noqa
+        "/home/sam/forcing_json/nwm.20201218.nwm.t00z.medium_range.forcing.f002.conus.nc.json",  # noqa
+    ]
+
+    single_filepath = "/mnt/sf_shared/data/ciroh/nwm.20201218_forcing_short_range_nwm.t00z.short_range.forcing.f001.conus.nc"  # noqa
+
+    weights_json = (
+        "/mnt/sf_shared/data/ciroh/wbdhu10_medium_range_weights_SJL.pkl.json"
+    )
+    weights_parquet = "/mnt/sf_shared/data/ciroh/wbdhuc10_weights.parquet"
+
     nwm_to_parquet(
         "forcing_medium_range",
         "forcing",
         "RAINRATE",
         "2020-12-18",
         1,
-        "/mnt/sf_shared/data/ciroh/wbdhu10_medium_range_weights.pkl.json",
+        weights_json,
         "/home/sam/forcing_jsons",
         "/home/sam/forcing_parquet",
     )
-
-    # run: str,
-    # output_type: str,
-    # variable_name: str,
-    # start_date: Union[str, datetime],
-    # ingest_days: int,
-    # json_dir: str,
-    # output_parquet_dir: str,
-    # zonal_weights_filepath: str,
-    # t_minus_hours: Optional[Iterable[int]] = None,
