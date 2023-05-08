@@ -13,7 +13,7 @@ def generate_weights(
     src: xr.DataArray,
     weights_filepath: str,
     crosswalk_dict_key: str = None,
-):
+) -> None:
     """Generate a weights file with row/col indices."""
     gdf_proj = gdf.to_crs(const_nwm.CONUS_NWM_WKT)
 
@@ -53,7 +53,7 @@ def generate_weights_file(
     template_dataset: str,
     variable_name: str,
     output_weights_filepath: str,
-):
+) -> None:
     """Generate a file of row/col indices and weights for pixels intersecting
        given zone polyons
 
