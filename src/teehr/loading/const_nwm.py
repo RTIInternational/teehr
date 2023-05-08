@@ -263,6 +263,10 @@ NWM22_RUN_CONFIG = {
     "forcing_short_range": {"forcing": NWM22_FORCING_VARS},
     "forcing_short_range_hawaii": {"forcing": NWM22_FORCING_VARS},
     "forcing_short_range_puertorico": {"forcing": NWM22_FORCING_VARS},
+    "forcing_analysis_assim": {"forcing": NWM22_FORCING_VARS},
+    "forcing_analysis_assim_extend": {"forcing": NWM22_FORCING_VARS},
+    "forcing_analysis_assim_hawaii": {"forcing": NWM22_FORCING_VARS},
+    "forcing_analysis_assim_puertorico": {"forcing": NWM22_FORCING_VARS},
 }
 
 NWM22_ANALYSIS_CONFIG = {
@@ -326,16 +330,34 @@ NWM22_ANALYSIS_CONFIG = {
         "domain": "puertorico",
         "run_name_in_filepath": "analysis_assim_no_da",
     },
+    "forcing_analysis_assim": {
+        "num_lookback_hrs": 3,
+        "cycle_z_hours": np.arange(0, 24, 1),
+        "domain": "conus",
+        "run_name_in_filepath": "analysis_assim",
+    },
+    "forcing_analysis_assim_extend": {
+        "num_lookback_hrs": 28,
+        "cycle_z_hours": [16],
+        "domain": "conus",
+        "run_name_in_filepath": "analysis_assim_extend",
+    },
+    "forcing_analysis_assim_hawaii": {
+        "num_lookback_hrs": 3,
+        "cycle_z_hours": np.arange(0, 24, 1),
+        "domain": "hawaii",
+        "run_name_in_filepath": "analysis_assim",
+    },
+    "forcing_analysis_assim_puertorico": {
+        "num_lookback_hrs": 3,
+        "cycle_z_hours": np.arange(0, 24, 1),
+        "domain": "puertorico",
+        "run_name_in_filepath": "analysis_assim",
+    },
 }
 
-NWM22_UNIT_LOOKUP = {"m3 s-1": "m3/s"}
 
-# NWM22_HUC10_FORCING_WEIGHTS = (
-#     "shared/rti-eval/org/geo/wbdhu10_forcing_weights.npy"
-# )
-# NWM22_HUC10_FORCING_INDS = (
-#     "shared/rti-eval/org/geo/wbdhu10_medium_range_weights.pkl.json"
-# )
+NWM22_UNIT_LOOKUP = {"m3 s-1": "m3/s"}
 
 # WKT strings extracted from NWM grids
 CONUS_NWM_WKT = 'PROJCS["Lambert_Conformal_Conic",GEOGCS["GCS_Sphere",DATUM["D_Sphere",SPHEROID["Sphere",6370000.0,0.0]], \

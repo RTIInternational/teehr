@@ -268,7 +268,7 @@ def build_remote_nwm_filelist(
     output_type: str,
     start_dt: Union[str, datetime],
     ingest_days: int,
-    t_minus_hours: Optional[Iterable[int]] = None,
+    t_minus_hours: Optional[Iterable[int]],
 ) -> List[str]:
     """Assembles a list of remote NWM files in GCS based on specified user
         parameters.
@@ -292,7 +292,7 @@ def build_remote_nwm_filelist(
     list
         List of remote filepaths (strings)
     """
-    gcs_dir = f"gs://{NWM_BUCKET}"
+    gcs_dir = f"gcs://{NWM_BUCKET}"
     fs = fsspec.filesystem("gcs", anon=True)
     dates = pd.date_range(start=start_dt, periods=ingest_days, freq="1d")
 
@@ -301,7 +301,7 @@ def build_remote_nwm_filelist(
         domain = NWM22_ANALYSIS_CONFIG[run]["domain"]
         run_name_in_filepath = NWM22_ANALYSIS_CONFIG[run][
             "run_name_in_filepath"
-        ]  # noqa
+        ]
         max_lookback = NWM22_ANALYSIS_CONFIG[run]["num_lookback_hrs"]
 
         if max(t_minus_hours) > max_lookback - 1:

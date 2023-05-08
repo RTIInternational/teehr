@@ -6,7 +6,6 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 import dask
-from pydantic import validate_arguments
 
 from teehr.loading.utils_nwm import (
     validate_run_args,
@@ -122,7 +121,6 @@ def fetch_and_format_nwm_grids(
         z_hour_df.to_parquet(parquet_filepath)
 
 
-@validate_arguments
 def nwm_grids_to_parquet(
     run: str,
     output_type: str,
@@ -198,20 +196,18 @@ def nwm_grids_to_parquet(
 
 
 if __name__ == "__main__":
-    # For local testing
+    # Local testing
     single_filepath = "/mnt/sf_shared/data/ciroh/nwm.20201218_forcing_short_range_nwm.t00z.short_range.forcing.f001.conus.nc"  # noqa
-    weights_json = (
-        "/mnt/sf_shared/data/ciroh/wbdhu10_medium_range_weights_SJL.pkl.json"
-    )
     weights_parquet = "/mnt/sf_shared/data/ciroh/wbdhuc10_weights.parquet"
 
-    nwm_to_parquet(
-        "forcing_medium_range",
+    nwm_grids_to_parquet(
+        "forcing_analysis_assim",
         "forcing",
         "RAINRATE",
         "2020-12-18",
         1,
-        weights_json,
+        weights_parquet,
         "/home/sam/forcing_jsons",
         "/home/sam/forcing_parquet",
+        [0, 1, 2],
     )
