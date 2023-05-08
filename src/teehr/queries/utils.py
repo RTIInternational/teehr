@@ -279,7 +279,7 @@ def _select_primary_max_value_time(mq: MetricQuery) -> str:
 
 def _select_root_mean_squared_error(mq: MetricQuery) -> str:
     if (
-        "mean_squared_error" in mq.include_metrics
+        "root_mean_squared_error" in mq.include_metrics
         or mq.include_metrics == "all"
     ):
         return """, sqrt(sum(power(absolute_difference, 2))/count(*))
@@ -516,3 +516,8 @@ def df_to_gdf(df: pd.DataFrame) -> gpd.GeoDataFrame:
         df["geometry"].apply(lambda x: bytes(x))
         )
     return gpd.GeoDataFrame(df, crs="EPSG:4326", geometry="geometry")
+
+
+def remove_empty_lines(text: str) -> str:
+    """Remove empty lines from string."""
+    return "".join([s for s in text.splitlines(True) if s.strip()])
