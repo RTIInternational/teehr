@@ -65,7 +65,7 @@ def get_metrics(
     -------
     results : Union[str, pd.DataFrame, gpd.GeoDataFrame]
 
-    Filter Order By and Group By Fields
+    Filter, Order By and Group By Fields
     -----------------------------------
     * reference_time
     * primary_location_id
@@ -391,6 +391,16 @@ def get_timeseries(
     -------
     results : Union[str, pd.DataFrame, gpd.GeoDataFrame]
 
+    Filter and Order By Fields
+    --------------------------
+    * value_time
+    * location_id
+    * value
+    * measurement_unit
+    * reference_time
+    * configuration
+    * variable_name
+
     Examples:
         order_by = ["lead_time", "primary_location_id"]
         filters = [
@@ -472,6 +482,16 @@ def get_timeseries_chars(
     Returns
     -------
     results : Union[str, pd.DataFrame, gpd.GeoDataFrame]
+
+    Filter, Group By and Order By Fields
+    ------------------------------------
+    * value_time
+    * location_id
+    * value
+    * measurement_unit
+    * reference_time
+    * configuration
+    * variable_name
 
     Examples:
         order_by = ["lead_time", "primary_location_id"]
