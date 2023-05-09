@@ -190,7 +190,7 @@ def test_metric_query_df_all():
     assert isinstance(query_df, pd.DataFrame)
 
 
-def test_metric_query_Value_time_filter():
+def test_metric_query_value_time_filter():
     group_by = ["primary_location_id", "reference_time"]
     query_df = tqu.get_metrics(
         primary_filepath=PRIMARY_FILEPATH,
@@ -231,5 +231,5 @@ if __name__ == "__main__":
     test_metric_query_df_2()
     test_metric_query_df_time_metrics()
     test_metric_query_df_all()
-    test_metric_query_Value_time_filter()
+    test_metric_query_value_time_filter()
     pass
