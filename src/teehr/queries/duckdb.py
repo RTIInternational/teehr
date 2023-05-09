@@ -203,8 +203,6 @@ def get_metrics(
             {tqu._join_nse_cte(mq)}
             GROUP BY
                 {",".join([f"joined.{gb}" for gb in mq.group_by])}
-            ORDER BY
-                {",".join([f"joined.{gb}" for gb in mq.order_by])}
         )
         SELECT
             metrics.*
@@ -216,6 +214,8 @@ def get_metrics(
         {tqu.metric_geometry_join_clause(mq)}
         {tqu._join_primary_join_max_time(mq)}
         {tqu._join_secondary_join_max_time(mq)}
+        ORDER BY
+            {",".join([f"metrics.{gb}" for gb in mq.group_by])}
     ;"""
 
     if mq.return_query:
