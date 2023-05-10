@@ -4,8 +4,8 @@ import xarray as xr
 from rasterio.features import rasterize
 import pandas as pd
 
-from utils_nwm import parquet_to_gdf
-import const_nwm
+from teehr.loading.utils_nwm import parquet_to_gdf
+import teehr.loading.const_nwm as const_nwm
 
 
 def generate_weights(
@@ -53,6 +53,7 @@ def generate_weights_file(
     template_dataset: str,
     variable_name: str,
     output_weights_filepath: str,
+    kwarg,
 ) -> None:
     """Generate a file of row/col indices and weights for pixels intersecting
        given zone polyons
