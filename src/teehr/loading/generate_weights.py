@@ -75,8 +75,8 @@ def generate_weights_file(
     unique_zone_id: str
         Name of the field in the zone polygon file containing unique IDs
     read_args: dict, optional
-        Keyword arguments to be passed to GeoPandas read_file(), read_parquet(),
-        and read_feather() methods
+        Keyword arguments to be passed to GeoPandas read_file(),
+        read_parquet(), and read_feather() methods
     """
     # Not 100% sure how best to manage this yet.  Hope a pattern will emerge.
     zone_gdf = load_gdf(zone_polygon_filepath, read_args)
