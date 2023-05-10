@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union, Optional, Iterable, List
+from typing import Union, Optional, Iterable, List, Dict
 from datetime import datetime
 
 import dask
@@ -16,6 +16,27 @@ from teehr.loading.const_nwm import (
     NWM22_ANALYSIS_CONFIG,
     NWM_BUCKET,
 )
+
+
+def load_gdf(
+    filepath: Union[str, Path], args: Optional[Dict] = {}
+) -> gpd.GeoDataFrame:
+    """Load any supported geospatial file type into a gdf using GeoPandas"""
+    try:
+        gdf = gpd.read_file(filepath, **args)
+        return gdf
+    except Exception:
+        pass
+    try:
+        gdf = gpd.read_parquet(filepath, **args)
+        return gdf
+    except Exception:
+        pass
+    try:
+        gdf = gpd.read_feather(filepath, **args)
+        return gdf
+    except Exception:
+        raise Exception("Unsupported zone polygon file type")
 
 
 def parquet_to_gdf(parquet_filepath: str) -> gpd.GeoDataFrame:
