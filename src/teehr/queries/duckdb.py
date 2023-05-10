@@ -65,6 +65,19 @@ def get_metrics(
     -------
     results : Union[str, pd.DataFrame, gpd.GeoDataFrame]
 
+    Filter, Order By and Group By Fields
+    -----------------------------------
+    * reference_time
+    * primary_location_id
+    * secondary_location_id
+    * primary_value
+    * secondary_value
+    * value_time
+    * configuration
+    * measurement_unit
+    * variable_name
+    * lead_time
+
     Available Metrics
     -----------------------
     Basic
@@ -206,7 +219,7 @@ def get_metrics(
     ;"""
 
     if mq.return_query:
-        return query
+        return tqu.remove_empty_lines(query)
 
     df = duckdb.query(query).to_df()
 
@@ -254,6 +267,19 @@ def get_joined_timeseries(
     Returns
     -------
     results : Union[str, pd.DataFrame, gpd.GeoDataFrame]
+
+    Filter and Order By Fields
+    --------------------------
+    * reference_time
+    * primary_location_id
+    * secondary_location_id
+    * primary_value
+    * secondary_value
+    * value_time
+    * configuration
+    * measurement_unit
+    * variable_name
+    * lead_time
 
     Examples:
         order_by = ["lead_time", "primary_location_id"]
@@ -323,7 +349,7 @@ def get_joined_timeseries(
     ;"""
 
     if jtq.return_query:
-        return query
+        return tqu.remove_empty_lines(query)
 
     df = duckdb.query(query).to_df()
 
@@ -365,6 +391,16 @@ def get_timeseries(
     -------
     results : Union[str, pd.DataFrame, gpd.GeoDataFrame]
 
+    Filter and Order By Fields
+    --------------------------
+    * value_time
+    * location_id
+    * value
+    * measurement_unit
+    * reference_time
+    * configuration
+    * variable_name
+
     Examples:
         order_by = ["lead_time", "primary_location_id"]
         filters = [
@@ -405,7 +441,7 @@ def get_timeseries(
     ;"""
 
     if tq.return_query:
-        return query
+        return tqu.remove_empty_lines(query)
 
     df = duckdb.query(query).to_df()
 
@@ -446,6 +482,16 @@ def get_timeseries_chars(
     Returns
     -------
     results : Union[str, pd.DataFrame, gpd.GeoDataFrame]
+
+    Filter, Group By and Order By Fields
+    ------------------------------------
+    * value_time
+    * location_id
+    * value
+    * measurement_unit
+    * reference_time
+    * configuration
+    * variable_name
 
     Examples:
         order_by = ["lead_time", "primary_location_id"]
@@ -526,7 +572,7 @@ def get_timeseries_chars(
     ;"""
 
     if tcq.return_query:
-        return query
+        return tqu.remove_empty_lines(query)
 
     df = duckdb.query(query).to_df()
 
