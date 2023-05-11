@@ -19,21 +19,21 @@ from teehr.loading.const_nwm import (
 
 
 def load_gdf(
-    filepath: Union[str, Path], args: Optional[Dict] = {}
+    filepath: Union[str, Path], kwargs: Optional[Dict] = {}
 ) -> gpd.GeoDataFrame:
     """Load any supported geospatial file type into a gdf using GeoPandas"""
     try:
-        gdf = gpd.read_file(filepath, **args)
+        gdf = gpd.read_file(filepath, **kwargs)
         return gdf
     except Exception:
         pass
     try:
-        gdf = gpd.read_parquet(filepath, **args)
+        gdf = gpd.read_parquet(filepath, **kwargs)
         return gdf
     except Exception:
         pass
     try:
-        gdf = gpd.read_feather(filepath, **args)
+        gdf = gpd.read_feather(filepath, **kwargs)
         return gdf
     except Exception:
         raise Exception("Unsupported zone polygon file type")
