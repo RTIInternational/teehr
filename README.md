@@ -39,8 +39,8 @@ $ python -m pip install dist/teehr-0.0.1.tar.gz
 $ pip install 'teehr @ git+https://[PAT]@github.com/RTIInternational/teehr@[BRANCH]'
 ```
 
-Use Docker (not working yet)...
+Use Docker
 ```bash
-$ docker build -t localbuild/teehr:latest .
-$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 localbuild/teehr:latest jupyter lab --ip 0.0.0.0 $HOME
+$ docker build -t teehr:latest .
+$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:latest jupyter lab --ip 0.0.0.0 $HOME
 ```
