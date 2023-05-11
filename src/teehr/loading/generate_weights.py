@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Union
+from typing import Union
 
 from pathlib import Path
 import geopandas as gpd
@@ -57,7 +57,7 @@ def generate_weights_file(
     variable_name: str,
     output_weights_filepath: Union[str, Path],
     unique_zone_id: str,
-    read_args: Optional[Dict] = {},
+    **kwargs: str,
 ) -> None:
     """Generate a file of row/col indices and weights for pixels intersecting
        given zone polyons
@@ -79,7 +79,7 @@ def generate_weights_file(
         read_parquet(), and read_feather() methods
     """
     # Not 100% sure how best to manage this yet.  Hope a pattern will emerge.
-    zone_gdf = load_gdf(zone_polygon_filepath, read_args)
+    zone_gdf = load_gdf(zone_polygon_filepath, **kwargs)
     ds = xr.open_dataset(template_dataset)
     src_da = ds[variable_name]
     generate_weights(
@@ -92,10 +92,11 @@ def generate_weights_file(
 
 if __name__ == "__main__":
     # Local testing
-    zone_polygon_filepath = "/mnt/sf_shared/data/ciroh/wbdhu10_conus.parquet"
+    # zone_polygon_filepath = "/mnt/sf_shared/data/ciroh/wbdhu10_conus.parquet"
+    zone_polygon_filepath = "/mnt/sf_shared/data/ciroh/nextgen_03S.gpkg"
     template_dataset = "/mnt/sf_shared/data/ciroh/nwm.20201218_forcing_short_range_nwm.t00z.short_range.forcing.f001.conus.nc"  # noqa
     variable_name = "RAINRATE"
-    unique_zone_id = "huc10"
+    unique_zone_id = "id"
     output_weights_filepath = (
         "/mnt/sf_shared/data/ciroh/wbdhu10_medium_range_weights.parquet"
     )
@@ -106,4 +107,5 @@ if __name__ == "__main__":
         variable_name,
         output_weights_filepath,
         unique_zone_id,
+        layer="divides",
     )
