@@ -2,4 +2,12 @@ pandas
 geopandas
 duckdb
 pydantic
-hydrotools
+hydrotools.metrics
+hydrotools.nwis-client
+dask
+fsspec
+ujson
+kerchunk
+gcsfs
+s3fs
+zarr

@@ -27,33 +27,46 @@ The `location` data model is used to store geographic entities.  This could incl
 - `name`: [string] This is the common name for location (e.g., Some River at Some City, Some State).  This will be used for plots
 - `geometry`: [string/bytes] Geometry in WKT/WKB format.  For example "Point(100,200)".  Must be "EPSG:4326"
 
-## Thresholds
-The `threshold` data model is used to store other data about the location.  This could possibly replaced by a generic `key:value` table.
+## Attributes
+The `attributes` data model is used to store other data about the location.  This could possibly replaced by a generic `key:value` table.
 
 - `location_id`: [string] Primary location ID of the location.
-- `threshold_name`: [string] name of threshold 
-- `threshold_value`: [string] threshold value
+- `attribute_name`: [string] Name of attribute (i.e., 2-year flow, eco-region)
+- `attribute_value`: [string | float] Attribute  value
+- `attribute_unit`: [string] Units of attribute value, if any.
 
 ## Data Model Diagram
 The following is a visual representation of the data model structure.
-![data_model](data_model.png "Data Model")
+![data_model](images/data_model.png "Data Model")
 
 ## Uniqueness and Referential Integrity
 The general gist of this topic is that the current file-based approach (i.e. using parquet files) to store that data does not include any referential integrity or guarantee uniqueness of timeseries values.  A more traditional relational database would provide this but also tends to use far more storage and be slower to insert data to in our experience.  Some sort of hybrid approach to using parquet files and traditional database tables may be consider at a later date.
 # Cache Directory Structure
 The following represents the recommended directory structure for a study. This is just an example and will certainly evolve over time but provides a starting point.
 
-```text
-.
+```
 ├── new directory for each study
 └── study_1
+    ├── dashboards
+    │   └── dashboard files
     ├── geo
     │   ├── usgs_nwm_crosswalk.csv
     │   ├── usgs_nwm_crosswalk.parquet
     │   ├── usgs_sites.geojson
     │   └── usgs_sites.parquet
+    ├── notebooks
+    │   └── notebook files
+    ├── scripts
+    │   └── scripts
     ├── timeseries
     │   ├── new directory for each source
+    │   ├── nwm21
+    │   │   ├── forcing_medium_range
+    │   │   │   ├── _20220101T00Z.parquet
+    │   │   │   └── files omitted
+    │   │   └── medium_range
+    │   │       ├── _20220101T00Z.parquet
+    │   │       └── files omitted.
     │   ├── research_model
     │   │   ├── forcing
     │   │   │   ├── _cat-1_2022-01-01.csv
@@ -62,11 +75,6 @@ The following represents the recommended directory structure for a study. This i
     │   │       ├── _cat-1_ouput.csv
     │   │       ├── _nex-1_output.csv
     │   │       └── output.parquet
-    │   ├── nwm21
-    │   │   ├── forcing_medium_range
-    │   │   │   └── _20220101T00Z.parquet
-    │   │   └── medium_range
-    │   │       └── _20220101T00Z.parquet
     │   └── usgs
     │       └── gage_data.parquet
     └── zarr
