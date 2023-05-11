@@ -7,19 +7,83 @@ import fsspec
 import ujson  # fast json
 from kerchunk.hdf import SingleHdf5ToZarr
 import pandas as pd
+import numpy as np
+import xarray as xr
+import geopandas as gpd
 
 from teehr.loading.const_nwm import (
     NWM22_RUN_CONFIG,
     NWM22_ANALYSIS_CONFIG,
-    NWM_BUCKET
+    NWM_BUCKET,
 )
+
+
+def load_gdf(filepath: Union[str, Path], **kwargs: str) -> gpd.GeoDataFrame:
+    """Load any supported geospatial file type into a gdf using GeoPandas."""
+    try:
+        gdf = gpd.read_file(filepath, **kwargs)
+        return gdf
+    except Exception:
+        pass
+    try:
+        gdf = gpd.read_parquet(filepath, **kwargs)
+        return gdf
+    except Exception:
+        pass
+    try:
+        gdf = gpd.read_feather(filepath, **kwargs)
+        return gdf
+    except Exception:
+        raise Exception("Unsupported zone polygon file type")
+
+
+def parquet_to_gdf(parquet_filepath: str) -> gpd.GeoDataFrame:
+    gdf = gpd.read_parquet(parquet_filepath)
+    return gdf
+
+
+def np_to_list(t):
+    return [a.tolist() for a in t]
+
+
+def get_dataset(zarr_json: str) -> xr.Dataset:
+    """Retrieve a blob from the data service as xarray.Dataset.
+
+    Parameters
+    ----------
+    blob_name: str, required
+        Name of blob to retrieve.
+
+    Returns
+    -------
+    ds : xarray.Dataset
+        The data stored in the blob.
+
+    """
+    backend_args = {
+        "consolidated": False,
+        "storage_options": {
+            "fo": zarr_json,
+            "remote_protocol": "gcs",
+            "remote_options": {"anon": True},
+        },
+    }
+    ds = xr.open_dataset(
+        "reference://",
+        engine="zarr",
+        backend_kwargs=backend_args,
+    )
+
+    return ds
+
+
+def list_to_np(lst):
+    return tuple([np.array(a) for a in lst])
 
 
 @dask.delayed
 def gen_json(
-    remote_path: str,
-    fs: fsspec.filesystem,
-    json_dir: Union[str, Path]
+    remote_path: str, fs: fsspec.filesystem, json_dir: Union[str, Path]
 ) -> str:
     """Helper function for creating single-file kerchunk reference JSONs.
 
@@ -41,7 +105,7 @@ def gen_json(
         mode="rb",
         anon=True,
         default_fill_cache=False,
-        default_cache_type="first"
+        default_cache_type="first",  # noqa
     )
     with fs.open(remote_path, **so) as infile:
         h5chunks = SingleHdf5ToZarr(infile, remote_path, inline_threshold=300)
@@ -55,8 +119,7 @@ def gen_json(
 
 
 def build_zarr_references(
-    remote_paths: List[str],
-    json_dir: Union[str, Path]
+    remote_paths: List[str], json_dir: Union[str, Path]
 ) -> list[str]:
     """Builds the single file zarr json reference files using kerchunk.
 
@@ -86,11 +149,7 @@ def build_zarr_references(
     return sorted(json_paths)
 
 
-def validate_run_args(
-        run: str,
-        output_type: str,
-        variable: str
-):
+def validate_run_args(run: str, output_type: str, variable: str):
     """Validates user-provided NWMv22 run arguments.
 
     Parameters
@@ -130,9 +189,11 @@ def construct_assim_paths(
     domain: str,
 ) -> list[str]:
     """Constructs paths to NWM point assimilation data based on specified
-        parameters. This function prioritizes value time over reference
-        time so that only files with value times falling within the specified
-        date range are included in the resulting file list.
+        parameters.
+
+    This function prioritizes value time over reference time so that only
+    files with value times falling within the specified date range are included
+    in the resulting file list.
 
     Parameters
     ----------
@@ -212,8 +273,7 @@ def construct_assim_paths(
                 for tm in t_minus:
                     if cycle_hr2 > 0:
                         dt_add = dt + pd.Timedelta(
-                            cycle_hr + cycle_hr2,
-                            unit="hours"
+                            cycle_hr + cycle_hr2, unit="hours"
                         )
                         hr_add = dt_add.hour
                         if tm > hr_add:
@@ -229,7 +289,7 @@ def build_remote_nwm_filelist(
     output_type: str,
     start_dt: Union[str, datetime],
     ingest_days: int,
-    t_minus_hours: Optional[Iterable[int]] = None,
+    t_minus_hours: Optional[Iterable[int]],
 ) -> List[str]:
     """Assembles a list of remote NWM files in GCS based on specified user
         parameters.
@@ -253,14 +313,16 @@ def build_remote_nwm_filelist(
     list
         List of remote filepaths (strings)
     """
-    gcs_dir = f"gs://{NWM_BUCKET}"
+    gcs_dir = f"gcs://{NWM_BUCKET}"
     fs = fsspec.filesystem("gcs", anon=True)
     dates = pd.date_range(start=start_dt, periods=ingest_days, freq="1d")
 
     if "assim" in run:
         cycle_z_hours = NWM22_ANALYSIS_CONFIG[run]["cycle_z_hours"]
         domain = NWM22_ANALYSIS_CONFIG[run]["domain"]
-        run_name_in_filepath = NWM22_ANALYSIS_CONFIG[run]["run_name_in_filepath"]  # noqa
+        run_name_in_filepath = NWM22_ANALYSIS_CONFIG[run][
+            "run_name_in_filepath"
+        ]
         max_lookback = NWM22_ANALYSIS_CONFIG[run]["num_lookback_hrs"]
 
         if max(t_minus_hours) > max_lookback - 1:
@@ -289,6 +351,6 @@ def build_remote_nwm_filelist(
             dt_str = dt.strftime("%Y%m%d")
             file_path = f"{gcs_dir}/nwm.{dt_str}/{run}/nwm.*.{output_type}*"
             component_paths.extend(fs.glob(file_path))
-        component_paths = sorted([f"gs://{path}" for path in component_paths])
+        component_paths = sorted([f"gcs://{path}" for path in component_paths])
 
     return component_paths

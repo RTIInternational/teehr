@@ -19,16 +19,9 @@ NWM22_CHANNEL_RT_VARS_NO_DA = [
     "velocity",
 ]
 
-NWM22_CHANNEL_RT_VARS_LONG = [
-    "nudge",
-    "streamflow",
-    "velocity"
-]
+NWM22_CHANNEL_RT_VARS_LONG = ["nudge", "streamflow", "velocity"]
 
-NWM22_TERRAIN_VARS = [
-    "sfcheadsubrt",
-    "zwattablrt"
-]
+NWM22_TERRAIN_VARS = ["sfcheadsubrt", "zwattablrt"]
 
 NWM22_RESERVOIR_VARS = [
     "inflow",
@@ -61,7 +54,7 @@ NWM22_LAND_VARS_SHORT = [
     "SOILSAT_TOP",
     "FSNO",
     "SNOWH",
-    "SNEQV"
+    "SNEQV",
 ]
 
 NWM22_LAND_VARS_MEDIUM = [
@@ -99,6 +92,17 @@ NWM22_LAND_VARS_LONG = [
     "CANWAT",
     "SOILSAT_TOP",
     "SOILSAT",
+]
+
+NWM22_FORCING_VARS = [
+    "U2D",
+    "V2D",
+    "T2D",
+    "Q2D",
+    "LWDOWN",
+    "SWDOWN",
+    "RAINRATE",
+    "PSFC",
 ]
 
 NWM22_RUN_CONFIG = {
@@ -255,6 +259,14 @@ NWM22_RUN_CONFIG = {
         "land_4": NWM22_LAND_VARS_LONG,
         "reservoir_4": NWM22_RESERVOIR_VARS,
     },
+    "forcing_medium_range": {"forcing": NWM22_FORCING_VARS},
+    "forcing_short_range": {"forcing": NWM22_FORCING_VARS},
+    "forcing_short_range_hawaii": {"forcing": NWM22_FORCING_VARS},
+    "forcing_short_range_puertorico": {"forcing": NWM22_FORCING_VARS},
+    "forcing_analysis_assim": {"forcing": NWM22_FORCING_VARS},
+    "forcing_analysis_assim_extend": {"forcing": NWM22_FORCING_VARS},
+    "forcing_analysis_assim_hawaii": {"forcing": NWM22_FORCING_VARS},
+    "forcing_analysis_assim_puertorico": {"forcing": NWM22_FORCING_VARS},
 }
 
 NWM22_ANALYSIS_CONFIG = {
@@ -318,8 +330,47 @@ NWM22_ANALYSIS_CONFIG = {
         "domain": "puertorico",
         "run_name_in_filepath": "analysis_assim_no_da",
     },
+    "forcing_analysis_assim": {
+        "num_lookback_hrs": 3,
+        "cycle_z_hours": np.arange(0, 24, 1),
+        "domain": "conus",
+        "run_name_in_filepath": "analysis_assim",
+    },
+    "forcing_analysis_assim_extend": {
+        "num_lookback_hrs": 28,
+        "cycle_z_hours": [16],
+        "domain": "conus",
+        "run_name_in_filepath": "analysis_assim_extend",
+    },
+    "forcing_analysis_assim_hawaii": {
+        "num_lookback_hrs": 3,
+        "cycle_z_hours": np.arange(0, 24, 1),
+        "domain": "hawaii",
+        "run_name_in_filepath": "analysis_assim",
+    },
+    "forcing_analysis_assim_puertorico": {
+        "num_lookback_hrs": 3,
+        "cycle_z_hours": np.arange(0, 24, 1),
+        "domain": "puertorico",
+        "run_name_in_filepath": "analysis_assim",
+    },
 }
 
-NWM22_UNIT_LOOKUP = {
-    "m3 s-1": "m3/s"
-}
+
+NWM22_UNIT_LOOKUP = {"m3 s-1": "m3/s"}
+
+# WKT strings extracted from NWM grids
+CONUS_NWM_WKT = 'PROJCS["Lambert_Conformal_Conic",GEOGCS["GCS_Sphere",DATUM["D_Sphere",SPHEROID["Sphere",6370000.0,0.0]], \
+PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["false_easting",0.0],\
+PARAMETER["false_northing",0.0],PARAMETER["central_meridian",-97.0],PARAMETER["standard_parallel_1",30.0],\
+PARAMETER["standard_parallel_2",60.0],PARAMETER["latitude_of_origin",40.0],UNIT["Meter",1.0]]'
+
+HI_NWM_WKT = 'PROJCS["Lambert_Conformal_Conic",GEOGCS["GCS_Sphere",DATUM["D_Sphere",SPHEROID["Sphere",6370000.0,0.0]],\
+PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["false_easting",0.0],\
+PARAMETER["false_northing",0.0],PARAMETER["central_meridian",-157.42],PARAMETER["standard_parallel_1",10.0],\
+PARAMETER["standard_parallel_2",30.0],PARAMETER["latitude_of_origin",20.6],UNIT["Meter",1.0]]'
+
+PR_NWM_WKT = 'PROJCS["Sphere_Lambert_Conformal_Conic",GEOGCS["GCS_Sphere",DATUM["D_Sphere",SPHEROID["Sphere",6370000.0,0.0]],\
+PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["false_easting",0.0],\
+PARAMETER["false_northing",0.0],PARAMETER["central_meridian",-65.91],PARAMETER["standard_parallel_1",18.1],\
+PARAMETER["standard_parallel_2",18.1],PARAMETER["latitude_of_origin",18.1],UNIT["Meter",1.0]]'
