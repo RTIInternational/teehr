@@ -19,7 +19,7 @@ from teehr.loading.const_nwm import (
 
 
 def load_gdf(filepath: Union[str, Path], **kwargs: str) -> gpd.GeoDataFrame:
-    """Load any supported geospatial file type into a gdf using GeoPandas"""
+    """Load any supported geospatial file type into a gdf using GeoPandas."""
     try:
         gdf = gpd.read_file(filepath, **kwargs)
         return gdf
@@ -189,9 +189,11 @@ def construct_assim_paths(
     domain: str,
 ) -> list[str]:
     """Constructs paths to NWM point assimilation data based on specified
-        parameters. This function prioritizes value time over reference
-        time so that only files with value times falling within the specified
-        date range are included in the resulting file list.
+        parameters.
+
+    This function prioritizes value time over reference time so that only
+    files with value times falling within the specified date range are included
+    in the resulting file list.
 
     Parameters
     ----------

@@ -152,13 +152,11 @@ def nwm_grids_to_parquet(
         Str formats can include YYYY-MM-DD or MM/DD/YYYY
     ingest_days : int
         Number of days to ingest data after start date
-    json_dir : str
-        Directory path for saving json reference files
-    zonal_indices_filepath: str
-        Path to the json file containing row/col indices of zones
     zonal_weights_filepath: str
         Path to the array containing fraction of pixel overlap
         for each zone
+    json_dir : str
+        Directory path for saving json reference files
     output_parquet_dir : str
         Path to the directory for the final parquet files
     t_minus_hours: Optional[Iterable[int]]
@@ -184,7 +182,10 @@ def nwm_grids_to_parquet(
         t_minus_hours,
     )
 
-    json_paths = build_zarr_references(component_paths, json_dir)
+    json_paths = build_zarr_references(
+        component_paths,
+        json_dir
+    )
 
     fetch_and_format_nwm_grids(
         json_paths,
