@@ -112,7 +112,7 @@ def calculate_weights(
     xmin, ymin, xmax, ymax = zone_gdf.total_bounds
 
     x_steps = np.arange(xmin, xmax, const_nwm.OVERLAY_STEP * 1000)
-    y_steps = np.arange(ymin, ymax, const_nwm.OVERLAY_STEP * 1000)  # 300000
+    y_steps = np.arange(ymin, ymax, const_nwm.OVERLAY_STEP * 1000)  # ~300000
 
     x_steps = np.append(x_steps, xmax)
     y_steps = np.append(y_steps, ymax)
@@ -144,7 +144,7 @@ def generate_weights_file(
     variable_name: str,
     weights_filepath: Union[str, Path],
     unique_zone_id: str = None,
-    **kwargs: str,
+    **read_args: str,
 ) -> None:
     """Generate a file of row/col indices and weights for pixels intersecting
        given zone polyons
@@ -166,7 +166,7 @@ def generate_weights_file(
         read_parquet(), and read_feather() methods
     """
 
-    zone_gdf = load_gdf(zone_polygon_filepath, **kwargs)
+    zone_gdf = load_gdf(zone_polygon_filepath, **read_args)
     zone_gdf = zone_gdf.to_crs(const_nwm.CONUS_NWM_WKT)
 
     ds = xr.open_dataset(template_dataset)
@@ -232,4 +232,5 @@ if __name__ == "__main__":
         variable_name,
         output_weights_filepath,
         unique_zone_id,
+        layer="divides",
     )
