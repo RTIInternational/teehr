@@ -77,7 +77,6 @@ def vectorize_grid(
     """Vectorize pixels in the template array in chunks using dask"""
     # X_STEPSIZE = 200
     # Y_STEPSIZE = 200
-
     # max_pixels = X_STEPSIZE * Y_STEPSIZE
     max_pixels = const_nwm.VECTORIZE_STEP * 1000
     num_splits = np.ceil(src_da.values.size / max_pixels).astype(int)
@@ -142,7 +141,7 @@ def generate_weights_file(
     zone_polygon_filepath: Union[Path, str],
     template_dataset: Union[str, Path],
     variable_name: str,
-    weights_filepath: Union[str, Path],
+    output_weights_filepath: Union[str, Path],
     unique_zone_id: str = None,
     **read_args: str,
 ) -> None:
@@ -207,14 +206,13 @@ def generate_weights_file(
         df = weights_gdf[["row", "col", "weight"]]
         df["zone"] = weights_gdf.index.values
 
-    df.to_parquet(weights_filepath)
+    df.to_parquet(output_weights_filepath)
 
     return
 
 
 if __name__ == "__main__":
     # Local testing
-    # zone_polygon_filepath = "/mnt/sf_shared/data/ciroh/wbdhu10_conus.parquet"
     zone_polygon_filepath = "/mnt/sf_shared/data/ciroh/nextgen_03S.gpkg"
     template_dataset = "/mnt/sf_shared/data/ciroh/nwm.20201218_forcing_short_range_nwm.t00z.short_range.forcing.f001.conus.nc"  # noqa
     variable_name = "RAINRATE"
@@ -222,9 +220,6 @@ if __name__ == "__main__":
     output_weights_filepath = (
         "/mnt/sf_shared/data/ciroh/wbdhu10_medium_range_weights.parquet"
     )
-
-    # from dask.distributed import Client
-    # client = Client(n_workers=2)
 
     generate_weights_file(
         zone_polygon_filepath,
