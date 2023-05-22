@@ -1,62 +1,149 @@
 from typing import Union
-
 from pathlib import Path
+
 import geopandas as gpd
 import numpy as np
 import xarray as xr
-from rasterio.features import rasterize
+from rasterio.transform import rowcol
+import rasterio
 import pandas as pd
+import dask
+import shapely
 
 from teehr.loading.utils_nwm import load_gdf
 import teehr.loading.const_nwm as const_nwm
 
 
-def generate_weights(
-    gdf: gpd.GeoDataFrame,
-    src: xr.DataArray,
-    weights_filepath: Union[str, Path],
-    unique_zone_id: str = None,
-) -> None:
-    """Generate a weights file with row/col indices."""
-    gdf_proj = gdf.to_crs(const_nwm.CONUS_NWM_WKT)
+@dask.delayed
+def vectorize(data_array: xr.DataArray) -> gpd.GeoDataFrame:
+    """
+    Convert 2D xarray.DataArray into a geopandas.GeoDataFrame
 
-    df_list = []
-    # This is a probably a really poor performing way to do this
-    for index, row in gdf_proj.iterrows():
-        geom_rasterize = rasterize(
-            [(row["geometry"], 1)],
-            out_shape=src.rio.shape,
-            transform=src.rio.transform(),
-            all_touched=True,
-            fill=0,
-            dtype="uint8",
+    Heavily borrowed from GeoCube, see:
+    https://github.com/corteva/geocube/blob/master/geocube/vector.py#L12
+    """
+    # nodata mask
+    mask = None
+    if np.isnan(data_array.rio.nodata):
+        mask = ~data_array.isnull()
+    elif data_array.rio.nodata is not None:
+        mask = data_array != data_array.rio.nodata
+
+    # Give all pixels a unique value
+    data_array.values[:, :] = np.arange(0, data_array.values.size).reshape(
+        data_array.shape
+    )
+
+    # vectorize generator
+    vectorized_data = (
+        (value, shapely.geometry.shape(polygon))
+        for polygon, value in rasterio.features.shapes(
+            data_array,
+            transform=data_array.rio.transform(),
+            mask=mask,
         )
-        inds_tuple = np.where(geom_rasterize == 1)
-        weights_tuple = inds_tuple + (np.ones(inds_tuple[0].size),)
-        df = pd.DataFrame(
-            {
-                "row": inds_tuple[0],
-                "col": inds_tuple[1],
-                "weight": weights_tuple[2],
-            }
+    )
+    gdf = gpd.GeoDataFrame(
+        vectorized_data,
+        columns=[data_array.name, "geometry"],
+        crs=data_array.rio.crs,
+    )
+    xx, yy = np.meshgrid(data_array.x.values, data_array.y.values)
+    gdf["x"] = xx.ravel()
+    gdf["y"] = yy.ravel()
+
+    return gdf
+
+
+@dask.delayed
+def overlay_zones(
+    grid: gpd.GeoDataFrame, zones: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
+    with pd.option_context(
+        "mode.chained_assignment", None
+    ):  # to ignore setwithcopywarning
+        grid.loc[:, "pixel_area"] = grid.geometry.area
+        overlay_gdf = grid.overlay(zones, keep_geom_type=True)
+        overlay_gdf.loc[:, "overlay_area"] = overlay_gdf.geometry.area
+        overlay_gdf.loc[:, "weight"] = (
+            overlay_gdf.overlay_area / overlay_gdf.pixel_area
         )
-        if unique_zone_id:
-            df["zone"] = row[unique_zone_id]
-        else:
-            df["zone"] = index
+    return overlay_gdf
 
-        df_list.append(df)
 
-    df = pd.concat(df_list)
-    df.to_parquet(weights_filepath)
+def vectorize_grid(
+    src_da: xr.DataArray, nodata_val: float
+) -> gpd.GeoDataFrame:
+    """Vectorize pixels in the template array in chunks using dask"""
+    # X_STEPSIZE = 200
+    # Y_STEPSIZE = 200
+
+    # max_pixels = X_STEPSIZE * Y_STEPSIZE
+    max_pixels = const_nwm.VECTORIZE_STEP * 1000
+    num_splits = np.ceil(src_da.values.size / max_pixels).astype(int)
+
+    # Prepare each data array
+    da_list = np.array_split(src_da, num_splits)
+    [da.rio.write_nodata(nodata_val, inplace=True) for da in da_list]
+
+    results = []
+    for da_subset in da_list:
+        results.append(vectorize(da_subset))
+    grid_gdf = pd.concat(dask.compute(results)[0])
+    grid_gdf.crs = const_nwm.CONUS_NWM_WKT
+
+    # Reindex to remove duplicates
+    grid_gdf["index"] = np.arange(len(grid_gdf.index))
+    grid_gdf.set_index("index", inplace=True)
+
+    return grid_gdf
+
+
+def calculate_weights(
+    grid_gdf: gpd.GeoDataFrame, zone_gdf: gpd.GeoDataFrame
+) -> gpd.GeoDataFrame:
+    """Overlay vectorized pixels and zone polygons, and calculate
+    areal weights, returning a geodataframe"""
+
+    # Make sure geometries are valid
+    grid_gdf["geometry"] = grid_gdf.geometry.make_valid()
+    zone_gdf["geometry"] = zone_gdf.geometry.make_valid()
+
+    xmin, ymin, xmax, ymax = zone_gdf.total_bounds
+
+    x_steps = np.arange(xmin, xmax, const_nwm.OVERLAY_STEP * 1000)
+    y_steps = np.arange(ymin, ymax, const_nwm.OVERLAY_STEP * 1000)  # 300000
+
+    x_steps = np.append(x_steps, xmax)
+    y_steps = np.append(y_steps, ymax)
+
+    results = []
+    for i in range(x_steps.size - 1):
+        for j in range(y_steps.size - 1):
+            xmin = x_steps[i]
+            xmax = x_steps[i + 1]
+
+            ymin = y_steps[j]
+            ymax = y_steps[j + 1]
+
+            zone = zone_gdf.cx[xmin:xmax, ymin:ymax]
+            grid = grid_gdf.cx[xmin:xmax, ymin:ymax]
+
+            if len(zone.index) == 0 or len(grid.index) == 0:
+                continue
+            results.append(overlay_zones(grid, zone))
+
+    overlay_gdf = pd.concat(dask.compute(results)[0])
+
+    return overlay_gdf
 
 
 def generate_weights_file(
-    zone_polygon_filepath: Union[str, Path],
+    zone_polygon_filepath: Union[Path, str],
     template_dataset: Union[str, Path],
     variable_name: str,
-    output_weights_filepath: Union[str, Path],
-    unique_zone_id: str,
+    weights_filepath: Union[str, Path],
+    unique_zone_id: str = None,
     **kwargs: str,
 ) -> None:
     """Generate a file of row/col indices and weights for pixels intersecting
@@ -78,16 +165,51 @@ def generate_weights_file(
         Keyword arguments to be passed to GeoPandas read_file(),
         read_parquet(), and read_feather() methods
     """
-    # Not 100% sure how best to manage this yet.  Hope a pattern will emerge.
+
     zone_gdf = load_gdf(zone_polygon_filepath, **kwargs)
+    zone_gdf = zone_gdf.to_crs(const_nwm.CONUS_NWM_WKT)
+
     ds = xr.open_dataset(template_dataset)
     src_da = ds[variable_name]
-    generate_weights(
-        zone_gdf,
-        src_da,
-        output_weights_filepath,
-        unique_zone_id,
+    src_da = src_da.rio.write_crs(const_nwm.CONUS_NWM_WKT, inplace=True)
+    grid_transform = src_da.rio.transform()
+    nodata_val = src_da.rio.nodata
+
+    # Get the subset of the grid that intersects the total zone bounds
+    bbox = tuple(zone_gdf.total_bounds)
+    src_da = src_da.sel(x=slice(bbox[0], bbox[2]), y=slice(bbox[1], bbox[3]))[
+        0
+    ]
+    src_da = src_da.astype("float32")
+    src_da["x"] = np.float32(src_da.x.values)
+    src_da["y"] = np.float32(src_da.y.values)
+
+    # Vectorize source grid pixels
+    grid_gdf = vectorize_grid(src_da, nodata_val)
+
+    # Overlay and calculate areal weights of pixels within each zone
+    weights_gdf = calculate_weights(grid_gdf, zone_gdf)
+    weights_gdf = weights_gdf.drop_duplicates(
+        subset=["x", "y", unique_zone_id]
     )
+
+    # Convert x-y to row-col using original transform
+    rows, cols = rowcol(
+        grid_transform, weights_gdf.x.values, weights_gdf.y.values
+    )
+    weights_gdf["row"] = rows
+    weights_gdf["col"] = cols
+
+    if unique_zone_id:
+        df = weights_gdf[["row", "col", "weight", unique_zone_id]].copy()
+        df.rename(columns={unique_zone_id: "zone"}, inplace=True)
+    else:
+        df = weights_gdf[["row", "col", "weight"]]
+        df["zone"] = weights_gdf.index.values
+
+    df.to_parquet(weights_filepath)
+
+    return
 
 
 if __name__ == "__main__":
@@ -101,11 +223,13 @@ if __name__ == "__main__":
         "/mnt/sf_shared/data/ciroh/wbdhu10_medium_range_weights.parquet"
     )
 
+    # from dask.distributed import Client
+    # client = Client(n_workers=2)
+
     generate_weights_file(
         zone_polygon_filepath,
         template_dataset,
         variable_name,
         output_weights_filepath,
         unique_zone_id,
-        layer="divides",
     )
