@@ -72,13 +72,17 @@ def overlay_zones(
 
 
 def vectorize_grid(
-    src_da: xr.DataArray, nodata_val: float
+    src_da: xr.DataArray,
+    nodata_val: float,
+    vectorize_chunk: float = 40,
 ) -> gpd.GeoDataFrame:
-    """Vectorize pixels in the template array in chunks using dask"""
-    # X_STEPSIZE = 200
-    # Y_STEPSIZE = 200
-    # max_pixels = X_STEPSIZE * Y_STEPSIZE
-    max_pixels = const_nwm.VECTORIZE_STEP * 1000
+    """Vectorize pixels in the template array in chunks using dask
+
+    Note: Parameter vectorize_chunk determines how many pixels will
+    be vectorized at one time
+    (thousands of pixels)
+    """
+    max_pixels = vectorize_chunk * 1000
     num_splits = np.ceil(src_da.values.size / max_pixels).astype(int)
 
     # Prepare each data array
@@ -103,19 +107,25 @@ def vectorize_grid(
 
 
 def calculate_weights(
-    grid_gdf: gpd.GeoDataFrame, zone_gdf: gpd.GeoDataFrame
+    grid_gdf: gpd.GeoDataFrame,
+    zone_gdf: gpd.GeoDataFrame,
+    overlay_chunk: float = 250,
 ) -> gpd.GeoDataFrame:
     """Overlay vectorized pixels and zone polygons, and calculate
-    areal weights, returning a geodataframe"""
+    areal weights, returning a geodataframe
 
+    Note: Parameter overlay_chunk determines the size of the rectangular
+    window that spatially subsets datasets for the operation
+    (thousands of pixels)
+    """
     # Make sure geometries are valid
     grid_gdf["geometry"] = grid_gdf.geometry.make_valid()
     zone_gdf["geometry"] = zone_gdf.geometry.make_valid()
 
     xmin, ymin, xmax, ymax = zone_gdf.total_bounds
 
-    x_steps = np.arange(xmin, xmax, const_nwm.OVERLAY_STEP * 1000)
-    y_steps = np.arange(ymin, ymax, const_nwm.OVERLAY_STEP * 1000)  # ~300000
+    x_steps = np.arange(xmin, xmax, overlay_chunk * 1000)
+    y_steps = np.arange(ymin, ymax, overlay_chunk * 1000)
 
     x_steps = np.append(x_steps, xmax)
     y_steps = np.append(y_steps, ymax)
@@ -214,6 +224,7 @@ def generate_weights_file(
 
     if output_weights_filepath:
         df.to_parquet(output_weights_filepath)
+        df = None
 
     return df
 
