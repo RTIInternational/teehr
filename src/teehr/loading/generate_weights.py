@@ -82,8 +82,12 @@ def vectorize_grid(
     num_splits = np.ceil(src_da.values.size / max_pixels).astype(int)
 
     # Prepare each data array
-    da_list = np.array_split(src_da, num_splits)
-    [da.rio.write_nodata(nodata_val, inplace=True) for da in da_list]
+    if num_splits > 0:
+        da_list = np.array_split(src_da, num_splits)
+        [da.rio.write_nodata(nodata_val, inplace=True) for da in da_list]
+    else:
+        src_da.rio.write_nodata(nodata_val, inplace=True)
+        da_list = [src_da]
 
     results = []
     for da_subset in da_list:
@@ -160,6 +164,8 @@ def generate_weights_file(
         Path to the resultant weights file
     unique_zone_id: str
         Name of the field in the zone polygon file containing unique IDs
+    save_to_disk: boolean
+        Flag to indicate whether or not to save results to disk
     read_args: dict, optional
         Keyword arguments to be passed to GeoPandas read_file(),
         read_parquet(), and read_feather() methods
@@ -206,9 +212,10 @@ def generate_weights_file(
         df = weights_gdf[["row", "col", "weight"]]
         df["zone"] = weights_gdf.index.values
 
-    df.to_parquet(output_weights_filepath)
+    if output_weights_filepath:
+        df.to_parquet(output_weights_filepath)
 
-    return
+    return df
 
 
 if __name__ == "__main__":
@@ -220,6 +227,9 @@ if __name__ == "__main__":
     output_weights_filepath = (
         "/mnt/sf_shared/data/ciroh/wbdhu10_medium_range_weights.parquet"
     )
+    zone_polygon_filepath = (
+        "/mnt/sf_shared/data/ciroh/test_ngen_divides.parquet"
+    )
 
     generate_weights_file(
         zone_polygon_filepath,
@@ -227,5 +237,4 @@ if __name__ == "__main__":
         variable_name,
         output_weights_filepath,
         unique_zone_id,
-        layer="divides",
     )
