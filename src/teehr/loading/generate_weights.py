@@ -1,5 +1,6 @@
 from typing import Union
 from pathlib import Path
+import warnings
 
 import geopandas as gpd
 import numpy as np
@@ -82,6 +83,7 @@ def vectorize_grid(
     be vectorized at one time
     (thousands of pixels)
     """
+    src_da = src_da.persist()
     max_pixels = vectorize_chunk * 1000
     num_splits = np.ceil(src_da.values.size / max_pixels).astype(int)
 
@@ -203,7 +205,11 @@ def generate_weights_file(
     grid_gdf = vectorize_grid(src_da, nodata_val)
 
     # Overlay and calculate areal weights of pixels within each zone
-    weights_gdf = calculate_weights(grid_gdf, zone_gdf)
+    # Note: Temporarily suppress the dask UserWarning: "Large object detected
+    #  in task graph" until a better approach is found
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning)
+        weights_gdf = calculate_weights(grid_gdf, zone_gdf)
     weights_gdf = weights_gdf.drop_duplicates(
         subset=["x", "y", unique_zone_id]
     )
