@@ -7,22 +7,8 @@ assess their skill and performance.
 
 NOTE: THIS PROJECT IS UNDER DEVELOPMENT - EXPECT TO FIND BROKEN AND INCOMPLETE CODE.
 
-Project structure:
-
-- `/docs`: This directory contains documentation
-- `/examples`: This directory contains
-- `/src`: This directory contains
-- `/references`: This directory contains
-- `/tests`: This directory contains
-- `/teehr`: This directory contains the library source code.
-- `/playground`: This directory contains
-- `/dashboards`: This directory contains
-
-## Examples
-For examples of how to use TEEHR, see the [examples](examples)
-
 ## How to Install TEEHR
-Install with `pip`.
+Install with from source
 
 ```bash
 # Create and activate python environment, requires python >= 3.10
@@ -33,14 +19,27 @@ $ python3 -m pip install --upgrade pip
 # Build and install from source
 $ python3 -m pip install --upgrade build
 $ python -m build
-$ python -m pip install dist/teehr-0.0.1.tar.gz
+$ python -m pip install dist/teehr-0.1.0.tar.gz
+```
 
-# Or install from GitHub
-$ pip install 'teehr @ git+https://[PAT]@github.com/RTIInternational/teehr@[BRANCH]'
+Install from GitHub
+```bash
+$ pip install 'teehr @ git+https://github.com/RTIInternational/teehr@[BRANCH_TAG]'
 ```
 
 Use Docker
 ```bash
-$ docker build -t teehr:latest .
-$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:latest jupyter lab --ip 0.0.0.0 $HOME
+$ docker build -t teehr:v0.1.0 .
+$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.1.0 jupyter lab --ip 0.0.0.0 $HOME
 ```
+
+## Examples
+For examples of how to use TEEHR, see the [examples](examples).  We will maintain a basic set of example Jupyter Notebooks demonstrating how to use the TEEHR tools.
+
+
+## Resources
+In May of 2023 we put on a workshop at the CIROH 1st Annual Training and Developers Conference.  The workshop materials and presentation are available in the workshop GitHub repository: [teehr-may-2023-workshop](https://github.com/RTIInternational/teehr-may-2023-workshop).  This workshop was based on version 0.1.0.
+
+## Versioning
+The TEEHR project follows semantic versioning as described here: [https://semver.org/](https://semver.org/).
+Note, per the specification, "Major version zero (0.y.z) is for initial development. Anything MAY change at any time. The public API SHOULD NOT be considered stable.".  We are solidly in "major version zero" territory, and trying to move fast, so expect breaking changes often.

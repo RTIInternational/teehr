@@ -22,7 +22,7 @@ dynamic = ["version", "readme", "dependencies", "optional-dependencies"]
 description = "Tools for Exploratory Evaluation in Hydrologic Research"
 
 [tool.setuptools.dynamic]
-dependencies = {file = ["./requirements/minimum.txt", "./requirements/test.txt"]}
+dependencies = {file = ["./requirements/minimum.txt"]}
 version = {file = ["./version.txt"]}
 readme = {file = ["README.md"], content-type = "text/markdown"}
 
