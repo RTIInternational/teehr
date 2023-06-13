@@ -11,3 +11,5 @@ kerchunk
 gcsfs
 s3fs
 zarr
+rioxarray
+rasterio
