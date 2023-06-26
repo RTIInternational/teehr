@@ -7,14 +7,14 @@ import numpy as np
 import pandas as pd
 import dask
 
-from teehr.loading.utils_nwm import (
+from teehr.loading.nwm22.utils_nwm import (
     validate_run_args,
     build_remote_nwm_filelist,
     build_zarr_references,
     get_dataset,
 )
 
-from teehr.loading.const_nwm import (
+from teehr.loading.nwm22.const_nwm import (
     NWM22_UNIT_LOOKUP,
 )
 
@@ -182,10 +182,7 @@ def nwm_grids_to_parquet(
         t_minus_hours,
     )
 
-    json_paths = build_zarr_references(
-        component_paths,
-        json_dir
-    )
+    json_paths = build_zarr_references(component_paths, json_dir)
 
     fetch_and_format_nwm_grids(
         json_paths,

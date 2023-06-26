@@ -11,7 +11,7 @@ import numpy as np
 import xarray as xr
 import geopandas as gpd
 
-from teehr.loading.const_nwm import (
+from teehr.loading.nwm22.const_nwm import (
     NWM22_RUN_CONFIG,
     NWM22_ANALYSIS_CONFIG,
     NWM_BUCKET,
