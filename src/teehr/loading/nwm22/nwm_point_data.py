@@ -10,15 +10,13 @@ import dask
 import ujson
 
 
-from teehr.loading.utils_nwm import (
+from teehr.loading.nwm22.utils_nwm import (
     validate_run_args,
     build_remote_nwm_filelist,
     build_zarr_references,
 )
 
-from teehr.loading.const_nwm import (
-    NWM22_UNIT_LOOKUP
-)
+from teehr.loading.nwm22.const_nwm import NWM22_UNIT_LOOKUP
 
 
 def fetch_and_format_nwm_points(
@@ -59,11 +57,7 @@ def fetch_and_format_nwm_points(
         days.append(filename.split(".")[1])
         z_hours.append(filename.split(".")[3])
     df_refs = pd.DataFrame(
-        {
-            "day": days,
-            "z_hour": z_hours,
-            "filepath": json_paths
-        }
+        {"day": days, "z_hour": z_hours, "filepath": json_paths}
     )
     gps = df_refs.groupby(["day", "z_hour"])
     results = []
@@ -75,7 +69,7 @@ def fetch_and_format_nwm_points(
                 run,
                 variable_name,
                 output_parquet_dir,
-                concat_dims
+                concat_dims,
             )
         )
     dask.compute(results)
@@ -149,7 +143,9 @@ def fetch_and_format(
     df_temp["reference_time"] = ref_time
     df_temp["configuration"] = run
     df_temp["variable_name"] = variable_name
-    df_temp["location_id"] = "nwm22-" + df_temp.location_id.astype(int).astype(str)
+    df_temp["location_id"] = "nwm22-" + df_temp.location_id.astype(int).astype(
+        str
+    )
     # Save to parquet
     ref_time_str = pd.to_datetime(ref_time).strftime("%Y%m%dT%HZ")
     parquet_filepath = Path(output_parquet_dir, f"{ref_time_str}.parquet")
@@ -204,11 +200,7 @@ def nwm_to_parquet(
     parquet files follow the timeseries data model described here:
     https://github.com/RTIInternational/teehr/blob/main/docs/data_models.md#timeseries  # noqa
     """
-    validate_run_args(
-        run,
-        output_type,
-        variable_name
-    )
+    validate_run_args(run, output_type, variable_name)
 
     component_paths = build_remote_nwm_filelist(
         run,
@@ -218,10 +210,7 @@ def nwm_to_parquet(
         t_minus_hours,
     )
 
-    json_paths = build_zarr_references(
-        component_paths,
-        json_dir
-    )
+    json_paths = build_zarr_references(component_paths, json_dir)
 
     fetch_and_format_nwm_points(
         json_paths,

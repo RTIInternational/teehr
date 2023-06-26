@@ -1,36 +1,28 @@
 import pandas as pd
 import xarray as xr
 import fsspec
+
 # import numpy as np
 from datetime import datetime, timedelta
 
 from pathlib import Path
 from typing import Union, Iterable
 
-from teehr.loading.const_nwm import (
-    NWM22_UNIT_LOOKUP
-)
-from teehr.models.loading import (
-    ChunkByEnum
-)
+from teehr.loading.nwm22.const_nwm import NWM22_UNIT_LOOKUP
+from teehr.models.loading import ChunkByEnum
 
 # URL = 's3://noaa-nwm-retro-v2-zarr-pds'
 # MIN_DATE = datetime(1993, 1, 1)
 # MAX_DATE = datetime(2018, 12, 31, 23)
 
-URL = 's3://noaa-nwm-retrospective-2-1-zarr-pds/chrtout.zarr/'
+URL = "s3://noaa-nwm-retrospective-2-1-zarr-pds/chrtout.zarr/"
 MIN_DATE = pd.Timestamp(1979, 1, 1)
 MAX_DATE = pd.Timestamp(2020, 12, 31, 23)
 
 
 def _datetime_to_date(dt: datetime) -> datetime:
     """Convert datetime to date only"""
-    dt.replace(
-        hour=0,
-        minute=0,
-        second=0,
-        microsecond=0
-    )
+    dt.replace(hour=0, minute=0, second=0, microsecond=0)
     return dt
 
 
@@ -47,9 +39,9 @@ def _da_to_df(da: xr.DataArray) -> pd.DataFrame:
         columns={
             "time": "value_time",
             "feature_id": "location_id",
-            da.name: "value"
+            da.name: "value",
         },
-        inplace=True
+        inplace=True,
     )
     df.drop(columns=["latitude", "longitude"], inplace=True)
 
@@ -108,13 +100,11 @@ def nwm_retro_to_parquet(
     # Fetch all at once
     if chunk_by is None:
         da = ds[variable_name].sel(
-            feature_id=location_ids,
-            time=slice(start_date, end_date)
+            feature_id=location_ids, time=slice(start_date, end_date)
         )
         df = _da_to_df(da)
         output_filepath = Path(
-            output_parquet_dir,
-            "nwm22_retrospective.parquet"
+            output_parquet_dir, "nwm22_retrospective.parquet"
         )
         df.to_parquet(output_filepath)
         # output_filepath = Path(
@@ -136,22 +126,17 @@ def nwm_retro_to_parquet(
 
         # Fetch data in daily batches
         for day in range(number_of_days):
-
             # Setup start and end date for fetch
-            start_dt = (start_date + period_length * day)
+            start_dt = start_date + period_length * day
             end_dt = (
-                start_date
-                + period_length * (day + 1)
-                - timedelta(minutes=1)
+                start_date + period_length * (day + 1) - timedelta(minutes=1)
             )
             da = ds[variable_name].sel(
-                feature_id=location_ids,
-                time=slice(start_dt, end_dt)
+                feature_id=location_ids, time=slice(start_dt, end_dt)
             )
             df = _da_to_df(da)
             output_filepath = Path(
-                output_parquet_dir,
-                f"{start_dt.strftime('%Y-%m-%d')}.parquet"
+                output_parquet_dir, f"{start_dt.strftime('%Y-%m-%d')}.parquet"
             )
             df.to_parquet(output_filepath)
             # output_filepath = Path(
@@ -165,13 +150,11 @@ def nwm_retro_to_parquet(
     if chunk_by == "location_id":
         for location_id in location_ids:
             da = ds[variable_name].sel(
-                feature_id=location_id,
-                time=slice(start_date, end_date)
+                feature_id=location_id, time=slice(start_date, end_date)
             )
             df = _da_to_df(da)
             output_filepath = Path(
-                output_parquet_dir,
-                f"{location_id}.parquet"
+                output_parquet_dir, f"{location_id}.parquet"
             )
             df.to_parquet(output_filepath)
             # output_filepath = Path(
@@ -183,21 +166,20 @@ def nwm_retro_to_parquet(
 
 
 if __name__ == "__main__":
-
     # Examples
 
     LOCATION_IDS = [7086109, 7040481]
 
     nwm_retro_to_parquet(
-        variable_name='streamflow',
+        variable_name="streamflow",
         start_date="2000-01-01",
         end_date="2000-01-02 23:00",
         location_ids=LOCATION_IDS,
-        output_parquet_dir=Path(Path().home(), "temp", "nwm22_retrospective")
+        output_parquet_dir=Path(Path().home(), "temp", "nwm22_retrospective"),
     )
 
     nwm_retro_to_parquet(
-        variable_name='streamflow',
+        variable_name="streamflow",
         start_date=datetime(2000, 1, 1),
         end_date=datetime(2000, 1, 3),
         location_ids=LOCATION_IDS,
@@ -206,7 +188,7 @@ if __name__ == "__main__":
     )
 
     nwm_retro_to_parquet(
-        variable_name='streamflow',
+        variable_name="streamflow",
         start_date=datetime(2000, 1, 1),
         end_date=datetime(2000, 1, 2, 23),
         location_ids=LOCATION_IDS,

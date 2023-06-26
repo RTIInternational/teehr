@@ -13,3 +13,6 @@ s3fs
 zarr
 rioxarray
 rasterio
+pyarrow
+netCDF4
+h5py

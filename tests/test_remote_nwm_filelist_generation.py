@@ -1,6 +1,6 @@
 import pandas as pd
 from pathlib import Path
-from teehr.loading.utils_nwm import build_remote_nwm_filelist
+from teehr.loading.nwm22.utils_nwm import build_remote_nwm_filelist
 
 
 def test_remote_filelist():
