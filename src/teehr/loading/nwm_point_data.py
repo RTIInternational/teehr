@@ -19,40 +19,6 @@ from teehr.loading.point_config_models import PointConfigurationModel
 from teehr.loading.const_nwm import NWM22_UNIT_LOOKUP
 
 
-def file_chunk_loop_bag(
-    filepath: str,
-    location_ids: Iterable[int],
-    variable_name: str,
-    configuration: str,
-    schema: pa.Schema,
-):
-    """Fetch NWM values and convert to tabular format for a single json"""
-    ds = get_dataset(filepath).sel(feature_id=location_ids)
-    vals = ds[variable_name].astype("float32").values
-    nwm22_units = ds[variable_name].units
-    teehr_units = NWM22_UNIT_LOOKUP.get(nwm22_units, nwm22_units)
-    ref_time = ds.reference_time.values
-    valid_time = ds.time.values
-    feature_ids = ds.feature_id.astype("int32").values
-    teehr_location_ids = [f"nwm22-{feat_id}" for feat_id in feature_ids]
-    num_vals = vals.size
-
-    output_table = pa.table(
-        {
-            "value_time": np.full(vals.shape, valid_time),
-            "location_id": teehr_location_ids,
-            "value": vals,
-            "measurement_unit": num_vals * [teehr_units],
-            "reference_time": np.full(vals.shape, ref_time),
-            "configuration": num_vals * [configuration],
-            "variable_name": num_vals * [variable_name],
-        },
-        schema=schema,
-    )
-
-    return output_table
-
-
 @dask.delayed
 def file_chunk_loop(
     row: Tuple,
