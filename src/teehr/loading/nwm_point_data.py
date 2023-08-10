@@ -74,13 +74,13 @@ def file_chunk_loop(
 
     output_table = pa.table(
         {
-            "value_time": np.full(vals.shape, valid_time),
-            "location_id": teehr_location_ids,
             "value": vals,
-            "measurement_unit": num_vals * [teehr_units],
             "reference_time": np.full(vals.shape, ref_time),
+            "location_id": teehr_location_ids,
+            "value_time": np.full(vals.shape, valid_time),
             "configuration": num_vals * [configuration],
             "variable_name": num_vals * [variable_name],
+            "measurement_unit": num_vals * [teehr_units],
         },
         schema=schema,
     )
@@ -99,10 +99,10 @@ def process_chunk_of_files(
 
     schema = pa.schema(
         [
-            ("values", pa.float32()),
+            ("value", pa.float32()),
             ("reference_time", pa.timestamp("ms")),
             ("location_id", pa.string()),
-            ("valid_time", pa.timestamp("ms")),
+            ("value_time", pa.timestamp("ms")),
             ("configuration", pa.string()),
             ("variable_name", pa.string()),
             ("measurement_unit", pa.string()),
