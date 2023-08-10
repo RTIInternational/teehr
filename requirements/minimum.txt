@@ -1,7 +1,7 @@
 pandas
 geopandas
 duckdb
-pydantic
+pydantic<2.0
 hydrotools.metrics
 hydrotools.nwis-client
 dask
@@ -13,3 +13,5 @@ s3fs
 zarr
 rioxarray
 rasterio
+h5py
+pyarrow
