@@ -185,7 +185,7 @@ def nwm_grids_to_parquet(
             output_type: variable_name,
         },
     }
-    cm = GridConfigurationModel.parse_obj(vars)
+    cm = GridConfigurationModel.model_validate(vars)
 
     component_paths = build_remote_nwm_filelist(
         cm.configuration.name,

@@ -4,12 +4,6 @@ from typing import Optional
 from pydantic import BaseModel
 
 
-class BaseModel(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
-        smart_union = True
-
-
 # POINT OUTPUT VARIABLES ENUMS
 class ChannelRtVariableEnum(str, Enum):
     nudge = "nudge"
@@ -94,159 +88,159 @@ class OutputTypesEnum(str, Enum):
 
 # POINT OUTPUT TYPE MODELS (needed for each configuration enum)
 class Analysis(BaseModel):
-    channel_rt: Optional[ChannelRtVariableEnum]
-    terrain_rt: Optional[TerrainRtVariableEnum]
-    reservoir: Optional[ReservoirVariableEnum]
+    channel_rt: Optional[ChannelRtVariableEnum] = None
+    terrain_rt: Optional[TerrainRtVariableEnum] = None
+    reservoir: Optional[ReservoirVariableEnum] = None
 
 
 class AnalysisNoDA(BaseModel):
-    channel_rt: Optional[ChannelRtNoDAVariableEnum]
-    terrain_rt: Optional[TerrainRtVariableEnum]
-    reservoir: Optional[ReservoirVariableEnum]
+    channel_rt: Optional[ChannelRtNoDAVariableEnum] = None
+    terrain_rt: Optional[TerrainRtVariableEnum] = None
+    reservoir: Optional[ReservoirVariableEnum] = None
 
 
 class AnalysisExtend(BaseModel):
-    channel_rt: Optional[ChannelRtVariableEnum]
-    terrain_rt: Optional[TerrainRtVariableEnum]
-    reservoir: Optional[ReservoirVariableEnum]
+    channel_rt: Optional[ChannelRtVariableEnum] = None
+    terrain_rt: Optional[TerrainRtVariableEnum] = None
+    reservoir: Optional[ReservoirVariableEnum] = None
 
 
 class AnalysisExtendNoDA(BaseModel):
-    channel_rt: Optional[ChannelRtNoDAVariableEnum]
-    terrain_rt: Optional[TerrainRtVariableEnum]
-    reservoir: Optional[ReservoirVariableEnum]
+    channel_rt: Optional[ChannelRtNoDAVariableEnum] = None
+    terrain_rt: Optional[TerrainRtVariableEnum] = None
+    reservoir: Optional[ReservoirVariableEnum] = None
 
 
 class AnalysisLong(BaseModel):
-    channel_rt: Optional[ChannelRtVariableEnum]
-    terrain_rt: Optional[TerrainRtVariableEnum]
-    reservoir: Optional[ReservoirVariableEnum]
+    channel_rt: Optional[ChannelRtVariableEnum] = None
+    terrain_rt: Optional[TerrainRtVariableEnum] = None
+    reservoir: Optional[ReservoirVariableEnum] = None
 
 
 class AnalysisLongNoDA(BaseModel):
-    channel_rt: Optional[ChannelRtNoDAVariableEnum]
-    terrain_rt: Optional[TerrainRtVariableEnum]
-    reservoir: Optional[ReservoirVariableEnum]
+    channel_rt: Optional[ChannelRtNoDAVariableEnum] = None
+    terrain_rt: Optional[TerrainRtVariableEnum] = None
+    reservoir: Optional[ReservoirVariableEnum] = None
 
 
 class AnalysisHawaii(BaseModel):
-    channel_rt: Optional[ChannelRtVariableEnum]
-    terrain_rt: Optional[TerrainRtVariableEnum]
-    reservoir: Optional[ReservoirVariableEnum]
+    channel_rt: Optional[ChannelRtVariableEnum] = None
+    terrain_rt: Optional[TerrainRtVariableEnum] = None
+    reservoir: Optional[ReservoirVariableEnum] = None
 
 
 class AnalysisHawaiiNoDA(BaseModel):
-    channel_rt: Optional[ChannelRtNoDAVariableEnum]
-    terrain_rt: Optional[TerrainRtVariableEnum]
-    reservoir: Optional[ReservoirVariableEnum]
+    channel_rt: Optional[ChannelRtNoDAVariableEnum] = None
+    terrain_rt: Optional[TerrainRtVariableEnum] = None
+    reservoir: Optional[ReservoirVariableEnum] = None
 
 
 class AnalysisPuertoRico(BaseModel):
-    channel_rt: Optional[ChannelRtVariableEnum]
-    terrain_rt: Optional[TerrainRtVariableEnum]
-    reservoir: Optional[ReservoirVariableEnum]
+    channel_rt: Optional[ChannelRtVariableEnum] = None
+    terrain_rt: Optional[TerrainRtVariableEnum] = None
+    reservoir: Optional[ReservoirVariableEnum] = None
 
 
 class AnalysisPuertoRicoNoDA(BaseModel):
-    channel_rt: Optional[ChannelRtNoDAVariableEnum]
-    terrain_rt: Optional[TerrainRtVariableEnum]
-    reservoir: Optional[ReservoirVariableEnum]
+    channel_rt: Optional[ChannelRtNoDAVariableEnum] = None
+    terrain_rt: Optional[TerrainRtVariableEnum] = None
+    reservoir: Optional[ReservoirVariableEnum] = None
 
 
 class ShortRange(BaseModel):
-    channel_rt: Optional[ChannelRtVariableEnum]
-    terrain_rt: Optional[TerrainRtVariableEnum]
-    reservoir: Optional[ReservoirVariableEnum]
+    channel_rt: Optional[ChannelRtVariableEnum] = None
+    terrain_rt: Optional[TerrainRtVariableEnum] = None
+    reservoir: Optional[ReservoirVariableEnum] = None
 
 
 class ShortRangeHawaii(BaseModel):
-    channel_rt: Optional[ChannelRtVariableEnum]
-    terrain_rt: Optional[TerrainRtVariableEnum]
-    reservoir: Optional[ReservoirVariableEnum]
+    channel_rt: Optional[ChannelRtVariableEnum] = None
+    terrain_rt: Optional[TerrainRtVariableEnum] = None
+    reservoir: Optional[ReservoirVariableEnum] = None
 
 
 class ShortRangePuertoRico(BaseModel):
-    channel_rt: Optional[ChannelRtVariableEnum]
-    terrain_rt: Optional[TerrainRtVariableEnum]
-    reservoir: Optional[ReservoirVariableEnum]
+    channel_rt: Optional[ChannelRtVariableEnum] = None
+    terrain_rt: Optional[TerrainRtVariableEnum] = None
+    reservoir: Optional[ReservoirVariableEnum] = None
 
 
 class ShortRangeHawaiiNoDA(BaseModel):
-    channel_rt: Optional[ChannelRtNoDAVariableEnum]
-    terrain_rt: Optional[TerrainRtVariableEnum]
-    reservoir: Optional[ReservoirVariableEnum]
+    channel_rt: Optional[ChannelRtNoDAVariableEnum] = None
+    terrain_rt: Optional[TerrainRtVariableEnum] = None
+    reservoir: Optional[ReservoirVariableEnum] = None
 
 
 class ShortRangePuertoRicoNoDA(BaseModel):
-    channel_rt: Optional[ChannelRtNoDAVariableEnum]
-    terrain_rt: Optional[TerrainRtVariableEnum]
-    reservoir: Optional[ReservoirVariableEnum]
+    channel_rt: Optional[ChannelRtNoDAVariableEnum] = None
+    terrain_rt: Optional[TerrainRtVariableEnum] = None
+    reservoir: Optional[ReservoirVariableEnum] = None
 
 
 class MediumRangeMem1(BaseModel):
-    channel_rt_1: Optional[ChannelRtVariableEnum]
-    terrain_rt_1: Optional[TerrainRtVariableEnum]
-    reservoir_1: Optional[ReservoirVariableEnum]
+    channel_rt_1: Optional[ChannelRtVariableEnum] = None
+    terrain_rt_1: Optional[TerrainRtVariableEnum] = None
+    reservoir_1: Optional[ReservoirVariableEnum] = None
 
 
 class MediumRangeMem2(BaseModel):
-    channel_rt_2: Optional[ChannelRtVariableEnum]
-    terrain_rt_2: Optional[TerrainRtVariableEnum]
-    reservoir_2: Optional[ReservoirVariableEnum]
+    channel_rt_2: Optional[ChannelRtVariableEnum] = None
+    terrain_rt_2: Optional[TerrainRtVariableEnum] = None
+    reservoir_2: Optional[ReservoirVariableEnum] = None
 
 
 class MediumRangeMem3(BaseModel):
-    channel_rt_3: Optional[ChannelRtVariableEnum]
-    terrain_rt_3: Optional[TerrainRtVariableEnum]
-    reservoir_3: Optional[ReservoirVariableEnum]
+    channel_rt_3: Optional[ChannelRtVariableEnum] = None
+    terrain_rt_3: Optional[TerrainRtVariableEnum] = None
+    reservoir_3: Optional[ReservoirVariableEnum] = None
 
 
 class MediumRangeMem4(BaseModel):
-    channel_rt_4: Optional[ChannelRtVariableEnum]
-    terrain_rt_4: Optional[TerrainRtVariableEnum]
-    reservoir_4: Optional[ReservoirVariableEnum]
+    channel_rt_4: Optional[ChannelRtVariableEnum] = None
+    terrain_rt_4: Optional[TerrainRtVariableEnum] = None
+    reservoir_4: Optional[ReservoirVariableEnum] = None
 
 
 class MediumRangeMem5(BaseModel):
-    channel_rt_5: Optional[ChannelRtVariableEnum]
-    terrain_rt_5: Optional[TerrainRtVariableEnum]
-    reservoir_5: Optional[ReservoirVariableEnum]
+    channel_rt_5: Optional[ChannelRtVariableEnum] = None
+    terrain_rt_5: Optional[TerrainRtVariableEnum] = None
+    reservoir_5: Optional[ReservoirVariableEnum] = None
 
 
 class MediumRangeMem6(BaseModel):
-    channel_rt_6: Optional[ChannelRtVariableEnum]
-    terrain_rt_6: Optional[TerrainRtVariableEnum]
-    reservoir_6: Optional[ReservoirVariableEnum]
+    channel_rt_6: Optional[ChannelRtVariableEnum] = None
+    terrain_rt_6: Optional[TerrainRtVariableEnum] = None
+    reservoir_6: Optional[ReservoirVariableEnum] = None
 
 
 class MediumRangeMem7(BaseModel):
-    channel_rt_7: Optional[ChannelRtVariableEnum]
-    terrain_rt_7: Optional[TerrainRtVariableEnum]
-    reservoir_7: Optional[ReservoirVariableEnum]
+    channel_rt_7: Optional[ChannelRtVariableEnum] = None
+    terrain_rt_7: Optional[TerrainRtVariableEnum] = None
+    reservoir_7: Optional[ReservoirVariableEnum] = None
 
 
 class MediumRangeNoDA(BaseModel):
-    channel_rt: Optional[ChannelRtNoDAVariableEnum]
+    channel_rt: Optional[ChannelRtNoDAVariableEnum] = None
 
 
 class LongRangeMem1(BaseModel):
-    channel_rt_1: Optional[ChannelRtLongVariableEnum]
-    reservoir_1: Optional[ReservoirVariableEnum]
+    channel_rt_1: Optional[ChannelRtLongVariableEnum] = None
+    reservoir_1: Optional[ReservoirVariableEnum] = None
 
 
 class LongRangeMem2(BaseModel):
-    channel_rt_2: Optional[ChannelRtLongVariableEnum]
-    reservoir_2: Optional[ReservoirVariableEnum]
+    channel_rt_2: Optional[ChannelRtLongVariableEnum] = None
+    reservoir_2: Optional[ReservoirVariableEnum] = None
 
 
 class LongRangeMem3(BaseModel):
-    channel_rt_3: Optional[ChannelRtLongVariableEnum]
-    reservoir_3: Optional[ReservoirVariableEnum]
+    channel_rt_3: Optional[ChannelRtLongVariableEnum] = None
+    reservoir_3: Optional[ReservoirVariableEnum] = None
 
 
 class LongRangeMem4(BaseModel):
-    channel_rt_4: Optional[ChannelRtLongVariableEnum]
-    reservoir_4: Optional[ReservoirVariableEnum]
+    channel_rt_4: Optional[ChannelRtLongVariableEnum] = None
+    reservoir_4: Optional[ReservoirVariableEnum] = None
 
 
 # POINT CONFIGURATION ENUM
@@ -285,33 +279,33 @@ class PointConfigurationModel(BaseModel):
     configuration: ConfigurationsEnum  # configuration is OK?
     output_type: OutputTypesEnum  # output_type is OK?
     variable_name: VariableNamesEnum  # variable_name is OK?
-    analysis_assim: Optional[Analysis]
-    analysis_assim_no_da: Optional[AnalysisNoDA]
-    analysis_assim_extend: Optional[AnalysisExtend]
-    analysis_assim_extend_no_da: Optional[AnalysisExtendNoDA]
-    analysis_assim_long: Optional[AnalysisLong]
-    analysis_assim_long_no_da: Optional[AnalysisLongNoDA]
-    analysis_assim_hawaii: Optional[AnalysisHawaii]
-    analysis_assim_hawaii_no_da: Optional[AnalysisHawaiiNoDA]
-    analysis_assim_puertorico: Optional[AnalysisPuertoRico]
-    analysis_assim_puertorico_no_da: Optional[AnalysisPuertoRicoNoDA]
-    short_range: Optional[ShortRange]
-    short_range_hawaii: Optional[ShortRangeHawaii]
-    short_range_puertorico: Optional[ShortRangePuertoRico]
-    short_range_hawaii_no_da: Optional[ShortRangeHawaiiNoDA]
-    short_range_puertorico_no_da: Optional[ShortRangePuertoRicoNoDA]
-    medium_range_mem1: Optional[MediumRangeMem1]
-    medium_range_mem2: Optional[MediumRangeMem2]
-    medium_range_mem3: Optional[MediumRangeMem3]
-    medium_range_mem4: Optional[MediumRangeMem4]
-    medium_range_mem5: Optional[MediumRangeMem5]
-    medium_range_mem6: Optional[MediumRangeMem6]
-    medium_range_mem7: Optional[MediumRangeMem7]
-    medium_range_no_da: Optional[MediumRangeNoDA]
-    long_range_mem1: Optional[LongRangeMem1]
-    long_range_mem2: Optional[LongRangeMem2]
-    long_range_mem3: Optional[LongRangeMem3]
-    long_range_mem4: Optional[LongRangeMem4]
+    analysis_assim: Optional[Analysis] = None
+    analysis_assim_no_da: Optional[AnalysisNoDA] = None
+    analysis_assim_extend: Optional[AnalysisExtend] = None
+    analysis_assim_extend_no_da: Optional[AnalysisExtendNoDA] = None
+    analysis_assim_long: Optional[AnalysisLong] = None
+    analysis_assim_long_no_da: Optional[AnalysisLongNoDA] = None
+    analysis_assim_hawaii: Optional[AnalysisHawaii] = None
+    analysis_assim_hawaii_no_da: Optional[AnalysisHawaiiNoDA] = None
+    analysis_assim_puertorico: Optional[AnalysisPuertoRico] = None
+    analysis_assim_puertorico_no_da: Optional[AnalysisPuertoRicoNoDA] = None
+    short_range: Optional[ShortRange] = None
+    short_range_hawaii: Optional[ShortRangeHawaii] = None
+    short_range_puertorico: Optional[ShortRangePuertoRico] = None
+    short_range_hawaii_no_da: Optional[ShortRangeHawaiiNoDA] = None
+    short_range_puertorico_no_da: Optional[ShortRangePuertoRicoNoDA] = None
+    medium_range_mem1: Optional[MediumRangeMem1] = None
+    medium_range_mem2: Optional[MediumRangeMem2] = None
+    medium_range_mem3: Optional[MediumRangeMem3] = None
+    medium_range_mem4: Optional[MediumRangeMem4] = None
+    medium_range_mem5: Optional[MediumRangeMem5] = None
+    medium_range_mem6: Optional[MediumRangeMem6] = None
+    medium_range_mem7: Optional[MediumRangeMem7] = None
+    medium_range_no_da: Optional[MediumRangeNoDA] = None
+    long_range_mem1: Optional[LongRangeMem1] = None
+    long_range_mem2: Optional[LongRangeMem2] = None
+    long_range_mem3: Optional[LongRangeMem3] = None
+    long_range_mem4: Optional[LongRangeMem4] = None
 
 
 if __name__ == "__main__":

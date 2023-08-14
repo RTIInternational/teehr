@@ -268,7 +268,7 @@ if __name__ == "__main__":
 
     # Check input parameters
     # try:
-    cm = GridConfigurationModel.parse_obj(vars)
+    cm = GridConfigurationModel.model_validate(vars)
     # except ValidationError as e:
     #     print(e.errors()[0]["msg"])
     #     sys.exit()

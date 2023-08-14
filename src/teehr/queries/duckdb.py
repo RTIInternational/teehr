@@ -134,7 +134,7 @@ def get_metrics(
         ]
     """
 
-    mq = MetricQuery.parse_obj(
+    mq = MetricQuery.model_validate(
         {
             "primary_filepath": primary_filepath,
             "secondary_filepath": secondary_filepath,
@@ -302,7 +302,7 @@ def get_joined_timeseries(
         ]
     """
 
-    jtq = JoinedTimeseriesQuery.parse_obj(
+    jtq = JoinedTimeseriesQuery.model_validate(
         {
             "primary_filepath": primary_filepath,
             "secondary_filepath": secondary_filepath,
@@ -411,7 +411,7 @@ def get_timeseries(
             },
         ]
     """
-    tq = TimeseriesQuery.parse_obj(
+    tq = TimeseriesQuery.model_validate(
         {
             "timeseries_filepath": timeseries_filepath,
             "order_by": order_by,
@@ -514,7 +514,7 @@ def get_timeseries_chars(
         ]
     """
 
-    tcq = TimeseriesCharQuery.parse_obj(
+    tcq = TimeseriesCharQuery.model_validate(
         {
             "timeseries_filepath": timeseries_filepath,
             "order_by": order_by,

@@ -118,7 +118,7 @@ def get_metrics(
         include_metrics=["nash_sutcliffe_efficiency"]
     """
 
-    mq = tmq.MetricQuery.parse_obj(
+    mq = tmq.MetricQuery.model_validate(
         {
             "primary_filepath": primary_filepath,
             "secondary_filepath": secondary_filepath,
