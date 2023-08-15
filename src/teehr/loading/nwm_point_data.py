@@ -240,7 +240,7 @@ def nwm_to_parquet(
             output_type: variable_name,
         },
     }
-    cm = PointConfigurationModel.model_validate(vars)
+    cm = PointConfigurationModel.parse_obj(vars)
 
     component_paths = build_remote_nwm_filelist(
         cm.configuration.name,

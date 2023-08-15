@@ -4,12 +4,12 @@ from enum import Enum
 from typing import List, Optional, Union
 
 from pydantic import BaseModel as PydanticBaseModel
-from pydantic import field_validator
+from pydantic import validator
 from pathlib import Path
 
 
 class BaseModel(PydanticBaseModel):
-    class ConfigDict:
+    class Config:
         arbitrary_types_allowed = True
         smart_union = True
 
@@ -93,12 +93,12 @@ class JoinedFilter(BaseModel):
             return True
         return False
 
-    @field_validator("value")
+    @validator("value")
     def in_operator_must_have_iterable(cls, v, values):
-        if cls.is_iterable_not_str(v) and values.data["operator"] != "in":
+        if cls.is_iterable_not_str(v) and values["operator"] != "in":
             raise ValueError("iterable value must be used with 'in' operator")
 
-        if values.data["operator"] == "in" and not cls.is_iterable_not_str(v):
+        if values["operator"] == "in" and not cls.is_iterable_not_str(v):
             raise ValueError(
                 "'in' operator can only be used with iterable value"
             )
@@ -119,12 +119,12 @@ class TimeseriesFilter(BaseModel):
             return True
         return False
 
-    @field_validator("value")
+    @validator("value")
     def in_operator_must_have_iterable(cls, v, values):
-        if cls.is_iterable_not_str(v) and values.data["operator"] != "in":
+        if cls.is_iterable_not_str(v) and values["operator"] != "in":
             raise ValueError("iterable value must be used with 'in' operator")
 
-        if values.data["operator"] == "in" and not cls.is_iterable_not_str(v):
+        if values["operator"] == "in" and not cls.is_iterable_not_str(v):
             raise ValueError(
                 "'in' operator can only be used with iterable value"
             )
@@ -144,26 +144,26 @@ class MetricQuery(BaseModel):
     geometry_filepath: Optional[Union[str, Path]]
     include_geometry: bool
 
-    @field_validator("include_geometry")
+    @validator("include_geometry")
     def include_geometry_must_group_by_primary_location_id(cls, v, values):
         if (
             v is True
             and JoinedFilterFieldEnum.primary_location_id
-            not in values.data["group_by"]  # noqa
+            not in values["group_by"]  # noqa
         ):
             raise ValueError(
                 "`group_by` must contain `primary_location_id` "
                 "to include geometry in returned data"
             )
 
-        if v is True and not values.data["geometry_filepath"]:
+        if v is True and not values["geometry_filepath"]:
             raise ValueError(
                 "`geometry_filepath` must be provided to include geometry "
                 "in returned data"
             )
 
         if (
-            JoinedFilterFieldEnum.geometry in values.data["group_by"]
+            JoinedFilterFieldEnum.geometry in values["group_by"]
             and v is False
         ):
             raise ValueError(
@@ -173,7 +173,7 @@ class MetricQuery(BaseModel):
 
         return v
 
-    @field_validator("filters")
+    @validator("filters")
     def filter_must_be_list(cls, v):
         if v is None:
             return []
@@ -190,9 +190,9 @@ class JoinedTimeseriesQuery(BaseModel):
     geometry_filepath: Optional[Union[str, Path]]
     include_geometry: bool
 
-    @field_validator("include_geometry")
+    @validator("include_geometry")
     def include_geometry_must_group_by_primary_location_id(cls, v, values):
-        if v is True and not values.data["geometry_filepath"]:
+        if v is True and not values["geometry_filepath"]:
             raise ValueError(
                 "`geometry_filepath` must be provided to include geometry "
                 "in returned data"
@@ -200,7 +200,7 @@ class JoinedTimeseriesQuery(BaseModel):
 
         return v
 
-    @field_validator("filters")
+    @validator("filters")
     def filter_must_be_list(cls, v):
         if v is None:
             return []
@@ -213,7 +213,7 @@ class TimeseriesQuery(BaseModel):
     filters: Optional[List[TimeseriesFilter]] = []
     return_query: bool
 
-    @field_validator("filters")
+    @validator("filters")
     def filter_must_be_list(cls, v):
         if v is None:
             return []
@@ -227,7 +227,7 @@ class TimeseriesCharQuery(BaseModel):
     filters: Optional[List[TimeseriesFilter]] = []
     return_query: bool
 
-    @field_validator("filters")
+    @validator("filters")
     def filter_must_be_list(cls, v):
         if v is None:
             return []

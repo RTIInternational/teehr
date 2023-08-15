@@ -325,7 +325,7 @@ if __name__ == "__main__":
     }
 
     # Check input parameters
-    cm = PointConfigurationModel.model_validate(vars)
+    cm = PointConfigurationModel.parse_obj(vars)
 
     cm.configuration.name
     cm.output_type.name
