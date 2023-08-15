@@ -54,7 +54,12 @@ def process_single_file(
     """Compute zonal mean for a single json reference file and format
     to a dataframe using the TEEHR data model"""
     ds = get_dataset(singlefile)
-    ref_time = ds.reference_time.values[0]
+    filename = Path(singlefile).name
+    yrmoday = filename.split(".")[1]
+    z_hour = filename.split(".")[3][1:3]
+    ref_time = pd.to_datetime(yrmoday) \
+        + pd.to_timedelta(int(z_hour), unit="H")
+
     nwm22_units = ds[variable_name].attrs["units"]
     teehr_units = NWM22_UNIT_LOOKUP.get(nwm22_units, nwm22_units)
     value_time = ds.time.values[0]
@@ -220,5 +225,5 @@ if __name__ == "__main__":
         weights_parquet,
         "/home/sam/forcing_jsons",
         "/home/sam/forcing_parquet",
-        [0, 1, 2],
+        [0],
     )

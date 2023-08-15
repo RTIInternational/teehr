@@ -32,7 +32,9 @@ def file_chunk_loop(
     vals = ds[variable_name].astype("float32").values
     nwm22_units = ds[variable_name].units
     teehr_units = NWM22_UNIT_LOOKUP.get(nwm22_units, nwm22_units)
-    ref_time = ds.reference_time.values
+    ref_time = pd.to_datetime(row.day) \
+        + pd.to_timedelta(int(row.z_hour[1:3]), unit="H")
+
     valid_time = ds.time.values
     feature_ids = ds.feature_id.astype("int32").values
     teehr_location_ids = [f"nwm22-{feat_id}" for feat_id in feature_ids]
@@ -301,5 +303,5 @@ if __name__ == "__main__":
         location_ids,
         json_dir,
         output_parquet_dir,
-        t_minus_hours=[0, 1, 2],
+        t_minus_hours=[0],
     )
