@@ -1,6 +1,6 @@
 import pandas as pd
 from pathlib import Path
-from teehr.loading.generate_weights import generate_weights_file
+from teehr.utilities.generate_weights import generate_weights_file
 
 TEST_DIR = Path("tests", "data")
 TEMPLATE_FILEPATH = Path(TEST_DIR, "test_template_grid.nc")
