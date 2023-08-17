@@ -1,31 +1,114 @@
 from pathlib import Path
-from typing import Union, Iterable, Tuple, Optional, List
+from typing import Union, Iterable, Optional, List, Tuple
 from datetime import datetime
 
-import fsspec
-import xarray as xr
 import pandas as pd
-from kerchunk.combine import MultiZarrToZarr
 import dask
-import ujson
-
+import numpy as np
+import pyarrow as pa
+import pyarrow.parquet as pq
 
 from teehr.loading.nwm22.utils_nwm import (
-    validate_run_args,
     build_remote_nwm_filelist,
     build_zarr_references,
+    get_dataset,
 )
 
+from teehr.loading.nwm22.point_config_models import PointConfigurationModel
+
 from teehr.loading.nwm22.const_nwm import NWM22_UNIT_LOOKUP
+
+
+@dask.delayed
+def file_chunk_loop(
+    row: Tuple,
+    location_ids: Iterable[int],
+    variable_name: str,
+    configuration: str,
+    schema: pa.Schema,
+):
+    """Fetch NWM values and convert to tabular format for a single json"""
+    ds = get_dataset(row.filepath).sel(feature_id=location_ids)
+    vals = ds[variable_name].astype("float32").values
+    nwm22_units = ds[variable_name].units
+    teehr_units = NWM22_UNIT_LOOKUP.get(nwm22_units, nwm22_units)
+    ref_time = pd.to_datetime(row.day) \
+        + pd.to_timedelta(int(row.z_hour[1:3]), unit="H")
+
+    valid_time = ds.time.values
+    feature_ids = ds.feature_id.astype("int32").values
+    teehr_location_ids = [f"nwm22-{feat_id}" for feat_id in feature_ids]
+    num_vals = vals.size
+
+    output_table = pa.table(
+        {
+            "value": vals,
+            "reference_time": np.full(vals.shape, ref_time),
+            "location_id": teehr_location_ids,
+            "value_time": np.full(vals.shape, valid_time),
+            "configuration": num_vals * [configuration],
+            "variable_name": num_vals * [variable_name],
+            "measurement_unit": num_vals * [teehr_units],
+        },
+        schema=schema,
+    )
+
+    return output_table
+
+
+def process_chunk_of_files(
+    df: pd.DataFrame,
+    location_ids: Iterable[int],
+    configuration: str,
+    variable_name: str,
+    output_parquet_dir: str,
+) -> None:
+    """Assemble a table of NWM values for a chunk of NWM files"""
+
+    schema = pa.schema(
+        [
+            ("value", pa.float32()),
+            ("reference_time", pa.timestamp("ms")),
+            ("location_id", pa.string()),
+            ("value_time", pa.timestamp("ms")),
+            ("configuration", pa.string()),
+            ("variable_name", pa.string()),
+            ("measurement_unit", pa.string()),
+        ]
+    )
+
+    results = []
+    for row in df.itertuples():
+        results.append(
+            file_chunk_loop(
+                row, location_ids, variable_name, configuration, schema
+            )
+        )
+    output = dask.compute(*results)
+    output_table = pa.concat_tables(output)
+
+    max_ref = pa.compute.max(output_table["reference_time"])
+    min_ref = pa.compute.min(output_table["reference_time"])
+
+    if max_ref != min_ref:
+        min_ref_str = pa.compute.strftime(min_ref, format="%Y%m%dT%HZ")
+        max_ref_str = pa.compute.strftime(max_ref, format="%Y%m%dT%HZ")
+        filename = f"{min_ref_str}_{max_ref_str}.parquet"
+    else:
+        min_ref_str = pa.compute.strftime(min_ref, format="%Y%m%dT%HZ")
+        filename = f"{min_ref_str}.parquet"
+
+    pq.write_table(output_table, Path(output_parquet_dir, filename))
 
 
 def fetch_and_format_nwm_points(
     json_paths: List[str],
     location_ids: Iterable[int],
-    run: str,
+    configuration: str,
     variable_name: str,
     output_parquet_dir: str,
-    concat_dims=["time"],
+    process_by_z_hour: bool,
+    stepsize: int,
 ):
     """Reads in the single reference jsons, subsets the
         NWM data based on provided IDs and formats and saves
@@ -37,19 +120,24 @@ def fetch_and_format_nwm_points(
         List of the single json reference filepaths
     location_ids : Iterable[int]
         Array specifying NWM IDs of interest
-    run : str
+    configuration : str
         NWM forecast category
     variable_name : str
         Name of the NWM data variable to download
     output_parquet_dir : str
         Path to the directory for the final parquet files
+    process_by_z_hour: bool
+        A boolean flag that determines the method of grouping files
+        for processing.
+    stepsize: int
+        The number of json files to process at one time.
     """
 
     output_parquet_dir = Path(output_parquet_dir)
     if not output_parquet_dir.exists():
         output_parquet_dir.mkdir(parents=True)
 
-    # Format file list into a dataframe and group by reference time
+    # Format file list into a dataframe and group by specified method
     days = []
     z_hours = []
     for path in json_paths:
@@ -59,101 +147,31 @@ def fetch_and_format_nwm_points(
     df_refs = pd.DataFrame(
         {"day": days, "z_hour": z_hours, "filepath": json_paths}
     )
-    gps = df_refs.groupby(["day", "z_hour"])
-    results = []
-    for gp in gps:
-        results.append(
-            fetch_and_format(
-                gp,
-                location_ids,
-                run,
-                variable_name,
-                output_parquet_dir,
-                concat_dims,
-            )
-        )
-    dask.compute(results)
 
-
-@dask.delayed
-def fetch_and_format(
-    gp: Tuple[Tuple[str, str], pd.DataFrame],
-    location_ids: Iterable[int],
-    run: str,
-    variable_name: str,
-    output_parquet_dir: str,
-    concat_dims: List[str],
-) -> None:
-    """Helper function to fetch and format the NWM data using Dask.
-
-    Parameters
-    ----------
-    gp : Tuple[Tuple[str, str], pd.Dataframe],
-        A tuple containing a tuple of (day, z_hour) and a dataframe of
-        reference json filepaths for a specific z_hour.  Results from
-        pandas dataframe.groupby(["day", "z_hour"])
-    location_ids : Iterable[int]
-        Array specifying NWM IDs of interest
-    run : str
-        NWM forecast category
-    variable_name : str
-        Name of the NWM data variable to download
-    output_parquet_dir : str
-        Path to the directory for the final parquet files
-    concat_dims : list of strings
-        List of dimensions to use when concatenating single file
-        jsons to multifile
-    """
-    _, df = gp
-    # Only combine if there is more than one file for this group,
-    # otherwise a warning is thrown
-    if len(df.index) > 1:
-        mzz = MultiZarrToZarr(
-            df.filepath.tolist(),
-            remote_protocol="gcs",
-            remote_options={"anon": True},
-            concat_dims=concat_dims,
-        )
-        json = mzz.translate()
+    if process_by_z_hour:
+        # Option #1. Groupby day and z_hour
+        gps = df_refs.groupby(["day", "z_hour"])
+        dfs = [df for _, df in gps]
     else:
-        json = ujson.load(open(df.filepath.iloc[0]))
-    fs = fsspec.filesystem("reference", fo=json)
-    m = fs.get_mapper("")
-    ds_nwm_subset = xr.open_zarr(m, consolidated=False, chunks={}).sel(
-        feature_id=location_ids
-    )
-    # Convert to dataframe and do some reformatting
-    df_temp = ds_nwm_subset[variable_name].to_dataframe()
-    df_temp.reset_index(inplace=True)
-    if len(df.index) == 1:
-        df_temp["time"] = ds_nwm_subset.time.values[0]
-    df_temp.rename(
-        columns={
-            variable_name: "value",
-            "time": "value_time",
-            "feature_id": "location_id",
-        },
-        inplace=True,
-    )
-    df_temp.dropna(subset=["value"], inplace=True)
-    nwm22_units = ds_nwm_subset[variable_name].units
-    teehr_units = NWM22_UNIT_LOOKUP.get(nwm22_units, nwm22_units)
-    df_temp["measurement_unit"] = teehr_units
-    ref_time = ds_nwm_subset.reference_time.values[0]
-    df_temp["reference_time"] = ref_time
-    df_temp["configuration"] = run
-    df_temp["variable_name"] = variable_name
-    df_temp["location_id"] = "nwm22-" + df_temp.location_id.astype(int).astype(
-        str
-    )
-    # Save to parquet
-    ref_time_str = pd.to_datetime(ref_time).strftime("%Y%m%dT%HZ")
-    parquet_filepath = Path(output_parquet_dir, f"{ref_time_str}.parquet")
-    df_temp.to_parquet(parquet_filepath)
+        # Option #2. Chunk by some number of files
+        if stepsize > df_refs.index.size:
+            num_partitions = 1
+        else:
+            num_partitions = int(df_refs.index.size / stepsize)
+        dfs = np.array_split(df_refs, num_partitions)
+
+    for df in dfs:
+        process_chunk_of_files(
+            df,
+            location_ids,
+            configuration,
+            variable_name,
+            output_parquet_dir,
+        )
 
 
 def nwm_to_parquet(
-    run: str,
+    configuration: str,
     output_type: str,
     variable_name: str,
     start_date: Union[str, datetime],
@@ -162,12 +180,14 @@ def nwm_to_parquet(
     json_dir: str,
     output_parquet_dir: str,
     t_minus_hours: Optional[Iterable[int]] = None,
+    process_by_z_hour=True,
+    stepsize=100,
 ):
     """Fetches NWM point data, formats to tabular, and saves to parquet
 
     Parameters
     ----------
-    run : str
+    configuration : str
         NWM forecast category.
         (e.g., "analysis_assim", "short_range", ...)
     output_type : str
@@ -189,22 +209,42 @@ def nwm_to_parquet(
         Path to the directory for the final parquet files
     t_minus_hours: Optional[Iterable[int]]
         Specifies the look-back hours to include if an assimilation
-        run is specified.
+        configuration is specified.
+    process_by_z_hour: bool
+        A boolean flag that determines the method of grouping files
+        for processing. The default is True, which groups by day and z_hour.
+        False groups files sequentially into chunks, whose size is determined
+        by stepsize. This allows users to process more data potentially more
+        efficiently, but runs to risk of splitting up forecasts into separate
+        output files.
+    stepsize: int
+        The number of json files to process at one time. Used if
+        process_by_z_hour is set to False. Default value is 100. Larger values
+        can result in greater efficiency but require more memory
 
-    The NWM configuration variables, including run, output_type, and
-    variable_name are stored in the NWM22_RUN_CONFIG dictionary in
-    const_nwm.py.
+    The NWM configuration variables, including configuration, output_type, and
+    variable_name are stored as pydantic models in point_config_models.py
 
     Forecast and assimilation data is grouped and saved one file per reference
     time, using the file name convention "YYYYMMDDTHHZ".  The tabular output
     parquet files follow the timeseries data model described here:
     https://github.com/RTIInternational/teehr/blob/main/docs/data_models.md#timeseries  # noqa
     """
-    validate_run_args(run, output_type, variable_name)
+
+    # Parse input parameters
+    vars = {
+        "configuration": configuration,
+        "output_type": output_type,
+        "variable_name": variable_name,
+        configuration: {
+            output_type: variable_name,
+        },
+    }
+    cm = PointConfigurationModel.parse_obj(vars)
 
     component_paths = build_remote_nwm_filelist(
-        run,
-        output_type,
+        cm.configuration.name,
+        cm.output_type.name,
         start_date,
         ingest_days,
         t_minus_hours,
@@ -215,7 +255,53 @@ def nwm_to_parquet(
     fetch_and_format_nwm_points(
         json_paths,
         location_ids,
-        run,
-        variable_name,
+        cm.configuration.name,
+        cm.variable_name.name,
         output_parquet_dir,
+        process_by_z_hour,
+        stepsize,
+    )
+
+
+if __name__ == "__main__":
+    configuration = (
+        "analysis_assim_extend"  # analysis_assim_extend, short_range
+    )
+    output_type = "channel_rt"
+    variable_name = "streamflow"
+    start_date = "2023-03-18"
+    ingest_days = 3
+    location_ids = [
+        7086109,
+        7040481,
+        7053819,
+        7111205,
+        7110249,
+        14299781,
+        14251875,
+        14267476,
+        7152082,
+        14828145,
+    ]
+    # location_ids = np.load(
+    #     "/mnt/sf_shared/data/ciroh/temp_location_ids.npy"
+    # )  # all 2.7 million
+    json_dir = "/mnt/sf_shared/data/ciroh/jsons"
+    output_parquet_dir = "/mnt/sf_shared/data/ciroh/parquet"
+
+    # Start dask client here first?  Need to install dask[distributed]
+    # python -m pip install "dask[distributed]" --upgrade
+    # from dask.distributed import Client
+    # client = Client(n_workers=10)
+
+    nwm_to_parquet(
+        configuration,
+        output_type,
+        variable_name,
+        start_date,
+        ingest_days,
+        location_ids,
+        json_dir,
+        output_parquet_dir,
+        t_minus_hours=[0],
     )

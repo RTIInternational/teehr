@@ -93,7 +93,7 @@ class JoinedFilter(BaseModel):
             return True
         return False
 
-    @validator('value')
+    @validator("value")
     def in_operator_must_have_iterable(cls, v, values):
         if cls.is_iterable_not_str(v) and values["operator"] != "in":
             raise ValueError("iterable value must be used with 'in' operator")
@@ -119,7 +119,7 @@ class TimeseriesFilter(BaseModel):
             return True
         return False
 
-    @validator('value')
+    @validator("value")
     def in_operator_must_have_iterable(cls, v, values):
         if cls.is_iterable_not_str(v) and values["operator"] != "in":
             raise ValueError("iterable value must be used with 'in' operator")
@@ -144,11 +144,12 @@ class MetricQuery(BaseModel):
     geometry_filepath: Optional[Union[str, Path]]
     include_geometry: bool
 
-    @validator('include_geometry')
+    @validator("include_geometry")
     def include_geometry_must_group_by_primary_location_id(cls, v, values):
         if (
             v is True
-            and JoinedFilterFieldEnum.primary_location_id not in values["group_by"]  # noqa
+            and JoinedFilterFieldEnum.primary_location_id
+            not in values["group_by"]  # noqa
         ):
             raise ValueError(
                 "`group_by` must contain `primary_location_id` "
@@ -161,7 +162,10 @@ class MetricQuery(BaseModel):
                 "in returned data"
             )
 
-        if JoinedFilterFieldEnum.geometry in values["group_by"] and v is False:
+        if (
+            JoinedFilterFieldEnum.geometry in values["group_by"]
+            and v is False
+        ):
             raise ValueError(
                 "group_by contains `geometry` field but `include_geometry` "
                 "is False, must be True"
@@ -169,7 +173,7 @@ class MetricQuery(BaseModel):
 
         return v
 
-    @validator('filters')
+    @validator("filters")
     def filter_must_be_list(cls, v):
         if v is None:
             return []
@@ -186,7 +190,7 @@ class JoinedTimeseriesQuery(BaseModel):
     geometry_filepath: Optional[Union[str, Path]]
     include_geometry: bool
 
-    @validator('include_geometry')
+    @validator("include_geometry")
     def include_geometry_must_group_by_primary_location_id(cls, v, values):
         if v is True and not values["geometry_filepath"]:
             raise ValueError(
@@ -196,7 +200,7 @@ class JoinedTimeseriesQuery(BaseModel):
 
         return v
 
-    @validator('filters')
+    @validator("filters")
     def filter_must_be_list(cls, v):
         if v is None:
             return []
@@ -209,7 +213,7 @@ class TimeseriesQuery(BaseModel):
     filters: Optional[List[TimeseriesFilter]] = []
     return_query: bool
 
-    @validator('filters')
+    @validator("filters")
     def filter_must_be_list(cls, v):
         if v is None:
             return []
@@ -223,7 +227,7 @@ class TimeseriesCharQuery(BaseModel):
     filters: Optional[List[TimeseriesFilter]] = []
     return_query: bool
 
-    @validator('filters')
+    @validator("filters")
     def filter_must_be_list(cls, v):
         if v is None:
             return []

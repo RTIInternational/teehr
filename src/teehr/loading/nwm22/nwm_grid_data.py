@@ -8,11 +8,12 @@ import pandas as pd
 import dask
 
 from teehr.loading.nwm22.utils_nwm import (
-    validate_run_args,
     build_remote_nwm_filelist,
     build_zarr_references,
     get_dataset,
 )
+
+from teehr.loading.nwm22.grid_config_models import GridConfigurationModel
 
 from teehr.loading.nwm22.const_nwm import (
     NWM22_UNIT_LOOKUP,
@@ -45,12 +46,20 @@ def compute_zonal_mean(
 
 @dask.delayed
 def process_single_file(
-    singlefile: str, run: str, variable_name: str, weights_filepath: str
+    singlefile: str,
+    configuration: str,
+    variable_name: str,
+    weights_filepath: str,
 ):
     """Compute zonal mean for a single json reference file and format
     to a dataframe using the TEEHR data model"""
     ds = get_dataset(singlefile)
-    ref_time = ds.reference_time.values[0]
+    filename = Path(singlefile).name
+    yrmoday = filename.split(".")[1]
+    z_hour = filename.split(".")[3][1:3]
+    ref_time = pd.to_datetime(yrmoday) \
+        + pd.to_timedelta(int(z_hour), unit="H")
+
     nwm22_units = ds[variable_name].attrs["units"]
     teehr_units = NWM22_UNIT_LOOKUP.get(nwm22_units, nwm22_units)
     value_time = ds.time.values[0]
@@ -62,7 +71,7 @@ def process_single_file(
     df["value_time"] = value_time
     df["reference_time"] = ref_time
     df["measurement_unit"] = teehr_units
-    df["configuration"] = run
+    df["configuration"] = configuration
     df["variable_name"] = variable_name
 
     return df
@@ -70,7 +79,7 @@ def process_single_file(
 
 def fetch_and_format_nwm_grids(
     json_paths: List[str],
-    run: str,
+    configuration: str,
     variable_name: str,
     output_parquet_dir: str,
     zonal_weights_filepath: str,
@@ -103,7 +112,7 @@ def fetch_and_format_nwm_grids(
             results.append(
                 process_single_file(
                     singlefile,
-                    run,
+                    configuration,
                     variable_name,
                     zonal_weights_filepath,
                 )
@@ -122,7 +131,7 @@ def fetch_and_format_nwm_grids(
 
 
 def nwm_grids_to_parquet(
-    run: str,
+    configuration: str,
     output_type: str,
     variable_name: str,
     start_date: Union[str, datetime],
@@ -138,7 +147,7 @@ def nwm_grids_to_parquet(
 
     Parameters
     ----------
-    run : str
+    configuration : str
         NWM forecast category.
         (e.g., "analysis_assim", "short_range", ...)
     output_type : str
@@ -161,22 +170,31 @@ def nwm_grids_to_parquet(
         Path to the directory for the final parquet files
     t_minus_hours: Optional[Iterable[int]]
         Specifies the look-back hours to include if an assimilation
-        run is specified.
+        configuration is specified.
 
-    The NWM configuration variables, including run, output_type, and
-    variable_name are stored in the NWM22_RUN_CONFIG dictionary in
-    const_nwm.py.
+    The NWM configuration variables, including configuration, output_type, and
+    variable_name are stored as a pydantic model in grid_config_models.py
 
     Forecast and assimilation data is grouped and saved one file per reference
     time, using the file name convention "YYYYMMDDTHHZ".  The tabular output
     parquet files follow the timeseries data model described here:
     https://github.com/RTIInternational/teehr/blob/main/docs/data_models.md#timeseries  # noqa
     """
-    validate_run_args(run, output_type, variable_name)
+
+    # Parse input parameters
+    vars = {
+        "configuration": configuration,
+        "output_type": output_type,
+        "variable_name": variable_name,
+        configuration: {
+            output_type: variable_name,
+        },
+    }
+    cm = GridConfigurationModel.parse_obj(vars)
 
     component_paths = build_remote_nwm_filelist(
-        run,
-        output_type,
+        cm.configuration.name,
+        cm.output_type.name,
         start_date,
         ingest_days,
         t_minus_hours,
@@ -186,8 +204,8 @@ def nwm_grids_to_parquet(
 
     fetch_and_format_nwm_grids(
         json_paths,
-        run,
-        variable_name,
+        cm.configuration.name,
+        cm.variable_name.name,
         output_parquet_dir,
         zonal_weights_filepath,
     )
@@ -207,5 +225,5 @@ if __name__ == "__main__":
         weights_parquet,
         "/home/sam/forcing_jsons",
         "/home/sam/forcing_parquet",
-        [0, 1, 2],
+        [0],
     )
