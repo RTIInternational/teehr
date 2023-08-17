@@ -14,7 +14,7 @@ from teehr.loading.nwm22.utils_nwm import (
     get_dataset,
 )
 
-from teehr.loading.point_config_models import PointConfigurationModel
+from teehr.loading.nwm22.point_config_models import PointConfigurationModel
 
 from teehr.loading.nwm22.const_nwm import NWM22_UNIT_LOOKUP
 
