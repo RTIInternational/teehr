@@ -4,7 +4,7 @@ The instructions should generally work with other providers, but some steps will
 
 NOTE: you must clean up complete from other approaches before running this.
 
-Login to AWS.  You need to login with a user that has sufficient permissions.  
+Login to AWS.  You need to login with a user that has sufficient permissions.
 We used Admin for testing but need to determine the minimum set of permissions needed.
 ```bash
 aws configure
@@ -34,7 +34,7 @@ helm repo add autoscaler https://kubernetes.github.io/autoscaler
 cd ..
 ```
 
-This next step requires that you have a `.env` file the contains the 
+This next step requires that you have a `.env` file the contains the
 `GH_OAUTH_CLIENT_ID` and `GH_OAUTH_CLIENT_SECRET` values needed to use GitHub auth.
 A sample `.env-sample` is provided.
 ```bash
@@ -65,7 +65,7 @@ cd terraform/ && terraform output nfs_server_dns && cd ..
 
 Update NFS DNS in manifests, then run
 ```bash
-cd terraform/ 
+cd terraform/
 export NFS_SERVER_DNS="$(terraform output -raw nfs_server_dns)"
 cd ..
 cd kubernetes
@@ -83,7 +83,7 @@ MANUAL: Set alias in DNS provider
 
 Delete pods and let it recreate
 ```bash
-kubectl delete pods -l component=autohttps -n teehr-hub 
+kubectl delete pods -l component=autohttps -n teehr-hub
 ```
 
 
@@ -99,7 +99,7 @@ cd ..
 
 NFS
 ```bash
-cd terraform/ 
+cd terraform/
 export NFS_SERVER_DNS="$(terraform output -raw nfs_server_dns)"
 cd ..
 cd kubernetes
