@@ -8,7 +8,7 @@ import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from teehr.loading.utils_nwm import (
+from teehr.loading.nwm22.utils_nwm import (
     build_remote_nwm_filelist,
     build_zarr_references,
     get_dataset,
@@ -16,7 +16,7 @@ from teehr.loading.utils_nwm import (
 
 from teehr.loading.point_config_models import PointConfigurationModel
 
-from teehr.loading.const_nwm import NWM22_UNIT_LOOKUP
+from teehr.loading.nwm22.const_nwm import NWM22_UNIT_LOOKUP
 
 
 @dask.delayed

@@ -40,7 +40,7 @@ After you install conda (or miniconda3)
 ```bash
 # You may need to run the following
 # if you did not make conda default when installing
-$eval "$(/home/[username]/miniconda3/bin/conda shell.bash hook)"
+$ eval "$(/home/[username]/miniconda3/bin/conda shell.bash hook)"
 
 # Create conda env.
 $ conda config --append channels conda-forge

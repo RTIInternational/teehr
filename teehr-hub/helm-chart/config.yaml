@@ -1,0 +1,137 @@
+jupyterhub:
+  proxy:
+    https:
+      enabled: true
+      hosts:
+        - teehr-hub.rtiamanzi.org
+      letsencrypt:
+        contactEmail: mdenno@rti.org
+  hub:
+    config:
+      GitHubOAuthenticator:
+        client_id: ${GH_OAUTH_CLIENT_ID}
+        client_secret: ${GH_OAUTH_CLIENT_SECRET}
+        oauth_callback_url: https://teehr-hub.rtiamanzi.org/hub/oauth_callback
+        allowed_organizations:
+          - rtiinternational:teehr-hub-users
+        scope:
+          - read:org
+      JupyterHub:
+        authenticator_class: github
+      Authenticator:
+        admin_users:
+          - mgdenno
+        # allowed_users:
+        #   - mgdenno
+  singleuser:
+    image:
+      name: 935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr  # Image to use for singleuser environment. Must include dask-gateway.
+      tag: v0.1.3
+    defaultUrl: "/lab"  # Use jupyterlab by defualt.
+    profileList:
+    - display_name: "TEEHR Evaluation System (4 vCPU/32GB memory)"
+      default: True
+      description: "A r5.xlarge EC2 instance $0.252/hour"
+      kubespawner_override:
+        # mem_limit: 32G
+        # mem_guarantee: 32G
+        # cpu_limit: 4
+        # cpu_guarantee: 4
+        cpu_limit: null
+        mem_limit: null
+        node_selector:
+          node.kubernetes.io/instance-type: r5.xlarge
+    - display_name: "TEEHR Evaluation System (16 vCPU/128GB memory)"
+      description: "A r5.4xlarge EC2 instance @ $1.008/hour"
+      kubespawner_override:
+        # mem_limit: 128G
+        # mem_guarantee: 128G
+        # cpu_limit: 16
+        # cpu_guarantee: 16
+        cpu_limit: null
+        mem_limit: null
+        node_selector:
+          node.kubernetes.io/instance-type: r5.4xlarge
+    storage:
+      extraVolumes:
+      - name: teehr-hub-data-nfs
+        persistentVolumeClaim:
+            claimName: data-nfs
+      extraVolumeMounts:
+      - name: teehr-hub-data-nfs
+        mountPath: /data
+
+  scheduling:
+    userScheduler:
+      enabled: true
+    # podPriority:
+    #   enabled: true
+    # userPlaceholder:
+    #   enabled: true
+    #   replicas: 4
+    userPods:
+      nodeAffinity:
+        matchNodePurpose: require
+
+  cull:
+    enabled: true
+    timeout: 3600
+    every: 300
+
+dask-gateway:
+  gateway:
+    backend:
+      image:
+        name: 935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr  # Image to use for singleuser environment. Must include dask-gateway.
+        tag: v0.1.3
+#       scheduler:
+#         extraPodConfig:
+#           # serviceAccountName: user-sa
+#           tolerations:
+#             # Let's put schedulers on notebook nodes, since they aren't ephemeral
+#             # dask can recover from dead workers, but not dead schedulers
+#             - key: "hub.jupyter.org/dedicated"
+#               operator: "Equal"
+#               value: "user"
+#               effect: "NoSchedule"
+#             - key: "hub.jupyter.org_dedicated"
+#               operator: "Equal"
+#               value: "user"
+#               effect: "NoSchedule"
+#           nodeSelector:
+#             k8s.dask.org/node-purpose: scheduler
+#         cores:
+#           request: 0.01
+#           limit: 1
+#         memory:
+#           request: 128M
+#           limit: 1G
+      worker:
+        extraPodConfig:
+          volumes:
+            - name: teehr-hub-data-nfs
+              persistentVolumeClaim:
+                  claimName: data-nfs
+#           # serviceAccountName: user-sa
+#           # securityContext:
+#           #   fsGroup: 1000
+          tolerations:
+            - key: "k8s.dask.org/dedicated"
+              operator: "Equal"
+              value: "worker"
+              effect: "NoSchedule"
+            - key: "k8s.dask.org_dedicated"
+              operator: "Equal"
+              value: "worker"
+              effect: "NoSchedule"
+          nodeSelector:
+            # Dask workers get their own pre-emptible pool
+            k8s.dask.org/node-purpose: worker
+            node.kubernetes.io/instance-type: r5.4xlarge
+        extraContainerConfig:
+          volumeMounts:
+            - name: teehr-hub-data-nfs
+              mountPath: /data
+        #   securityContext:
+        #     runAsGroup: 1000
+        #     runAsUser: 1000

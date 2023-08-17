@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nfs-share-creator
+  labels:
+    hub.jupyter.org/deletable: "true"
+    app.kubernetes.io/managed-by: "Manual"
+    app.kubernetes.io/instance: "teehr-hub"
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "10"
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/managed-by: "Manual"
+        app.kubernetes.io/instance: "teehr-hub"
+    spec:
+      restartPolicy: Never
+      terminationGracePeriodSeconds: 0
+      tolerations: []
+
+      containers:
+        - name: dummy
+          image: busybox
+          command:
+            - /bin/sh
+            - -c
+            - "mkdir -p /mnt/teehr-hub && chown 1000:1000 /mnt/teehr-hub && mount && ls -la /mnt/"
+          volumeMounts:
+            # Mount the the base of the filesystem (which must be "/" on EFS as
+            # it will hang if trying to mount a path that isn't created
+            # already).
+            - name: teehr-hub-data-nfs
+              mountPath: /mnt/
+      volumes:
+        # Directly references the NFS server in order to create folders and
+        # update permissions. Note that this does not rely on the PV or PVC
+        # objects to be created.
+        - name: teehr-hub-data-nfs
+          nfs:
+            server: "${NFS_SERVER_DNS}"
+            path: "/"
