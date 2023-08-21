@@ -7,6 +7,8 @@ WORKDIR /teehr
 
 COPY . /teehr
 
+RUN echo ${TEEHR_VERSION}
+
 RUN cat /teehr/version.txt
 
 RUN pip install --upgrade pip build && \
