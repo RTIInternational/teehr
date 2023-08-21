@@ -1,13 +1,11 @@
 # Build TEEHR
 FROM python:3.10 AS builder
 
-ARG TEEHR_VERSION=0.1.0
-
 WORKDIR /teehr
 
 COPY . /teehr
 
-RUN echo ${TEEHR_VERSION}
+RUN export TEEHR_VERSION=$(cat /teehr/version.txt)
 
 RUN cat /teehr/version.txt
 
