@@ -31,6 +31,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Store the version, stripping any v-prefix
+      - name: Write release version
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          echo Version: $VERSION
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      # Use version in other step
+      - name: Read version
+        run: echo Version now: ${VERSION}
+
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
       - name: Install cosign
@@ -72,6 +83,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: TEEHR_VERSION=${VERSION}
 
 
       # Sign the resulting Docker image digest except on PRs.
@@ -117,3 +129,4 @@ jobs:
           push: true
           tags: ${{ steps.meta-aws.outputs.tags }}
           labels: ${{ steps.meta-aws.outputs.labels }}
+          build-args: TEEHR_VERSION=${VERSION}
