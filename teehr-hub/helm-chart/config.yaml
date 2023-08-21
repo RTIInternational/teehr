@@ -26,7 +26,7 @@ jupyterhub:
   singleuser:
     image:
       name: 935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr  # Image to use for singleuser environment. Must include dask-gateway.
-      tag: v0.1.3
+      tag: v0.2.1
     defaultUrl: "/lab"  # Use jupyterlab by defualt.
     profileList:
     - display_name: "TEEHR Evaluation System (4 vCPU/32GB memory)"
@@ -83,7 +83,7 @@ dask-gateway:
     backend:
       image:
         name: 935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr  # Image to use for singleuser environment. Must include dask-gateway.
-        tag: v0.1.3
+        tag: v0.2.1
 #       scheduler:
 #         extraPodConfig:
 #           # serviceAccountName: user-sa
@@ -135,3 +135,78 @@ dask-gateway:
         #   securityContext:
         #     runAsGroup: 1000
         #     runAsUser: 1000
+
+    # TODO: figure out a replacement for userLimits.
+    extraConfig:
+      optionHandler: |
+        from dask_gateway_server.options import Options, Integer, Float, String, Mapping
+        import string
+
+        # Escape a string to be dns-safe in the same way that KubeSpawner does it.
+        # Reference https://github.com/jupyterhub/kubespawner/blob/616f72c4aee26c3d2127c6af6086ec50d6cda383/kubespawner/spawner.py#L1828-L1835
+        # Adapted from https://github.com/minrk/escapism to avoid installing the package
+        # in the dask-gateway api pod which would have been problematic.
+        def escape_string_label_safe(to_escape):
+            safe_chars = set(string.ascii_lowercase + string.digits)
+            escape_char = "-"
+            chars = []
+            for c in to_escape:
+                if c in safe_chars:
+                    chars.append(c)
+                else:
+                    # escape one character
+                    buf = []
+                    # UTF-8 uses 1 to 4 bytes per character, depending on the Unicode symbol
+                    # so we need to transform each byte to its hex value
+                    for byte in c.encode("utf8"):
+                        buf.append(escape_char)
+                        # %X is the hex value of the byte
+                        buf.append('%X' % byte)
+                    escaped_hex_char = "".join(buf)
+                    chars.append(escaped_hex_char)
+            return u''.join(chars)
+
+        def cluster_options(user):
+            safe_username = escape_string_label_safe(user.name)
+            def option_handler(options):
+                #if ":" not in options.image:
+                #    raise ValueError("When specifying an image you must also provide a tag")
+                extra_annotations = {
+                    "hub.jupyter.org/username": safe_username,
+                    "prometheus.io/scrape": "true",
+                    "prometheus.io/port": "8787",
+                }
+                extra_labels = {
+                    "hub.jupyter.org/username": safe_username,
+                }
+                return {
+                    "worker_cores_limit": options.worker_cores,
+                    "worker_cores": options.worker_cores,
+                    "worker_memory": "%fG" % options.worker_memory,
+                    #"image": options.image,
+                    "scheduler_extra_pod_annotations": extra_annotations,
+                    "worker_extra_pod_annotations": extra_annotations,
+                    "scheduler_extra_pod_labels": extra_labels,
+                    "worker_extra_pod_labels": extra_labels,
+                    #"environment": options.environment,
+                }
+            return Options(
+                Integer("worker_cores", 2, min=1, label="Worker Cores"),
+                Float("worker_memory", 4, min=1, label="Worker Memory (GiB)"),
+                # The default image is set via DASK_GATEWAY__CLUSTER__OPTIONS__IMAGE env variable
+                # String("image", label="Image"),
+                # Mapping("environment", {}, label="Environment Variables"),
+                handler=option_handler,
+            )
+        c.Backend.cluster_options = cluster_options
+      idle: |
+        # timeout after 30 minutes of inactivity
+        c.KubeClusterConfig.idle_timeout = 1800
+    prefix: "/services/dask-gateway" # Users connect to the Gateway through the JupyterHub service.
+    auth:
+      type: jupyterhub # Use JupyterHub to authenticate with Dask Gateway
+  # traefik:
+  #   nodeSelector:
+  #     k8s.dask.org/node-purpose: core
+  #   service:
+  #     type: ClusterIP # Access Dask Gateway through JupyterHub. To access the Gateway from outside JupyterHub, this must be changed to a `LoadBalancer`.
