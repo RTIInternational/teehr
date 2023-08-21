@@ -40,7 +40,8 @@ jobs:
 
       # Use version in other step
       - name: Read version
-        run: echo Version now: ${VERSION}
+        run: |
+          echo Version: ${VERSION}
 
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
