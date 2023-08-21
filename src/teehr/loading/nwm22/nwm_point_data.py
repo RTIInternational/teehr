@@ -22,7 +22,7 @@ from teehr.loading.nwm22.const_nwm import NWM22_UNIT_LOOKUP
 @dask.delayed
 def file_chunk_loop(
     row: Tuple,
-    location_ids: Iterable[int],
+    location_ids: np.array,
     variable_name: str,
     configuration: str,
     schema: pa.Schema,
@@ -64,6 +64,8 @@ def process_chunk_of_files(
     output_parquet_dir: str,
 ) -> None:
     """Assemble a table of NWM values for a chunk of NWM files"""
+
+    location_ids = np.array(location_ids).astype(int)
 
     schema = pa.schema(
         [
