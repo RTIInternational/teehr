@@ -62,8 +62,9 @@ def process_chunk_of_files(
     configuration: str,
     variable_name: str,
     output_parquet_dir: str,
+    process_by_z_hour: bool
 ) -> None:
-    """Assemble a table of NWM values for a chunk of NWM files"""
+    """Assemble a table for a chunk of NWM files"""
 
     location_ids = np.array(location_ids).astype(int)
 
@@ -89,16 +90,18 @@ def process_chunk_of_files(
     output = dask.compute(*results)
     output_table = pa.concat_tables(output)
 
-    max_ref = pa.compute.max(output_table["reference_time"])
-    min_ref = pa.compute.min(output_table["reference_time"])
-
-    if max_ref != min_ref:
-        min_ref_str = pa.compute.strftime(min_ref, format="%Y%m%dT%HZ")
-        max_ref_str = pa.compute.strftime(max_ref, format="%Y%m%dT%HZ")
-        filename = f"{min_ref_str}_{max_ref_str}.parquet"
+    if process_by_z_hour:
+        row = df.iloc[0]
+        filename = f"{row.day}T{row.z_hour[1:3]}Z.parquet"
     else:
-        min_ref_str = pa.compute.strftime(min_ref, format="%Y%m%dT%HZ")
-        filename = f"{min_ref_str}.parquet"
+        # Use start and end dates including forecast hour
+        #  for the output file name
+        filepath_list = df.filepath.sort_values().tolist()
+        start_json = filepath_list[0].split("/")[-1].split(".")
+        start = f"{start_json[1]}T{start_json[3][1:3]}Z{start_json[6][1:]}F"
+        end_json = filepath_list[-1].split("/")[-1].split(".")
+        end = f"{end_json[1]}T{end_json[3][1:3]}Z{end_json[6][1:]}F"
+        filename = f"{start}_{end}.parquet"
 
     pq.write_table(output_table, Path(output_parquet_dir, filename))
 
@@ -169,6 +172,7 @@ def fetch_and_format_nwm_points(
             configuration,
             variable_name,
             output_parquet_dir,
+            process_by_z_hour,
         )
 
 
@@ -291,10 +295,8 @@ if __name__ == "__main__":
     json_dir = "/mnt/sf_shared/data/ciroh/jsons"
     output_parquet_dir = "/mnt/sf_shared/data/ciroh/parquet"
 
-    # Start dask client here first?  Need to install dask[distributed]
-    # python -m pip install "dask[distributed]" --upgrade
-    # from dask.distributed import Client
-    # client = Client(n_workers=10)
+    process_by_z_hour = False
+    stepsize = 100
 
     nwm_to_parquet(
         configuration,
@@ -306,4 +308,6 @@ if __name__ == "__main__":
         json_dir,
         output_parquet_dir,
         t_minus_hours=[0],
+        process_by_z_hour=process_by_z_hour,
+        stepsize=stepsize,
     )
