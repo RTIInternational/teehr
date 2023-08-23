@@ -26,7 +26,7 @@ jupyterhub:
   singleuser:
     image:
       name: 935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr  # Image to use for singleuser environment. Must include dask-gateway.
-      tag: v0.2.1
+      tag: v0.2.2
     defaultUrl: "/lab"  # Use jupyterlab by defualt.
     profileList:
     - display_name: "TEEHR Evaluation System (4 vCPU/32GB memory)"
@@ -83,29 +83,29 @@ dask-gateway:
     backend:
       image:
         name: 935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr  # Image to use for singleuser environment. Must include dask-gateway.
-        tag: v0.2.1
-#       scheduler:
-#         extraPodConfig:
-#           # serviceAccountName: user-sa
-#           tolerations:
-#             # Let's put schedulers on notebook nodes, since they aren't ephemeral
-#             # dask can recover from dead workers, but not dead schedulers
-#             - key: "hub.jupyter.org/dedicated"
-#               operator: "Equal"
-#               value: "user"
-#               effect: "NoSchedule"
-#             - key: "hub.jupyter.org_dedicated"
-#               operator: "Equal"
-#               value: "user"
-#               effect: "NoSchedule"
-#           nodeSelector:
-#             k8s.dask.org/node-purpose: scheduler
-#         cores:
-#           request: 0.01
-#           limit: 1
-#         memory:
-#           request: 128M
-#           limit: 1G
+        tag: v0.2.2
+      scheduler:
+        extraPodConfig:
+          # serviceAccountName: user-sa
+          tolerations:
+            # Let's put schedulers on notebook nodes, since they aren't ephemeral
+            # dask can recover from dead workers, but not dead schedulers
+            - key: "hub.jupyter.org/dedicated"
+              operator: "Equal"
+              value: "user"
+              effect: "NoSchedule"
+            - key: "hub.jupyter.org_dedicated"
+              operator: "Equal"
+              value: "user"
+              effect: "NoSchedule"
+          nodeSelector:
+            k8s.dask.org/node-purpose: scheduler
+        cores:
+          request: 0.01
+          limit: 1
+        memory:
+          request: 128M
+          limit: 1G
       worker:
         extraPodConfig:
           volumes:

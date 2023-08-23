@@ -13,7 +13,9 @@ RUN TEEHR_VERSION=$(cat /teehr/version.txt) && \
 
 # Install TEEHR in the Pangeo Image
 # https://hub.docker.com/r/pangeo/pangeo-notebook/tags
-FROM pangeo/pangeo-notebook:2023.06.07
+FROM pangeo/pangeo-notebook:2023.07.05
+
+RUN conda install -c conda-forge nodejs
 
 WORKDIR /teehr
 
