@@ -19,7 +19,7 @@ $ python3 -m pip install --upgrade pip
 # Build and install from source
 $ python3 -m pip install --upgrade build
 $ python -m build
-$ python -m pip install dist/teehr-0.2.2.tar.gz
+$ python -m pip install dist/teehr-0.2.3.tar.gz
 ```
 
 Install from GitHub
@@ -29,8 +29,8 @@ $ pip install 'teehr @ git+https://github.com/RTIInternational/teehr@[BRANCH_TAG
 
 Use Docker
 ```bash
-$ docker build -t teehr:v0.2.2 .
-$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.2.2 jupyter lab --ip 0.0.0.0 $HOME
+$ docker build -t teehr:v0.2.3 .
+$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.2.3 jupyter lab --ip 0.0.0.0 $HOME
 ```
 
 ## Examples
