@@ -282,6 +282,7 @@ def nwm_to_parquet(
         start_date,
         ingest_days,
         t_minus_hours,
+        crash_on_missing_file,
     )
 
     json_paths = build_zarr_references(component_paths,
@@ -302,12 +303,12 @@ def nwm_to_parquet(
 
 if __name__ == "__main__":
     configuration = (
-        "analysis_assim_extend"  # analysis_assim_extend, short_range
+        "short_range"  # analysis_assim_extend, short_range
     )
     output_type = "channel_rt"
     variable_name = "streamflow"
-    start_date = "2023-08-23"  # 1-day delay on gcs?
-    ingest_days = 1
+    start_date = "2023-08-24"
+    ingest_days = 2
     location_ids = [
         7086109,
         7040481,

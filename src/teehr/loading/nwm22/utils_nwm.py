@@ -285,6 +285,7 @@ def build_remote_nwm_filelist(
     start_dt: Union[str, datetime],
     ingest_days: int,
     t_minus_hours: Optional[Iterable[int]],
+    crash_on_missing_file: Optional[bool],
 ) -> List[str]:
     """Assembles a list of remote NWM files in GCS based on specified user
         parameters.
@@ -302,6 +303,10 @@ def build_remote_nwm_filelist(
     t_minus_hours: Iterable[int]
         Only necessary if assimilation data is requested.
         Collection of lookback hours to include when fetching assimilation data
+    crash_on_missing_file: bool
+        Flag specifying whether or not to fail if a missing NWM file is encountered
+        True = fail
+        False = skip and continue
 
     Returns
     -------
@@ -347,7 +352,10 @@ def build_remote_nwm_filelist(
             file_path = (
                 f"{gcs_dir}/nwm.{dt_str}/{configuration}/nwm.*.{output_type}*"
             )
-            component_paths.extend(fs.glob(file_path))
+            result = fs.glob(file_path)
+            if (len(result) == 0) & crash_on_missing_file:
+                raise FileNotFoundError(f"No NWM files found in {file_path}")
+            component_paths.extend(result)
         component_paths = sorted([f"gcs://{path}" for path in component_paths])
 
     return component_paths
