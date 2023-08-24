@@ -45,7 +45,7 @@ def np_to_list(t):
     return [a.tolist() for a in t]
 
 
-def get_dataset(zarr_json: str) -> xr.Dataset:
+def get_dataset(zarr_json: str, crash_on_missing_file: bool) -> xr.Dataset:
     """Retrieve a blob from the data service as xarray.Dataset.
 
     Parameters
@@ -67,12 +67,18 @@ def get_dataset(zarr_json: str) -> xr.Dataset:
             "remote_options": {"anon": True},
         },
     }
-    ds = xr.open_dataset(
-        "reference://",
-        engine="zarr",
-        backend_kwargs=backend_args,
-    )
-
+    try:
+        ds = xr.open_dataset(
+            "reference://",
+            engine="zarr",
+            backend_kwargs=backend_args,
+        )
+    except FileNotFoundError as e:
+        if crash_on_missing_file:
+            raise e
+        else:
+            # TODO: log missing file?
+            return None
     return ds
 
 
@@ -82,7 +88,10 @@ def list_to_np(lst):
 
 @dask.delayed
 def gen_json(
-    remote_path: str, fs: fsspec.filesystem, json_dir: Union[str, Path]
+    remote_path: str,
+    fs: fsspec.filesystem,
+    json_dir: Union[str, Path],
+    crash_on_missing_file: bool,
 ) -> str:
     """Helper function for creating single-file kerchunk reference JSONs.
 
@@ -106,19 +115,28 @@ def gen_json(
         default_fill_cache=False,
         default_cache_type="first",  # noqa
     )
-    with fs.open(remote_path, **so) as infile:
-        h5chunks = SingleHdf5ToZarr(infile, remote_path, inline_threshold=300)
-        p = remote_path.split("/")
-        date = p[3]
-        fname = p[5]
-        outf = str(Path(json_dir, f"{date}.{fname}.json"))
-        with open(outf, "wb") as f:
-            f.write(ujson.dumps(h5chunks.translate()).encode())
+    try:
+        with fs.open(remote_path, **so) as infile:
+            h5chunks = SingleHdf5ToZarr(infile, remote_path, inline_threshold=300)
+            p = remote_path.split("/")
+            date = p[3]
+            fname = p[5]
+            outf = str(Path(json_dir, f"{date}.{fname}.json"))
+            with open(outf, "wb") as f:
+                f.write(ujson.dumps(h5chunks.translate()).encode())
+    except FileNotFoundError as e:
+        if crash_on_missing_file:
+            raise e
+        else:
+            # TODO: log missing file?
+            return None
     return outf
 
 
 def build_zarr_references(
-    remote_paths: List[str], json_dir: Union[str, Path]
+    remote_paths: List[str],
+    json_dir: Union[str, Path],
+    crash_on_missing_file: bool,
 ) -> list[str]:
     """Builds the single file zarr json reference files using kerchunk.
 
@@ -142,8 +160,14 @@ def build_zarr_references(
 
     results = []
     for path in remote_paths:
-        results.append(gen_json(path, fs, json_dir))
+        results.append(gen_json(path, fs, json_dir, crash_on_missing_file))
     json_paths = dask.compute(results)[0]
+
+    if not any(json_paths):
+        raise FileNotFoundError("No NWM files for specified input \
+                                configuration were found in GCS!")
+
+    json_paths = [path for path in json_paths if path is not None]
 
     return sorted(json_paths)
 

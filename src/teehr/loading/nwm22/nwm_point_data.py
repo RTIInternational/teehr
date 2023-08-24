@@ -26,9 +26,13 @@ def file_chunk_loop(
     variable_name: str,
     configuration: str,
     schema: pa.Schema,
+    crash_on_missing_file: bool,
 ):
     """Fetch NWM values and convert to tabular format for a single json"""
-    ds = get_dataset(row.filepath).sel(feature_id=location_ids)
+    ds = get_dataset(row.filepath, crash_on_missing_file)
+    if not ds:
+        return None
+    ds = ds.sel(feature_id=location_ids)
     vals = ds[variable_name].astype("float32").values
     nwm22_units = ds[variable_name].units
     teehr_units = NWM22_UNIT_LOOKUP.get(nwm22_units, nwm22_units)
@@ -62,7 +66,8 @@ def process_chunk_of_files(
     configuration: str,
     variable_name: str,
     output_parquet_dir: str,
-    process_by_z_hour: bool
+    process_by_z_hour: bool,
+    crash_on_missing_file: bool,
 ) -> None:
     """Assemble a table for a chunk of NWM files"""
 
@@ -84,10 +89,21 @@ def process_chunk_of_files(
     for row in df.itertuples():
         results.append(
             file_chunk_loop(
-                row, location_ids, variable_name, configuration, schema
+                row,
+                location_ids,
+                variable_name,
+                configuration,
+                schema,
+                crash_on_missing_file
             )
         )
     output = dask.compute(*results)
+
+    if not any(output):
+        raise FileNotFoundError("No NWM files for specified input"
+                                "configuration were found in GCS!")
+
+    output = [tbl for tbl in output if tbl is not None]
     output_table = pa.concat_tables(output)
 
     if process_by_z_hour:
@@ -114,6 +130,7 @@ def fetch_and_format_nwm_points(
     output_parquet_dir: str,
     process_by_z_hour: bool,
     stepsize: int,
+    crash_on_missing_file: bool,
 ):
     """Reads in the single reference jsons, subsets the
         NWM data based on provided IDs and formats and saves
@@ -136,6 +153,11 @@ def fetch_and_format_nwm_points(
         for processing.
     stepsize: int
         The number of json files to process at one time.
+    crash_on_missing_file: bool
+        Flag specifying whether or not to fail if a missing NWM
+        file is encountered
+        True = fail
+        False = skip and continue
     """
 
     output_parquet_dir = Path(output_parquet_dir)
@@ -173,6 +195,7 @@ def fetch_and_format_nwm_points(
             variable_name,
             output_parquet_dir,
             process_by_z_hour,
+            crash_on_missing_file,
         )
 
 
@@ -186,8 +209,9 @@ def nwm_to_parquet(
     json_dir: str,
     output_parquet_dir: str,
     t_minus_hours: Optional[Iterable[int]] = None,
-    process_by_z_hour=True,
-    stepsize=100,
+    process_by_z_hour: Optional[bool] = True,
+    stepsize: Optional[int] = 100,
+    crash_on_missing_file: Optional[bool] = True
 ):
     """Fetches NWM point data, formats to tabular, and saves to parquet
 
@@ -227,6 +251,10 @@ def nwm_to_parquet(
         The number of json files to process at one time. Used if
         process_by_z_hour is set to False. Default value is 100. Larger values
         can result in greater efficiency but require more memory
+    crash_on_missing_file: bool
+        Flag specifying whether or not to fail if a missing NWM file is encountered
+        True = fail
+        False = skip and continue
 
     The NWM configuration variables, including configuration, output_type, and
     variable_name are stored as pydantic models in point_config_models.py
@@ -256,7 +284,9 @@ def nwm_to_parquet(
         t_minus_hours,
     )
 
-    json_paths = build_zarr_references(component_paths, json_dir)
+    json_paths = build_zarr_references(component_paths,
+                                       json_dir,
+                                       crash_on_missing_file)
 
     fetch_and_format_nwm_points(
         json_paths,
@@ -266,6 +296,7 @@ def nwm_to_parquet(
         output_parquet_dir,
         process_by_z_hour,
         stepsize,
+        crash_on_missing_file,
     )
 
 
@@ -275,8 +306,8 @@ if __name__ == "__main__":
     )
     output_type = "channel_rt"
     variable_name = "streamflow"
-    start_date = "2023-03-18"
-    ingest_days = 3
+    start_date = "2023-08-23"  # 1-day delay on gcs?
+    ingest_days = 1
     location_ids = [
         7086109,
         7040481,
@@ -295,8 +326,9 @@ if __name__ == "__main__":
     json_dir = "/mnt/sf_shared/data/ciroh/jsons"
     output_parquet_dir = "/mnt/sf_shared/data/ciroh/parquet"
 
-    process_by_z_hour = False
+    process_by_z_hour = True
     stepsize = 100
+    crash_on_missing_file = False
 
     nwm_to_parquet(
         configuration,
@@ -307,7 +339,8 @@ if __name__ == "__main__":
         location_ids,
         json_dir,
         output_parquet_dir,
-        t_minus_hours=[0],
+        t_minus_hours=[0, 1, 2],
         process_by_z_hour=process_by_z_hour,
         stepsize=stepsize,
+        crash_on_missing_file=crash_on_missing_file
     )

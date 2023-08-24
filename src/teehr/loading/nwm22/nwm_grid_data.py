@@ -50,10 +50,13 @@ def process_single_file(
     configuration: str,
     variable_name: str,
     weights_filepath: str,
+    crash_on_missing_file: bool,
 ):
     """Compute zonal mean for a single json reference file and format
     to a dataframe using the TEEHR data model"""
-    ds = get_dataset(singlefile)
+    ds = get_dataset(singlefile, crash_on_missing_file)
+    if not ds:
+        return None
     filename = Path(singlefile).name
     yrmoday = filename.split(".")[1]
     z_hour = filename.split(".")[3][1:3]
@@ -83,6 +86,7 @@ def fetch_and_format_nwm_grids(
     variable_name: str,
     output_parquet_dir: str,
     zonal_weights_filepath: str,
+    crash_on_missing_file: bool,
 ) -> None:
     """
     Reads in the single reference jsons, subsets the NWM data based on
@@ -95,6 +99,7 @@ def fetch_and_format_nwm_grids(
     # Format file list into a dataframe and group by reference time
     days = []
     z_hours = []
+
     for path in json_paths:
         filename = Path(path).name
         days.append(filename.split(".")[1])
@@ -115,9 +120,17 @@ def fetch_and_format_nwm_grids(
                     configuration,
                     variable_name,
                     zonal_weights_filepath,
+                    crash_on_missing_file,
                 )
             )
-        z_hour_df = pd.concat(dask.compute(results)[0])
+
+        output = dask.compute(*results)
+
+        output = [df for df in output if df is not None]
+        if len(output) == 0:
+            raise FileNotFoundError("No NWM files for specified input"
+                                    "configuration were found in GCS!")
+        z_hour_df = pd.concat(output)
 
         # Save to parquet
         yrmoday = df.day.iloc[0]
@@ -140,6 +153,7 @@ def nwm_grids_to_parquet(
     json_dir: str,
     output_parquet_dir: str,
     t_minus_hours: Optional[Iterable[int]] = None,
+    crash_on_missing_file: Optional[bool] = True,
 ):
     """
     Fetches NWM gridded data, calculates zonal statistics (mean) of selected
@@ -171,6 +185,10 @@ def nwm_grids_to_parquet(
     t_minus_hours: Optional[Iterable[int]]
         Specifies the look-back hours to include if an assimilation
         configuration is specified.
+    crash_on_missing_file: bool
+        Flag specifying whether or not to fail if a missing NWM file is encountered
+        True = fail
+        False = skip and continue
 
     The NWM configuration variables, including configuration, output_type, and
     variable_name are stored as a pydantic model in grid_config_models.py
@@ -200,7 +218,9 @@ def nwm_grids_to_parquet(
         t_minus_hours,
     )
 
-    json_paths = build_zarr_references(component_paths, json_dir)
+    json_paths = build_zarr_references(component_paths,
+                                       json_dir,
+                                       crash_on_missing_file)
 
     fetch_and_format_nwm_grids(
         json_paths,
@@ -208,6 +228,7 @@ def nwm_grids_to_parquet(
         cm.variable_name.name,
         output_parquet_dir,
         zonal_weights_filepath,
+        crash_on_missing_file,
     )
 
 
@@ -215,6 +236,7 @@ if __name__ == "__main__":
     # Local testing
     single_filepath = "/mnt/sf_shared/data/ciroh/nwm.20201218_forcing_short_range_nwm.t00z.short_range.forcing.f001.conus.nc"  # noqa
     weights_parquet = "/mnt/sf_shared/data/ciroh/wbdhuc10_weights.parquet"
+    crash_on_missing_file = True
 
     nwm_grids_to_parquet(
         "forcing_analysis_assim",
@@ -226,4 +248,5 @@ if __name__ == "__main__":
         "/home/sam/forcing_jsons",
         "/home/sam/forcing_parquet",
         [0],
+        crash_on_missing_file,
     )
