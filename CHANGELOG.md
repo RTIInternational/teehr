@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Behavior of loading when encountering missing files
+- Renamed field `zone` to `location_id` in `nwm_grid_data.py` and `generate_weights.py`
 
 ### Added
 - The boolean flag `crash_on_missing_file` to point and grid loading to determine whether to fail or continue on missing NWM files

@@ -26,7 +26,7 @@ def compute_zonal_mean(
     """Compute zonal mean for given zones and weights"""
     # Read weights file
     weights_df = pd.read_parquet(
-        weights_filepath, columns=["row", "col", "weight", "zone"]
+        weights_filepath, columns=["row", "col", "weight", "location_id"]
     )
     # Get variable data
     arr_2d = da.values[0]
@@ -38,7 +38,7 @@ def compute_zonal_mean(
     var_values = arr_2d[rows, cols]
     weights_df["value"] = var_values * weights_df.weight.values
     # Compute mean
-    df = weights_df.groupby(by="zone")["value"].mean().to_frame()
+    df = weights_df.groupby(by="location_id")["value"].mean().to_frame()
     df.reset_index(inplace=True)
 
     return df
@@ -139,7 +139,7 @@ def fetch_and_format_nwm_grids(
         parquet_filepath = Path(
             Path(output_parquet_dir), f"{ref_time_str}.parquet"
         )
-        z_hour_df.sort_values(["zone", "value_time"], inplace=True)
+        z_hour_df.sort_values(["location_id", "value_time"], inplace=True)
         z_hour_df.to_parquet(parquet_filepath)
 
 
@@ -210,17 +210,21 @@ def nwm_grids_to_parquet(
     }
     cm = GridConfigurationModel.parse_obj(vars)
 
-    component_paths = build_remote_nwm_filelist(
-        cm.configuration.name,
-        cm.output_type.name,
-        start_date,
-        ingest_days,
-        t_minus_hours,
-    )
+    # component_paths = build_remote_nwm_filelist(
+    #     cm.configuration.name,
+    #     cm.output_type.name,
+    #     start_date,
+    #     ingest_days,
+    #     t_minus_hours,
+    # )
 
-    json_paths = build_zarr_references(component_paths,
-                                       json_dir,
-                                       crash_on_missing_file)
+    # json_paths = build_zarr_references(component_paths,
+    #                                    json_dir,
+    #                                    crash_on_missing_file)
+
+    import glob
+    json_paths = glob.glob("/home/sam/forcing_jsons/nwm.20201218*forcing*.json")
+    json_paths.sort()
 
     fetch_and_format_nwm_grids(
         json_paths,
