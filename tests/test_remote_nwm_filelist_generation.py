@@ -17,6 +17,7 @@ def test_remote_filelist():
         start_date,
         ingest_days,
         t_minus_hours,
+        crash_on_missing_file=True,
     )
 
     test_list_path = Path("tests", "data", "test_remote_list.csv")
