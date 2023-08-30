@@ -26,10 +26,10 @@ def file_chunk_loop(
     variable_name: str,
     configuration: str,
     schema: pa.Schema,
-    crash_on_missing_file: bool,
+    ignore_missing_file: bool,
 ):
     """Fetch NWM values and convert to tabular format for a single json"""
-    ds = get_dataset(row.filepath, crash_on_missing_file)
+    ds = get_dataset(row.filepath, ignore_missing_file)
     if not ds:
         return None
     ds = ds.sel(feature_id=location_ids)
@@ -67,7 +67,7 @@ def process_chunk_of_files(
     variable_name: str,
     output_parquet_dir: str,
     process_by_z_hour: bool,
-    crash_on_missing_file: bool,
+    ignore_missing_file: bool,
 ) -> None:
     """Assemble a table for a chunk of NWM files"""
 
@@ -94,7 +94,7 @@ def process_chunk_of_files(
                 variable_name,
                 configuration,
                 schema,
-                crash_on_missing_file
+                ignore_missing_file
             )
         )
     output = dask.compute(*results)
@@ -130,7 +130,7 @@ def fetch_and_format_nwm_points(
     output_parquet_dir: str,
     process_by_z_hour: bool,
     stepsize: int,
-    crash_on_missing_file: bool,
+    ignore_missing_file: bool,
 ):
     """Reads in the single reference jsons, subsets the
         NWM data based on provided IDs and formats and saves
@@ -153,11 +153,11 @@ def fetch_and_format_nwm_points(
         for processing.
     stepsize: int
         The number of json files to process at one time.
-    crash_on_missing_file: bool
+    ignore_missing_file: bool
         Flag specifying whether or not to fail if a missing NWM
         file is encountered
-        True = fail
-        False = skip and continue
+        True = skip and continue
+        False = fail
     """
 
     output_parquet_dir = Path(output_parquet_dir)
@@ -174,7 +174,6 @@ def fetch_and_format_nwm_points(
     df_refs = pd.DataFrame(
         {"day": days, "z_hour": z_hours, "filepath": json_paths}
     )
-
     if process_by_z_hour:
         # Option #1. Groupby day and z_hour
         gps = df_refs.groupby(["day", "z_hour"])
@@ -195,7 +194,7 @@ def fetch_and_format_nwm_points(
             variable_name,
             output_parquet_dir,
             process_by_z_hour,
-            crash_on_missing_file,
+            ignore_missing_file,
         )
 
 
@@ -211,7 +210,7 @@ def nwm_to_parquet(
     t_minus_hours: Optional[Iterable[int]] = None,
     process_by_z_hour: Optional[bool] = True,
     stepsize: Optional[int] = 100,
-    crash_on_missing_file: Optional[bool] = True
+    ignore_missing_file: Optional[bool] = True
 ):
     """Fetches NWM point data, formats to tabular, and saves to parquet
 
@@ -251,10 +250,10 @@ def nwm_to_parquet(
         The number of json files to process at one time. Used if
         process_by_z_hour is set to False. Default value is 100. Larger values
         can result in greater efficiency but require more memory
-    crash_on_missing_file: bool
+    ignore_missing_file: bool
         Flag specifying whether or not to fail if a missing NWM file is encountered
-        True = fail
-        False = skip and continue
+        True = skip and continue
+        False = fail
 
     The NWM configuration variables, including configuration, output_type, and
     variable_name are stored as pydantic models in point_config_models.py
@@ -282,12 +281,12 @@ def nwm_to_parquet(
         start_date,
         ingest_days,
         t_minus_hours,
-        crash_on_missing_file,
+        ignore_missing_file,
     )
 
     json_paths = build_zarr_references(component_paths,
                                        json_dir,
-                                       crash_on_missing_file)
+                                       ignore_missing_file)
 
     fetch_and_format_nwm_points(
         json_paths,
@@ -297,7 +296,7 @@ def nwm_to_parquet(
         output_parquet_dir,
         process_by_z_hour,
         stepsize,
-        crash_on_missing_file,
+        ignore_missing_file,
     )
 
 
@@ -329,7 +328,7 @@ if __name__ == "__main__":
 
     process_by_z_hour = True
     stepsize = 100
-    crash_on_missing_file = False
+    ignore_missing_file = False
 
     nwm_to_parquet(
         configuration,
@@ -343,5 +342,5 @@ if __name__ == "__main__":
         t_minus_hours=[0, 1, 2],
         process_by_z_hour=process_by_z_hour,
         stepsize=stepsize,
-        crash_on_missing_file=crash_on_missing_file
+        ignore_missing_file=ignore_missing_file
     )
