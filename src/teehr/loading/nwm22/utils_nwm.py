@@ -45,7 +45,7 @@ def np_to_list(t):
     return [a.tolist() for a in t]
 
 
-def get_dataset(zarr_json: str) -> xr.Dataset:
+def get_dataset(zarr_json: str, ignore_missing_file: bool) -> xr.Dataset:
     """Retrieve a blob from the data service as xarray.Dataset.
 
     Parameters
@@ -67,12 +67,18 @@ def get_dataset(zarr_json: str) -> xr.Dataset:
             "remote_options": {"anon": True},
         },
     }
-    ds = xr.open_dataset(
-        "reference://",
-        engine="zarr",
-        backend_kwargs=backend_args,
-    )
-
+    try:
+        ds = xr.open_dataset(
+            "reference://",
+            engine="zarr",
+            backend_kwargs=backend_args,
+        )
+    except FileNotFoundError as e:
+        if not ignore_missing_file:
+            raise e
+        else:
+            # TODO: log missing file?
+            return None
     return ds
 
 
@@ -82,7 +88,10 @@ def list_to_np(lst):
 
 @dask.delayed
 def gen_json(
-    remote_path: str, fs: fsspec.filesystem, json_dir: Union[str, Path]
+    remote_path: str,
+    fs: fsspec.filesystem,
+    json_dir: Union[str, Path],
+    ignore_missing_file: bool,
 ) -> str:
     """Helper function for creating single-file kerchunk reference JSONs.
 
@@ -106,19 +115,30 @@ def gen_json(
         default_fill_cache=False,
         default_cache_type="first",  # noqa
     )
-    with fs.open(remote_path, **so) as infile:
-        h5chunks = SingleHdf5ToZarr(infile, remote_path, inline_threshold=300)
-        p = remote_path.split("/")
-        date = p[3]
-        fname = p[5]
-        outf = str(Path(json_dir, f"{date}.{fname}.json"))
-        with open(outf, "wb") as f:
-            f.write(ujson.dumps(h5chunks.translate()).encode())
+    try:
+        with fs.open(remote_path, **so) as infile:
+            p = remote_path.split("/")
+            date = p[3]
+            fname = p[5]
+            outf = str(Path(json_dir, f"{date}.{fname}.json"))
+            h5chunks = SingleHdf5ToZarr(infile,
+                                        remote_path,
+                                        inline_threshold=300)
+            with open(outf, "wb") as f:
+                f.write(ujson.dumps(h5chunks.translate()).encode())
+    except FileNotFoundError as e:
+        if not ignore_missing_file:
+            raise e
+        else:
+            # TODO: log missing file?
+            return None
     return outf
 
 
 def build_zarr_references(
-    remote_paths: List[str], json_dir: Union[str, Path]
+    remote_paths: List[str],
+    json_dir: Union[str, Path],
+    ignore_missing_file: bool,
 ) -> list[str]:
     """Builds the single file zarr json reference files using kerchunk.
 
@@ -140,10 +160,32 @@ def build_zarr_references(
 
     fs = fsspec.filesystem("gcs", anon=True)
 
-    results = []
+    # Check to see if the jsons already exist locally
+    existing_jsons = []
+    missing_paths = []
     for path in remote_paths:
-        results.append(gen_json(path, fs, json_dir))
+        p = path.split("/")
+        date = p[3]
+        fname = p[5]
+        local_path = Path(json_dir, f"{date}.{fname}.json")
+        if local_path.exists():
+            existing_jsons.append(str(local_path))
+        else:
+            missing_paths.append(path)
+    if len(missing_paths) == 0:
+        return sorted(existing_jsons)
+
+    results = []
+    for path in missing_paths:
+        results.append(gen_json(path, fs, json_dir, ignore_missing_file))
     json_paths = dask.compute(results)[0]
+    json_paths.extend(existing_jsons)
+
+    if not any(json_paths):
+        raise FileNotFoundError("No NWM files for specified input \
+                                configuration were found in GCS!")
+
+    json_paths = [path for path in json_paths if path is not None]
 
     return sorted(json_paths)
 
@@ -261,6 +303,7 @@ def build_remote_nwm_filelist(
     start_dt: Union[str, datetime],
     ingest_days: int,
     t_minus_hours: Optional[Iterable[int]],
+    ignore_missing_file: Optional[bool],
 ) -> List[str]:
     """Assembles a list of remote NWM files in GCS based on specified user
         parameters.
@@ -278,6 +321,11 @@ def build_remote_nwm_filelist(
     t_minus_hours: Iterable[int]
         Only necessary if assimilation data is requested.
         Collection of lookback hours to include when fetching assimilation data
+    ignore_missing_file: bool
+        Flag specifying whether or not to fail if a missing
+        NWM file is encountered
+        True = skip and continue
+        False = fail
 
     Returns
     -------
@@ -323,7 +371,10 @@ def build_remote_nwm_filelist(
             file_path = (
                 f"{gcs_dir}/nwm.{dt_str}/{configuration}/nwm.*.{output_type}*"
             )
-            component_paths.extend(fs.glob(file_path))
+            result = fs.glob(file_path)
+            if (len(result) == 0) & (not ignore_missing_file):
+                raise FileNotFoundError(f"No NWM files found in {file_path}")
+            component_paths.extend(result)
         component_paths = sorted([f"gcs://{path}" for path in component_paths])
 
     return component_paths

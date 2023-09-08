@@ -226,7 +226,7 @@ def generate_weights_file(
         df.rename(columns={unique_zone_id: "zone"}, inplace=True)
     else:
         df = weights_gdf[["row", "col", "weight"]]
-        df["zone"] = weights_gdf.index.values
+        df["location_id"] = weights_gdf.index.values
 
     if output_weights_filepath:
         df.to_parquet(output_weights_filepath)
