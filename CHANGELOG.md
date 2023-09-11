@@ -1,9 +1,20 @@
-# Changelog
+-# Changelog
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.2.5] - 2023-09-11
+
+### Changed
+
+- None
+
+### Added
+- Added ability to use holoviz export to TEEHR-HUB:
+    - Installed firefox (and a bunch of dependencies) to the Docker container (using apt)
+    - Installed selenium and the geckodriver using conda
 
 ## [0.2.4] - 2023-08-30
 
