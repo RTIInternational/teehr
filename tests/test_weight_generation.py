@@ -2,12 +2,15 @@ import pandas as pd
 from pathlib import Path
 from teehr.utilities.generate_weights import generate_weights_file
 
-TEST_DIR = Path("tests", "data")
+import pytest
+
+TEST_DIR = Path("tests", "data", "nwm22")
 TEMPLATE_FILEPATH = Path(TEST_DIR, "test_template_grid.nc")
 ZONES_FILEPATH = Path(TEST_DIR, "test_ngen_divides.parquet")
 WEIGHTS_FILEPATH = Path(TEST_DIR, "test_weights_results.parquet")
 
 
+@pytest.mark.filterwarnings("ignore::RuntimeWarning")
 def test_weights():
     df = generate_weights_file(
         zone_polygon_filepath=ZONES_FILEPATH,

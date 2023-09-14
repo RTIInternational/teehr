@@ -20,7 +20,7 @@ def test_remote_filelist():
         ignore_missing_file=False,
     )
 
-    test_list_path = Path("tests", "data", "test_remote_list.csv")
+    test_list_path = Path("tests", "data", "nwm22", "test_remote_list.csv")
     test_df = pd.read_csv(test_list_path)
     test_list = test_df["filename"].to_list()
 
