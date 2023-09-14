@@ -223,7 +223,7 @@ def generate_weights_file(
 
     if unique_zone_id:
         df = weights_gdf[["row", "col", "weight", unique_zone_id]].copy()
-        df.rename(columns={unique_zone_id: "zone"}, inplace=True)
+        df.rename(columns={unique_zone_id: "location_id"}, inplace=True)
     else:
         df = weights_gdf[["row", "col", "weight"]]
         df["location_id"] = weights_gdf.index.values

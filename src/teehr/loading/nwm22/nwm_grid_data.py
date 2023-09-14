@@ -50,11 +50,11 @@ def process_single_file(
     configuration: str,
     variable_name: str,
     weights_filepath: str,
-    crash_on_missing_file: bool,
+    ignore_missing_file: bool,
 ):
     """Compute zonal mean for a single json reference file and format
     to a dataframe using the TEEHR data model"""
-    ds = get_dataset(singlefile, crash_on_missing_file)
+    ds = get_dataset(singlefile, ignore_missing_file)
     if not ds:
         return None
     filename = Path(singlefile).name
@@ -86,7 +86,7 @@ def fetch_and_format_nwm_grids(
     variable_name: str,
     output_parquet_dir: str,
     zonal_weights_filepath: str,
-    crash_on_missing_file: bool,
+    ignore_missing_file: bool,
 ) -> None:
     """
     Reads in the single reference jsons, subsets the NWM data based on
@@ -120,7 +120,7 @@ def fetch_and_format_nwm_grids(
                     configuration,
                     variable_name,
                     zonal_weights_filepath,
-                    crash_on_missing_file,
+                    ignore_missing_file,
                 )
             )
 
@@ -153,7 +153,7 @@ def nwm_grids_to_parquet(
     json_dir: str,
     output_parquet_dir: str,
     t_minus_hours: Optional[Iterable[int]] = None,
-    crash_on_missing_file: Optional[bool] = True,
+    ignore_missing_file: Optional[bool] = True,
 ):
     """
     Fetches NWM gridded data, calculates zonal statistics (mean) of selected
@@ -185,10 +185,10 @@ def nwm_grids_to_parquet(
     t_minus_hours: Optional[Iterable[int]]
         Specifies the look-back hours to include if an assimilation
         configuration is specified.
-    crash_on_missing_file: bool
+    ignore_missing_file: bool
         Flag specifying whether or not to fail if a missing NWM file is encountered
-        True = fail
-        False = skip and continue
+        True = skip and continue
+        False = fail
 
     The NWM configuration variables, including configuration, output_type, and
     variable_name are stored as a pydantic model in grid_config_models.py
@@ -210,21 +210,18 @@ def nwm_grids_to_parquet(
     }
     cm = GridConfigurationModel.parse_obj(vars)
 
-    # component_paths = build_remote_nwm_filelist(
-    #     cm.configuration.name,
-    #     cm.output_type.name,
-    #     start_date,
-    #     ingest_days,
-    #     t_minus_hours,
-    # )
+    component_paths = build_remote_nwm_filelist(
+        cm.configuration.name,
+        cm.output_type.name,
+        start_date,
+        ingest_days,
+        t_minus_hours,
+        ignore_missing_file,
+    )
 
-    # json_paths = build_zarr_references(component_paths,
-    #                                    json_dir,
-    #                                    crash_on_missing_file)
-
-    import glob
-    json_paths = glob.glob("/home/sam/forcing_jsons/nwm.20201218*forcing*.json")
-    json_paths.sort()
+    json_paths = build_zarr_references(component_paths,
+                                       json_dir,
+                                       ignore_missing_file)
 
     fetch_and_format_nwm_grids(
         json_paths,
@@ -232,7 +229,7 @@ def nwm_grids_to_parquet(
         cm.variable_name.name,
         output_parquet_dir,
         zonal_weights_filepath,
-        crash_on_missing_file,
+        ignore_missing_file,
     )
 
 
@@ -240,7 +237,7 @@ if __name__ == "__main__":
     # Local testing
     single_filepath = "/mnt/sf_shared/data/ciroh/nwm.20201218_forcing_short_range_nwm.t00z.short_range.forcing.f001.conus.nc"  # noqa
     weights_parquet = "/mnt/sf_shared/data/ciroh/wbdhuc10_weights.parquet"
-    crash_on_missing_file = True
+    ignore_missing_file = False
 
     nwm_grids_to_parquet(
         "forcing_analysis_assim",
@@ -252,5 +249,5 @@ if __name__ == "__main__":
         "/home/sam/forcing_jsons",
         "/home/sam/forcing_parquet",
         [0],
-        crash_on_missing_file,
+        ignore_missing_file,
     )

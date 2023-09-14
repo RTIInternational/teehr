@@ -79,6 +79,8 @@ def get_dataset(zarr_json: str, ignore_missing_file: bool) -> xr.Dataset:
         else:
             # TODO: log missing file?
             return None
+    except ValueError:
+        raise ValueError(f"There was a problem reading {zarr_json}")
     return ds
 
 
