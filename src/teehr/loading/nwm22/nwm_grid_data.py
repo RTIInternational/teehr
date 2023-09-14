@@ -216,7 +216,7 @@ def nwm_grids_to_parquet(
         start_date,
         ingest_days,
         t_minus_hours,
-
+        ignore_missing_file,
     )
 
     json_paths = build_zarr_references(component_paths,
