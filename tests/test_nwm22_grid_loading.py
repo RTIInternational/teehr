@@ -21,7 +21,7 @@ def test_grid_loading():
                                        False)
 
     json_file = Path(TEST_DIR,
-                     "nwm.20201218.nwm.t00z.analysis_assim.forcing.tm00.conus.nc.json")
+                     "nwm.20201218.nwm.t00z.analysis_assim.forcing.tm00.conus.nc.json") # noqa
     test_file = Path(TEST_DIR, "grid_benchmark.json")
     assert filecmp.cmp(test_file, json_file, shallow=False)
 

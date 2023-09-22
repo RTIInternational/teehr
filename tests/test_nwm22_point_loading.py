@@ -8,7 +8,7 @@ TEST_DIR = Path("tests", "data", "nwm22")
 
 def test_point_loading():
 
-    json_paths = [Path(TEST_DIR, "nwm.20230318.nwm.t14z.short_range.channel_rt.f012.conus.nc.json").as_posix()]
+    json_paths = [Path(TEST_DIR, "nwm.20230318.nwm.t14z.short_range.channel_rt.f012.conus.nc.json").as_posix()] # noqa
 
     location_ids = [
         7086109,

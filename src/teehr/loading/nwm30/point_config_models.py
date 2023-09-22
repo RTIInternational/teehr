@@ -40,7 +40,7 @@ class ReservoirVariableEnum(str, Enum):
     water_sfc_elev = "water_sfc_elev"
 
 
-# OUTPUT ENUMS: Potential output names for each configuration
+# OUTPUT ENUMS: Potential output_type names for each configuration
 class ShortAndAnalysisOutputEnum(str, Enum):
     channel_rt = "channel_rt"
     terrain_rt = "terrain_rt"
@@ -113,7 +113,7 @@ class Long4OutputEnum(str, Enum):
     reservoir_4 = "reservoir_4"
 
 
-# POINT OUTPUT TYPE MODELS (needed for each configuration enum)
+# POINT OUTPUT TYPE MODELS
 class ShortAndAnalysis(BaseModel):
     output_type: ShortAndAnalysisOutputEnum
     channel_rt: Optional[ChannelRtVariableEnum]
@@ -218,11 +218,16 @@ class ConfigurationsEnum(str, Enum):
     analysis_assim_hawaii_no_da = "analysis_assim_hawaii_no_da"
     analysis_assim_puertorico = "analysis_assim_puertorico"
     analysis_assim_puertorico_no_da = "analysis_assim_puertorico_no_da"
+    analysis_assim_alaska = "analysis_assim_alaska"
+    analysis_assim_alaska_no_da = "analysis_assim_alaska_no_da"
+    analysis_assim_extend_alaska = "analysis_assim_extend_alaska"
+    analysis_assim_extend_alaska_no_da = "analysis_assim_extend_alaska_no_da"
     short_range = "short_range"
     short_range_hawaii = "short_range_hawaii"
     short_range_puertorico = "short_range_puertorico"
     short_range_hawaii_no_da = "short_range_hawaii_no_da"
     short_range_puertorico_no_da = "short_range_puertorico_no_da"
+    short_range_alaska = "short_range_alaska"
     medium_range_mem1 = "medium_range_mem1"
     medium_range_mem2 = "medium_range_mem2"
     medium_range_mem3 = "medium_range_mem3"
@@ -231,6 +236,15 @@ class ConfigurationsEnum(str, Enum):
     medium_range_mem6 = "medium_range_mem6"
     medium_range_mem7 = "medium_range_mem7"
     medium_range_no_da = "medium_range_no_da"
+    medium_range_alaska_mem1 = "medium_range_alaska_mem1"
+    medium_range_alaska_mem2 = "medium_range_alaska_mem2"
+    medium_range_alaska_mem3 = "medium_range_alaska_mem3"
+    medium_range_alaska_mem4 = "medium_range_alaska_mem4"
+    medium_range_alaska_mem5 = "medium_range_alaska_mem5"
+    medium_range_alaska_mem6 = "medium_range_alaska_mem6"
+    medium_range_alaska_no_da = "medium_range_alaska_no_da"
+    medium_range_blend = "medium_range_blend"
+    medium_range_blend_alaska = "medium_range_blend_alaska"
     long_range_mem1 = "long_range_mem1"
     long_range_mem2 = "long_range_mem2"
     long_range_mem3 = "long_range_mem3"
@@ -250,11 +264,16 @@ class PointConfigurationModel(BaseModel):
     analysis_assim_hawaii_no_da: Optional[ShortAndAnalysisNoDA]
     analysis_assim_puertorico: Optional[ShortAndAnalysis]
     analysis_assim_puertorico_no_da: Optional[ShortAndAnalysisNoDA]
+    analysis_assim_alaska: Optional[ShortAndAnalysis]
+    analysis_assim_alaska_no_da: Optional[ShortAndAnalysisNoDA]
+    analysis_assim_extend_alaska: Optional[ShortAndAnalysis]
+    analysis_assim_extend_alaska_no_da: Optional[ShortAndAnalysisNoDA]
     short_range: Optional[ShortAndAnalysis]
     short_range_hawaii: Optional[ShortAndAnalysis]
     short_range_puertorico: Optional[ShortAndAnalysis]
     short_range_hawaii_no_da: Optional[ShortAndAnalysisNoDA]
     short_range_puertorico_no_da: Optional[ShortAndAnalysisNoDA]
+    short_range_alaska: Optional[ShortAndAnalysis]
     medium_range_mem1: Optional[MediumRangeMem1]
     medium_range_mem2: Optional[MediumRangeMem2]
     medium_range_mem3: Optional[MediumRangeMem3]
@@ -263,6 +282,15 @@ class PointConfigurationModel(BaseModel):
     medium_range_mem6: Optional[MediumRangeMem6]
     medium_range_mem7: Optional[MediumRangeMem7]
     medium_range_no_da: Optional[MediumRangeNoDA]
+    medium_range_alaska_mem1: Optional[MediumRangeMem1]
+    medium_range_alaska_mem2: Optional[MediumRangeMem2]
+    medium_range_alaska_mem3: Optional[MediumRangeMem3]
+    medium_range_alaska_mem4: Optional[MediumRangeMem4]
+    medium_range_alaska_mem5: Optional[MediumRangeMem5]
+    medium_range_alaska_mem6: Optional[MediumRangeMem6]
+    medium_range_alaska_no_da: Optional[ShortAndAnalysisNoDA]
+    medium_range_blend: Optional[ShortAndAnalysis]
+    medium_range_blend_alaska: Optional[ShortAndAnalysis]
     long_range_mem1: Optional[LongRangeMem1]
     long_range_mem2: Optional[LongRangeMem2]
     long_range_mem3: Optional[LongRangeMem3]
@@ -271,8 +299,8 @@ class PointConfigurationModel(BaseModel):
 
 if __name__ == "__main__":
     # So for example:
-    configuration = "medium_range_mem1"
-    output_type = "channel_rt_1"
+    configuration = "short_range_hawaii"
+    output_type = "channel_rt"
     variable_name = "streamflow"
 
     # Assemble input parameters

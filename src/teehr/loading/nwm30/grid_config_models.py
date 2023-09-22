@@ -80,7 +80,7 @@ class ForcingVariablesEnum(str, Enum):
     PSFC = "PSFC"
 
 
-# OUTPUT TYPE ENUMS
+# OUTPUT TYPE ENUMS: Potential output type names
 class ShortAndAnalysisOutputEnum(str, Enum):
     land = "land"
 
@@ -141,7 +141,7 @@ class Forcing(BaseModel):
     forcing: Optional[ForcingVariablesEnum]
 
 
-# CONFIGURATIONS ENUM
+# CONFIGURATIONS ENUM: All possible configuration
 class ConfigurationsEnum(str, Enum):
     analysis_assim = "analysis_assim"
     analysis_assim_no_da = "analysis_assim_no_da"
@@ -170,13 +170,18 @@ class ConfigurationsEnum(str, Enum):
     long_range_mem3 = "long_range_mem3"
     long_range_mem4 = "long_range_mem4"
     forcing_medium_range = "forcing_medium_range"
+    forcing_medium_range_blend = "forcing_medium_range_blend"
+    forcing_medium_range_alaska = "forcing_medium_range_alaska"
+    forcing_medium_range_blend_alaska = "forcing_medium_range_blend_alaska"
     forcing_short_range = "forcing_short_range"
     forcing_short_range_hawaii = "forcing_short_range_hawaii"
     forcing_short_range_puertorico = "forcing_short_range_puertorico"
+    forcing_short_range_alaska = "forcing_short_range_alaska"
     forcing_analysis_assim = "forcing_analysis_assim"
     forcing_analysis_assim_extend = "forcing_analysis_assim_extend"
     forcing_analysis_assim_hawaii = "forcing_analysis_assim_hawaii"
     forcing_analysis_assim_puertorico = "forcing_analysis_assim_puertorico"
+    forcing_analysis_assim_alaska = "forcing_analysis_assim_alaska"
 
 
 # CONFIGURATION MODEL
@@ -210,18 +215,23 @@ class GridConfigurationModel(BaseModel):
     long_range_mem3: Optional[LongRange]
     long_range_mem4: Optional[LongRange]
     forcing_medium_range: Optional[Forcing]
+    forcing_medium_range_blend: Optional[Forcing]
+    forcing_medium_range_alaska: Optional[Forcing]
+    forcing_medium_range_blend_alaska: Optional[Forcing]
     forcing_short_range: Optional[Forcing]
     forcing_short_range_hawaii: Optional[Forcing]
     forcing_short_range_puertorico: Optional[Forcing]
+    forcing_short_range_alaska: Optional[Forcing]
     forcing_analysis_assim: Optional[Forcing]
     forcing_analysis_assim_extend: Optional[Forcing]
     forcing_analysis_assim_hawaii: Optional[Forcing]
     forcing_analysis_assim_puertorico: Optional[Forcing]
+    forcing_analysis_assim_alaska: Optional[Forcing]
 
 
 if __name__ == "__main__":
     # So for example:
-    configuration = "forcing_medium_range"
+    configuration = "forcing_medium_range_blend_alaska"
     output_type = "forcing"
     variable_name = "RAINRATE"
 
@@ -245,6 +255,7 @@ if __name__ == "__main__":
     config = cm.configuration.name
     forecast_obj = getattr(cm, config)
     out_type = forecast_obj.output_type.name
+    # out_type = getattr(cm, config).output_type.name
     var_name = getattr(forecast_obj, out_type).name
 
     pass

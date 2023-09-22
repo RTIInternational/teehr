@@ -7,41 +7,52 @@ def test_point_model():
     output_type = "channel_rt"
     variable_name = "streamflow"
 
+    # Assemble input parameters
     vars = {
         "configuration": configuration,
-        "output_type": output_type,
-        "variable_name": variable_name,
         configuration: {
+            "output_type": output_type,
             output_type: variable_name,
         },
     }
 
     cm = PointConfigurationModel.parse_obj(vars)
 
-    assert cm.configuration.name == "short_range"
-    assert cm.output_type.name == "channel_rt"
-    assert cm.variable_name.name == "streamflow"
+    config = cm.configuration.name
+    forecast_obj = getattr(cm, config)
+    out_type = forecast_obj.output_type.name
+    var_name = getattr(forecast_obj, out_type).name
+
+    assert config == "short_range"
+    assert output_type == "channel_rt"
+    assert var_name == "streamflow"
 
 
 def test_grid_model():
-    configuration = "short_range"
+    configuration = "forcing_short_range"
     output_type = "forcing"
     variable_name = "RAINRATE"
 
+    # Assemble input parameters
     vars = {
         "configuration": configuration,
-        "output_type": output_type,
-        "variable_name": variable_name,
         configuration: {
+            "output_type": output_type,
             output_type: variable_name,
         },
     }
 
+    # Check input parameters
     cm = GridConfigurationModel.parse_obj(vars)
 
-    assert cm.configuration.name == "short_range"
-    assert cm.output_type.name == "forcing"
-    assert cm.variable_name.name == "RAINRATE"
+    config = cm.configuration.name
+    forecast_obj = getattr(cm, config)
+    out_type = forecast_obj.output_type.name
+    var_name = getattr(forecast_obj, out_type).name
+
+    assert config == "forcing_short_range"
+    assert output_type == "forcing"
+    assert var_name == "RAINRATE"
 
 
 if __name__ == "__main__":
