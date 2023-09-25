@@ -264,20 +264,19 @@ def nwm_to_parquet(
     https://github.com/RTIInternational/teehr/blob/main/docs/data_models.md#timeseries  # noqa
     """
 
-    # Parse input parameters
+    # Parse input parameters to validate configuration
     vars = {
         "configuration": configuration,
-        "output_type": output_type,
-        "variable_name": variable_name,
         configuration: {
+            "output_type": output_type,
             output_type: variable_name,
         },
     }
-    cm = PointConfigurationModel.parse_obj(vars)
+    _ = PointConfigurationModel.parse_obj(vars)
 
     component_paths = build_remote_nwm_filelist(
-        cm.configuration.name,
-        cm.output_type.name,
+        configuration,
+        output_type,
         start_date,
         ingest_days,
         t_minus_hours,
@@ -291,8 +290,8 @@ def nwm_to_parquet(
     fetch_and_format_nwm_points(
         json_paths,
         location_ids,
-        cm.configuration.name,
-        cm.variable_name.name,
+        configuration,
+        variable_name,
         output_parquet_dir,
         process_by_z_hour,
         stepsize,
