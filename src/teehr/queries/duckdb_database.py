@@ -26,7 +26,6 @@ def get_metrics(
     include_metrics: Union[List[tmq.MetricEnum], "all"],
     filters: Union[List[dict], None] = None,
     return_query: bool = False,
-    geometry_filepath: Union[str, None] = None,
     include_geometry: bool = False,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
     """Calculate performance metrics using database queries.
@@ -127,30 +126,20 @@ def get_metrics(
 
     mq = MetricQueryDB.parse_obj(
         {
+            "database_filepath": database_filepath,
             "group_by": group_by,
             "order_by": order_by,
             "include_metrics": include_metrics,
             "filters": filters,
             "return_query": return_query,
             "include_geometry": include_geometry,
-            "geometry_filepath": geometry_filepath
         }
     )
 
     query = f"""
         WITH joined as (
             SELECT
-                reference_time
-                , value_time
-                , secondary_location_id
-                , secondary_value
-                , configuration
-                , measurement_unit
-                , variable_name
-                , primary_value
-                , primary_location_id
-                , value_time - reference_time as lead_time
-                , abs(primary_value - secondary_value) as absolute_difference
+                *
             FROM joined_timeseries
             {tqu.filters_to_sql(mq.filters)}
         )
@@ -190,9 +179,7 @@ def get_metrics(
             {tqu._select_primary_max_value_time(mq)}
             {tqu._select_secondary_max_value_time(mq)}
             {tqu._select_max_value_timedelta(mq)}
-            {tqu.geometry_select_clause(mq)}
         FROM metrics
-        {tqu.metric_geometry_join_clause(mq)}
         {tqu._join_primary_join_max_time(mq)}
         {tqu._join_secondary_join_max_time(mq)}
         ORDER BY
@@ -203,12 +190,22 @@ def get_metrics(
         return tqu.remove_empty_lines(query)
 
     with duckdb.connect(str(database_filepath)) as con:
-        df = con.sql(query).to_df()
-
-    if mq.include_geometry:
-        return tqu.df_to_gdf(df)
-
-    return df
+        query_tbl = con.sql(query)  # noqa
+        if mq.include_geometry:
+            # Join geometry
+            query = """
+                SELECT
+                    *
+                FROM
+                    query_tbl
+                JOIN
+                    geometry
+                    ON geometry.id = query_tbl.primary_location_id
+            ;"""
+            df = con.sql(query).to_df()
+            return tqu.df_to_gdf(df)
+        else:
+            return query_tbl.to_df()
 
 
 def join_and_save_timeseries(
@@ -319,7 +316,8 @@ def join_and_save_timeseries(
             sf.variable_name,
             pf.value as primary_value,
             pf.location_id as primary_location_id,
-            sf.value_time - sf.reference_time as lead_time
+            sf.value_time - sf.reference_time as lead_time,
+            abs(primary_value - secondary_value) as absolute_difference
             {tqu.geometry_select_clause(jtq)}
         FROM read_parquet('{str(jtq.secondary_filepath)}') sf
         JOIN read_parquet('{str(jtq.crosswalk_filepath)}') cf

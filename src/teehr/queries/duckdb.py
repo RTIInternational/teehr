@@ -3,7 +3,7 @@ import duckdb
 import pandas as pd
 import geopandas as gpd
 
-from typing import List, Union, Dict
+from typing import List, Union
 
 from teehr.models.queries import (
     MetricQuery,
@@ -150,7 +150,15 @@ def get_metrics(
     )
 
     query = f"""
-        WITH joined as (
+        WITH filtered_primary AS (
+            SELECT * FROM(
+                SELECT *,
+                    row_number() OVER(PARTITION BY value_time, location_id ORDER BY reference_time desc) AS rn
+                FROM read_parquet("{str(mq.primary_filepath)}")
+                ) t
+            WHERE rn = 1
+        ),
+        joined as (
             SELECT
                 sf.reference_time
                 , sf.value_time as value_time
@@ -166,7 +174,7 @@ def get_metrics(
             FROM read_parquet('{str(mq.secondary_filepath)}') sf
             JOIN read_parquet('{str(mq.crosswalk_filepath)}') cf
                 on cf.secondary_location_id = sf.location_id
-            JOIN read_parquet('{str(mq.primary_filepath)}') pf
+            JOIN filtered_primary pf
                 on cf.primary_location_id = pf.location_id
                 and sf.value_time = pf.value_time
                 and sf.measurement_unit = pf.measurement_unit
@@ -216,7 +224,7 @@ def get_metrics(
         {tqu._join_secondary_join_max_time(mq)}
         ORDER BY
             {",".join([f"metrics.{gb}" for gb in mq.group_by])}
-    ;"""
+    ;""" # noqa
 
     if mq.return_query:
         return tqu.remove_empty_lines(query)
@@ -316,7 +324,15 @@ def get_joined_timeseries(
     )
 
     query = f"""
-        WITH joined as (
+        WITH filtered_primary AS (
+            SELECT * FROM(
+                SELECT *,
+                    row_number() OVER(PARTITION BY value_time, location_id ORDER BY reference_time desc) AS rn
+                FROM read_parquet("{str(jtq.primary_filepath)}")
+                ) t
+            WHERE rn = 1
+        ),
+        joined as (
             SELECT
                 sf.reference_time,
                 sf.value_time,
@@ -332,7 +348,7 @@ def get_joined_timeseries(
             FROM read_parquet('{str(jtq.secondary_filepath)}') sf
             JOIN read_parquet('{str(jtq.crosswalk_filepath)}') cf
                 on cf.secondary_location_id = sf.location_id
-            JOIN read_parquet('{str(jtq.primary_filepath)}') pf
+            JOIN filtered_primary pf
                 on cf.primary_location_id = pf.location_id
                 and sf.value_time = pf.value_time
                 and sf.measurement_unit = pf.measurement_unit
@@ -346,7 +362,7 @@ def get_joined_timeseries(
             joined
         ORDER BY
             {",".join(jtq.order_by)}
-    ;"""
+    ;""" # noqa
 
     if jtq.return_query:
         return tqu.remove_empty_lines(query)

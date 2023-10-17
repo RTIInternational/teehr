@@ -133,42 +133,15 @@ class TimeseriesFilter(BaseModel):
 
 
 class MetricQueryDB(BaseModel):
-    group_by: List[JoinedFilterFieldEnum]
-    order_by: List[JoinedFilterFieldEnum]
+    database_filepath: Union[str, Path]
+    group_by: List[str]
+    order_by: List[str]
     include_metrics: Union[List[str], str]
-    filters: Optional[List[JoinedFilter]] = []
+    filters: Optional[List[str]] = []
     return_query: bool
-    geometry_filepath: Optional[Union[str, Path]]
     include_geometry: bool
 
-    @validator("include_geometry")
-    def include_geometry_must_group_by_primary_location_id(cls, v, values):
-        if (
-            v is True
-            and JoinedFilterFieldEnum.primary_location_id
-            not in values["group_by"]  # noqa
-        ):
-            raise ValueError(
-                "`group_by` must contain `primary_location_id` "
-                "to include geometry in returned data"
-            )
-
-        if v is True and not values["geometry_filepath"]:
-            raise ValueError(
-                "`geometry_filepath` must be provided to include geometry "
-                "in returned data"
-            )
-
-        if (
-            JoinedFilterFieldEnum.geometry in values["group_by"]
-            and v is False
-        ):
-            raise ValueError(
-                "group_by contains `geometry` field but `include_geometry` "
-                "is False, must be True"
-            )
-
-        return v
+    # TODO: Validate database tables here?
 
     @validator("filters")
     def filter_must_be_list(cls, v):

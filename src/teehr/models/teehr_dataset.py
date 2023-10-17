@@ -1,39 +1,39 @@
 """Defines the TEEHR dataset class and pre-processing methods"""
-from typing import Union, List, Callable
+from typing import Union, List, Callable, Tuple, Dict
 from pathlib import Path
+import time
 
 import duckdb
-# import pandas as pd
+import pandas as pd
+import geopandas as gpd
 
-import teehr.queries.duckdb_database as tqu
-import teehr.queries.duckdb as tqu_original
-# from teehr.models.queries import JoinedFilterFieldEnum, JoinedFilter
-
-
-TEST_STUDY_DIR = Path("/mnt/data/ciroh/2023_hilary")
-PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "forcing_analysis_assim_extend", "*.parquet")
-SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "forcing_medium_range", "*.parquet")
-CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "huc10_huc10_crosswalk.conus.parquet")
-# ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "attrs/huc10_2_year_flow.parquet")
-ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "attrs/*.parquet")
-GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR,  "huc10_geometry.conus.parquet")
-DATABASE_FILEPATH = Path(TEST_STUDY_DIR, "hilary_post_event.db")
+import teehr.queries.duckdb_database as tqu_db
+# import teehr.queries.duckdb as tqu_original
+from teehr.models.queries import MetricEnum
 
 
-class TeehrDataset():
+class TEEHRDataset():
     """Create instance of a TeehrDataset class and
     initialize study area database"""
     def __init__(self,
-                 primary_filepath: Union[str, Path],
-                 secondary_filepath: Union[str, Path],
-                 crosswalk_filepath: Union[str, Path],
-                 database_filepath: Union[str, Path]):
-        self.primary_filepath = str(primary_filepath)
-        self.secondary_filepath = str(secondary_filepath)
-        self.crosswalk_filepath = str(crosswalk_filepath)
-        self.database_filepath = str(database_filepath)
+                 database_filepath: Union[str, Path],
+                 primary_filepath: Union[str, Path] = None,
+                 secondary_filepath: Union[str, Path] = None,
+                 crosswalk_filepath: Union[str, Path] = None,
+                 geometry_filepath: Union[str, Path] = None):
 
-        # Create the persistent study database and table here
+        self.database_filepath = str(database_filepath)
+        self.primary_filepath = primary_filepath
+        self.secondary_filepath = secondary_filepath
+        self.crosswalk_filepath = crosswalk_filepath
+        self.geometry_filepath = geometry_filepath
+
+    def _check_spatial_extension(self, con):
+        """WIP: Check to see if spatial extension is installed and loaded?"""
+        con.sql()
+
+    def _initialize_database_tables(self):
+        """Create the persistent study database and empty table(s)"""
         create_table = """
             CREATE TABLE IF NOT EXISTS joined_timeseries(
                 reference_time DATETIME,
@@ -46,33 +46,62 @@ class TeehrDataset():
                 primary_value FLOAT,
                 primary_location_id VARCHAR,
                 lead_time INTERVAL,
+                absolute_difference FLOAT
                 );"""
 
         with duckdb.connect(self.database_filepath) as con:
             con.sql(create_table)
-            pass
 
-    def created_joined_timeseries_table(self,
-                                        order_by: List[str],
-                                        filters: Union[List[dict], None] = None):  # noqa
-        """Join primary and secondary timeseries and insert
-        into the database
-
-        Need to ensure there's no duplicate data here (duplicate
-        value times with different reference times)
-        """
+        # Also initialize the geometry table (what if multiple geometry types?)
+        create_table = """
+            CREATE TABLE IF NOT EXISTS geometry(
+                id VARCHAR,
+                name VARCHAR,
+                geometry BLOB
+                );"""
         with duckdb.connect(self.database_filepath) as con:
-            tqu.join_and_save_timeseries(
+            # con.sql("LOAD spatial;")  # if using GEOMETRY type
+            # Would need to check to make sure it's installed and loaded
+            con.sql(create_table)
+
+    def create_joined_timeseries_table(self,
+                                       order_by: List[str],
+                                       filters: Union[List[dict], None] = None,
+                                       return_query=False,
+                                       include_geometry=False):
+        """Join primary and secondary timeseries and insert
+        into the database. Also loads the geometry file into a
+        separate table if the filepath exists
+        """
+
+        self._initialize_database_tables()
+
+        with duckdb.connect(self.database_filepath) as con:
+            # con.sql("SET memory_limit='15GB';")  # No effect?
+            tqu_db.join_and_save_timeseries(
                 primary_filepath=self.primary_filepath,
                 secondary_filepath=self.secondary_filepath,
                 crosswalk_filepath=self.crosswalk_filepath,
                 order_by=order_by,
                 con=con,
                 filters=filters,
-                return_query=False,
+                return_query=return_query,
+                geometry_filepath=self.geometry_filepath,
+                include_geometry=include_geometry
             )
 
-            pass
+        # Load the geometry data into a separate table if the file exists
+        if self.geometry_filepath:
+            query = f"""
+                INSERT INTO
+                    geometry
+                SELECT
+                    *
+                FROM
+                    read_parquet('{self.geometry_filepath}')
+            ;"""
+            with duckdb.connect(self.database_filepath) as con:
+                con.sql(query)
 
     def get_joined_timeseries_schema(self):
         """Get field names and field data types from joined_timeseries"""
@@ -141,8 +170,7 @@ class TeehrDataset():
 
     # attr_pivot: duckdb.DuckDBPyRelation
     def _join_attribute_values(self, field_name: str):
-        """Join values of the new attr field on location_id
-        NOTE: Somehow attr_pivot does need need to be passed in here"""
+        """Join values of the new attr field on location_id"""
         update_query = f"""
             UPDATE
                 joined_timeseries
@@ -167,8 +195,6 @@ class TeehrDataset():
 
         for attr in attr_list:
             # Pivot the single attribute
-            # NOTE: Somehow attr_pivot gets cached or saved in memory, so it
-            # can be referenced in the update_query in _join_attribute_values
             attr_pivot = self._pivot_attribute_table(str(attributes_filepath), attr) # noqa
 
             # Add the attr field name to joined_timeseries
@@ -181,43 +207,40 @@ class TeehrDataset():
             # Join the attribute values to the new field  , attr_pivot
             self._join_attribute_values(field_name)
 
-    def describe_inputs(self):
+    def describe_inputs(self) -> Tuple[Dict]:
         """Get descriptive stats on primary and secondary
         timeseries parquet files"""
-        primary_dict = tqu.describe_timeseries( # noqa
+        primary_dict = tqu_db.describe_timeseries( # noqa
             timeseries_filepath=self.primary_filepath)
 
-        secondary_dict = tqu.describe_timeseries( # noqa
+        secondary_dict = tqu_db.describe_timeseries( # noqa
             timeseries_filepath=self.secondary_filepath)
 
         # TODO: Format dicts as a report to user (save to csv?)
         # Add more stats
         # Include visualization option here? (plot timeseries)
-        pass
+        return primary_dict, secondary_dict
 
     def calculate_field(self,
                         new_field_name: str,
                         new_field_type: str,
                         parameter_names: List[str],
                         user_defined_function: Callable):
-        """
-        name: Name of the func, 'user_defined_function'
-        func: The user's python function. Executes row by row
-        argument_type_list: List of column types used as input
-            Must be joined_timeseries table fields
-        return_type: Type of the object returned by the function
-        type (Optional): Function type. Specify type='arrow' to use
-            pyarrow arrays as variables to function
-        null_handling (Optional): What to do when null values are
-            encountered. By default, null is returned. Change this
-            using null_handling='special'
+        """Calculate a new field in joined_timeseries based on existing
+        fields and a user-defined function
 
-        Notes
-        -----
-        - Have another function to get the fields and their types
-        from the joined timeseries table
-        - Joined table will contain all
-        # """
+        Parameters
+        ----------
+        parameter_names: List[str]
+            Arguments to your user function,
+            exisiting joined_timeseries fields
+        new_field_name: str
+            Name of new field to be added to joined_timeseries
+        new_field_type: str
+            Data type of the new field
+        user_defined_function: Callable
+            Function to apply
+        """
         schema_dict = self.get_joined_timeseries_schema()
 
         # parameter_names must be valid joined_timeseries field names!
@@ -233,28 +256,14 @@ class TeehrDataset():
         args = args[:-2]
 
         query = f"""
-            WITH udf AS (
-                SELECT
-                    primary_location_id,
-                    user_defined_function({args})
-                FROM joined_timeseries
-            )
             UPDATE
                 joined_timeseries
             SET
                 {new_field_name} = (
             SELECT
-                *
-            EXCLUDE
-                primary_location_id
-            FROM
-                udf
-            WHERE
-                primary_location_id = udf.primary_location_id
+                user_defined_function({args})
             );
             """
-        # TODO: Do we need to join on location_id here? Can we assume
-        # the output of UDF is in the same row order as joined_timeseries?
 
         # Create and register the user-defined function (UDF)
         with duckdb.connect(self.database_filepath) as con:
@@ -266,80 +275,79 @@ class TeehrDataset():
             # Call the function and add the results to joined_timeseries
             con.sql(query)
 
-            # TODO: You could potentially register several functions
-            # first, then use them all in a query to calculate a new field?
-            pass
+    def get_metrics(self,
+                    order_by: List[str],
+                    group_by: List[str],
+                    include_metrics: Union[List[MetricEnum], "all"],
+                    filters: Union[List[dict], None] = None,
+                    return_query: bool = False,
+                    include_geometry: bool = True,
+                    ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
+        """Calculate performance metrics using database queries"""
+        df = tqu_db.get_metrics(self.database_filepath,
+                                group_by=group_by,
+                                order_by=order_by,
+                                include_metrics=include_metrics,
+                                filters=filters,
+                                return_query=return_query,
+                                include_geometry=include_geometry)
+        return df
 
 
 if __name__ == "__main__":
 
-    data_vars = {"primary_filepath": PRIMARY_FILEPATH,
+    # Test data
+    TEST_STUDY_DIR = Path("tests/data/test_study")
+    PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "test_short_obs.parquet")
+    SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "test_short_fcast.parquet")
+    CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
+    ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr.parquet")
+    GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR,  "geo", "gages.parquet")
+    DATABASE_FILEPATH = Path(TEST_STUDY_DIR, "temp_test.db")
+
+    data_vars = {"database_filepath": DATABASE_FILEPATH,
+                 "primary_filepath": PRIMARY_FILEPATH,
                  "secondary_filepath": SECONDARY_FILEPATH,
                  "crosswalk_filepath": CROSSWALK_FILEPATH,
-                 "database_filepath": DATABASE_FILEPATH}
+                 "geometry_filepath": GEOMETRY_FILEPATH}
 
-    tds = TeehrDataset(**data_vars)
+    tds = TEEHRDataset(**data_vars)
 
-    # query = "SELECT * FROM joined_timeseries LIMIT 10;"
-    # with duckdb.connect(str(DATABASE_FILEPATH)) as con:
-    #     res_df = con.sql(query).to_df()
+    # Check the parquet files and report some stats to the user (WIP)
+    primary_dict, secondary_dict = tds.describe_inputs()
 
-    # Check the parquet files and report some stats to the user
-    tds.describe_inputs()
-
-    # Perform the join and insert into duckdb database or save as parquet
-    tds.created_joined_timeseries_table(order_by=["lead_time",
-                                                  "primary_location_id"])
+    # Perform the join and insert into duckdb database
+    # NOTE: Right now this will re-join and overwrite
+    tds.create_joined_timeseries_table(order_by=["lead_time",
+                                                 "primary_location_id"])
 
     # Join (one or more?) table(s) of attributes to the timeseries table
     tds.join_attributes(ATTRIBUTES_FILEPATH)
 
     # Calculate and add a field based on some user-defined function (UDF).
-    # Need to supply:
-    # - parameter_names: Arguments to your user function
-    # - new_field_name: Name of the new field to be added to joined_timeseries
-    # - new_field_type: Data type of the new field
-    # - names of input parameters (exisiting joined_timeseries fields)
-    def test_user_function(arg1: str, arg2: str) -> float:
+    def test_user_function(arg1: float, arg2: str) -> float:
         """Function arguments are fields in joined_timeseries, and
         should have the same data type.
         Note: In the data model, attribute values are always str type"""
-        return float(arg1) * float(arg2)
+        return float(arg1) / float(arg2)
 
-    parameter_names = ["two_year_flow_cfs", "mean_temperature_F"]
-    new_field_name = "my_new_field"
+    parameter_names = ["primary_value", "drainage_area_sq_km"]
+    new_field_name = "primary_normalized_discharge"
     new_field_type = "FLOAT"
     tds.calculate_field(new_field_name=new_field_name,
                         new_field_type=new_field_type,
                         parameter_names=parameter_names,
                         user_defined_function=test_user_function)
 
-    # TEMP: get_metrics() comparison
-    # import time
+    # Get metrics
+    order_by = ["lead_time", "primary_location_id"]
+    group_by = [new_field_name, "primary_location_id"]
 
-    # # Get metrics
-    # order_by = ["lead_time", "primary_location_id"]
-    # group_by = ["lead_time", "primary_location_id"]
-
-    # t1 = time.time()
-    # df1 = tqu.get_metrics(DATABASE_FILEPATH,
-    #                       group_by=group_by,
-    #                       order_by=order_by,
-    #                       include_metrics="all")
-    # print(f"Database version: {(time.time() - t1):.2f} secs")
-
-    # # df1.to_parquet(Path(TEST_STUDY_DIR, "all_metrics_database_version.parquet"))
-
-
-    # t1 = time.time()
-    # df2 = tqu_original.get_metrics(tds.primary_filepath,
-    #                                tds.secondary_filepath,
-    #                                tds.crosswalk_filepath,
-    #                                group_by=group_by,
-    #                                order_by=order_by,
-    #                                include_metrics="all")
-    # print(f"Original version: {(time.time() - t1):.2f} secs")
-
-    # # df2.to_parquet(Path(TEST_STUDY_DIR, "all_metrics_original_version.parquet"))
+    t1 = time.time()
+    df1 = tds.get_metrics(group_by=group_by,
+                          order_by=order_by,
+                          include_metrics="all",
+                          include_geometry=True)
+    print(f"Database query: {(time.time() - t1):.2f} secs")
 
     pass
