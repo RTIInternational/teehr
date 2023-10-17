@@ -28,10 +28,6 @@ class TEEHRDataset():
         self.crosswalk_filepath = crosswalk_filepath
         self.geometry_filepath = geometry_filepath
 
-    def _check_spatial_extension(self, con):
-        """WIP: Check to see if spatial extension is installed and loaded?"""
-        con.sql()
-
     def _initialize_database_tables(self):
         """Create the persistent study database and empty table(s)"""
         create_table = """
