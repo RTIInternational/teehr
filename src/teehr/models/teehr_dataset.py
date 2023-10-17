@@ -164,7 +164,6 @@ class TEEHRDataset():
         with duckdb.connect(self.database_filepath) as con:
             con.sql(query)
 
-    # attr_pivot: duckdb.DuckDBPyRelation
     def _join_attribute_values(self, field_name: str):
         """Join values of the new attr field on location_id"""
         update_query = f"""
