@@ -132,6 +132,24 @@ class TimeseriesFilter(BaseModel):
         return v
 
 
+class MetricQueryDB(BaseModel):
+    database_filepath: Union[str, Path]
+    group_by: List[str]
+    order_by: List[str]
+    include_metrics: Union[List[str], str]
+    filters: Optional[List[str]] = []
+    return_query: bool
+    include_geometry: bool
+
+    # TODO: Validate database tables here?
+
+    @validator("filters")
+    def filter_must_be_list(cls, v):
+        if v is None:
+            return []
+        return v
+
+
 class MetricQuery(BaseModel):
     primary_filepath: Union[str, Path]
     secondary_filepath: Union[str, Path]
