@@ -115,11 +115,11 @@ class TEEHRDataset():
 
         query = f"""
             SELECT
-                DISTINCT(attribute_name, attribute_unit)
+                DISTINCT attribute_name, attribute_unit
             FROM
                 read_parquet('{attributes_filepath}')
         ;"""
-        attr_list = duckdb.sql(query).fetchall()
+        attr_list = duckdb.sql(query).df().to_dict(orient="records")
         return attr_list
 
     @staticmethod
@@ -136,9 +136,9 @@ class TEEHRDataset():
                 FROM
                     read_parquet('{attributes_filepath}')
                 WHERE
-                    attribute_name = '{attr[0]["attribute_name"]}'
+                    attribute_name = '{attr["attribute_name"]}'
                 AND
-                    attribute_unit = '{attr[0]["attribute_unit"]}'
+                    attribute_unit = '{attr["attribute_unit"]}'
             )
             PIVOT
                 attribute
@@ -296,7 +296,7 @@ if __name__ == "__main__":
     PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "test_short_obs.parquet")
     SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "test_short_fcast.parquet")
     CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
-    ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr.parquet")
+    ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr2.parquet")
     GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR,  "geo", "gages.parquet")
     DATABASE_FILEPATH = Path(TEST_STUDY_DIR, "temp_test.db")
 
