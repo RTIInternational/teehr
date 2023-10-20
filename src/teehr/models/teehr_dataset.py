@@ -3,6 +3,7 @@ from typing import Union, List, Callable, Tuple, Dict
 from pathlib import Path
 import time
 
+import re
 import duckdb
 import pandas as pd
 import geopandas as gpd
@@ -92,7 +93,7 @@ class TEEHRDataset():
                 INSERT INTO
                     geometry
                 SELECT
-                    *
+                    id, name, geometry
                 FROM
                     read_parquet('{self.geometry_filepath}')
             ;"""
@@ -105,8 +106,20 @@ class TEEHRDataset():
         desc = """DESCRIBE SELECT * FROM joined_timeseries;"""
         with duckdb.connect(self.database_filepath) as con:
             schema_df = con.sql(desc).to_df()
-        schema_dict = dict(zip(schema_df.column_name, schema_df.column_type))
-        return schema_dict
+        # schema_dict = dict(zip(schema_df.column_name, schema_df.column_type))
+        return schema_df
+
+    @staticmethod
+    def _sanitize_field_name(field_name: str) -> str:
+        # I think we will needs this
+        # allowed_chars = r"[^a-zA-Z0-9_]"
+        # search = re.compile(allowed_chars).search
+
+        # if bool(search(field_name)):
+        #     sub = re.compile(allowed_chars).sub
+        #     return str(sub("_", field_name))
+
+        return field_name
 
     @staticmethod
     def _get_unique_attributes(attributes_filepath: str) -> List:
@@ -195,11 +208,11 @@ class TEEHRDataset():
             # Add the attr field name to joined_timeseries
             field_name = attr_pivot.columns
             field_name.remove("location_id")
-            field_name = field_name[0]
+            field_name = self._sanitize_field_name(field_name[0])
 
             self._add_field_name_to_joined_timeseries(field_name)
 
-            # Join the attribute values to the new field  , attr_pivot
+            # Join the attribute values to the new field, attr_pivot
             self._join_attribute_values(field_name)
 
     def describe_inputs(self) -> Tuple[Dict]:
@@ -236,7 +249,8 @@ class TEEHRDataset():
         user_defined_function: Callable
             Function to apply
         """
-        schema_dict = self.get_joined_timeseries_schema()
+        schema_df = self.get_joined_timeseries_schema()
+        schema_dict = dict(zip(schema_df.column_name, schema_df.column_type))
 
         # parameter_names must be valid joined_timeseries field names!
         parameter_types = [schema_dict[param] for param in parameter_names]
