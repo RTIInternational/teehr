@@ -223,7 +223,7 @@ def get_metrics(
         {tqu._join_primary_join_max_time(mq)}
         {tqu._join_secondary_join_max_time(mq)}
         ORDER BY
-            {",".join([f"metrics.{gb}" for gb in mq.group_by])}
+            {",".join([f"metrics.{ob}" for ob in mq.order_by])}
     ;""" # noqa
 
     if mq.return_query:

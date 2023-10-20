@@ -256,7 +256,7 @@ class TEEHRDataset():
         parameter_types = [schema_dict[param] for param in parameter_names]
 
         self._add_field_name_to_joined_timeseries(field_name=new_field_name,
-                                                  field_dtype="FLOAT")
+                                                  field_dtype=new_field_type)
 
         # Build the query using the parameter names
         args = ""
