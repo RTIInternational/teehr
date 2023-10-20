@@ -80,6 +80,32 @@ class ChunkByEnum(str, Enum):
     site = "site"
 
 
+class JoinedFilterDB(BaseModel):
+    column: str
+    operator: FilterOperatorEnum
+    value: Union[
+        str, int, float, datetime,
+        List[Union[str, int, float, datetime]]
+    ]
+
+    def is_iterable_not_str(obj):
+        if isinstance(obj, Iterable) and not isinstance(obj, str):
+            return True
+        return False
+
+    @validator("value")
+    def in_operator_must_have_iterable(cls, v, values):
+        if cls.is_iterable_not_str(v) and values["operator"] != "in":
+            raise ValueError("iterable value must be used with 'in' operator")
+
+        if values["operator"] == "in" and not cls.is_iterable_not_str(v):
+            raise ValueError(
+                "'in' operator can only be used with iterable value"
+            )
+
+        return v
+
+
 class JoinedFilter(BaseModel):
     column: JoinedFilterFieldEnum
     operator: FilterOperatorEnum
@@ -136,8 +162,8 @@ class MetricQueryDB(BaseModel):
     database_filepath: Union[str, Path]
     group_by: List[str]
     order_by: List[str]
-    include_metrics: Union[List[str], str]
-    filters: Optional[List[str]] = []
+    include_metrics: Union[List[MetricEnum], MetricEnum]
+    filters: Optional[List[JoinedFilterDB]] = []
     return_query: bool
     include_geometry: bool
 
@@ -156,7 +182,7 @@ class MetricQuery(BaseModel):
     crosswalk_filepath: Union[str, Path]
     group_by: List[JoinedFilterFieldEnum]
     order_by: List[JoinedFilterFieldEnum]
-    include_metrics: Union[List[str], str]
+    include_metrics: Union[List[MetricEnum], MetricEnum]
     filters: Optional[List[JoinedFilter]] = []
     return_query: bool
     geometry_filepath: Optional[Union[str, Path]]
