@@ -195,12 +195,13 @@ def get_metrics(
             # Join geometry
             query = """
                 SELECT
-                    *
+                    geometry.name, geometry.geometry, query_tbl.*
                 FROM
                     query_tbl
                 JOIN
                     geometry
-                    ON geometry.id = query_tbl.primary_location_id
+                ON
+                    geometry.id = query_tbl.primary_location_id
             ;"""
             df = con.sql(query).to_df()
             return tqu.df_to_gdf(df)
