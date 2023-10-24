@@ -3,7 +3,7 @@ import './App.css'
 import axios from "axios";
 // import Box from '@mui/material/Box';
 // import Grid from '@mui/material/Grid';
-import { Button, Grid, Box } from '@mui/material';
+import { Button, Grid, Box, Typography } from '@mui/material';
 
 import StationMap from './components/StationMap';
 import MetricSelect from './components/MetricSelect.jsx'
@@ -16,7 +16,7 @@ import DataGridDemo from './components/DataGrid';
 function App() {
   const [errors, setErrors] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState(null);
+  const [data, setData] = useState({});
 
   const [datasets, setDatasets] = useState([]);
   const [selectedDataset, setSelectedDataset] = useState("");
@@ -32,11 +32,15 @@ function App() {
   // const [orderByFields, setOrderByFields] = useState([]);
   // const [selectedOrderByFields, setSelectedOrderByFields] = useState([]);
 
+  const formatGroupByFields = (fields) => {
+    return fields.map(obj => obj.name)
+  }
+
   const fetchStations = () => {
     axios
       .post(`http://localhost:8000/datasets/${selectedDataset}/get_metrics`,
         {
-          group_by: selectedGroupByFields,
+          group_by: formatGroupByFields(selectedGroupByFields),
           order_by: ["primary_location_id"],
           include_metrics: selectedMetrics,
           return_query: false,
@@ -44,7 +48,7 @@ function App() {
         }
       )
       .then((res) => {
-        // console.log(res.data);
+        console.log(res.data);
         setData(res.data);
       })
       .catch(function (err) {
@@ -83,6 +87,8 @@ function App() {
                 selectedDataset={selectedDataset}
               />
 
+              <Typography>Filters</Typography>
+
 
               <Button variant="contained" onClick={() => { fetchStations() }}>Fetch Data</Button>
 
@@ -95,6 +101,7 @@ function App() {
           </Grid>
         </Grid>
         <Grid item xs={8}>
+          <Grid>
           {
             (data && displayMetric) && (
               <>
@@ -103,6 +110,10 @@ function App() {
               </>
             )
           }
+          </Grid>
+          <Grid>
+
+          </Grid>
         </Grid>
       </Grid>
     </Box>

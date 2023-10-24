@@ -112,8 +112,8 @@ function StationMap(props) {
 }
 
 StationMap.propTypes = {
-  stations: PropTypes.any.isRequired,
-  metricName: PropTypes.any.isRequired,
+  stations: PropTypes.object.isRequired,
+  metricName: PropTypes.string.isRequired,
 };
 
 export default StationMap

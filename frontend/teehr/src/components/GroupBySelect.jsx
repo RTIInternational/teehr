@@ -43,7 +43,7 @@ export default function GroupBySelect(props) {
       const fetchMetricFields = () => {
          if (selectedDataset && selectedDataset !== "") {
             axios
-               .get(`http://localhost:8000/datasets/${selectedDataset}/get_group_by_fields`)
+               .get(`http://localhost:8000/datasets/${selectedDataset}/get_data_fields`)
                .then((res) => {
                   // console.log(res.data);
                   setGroupByFields(res.data);
@@ -60,9 +60,7 @@ export default function GroupBySelect(props) {
    }, [selectedDataset, setGroupByFields, setLoading, setErrors])
 
    const handleChange = (event) => {
-      const {
-         target: { value },
-      } = event;
+      const { target: { value },} = event;
       setSelectedGroupByFields(
          // On autofill we get a stringified value.
          typeof value === 'string' ? value.split(',') : value,
@@ -84,20 +82,20 @@ export default function GroupBySelect(props) {
                      input={<OutlinedInput id="select-multiple-chip" label="Group By Fields" />}
                      renderValue={(selected) => (
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                           {selected.map((value) => (
-                              <Chip key={value} label={value} />
+                           {selected.map((obj) => (
+                              <Chip key={obj.name} label={obj.name} />
                            ))}
                         </Box>
                      )}
                      MenuProps={MenuProps}
                   >
-                     {groupByFields.map((name) => (
+                     {groupByFields.map((obj) => (
                         <MenuItem
-                           key={name}
-                           value={name}
-                           style={getStyles(name, selectedGroupByFields, theme)}
+                           key={obj.name}
+                           value={obj}
+                           style={getStyles(obj.name, selectedGroupByFields, theme)}
                         >
-                           {name}
+                           {obj.name}
                         </MenuItem>
                      ))}
                   </Select>

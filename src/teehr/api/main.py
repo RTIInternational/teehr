@@ -13,7 +13,8 @@ from typing import List, Optional, Union
 from pydantic import validator
 from pathlib import Path
 
-from teehr.queries.duckdb import get_metrics
+# from teehr.queries.duckdb import get_metrics
+from teehr.models.teehr_dataset import TEEHRDataset
 from teehr.models.queries import (
     JoinedFilterFieldEnum,
     JoinedFilter,
@@ -22,7 +23,7 @@ from teehr.models.queries import (
 )
 import pandas as pd
 import geopandas as gpd
-import duckdb
+# import duckdb
 
 app = FastAPI()
 
@@ -45,7 +46,7 @@ with open(Path(Path(__file__).resolve().parent, "data.yaml")) as f:
     datasets = load(f.read(), Loader)
 
 
-class APIMetricQuery(BaseModel):
+class MetricQueryAPI(BaseModel):
     group_by: List[JoinedFilterFieldEnum]
     order_by: List[JoinedFilterFieldEnum]
     include_metrics: Union[List[str], str]
@@ -60,17 +61,18 @@ class APIMetricQuery(BaseModel):
         return v
 
 
-def format_response(resp: Union[gpd.GeoDataFrame, pd.DataFrame]) -> dict:
-    if isinstance(resp, gpd.GeoDataFrame):
+def format_response(df: Union[gpd.GeoDataFrame, pd.DataFrame]) -> dict:
+    print(df.info())
+    if isinstance(df, gpd.GeoDataFrame):
         # convert datetime/duration to string
-        for col in resp.columns:
-            if resp[col].dtype in ["datetime64[ns]", "timedelta64[ns]"]:
-                resp[col] = resp[col].astype(str)
-        return json.loads(resp.to_json())
-    elif isinstance(resp, pd.DataFrame):
-        return resp.to_dict(orient="records")
+        for col in df.columns:
+            if df[col].dtype in ["datetime64[ns]", "timedelta64[ns]"]:
+                df[col] = df[col].astype(str)
+        return json.loads(df.to_json())
+    elif isinstance(df, pd.DataFrame):
+        return df.to_dict(orient="records", index=True)
     else:
-        return resp
+        return df
 
 
 @app.get("/")
@@ -95,11 +97,22 @@ async def get_metric_fields(
     return list(MetricEnum)
 
 
-@app.get("/datasets/{dataset_id}/get_group_by_fields")
-async def get_group_by_fields(
+@app.get("/datasets/{dataset_id}/get_data_fields")
+async def get_data_fields(
     dataset_id: str,
 ):
-    return list(JoinedFilterFieldEnum)
+    config = datasets["datasets"][dataset_id]
+    tds = TEEHRDataset(**config)
+    fields = tds.get_joined_timeseries_schema()
+    fields.rename(
+        columns={
+            "column_name": "name",
+            "column_type": "type"
+        },
+        inplace=True
+    )
+
+    return fields[["name", "type"]].to_dict(orient="records")
 
 
 # @app.get("/datasets/{dataset_id}/get_group_by_fields")
@@ -129,15 +142,16 @@ async def get_group_by_fields(
 @app.post("/datasets/{dataset_id}/get_metrics")
 async def get_metrics_by_query(
     dataset_id: str,
-    api_metrics_query: APIMetricQuery
+    api_metrics_query: MetricQueryAPI
 ):
 
     # once we have a DataSet approach implemented, get Dataset here
     config = datasets["datasets"][dataset_id]
+    tds = TEEHRDataset(**config)
 
     # converting to dict and then unpacking is bad
     # need to chang func sig to take MetricQuery
-    df = get_metrics(**{**api_metrics_query.dict(), **config})
+    df = tds.get_metrics(**api_metrics_query.dict())
 
     return format_response(df)
 

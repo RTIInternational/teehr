@@ -12,24 +12,30 @@ export default function DataGridDemo(props) {
 
   const { data } = props;
 
-  function getRowId(row) {
-    return row.primary_location_id;
-  }
+  // function getRowId(row) {
+  //   return row.primary_location_id;
+  // }
 
   useEffect(() => {
     const getColumns = () => {
       if (data) {
+        const base = [
+          {
+            field: "id",
+            headerName: "id",
+            editable: false,
+          }
+        ]
         const arr = Object.keys(data.features[0].properties).map((c) => {
           return {
             field: c,
             headerName: c,
-            type: 'number',
-            // width: 110,
             editable: false,
           }
         })
-        console.log(arr)
-        setColumns(arr)
+        base.push(...arr)
+        // console.log(arr)
+        setColumns(base)
       }
     }
     getColumns()
@@ -39,7 +45,9 @@ export default function DataGridDemo(props) {
     const getRows= () => {
       if (data) {
         const arr = data.features.map((feat) => {
-          return feat.properties
+          const obj = feat.properties
+          obj["id"] = feat.id
+          return obj
         })
         console.log(arr)
         setRows(arr)
@@ -66,7 +74,7 @@ export default function DataGridDemo(props) {
           pageSizeOptions={[5]}
           checkboxSelection
           disableRowSelectionOnClick
-          getRowId={getRowId}
+          // getRowId={getRowId}
         />
       </Box>
 
@@ -75,5 +83,5 @@ export default function DataGridDemo(props) {
 }
 
 DataGridDemo.propTypes = {
-  data: PropTypes.array.isRequired
+  data: PropTypes.object.isRequired
 };
