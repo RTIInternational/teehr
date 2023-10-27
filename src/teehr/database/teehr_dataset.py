@@ -3,7 +3,7 @@ from typing import Union, List, Callable, Tuple, Dict
 from pathlib import Path
 import time
 
-import re
+# import re
 import duckdb
 import pandas as pd
 import geopandas as gpd
@@ -29,9 +29,26 @@ class TEEHRDataset():
         self.crosswalk_filepath = crosswalk_filepath
         self.geometry_filepath = geometry_filepath
 
+    def query(self, query: str, format: str = None):
+        """Run query against the class's database.
+
+        """
+        with duckdb.connect(self.database_filepath) as con:
+            con.install_extension("spatial")
+            con.load_extension("spatial")
+            con.sql("SET memory_limit='15GB';")
+
+            if format == "df":
+                return con.sql(query).df()
+            elif format == "raw":
+                return con.sql(query).show()
+
+            con.sql(query)
+            return None
+
     def _initialize_database_tables(self):
         """Create the persistent study database and empty table(s)"""
-        create_table = """
+        create_timeseries_table = """
             CREATE TABLE IF NOT EXISTS joined_timeseries(
                 reference_time DATETIME,
                 value_time DATETIME,
@@ -46,20 +63,28 @@ class TEEHRDataset():
                 absolute_difference FLOAT
                 );"""
 
-        with duckdb.connect(self.database_filepath) as con:
-            con.sql(create_table)
+        self.query(create_timeseries_table)
+
+        # Adding a unique index ~ doubles the size of the database on disk.
+        # Doing so might start to get us close to PostgreSQL/TimescaleDB sizes?
+        # add_index = """
+        #     CREATE UNIQUE INDEX unique_ts_idx ON joined_timeseries (
+        #         reference_time,
+        #         value_time,
+        #         configuration,
+        #         variable_name,
+        #         primary_location_id
+        #         );"""
+        # self.query(add_index)
 
         # Also initialize the geometry table (what if multiple geometry types?)
-        create_table = """
+        create_geometry_table = """
             CREATE TABLE IF NOT EXISTS geometry(
                 id VARCHAR,
                 name VARCHAR,
                 geometry BLOB
                 );"""
-        with duckdb.connect(self.database_filepath) as con:
-            # con.sql("LOAD spatial;")  # if using GEOMETRY type
-            # Would need to check to make sure it's installed and loaded
-            con.sql(create_table)
+        self.query(create_geometry_table)
 
     def create_joined_timeseries_table(self,
                                        order_by: List[str],
@@ -97,17 +122,15 @@ class TEEHRDataset():
                 FROM
                     read_parquet('{self.geometry_filepath}')
             ;"""
-            with duckdb.connect(self.database_filepath) as con:
-                con.sql(query)
+            self.query(query)
 
     def get_joined_timeseries_schema(self):
         """Get field names and field data types from joined_timeseries"""
 
         desc = """DESCRIBE SELECT * FROM joined_timeseries;"""
-        with duckdb.connect(self.database_filepath) as con:
-            schema_df = con.sql(desc).to_df()
-        # schema_dict = dict(zip(schema_df.column_name, schema_df.column_type))
-        return schema_df
+        df = self.query(desc, format="df")
+
+        return df
 
     @staticmethod
     def _sanitize_field_name(field_name: str) -> str:
@@ -256,7 +279,7 @@ class TEEHRDataset():
         parameter_types = [schema_dict[param] for param in parameter_names]
 
         self._add_field_name_to_joined_timeseries(field_name=new_field_name,
-                                                  field_dtype="FLOAT")
+                                                  field_dtype=new_field_type)
 
         # Build the query using the parameter names
         args = ""
