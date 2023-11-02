@@ -8,7 +8,7 @@ from pathlib import Path
 
 from teehr.models.queries import (
     MetricQueryDB,
-    JoinedTimeseriesQuery,
+    JoinedTimeseriesQueryDB,
     # TimeseriesQuery,
     # TimeseriesCharQuery,
 )
@@ -19,18 +19,11 @@ import teehr.models.queries as tmq
 SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-def get_metrics(
-    database_filepath: Union[str, Path],
-    group_by: List[str],
-    order_by: List[str],
-    include_metrics: Union[List[tmq.MetricEnum], "all"],
-    filters: Union[List[dict], None] = None,
-    return_query: bool = False,
-    include_geometry: bool = False,
-) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
-    """Calculate performance metrics using database queries.
+def create_get_metrics_query(mq: MetricQueryDB) -> str:
+    """Build the query string to calculate performance metrics
+    using database queries.
 
-    Parameters
+    mq Fields
     ----------
     group_by : List[str]
         List of column/field names to group timeseries data by.
@@ -44,16 +37,10 @@ def get_metrics(
     filters : Union[List[dict], None] = None
         List of dictionaries describing the "where" clause to limit data that
         is included in metrics.
-    return_query: bool = False
-        True returns the query string instead of the data
-    include_geometry: bool = True
-        True joins the geometry to the query results.
-        Only works if `primary_location_id`
-        is included as a group_by field.
 
     Returns
     -------
-    results : Union[str, pd.DataFrame, gpd.GeoDataFrame]
+    query : str
 
     Filter, Order By and Group By Fields
     -----------------------------------
@@ -103,45 +90,29 @@ def get_metrics(
     * max_value_timedelta
 
     Examples:
-        group_by = ["lead_time", "primary_location_id"]
         order_by = ["lead_time", "primary_location_id"]
+        group_by = ["lead_time", "primary_location_id"]
         filters = [
             {
                 "column": "primary_location_id",
                 "operator": "=",
-                "value": "'123456'"
+                "value": "gage-A",
             },
             {
                 "column": "reference_time",
                 "operator": "=",
-                "value": "'2022-01-01 00:00'"
+                "value": "2022-01-01 00:00:00",
             },
-            {
-                "column": "lead_time",
-                "operator": "<=",
-                "value": "'10 days'"
-            }
+            {"column": "lead_time", "operator": "<=", "value": "10 hours"},
         ]
     """
-
-    mq = MetricQueryDB.parse_obj(
-        {
-            "database_filepath": database_filepath,
-            "group_by": group_by,
-            "order_by": order_by,
-            "include_metrics": include_metrics,
-            "filters": filters,
-            "return_query": return_query,
-            "include_geometry": include_geometry,
-        }
-    )
 
     query = f"""
         WITH joined as (
             SELECT
                 *
             FROM joined_timeseries
-            {tqu.filters_to_sql(mq.filters)}
+            {tqu.filters_to_sql_db(mq.filters)}
         )
         {tqu._nse_cte(mq)}
         {tqu._pmxt_cte(mq)}
@@ -185,45 +156,16 @@ def get_metrics(
         ORDER BY
             {",".join([f"metrics.{ob}" for ob in mq.order_by])}
     ;"""
-
-    if mq.return_query:
-        return tqu.remove_empty_lines(query)
-
-    with duckdb.connect(str(database_filepath)) as con:
-        query_tbl = con.sql(query)  # noqa
-        if mq.include_geometry:
-            # Join geometry
-            query = """
-                SELECT
-                    geometry.name, geometry.geometry, query_tbl.*
-                FROM
-                    query_tbl
-                JOIN
-                    geometry
-                ON
-                    geometry.id = query_tbl.primary_location_id
-            ;"""
-            df = con.sql(query).to_df()
-            return tqu.df_to_gdf(df)
-        else:
-            return query_tbl.to_df()
+    # if mq.return_query:
+    #     return tqu.remove_empty_lines(query)
+    return query
 
 
-def join_and_save_timeseries(
-    primary_filepath: str,
-    secondary_filepath: str,
-    crosswalk_filepath: str,
-    order_by: List[str],
-    con: duckdb.DuckDBPyConnection,
-    filters: Union[List[dict], None] = None,
-    return_query: bool = False,
-    geometry_filepath: Union[str, None] = None,
-    include_geometry: bool = False,
-) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
+def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQueryDB) -> str:
     """Load joined timeseries into a duckdb persistent database
     using database query.
 
-    Parameters
+    jtq Fields
     ----------
     primary_filepath : str
         File path to the "observed" data.  String must include path to file(s)
@@ -233,69 +175,15 @@ def join_and_save_timeseries(
         and can include wildcards.  For example, "/path/to/parquet/*.parquet"
     crosswalk_filepath : str
         File path to single crosswalk file.
-    order_by : List[str]
+    order_by : Optional[List[str]]
         List of column/field names to order results by.
         Must provide at least one.
-    filters : Union[List[dict], None] = None
-        List of dictionaries describing the "where" clause to limit data that
-        is included in metrics.
-    return_query: bool = False
-        True returns the query string instead of the data
-    include_geometry: bool = True
-        True joins the geometry to the query results.
-        Only works if `primary_location_id`.
-        is included as a group_by field.
+
 
     Returns
     -------
-    results : Union[str, pd.DataFrame, gpd.GeoDataFrame]
-
-    Filter and Order By Fields
-    --------------------------
-    * reference_time
-    * primary_location_id
-    * secondary_location_id
-    * primary_value
-    * secondary_value
-    * value_time
-    * configuration
-    * measurement_unit
-    * variable_name
-    * lead_time
-
-    Examples:
-        order_by = ["lead_time", "primary_location_id"]
-        filters = [
-            {
-                "column": "primary_location_id",
-                "operator": "=",
-                "value": "'123456'"
-            },
-            {
-                "column": "reference_time",
-                "operator": "=",
-                "value": "'2022-01-01 00:00'"
-            },
-            {
-                "column": "lead_time",
-                "operator": "<=",
-                "value": "'10 days'"
-            }
-        ]
+    query : str
     """
-
-    jtq = JoinedTimeseriesQuery.parse_obj(
-        {
-            "primary_filepath": primary_filepath,
-            "secondary_filepath": secondary_filepath,
-            "crosswalk_filepath": crosswalk_filepath,
-            "order_by": order_by,
-            "filters": filters,
-            "return_query": return_query,
-            "include_geometry": include_geometry,
-            "geometry_filepath": geometry_filepath
-        }
-    )
 
     query = f"""
     WITH filtered_primary AS (
@@ -319,7 +207,6 @@ def join_and_save_timeseries(
             pf.location_id as primary_location_id,
             sf.value_time - sf.reference_time as lead_time,
             abs(primary_value - secondary_value) as absolute_difference
-            {tqu.geometry_select_clause(jtq)}
         FROM read_parquet('{str(jtq.secondary_filepath)}') sf
         JOIN read_parquet('{str(jtq.crosswalk_filepath)}') cf
             on cf.secondary_location_id = sf.location_id
@@ -328,8 +215,6 @@ def join_and_save_timeseries(
             and sf.value_time = pf.value_time
             and sf.measurement_unit = pf.measurement_unit
             and sf.variable_name = pf.variable_name
-        {tqu.geometry_join_clause(jtq)}
-        {tqu.filters_to_sql(jtq.filters)}
     )
     INSERT INTO joined_timeseries
     SELECT
@@ -338,13 +223,11 @@ def join_and_save_timeseries(
         joined
     ORDER BY
         {",".join(jtq.order_by)}
-    ;""" # noqa
+    ;"""  # noqa
 
-    # Join primary and secondary and insert into table joined_timeseries
-    con.sql(query)
-
-    if jtq.return_query:
-        return tqu.remove_empty_lines(query)
+    # if jtq.return_query:
+    #     return tqu.remove_empty_lines(query)
+    return query
 
 
 def describe_timeseries(timeseries_filepath: str) -> Dict:
@@ -432,8 +315,9 @@ def describe_timeseries(timeseries_filepath: str) -> Dict:
         WHERE num_duplicates > 1
         """
     df = duckdb.sql(query).to_df()
-    num_locations_with_duplicate_value_times = \
-        df["num_locations_with_duplicates"][0]
+    num_locations_with_duplicate_value_times = df[
+        "num_locations_with_duplicates"
+    ][0]
 
     # Check time step integrity by reference_time and location_id
     query = f"""
@@ -473,10 +357,8 @@ def describe_timeseries(timeseries_filepath: str) -> Dict:
         "Start Date": start_date,
         "End Date": end_date,
         "Number of duplicate rows": num_duplicate_rows,
-        "Number of location IDs with duplicate value times":
-            num_locations_with_duplicate_value_times,
-        "Number of location IDs with missing time steps":
-            num_locations_with_missing_timesteps
+        "Number of location IDs with duplicate value times": num_locations_with_duplicate_value_times,
+        "Number of location IDs with missing time steps": num_locations_with_missing_timesteps,
     }
 
     return output_report

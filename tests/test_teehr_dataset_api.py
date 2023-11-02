@@ -1,0 +1,76 @@
+from pathlib import Path
+import numpy as np
+
+from teehr.database.teehr_dataset import TEEHRDatasetAPI
+from teehr.models.queries import MetricQueryDB
+
+# Test data
+TEST_STUDY_DIR = Path("tests/data/test_study")
+PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "test_short_obs.parquet")
+SECONDARY_FILEPATH = Path(
+    TEST_STUDY_DIR, "timeseries", "test_short_fcast.parquet"
+)
+CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
+ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr2.parquet")
+GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
+DATABASE_FILEPATH = Path(TEST_STUDY_DIR, "temp_test.db")
+
+# NOTE: These tests require joined_timeseries values to already exist
+
+
+def test_unique_field_values():
+    tds = TEEHRDatasetAPI(DATABASE_FILEPATH)
+    df = tds.get_unique_field_values("primary_location_id")
+    assert sorted(df["unique_primary_location_id_values"].tolist()) == [
+        "gage-A",
+        "gage-B",
+        "gage-C",
+    ]
+    pass
+
+
+def test_metrics_query():
+    tds = TEEHRDatasetAPI(DATABASE_FILEPATH)
+
+    # Get metrics
+    order_by = ["lead_time", "primary_location_id"]
+    group_by = ["lead_time", "primary_location_id"]
+    filters = [
+        {
+            "column": "primary_location_id",
+            "operator": "=",
+            "value": "gage-A",
+        },
+        {
+            "column": "reference_time",
+            "operator": "=",
+            "value": "2022-01-01 00:00:00",
+        },
+        {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+    ]
+
+    mq = MetricQueryDB.model_validate(
+        {
+            "group_by": group_by,
+            "order_by": order_by,
+            "include_metrics": "all",
+            "filters": filters,
+        },
+    )
+    df = tds.get_metrics(
+        mq,
+        include_geometry=False,
+    )
+    assert df.index.size == 11
+
+
+def test_describe_inputs():
+    tds = TEEHRDatasetAPI(DATABASE_FILEPATH)
+    df = tds.describe_inputs(PRIMARY_FILEPATH, SECONDARY_FILEPATH)
+    pass
+
+
+if __name__ == "__main__":
+    test_unique_field_values()
+    # test_describe_inputs()
+    test_metrics_query()

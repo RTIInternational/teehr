@@ -16,7 +16,7 @@ def test_point_model():
         },
     }
 
-    cm = PointConfigurationModel.parse_obj(vars)
+    cm = PointConfigurationModel.model_validate(vars)
 
     assert cm.configuration.name == "short_range"
     assert cm.output_type.name == "channel_rt"
@@ -37,7 +37,7 @@ def test_grid_model():
         },
     }
 
-    cm = GridConfigurationModel.parse_obj(vars)
+    cm = GridConfigurationModel.model_validate(vars)
 
     assert cm.configuration.name == "short_range"
     assert cm.output_type.name == "forcing"
