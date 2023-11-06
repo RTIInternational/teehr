@@ -30,6 +30,8 @@ function Dashboard() {
   const [groupByFields, setGroupByFields] = useState([]);
   const [selectedGroupByFields, setSelectedGroupByFields] = useState([]);
 
+  const [operators, setOperators] = useState([]);
+
   const [filters, setFilters] = useState([
     { column: "", operator: "", value: "" },
   ]);
@@ -70,6 +72,9 @@ function Dashboard() {
     metrics,
     groupByFields,
     filters,
+    operators,
+    errors,
+    loading,
     selectedDataset,
     selectedMetrics,
     selectedGroupByFields,
@@ -77,6 +82,9 @@ function Dashboard() {
     setMetrics,
     setGroupByFields,
     setFilters,
+    setOperators,
+    setErrors,
+    setLoading,
   };
 
   return (

@@ -19,6 +19,7 @@ from teehr.models.queries import (
     # JoinedFilterFieldEnum,
     # JoinedFilter,
     # BaseModel,
+    FilterOperatorEnum,
     MetricEnum
 )
 from teehr.models.queries_database import (
@@ -103,6 +104,10 @@ async def get_data_fields(
         inplace=True
     )
     return fields[["name", "type"]].to_dict(orient="records")
+
+@app.get("/datasets/{dataset_id}/get_filter_operators")
+async def get_filter_operators(dataset_id: str):
+    return {item.name: item.value for item in FilterOperatorEnum}
 
 
 # @app.get("/datasets/{dataset_id}/get_group_by_fields")

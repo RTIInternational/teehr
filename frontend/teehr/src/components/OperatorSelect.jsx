@@ -1,26 +1,44 @@
+import { useEffect, useContext } from "react";
 import PropTypes from "prop-types";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 import { OutlinedInput, Box } from "@mui/material";
-
-const filterOperatorEnum = {
-  EQ: "=",
-  GT: ">",
-  LT: "<",
-  GTE: ">=",
-  LTE: "<=",
-  ISLIKE: "like",
-  ISIN: "in",
-};
+import axios from "axios";
+import DashboardContext from "../Context";
 
 export default function OperatorSelect(props) {
+  const { operators, selectedDataset, setOperators, setLoading, setErrors } =
+    useContext(DashboardContext);
   const { selectedOperator, setSelectedOperator } = props;
 
   const handleChange = (event) => {
     setSelectedOperator(event.target.value);
   };
+
+  useEffect(() => {
+    const fetchFilterOperators = () => {
+      if (selectedDataset) {
+        setLoading(true);
+        axios
+          .get(
+            `http://localhost:8000/datasets/${selectedDataset}/get_filter_operators`
+          )
+          .then((res) => {
+            // console.log(res.data);
+            setOperators(res.data);
+            setLoading(false);
+          })
+          .catch(function (err) {
+            console.log(err);
+            setErrors(err);
+            setLoading(false);
+          });
+      }
+    };
+    fetchFilterOperators();
+  }, [selectedDataset, setLoading, setErrors, setOperators]);
 
   return (
     <FormControl sx={{ m: 1, display: "flex" }}>
@@ -38,12 +56,12 @@ export default function OperatorSelect(props) {
         }
         renderValue={(selected) => (
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-            {filterOperatorEnum[selected]}
+            {operators[selected]}
           </Box>
         )}
         // MenuProps={MenuProps}
       >
-        {Object.entries(filterOperatorEnum).map(([key, label]) => (
+        {Object.entries(operators).map(([key, label]) => (
           <MenuItem
             key={key}
             value={key}
