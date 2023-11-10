@@ -214,12 +214,72 @@ def test_get_joined_timeseries_schema():
     pass
 
 
+def test_timeseries_query():
+    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+
+    filters = [
+        {
+            "column": "primary_location_id",
+            "operator": "=",
+            "value": "gage-A",
+        },
+        {
+            "column": "reference_time",
+            "operator": "=",
+            "value": "2022-01-01 00:00:00",
+        },
+        {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+    ]
+
+    order_by = ["primary_location_id"]
+
+    df = tds.get_timeseries(
+        order_by=order_by,
+        filters=filters
+    )
+
+    pass
+
+
+def test_timeseries_char_query():
+    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+
+    # filters = [
+    #     {
+    #         "column": "primary_location_id",
+    #         "operator": "=",
+    #         "value": "gage-A",
+    #     },
+    #     {
+    #         "column": "reference_time",
+    #         "operator": "=",
+    #         "value": "2022-01-01 00:00:00",
+    #     },
+    #     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+    # ]
+    filters = []
+    group_by = ["primary_location_id"]
+    order_by = ["primary_location_id"]
+    timeseries_name = "secondary"  # "primary, secondary"
+
+    df = tds.get_timeseries_characteristics(
+        order_by=order_by,
+        group_by=group_by,
+        timeseries_name=timeseries_name,
+        filters=filters
+    )
+
+    pass
+
+
 if __name__ == "__main__":
     # test_insert_joined_timeseries()
     # test_join_attributes()
     # test_unique_field_values()
     # test_describe_inputs()
     # test_calculate_field()
-    # test_unique_field_values()
-    test_metrics_query()
+    test_unique_field_values()
+    # test_metrics_query()
     # test_get_joined_timeseries_schema()
+    # test_timeseries_query()
+    # test_timeseries_char_query()

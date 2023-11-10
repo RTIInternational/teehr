@@ -75,7 +75,7 @@ def test_timeseries_query_df():
         order_by=["location_id"],
         return_query=False,
     )
-    # print(query_df)
+    print(query_df)
     assert len(query_df) == 26 * 3
 
 
@@ -184,13 +184,13 @@ def test_timeseries_char_query_filter_df():
 
 
 if __name__ == "__main__":
-    test_joined_timeseries_query_df()
-    test_joined_timeseries_query_gdf()
-    test_joined_timeseries_query_df_filter()
-    test_timeseries_query_df()
-    test_timeseries_query_df2()
-    test_timeseries_query_one_site_one_ref_df()
+    # test_joined_timeseries_query_df()
+    # test_joined_timeseries_query_gdf()
+    # test_joined_timeseries_query_df_filter()
+    # test_timeseries_query_df()
+    # test_timeseries_query_df2()
+    # test_timeseries_query_one_site_one_ref_df()
     test_timeseries_char_query_df()
-    test_timeseries_char_query_df2()
-    test_timeseries_char_query_filter_df()
+    # test_timeseries_char_query_df2()
+    # test_timeseries_char_query_filter_df()
     pass

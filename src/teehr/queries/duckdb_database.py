@@ -7,10 +7,11 @@ from typing import List, Union, Dict
 from pathlib import Path
 
 from teehr.models.queries_database import (
-    MetricQueryDB,
-    JoinedTimeseriesQueryDB,
-    # TimeseriesQueryDB,
-    # TimeseriesCharQuery,
+    MetricQuery,
+    JoinedTimeseriesQuery,
+    TimeseriesQuery,
+    TimeseriesCharQuery,
+    JoinedTimeseriesFieldName
 )
 
 import teehr.queries.utils as tqu
@@ -18,7 +19,7 @@ import teehr.queries.utils as tqu
 SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-def create_get_metrics_query(mq: MetricQueryDB) -> str:
+def create_get_metrics_query(mq: MetricQuery) -> str:
     """Build the query string to calculate performance metrics
     using database queries.
 
@@ -161,7 +162,7 @@ def create_get_metrics_query(mq: MetricQueryDB) -> str:
     return query
 
 
-def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQueryDB) -> str:
+def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQuery) -> str:
     """Load joined timeseries into a duckdb persistent database
     using database query.
 
@@ -365,11 +366,8 @@ def describe_timeseries(timeseries_filepath: str) -> Dict:
 
 
 def create_get_timeseries_query(
-    timeseries_filepath: str,
-    order_by: List[str],
-    filters: Union[List[dict], None] = None,
-    return_query: bool = False,
-) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
+    tq: TimeseriesQuery
+) -> str:
     """Retrieve joined timeseries using database query.
 
     Parameters
@@ -388,7 +386,7 @@ def create_get_timeseries_query(
 
     Returns
     -------
-    results : Union[str, pd.DataFrame, gpd.GeoDataFrame]
+    results : Union[str, pd.DataFram]
 
     Filter and Order By Fields
     --------------------------
@@ -410,33 +408,144 @@ def create_get_timeseries_query(
             },
         ]
     """
-    tq = TimeseriesQueryDB.model_validate(
-        {
-            "timeseries_filepath": timeseries_filepath,
-            "order_by": order_by,
-            "filters": filters,
-            "return_query": return_query,
-        }
-    )
+
+    # query = f"""
+    #     WITH joined as (
+    #         SELECT
+    #             sf.reference_time,
+    #             sf.value_time,
+    #             sf.location_id,
+    #             sf.value,
+    #             sf.configuration,
+    #             sf.measurement_unit,
+    #             sf.variable_name
+    #         FROM
+    #             joined_timeseries sf
+    #         {tqu.filters_to_sql(tq.filters)}
+    #     )
+    #     SELECT * FROM
+    #         joined
+    #     ORDER BY
+    #         {",".join(tq.order_by)}
+    # ;"""
 
     query = f"""
-        WITH joined as (
-            SELECT
-                sf.reference_time,
-                sf.value_time,
-                sf.location_id,
-                sf.value,
-                sf.configuration,
-                sf.measurement_unit,
-                sf.variable_name
-            FROM
-                read_parquet('{str(tq.timeseries_filepath)}') sf
-            {tqu.filters_to_sql(tq.filters)}
-        )
-        SELECT * FROM
-            joined
+        SELECT
+            *
+        FROM
+            joined_timeseries sf
+        {tqu.filters_to_sql(tq.filters)}
         ORDER BY
             {",".join(tq.order_by)}
     ;"""
+
+    return query
+
+
+def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
+    """Retrieve joined timeseries using database query.
+
+    Parameters
+    ----------
+    order_by : List[str]
+        List of column/field names to order results by.
+        Must provide at least one.
+    group_by : List[str]
+        List of column/field names to group timeseries data by.
+        Must provide at least one.
+    filters : Union[List[dict], None] = None
+        List of dictionaries describing the "where" clause to limit data that
+        is included in metrics.
+    return_query: bool = False
+        True returns the query string instead of the data
+
+    Returns
+    -------
+    query : str
+
+    Examples:
+        order_by = ["lead_time", "primary_location_id"]
+        filters = [
+            {
+                "column": "primary_location_id",
+                "operator": "=",
+                "value": "'123456'"
+            },
+            {
+                "column": "reference_time",
+                "operator": "=",
+                "value": "'2022-01-01 00:00'"
+            },
+            {
+                "column": "lead_time",
+                "operator": "<=",
+                "value": "'10 days'"
+            }
+        ]
+    """
+
+    join_max_time_on = tqu._join_time_on(
+        join="mxt", join_to="chars", join_on=tcq.group_by
+    )
+
+    order_by = [f"chars.{val}" for val in tcq.order_by]
+
+    # TODO: Need to handle primary_value vs. secondary_value?
+
+    query = f"""
+        WITH fts AS (
+            SELECT sf.* FROM
+            joined_timeseries sf
+            {tqu.filters_to_sql(tcq.filters)}
+        ),
+        mxt AS (
+            SELECT
+                {",".join(tcq.group_by)}
+                , {tcq.timeseries_name}_value
+                , value_time
+                , ROW_NUMBER() OVER(
+                    PARTITION BY {",".join(tcq.group_by)}
+                    ORDER BY {tcq.timeseries_name}_value DESC, value_time
+                ) as n
+            FROM fts
+        ),
+        chars AS (
+            SELECT
+                {",".join(tcq.group_by)}
+                ,count(fts.{tcq.timeseries_name}_value) as count
+                ,min(fts.{tcq.timeseries_name}_value) as min
+                ,max(fts.{tcq.timeseries_name}_value) as max
+                ,avg(fts.{tcq.timeseries_name}_value) as average
+                ,sum(fts.{tcq.timeseries_name}_value) as sum
+                ,var_pop(fts.{tcq.timeseries_name}_value) as variance
+            FROM
+                fts
+            GROUP BY
+                {",".join(tcq.group_by)}
+        )
+        SELECT
+            chars.*
+            ,mxt.value_time as max_value_time
+        FROM chars
+            {join_max_time_on}
+        ORDER BY
+            {",".join(order_by)}
+    ;"""
+
+    return query
+
+
+def create_unique_field_values_query(fn) -> str:
+
+    query = f"""
+        SELECT
+        DISTINCT
+            {fn.field_name}
+        AS unique_{fn.field_name}_values,
+        FROM
+            joined_timeseries
+        ORDER BY
+            {fn.field_name}
+        """
 
     return query

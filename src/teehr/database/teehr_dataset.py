@@ -1,5 +1,5 @@
 """Defines the TEEHR dataset class and pre-processing methods"""
-from typing import Union, List, Callable, Tuple, Dict
+from typing import Union, List, Callable, Tuple, Dict, Any
 from pathlib import Path
 
 import re
@@ -12,9 +12,12 @@ import teehr.queries.duckdb_database as tqu_db
 import teehr.queries.utils as tqu
 from teehr.models.queries_database import (
     JoinedFieldNameEnum,
-    JoinedTimeseriesQueryDB,
-    CalculateFieldDB,
-    MetricQueryDB,
+    JoinedTimeseriesQuery,
+    CalculateField,
+    MetricQuery,
+    TimeseriesQuery,
+    TimeseriesCharQuery,
+    JoinedTimeseriesFieldName,
 )
 from teehr.models.queries import MetricEnum
 
@@ -36,10 +39,6 @@ class TEEHRDatasetAPI:
         """Run query against the class's database."""
         if not create_function_args:
             with duckdb.connect(self.database_filepath) as con:
-                # con.install_extension("spatial")
-                # con.load_extension("spatial")
-                # con.sql("SET memory_limit='15GB';")
-
                 if format == "df":
                     return con.sql(query).df()
                 elif format == "raw":
@@ -152,60 +151,80 @@ class TEEHRDatasetAPI:
 
         return df
 
-    def _check_if_field_currently_exists(self, field_name: str):
-        """Check if a given field name currently exists in the joined_timeseries table."""
-        schema_df = self.get_joined_timeseries_schema()
-        existing_fields = schema_df.column_name.tolist()
-        if field_name not in existing_fields:
-            raise ValueError(
-                f"Field '{field_name}' does not exist! Existing fields: {existing_fields}"
-            )
-
-    def get_unique_field_values(self, field_name: str):
-        """Get unique values for a given field"""
-        self._check_if_field_currently_exists(field_name)
-        query = f"""
-            SELECT
-            DISTINCT
-                {field_name}
-            AS unique_{field_name}_values,
-            FROM joined_timeseries
-            """
-
-        df = self.query(query, format="df")
-
-        return df
-
     def _check_if_geometry_is_inserted(self):
-        """Make sure the geometry data has been inserted into the geometry table."""
+        """Make sure the geometry data has been inserted
+        into the geometry table."""
         df = self.query("SELECT COUNT(geometry) FROM geometry;", format="df")
         if df["count(geometry)"].values == 0:
             raise ValueError(
                 "The geometry table is empty! Please insert geometry first"
             )
 
-    def get_metrics(
-        self,
-        mq: MetricQueryDB,
-        include_geometry: str = False,
-    ) -> Union[pd.DataFrame, gpd.GeoDataFrame]:
-        """Calculate performance metrics using database queries"""
-
-        # Validate the query based on existing table fields
+    def _validate_query_model(self, query_model: Any) -> Any:
+        """Validate the query based on existing table fields."""
         schema_df = self.get_joined_timeseries_schema()
-        mq.model_validate(
-            mq.model_dump(),
+        query_model.model_validate(
+            query_model.model_dump(),
             context={"existing_fields": schema_df.column_name.tolist()},
         )
+        return query_model
+
+    def get_metrics(
+        self,
+        mq: MetricQuery,
+    ) -> Union[pd.DataFrame, gpd.GeoDataFrame, str]:
+        """Calculate performance metrics using database queries"""
+
+        mq = self._validate_query_model(mq)
 
         query = tqu_db.create_get_metrics_query(mq)
 
-        if include_geometry:
+        if mq.return_query:
+            return tqu.remove_empty_lines(query)
+        elif mq.include_geometry:
             self._check_if_geometry_is_inserted()
             df = self.query(query, format="df")
             return tqu.df_to_gdf(df)
         else:
             df = self.query(query, format="df")
+        return df
+
+    def get_timeseries(
+        self,
+        tq: TimeseriesQuery
+    ) -> Union[pd.DataFrame, str]:
+
+        tq = self._validate_query_model(tq)
+
+        query = tqu_db.create_get_timeseries_query(tq)
+
+        if tq.return_query:
+            return tqu.remove_empty_lines(query)
+        else:
+            df = self.query(query, format="df")
+        return df
+
+    def get_timeseries_characteristics(
+        self, tcq: TimeseriesCharQuery
+    ) -> Union[str, pd.DataFrame]:
+
+        tcq = self._validate_query_model(tcq)
+
+        query = tqu_db.create_get_timeseries_char_query(tcq)
+
+        if tcq.return_query:
+            return tqu.remove_empty_lines(query)
+        else:
+            df = self.query(query, format="df")
+        return df
+
+        pass
+
+    def get_unique_field_values(self, fn: JoinedTimeseriesFieldName):
+        """Get unique values for a given field"""
+        fn = self._validate_query_model(fn)
+        query = tqu_db.create_unique_field_values_query(fn)
+        df = self.query(query, format="df")
         return df
 
 
@@ -222,7 +241,8 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         self.query(query)
 
     def _validate_joined_timeseries_base_fields(self, drop_added_fields: bool):
-        """(WIP) Make sure no extra fields have been added or base fields dropped"""
+        """(WIP) Make sure no extra fields have been
+        added or base fields dropped."""
         schema_df = self.get_joined_timeseries_schema()
         if schema_df.index.size < 11:
             raise ValueError(
@@ -235,7 +255,8 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
                     self._drop_joined_timeseries_field(field_name)
                 else:
                     raise ValueError(
-                        f"An added field '{field_name}' exists, please drop it before joining timeseries"
+                        f"An added field '{field_name}' exists,"
+                        "please drop it before joining timeseries"
                     )
 
     def insert_geometry(self, geometry_filepath: Union[str, Path]):
@@ -254,7 +275,8 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
                     FROM
                         geometry
                     WHERE
-                        pq.id = id AND pq.name = name AND pq.geometry = geometry
+                        pq.id = id AND pq.name = name
+                    AND pq.geometry = geometry
                 )
             ;"""
             self.query(query)
@@ -276,7 +298,7 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
 
         self._validate_joined_timeseries_base_fields(drop_added_fields)
 
-        jtq = JoinedTimeseriesQueryDB.model_validate(
+        jtq = JoinedTimeseriesQuery.model_validate(
             {
                 "primary_filepath": primary_filepath,
                 "secondary_filepath": secondary_filepath,
@@ -412,7 +434,7 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
 
         sanitized_field_name = self._sanitize_field_name(new_field_name)
 
-        cf = CalculateFieldDB.model_validate(
+        cf = CalculateField.model_validate(
             {
                 "new_field_name": sanitized_field_name,
                 "new_field_type": new_field_type,
@@ -459,6 +481,19 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
 
         self.query(query=query, create_function_args=create_function_args)
 
+    def _validate_query_model(
+        self,
+        query_model: Union[MetricQuery, TimeseriesQuery, TimeseriesCharQuery],
+        data: Dict
+    ) -> Union[MetricQuery, TimeseriesQuery, TimeseriesCharQuery]:
+        """Validate the query based on existing table fields."""
+        schema_df = self.get_joined_timeseries_schema()
+        query_model.model_validate(
+            data,
+            context={"existing_fields": schema_df.column_name.tolist()},
+        )
+        return query_model
+
     def get_metrics(
         self,
         group_by: List[str],
@@ -466,30 +501,84 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         include_metrics: Union[List[MetricEnum], "all"],
         filters: Union[List[dict], None] = None,
         include_geometry: bool = True,
+        return_query: bool = False,
     ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
         """Calculate performance metrics using database queries"""
 
-        existing_fields = (
-            self.get_joined_timeseries_schema().column_name.tolist()
-        )
-        mq = MetricQueryDB.model_validate(
-            {
-                "group_by": group_by,
-                "order_by": order_by,
-                "include_metrics": include_metrics,
-                "filters": filters,
-                "include_geometry": include_geometry,
-            },
-            context={"existing_fields": existing_fields},
-        )
+        data = {
+            "group_by": group_by,
+            "order_by": order_by,
+            "include_metrics": include_metrics,
+            "filters": filters,
+            "include_geometry": include_geometry,
+            "return_query": return_query,
+        }
+        mq = self._validate_query_model(MetricQuery, data)
 
         query = tqu_db.create_get_metrics_query(mq)
 
-        # print(tqu.remove_empty_lines(query))
-        if include_geometry:
+        if mq.return_query:
+            return tqu.remove_empty_lines(query)
+        elif mq.include_geometry:
             self._check_if_geometry_is_inserted()
             df = self.query(query, format="df")
             return tqu.df_to_gdf(df)
         else:
             df = self.query(query, format="df")
+        return df
+
+    def get_timeseries(
+        self,
+        order_by: List[str],
+        filters: Union[List[dict], None] = None,
+        return_query: bool = False,
+    ) -> Union[pd.DataFrame, str]:
+
+        data = {
+            "order_by": order_by,
+            "filters": filters,
+            "return_query": return_query,
+        }
+        tq = self._validate_query_model(TimeseriesQuery, data)
+
+        query = tqu_db.create_get_timeseries_query(tq)
+
+        if tq.return_query:
+            return tqu.remove_empty_lines(query)
+        else:
+            df = self.query(query, format="df")
+        return df
+
+    def get_timeseries_characteristics(
+        self,
+        group_by: List[str],
+        order_by: List[str],
+        timeseries_name: str,
+        filters: Union[List[dict], None] = None,
+        return_query: bool = False,
+    ) -> Union[str, pd.DataFrame]:
+
+        data = {
+            "order_by": order_by,
+            "group_by": group_by,
+            "timeseries_name": timeseries_name,
+            "filters": filters,
+            "return_query": return_query,
+        }
+        tcq = self._validate_query_model(TimeseriesCharQuery, data)
+
+        query = tqu_db.create_get_timeseries_char_query(tcq)
+
+        if tcq.return_query:
+            return tqu.remove_empty_lines(query)
+        else:
+            df = self.query(query, format="df")
+        return df
+
+    def get_unique_field_values(self, field_name: str):
+        """Get unique values for a given field"""
+        data = {"field_name": field_name}
+        fn = self._validate_query_model(JoinedTimeseriesFieldName, data)
+        query = tqu_db.create_unique_field_values_query(fn)
+        df = self.query(query, format="df")
         return df

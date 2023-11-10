@@ -1,5 +1,5 @@
 from pathlib import Path
-import numpy as np
+# import numpy as np
 
 from teehr.database.teehr_dataset import TEEHRDatasetAPI
 from teehr.models.queries_database import MetricQueryDB
@@ -66,10 +66,10 @@ def test_metrics_query():
 def test_describe_inputs():
     tds = TEEHRDatasetAPI(DATABASE_FILEPATH)
     df = tds.describe_inputs(PRIMARY_FILEPATH, SECONDARY_FILEPATH)
-    pass
+    assert df
 
 
 if __name__ == "__main__":
-    # test_unique_field_values()
+    test_unique_field_values()
     # test_describe_inputs()
-    test_metrics_query()
+    # test_metrics_query()

@@ -1,10 +1,11 @@
 datasets:
+
   study-a:
-    primary_filepath: /home/matt/repos/teehr/tests/data/test_study/timeseries/*_obs.parquet
-    secondary_filepath: /home/matt/repos/teehr/tests/data/test_study/timeseries/*_fcast.parquet
-    crosswalk_filepath: /home/matt/repos/teehr/tests/data/test_study/geo/crosswalk.parquet
-    geometry_filepath: /home/matt/repos/teehr/tests/data/test_study/geo/gages.parquet
-    database_filepath: /home/matt/repos/teehr/tests/data/test_study/temp_test.db
+    primary_filepath: tests/data/test_study/timeseries/*_obs.parquet
+    secondary_filepath: tests/data/test_study/timeseries/*_fcast.parquet
+    crosswalk_filepath: tests/data/test_study/geo/crosswalk.parquet
+    geometry_filepath: tests/data/test_study/geo/gages.parquet
+    database_filepath: tests/data/test_study/temp_test.db
 
   huc1802_retro:
     primary_filepath: /home/matt/temp/huc1802_retro/timeseries/usgs.parquet

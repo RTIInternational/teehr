@@ -30,8 +30,10 @@ def test_get_metrics():
         "/datasets/study-a/get_metrics",
         json=post
     )
-    assert response.status_code == 200
     print(response.json())
+    assert response.status_code == 200
+    # To unpack error msg from pydantic (only present if fails?)
+    # print(response.json()["detail"][0]["msg"])
 
 
 def test_get_metrics_filter():
@@ -42,7 +44,7 @@ def test_get_metrics_filter():
         "include_metrics": "all",
         "return_query": False,
         "include_geometry": False,
-        "filter": [{
+        "filters": [{
             "column": "primary_location_id",
             "operator": "=",
             "value": "gage-A"
@@ -57,9 +59,77 @@ def test_get_metrics_filter():
     print(response.json())
 
 
-def test_get_fields():
+def test_get_metric_fields():
     response = client.get(
-        "/datasets/{dataset_id}/get_metric_fields"
+        "/datasets/study-a/get_metric_fields"
+    )
+    # assert response.status_code == 200
+    print(response.json())
+
+
+def test_get_data_fields():
+    response = client.get(
+        "/datasets/study-a/get_data_fields"
+    )
+    # assert response.status_code == 200
+    print(response.json())
+
+
+def test_get_timeseries():
+
+    post = {
+        "order_by": ["primary_location_id"],
+        "return_query": False,
+        "filters": [{
+            "column": "primary_location_id",
+            "operator": "=",
+            "value": "gage-A"
+        }]
+    }
+
+    response = client.post(
+        "/datasets/study-a/get_timeseries",
+        json=post
+    )
+    assert response.status_code == 200
+    print(response.json())
+
+
+def test_get_timeseries_chars():
+
+    # post = {
+    #     "order_by": ["primary_location_id"],
+    #     "return_query": False,
+    #     "filters": [{
+    #         "column": "primary_location_id",
+    #         "operator": "=",
+    #         "value": "gage-A"
+    #     }]
+    # }
+
+    post = {
+        "filters": [],
+        "group_by": ["primary_location_id"],
+        "order_by": ["primary_location_id"],
+        "timeseries_name": "secondary",
+        # "return_query": False
+    }
+
+    response = client.post(
+        "/datasets/study-a/get_timeseries_chars",
+        json=post
+    )
+    assert response.status_code == 200
+    print(response.json())
+
+
+def test_get_unique_field_values():
+    post = {
+        "field_name": "primary_location_id"
+    }
+    response = client.post(
+        "/datasets/study-a/get_unique_field_values",
+        json=post
     )
     # assert response.status_code == 200
     print(response.json())
@@ -67,7 +137,11 @@ def test_get_fields():
 
 if __name__ == "__main__":
     # test_read_root()
-    test_read_datasets()
+    # test_read_datasets()
     # test_get_metrics()
     # test_get_metrics_filter()
-    # test_get_fields()
+    # test_get_metric_fields()
+    # test_get_data_fields()
+    # test_get_timeseries()
+    # test_get_timeseries_chars()
+    test_get_unique_field_values()

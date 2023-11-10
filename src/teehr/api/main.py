@@ -9,17 +9,23 @@ except ImportError:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from typing import List, Optional, Union
-from pydantic import validator
+from typing import Union
+# from pydantic import validator
 from pathlib import Path
 
 # from teehr.queries.duckdb import get_metrics
-from teehr.models.teehr_dataset import TEEHRDataset
+from teehr.database.teehr_dataset import TEEHRDatasetAPI
 from teehr.models.queries import (
-    JoinedFilterFieldEnum,
-    JoinedFilter,
-    BaseModel,
+    # JoinedFilterFieldEnum,
+    # JoinedFilter,
+    # BaseModel,
     MetricEnum
+)
+from teehr.models.queries_database import (
+    MetricQuery,
+    TimeseriesQuery,
+    TimeseriesCharQuery,
+    JoinedTimeseriesFieldName
 )
 import pandas as pd
 import geopandas as gpd
@@ -46,23 +52,23 @@ with open(Path(Path(__file__).resolve().parent, "data.yaml")) as f:
     datasets = load(f.read(), Loader)
 
 
-class MetricQueryAPI(BaseModel):
-    group_by: List[JoinedFilterFieldEnum]
-    order_by: List[JoinedFilterFieldEnum]
-    include_metrics: Union[List[str], str]
-    filters: Optional[List[JoinedFilter]] = []
-    return_query: bool
-    include_geometry: bool
+# class MetricQueryAPI(BaseModel):
+#     group_by: List[JoinedFilterFieldEnum]
+#     order_by: List[JoinedFilterFieldEnum]
+#     include_metrics: Union[List[str], str]
+#     filters: Optional[List[JoinedFilter]] = []
+#     return_query: bool
+#     include_geometry: bool
 
-    @validator("filters")
-    def filter_must_be_list(cls, v):
-        if v is None:
-            return []
-        return v
+#     @validator("filters")
+#     def filter_must_be_list(cls, v):
+#         if v is None:
+#             return []
+#         return v
 
 
 def format_response(df: Union[gpd.GeoDataFrame, pd.DataFrame]) -> dict:
-    print(df.info())
+    # print(df.info())
     if isinstance(df, gpd.GeoDataFrame):
         # convert datetime/duration to string
         for col in df.columns:
@@ -102,7 +108,7 @@ async def get_data_fields(
     dataset_id: str,
 ):
     config = datasets["datasets"][dataset_id]
-    tds = TEEHRDataset(**config)
+    tds = TEEHRDatasetAPI(config["database_filepath"])
     fields = tds.get_joined_timeseries_schema()
     fields.rename(
         columns={
@@ -111,7 +117,6 @@ async def get_data_fields(
         },
         inplace=True
     )
-
     return fields[["name", "type"]].to_dict(orient="records")
 
 
@@ -142,35 +147,55 @@ async def get_data_fields(
 @app.post("/datasets/{dataset_id}/get_metrics")
 async def get_metrics_by_query(
     dataset_id: str,
-    api_metrics_query: MetricQueryAPI
+    api_metrics_query: MetricQuery
 ):
-
-    # once we have a DataSet approach implemented, get Dataset here
     config = datasets["datasets"][dataset_id]
-    tds = TEEHRDataset(**config)
-
-    # converting to dict and then unpacking is bad
-    # need to chang func sig to take MetricQuery
-    df = tds.get_metrics(**api_metrics_query.dict())
+    tds = TEEHRDatasetAPI(config["database_filepath"])
+    df = tds.get_metrics(api_metrics_query)
 
     return format_response(df)
 
 
-# @app.post("/datasets/{dataset_id}/get_timeseries")
-# async def get_metrics_by_query(dataset_id: str, api_metrics_query: APIMetricQuery):
+@app.post("/datasets/{dataset_id}/get_timeseries")
+async def get_timeseries_by_query(
+    dataset_id: str,
+    api_timeseries_query: TimeseriesQuery
+):
 
-#     # once we have a DataSet approach implemented, get Dataset here
-#     config = datasets["datasets"][dataset_id]
+    config = datasets["datasets"][dataset_id]
+    tds = TEEHRDatasetAPI(config["database_filepath"])
+    df = tds.get_timeseries(api_timeseries_query)
 
-#     # converting to dict and then unpacking is bad
-#     # need to chang func sig to take MetricQuery
-#     resp = get_metrics(**{**api_metrics_query.dict(), **config})
+    return format_response(df)
 
-#     return format_response(resp)
+
+@app.post("/datasets/{dataset_id}/get_timeseries_chars")
+async def get_timeseries_chars_by_query(
+    dataset_id: str,
+    api_timeseries_char_query: TimeseriesCharQuery
+):
+
+    config = datasets["datasets"][dataset_id]
+    tds = TEEHRDatasetAPI(config["database_filepath"])
+    df = tds.get_timeseries_characteristics(api_timeseries_char_query)
+
+    return format_response(df)
+
+
+@app.post("/datasets/{dataset_id}/get_unique_field_values")
+async def get_unique_field_vals(
+    dataset_id: str,
+    api_field_name: JoinedTimeseriesFieldName
+):
+    config = datasets["datasets"][dataset_id]
+    tds = TEEHRDatasetAPI(config["database_filepath"])
+    df = tds.get_unique_field_values(api_field_name)
+
+    return format_response(df)
 
 
 # @app.post("/datasets/{dataset_id}/get_timeseries_chars")
-# async def get_metrics_by_query(dataset_id: str, api_metrics_query: APIMetricQuery):
+# async def get_metrics_by_query(dataset_id: str, api_metrics_query: APIMetricQuery): # noqa
 
 #     # once we have a DataSet approach implemented, get Dataset here
 #     config = datasets["datasets"][dataset_id]
@@ -183,7 +208,7 @@ async def get_metrics_by_query(
 
 
 # @app.post("/datasets/{dataset_id}/get_joined_timeseries")
-# async def get_metrics_by_query(dataset_id: str, api_metrics_query: APIMetricQuery):
+# async def get_metrics_by_query(dataset_id: str, api_metrics_query: APIMetricQuery): # noqa
 
 #     # once we have a DataSet approach implemented, get Dataset here
 #     config = datasets["datasets"][dataset_id]

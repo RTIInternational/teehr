@@ -1,7 +1,7 @@
 from collections.abc import Iterable
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Union, Any
+from typing import List, Optional, Union
 
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import ValidationInfo, field_validator, model_validator
@@ -60,7 +60,27 @@ class JoinedFieldNameEnum(str, Enum):
     geometry = "geometry"
 
 
-class CalculateFieldDB(BaseModel):
+class TimeseriesNameEnum(str, Enum):
+    primary = "primary"
+    secondary = "secondary"
+
+
+class JoinedTimeseriesFieldName(BaseModel):
+    field_name: str
+
+    @field_validator("field_name")
+    def field_name_must_exist_in_timeseries_table(cls, v, info: ValidationInfo):
+        context = info.context
+        if context:
+            existing_fields = context.get("existing_fields", set())
+            if v not in existing_fields:
+                raise ValueError(
+                    f"The field name {v} does not exist in the joined_timseries table"
+                )
+        return v
+
+
+class CalculateField(BaseModel):
     parameter_names: List[str]
     new_field_name: str
     new_field_type: FieldTypeEnum
@@ -84,7 +104,7 @@ class CalculateFieldDB(BaseModel):
         return v
 
 
-class FilterDB(BaseModel):
+class Filter(BaseModel):
     column: str
     operator: FilterOperatorEnum
     value: Union[
@@ -111,17 +131,17 @@ class FilterDB(BaseModel):
         return v
 
 
-class JoinedTimeseriesQueryDB(BaseModel):
+class JoinedTimeseriesQuery(BaseModel):
     primary_filepath: Union[str, Path]
     secondary_filepath: Union[str, Path]
     crosswalk_filepath: Union[str, Path]
     order_by: Optional[List[JoinedFieldNameEnum]] = []
 
 
-class TimeseriesQueryDB(BaseModel):
-    timeseries_filepath: Union[str, Path]
+class TimeseriesQuery(BaseModel):
     order_by: List[str]
-    filters: Optional[List[FilterDB]] = []
+    filters: Optional[List[Filter]] = []
+    return_query: Optional[bool] = False
 
     @field_validator("filters")
     def filter_must_be_list(cls, v):
@@ -129,13 +149,80 @@ class TimeseriesQueryDB(BaseModel):
             return []
         return v
 
+    @field_validator("order_by")
+    def order_by_must_exist_as_fields(cls, v, info: ValidationInfo):
+        """order_by fields must currently exist in the database"""
+        context = info.context
+        if context:
+            existing_fields = context.get("existing_fields", set())
+            for val in v:
+                if val not in existing_fields:
+                    raise ValueError(
+                        f"The order_by field '{val}' does not exist in the database"
+                    )
+        return v
 
-class MetricQueryDB(BaseModel):
+    @field_validator("filters")
+    def filters_must_exist_as_fields(cls, v, info: ValidationInfo):
+        """filters fields must currently exist in the database"""
+        context = info.context
+        if context:
+            existing_fields = context.get("existing_fields", set())
+            for val in v:
+                if val.column not in existing_fields:
+                    raise ValueError(
+                        f"The filters field {val.column} does not exist in the database"
+                    )
+        return v
+
+
+class TimeseriesCharQuery(BaseModel):
+    order_by: List[str]
+    group_by: List[str]
+    filters: Optional[List[Filter]] = []
+    return_query: Optional[bool] = False
+    timeseries_name: TimeseriesNameEnum
+
+    @field_validator("filters")
+    def filter_must_be_list(cls, v):
+        if v is None:
+            return []
+        return v
+
+    @field_validator("order_by", "group_by")
+    def order_by_must_exist_as_fields(cls, v, info: ValidationInfo):
+        """order_by fields must currently exist in the database"""
+        context = info.context
+        if context:
+            existing_fields = context.get("existing_fields", set())
+            for val in v:
+                if val not in existing_fields:
+                    raise ValueError(
+                        f"The order_by or group_by field '{val}' does not exist in the database"
+                    )
+        return v
+
+    @field_validator("filters")
+    def filters_must_exist_as_fields(cls, v, info: ValidationInfo):
+        """filters fields must currently exist in the database"""
+        context = info.context
+        if context:
+            existing_fields = context.get("existing_fields", set())
+            for val in v:
+                if val.column not in existing_fields:
+                    raise ValueError(
+                        f"The filters field {val.column} does not exist in the database"
+                    )
+        return v
+
+
+class MetricQuery(BaseModel):
     include_geometry: bool
     group_by: List[str]
     order_by: List[str]
     include_metrics: Union[List[MetricEnum], MetricEnum, str]
-    filters: Optional[List[FilterDB]] = []
+    filters: Optional[List[Filter]] = []
+    return_query: Optional[bool] = False
 
     @field_validator("filters")
     def filter_must_be_list(cls, v):
@@ -165,7 +252,7 @@ class MetricQueryDB(BaseModel):
                 "is False, must be True"
             )
 
-        # Order_by and group_by fields must currently exist in the database
+        # order_by, group_by, and filter fields must currently exist in the database
         context = info.context
         if context:
             existing_fields = context.get("existing_fields", set())
