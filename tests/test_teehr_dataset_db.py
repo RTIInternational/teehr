@@ -1,18 +1,16 @@
 from pathlib import Path
-import time
 import numpy as np
+import pandas as pd
 
 from teehr.database.teehr_dataset import TEEHRDatasetDB
 
 # Test data
-TEST_STUDY_DIR = Path("tests/data/test_study")
-PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "test_short_obs.parquet")
-SECONDARY_FILEPATH = Path(
-    TEST_STUDY_DIR, "timeseries", "test_short_fcast.parquet"
-)
+TEST_STUDY_DIR = Path("tests", "data", "test_study")
+PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_obs.parquet")
+SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
-ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr2.parquet")
 GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
+ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr.parquet")
 DATABASE_FILEPATH = Path(TEST_STUDY_DIR, "temp_test.db")
 
 
@@ -30,12 +28,18 @@ def test_unique_field_values():
 def test_metrics_query():
     tds = TEEHRDatasetDB(DATABASE_FILEPATH)
 
+    # Perform the join and insert into duckdb database
+    tds.insert_joined_timeseries(
+        primary_filepath=PRIMARY_FILEPATH,
+        secondary_filepath=SECONDARY_FILEPATH,
+        crosswalk_filepath=CROSSWALK_FILEPATH,
+        drop_added_fields=True,
+    )
+
     # Insert geometry
     tds.insert_geometry(GEOMETRY_FILEPATH)
 
     # Get metrics
-    order_by = ["lead_time", "primary_location_id"]
-    group_by = ["lead_time", "primary_location_id"]
     filters = [
         {
             "column": "primary_location_id",
@@ -50,14 +54,21 @@ def test_metrics_query():
         {"column": "lead_time", "operator": "<=", "value": "10 hours"},
     ]
 
+    group_by = ["primary_location_id"]
+    order_by = ["primary_location_id"]
+    include_metrics = "all"
+    # filters = []
+
     df = tds.get_metrics(
         group_by=group_by,
         order_by=order_by,
-        include_metrics="all",
+        include_metrics=include_metrics,
         filters=filters,
         include_geometry=True,
     )
-    assert df.index.size == 11
+    # print(df)
+    assert df.index.size == 1
+    assert df.columns.size == 24
 
 
 def test_insert_joined_timeseries():
@@ -89,7 +100,39 @@ def test_describe_inputs():
     )
     df = tds.describe_inputs(PRIMARY_FILEPATH, SECONDARY_FILEPATH)
 
-    pass
+    base_df = pd.DataFrame(
+        index=[
+            "Number of unique location IDs",
+            "Total number of rows",
+            "Start Date",
+            "End Date",
+            "Number of duplicate rows",
+            "Number of location IDs with duplicate value times",
+            "Number of location IDs with missing time steps",
+        ],
+        data={
+            "primary": [
+                3,
+                78,
+                pd.to_datetime("2022-01-01 00:00:00"),
+                pd.to_datetime("2022-01-02 01:00:00"),
+                0,
+                0,
+                0,
+            ],
+            "secondary": [
+                3,
+                216,
+                pd.to_datetime("2022-01-01 00:00:00"),
+                pd.to_datetime("2022-01-02 01:00:00"),
+                0,
+                3,
+                0,
+            ],
+        },
+    )
+
+    assert base_df.equals(df)
 
 
 def test_calculate_field():
@@ -123,10 +166,60 @@ def test_calculate_field():
     )
 
 
+def test_join_attributes():
+    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+
+    # Add attributes
+    tds.join_attributes(ATTRIBUTES_FILEPATH)
+
+    df = tds.get_joined_timeseries_schema()
+
+    cols = [
+        "reference_time",
+        "value_time",
+        "secondary_location_id",
+        "secondary_value",
+        "configuration",
+        "measurement_unit",
+        "variable_name",
+        "primary_value",
+        "primary_location_id",
+        "lead_time",
+        "absolute_difference",
+        "drainage_area_sq_km",
+        "year_2_discharge_cfs",
+        "primary_normalized_discharge",
+    ]
+    # Make sure attribute fields have been added
+    assert sorted(df.column_name.tolist()) == sorted(cols)
+
+    # Make sure attribute values are correct
+    df = tds.query("SELECT * FROM joined_timeseries LIMIT 10;", format="df")
+    np.testing.assert_approx_equal(
+        df.year_2_discharge_cfs.astype(float).sum(), 3500.0, significant=5
+    )
+
+    np.testing.assert_approx_equal(
+        df.drainage_area_sq_km.astype(float).sum(), 350.0, significant=4
+    )
+
+    pass
+
+
+def test_get_joined_timeseries_schema():
+    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+
+    df = tds.get_joined_timeseries_schema()
+
+    pass
+
+
 if __name__ == "__main__":
-    test_insert_joined_timeseries()
-    test_unique_field_values()
-    test_describe_inputs()
-    test_calculate_field()
-    test_unique_field_values()
+    # test_insert_joined_timeseries()
+    # test_join_attributes()
+    # test_unique_field_values()
+    # test_describe_inputs()
+    # test_calculate_field()
+    # test_unique_field_values()
     test_metrics_query()
+    # test_get_joined_timeseries_schema()

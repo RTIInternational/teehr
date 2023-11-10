@@ -118,7 +118,7 @@ def get_metrics(
         include_metrics=["nash_sutcliffe_efficiency"]
     """
 
-    mq = tmq.MetricQuery.parse_obj(
+    mq = tmq.MetricQuery.model_validate(
         {
             "primary_filepath": primary_filepath,
             "secondary_filepath": secondary_filepath,
@@ -150,7 +150,7 @@ def get_metrics(
     )
 
     # Pandas DataFrame GroupBy approach (works).
-    grouped = df.groupby(mq.group_by, as_index=False)
+    grouped = df.groupby(mq.group_by, as_index=False, observed=False)
 
     calculated_metrics = grouped.apply(
         calculate_group_metrics,

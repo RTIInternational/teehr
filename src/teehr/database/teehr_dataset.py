@@ -1,7 +1,6 @@
 """Defines the TEEHR dataset class and pre-processing methods"""
 from typing import Union, List, Callable, Tuple, Dict
 from pathlib import Path
-import time
 
 import re
 import duckdb
@@ -11,13 +10,13 @@ import geopandas as gpd
 import teehr.queries.duckdb_database as tqu_db
 
 import teehr.queries.utils as tqu
-from teehr.models.queries import (
-    MetricEnum,
+from teehr.models.queries_database import (
     JoinedFieldNameEnum,
     JoinedTimeseriesQueryDB,
     CalculateFieldDB,
     MetricQueryDB,
 )
+from teehr.models.queries import MetricEnum
 
 
 class TEEHRDatasetAPI:
@@ -37,9 +36,9 @@ class TEEHRDatasetAPI:
         """Run query against the class's database."""
         if not create_function_args:
             with duckdb.connect(self.database_filepath) as con:
-                con.install_extension("spatial")
-                con.load_extension("spatial")
-                con.sql("SET memory_limit='15GB';")
+                # con.install_extension("spatial")
+                # con.load_extension("spatial")
+                # con.sql("SET memory_limit='15GB';")
 
                 if format == "df":
                     return con.sql(query).df()
@@ -106,13 +105,13 @@ class TEEHRDatasetAPI:
                 );"""
         self.query(create_geometry_table)
 
-    def get_joined_timeseries_schema(self):
-        """Get field names and field data types from joined_timeseries"""
+    def get_joined_timeseries_schema(self) -> pd.DataFrame:
+        """Get field names and field data types from joined_timeseries,"""
 
         desc = """DESCRIBE SELECT * FROM joined_timeseries;"""
-        df = self.query(desc, format="df")
+        joined_df = self.query(desc, format="df")
 
-        return df
+        return joined_df
 
     @staticmethod
     def _sanitize_field_name(field_name: str) -> str:
@@ -177,6 +176,14 @@ class TEEHRDatasetAPI:
 
         return df
 
+    def _check_if_geometry_is_inserted(self):
+        """Make sure the geometry data has been inserted into the geometry table."""
+        df = self.query("SELECT COUNT(geometry) FROM geometry;", format="df")
+        if df["count(geometry)"].values == 0:
+            raise ValueError(
+                "The geometry table is empty! Please insert geometry first"
+            )
+
     def get_metrics(
         self,
         mq: MetricQueryDB,
@@ -184,30 +191,17 @@ class TEEHRDatasetAPI:
     ) -> Union[pd.DataFrame, gpd.GeoDataFrame]:
         """Calculate performance metrics using database queries"""
 
+        # Validate the query based on existing table fields
+        schema_df = self.get_joined_timeseries_schema()
+        mq.model_validate(
+            mq.model_dump(),
+            context={"existing_fields": schema_df.column_name.tolist()},
+        )
+
         query = tqu_db.create_get_metrics_query(mq)
 
         if include_geometry:
-            # Make sure the geometry table has some entries
-            df = self.query(
-                "SELECT COUNT(geometry) FROM geometry;", format="df"
-            )
-            if df["count(geometry)"].values == 0:
-                raise ValueError(
-                    "The geometry table is empty! Please insert geometry first"
-                )
-
-            query_tbl = self.query(query, format="relation")
-            # Join geometry
-            query = f"""
-                SELECT
-                    geometry.name, geometry.geometry, query_tbl.*
-                FROM
-                    query_tbl
-                JOIN
-                    geometry
-                ON
-                    geometry.id = query_tbl.primary_location_id
-            ;"""
+            self._check_if_geometry_is_inserted()
             df = self.query(query, format="df")
             return tqu.df_to_gdf(df)
         else:
@@ -217,7 +211,7 @@ class TEEHRDatasetAPI:
 
 class TEEHRDatasetDB(TEEHRDatasetAPI):
     """Extends TEEHRDatasetAPI class to provide additional
-    functionality and validation."""
+    functionality."""
 
     def _drop_joined_timeseries_field(self, field_name: str):
         """Drops a field by name from joined_timeseries table"""
@@ -427,12 +421,6 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
             context={"existing_fields": schema_df.column_name.tolist()},
         )
 
-        # # This works, you just need to dump and re-parse itself
-        # cf.model_validate(
-        #     cf.model_dump(),
-        #     context={"existing_fields": schema_df.column_name.tolist()},
-        # )
-
         # Get data types of function parameters
         schema_dict = dict(zip(schema_df.column_name, schema_df.column_type))
         parameter_types = [schema_dict[param] for param in parameter_names]
@@ -481,41 +469,25 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
     ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
         """Calculate performance metrics using database queries"""
 
-        schema_df = self.get_joined_timeseries_schema()
+        existing_fields = (
+            self.get_joined_timeseries_schema().column_name.tolist()
+        )
         mq = MetricQueryDB.model_validate(
             {
                 "group_by": group_by,
                 "order_by": order_by,
                 "include_metrics": include_metrics,
                 "filters": filters,
+                "include_geometry": include_geometry,
             },
-            context={"existing_fields": schema_df.column_name.tolist()},
+            context={"existing_fields": existing_fields},
         )
 
         query = tqu_db.create_get_metrics_query(mq)
 
+        # print(tqu.remove_empty_lines(query))
         if include_geometry:
-            # Make sure the geometry table has some entries
-            df = self.query(
-                "SELECT COUNT(geometry) FROM geometry;", format="df"
-            )
-            if df["count(geometry)"].values == 0:
-                raise ValueError(
-                    "The geometry table is empty! Please insert geometry first"
-                )
-
-            query_tbl = self.query(query, format="relation")
-            # Join geometry
-            query = f"""
-                SELECT
-                    geometry.name, geometry.geometry, query_tbl.*
-                FROM
-                    query_tbl
-                JOIN
-                    geometry
-                ON
-                    geometry.id = query_tbl.primary_location_id
-            ;"""
+            self._check_if_geometry_is_inserted()
             df = self.query(query, format="df")
             return tqu.df_to_gdf(df)
         else:

@@ -2,17 +2,15 @@ from pathlib import Path
 import numpy as np
 
 from teehr.database.teehr_dataset import TEEHRDatasetAPI
-from teehr.models.queries import MetricQueryDB
+from teehr.models.queries_database import MetricQueryDB
 
 # Test data
-TEST_STUDY_DIR = Path("tests/data/test_study")
-PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "test_short_obs.parquet")
-SECONDARY_FILEPATH = Path(
-    TEST_STUDY_DIR, "timeseries", "test_short_fcast.parquet"
-)
+TEST_STUDY_DIR = Path("tests", "data", "test_study")
+PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_obs.parquet")
+SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
-ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr2.parquet")
 GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
+ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr.parquet")
 DATABASE_FILEPATH = Path(TEST_STUDY_DIR, "temp_test.db")
 
 # NOTE: These tests require joined_timeseries values to already exist
@@ -55,6 +53,7 @@ def test_metrics_query():
             "order_by": order_by,
             "include_metrics": "all",
             "filters": filters,
+            "include_geometry": False,
         },
     )
     df = tds.get_metrics(
@@ -71,6 +70,6 @@ def test_describe_inputs():
 
 
 if __name__ == "__main__":
-    test_unique_field_values()
+    # test_unique_field_values()
     # test_describe_inputs()
     test_metrics_query()

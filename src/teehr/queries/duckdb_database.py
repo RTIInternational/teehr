@@ -6,15 +6,14 @@ import geopandas as gpd
 from typing import List, Union, Dict
 from pathlib import Path
 
-from teehr.models.queries import (
+from teehr.models.queries_database import (
     MetricQueryDB,
     JoinedTimeseriesQueryDB,
-    # TimeseriesQuery,
+    # TimeseriesQueryDB,
     # TimeseriesCharQuery,
 )
 
 import teehr.queries.utils as tqu
-import teehr.models.queries as tmq
 
 SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -112,6 +111,7 @@ def create_get_metrics_query(mq: MetricQueryDB) -> str:
             SELECT
                 *
             FROM joined_timeseries
+            {tqu.geometry_select_clause_db(mq)}
             {tqu.filters_to_sql_db(mq.filters)}
         )
         {tqu._nse_cte(mq)}
@@ -150,14 +150,14 @@ def create_get_metrics_query(mq: MetricQueryDB) -> str:
             {tqu._select_primary_max_value_time(mq)}
             {tqu._select_secondary_max_value_time(mq)}
             {tqu._select_max_value_timedelta(mq)}
+            {tqu.geometry_select_clause(mq)}
         FROM metrics
+        {tqu.metric_geometry_join_clause_db(mq)}
         {tqu._join_primary_join_max_time(mq)}
         {tqu._join_secondary_join_max_time(mq)}
         ORDER BY
             {",".join([f"metrics.{ob}" for ob in mq.order_by])}
     ;"""
-    # if mq.return_query:
-    #     return tqu.remove_empty_lines(query)
     return query
 
 
@@ -362,3 +362,81 @@ def describe_timeseries(timeseries_filepath: str) -> Dict:
     }
 
     return output_report
+
+
+def create_get_timeseries_query(
+    timeseries_filepath: str,
+    order_by: List[str],
+    filters: Union[List[dict], None] = None,
+    return_query: bool = False,
+) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
+    """Retrieve joined timeseries using database query.
+
+    Parameters
+    ----------
+    timeseries_filepath : str
+        File path to the timeseries data.  String must include path to file(s)
+        and can include wildcards.  For example, "/path/to/parquet/*.parquet"
+    order_by : List[str]
+        List of column/field names to order results by.
+        Must provide at least one.
+    filters : Union[List[dict], None] = None
+        List of dictionaries describing the "where" clause to limit data that
+        is included in metrics.
+    return_query: bool = False
+        True returns the query string instead of the data
+
+    Returns
+    -------
+    results : Union[str, pd.DataFrame, gpd.GeoDataFrame]
+
+    Filter and Order By Fields
+    --------------------------
+    * value_time
+    * location_id
+    * value
+    * measurement_unit
+    * reference_time
+    * configuration
+    * variable_name
+
+    Examples:
+        order_by = ["lead_time", "primary_location_id"]
+        filters = [
+            {
+                "column": "location_id",
+                "operator": "in",
+                "value": [12345, 54321]
+            },
+        ]
+    """
+    tq = TimeseriesQueryDB.model_validate(
+        {
+            "timeseries_filepath": timeseries_filepath,
+            "order_by": order_by,
+            "filters": filters,
+            "return_query": return_query,
+        }
+    )
+
+    query = f"""
+        WITH joined as (
+            SELECT
+                sf.reference_time,
+                sf.value_time,
+                sf.location_id,
+                sf.value,
+                sf.configuration,
+                sf.measurement_unit,
+                sf.variable_name
+            FROM
+                read_parquet('{str(tq.timeseries_filepath)}') sf
+            {tqu.filters_to_sql(tq.filters)}
+        )
+        SELECT * FROM
+            joined
+        ORDER BY
+            {",".join(tq.order_by)}
+    ;"""
+
+    return query

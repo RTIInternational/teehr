@@ -134,7 +134,7 @@ def get_metrics(
         ]
     """
 
-    mq = MetricQuery.parse_obj(
+    mq = MetricQuery.model_validate(
         {
             "primary_filepath": primary_filepath,
             "secondary_filepath": secondary_filepath,
@@ -145,7 +145,7 @@ def get_metrics(
             "filters": filters,
             "return_query": return_query,
             "include_geometry": include_geometry,
-            "geometry_filepath": geometry_filepath
+            "geometry_filepath": geometry_filepath,
         }
     )
 
@@ -224,7 +224,7 @@ def get_metrics(
         {tqu._join_secondary_join_max_time(mq)}
         ORDER BY
             {",".join([f"metrics.{gb}" for gb in mq.group_by])}
-    ;""" # noqa
+    ;"""  # noqa
 
     if mq.return_query:
         return tqu.remove_empty_lines(query)
@@ -310,7 +310,7 @@ def get_joined_timeseries(
         ]
     """
 
-    jtq = JoinedTimeseriesQuery.parse_obj(
+    jtq = JoinedTimeseriesQuery.model_validate(
         {
             "primary_filepath": primary_filepath,
             "secondary_filepath": secondary_filepath,
@@ -319,7 +319,7 @@ def get_joined_timeseries(
             "filters": filters,
             "return_query": return_query,
             "include_geometry": include_geometry,
-            "geometry_filepath": geometry_filepath
+            "geometry_filepath": geometry_filepath,
         }
     )
 
@@ -362,7 +362,7 @@ def get_joined_timeseries(
             joined
         ORDER BY
             {",".join(jtq.order_by)}
-    ;""" # noqa
+    ;"""  # noqa
 
     if jtq.return_query:
         return tqu.remove_empty_lines(query)
@@ -370,7 +370,9 @@ def get_joined_timeseries(
     df = duckdb.query(query).to_df()
 
     df["primary_location_id"] = df["primary_location_id"].astype("category")
-    df["secondary_location_id"] = df["secondary_location_id"].astype("category")  # noqa
+    df["secondary_location_id"] = df["secondary_location_id"].astype(
+        "category"
+    )  # noqa
     df["configuration"] = df["configuration"].astype("category")
     df["measurement_unit"] = df["measurement_unit"].astype("category")
     df["variable_name"] = df["variable_name"].astype("category")
@@ -427,12 +429,12 @@ def get_timeseries(
             },
         ]
     """
-    tq = TimeseriesQuery.parse_obj(
+    tq = TimeseriesQuery.model_validate(
         {
             "timeseries_filepath": timeseries_filepath,
             "order_by": order_by,
             "filters": filters,
-            "return_query": return_query
+            "return_query": return_query,
         }
     )
 
@@ -530,21 +532,21 @@ def get_timeseries_chars(
         ]
     """
 
-    tcq = TimeseriesCharQuery.parse_obj(
+    tcq = TimeseriesCharQuery.model_validate(
         {
             "timeseries_filepath": timeseries_filepath,
             "order_by": order_by,
             "group_by": group_by,
             "filters": filters,
-            "return_query": return_query
+            "return_query": return_query,
         }
     )
 
     join_max_time_on = tqu._join_time_on(
-        join="mxt",
-        join_to="chars",
-        join_on=tcq.group_by
+        join="mxt", join_to="chars", join_on=tcq.group_by
     )
+
+    order_by = [f"chars.{val}" for val in tcq.order_by]
 
     query = f"""
         WITH fts AS (
@@ -576,15 +578,14 @@ def get_timeseries_chars(
                 fts
             GROUP BY
                 {",".join(tcq.group_by)}
-            ORDER BY
-                {",".join(tcq.order_by)}
         )
         SELECT
             chars.*
             ,mxt.value_time as max_value_time
         FROM chars
-        {join_max_time_on}
-
+            {join_max_time_on}
+        ORDER BY
+            {",".join(order_by)}
     ;"""
 
     if tcq.return_query:

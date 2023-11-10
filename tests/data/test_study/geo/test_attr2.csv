@@ -1,7 +1,0 @@
-location_id,attribute_name,attribute_value,attribute_unit
-gage-A,drainage_area,50,sq_km
-gage-B,drainage_area,20,sq_km
-gage-C,drainage_area,30,sq_km
-gage-A,year_2_discharge,500,cfs
-gage-B,year_2_discharge,200,cfs
-gage-C,year_2_discharge,300,cfs

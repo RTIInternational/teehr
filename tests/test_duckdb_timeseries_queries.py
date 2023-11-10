@@ -18,7 +18,7 @@ def test_joined_timeseries_query_df():
         crosswalk_filepath=CROSSWALK_FILEPATH,
         geometry_filepath=GEOMETRY_FILEPATH,
         order_by=["primary_location_id", "lead_time"],
-        return_query=False
+        return_query=False,
     )
 
     # print(query_df.info())
@@ -54,14 +54,14 @@ def test_joined_timeseries_query_df_filter():
             {
                 "column": "reference_time",
                 "operator": "=",
-                "value": "2022-01-01 00:00:00"
+                "value": "2022-01-01 00:00:00",
             },
             {
                 "column": "primary_location_id",
                 "operator": "=",
-                "value": "gage-A"
+                "value": "gage-A",
             },
-        ]
+        ],
     )
 
     # print(query_df.info())
@@ -76,7 +76,7 @@ def test_timeseries_query_df():
         return_query=False,
     )
     # print(query_df)
-    assert len(query_df) == 26*3
+    assert len(query_df) == 26 * 3
 
 
 def test_timeseries_query_df2():
@@ -85,18 +85,16 @@ def test_timeseries_query_df2():
         order_by=["location_id"],
         return_query=False,
     )
-    assert len(query_df) == 24*3*3
+    assert len(query_df) == 24 * 3 * 3
 
 
 def test_timeseries_query_one_site_df():
     query_df = tqu.get_timeseries(
         timeseries_filepath=PRIMARY_FILEPATH,
         order_by=["location_id"],
-        filters=[{
-            "column": "location_id",
-            "operator": "=",
-            "value": "gage-C"
-        }],
+        filters=[
+            {"column": "location_id", "operator": "=", "value": "gage-C"}
+        ],
         return_query=False,
     )
     assert len(query_df) == 26
@@ -107,15 +105,11 @@ def test_timeseries_query_one_site_one_ref_df():
         timeseries_filepath=SECONDARY_FILEPATH,
         order_by=["value_time"],
         filters=[
-            {
-                "column": "location_id",
-                "operator": "=",
-                "value": "fcst-1"
-            },
+            {"column": "location_id", "operator": "=", "value": "fcst-1"},
             {
                 "column": "reference_time",
                 "operator": "=",
-                "value": datetime(2022, 1, 1)
+                "value": datetime(2022, 1, 1),
             },
         ],
         return_query=False,
@@ -132,33 +126,32 @@ def test_timeseries_char_query_df():
     )
     df = pd.DataFrame(
         {
-            'location_id': {0: 'gage-A', 1: 'gage-B', 2: 'gage-C'},
-            'count': {0: 26, 1: 26, 2: 26},
-            'min': {0: 0.1, 1: 10.1, 2: 0.0},
-            'max': {0: 5.0, 1: 15.0, 2: 180.0},
-            'average': {
+            "location_id": {0: "gage-A", 1: "gage-B", 2: "gage-C"},
+            "count": {0: 26, 1: 26, 2: 26},
+            "min": {0: 0.1, 1: 10.1, 2: 0.0},
+            "max": {0: 5.0, 1: 15.0, 2: 180.0},
+            "average": {
                 0: 1.2038461538461542,
                 1: 11.203846153846156,
-                2: 100.38461538461539
+                2: 100.38461538461539,
             },
-            'sum': {
-                0: 31.300000000000008,
-                1: 291.30000000000007,
-                2: 2610.0
-            },
-            'variance': {
+            "sum": {0: 31.300000000000008, 1: 291.30000000000007, 2: 2610.0},
+            "variance": {
                 0: 1.9788313609467447,
                 1: 1.9788313609467456,
-                2: 2726.7751479289923
+                2: 2726.7751479289923,
             },
-            'max_value_time': {
-                0: pd.Timestamp('2022-01-01 15:00:00'),
-                1: pd.Timestamp('2022-01-01 15:00:00'),
-                2: pd.Timestamp('2022-01-01 06:00:00')
-            }
+            "max_value_time": {
+                0: pd.Timestamp("2022-01-01 15:00:00"),
+                1: pd.Timestamp("2022-01-01 15:00:00"),
+                2: pd.Timestamp("2022-01-01 06:00:00"),
+            },
         }
     )
-    assert df.equals(query_df)
+    # Check if contents are the same
+    diff_df = df.compare(query_df)
+    assert diff_df.index.size == 0
+    # assert df.equals(query_df)
 
 
 def test_timeseries_char_query_df2():
@@ -179,15 +172,11 @@ def test_timeseries_char_query_filter_df():
         order_by=["location_id"],
         return_query=False,
         filters=[
-            {
-                "column": "location_id",
-                "operator": "=",
-                "value": "fcst-1"
-            },
+            {"column": "location_id", "operator": "=", "value": "fcst-1"},
             {
                 "column": "reference_time",
                 "operator": "=",
-                "value": datetime(2022, 1, 1)
+                "value": datetime(2022, 1, 1),
             },
         ],
     )

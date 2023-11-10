@@ -175,6 +175,17 @@ def filters_to_sql(filters: List[JoinedFilter]) -> List[str]:
     return "--no where clause"
 
 
+def geometry_join_clause_db(
+    q: Union[MetricQuery, JoinedTimeseriesQuery]
+) -> str:
+    """Generate the join clause for"""
+    if q.include_geometry:
+        return f"""JOIN geometry gf
+            on pf.location_id = gf.id
+        """
+    return ""
+
+
 def geometry_join_clause(q: Union[MetricQuery, JoinedTimeseriesQuery]) -> str:
     """Generate the join clause for"""
     if q.include_geometry:
@@ -189,6 +200,25 @@ def geometry_select_clause(
 ) -> str:
     if q.include_geometry:
         return ",gf.geometry as geometry"
+    return ""
+
+
+def geometry_select_clause_db(
+    q: Union[MetricQuery, JoinedTimeseriesQuery]
+) -> str:
+    if q.include_geometry:
+        return ", geometry"
+    return ""
+
+
+def metric_geometry_join_clause_db(
+    q: Union[MetricQuery, JoinedTimeseriesQuery]
+) -> str:
+    """Generate the join clause for"""
+    if q.include_geometry:
+        return f"""JOIN geometry gf
+            on primary_location_id = gf.id
+        """
     return ""
 
 
