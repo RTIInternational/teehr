@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union, Iterable, Optional, List, Tuple
+from typing import Union, Iterable, Optional, List, Tuple, Dict
 from datetime import datetime
 
 import pandas as pd
@@ -13,10 +13,11 @@ from teehr.loading.nwm22.utils_nwm import (
     build_zarr_references,
     get_dataset,
 )
-
-from teehr.loading.nwm22.point_config_models import PointConfigurationModel
-
-from teehr.loading.nwm22.const_nwm import NWM22_UNIT_LOOKUP
+from teehr.models.loading.nwm22_point import PointConfigurationModel
+from teehr.loading.nwm22.const_nwm import (
+    NWM22_UNIT_LOOKUP,
+    NWM22_ANALYSIS_CONFIG
+)
 
 
 @dask.delayed
@@ -27,6 +28,7 @@ def file_chunk_loop(
     configuration: str,
     schema: pa.Schema,
     ignore_missing_file: bool,
+    units_format_dict: Dict,
 ):
     """Fetch NWM values and convert to tabular format for a single json"""
     ds = get_dataset(row.filepath, ignore_missing_file)
@@ -35,7 +37,7 @@ def file_chunk_loop(
     ds = ds.sel(feature_id=location_ids)
     vals = ds[variable_name].astype("float32").values
     nwm22_units = ds[variable_name].units
-    teehr_units = NWM22_UNIT_LOOKUP.get(nwm22_units, nwm22_units)
+    teehr_units = units_format_dict.get(nwm22_units, nwm22_units)
     ref_time = pd.to_datetime(row.day) \
         + pd.to_timedelta(int(row.z_hour[1:3]), unit="H")
 
@@ -68,6 +70,7 @@ def process_chunk_of_files(
     output_parquet_dir: str,
     process_by_z_hour: bool,
     ignore_missing_file: bool,
+    units_format_dict: Dict,
 ) -> None:
     """Assemble a table for a chunk of NWM files"""
 
@@ -94,7 +97,8 @@ def process_chunk_of_files(
                 variable_name,
                 configuration,
                 schema,
-                ignore_missing_file
+                ignore_missing_file,
+                units_format_dict,
             )
         )
     output = dask.compute(*results)
@@ -131,6 +135,7 @@ def fetch_and_format_nwm_points(
     process_by_z_hour: bool,
     stepsize: int,
     ignore_missing_file: bool,
+    units_format_dict: Dict,
 ):
     """Reads in the single reference jsons, subsets the
         NWM data based on provided IDs and formats and saves
@@ -195,6 +200,7 @@ def fetch_and_format_nwm_points(
             output_parquet_dir,
             process_by_z_hour,
             ignore_missing_file,
+            units_format_dict,
         )
 
 
@@ -279,6 +285,7 @@ def nwm_to_parquet(
         output_type,
         start_date,
         ingest_days,
+        NWM22_ANALYSIS_CONFIG,
         t_minus_hours,
         ignore_missing_file,
     )
@@ -296,6 +303,7 @@ def nwm_to_parquet(
         process_by_z_hour,
         stepsize,
         ignore_missing_file,
+        NWM22_UNIT_LOOKUP,
     )
 
 
@@ -306,7 +314,7 @@ if __name__ == "__main__":
     output_type = "channel_rt"
     variable_name = "streamflow"
     start_date = "2023-08-24"
-    ingest_days = 2
+    ingest_days = 1
     location_ids = [
         7086109,
         7040481,

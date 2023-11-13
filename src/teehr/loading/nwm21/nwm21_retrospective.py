@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Union, Iterable
 
 from teehr.loading.nwm22.const_nwm import NWM22_UNIT_LOOKUP
-from teehr.models.loading import ChunkByEnum
+from teehr.models.loading.utils import ChunkByEnum
 
 # URL = 's3://noaa-nwm-retro-v2-zarr-pds'
 # MIN_DATE = datetime(1993, 1, 1)

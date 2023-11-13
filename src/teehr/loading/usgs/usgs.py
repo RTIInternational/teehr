@@ -4,7 +4,7 @@ from typing import List, Union
 from pathlib import Path
 from datetime import datetime, timedelta
 from hydrotools.nwis_client.iv import IVDataService
-from teehr.models.loading import ChunkByEnum
+from teehr.models.loading.utils import ChunkByEnum
 from pydantic import validate_arguments
 
 DATETIME_STR_FMT = "%Y-%m-%dT%H:%M:00+0000"

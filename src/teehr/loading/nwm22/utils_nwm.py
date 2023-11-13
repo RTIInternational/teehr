@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union, Optional, Iterable, List
+from typing import Union, Optional, Iterable, List, Dict
 from datetime import datetime
 
 import dask
@@ -12,7 +12,6 @@ import xarray as xr
 import geopandas as gpd
 
 from teehr.loading.nwm22.const_nwm import (
-    NWM22_ANALYSIS_CONFIG,
     NWM_BUCKET,
 )
 
@@ -304,6 +303,7 @@ def build_remote_nwm_filelist(
     output_type: str,
     start_dt: Union[str, datetime],
     ingest_days: int,
+    analysis_config_dict: Dict,
     t_minus_hours: Optional[Iterable[int]],
     ignore_missing_file: Optional[bool],
 ) -> List[str]:
@@ -339,12 +339,12 @@ def build_remote_nwm_filelist(
     dates = pd.date_range(start=start_dt, periods=ingest_days, freq="1d")
 
     if "assim" in configuration:
-        cycle_z_hours = NWM22_ANALYSIS_CONFIG[configuration]["cycle_z_hours"]
-        domain = NWM22_ANALYSIS_CONFIG[configuration]["domain"]
-        configuration_name_in_filepath = NWM22_ANALYSIS_CONFIG[configuration][
+        cycle_z_hours = analysis_config_dict[configuration]["cycle_z_hours"]
+        domain = analysis_config_dict[configuration]["domain"]
+        configuration_name_in_filepath = analysis_config_dict[configuration][
             "configuration_name_in_filepath"
         ]
-        max_lookback = NWM22_ANALYSIS_CONFIG[configuration]["num_lookback_hrs"]
+        max_lookback = analysis_config_dict[configuration]["num_lookback_hrs"]
 
         if max(t_minus_hours) > max_lookback - 1:
             raise ValueError(

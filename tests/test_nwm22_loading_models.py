@@ -1,5 +1,5 @@
-from teehr.loading.nwm22.grid_config_models import GridConfigurationModel
-from teehr.loading.nwm22.point_config_models import PointConfigurationModel
+from teehr.models.loading.nwm22_grid import GridConfigurationModel
+from teehr.models.loading.nwm22_point import PointConfigurationModel
 
 
 def test_point_model():

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union, Iterable, Optional, List
+from typing import Union, Iterable, Optional, List, Dict
 from datetime import datetime
 
 import xarray as xr
@@ -13,10 +13,10 @@ from teehr.loading.nwm22.utils_nwm import (
     get_dataset,
 )
 
-from teehr.loading.nwm22.grid_config_models import GridConfigurationModel
+from teehr.models.loading.nwm22_grid import GridConfigurationModel
 
 from teehr.loading.nwm22.const_nwm import (
-    NWM22_UNIT_LOOKUP,
+    NWM22_UNIT_LOOKUP, NWM22_ANALYSIS_CONFIG
 )
 
 
@@ -51,6 +51,7 @@ def process_single_file(
     variable_name: str,
     weights_filepath: str,
     ignore_missing_file: bool,
+    units_format_dict: Dict
 ):
     """Compute zonal mean for a single json reference file and format
     to a dataframe using the TEEHR data model"""
@@ -64,7 +65,7 @@ def process_single_file(
         + pd.to_timedelta(int(z_hour), unit="H")
 
     nwm22_units = ds[variable_name].attrs["units"]
-    teehr_units = NWM22_UNIT_LOOKUP.get(nwm22_units, nwm22_units)
+    teehr_units = units_format_dict.get(nwm22_units, nwm22_units)
     value_time = ds.time.values[0]
     da = ds[variable_name]
 
@@ -87,6 +88,7 @@ def fetch_and_format_nwm_grids(
     output_parquet_dir: str,
     zonal_weights_filepath: str,
     ignore_missing_file: bool,
+    units_format_dict: Dict,
 ) -> None:
     """
     Reads in the single reference jsons, subsets the NWM data based on
@@ -121,6 +123,7 @@ def fetch_and_format_nwm_grids(
                     variable_name,
                     zonal_weights_filepath,
                     ignore_missing_file,
+                    units_format_dict,
                 )
             )
 
@@ -215,6 +218,7 @@ def nwm_grids_to_parquet(
         output_type,
         start_date,
         ingest_days,
+        NWM22_ANALYSIS_CONFIG,
         t_minus_hours,
         ignore_missing_file,
     )
@@ -230,13 +234,14 @@ def nwm_grids_to_parquet(
         output_parquet_dir,
         zonal_weights_filepath,
         ignore_missing_file,
+        NWM22_UNIT_LOOKUP,
     )
 
 
 if __name__ == "__main__":
     # Local testing
-    single_filepath = "/mnt/sf_shared/data/ciroh/nwm.20201218_forcing_short_range_nwm.t00z.short_range.forcing.f001.conus.nc"  # noqa
-    weights_parquet = "/mnt/sf_shared/data/ciroh/wbdhuc10_weights.parquet"
+    single_filepath = "/mnt/data/ciroh/nwm.20201218_forcing_short_range_nwm.t00z.short_range.forcing.f001.conus.nc"  # noqa
+    weights_parquet = "/mnt/data/ciroh/wbdhuc10_weights.parquet"
     ignore_missing_file = False
 
     nwm_grids_to_parquet(
