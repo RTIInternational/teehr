@@ -52,21 +52,6 @@ with open(Path(Path(__file__).resolve().parent, "data.yaml")) as f:
     datasets = load(f.read(), Loader)
 
 
-# class MetricQueryAPI(BaseModel):
-#     group_by: List[JoinedFilterFieldEnum]
-#     order_by: List[JoinedFilterFieldEnum]
-#     include_metrics: Union[List[str], str]
-#     filters: Optional[List[JoinedFilter]] = []
-#     return_query: bool
-#     include_geometry: bool
-
-#     @validator("filters")
-#     def filter_must_be_list(cls, v):
-#         if v is None:
-#             return []
-#         return v
-
-
 def format_response(df: Union[gpd.GeoDataFrame, pd.DataFrame]) -> dict:
     # print(df.info())
     if isinstance(df, gpd.GeoDataFrame):
@@ -192,29 +177,3 @@ async def get_unique_field_vals(
     df = tds.get_unique_field_values(api_field_name)
 
     return format_response(df)
-
-
-# @app.post("/datasets/{dataset_id}/get_timeseries_chars")
-# async def get_metrics_by_query(dataset_id: str, api_metrics_query: APIMetricQuery): # noqa
-
-#     # once we have a DataSet approach implemented, get Dataset here
-#     config = datasets["datasets"][dataset_id]
-
-#     # converting to dict and then unpacking is bad
-#     # need to chang func sig to take MetricQuery
-#     resp = get_metrics(**{**api_metrics_query.dict(), **config})
-
-#     return format_response(resp)
-
-
-# @app.post("/datasets/{dataset_id}/get_joined_timeseries")
-# async def get_metrics_by_query(dataset_id: str, api_metrics_query: APIMetricQuery): # noqa
-
-#     # once we have a DataSet approach implemented, get Dataset here
-#     config = datasets["datasets"][dataset_id]
-
-#     # converting to dict and then unpacking is bad
-#     # need to chang func sig to take MetricQuery
-#     resp = get_metrics(**{**api_metrics_query.dict(), **config})
-
-#     return format_response(resp)

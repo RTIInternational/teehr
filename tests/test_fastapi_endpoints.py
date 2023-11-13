@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from main import app
+from teehr.api.main import app
 
 client = TestClient(app)
 
@@ -23,7 +23,7 @@ def test_get_metrics():
         "order_by": ["primary_location_id"],
         "include_metrics": "primary_count",
         "return_query": False,
-        "include_geometry": True
+        "include_geometry": False
     }
 
     response = client.post(
@@ -63,7 +63,7 @@ def test_get_metric_fields():
     response = client.get(
         "/datasets/study-a/get_metric_fields"
     )
-    # assert response.status_code == 200
+    assert response.status_code == 200
     print(response.json())
 
 
@@ -71,7 +71,7 @@ def test_get_data_fields():
     response = client.get(
         "/datasets/study-a/get_data_fields"
     )
-    # assert response.status_code == 200
+    assert response.status_code == 200
     print(response.json())
 
 
@@ -131,7 +131,7 @@ def test_get_unique_field_values():
         "/datasets/study-a/get_unique_field_values",
         json=post
     )
-    # assert response.status_code == 200
+    assert response.status_code == 200
     print(response.json())
 
 

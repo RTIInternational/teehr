@@ -1,17 +1,17 @@
 import duckdb
 
-import pandas as pd
-import geopandas as gpd
+# import pandas as pd
+# import geopandas as gpd
 
-from typing import List, Union, Dict
-from pathlib import Path
+from typing import Dict
+# from pathlib import Path
 
 from teehr.models.queries_database import (
     MetricQuery,
     JoinedTimeseriesQuery,
     TimeseriesQuery,
     TimeseriesCharQuery,
-    JoinedTimeseriesFieldName
+    # JoinedTimeseriesFieldName
 )
 
 import teehr.queries.utils as tqu
@@ -159,6 +159,7 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
         ORDER BY
             {",".join([f"metrics.{ob}" for ob in mq.order_by])}
     ;"""
+
     return query
 
 
@@ -226,8 +227,6 @@ def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQuery) -> str:
         {",".join(jtq.order_by)}
     ;"""  # noqa
 
-    # if jtq.return_query:
-    #     return tqu.remove_empty_lines(query)
     return query
 
 

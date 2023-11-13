@@ -2,7 +2,10 @@ from pathlib import Path
 # import numpy as np
 
 from teehr.database.teehr_dataset import TEEHRDatasetAPI
-from teehr.models.queries_database import MetricQueryDB
+from teehr.models.queries_database import (
+    MetricQuery,
+    JoinedTimeseriesFieldName
+)
 
 # Test data
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
@@ -13,12 +16,17 @@ GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
 ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr.parquet")
 DATABASE_FILEPATH = Path(TEST_STUDY_DIR, "temp_test.db")
 
-# NOTE: These tests require joined_timeseries values to already exist
+# NOTE: These tests require the db and joined_timeseries values to exist
 
 
 def test_unique_field_values():
     tds = TEEHRDatasetAPI(DATABASE_FILEPATH)
-    df = tds.get_unique_field_values("primary_location_id")
+
+    jtn = JoinedTimeseriesFieldName.model_validate(
+        {"field_name": "primary_location_id"}
+    )
+
+    df = tds.get_unique_field_values(jtn)
     assert sorted(df["unique_primary_location_id_values"].tolist()) == [
         "gage-A",
         "gage-B",
@@ -47,7 +55,7 @@ def test_metrics_query():
         {"column": "lead_time", "operator": "<=", "value": "10 hours"},
     ]
 
-    mq = MetricQueryDB.model_validate(
+    mq = MetricQuery.model_validate(
         {
             "group_by": group_by,
             "order_by": order_by,
@@ -56,20 +64,17 @@ def test_metrics_query():
             "include_geometry": False,
         },
     )
-    df = tds.get_metrics(
-        mq,
-        include_geometry=False,
-    )
+    df = tds.get_metrics(mq)
     assert df.index.size == 11
 
 
 def test_describe_inputs():
     tds = TEEHRDatasetAPI(DATABASE_FILEPATH)
     df = tds.describe_inputs(PRIMARY_FILEPATH, SECONDARY_FILEPATH)
-    assert df
+    assert df.index.size == 7
 
 
 if __name__ == "__main__":
-    test_unique_field_values()
+    # test_unique_field_values()
     # test_describe_inputs()
-    # test_metrics_query()
+    test_metrics_query()

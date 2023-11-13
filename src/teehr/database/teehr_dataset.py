@@ -163,11 +163,11 @@ class TEEHRDatasetAPI:
     def _validate_query_model(self, query_model: Any) -> Any:
         """Validate the query based on existing table fields."""
         schema_df = self.get_joined_timeseries_schema()
-        query_model.model_validate(
+        validated_model = query_model.model_validate(
             query_model.model_dump(),
             context={"existing_fields": schema_df.column_name.tolist()},
         )
-        return query_model
+        return validated_model
 
     def get_metrics(
         self,
@@ -481,18 +481,14 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
 
         self.query(query=query, create_function_args=create_function_args)
 
-    def _validate_query_model(
-        self,
-        query_model: Union[MetricQuery, TimeseriesQuery, TimeseriesCharQuery],
-        data: Dict
-    ) -> Union[MetricQuery, TimeseriesQuery, TimeseriesCharQuery]:
+    def _validate_query_model(self, query_model: Any, data: Dict) -> Any:
         """Validate the query based on existing table fields."""
         schema_df = self.get_joined_timeseries_schema()
-        query_model.model_validate(
+        validated_model = query_model.model_validate(
             data,
             context={"existing_fields": schema_df.column_name.tolist()},
         )
-        return query_model
+        return validated_model
 
     def get_metrics(
         self,

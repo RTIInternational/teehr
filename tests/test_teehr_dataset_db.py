@@ -14,8 +14,43 @@ ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr.parquet")
 DATABASE_FILEPATH = Path(TEST_STUDY_DIR, "temp_test.db")
 
 
-def test_unique_field_values():
+def test_insert_joined_timeseries():
+
+    if DATABASE_FILEPATH.is_file():
+        DATABASE_FILEPATH.unlink()
+
     tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+
+    # Perform the join and insert into duckdb database
+    tds.insert_joined_timeseries(
+        primary_filepath=PRIMARY_FILEPATH,
+        secondary_filepath=SECONDARY_FILEPATH,
+        crosswalk_filepath=CROSSWALK_FILEPATH,
+        drop_added_fields=True,
+    )
+
+    tds.insert_geometry(GEOMETRY_FILEPATH)
+
+    df = tds.query("SELECT * FROM joined_timeseries", format="df")
+    np.testing.assert_approx_equal(
+        df.absolute_difference.sum(), 283.7, significant=4
+    )
+    pass
+
+
+def test_unique_field_values():
+    if DATABASE_FILEPATH.is_file():
+        DATABASE_FILEPATH.unlink()
+
+    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+
+    # Perform the join and insert into duckdb database
+    tds.insert_joined_timeseries(
+        primary_filepath=PRIMARY_FILEPATH,
+        secondary_filepath=SECONDARY_FILEPATH,
+        crosswalk_filepath=CROSSWALK_FILEPATH,
+        drop_added_fields=True,
+    )
     df = tds.get_unique_field_values("primary_location_id")
     assert sorted(df["unique_primary_location_id_values"].tolist()) == [
         "gage-A",
@@ -26,6 +61,9 @@ def test_unique_field_values():
 
 
 def test_metrics_query():
+    if DATABASE_FILEPATH.is_file():
+        DATABASE_FILEPATH.unlink()
+
     tds = TEEHRDatasetDB(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
@@ -71,26 +109,12 @@ def test_metrics_query():
     assert df.columns.size == 24
 
 
-def test_insert_joined_timeseries():
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
-
-    # Perform the join and insert into duckdb database
-    tds.insert_joined_timeseries(
-        primary_filepath=PRIMARY_FILEPATH,
-        secondary_filepath=SECONDARY_FILEPATH,
-        crosswalk_filepath=CROSSWALK_FILEPATH,
-        drop_added_fields=True,
-    )
-
-    df = tds.query("SELECT * FROM joined_timeseries LIMIT 10;", format="df")
-    np.testing.assert_approx_equal(
-        df.absolute_difference.sum(), 12.34, significant=4
-    )
-    pass
-
-
 def test_describe_inputs():
+    if DATABASE_FILEPATH.is_file():
+        DATABASE_FILEPATH.unlink()
+
     tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
         primary_filepath=PRIMARY_FILEPATH,
@@ -136,6 +160,9 @@ def test_describe_inputs():
 
 
 def test_calculate_field():
+    if DATABASE_FILEPATH.is_file():
+        DATABASE_FILEPATH.unlink()
+
     tds = TEEHRDatasetDB(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
@@ -167,7 +194,18 @@ def test_calculate_field():
 
 
 def test_join_attributes():
+    if DATABASE_FILEPATH.is_file():
+        DATABASE_FILEPATH.unlink()
+
     tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+
+    # Perform the join and insert into duckdb database
+    tds.insert_joined_timeseries(
+        primary_filepath=PRIMARY_FILEPATH,
+        secondary_filepath=SECONDARY_FILEPATH,
+        crosswalk_filepath=CROSSWALK_FILEPATH,
+        drop_added_fields=True,
+    )
 
     # Add attributes
     tds.join_attributes(ATTRIBUTES_FILEPATH)
@@ -188,34 +226,56 @@ def test_join_attributes():
         "absolute_difference",
         "drainage_area_sq_km",
         "year_2_discharge_cfs",
-        "primary_normalized_discharge",
     ]
     # Make sure attribute fields have been added
     assert sorted(df.column_name.tolist()) == sorted(cols)
 
     # Make sure attribute values are correct
-    df = tds.query("SELECT * FROM joined_timeseries LIMIT 10;", format="df")
+    df = tds.query("SELECT * FROM joined_timeseries", format="df")
     np.testing.assert_approx_equal(
-        df.year_2_discharge_cfs.astype(float).sum(), 3500.0, significant=5
+        df.year_2_discharge_cfs.astype(float).sum(), 72000.0, significant=6
     )
 
     np.testing.assert_approx_equal(
-        df.drainage_area_sq_km.astype(float).sum(), 350.0, significant=4
+        df.drainage_area_sq_km.astype(float).sum(), 7200.0, significant=5
     )
 
     pass
 
 
 def test_get_joined_timeseries_schema():
+    if DATABASE_FILEPATH.is_file():
+        DATABASE_FILEPATH.unlink()
+
     tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+
+    # Perform the join and insert into duckdb database
+    tds.insert_joined_timeseries(
+        primary_filepath=PRIMARY_FILEPATH,
+        secondary_filepath=SECONDARY_FILEPATH,
+        crosswalk_filepath=CROSSWALK_FILEPATH,
+        drop_added_fields=True,
+    )
 
     df = tds.get_joined_timeseries_schema()
 
+    assert df.index.size == 11
     pass
 
 
 def test_timeseries_query():
+    if DATABASE_FILEPATH.is_file():
+        DATABASE_FILEPATH.unlink()
+
     tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+
+    # Perform the join and insert into duckdb database
+    tds.insert_joined_timeseries(
+        primary_filepath=PRIMARY_FILEPATH,
+        secondary_filepath=SECONDARY_FILEPATH,
+        crosswalk_filepath=CROSSWALK_FILEPATH,
+        drop_added_fields=True,
+    )
 
     filters = [
         {
@@ -238,11 +298,23 @@ def test_timeseries_query():
         filters=filters
     )
 
+    assert df.index.size == 11
     pass
 
 
 def test_timeseries_char_query():
+    if DATABASE_FILEPATH.is_file():
+        DATABASE_FILEPATH.unlink()
+
     tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+
+    # Perform the join and insert into duckdb database
+    tds.insert_joined_timeseries(
+        primary_filepath=PRIMARY_FILEPATH,
+        secondary_filepath=SECONDARY_FILEPATH,
+        crosswalk_filepath=CROSSWALK_FILEPATH,
+        drop_added_fields=True,
+    )
 
     # filters = [
     #     {
@@ -269,17 +341,20 @@ def test_timeseries_char_query():
         filters=filters
     )
 
+    assert df.index.size == 3
     pass
 
 
 if __name__ == "__main__":
+
     # test_insert_joined_timeseries()
     # test_join_attributes()
     # test_unique_field_values()
     # test_describe_inputs()
     # test_calculate_field()
-    test_unique_field_values()
+    # test_unique_field_values()
     # test_metrics_query()
     # test_get_joined_timeseries_schema()
     # test_timeseries_query()
-    # test_timeseries_char_query()
+    test_timeseries_char_query()
+
