@@ -40,12 +40,13 @@ export default function Filters() {
             }
             setValue={(value) => updateFilter(index, "value", value)}
           />
-          <div
-            style={{
+          <Box
+            sx={{
               display: "flex",
               flex: 1,
               alignItems: "center",
               justifyContent: "center",
+              flexDirection: { xs: "column", md: "row" },
             }}
           >
             <Button
@@ -55,7 +56,7 @@ export default function Filters() {
             >
               <DeleteOutlineOutlinedIcon />
             </Button>
-          </div>
+          </Box>
         </div>
       ))}
       <Button variant="standard" onClick={addNewFilter} color="grey">
