@@ -4,7 +4,10 @@ import SingleSelect from "./SingleSelect";
 import OperatorSelect from "./OperatorSelect";
 import TextInput from "./TextInput";
 import DashboardContext from "../Context";
-
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterLuxon } from "@mui/x-date-pickers/AdapterLuxon";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
+import { DateTime } from "luxon";
 export default function Filter(props) {
   const { groupByFields } = useContext(DashboardContext);
   const {
@@ -63,9 +66,9 @@ export default function Filter(props) {
     if (selectedGroupByField) {
       const type = getFieldType(selectedGroupByField);
       setType(type);
+      setValue("");
     }
   }, [selectedGroupByField]);
-  console.log({ type });
 
   return (
     <div style={{ marginBottom: "8px", display: "flex" }}>
@@ -83,13 +86,31 @@ export default function Filter(props) {
         />
       </div>
       <div style={{ flex: 4 }}>
-        <TextInput
-          label={"Input"}
-          value={value || ""}
-          setValue={setValue}
-          error={error}
-          helperText={errorMessage}
-        />
+        {type === "TIMESTAMP" && (
+          <LocalizationProvider dateAdapter={AdapterLuxon}>
+            <TimePicker
+              label="Time"
+              value={value ? DateTime.fromISO(value) : null}
+              onChange={(value) => {
+                if (value) {
+                  setValue(value.toUTC().toISO());
+                } else {
+                  null;
+                }
+              }}
+              sx={{ m: "8px" }}
+            />
+          </LocalizationProvider>
+        )}
+        {type !== "TIMESTAMP" && (
+          <TextInput
+            label={"Input"}
+            value={value || ""}
+            setValue={setValue}
+            error={error}
+            helperText={errorMessage}
+          />
+        )}
       </div>
     </div>
   );

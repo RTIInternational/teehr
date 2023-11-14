@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import "../App.css";
 import axios from "axios";
 // import Box from '@mui/material/Box';
@@ -54,7 +54,6 @@ function Dashboard() {
         include_geometry: true,
       })
       .then((res) => {
-        console.log(res.data);
         setData(res.data);
       })
       .catch(function (err) {
@@ -62,10 +61,6 @@ function Dashboard() {
         setErrors(err);
       });
   };
-
-  useEffect(() => {
-    console.log({ filters });
-  }, [filters]);
 
   const contextValue = {
     datasets,

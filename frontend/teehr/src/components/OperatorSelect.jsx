@@ -56,15 +56,15 @@ export default function OperatorSelect(props) {
         }
         renderValue={(selected) => (
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-            {operators[selected]}
+            {selected}
           </Box>
         )}
         // MenuProps={MenuProps}
       >
         {Object.entries(operators).map(([key, label]) => (
           <MenuItem
-            key={key}
-            value={key}
+            key={label}
+            value={label}
             // style={getStyles(name, selectedDataset, theme)}
           >
             {label}
