@@ -1,6 +1,7 @@
 import pandas as pd
 from pathlib import Path
 from teehr.loading.nwm22.utils_nwm import build_remote_nwm_filelist
+from teehr.loading.nwm22.const_nwm import NWM22_ANALYSIS_CONFIG
 
 
 def test_remote_filelist():
@@ -16,6 +17,7 @@ def test_remote_filelist():
         output_type,
         start_date,
         ingest_days,
+        NWM22_ANALYSIS_CONFIG,
         t_minus_hours,
         ignore_missing_file=False,
     )

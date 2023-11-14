@@ -6,12 +6,12 @@ import pandas as pd
 import dask
 import numpy as np
 import pyarrow as pa
-import pyarrow.parquet as pq
 
 from teehr.loading.nwm22.utils_nwm import (
     build_remote_nwm_filelist,
     build_zarr_references,
     get_dataset,
+    write_parquet_file,
 )
 from teehr.models.loading.nwm22_point import PointConfigurationModel
 from teehr.loading.nwm22.const_nwm import (
@@ -71,7 +71,8 @@ def process_chunk_of_files(
     process_by_z_hour: bool,
     ignore_missing_file: bool,
     units_format_dict: Dict,
-) -> None:
+    overwrite_output: bool,
+):
     """Assemble a table for a chunk of NWM files"""
 
     location_ids = np.array(location_ids).astype(int)
@@ -123,7 +124,11 @@ def process_chunk_of_files(
         end = f"{end_json[1]}T{end_json[3][1:3]}Z{end_json[6][1:]}F"
         filename = f"{start}_{end}.parquet"
 
-    pq.write_table(output_table, Path(output_parquet_dir, filename))
+    write_parquet_file(
+        Path(output_parquet_dir, filename),
+        overwrite_output,
+        output_table
+    )
 
 
 def fetch_and_format_nwm_points(
@@ -136,6 +141,7 @@ def fetch_and_format_nwm_points(
     stepsize: int,
     ignore_missing_file: bool,
     units_format_dict: Dict,
+    overwrite_output: bool,
 ):
     """Reads in the single reference jsons, subsets the
         NWM data based on provided IDs and formats and saves
@@ -163,6 +169,11 @@ def fetch_and_format_nwm_points(
         file is encountered
         True = skip and continue
         False = fail
+    units_format_dict: Dict,
+        Dictionary of unit formats
+    overwrite_output: bool
+        Flag specifying whether or not to overwrite output files if
+        they already exist.  True = overwrite; False = fail
     """
 
     output_parquet_dir = Path(output_parquet_dir)
@@ -201,6 +212,7 @@ def fetch_and_format_nwm_points(
             process_by_z_hour,
             ignore_missing_file,
             units_format_dict,
+            overwrite_output,
         )
 
 
@@ -216,7 +228,8 @@ def nwm_to_parquet(
     t_minus_hours: Optional[Iterable[int]] = None,
     process_by_z_hour: Optional[bool] = True,
     stepsize: Optional[int] = 100,
-    ignore_missing_file: Optional[bool] = True
+    ignore_missing_file: Optional[bool] = True,
+    overwrite_output: Optional[bool] = True,
 ):
     """Fetches NWM point data, formats to tabular, and saves to parquet
 
@@ -260,6 +273,9 @@ def nwm_to_parquet(
         Flag specifying whether or not to fail if a missing NWM file is encountered
         True = skip and continue
         False = fail
+    overwrite_output: bool
+        Flag specifying whether or not to overwrite output files if they already
+        exist.  True = overwrite; False = fail
 
     The NWM configuration variables, including configuration, output_type, and
     variable_name are stored as pydantic models in point_config_models.py
@@ -278,7 +294,11 @@ def nwm_to_parquet(
             output_type: variable_name,
         },
     }
-    _ = PointConfigurationModel.parse_obj(vars)
+    cm = PointConfigurationModel.parse_obj(vars)
+    configuration = cm.configuration.name
+    forecast_obj = getattr(cm, configuration)
+    output_type = forecast_obj.output_type.name
+    variable_name = getattr(forecast_obj, output_type).name
 
     component_paths = build_remote_nwm_filelist(
         configuration,
@@ -304,6 +324,7 @@ def nwm_to_parquet(
         stepsize,
         ignore_missing_file,
         NWM22_UNIT_LOOKUP,
+        overwrite_output,
     )
 
 

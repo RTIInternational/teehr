@@ -24,7 +24,7 @@ def test_metric_query_str():
         return_query=True
     )
     # print(query_str)
-    assert type(query_str) == str
+    assert isinstance(query_str, str)
 
 
 def test_metric_query_df():

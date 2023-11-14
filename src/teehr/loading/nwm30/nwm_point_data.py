@@ -26,7 +26,8 @@ def nwm_to_parquet(
     t_minus_hours: Optional[Iterable[int]] = None,
     process_by_z_hour: Optional[bool] = True,
     stepsize: Optional[int] = 100,
-    ignore_missing_file: Optional[bool] = True
+    ignore_missing_file: Optional[bool] = True,
+    overwrite_output: Optional[bool] = True,
 ):
     """Fetches NWM point data, formats to tabular, and saves to parquet
 
@@ -70,6 +71,9 @@ def nwm_to_parquet(
         Flag specifying whether or not to fail if a missing NWM file is encountered
         True = skip and continue
         False = fail
+    overwrite_output: bool
+        Flag specifying whether or not to overwrite output files if they already
+        exist.  True = overwrite; False = fail
 
     The NWM configuration variables, including configuration, output_type, and
     variable_name are stored as pydantic models in point_config_models.py
@@ -118,6 +122,7 @@ def nwm_to_parquet(
         stepsize,
         ignore_missing_file,
         NWM22_UNIT_LOOKUP,
+        overwrite_output,
     )
 
 

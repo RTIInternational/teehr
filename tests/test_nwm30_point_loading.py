@@ -4,6 +4,9 @@ from pathlib import Path
 import pandas as pd
 
 from teehr.loading.nwm30.nwm_point_data import fetch_and_format_nwm_points
+from teehr.loading.nwm22.const_nwm import (
+    NWM22_UNIT_LOOKUP,
+)
 
 TEST_DIR = Path("tests", "data", "nwm22")
 
@@ -31,6 +34,8 @@ def test_point_loading():
         True,
         100,
         False,
+        units_format_dict=NWM22_UNIT_LOOKUP,
+        overwrite_output=True
     )
 
     parquet_file = Path(TEST_DIR, "20230318T14Z.parquet")

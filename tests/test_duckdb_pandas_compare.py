@@ -79,10 +79,14 @@ def test_metric_compare_time_metrics():
     pandas_df = tqk.get_metrics(**args)
     duckdb_df = tqu.get_metrics(**args)
 
-    for m in include_metrics:
-        duckdb_np = duckdb_df[m].astype('int64').to_numpy()
-        pandas_np = pandas_df[m].astype('int64').to_numpy()
-        assert np.allclose(duckdb_np, pandas_np)
+    # Difference in significant digits
+    # for m in include_metrics:
+    #     duckdb_np = duckdb_df[m].astype('int64').to_numpy()
+    #     pandas_np = pandas_df[m].astype('int64').to_numpy()
+    #     assert np.allclose(duckdb_np, pandas_np)
+
+    diff_df = pandas_df[include_metrics].compare(duckdb_df[include_metrics])
+    assert diff_df.index.size == 0
 
 
 if __name__ == "__main__":

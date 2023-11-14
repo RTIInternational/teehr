@@ -11,6 +11,7 @@ from teehr.loading.nwm22.utils_nwm import (
     build_remote_nwm_filelist,
     build_zarr_references,
     get_dataset,
+    write_parquet_file,
 )
 
 from teehr.models.loading.nwm22_grid import GridConfigurationModel
@@ -89,7 +90,8 @@ def fetch_and_format_nwm_grids(
     zonal_weights_filepath: str,
     ignore_missing_file: bool,
     units_format_dict: Dict,
-) -> None:
+    overwrite_output: bool,
+):
     """
     Reads in the single reference jsons, subsets the NWM data based on
     provided IDs and formats and saves the data as a parquet files
@@ -143,7 +145,7 @@ def fetch_and_format_nwm_grids(
             Path(output_parquet_dir), f"{ref_time_str}.parquet"
         )
         z_hour_df.sort_values(["location_id", "value_time"], inplace=True)
-        z_hour_df.to_parquet(parquet_filepath)
+        write_parquet_file(parquet_filepath, overwrite_output, z_hour_df)
 
 
 def nwm_grids_to_parquet(
@@ -157,6 +159,7 @@ def nwm_grids_to_parquet(
     output_parquet_dir: str,
     t_minus_hours: Optional[Iterable[int]] = None,
     ignore_missing_file: Optional[bool] = True,
+    overwrite_output: Optional[bool] = True,
 ):
     """
     Fetches NWM gridded data, calculates zonal statistics (mean) of selected
@@ -190,8 +193,10 @@ def nwm_grids_to_parquet(
         configuration is specified.
     ignore_missing_file: bool
         Flag specifying whether or not to fail if a missing NWM file is encountered
-        True = skip and continue
-        False = fail
+        True = skip and continue; False = fail
+    overwrite_output: bool
+        Flag specifying whether or not to overwrite output files if they already
+        exist.  True = overwrite; False = fail
 
     The NWM configuration variables, including configuration, output_type, and
     variable_name are stored as a pydantic model in grid_config_models.py
@@ -211,7 +216,11 @@ def nwm_grids_to_parquet(
         },
     }
 
-    _ = GridConfigurationModel.parse_obj(vars)
+    cm = GridConfigurationModel.parse_obj(vars)
+    configuration = cm.configuration.name
+    forecast_obj = getattr(cm, configuration)
+    output_type = forecast_obj.output_type.name
+    variable_name = getattr(forecast_obj, output_type).name
 
     component_paths = build_remote_nwm_filelist(
         configuration,
@@ -235,6 +244,7 @@ def nwm_grids_to_parquet(
         zonal_weights_filepath,
         ignore_missing_file,
         NWM22_UNIT_LOOKUP,
+        overwrite_output,
     )
 
 

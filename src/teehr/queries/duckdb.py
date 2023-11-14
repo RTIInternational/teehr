@@ -150,7 +150,19 @@ def get_metrics(
     )
 
     query = f"""
-        WITH joined as (
+        WITH filtered_primary AS (
+            SELECT * FROM(
+                SELECT *,
+                    row_number()
+                OVER(
+                    PARTITION BY value_time, location_id
+                    ORDER BY reference_time desc
+                    ) AS rn
+                FROM read_parquet("{str(mq.primary_filepath)}")
+                )
+            WHERE rn = 1
+        ),
+        joined as (
             SELECT
                 sf.reference_time
                 , sf.value_time as value_time
@@ -166,7 +178,7 @@ def get_metrics(
             FROM read_parquet('{str(mq.secondary_filepath)}') sf
             JOIN read_parquet('{str(mq.crosswalk_filepath)}') cf
                 on cf.secondary_location_id = sf.location_id
-            JOIN read_parquet('{str(mq.primary_filepath)}') pf
+            JOIN filtered_primary pf
                 on cf.primary_location_id = pf.location_id
                 and sf.value_time = pf.value_time
                 and sf.measurement_unit = pf.measurement_unit
@@ -316,7 +328,19 @@ def get_joined_timeseries(
     )
 
     query = f"""
-        WITH joined as (
+        WITH filtered_primary AS (
+            SELECT * FROM(
+                SELECT *,
+                    row_number()
+                OVER(
+                    PARTITION BY value_time, location_id
+                    ORDER BY reference_time desc
+                    ) AS rn
+                FROM read_parquet("{str(jtq.primary_filepath)}")
+                )
+            WHERE rn = 1
+        ),
+        joined as (
             SELECT
                 sf.reference_time,
                 sf.value_time,
@@ -332,7 +356,7 @@ def get_joined_timeseries(
             FROM read_parquet('{str(jtq.secondary_filepath)}') sf
             JOIN read_parquet('{str(jtq.crosswalk_filepath)}') cf
                 on cf.secondary_location_id = sf.location_id
-            JOIN read_parquet('{str(jtq.primary_filepath)}') pf
+            JOIN filtered_primary pf
                 on cf.primary_location_id = pf.location_id
                 and sf.value_time = pf.value_time
                 and sf.measurement_unit = pf.measurement_unit
@@ -431,7 +455,7 @@ def get_timeseries(
                 sf.measurement_unit,
                 sf.variable_name
             FROM
-                read_parquet('{str(tq.timeseries_filepath)}') sf
+                read_parquet("{str(tq.timeseries_filepath)}") sf
             {tqu.filters_to_sql(tq.filters)}
         )
         SELECT * FROM
@@ -530,6 +554,7 @@ def get_timeseries_chars(
         join_on=tcq.group_by
     )
 
+    chars_order_by = [f"chars.{val}" for val in tcq.order_by]
     query = f"""
         WITH fts AS (
             SELECT sf.* FROM
@@ -560,15 +585,14 @@ def get_timeseries_chars(
                 fts
             GROUP BY
                 {",".join(tcq.group_by)}
-            ORDER BY
-                {",".join(tcq.order_by)}
         )
         SELECT
             chars.*
             ,mxt.value_time as max_value_time
         FROM chars
         {join_max_time_on}
-
+        ORDER BY
+            {",".join(chars_order_by)}
     ;"""
 
     if tcq.return_query:
