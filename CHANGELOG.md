@@ -5,14 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.8] - 2023-09-25
+## [0.2.8] - 2023-11-14
 
 ### Added
 - NWM v3.0 data loading and configuration models
+- Added check for duplicate rows in `get_metrics` and `get_joined_timeseries` queries (#69)
+- Added control for overwrite file behavior in loading (#77)
 
 ### Changed
 
 - Fixed NWM pydantic configurations models for v2.2
+- Refactored `models/loading` directory
 
 ## [0.2.7] - 2023-09-14
 
