@@ -1,7 +1,7 @@
 pandas
 geopandas
 duckdb
-pydantic
+pydantic>2
 hydrotools.metrics
 hydrotools.nwis-client
 dask
