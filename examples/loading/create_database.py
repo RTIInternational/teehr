@@ -1,8 +1,10 @@
-# import duckdb
-import pandas as pd
-# import geopandas as gpd
+"""
+This script provides and example of how to create a TEEHR datyabase
+and insert joined timeseries, append attributes, and add user
+defined fields.
+"""
 from pathlib import Path
-from teehr.database.teehr_dataset import TEEHRDataset
+from teehr.database.teehr_dataset import TEEHRDatasetDB
 import time
 import datetime
 
@@ -24,44 +26,36 @@ DATABASE_FILEPATH = Path(TEST_STUDY_DIR, "huc1802_retro.db")
 # GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR,  "geo", "gages.parquet")
 # DATABASE_FILEPATH = Path(TEST_STUDY_DIR, "temp_test.db")
 
-data_vars = {
-        "database_filepath": DATABASE_FILEPATH,
-        "primary_filepath": PRIMARY_FILEPATH,
-        "secondary_filepath": SECONDARY_FILEPATH,
-        "crosswalk_filepath": CROSSWALK_FILEPATH,
-        "geometry_filepath": GEOMETRY_FILEPATH
-    }
-
 
 def describe_inputs():
-    tds = TEEHRDataset(**data_vars)
+    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
 
     # Check the parquet files and report some stats to the user (WIP)
-    primary_dict, secondary_dict = tds.describe_inputs()
-    rep = pd.DataFrame(
-        {
-            "primary": [primary_dict[key] for key in primary_dict.keys()],
-            "secondary": [secondary_dict[key] for key in secondary_dict.keys()]
-        },
-        index=primary_dict.keys()
+    df = tds.describe_inputs(
+        primary_filepath=PRIMARY_FILEPATH,
+        secondary_filepath=SECONDARY_FILEPATH
     )
-    print(rep)
+
+    print(df)
 
 
 def create_db_add_timeseries():
 
-    tds = TEEHRDataset(**data_vars)
+    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     # NOTE: Right now this will re-join and overwrite
     print("Creating joined table")
-    tds.create_joined_timeseries_table(
-        order_by=["lead_time", "primary_location_id"]
-    )
+    tds.insert_joined_timeseries(
+        primary_filepath=PRIMARY_FILEPATH,
+        secondary_filepath=SECONDARY_FILEPATH,
+        crosswalk_filepath=CROSSWALK_FILEPATH
+        )
+    tds.insert_geometry(geometry_filepath=GEOMETRY_FILEPATH)
 
 
 def add_attributes():
-    tds = TEEHRDataset(**data_vars)
+    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
 
     # Join (one or more?) table(s) of attributes to the timeseries table
     print("Adding attributes")
@@ -70,7 +64,7 @@ def add_attributes():
 
 def add_fields():
 
-    tds = TEEHRDataset(**data_vars)
+    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
 
     # Calculate and add a field based on some user-defined function (UDF).
     def test_user_function(arg1: float, arg2: str) -> float:
@@ -96,7 +90,7 @@ def add_fields():
 
     parameter_names = ["value_time"]
     new_field_name = "month"
-    new_field_type = "INT"
+    new_field_type = "INTEGER"
     tds.calculate_field(new_field_name=new_field_name,
                         new_field_type=new_field_type,
                         parameter_names=parameter_names,
@@ -111,7 +105,7 @@ def add_fields():
 
     parameter_names = ["primary_value", "retro_2yr_recurrence_flow_cms"]
     new_field_name = "exceed_2yr_recurrence"
-    new_field_type = "BOOL"
+    new_field_type = "BOOLEAN"
     tds.calculate_field(new_field_name=new_field_name,
                         new_field_type=new_field_type,
                         parameter_names=parameter_names,
@@ -121,39 +115,35 @@ def add_fields():
 
 def run_metrics_query():
 
-    tds = TEEHRDataset(**data_vars)
+    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
     # schema_df = tds.get_joined_timeseries_schema()
     # print(schema_df[["column_name", "column_type"]])
 
     # Get metrics
-    order_by = ["primary_location_id", "configuration"]
-    group_by = [
-        "primary_location_id",
-        "configuration",
-        "exceed_2yr_recurrence",
-        "month"
-    ]
+    group_by = ["primary_location_id", "configuration"]
+    order_by = ["primary_location_id"]
+    include_metrics = ["mean_error", "bias"]
     filters = [
         # {
         #     "column": "primary_location_id",
         #     "operator": "=",
         #     "value": "usgs-11337080"
         # },
-        {
-            "column": "month",
-            "operator": "=",
-            "value": 1
-        },
-        {
-            "column": "upstream_area_km2",
-            "operator": ">",
-            "value": 1000
-        },
-        {
-            "column": "exceed_2yr_recurrence",
-            "operator": "=",
-            "value": True
-        }
+        # {
+        #     "column": "month",
+        #     "operator": "=",
+        #     "value": 1
+        # },
+        # {
+        #     "column": "upstream_area_km2",
+        #     "operator": ">",
+        #     "value": 1000
+        # },
+        # {
+        #     "column": "exceed_2yr_recurrence",
+        #     "operator": "=",
+        #     "value": True
+        # }
     ]
 
     t1 = time.time()
@@ -161,12 +151,9 @@ def run_metrics_query():
         group_by=group_by,
         order_by=order_by,
         filters=filters,
-        include_metrics=[
-            "bias",
-            "mean_error",
-            "primary_count"
-        ],
-        include_geometry=False
+        include_metrics=include_metrics,
+        include_geometry=True,
+        # return_query=True
     )
     print(df1)
     print(f"Database query: {(time.time() - t1):.2f} secs")
@@ -175,20 +162,39 @@ def run_metrics_query():
 
 
 def describe_database():
-    tds = TEEHRDataset(**data_vars)
+    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
     df = tds.get_joined_timeseries_schema()
     print(df)
 
 
 def run_raw_query():
 
-    tds = TEEHRDataset(**data_vars)
+    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
     query = """
+        WITH joined as (
+            SELECT
+                *
+            FROM joined_timeseries
+        )
+        , metrics AS (
+            SELECT
+                joined.primary_location_id,joined.configuration
+                , sum(primary_value - secondary_value)/count(*) as bias
+                , sum(absolute_difference)/count(*) as mean_error
+            FROM
+                joined
+            GROUP BY
+                joined.primary_location_id,joined.configuration
+        )
         SELECT
-        ARRAY(SELECT DISTINCT(month)
-            FROM joined_timeseries) AS month_values,
-        ARRAY(SELECT DISTINCT(primary_location_id)
-            FROM joined_timeseries) AS primary_location_id_values
+            metrics.*
+            ,gf.geometry as geometry
+        FROM metrics
+        JOIN geometry gf
+            on primary_location_id = gf.id
+        ORDER BY
+            metrics.primary_location_id
+    ;
     ;"""
     # query = f"""
     #     COPY (
@@ -203,13 +209,13 @@ def run_raw_query():
 
 
 if __name__ == "__main__":
-    # describe_inputs()
     # create_db_add_timeseries()
+    # describe_inputs()
     # describe_database()
     # add_attributes()
     # describe_database()
     # add_fields()
     # describe_database()
-    run_metrics_query()
+    # run_metrics_query()
     # run_raw_query()
     pass
