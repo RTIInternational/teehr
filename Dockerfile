@@ -8,8 +8,8 @@ COPY . /teehr
 RUN TEEHR_VERSION=$(cat /teehr/version.txt) && \
     pip install --upgrade pip build && \
     python -m build && \
-    python -m pip install dist/teehr-${TEEHR_VERSION}.tar.gz && \
-    mv dist/teehr-${TEEHR_VERSION}.tar.gz dist/teehr-build.tar.gz
+    python -m pip install dist/teehr-${TEEHR_VERSION}0.tar.gz && \
+    mv dist/teehr-${TEEHR_VERSION}0.tar.gz dist/teehr-build.tar.gz
 
 # Install TEEHR in the Pangeo Image
 # https://hub.docker.com/r/pangeo/pangeo-notebook/tags
