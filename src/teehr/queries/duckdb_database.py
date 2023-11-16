@@ -112,7 +112,6 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
             SELECT
                 *
             FROM joined_timeseries
-            {tqu.geometry_select_clause_db(mq)}
             {tqu.filters_to_sql_db(mq.filters)}
         )
         {tqu._nse_cte(mq)}
