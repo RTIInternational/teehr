@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from teehr.loading.nwm22.nwm_point_data import fetch_and_format_nwm_points
+from teehr.loading.nwm_common.point_utils import fetch_and_format_nwm_points
 from teehr.loading.nwm22.const_nwm import (
     NWM22_UNIT_LOOKUP,
 )

@@ -1,10 +1,10 @@
 from typing import Union, Iterable, Optional
 from datetime import datetime
 
-from teehr.loading.nwm22.nwm_point_data import (
+from teehr.loading.nwm_common.point_utils import (
     fetch_and_format_nwm_points,
 )
-from teehr.loading.nwm22.utils_nwm import (
+from teehr.loading.nwm_common.utils_nwm import (
     build_zarr_references,
     build_remote_nwm_filelist
 )

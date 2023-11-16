@@ -5,8 +5,8 @@ import filecmp
 import pandas as pd
 import pytest
 
-from teehr.loading.nwm22.nwm_grid_data import fetch_and_format_nwm_grids
-from teehr.loading.nwm22.utils_nwm import build_zarr_references
+from teehr.loading.nwm_common.grid_utils import fetch_and_format_nwm_grids
+from teehr.loading.nwm_common.utils_nwm import build_zarr_references
 from teehr.loading.nwm22.const_nwm import (
     NWM22_UNIT_LOOKUP,
 )
