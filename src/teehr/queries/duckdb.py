@@ -186,7 +186,7 @@ def get_metrics(
         {tqu._smxt_cte(mq)}
         , metrics AS (
             SELECT
-                {",".join([f"joined.{gb}" for gb in mq.group_by])}
+                {",".join([f"joined.{str(gb)}" for gb in mq.group_by])}
                 {tqu._select_primary_count(mq)}
                 {tqu._select_secondary_count(mq)}
                 {tqu._select_primary_minimum(mq)}
@@ -210,7 +210,7 @@ def get_metrics(
                 joined
             {tqu._join_nse_cte(mq)}
             GROUP BY
-                {",".join([f"joined.{gb}" for gb in mq.group_by])}
+                {",".join([f"joined.{str(gb)}" for gb in mq.group_by])}
         )
         SELECT
             metrics.*
@@ -223,7 +223,7 @@ def get_metrics(
         {tqu._join_primary_join_max_time(mq)}
         {tqu._join_secondary_join_max_time(mq)}
         ORDER BY
-            {",".join([f"metrics.{ob}" for ob in mq.order_by])}
+            {",".join([f"metrics.{str(ob)}" for ob in mq.order_by])}
     ;""" # noqa
 
     if mq.return_query:

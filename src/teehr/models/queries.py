@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import List, Optional, Union
 
 from pydantic import BaseModel as PydanticBaseModel
@@ -14,7 +14,7 @@ class BaseModel(PydanticBaseModel):
         # smart_union = True # deprecated in v2
 
 
-class FilterOperatorEnum(str, Enum):
+class FilterOperatorEnum(StrEnum):
     eq = "="
     gt = ">"
     lt = "<"
@@ -24,7 +24,7 @@ class FilterOperatorEnum(str, Enum):
     isin = "in"
 
 
-class MetricEnum(str, Enum):
+class MetricEnum(StrEnum):
     primary_count = "primary_count"
     secondary_count = "secondary_count"
     primary_minimum = "primary_minimum"
@@ -49,7 +49,7 @@ class MetricEnum(str, Enum):
     max_value_timedelta = "max_value_timedelta"
 
 
-class JoinedFilterFieldEnum(str, Enum):
+class JoinedFilterFieldEnum(StrEnum):
     value_time = "value_time"
     reference_time = "reference_time"
     secondary_location_id = "secondary_location_id"
@@ -63,7 +63,7 @@ class JoinedFilterFieldEnum(str, Enum):
     geometry = "geometry"
 
 
-class TimeseriesFilterFieldEnum(str, Enum):
+class TimeseriesFilterFieldEnum(StrEnum):
     value_time = "value_time"
     reference_time = "reference_time"
     location_id = "location_id"
@@ -75,7 +75,7 @@ class TimeseriesFilterFieldEnum(str, Enum):
     geometry = "geometry"
 
 
-class ChunkByEnum(str, Enum):
+class ChunkByEnum(StrEnum):
     day = "day"
     site = "site"
 

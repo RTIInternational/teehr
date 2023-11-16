@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from datetime import datetime
-from enum import Enum
+from enum import Enum, StrEnum
 from typing import List, Optional, Union
 
 from pydantic import BaseModel as PydanticBaseModel
@@ -16,7 +16,7 @@ class BaseModel(PydanticBaseModel):
         # smart_union = True # deprecated in v2
 
 
-class FieldTypeEnum(str, Enum):
+class FieldTypeEnum(StrEnum):
     """Allowable duckdb data types."""
 
     BIGINT = "BIGINT"
@@ -43,7 +43,7 @@ class FieldTypeEnum(str, Enum):
     VARCHAR = "VARCHAR"
 
 
-class JoinedFieldNameEnum(str, Enum):
+class JoinedFieldNameEnum(StrEnum):
     """Names of fields in base joined_timeseries table."""
 
     reference_time = "reference_time"
@@ -60,7 +60,7 @@ class JoinedFieldNameEnum(str, Enum):
     geometry = "geometry"
 
 
-class TimeseriesNameEnum(str, Enum):
+class TimeseriesNameEnum(StrEnum):
     primary = "primary"
     secondary = "secondary"
 
