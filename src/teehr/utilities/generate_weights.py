@@ -12,7 +12,7 @@ import dask
 import shapely
 
 from teehr.loading.nwm_common.utils_nwm import load_gdf
-import teehr.loading.nwm22.const_nwm as const_nwm
+from teehr.loading.nwm30.const_nwm import AL_NWM_WKT
 
 
 @dask.delayed
@@ -75,6 +75,7 @@ def overlay_zones(
 def vectorize_grid(
     src_da: xr.DataArray,
     nodata_val: float,
+    crs_wkt: str,
     vectorize_chunk: float = 40,
 ) -> gpd.GeoDataFrame:
     """Vectorize pixels in the template array in chunks using dask
@@ -99,7 +100,7 @@ def vectorize_grid(
     for da_subset in da_list:
         results.append(vectorize(da_subset))
     grid_gdf = pd.concat(dask.compute(results)[0])
-    grid_gdf.crs = const_nwm.CONUS_NWM_WKT
+    grid_gdf.crs = crs_wkt
 
     # Reindex to remove duplicates
     grid_gdf["index"] = np.arange(len(grid_gdf.index))
@@ -158,6 +159,7 @@ def generate_weights_file(
     template_dataset: Union[str, Path],
     variable_name: str,
     output_weights_filepath: Union[str, Path],
+    crs_wkt: str,
     unique_zone_id: str = None,
     **read_args: str,
 ) -> None:
@@ -174,21 +176,21 @@ def generate_weights_file(
         Name of the variable within the dataset
     output_weights_filepath : str
         Path to the resultant weights file
+    crs_wkt: str
+        Coordinate system for given domain as WKT string
     unique_zone_id: str
         Name of the field in the zone polygon file containing unique IDs
-    save_to_disk: boolean
-        Flag to indicate whether or not to save results to disk
     read_args: dict, optional
         Keyword arguments to be passed to GeoPandas read_file(),
         read_parquet(), and read_feather() methods
     """
 
     zone_gdf = load_gdf(zone_polygon_filepath, **read_args)
-    zone_gdf = zone_gdf.to_crs(const_nwm.CONUS_NWM_WKT)
+    zone_gdf = zone_gdf.to_crs(crs_wkt)
 
     ds = xr.open_dataset(template_dataset)
     src_da = ds[variable_name]
-    src_da = src_da.rio.write_crs(const_nwm.CONUS_NWM_WKT, inplace=True)
+    src_da = src_da.rio.write_crs(crs_wkt, inplace=True)
     grid_transform = src_da.rio.transform()
     nodata_val = src_da.rio.nodata
 
@@ -202,7 +204,7 @@ def generate_weights_file(
     src_da["y"] = np.float32(src_da.y.values)
 
     # Vectorize source grid pixels
-    grid_gdf = vectorize_grid(src_da, nodata_val)
+    grid_gdf = vectorize_grid(src_da, nodata_val, crs_wkt)
 
     # Overlay and calculate areal weights of pixels within each zone
     # Note: Temporarily suppress the dask UserWarning: "Large object detected
@@ -237,21 +239,19 @@ def generate_weights_file(
 
 if __name__ == "__main__":
     # Local testing
-    zone_polygon_filepath = "/mnt/sf_shared/data/ciroh/nextgen_03S.gpkg"
-    template_dataset = "/mnt/sf_shared/data/ciroh/nwm.20201218_forcing_short_range_nwm.t00z.short_range.forcing.f001.conus.nc"  # noqa
+    zone_polygon_filepath = "/mnt/data/wbd/one_alaska_huc10.parquet"
+    template_dataset = "/mnt/data/ciroh/nwm_temp/nwm.20231101_forcing_analysis_assim_alaska_nwm.t00z.analysis_assim.forcing.tm01.alaska.nc"  # noqa
     variable_name = "RAINRATE"
-    unique_zone_id = "id"
+    unique_zone_id = "huc10"
     output_weights_filepath = (
-        "/mnt/sf_shared/data/ciroh/wbdhu10_medium_range_weights.parquet"
-    )
-    zone_polygon_filepath = (
-        "/mnt/sf_shared/data/ciroh/test_ngen_divides.parquet"
+        "/mnt/sf_shared/data/ciroh/one_huc10_alaska_weights.parquet"
     )
 
     generate_weights_file(
-        zone_polygon_filepath,
-        template_dataset,
-        variable_name,
-        output_weights_filepath,
-        unique_zone_id,
+        zone_polygon_filepath=zone_polygon_filepath,
+        template_dataset=template_dataset,
+        variable_name=variable_name,
+        output_weights_filepath=output_weights_filepath,
+        crs_wkt=AL_NWM_WKT,
+        unique_zone_id=unique_zone_id
     )

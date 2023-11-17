@@ -116,3 +116,10 @@ NWM30_ANALYSIS_CONFIG = {
         "configuration_name_in_filepath": "analysis_assim",
     },
 }
+
+# WKT strings extracted from NWM grids
+AL_NWM_WKT = 'PROJCS["Sphere_Stereographic",GEOGCS["Sphere",DATUM["Sphere",SPHEROID["unnamed",6370000,0]], \
+    PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]]], \
+    PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",-135], \
+    PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1],AXIS["Easting",SOUTH], \
+    AXIS["Northing",SOUTH]]' # noqa

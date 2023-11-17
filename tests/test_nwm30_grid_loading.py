@@ -3,46 +3,54 @@ from pathlib import Path
 import filecmp
 
 import pandas as pd
-import pytest
 
-from teehr.loading.nwm_common.grid_utils import fetch_and_format_nwm_grids
+from teehr.loading.nwm30.nwm_grid_data import fetch_and_format_nwm_grids
 from teehr.loading.nwm_common.utils_nwm import build_zarr_references
 from teehr.loading.nwm22.const_nwm import (
     NWM22_UNIT_LOOKUP,
 )
 
-TEST_DIR = Path("tests", "data", "nwm22")
-WEIGHTS_FILEPATH = Path(TEST_DIR, "onehuc10_weights.parquet")
+TEST_DIR = Path("tests", "data", "nwm30")
+TEMP_DIR = Path("tests", "data", "temp")
+WEIGHTS_FILEPATH = Path(TEST_DIR, "one_huc10_alaska_weights.parquet")
 
 
-@pytest.mark.filterwarnings("ignore::RuntimeWarning")
-def test_grid_loading():
+def test_grid_zarr_reference_file():
 
     component_paths = [
-        "gcs://national-water-model/nwm.20201218/forcing_analysis_assim/nwm.t00z.analysis_assim.forcing.tm00.conus.nc" # noqa
+        "gcs://national-water-model/nwm.20231101/forcing_analysis_assim_alaska/nwm.t00z.analysis_assim.forcing.tm02.alaska.nc" # noqa
     ]
 
-    json_paths = build_zarr_references(component_paths,
-                                       TEST_DIR,
-                                       False)
+    _ = build_zarr_references(
+        remote_paths=component_paths,
+        json_dir=TEMP_DIR,
+        ignore_missing_file=False
+    )
 
-    json_file = Path(TEST_DIR,
-                     "nwm.20201218.nwm.t00z.analysis_assim.forcing.tm00.conus.nc.json") # noqa
+    json_file = Path(TEMP_DIR,
+                     "nwm.20231101.nwm.t00z.analysis_assim.forcing.tm02.alaska.nc.json") # noqa
     test_file = Path(TEST_DIR, "grid_benchmark.json")
     assert filecmp.cmp(test_file, json_file, shallow=False)
 
+
+def test_grid_fetch_and_format():
+
+    json_file = Path(TEMP_DIR,
+                     "nwm.20231101.nwm.t00z.analysis_assim.forcing.tm02.alaska.nc.json") # noqa
+    json_paths = [str(json_file)]
+
     fetch_and_format_nwm_grids(
-        json_paths,
-        "forcing_analysis_assim",
-        "RAINRATE",
-        TEST_DIR,
-        WEIGHTS_FILEPATH,
+        json_paths=json_paths,
+        configuration="forcing_analysis_assim_alaska",
+        variable_name="RAINRATE",
+        output_parquet_dir=TEMP_DIR,
+        zonal_weights_filepath=WEIGHTS_FILEPATH,
         ignore_missing_file=False,
         units_format_dict=NWM22_UNIT_LOOKUP,
         overwrite_output=True
     )
 
-    parquet_file = Path(TEST_DIR, "20201218T00Z.parquet")
+    parquet_file = Path(TEMP_DIR, "20231101T00Z.parquet")
     test_file = Path(TEST_DIR, "grid_benchmark.parquet")
 
     bench_df = pd.read_parquet(test_file)
@@ -52,4 +60,5 @@ def test_grid_loading():
 
 
 if __name__ == "__main__":
-    test_grid_loading()
+    test_grid_zarr_reference_file()
+    test_grid_fetch_and_format()
