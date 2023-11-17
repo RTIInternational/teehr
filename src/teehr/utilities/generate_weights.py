@@ -11,7 +11,7 @@ import pandas as pd
 import dask
 import shapely
 
-from teehr.loading.nwm22.utils_nwm import load_gdf
+from teehr.loading.nwm_common.utils_nwm import load_gdf
 import teehr.loading.nwm22.const_nwm as const_nwm
 
 

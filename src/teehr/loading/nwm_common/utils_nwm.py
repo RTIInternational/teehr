@@ -41,7 +41,7 @@ def write_parquet_file(
         else:
             data.to_parquet(filepath)
     elif filepath.is_file() and overwrite_output:
-        print(f"Warning: Overwriting {filepath.name}")
+        print(f"Overwriting {filepath.name}")
         if isinstance(data, pa.Table):
             pq.write_table(data, filepath)
         else:
