@@ -1,5 +1,5 @@
 # Build TEEHR
-FROM python:3.11 AS builder
+FROM python:3.10 AS builder
 
 WORKDIR /teehr
 
@@ -13,7 +13,8 @@ RUN TEEHR_VERSION=$(cat /teehr/version.txt) && \
 
 # Install TEEHR in the Pangeo Image
 # https://hub.docker.com/r/pangeo/pangeo-notebook/tags
-FROM pangeo/pangeo-notebook:2023.11.14
+# Subsequent images use python=3.11
+FROM pangeo/pangeo-notebook:2023.09.11
 
 USER root
 ENV DEBIAN_FRONTEND=noninteractive

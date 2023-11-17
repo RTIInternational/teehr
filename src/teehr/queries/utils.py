@@ -73,22 +73,22 @@ def _format_filter_item_db(
     column = filter.column
 
     if isinstance(filter.value, str):
-        return f"""{column} {str(filter.operator)} '{filter.value}'"""
+        return f"""{column} {filter.operator} '{filter.value}'"""
     elif isinstance(filter.value, int) or isinstance(filter.value, float):
-        return f"""{column} {str(filter.operator)} {filter.value}"""
+        return f"""{column} {filter.operator} {filter.value}"""
     elif isinstance(filter.value, datetime):
         dt_str = filter.value.strftime(SQL_DATETIME_STR_FORMAT)
-        return f"""{column} {str(filter.operator)} '{dt_str}'"""
+        return f"""{column} {filter.operator} '{dt_str}'"""
     elif isinstance(filter.value, Iterable) and not isinstance(
         filter.value, str
     ):
         value = _format_iterable_value(filter.value)
-        return f"""{column} {str(filter.operator)} {value}"""
+        return f"""{column} {filter.operator} {value}"""
     else:
         warnings.warn(
             "treating value as string because didn't know what else to do."
         )
-        return f"""{column} {str(filter.operator)} '{str(filter.value)}'"""
+        return f"""{column} {filter.operator} '{str(filter.value)}'"""
 
 
 def filters_to_sql_db(filters: List[JoinedFilter]) -> List[str]:
@@ -127,29 +127,33 @@ def _format_filter_item(filter: Union[JoinedFilter, TimeseriesFilter]) -> str:
     formatted_string : str
 
     """
-    column = str(filter.column)
+    column = filter.column
     if column == "value_time":
         column = "sf.value_time"
     if column == "reference_time":
         column = "sf.reference_time"
 
     if isinstance(filter.value, str):
-        return f"""{column} {str(filter.operator)} '{filter.value}'"""
-    elif isinstance(filter.value, int) or isinstance(filter.value, float):
-        return f"""{column} {str(filter.operator)} {filter.value}"""
+        return f"""{column} {filter.operator} '{filter.value}'"""
+    elif (
+        isinstance(filter.value, int)
+        or isinstance(filter.value, float)
+    ):
+        return f"""{column} {filter.operator} {filter.value}"""
     elif isinstance(filter.value, datetime):
         dt_str = filter.value.strftime(SQL_DATETIME_STR_FORMAT)
-        return f"""{column} {str(filter.operator)} '{dt_str}'"""
-    elif isinstance(filter.value, Iterable) and not isinstance(
-        filter.value, str
+        return f"""{column} {filter.operator} '{dt_str}'"""
+    elif (
+        isinstance(filter.value, Iterable)
+        and not isinstance(filter.value, str)
     ):
         value = _format_iterable_value(filter.value)
-        return f"""{column} {str(filter.operator)} {value}"""
+        return f"""{column} {filter.operator} {value}"""
     else:
         warnings.warn(
             "treating value as string because didn't know what else to do."
         )
-        return f"""{column} {str(filter.operator)} '{str(filter.value)}'"""
+        return f"""{column} {filter.operator} '{str(filter.value)}'"""
 
 
 def filters_to_sql(filters: List[JoinedFilter]) -> List[str]:
@@ -216,7 +220,7 @@ def metric_geometry_join_clause_db(
 ) -> str:
     """Generate the join clause for"""
     if q.include_geometry:
-        return f"""JOIN geometry gf
+        return """JOIN geometry gf
             on primary_location_id = gf.id
         """
     return ""
@@ -236,7 +240,7 @@ def metric_geometry_join_clause(
 def _join_time_on(join: str, join_to: str, join_on: List[str]):
     qry = f"""
         INNER JOIN {join}
-        ON {f" AND ".join([f"{join}.{str(jo)} = {join_to}.{str(jo)}" for jo in join_on])}
+        ON {f" AND ".join([f"{join}.{jo} = {join_to}.{jo}" for jo in join_on])}
         AND {join}.n = 1
     """
     return qry
@@ -245,7 +249,7 @@ def _join_time_on(join: str, join_to: str, join_on: List[str]):
 def _join_on(join: str, join_to: str, join_on: List[str]) -> str:
     qry = f"""
         INNER JOIN {join}
-        ON {f" AND ".join([f"{join}.{str(jo)} = {join_to}.{str(jo)}" for jo in join_on])}
+        ON {f" AND ".join([f"{join}.{jo} = {join_to}.{jo}" for jo in join_on])}
     """
     return qry
 

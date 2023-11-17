@@ -224,23 +224,24 @@ files = [
 
 [[package]]
 name = "anyio"
-version = "4.0.0"
+version = "3.7.1"
 description = "High level compatibility layer for multiple asynchronous event loop implementations"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.7"
 files = [
-    {file = "anyio-4.0.0-py3-none-any.whl", hash = "sha256:cfdb2b588b9fc25ede96d8db56ed50848b0b649dca3dd1df0b11f683bb9e0b5f"},
-    {file = "anyio-4.0.0.tar.gz", hash = "sha256:f7ed51751b2c2add651e5747c891b47e26d2a21be5d32d9311dfe9692f3e5d7a"},
+    {file = "anyio-3.7.1-py3-none-any.whl", hash = "sha256:91dee416e570e92c64041bd18b900d1d6fa78dff7048769ce5ac5ddad004fbb5"},
+    {file = "anyio-3.7.1.tar.gz", hash = "sha256:44a3c9aba0f5defa43261a8b3efb97891f2bd7d804e0e1f56419befa1adfc780"},
 ]
 
 [package.dependencies]
+exceptiongroup = {version = "*", markers = "python_version < \"3.11\""}
 idna = ">=2.8"
 sniffio = ">=1.1"
 
 [package.extras]
-doc = ["Sphinx (>=7)", "packaging", "sphinx-autodoc-typehints (>=1.2.0)"]
-test = ["anyio[trio]", "coverage[toml] (>=7)", "hypothesis (>=4.0)", "psutil (>=5.9)", "pytest (>=7.0)", "pytest-mock (>=3.6.1)", "trustme", "uvloop (>=0.17)"]
-trio = ["trio (>=0.22)"]
+doc = ["Sphinx", "packaging", "sphinx-autodoc-typehints (>=1.2.0)", "sphinx-rtd-theme (>=1.2.2)", "sphinxcontrib-jquery"]
+test = ["anyio[trio]", "coverage[toml] (>=4.5)", "hypothesis (>=4.0)", "mock (>=4)", "psutil (>=5.9)", "pytest (>=7.0)", "pytest-mock (>=3.6.1)", "trustme", "uvloop (>=0.17)"]
+trio = ["trio (<0.22)"]
 
 [[package]]
 name = "asciitree"
@@ -627,17 +628,32 @@ files = [
 ]
 
 [[package]]
+name = "exceptiongroup"
+version = "1.1.3"
+description = "Backport of PEP 654 (exception groups)"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "exceptiongroup-1.1.3-py3-none-any.whl", hash = "sha256:343280667a4585d195ca1cf9cef84a4e178c4b6cf2274caef9859782b567d5e3"},
+    {file = "exceptiongroup-1.1.3.tar.gz", hash = "sha256:097acd85d473d75af5bb98e41b61ff7fe35efe6675e4f9370ec6ec5126d160e9"},
+]
+
+[package.extras]
+test = ["pytest (>=6)"]
+
+[[package]]
 name = "fastapi"
-version = "0.103.0"
+version = "0.103.2"
 description = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "fastapi-0.103.0-py3-none-any.whl", hash = "sha256:61ab72c6c281205dd0cbaccf503e829a37e0be108d965ac223779a8479243665"},
-    {file = "fastapi-0.103.0.tar.gz", hash = "sha256:4166732f5ddf61c33e9fa4664f73780872511e0598d4d5434b1816dc1e6d9421"},
+    {file = "fastapi-0.103.2-py3-none-any.whl", hash = "sha256:3270de872f0fe9ec809d4bd3d4d890c6d5cc7b9611d721d6438f9dacc8c4ef2e"},
+    {file = "fastapi-0.103.2.tar.gz", hash = "sha256:75a11f6bfb8fc4d2bec0bd710c2d5f2829659c0e8c0afd5560fdda6ce25ec653"},
 ]
 
 [package.dependencies]
+anyio = ">=3.7.1,<4.0.0"
 pydantic = ">=1.7.4,<1.8 || >1.8,<1.8.1 || >1.8.1,<2.0.0 || >2.0.0,<2.0.1 || >2.0.1,<2.1.0 || >2.1.0,<3.0.0"
 starlette = ">=0.27.0,<0.28.0"
 typing-extensions = ">=4.5.0"
@@ -1134,6 +1150,27 @@ files = [
 numpy = ">=1.17.3"
 
 [[package]]
+name = "httpcore"
+version = "1.0.2"
+description = "A minimal low-level HTTP client."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "httpcore-1.0.2-py3-none-any.whl", hash = "sha256:096cc05bca73b8e459a1fc3dcf585148f63e534eae4339559c9b8a8d6399acc7"},
+    {file = "httpcore-1.0.2.tar.gz", hash = "sha256:9fc092e4799b26174648e54b74ed5f683132a464e95643b226e00c2ed2fa6535"},
+]
+
+[package.dependencies]
+certifi = "*"
+h11 = ">=0.13,<0.15"
+
+[package.extras]
+asyncio = ["anyio (>=4.0,<5.0)"]
+http2 = ["h2 (>=3,<5)"]
+socks = ["socksio (==1.*)"]
+trio = ["trio (>=0.22.0,<0.23.0)"]
+
+[[package]]
 name = "httptools"
 version = "0.6.1"
 description = "A collection of framework independent HTTP protocol utils."
@@ -1180,6 +1217,30 @@ files = [
 
 [package.extras]
 test = ["Cython (>=0.29.24,<0.30.0)"]
+
+[[package]]
+name = "httpx"
+version = "0.25.1"
+description = "The next generation HTTP client."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "httpx-0.25.1-py3-none-any.whl", hash = "sha256:fec7d6cc5c27c578a391f7e87b9aa7d3d8fbcd034f6399f9f79b45bcc12a866a"},
+    {file = "httpx-0.25.1.tar.gz", hash = "sha256:ffd96d5cf901e63863d9f1b4b6807861dbea4d301613415d9e6e57ead15fc5d0"},
+]
+
+[package.dependencies]
+anyio = "*"
+certifi = "*"
+httpcore = "*"
+idna = "*"
+sniffio = "*"
+
+[package.extras]
+brotli = ["brotli", "brotlicffi"]
+cli = ["click (==8.*)", "pygments (==2.*)", "rich (>=10,<14)"]
+http2 = ["h2 (>=3,<5)"]
+socks = ["socksio (==1.*)"]
 
 [[package]]
 name = "hydrotools-metrics"
@@ -1618,6 +1679,7 @@ files = [
 
 [package.dependencies]
 numpy = [
+    {version = ">=1.22.4,<2", markers = "python_version < \"3.11\""},
     {version = ">=1.23.2,<2", markers = "python_version == \"3.11\""},
     {version = ">=1.26.0,<2", markers = "python_version >= \"3.12\""},
 ]
@@ -1684,22 +1746,22 @@ testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
 name = "protobuf"
-version = "4.25.0"
+version = "4.25.1"
 description = ""
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "protobuf-4.25.0-cp310-abi3-win32.whl", hash = "sha256:5c1203ac9f50e4853b0a0bfffd32c67118ef552a33942982eeab543f5c634395"},
-    {file = "protobuf-4.25.0-cp310-abi3-win_amd64.whl", hash = "sha256:c40ff8f00aa737938c5378d461637d15c442a12275a81019cc2fef06d81c9419"},
-    {file = "protobuf-4.25.0-cp37-abi3-macosx_10_9_universal2.whl", hash = "sha256:cf21faba64cd2c9a3ed92b7a67f226296b10159dbb8fbc5e854fc90657d908e4"},
-    {file = "protobuf-4.25.0-cp37-abi3-manylinux2014_aarch64.whl", hash = "sha256:32ac2100b0e23412413d948c03060184d34a7c50b3e5d7524ee96ac2b10acf51"},
-    {file = "protobuf-4.25.0-cp37-abi3-manylinux2014_x86_64.whl", hash = "sha256:683dc44c61f2620b32ce4927de2108f3ebe8ccf2fd716e1e684e5a50da154054"},
-    {file = "protobuf-4.25.0-cp38-cp38-win32.whl", hash = "sha256:1a3ba712877e6d37013cdc3476040ea1e313a6c2e1580836a94f76b3c176d575"},
-    {file = "protobuf-4.25.0-cp38-cp38-win_amd64.whl", hash = "sha256:b2cf8b5d381f9378afe84618288b239e75665fe58d0f3fd5db400959274296e9"},
-    {file = "protobuf-4.25.0-cp39-cp39-win32.whl", hash = "sha256:63714e79b761a37048c9701a37438aa29945cd2417a97076048232c1df07b701"},
-    {file = "protobuf-4.25.0-cp39-cp39-win_amd64.whl", hash = "sha256:d94a33db8b7ddbd0af7c467475fb9fde0c705fb315a8433c0e2020942b863a1f"},
-    {file = "protobuf-4.25.0-py3-none-any.whl", hash = "sha256:1a53d6f64b00eecf53b65ff4a8c23dc95df1fa1e97bb06b8122e5a64f49fc90a"},
-    {file = "protobuf-4.25.0.tar.gz", hash = "sha256:68f7caf0d4f012fd194a301420cf6aa258366144d814f358c5b32558228afa7c"},
+    {file = "protobuf-4.25.1-cp310-abi3-win32.whl", hash = "sha256:193f50a6ab78a970c9b4f148e7c750cfde64f59815e86f686c22e26b4fe01ce7"},
+    {file = "protobuf-4.25.1-cp310-abi3-win_amd64.whl", hash = "sha256:3497c1af9f2526962f09329fd61a36566305e6c72da2590ae0d7d1322818843b"},
+    {file = "protobuf-4.25.1-cp37-abi3-macosx_10_9_universal2.whl", hash = "sha256:0bf384e75b92c42830c0a679b0cd4d6e2b36ae0cf3dbb1e1dfdda48a244f4bcd"},
+    {file = "protobuf-4.25.1-cp37-abi3-manylinux2014_aarch64.whl", hash = "sha256:0f881b589ff449bf0b931a711926e9ddaad3b35089cc039ce1af50b21a4ae8cb"},
+    {file = "protobuf-4.25.1-cp37-abi3-manylinux2014_x86_64.whl", hash = "sha256:ca37bf6a6d0046272c152eea90d2e4ef34593aaa32e8873fc14c16440f22d4b7"},
+    {file = "protobuf-4.25.1-cp38-cp38-win32.whl", hash = "sha256:abc0525ae2689a8000837729eef7883b9391cd6aa7950249dcf5a4ede230d5dd"},
+    {file = "protobuf-4.25.1-cp38-cp38-win_amd64.whl", hash = "sha256:1484f9e692091450e7edf418c939e15bfc8fc68856e36ce399aed6889dae8bb0"},
+    {file = "protobuf-4.25.1-cp39-cp39-win32.whl", hash = "sha256:8bdbeaddaac52d15c6dce38c71b03038ef7772b977847eb6d374fc86636fa510"},
+    {file = "protobuf-4.25.1-cp39-cp39-win_amd64.whl", hash = "sha256:becc576b7e6b553d22cbdf418686ee4daa443d7217999125c045ad56322dda10"},
+    {file = "protobuf-4.25.1-py3-none-any.whl", hash = "sha256:a19731d5e83ae4737bb2a089605e636077ac001d18781b3cf489b9546c7c80d6"},
+    {file = "protobuf-4.25.1.tar.gz", hash = "sha256:57d65074b4f5baa4ab5da1605c02be90ac20c8b40fb137d6a8df9f416b0d0ce2"},
 ]
 
 [[package]]
@@ -1999,9 +2061,11 @@ files = [
 
 [package.dependencies]
 colorama = {version = "*", markers = "sys_platform == \"win32\""}
+exceptiongroup = {version = ">=1.0.0rc8", markers = "python_version < \"3.11\""}
 iniconfig = "*"
 packaging = "*"
 pluggy = ">=0.12,<2.0"
+tomli = {version = ">=1.0.0", markers = "python_version < \"3.11\""}
 
 [package.extras]
 testing = ["argcomplete", "attrs (>=19.2.0)", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
@@ -2387,6 +2451,17 @@ anyio = ">=3.4.0,<5"
 full = ["httpx (>=0.22.0)", "itsdangerous", "jinja2", "python-multipart", "pyyaml"]
 
 [[package]]
+name = "tomli"
+version = "2.0.1"
+description = "A lil' TOML parser"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
+    {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
+]
+
+[[package]]
 name = "toolz"
 version = "0.12.0"
 description = "List processing tools and functional utilities"
@@ -2538,6 +2613,7 @@ h11 = ">=0.8"
 httptools = {version = ">=0.5.0", optional = true, markers = "extra == \"standard\""}
 python-dotenv = {version = ">=0.13", optional = true, markers = "extra == \"standard\""}
 pyyaml = {version = ">=5.1", optional = true, markers = "extra == \"standard\""}
+typing-extensions = {version = ">=4.0", markers = "python_version < \"3.11\""}
 uvloop = {version = ">=0.14.0,<0.15.0 || >0.15.0,<0.15.1 || >0.15.1", optional = true, markers = "(sys_platform != \"win32\" and sys_platform != \"cygwin\") and platform_python_implementation != \"PyPy\" and extra == \"standard\""}
 watchfiles = {version = ">=0.13", optional = true, markers = "extra == \"standard\""}
 websockets = {version = ">=10.4", optional = true, markers = "extra == \"standard\""}
@@ -2984,5 +3060,5 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.11"
-content-hash = "fad83c23ed929741821bcd2d78562f51f29317946b246a8e00f0f4b40bd9c529"
+python-versions = "^3.10"
+content-hash = "7d9b8392cb0609cc1e0759e6ada994968c955712169371798f256e8b7b7acc5e"
