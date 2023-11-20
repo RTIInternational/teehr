@@ -1,5 +1,6 @@
-![alt text](https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png)
-
+<p align="center">
+  <img src="[[http://some_place.com/image.png](https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png)](https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png)" />
+</p>
 ![alt text](docs/images/teehr.png)
 # TEEHR - Tools for Exploratory Evaluation in Hydrologic Research
 TEEHR (pronounced "tier") is a python tool set for loading, storing,
