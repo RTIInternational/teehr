@@ -1,8 +1,10 @@
-<p align="center">
-  <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png" />
-</p>
-
 ![alt text](docs/images/teehr.png)
+
+| | |
+| --- | --- |
+| ![alt text](https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png) | Funding for this project was provided by the National Oceanic & Atmospheric Administration (NOAA), awarded to the Cooperative Institute for Research to Operations in Hydrology (CIROH) through the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003). |
+
+
 # TEEHR - Tools for Exploratory Evaluation in Hydrologic Research
 TEEHR (pronounced "tier") is a python tool set for loading, storing,
 processing and visualizing hydrologic data, particularly National Water
