@@ -116,7 +116,7 @@ def usgs_to_parquet(
     filter_to_hourly: bool = True,
     filter_no_data: bool = True,
     convert_to_si: bool = True,
-    overwrite_output: Optional[bool] = True,
+    overwrite_output: Optional[bool] = False,
 ):
     """Fetch USGS gage data and save as a Parquet file.
 

@@ -136,7 +136,11 @@ def nwm_retro_to_parquet(
         raise ValueError(f"unsupported NWM version {nwm_version}")
 
     start_date = datetime_to_date(pd.Timestamp(start_date))
-    end_date = datetime_to_date(pd.Timestamp(end_date)) + timedelta(days=1) - timedelta(minutes=1)
+    end_date = (
+        datetime_to_date(pd.Timestamp(end_date)) +
+        timedelta(days=1) -
+        timedelta(minutes=1)
+    )
     # start_date = datetime_to_date(start_date)
     # end_date = datetime_to_date(end_date) + timedelta(days=1)
 
