@@ -1,9 +1,9 @@
-from teehr.models.loading.nwm22_grid import GridConfigurationModel
-from teehr.models.loading.nwm22_point import PointConfigurationModel
+from teehr.models.loading.nwm30_grid import GridConfigurationModel
+from teehr.models.loading.nwm30_point import PointConfigurationModel
 
 
 def test_point_model():
-    configuration = "short_range"
+    configuration = "short_range_alaska"
     output_type = "channel_rt"
     variable_name = "streamflow"
 
@@ -23,13 +23,13 @@ def test_point_model():
     out_type = forecast_obj.output_type.name
     var_name = getattr(forecast_obj, out_type).name
 
-    assert config == "short_range"
+    assert config == "short_range_alaska"
     assert output_type == "channel_rt"
     assert var_name == "streamflow"
 
 
 def test_grid_model():
-    configuration = "forcing_short_range"
+    configuration = "forcing_medium_range_blend_alaska"
     output_type = "forcing"
     variable_name = "RAINRATE"
 
@@ -50,7 +50,7 @@ def test_grid_model():
     out_type = forecast_obj.output_type.name
     var_name = getattr(forecast_obj, out_type).name
 
-    assert config == "forcing_short_range"
+    assert config == "forcing_medium_range_blend_alaska"
     assert output_type == "forcing"
     assert var_name == "RAINRATE"
 

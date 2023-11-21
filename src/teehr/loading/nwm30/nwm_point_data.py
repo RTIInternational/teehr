@@ -1,17 +1,17 @@
 from typing import Union, Iterable, Optional
 from datetime import datetime
 
-from teehr.loading.nwm_common.point_utils import fetch_and_format_nwm_points
-
+from teehr.loading.nwm_common.point_utils import (
+    fetch_and_format_nwm_points,
+)
 from teehr.loading.nwm_common.utils_nwm import (
-    build_remote_nwm_filelist,
     build_zarr_references,
+    build_remote_nwm_filelist
 )
-from teehr.models.loading.nwm22_point import PointConfigurationModel
-from teehr.loading.nwm22.const_nwm import (
-    NWM22_UNIT_LOOKUP,
-    NWM22_ANALYSIS_CONFIG
-)
+from teehr.loading.nwm22.const_nwm import NWM22_UNIT_LOOKUP
+
+from teehr.models.loading.nwm30_point import PointConfigurationModel
+from teehr.loading.nwm30.const_nwm import NWM30_ANALYSIS_CONFIG
 
 
 def nwm_to_parquet(
@@ -103,7 +103,7 @@ def nwm_to_parquet(
         output_type,
         start_date,
         ingest_days,
-        NWM22_ANALYSIS_CONFIG,
+        NWM30_ANALYSIS_CONFIG,
         t_minus_hours,
         ignore_missing_file,
     )

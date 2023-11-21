@@ -158,7 +158,10 @@ def test_timeseries_char_query_df():
             }
         }
     )
-    assert df.equals(query_df)
+    diff_df = df.compare(query_df)
+    assert diff_df.index.size == 0
+    # assert df.equals(query_df)
+    # difference in max_value_time dtype (us vs. ns)
 
 
 def test_timeseries_char_query_df2():
