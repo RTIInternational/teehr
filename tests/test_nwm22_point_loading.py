@@ -19,17 +19,15 @@ def test_point_zarr_reference_file():
         "gcs://national-water-model/nwm.20230318/short_range/nwm.t14z.short_range.channel_rt.f012.conus.nc" # noqa
     ]
 
-    _ = build_zarr_references(
+    json_file = build_zarr_references(
         remote_paths=component_paths,
         json_dir=TEMP_DIR,
         ignore_missing_file=False
     )
 
-    json_file = Path(TEMP_DIR,
-                     "nwm.20230318.nwm.t14z.short_range.channel_rt.f012.conus.nc.json") # noqa
     test_file = Path(TEST_DIR, "point_benchmark.json")
 
-    assert filecmp.cmp(test_file, json_file, shallow=False)
+    assert filecmp.cmp(test_file, json_file[0], shallow=False)
 
 
 def test_point_fetch_and_format():

@@ -21,17 +21,15 @@ def test_grid_zarr_reference_file():
         "gcs://national-water-model/nwm.20201218/forcing_analysis_assim/nwm.t00z.analysis_assim.forcing.tm00.conus.nc" # noqa
     ]
 
-    _ = build_zarr_references(
+    json_file = build_zarr_references(
         remote_paths=component_paths,
         json_dir=TEMP_DIR,
         ignore_missing_file=False
     )
 
-    json_file = Path(TEMP_DIR,
-                     "nwm.20201218.nwm.t00z.analysis_assim.forcing.tm00.conus.nc.json") # noqa
     test_file = Path(TEST_DIR, "grid_benchmark.json")
 
-    assert filecmp.cmp(test_file, json_file, shallow=False)
+    assert filecmp.cmp(test_file, json_file[0], shallow=False)
 
 
 def test_grid_fetch_and_format():
