@@ -25,7 +25,7 @@ def nwm_grids_to_parquet(
     output_parquet_dir: str,
     t_minus_hours: Optional[Iterable[int]] = None,
     ignore_missing_file: Optional[bool] = True,
-    overwrite_output: Optional[bool] = True,
+    overwrite_output: Optional[bool] = False,
 ):
     """
     Fetches NWM gridded data, calculates zonal statistics (mean) of selected

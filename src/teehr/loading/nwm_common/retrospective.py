@@ -6,7 +6,7 @@ import fsspec
 from datetime import datetime, timedelta
 
 from pathlib import Path
-from typing import Union, Iterable
+from typing import Union, Iterable, Optional
 from teehr.loading.nwm22.const_nwm import NWM22_UNIT_LOOKUP
 
 from teehr.models.loading.utils import ChunkByEnum, SupportedNWMVersionsEnum
@@ -95,7 +95,7 @@ def nwm_retro_to_parquet(
     end_date: Union[str, datetime, pd.Timestamp],
     output_parquet_dir: Union[str, Path],
     chunk_by: Union[ChunkByEnum, None] = None,
-    overwrite_output: bool = False,
+    overwrite_output: Optional[bool] = False,
 ):
     """Fetch NWM retrospective at NWM COMIDs and store as Parquet file.
 

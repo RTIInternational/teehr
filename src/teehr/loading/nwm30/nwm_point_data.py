@@ -27,7 +27,7 @@ def nwm_to_parquet(
     process_by_z_hour: Optional[bool] = True,
     stepsize: Optional[int] = 100,
     ignore_missing_file: Optional[bool] = True,
-    overwrite_output: Optional[bool] = True,
+    overwrite_output: Optional[bool] = False,
 ):
     """Fetches NWM point data, formats to tabular, and saves to parquet
 
