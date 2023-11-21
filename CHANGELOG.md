@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added check for duplicate rows in `get_metrics` and `get_joined_timeseries` queries (#69)
 - Added control for overwrite file behavior in loading (#77)
 - Significant refactor of the loading libraries
-- Added ability to select which retrospective version to download (v2.0 or v2.1)
+- Added ability to select which retrospective version to download (v2.0 or v2.1) (#80)
 
 ### Changed
 
