@@ -488,8 +488,6 @@ def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
 
     order_by = [f"chars.{val}" for val in tcq.order_by]
 
-    # TODO: Need to handle primary_value vs. secondary_value?
-
     query = f"""
         WITH fts AS (
             SELECT sf.* FROM
@@ -499,23 +497,23 @@ def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
         mxt AS (
             SELECT
                 {",".join(tcq.group_by)}
-                , {tcq.timeseries_name.value}_value
+                , {tcq.timeseries_name}_value
                 , value_time
                 , ROW_NUMBER() OVER(
                     PARTITION BY {",".join(tcq.group_by)}
-                    ORDER BY {tcq.timeseries_name.value}_value DESC, value_time
+                    ORDER BY {tcq.timeseries_name}_value DESC, value_time
                 ) as n
             FROM fts
         ),
         chars AS (
             SELECT
                 {",".join(tcq.group_by)}
-                ,count(fts.{tcq.timeseries_name.value}_value) as count
-                ,min(fts.{tcq.timeseries_name.value}_value) as min
-                ,max(fts.{tcq.timeseries_name.value}_value) as max
-                ,avg(fts.{tcq.timeseries_name.value}_value) as average
-                ,sum(fts.{tcq.timeseries_name.value}_value) as sum
-                ,var_pop(fts.{tcq.timeseries_name.value}_value) as variance
+                ,count(fts.{tcq.timeseries_name}_value) as count
+                ,min(fts.{tcq.timeseries_name}_value) as min
+                ,max(fts.{tcq.timeseries_name}_value) as max
+                ,avg(fts.{tcq.timeseries_name}_value) as average
+                ,sum(fts.{tcq.timeseries_name}_value) as sum
+                ,var_pop(fts.{tcq.timeseries_name}_value) as variance
             FROM
                 fts
             GROUP BY
