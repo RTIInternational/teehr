@@ -1,0 +1,13 @@
+.github
+.ipynb_checkpoints
+.pytest_cache
+.vscode
+dashboards
+dist
+docs
+examples
+frontend
+playground
+study_template
+teehr-hub
+tests

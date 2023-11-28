@@ -1,6 +1,6 @@
 from collections.abc import Iterable
 from datetime import datetime
-from enum import Enum
+from enum import Enum  # , StrEnum  if 3.11
 from typing import List, Optional, Union
 
 from pydantic import BaseModel as PydanticBaseModel

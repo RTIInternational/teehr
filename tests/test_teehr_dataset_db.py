@@ -347,14 +347,13 @@ def test_timeseries_char_query():
 
 if __name__ == "__main__":
 
-    # test_insert_joined_timeseries()
-    # test_join_attributes()
-    # test_unique_field_values()
-    # test_describe_inputs()
-    # test_calculate_field()
-    # test_unique_field_values()
-    # test_metrics_query()
-    # test_get_joined_timeseries_schema()
-    # test_timeseries_query()
+    test_insert_joined_timeseries()
+    test_join_attributes()
+    test_unique_field_values()
+    test_describe_inputs()
+    test_calculate_field()
+    test_unique_field_values()
+    test_metrics_query()
+    test_get_joined_timeseries_schema()
+    test_timeseries_query()
     test_timeseries_char_query()
-

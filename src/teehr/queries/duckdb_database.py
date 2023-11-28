@@ -488,8 +488,6 @@ def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
 
     order_by = [f"chars.{val}" for val in tcq.order_by]
 
-    # TODO: Need to handle primary_value vs. secondary_value?
-
     query = f"""
         WITH fts AS (
             SELECT sf.* FROM

@@ -21,11 +21,11 @@ def test_metric_query_str():
         group_by=["primary_location_id"],
         order_by=["primary_location_id"],
         include_metrics=["nash_sutcliffe_efficiency"],
-        return_query=False,
+        return_query=True,
         include_geometry=True,
     )
     print(query_str)
-    assert type(query_str) == str
+    assert isinstance(query_str, str)
 
 
 def test_metric_query_df():
@@ -221,13 +221,13 @@ def test_metric_query_value_time_filter():
 
 if __name__ == "__main__":
     test_metric_query_str()
-    # test_metric_query_df()
-    # test_metric_query_gdf()
-    # test_metric_query_gdf_2()
-    # test_metric_query_gdf_no_geom()
-    # test_metric_query_gdf_missing_group_by()
-    # test_metric_query_df_2()
-    # test_metric_query_df_time_metrics()
-    # test_metric_query_df_all()
-    # test_metric_query_value_time_filter()
+    test_metric_query_df()
+    test_metric_query_gdf()
+    test_metric_query_gdf_2()
+    test_metric_query_gdf_no_geom()
+    test_metric_query_gdf_missing_group_by()
+    test_metric_query_df_2()
+    test_metric_query_df_time_metrics()
+    test_metric_query_df_all()
+    test_metric_query_value_time_filter()
     pass

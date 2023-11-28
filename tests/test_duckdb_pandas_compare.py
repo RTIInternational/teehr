@@ -42,12 +42,15 @@ def test_metric_compare_1():
         "crosswalk_filepath": CROSSWALK_FILEPATH,
         "geometry_filepath": GEOMETRY_FILEPATH,
         "group_by": group_by,
-        "order_by": ["primary_location_id"],
+        "order_by": ["primary_location_id", "reference_time"],
         "include_metrics": include_metrics,
         "return_query": False
     }
     pandas_df = tqk.get_metrics(**args)
     duckdb_df = tqu.get_metrics(**args)
+
+    pandas_df["primary_count"] = pandas_df.primary_count.astype(int)
+    pandas_df["secondary_count"] = pandas_df.secondary_count.astype(int)
 
     for m in include_metrics:
         # print(m)
@@ -72,17 +75,12 @@ def test_metric_compare_time_metrics():
         "crosswalk_filepath": CROSSWALK_FILEPATH,
         "geometry_filepath": GEOMETRY_FILEPATH,
         "group_by": group_by,
-        "order_by": ["primary_location_id"],
+        "order_by": ["primary_location_id", "reference_time"],
         "include_metrics": include_metrics,
         "return_query": False
     }
     pandas_df = tqk.get_metrics(**args)
     duckdb_df = tqu.get_metrics(**args)
-
-    # for m in include_metrics:
-    #     duckdb_np = duckdb_df[m].astype("int64").to_numpy()
-    #     pandas_np = pandas_df[m].astype("int64").to_numpy()
-    #     assert np.allclose(duckdb_np, pandas_np)
 
     diff_df = pandas_df[include_metrics].compare(duckdb_df[include_metrics])
     assert diff_df.index.size == 0

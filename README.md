@@ -8,23 +8,26 @@ assess their skill and performance.
 NOTE: THIS PROJECT IS UNDER DEVELOPMENT - EXPECT TO FIND BROKEN AND INCOMPLETE CODE.
 
 ## How to Install TEEHR
-Install with from source
-
+Install poetry
+```bash
+$ pipx install poetry
+```
+Install from source
 ```bash
 # Create and activate python environment, requires python >= 3.10
-$ python3 -m venv .venv
-$ source .venv/bin/activate
-$ python3 -m pip install --upgrade pip
+$ poetry shell
 
-# Build and install from source
-$ python3 -m pip install --upgrade build
-$ python -m build
-$ python -m pip install dist/teehr-0.2.7.tar.gz
+# Install from source
+$ poetry install
 ```
 
 Install from GitHub
 ```bash
+# Using pip
 $ pip install 'teehr @ git+https://github.com/RTIInternational/teehr@[BRANCH_TAG]'
+
+# Using poetry
+$ poetry add git+https://github.com/RTIInternational/teehr.git#[BRANCH TAG]
 ```
 
 Use Docker

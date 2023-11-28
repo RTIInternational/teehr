@@ -135,13 +135,17 @@ def _format_filter_item(filter: Union[JoinedFilter, TimeseriesFilter]) -> str:
 
     if isinstance(filter.value, str):
         return f"""{column} {filter.operator} '{filter.value}'"""
-    elif isinstance(filter.value, int) or isinstance(filter.value, float):
+    elif (
+        isinstance(filter.value, int)
+        or isinstance(filter.value, float)
+    ):
         return f"""{column} {filter.operator} {filter.value}"""
     elif isinstance(filter.value, datetime):
         dt_str = filter.value.strftime(SQL_DATETIME_STR_FORMAT)
         return f"""{column} {filter.operator} '{dt_str}'"""
-    elif isinstance(filter.value, Iterable) and not isinstance(
-        filter.value, str
+    elif (
+        isinstance(filter.value, Iterable)
+        and not isinstance(filter.value, str)
     ):
         value = _format_iterable_value(filter.value)
         return f"""{column} {filter.operator} {value}"""
@@ -180,7 +184,7 @@ def geometry_join_clause_db(
 ) -> str:
     """Generate the join clause for"""
     if q.include_geometry:
-        return f"""JOIN geometry gf
+        return """JOIN geometry gf
             on pf.location_id = gf.id
         """
     return ""
@@ -216,7 +220,7 @@ def metric_geometry_join_clause_db(
 ) -> str:
     """Generate the join clause for"""
     if q.include_geometry:
-        return f"""JOIN geometry gf
+        return """JOIN geometry gf
             on primary_location_id = gf.id
         """
     return ""
