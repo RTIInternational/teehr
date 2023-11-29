@@ -3,11 +3,11 @@ import filecmp
 
 import pandas as pd
 
-from teehr.loading.nwm30.nwm_point_data import fetch_and_format_nwm_points
-from teehr.loading.nwm22.const_nwm import (
+from teehr.loading.nwm.nwm_points import fetch_and_format_nwm_points
+from teehr.loading.nwm.const import (
     NWM22_UNIT_LOOKUP,
 )
-from teehr.loading.nwm_common.utils_nwm import build_zarr_references
+from teehr.loading.nwm.utils import build_zarr_references
 
 TEST_DIR = Path("tests", "data", "nwm30")
 TEMP_DIR = Path("tests", "data", "temp")
@@ -50,6 +50,7 @@ def test_point_fetch_and_format():
         configuration="short_range",
         variable_name="streamflow",
         output_parquet_dir=TEMP_DIR,
+        nwm_version="nwm30",
         process_by_z_hour=True,
         stepsize=100,
         ignore_missing_file=False,
@@ -67,5 +68,5 @@ def test_point_fetch_and_format():
 
 
 if __name__ == "__main__":
-    test_point_zarr_reference_file()
+    # test_point_zarr_reference_file()
     test_point_fetch_and_format()

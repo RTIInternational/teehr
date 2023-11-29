@@ -1,6 +1,6 @@
 import pandas as pd
 from pathlib import Path
-from teehr.loading.nwm_common.utils_nwm import build_remote_nwm_filelist
+from teehr.loading.nwm.utils import build_remote_nwm_filelist
 from teehr.loading.nwm22.const_nwm import NWM22_ANALYSIS_CONFIG
 
 

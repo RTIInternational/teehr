@@ -7,9 +7,26 @@ class ChunkByEnum(str, Enum):
     location_id = "location_id"
 
 
-class SupportedNWMVersionsEnum(str, Enum):
+class SupportedNWMRetroVersionsEnum(str, Enum):
     nwm20 = "nwm20"
     nwm21 = "nwm21"
+
+
+class SupportedNWMOperationalVersionsEnum(str, Enum):
+    nwm22 = "nwm22"
+    nwm30 = "nwm30"
+
+
+class SupportedNWMDataSourcesEnum(str, Enum):
+    GCS = "GCS"
+    NOMADS = "NOMADS"
+    DSTOR = "DSTOR"
+
+
+class SupportedKerchunkMethod(str, Enum):
+    create = "create"
+    auto = "auto"
+    use_available = "use_available"
 
 
 # class NWM20RetroConfig(BaseModel):

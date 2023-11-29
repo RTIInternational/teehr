@@ -7,7 +7,7 @@ from teehr.loading.nwm22.nwm_point_data import fetch_and_format_nwm_points
 from teehr.loading.nwm22.const_nwm import (
     NWM22_UNIT_LOOKUP,
 )
-from teehr.loading.nwm_common.utils_nwm import build_zarr_references
+from teehr.loading.nwm.utils import build_zarr_references
 
 TEST_DIR = Path("tests", "data", "nwm22")
 TEMP_DIR = Path("tests", "data", "temp")
