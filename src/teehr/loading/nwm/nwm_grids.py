@@ -145,6 +145,7 @@ def nwm_grids_to_parquet(
             ignore_missing_file,
         )
 
+        # Create paths to local and/or remote kerchunk jsons
         json_paths = generate_json_paths(
             kerchunk_method,
             gcs_component_paths,
@@ -152,6 +153,7 @@ def nwm_grids_to_parquet(
             ignore_missing_file
         )
 
+        # Fetch the data, saving to parquet files based on TEEHR data model
         fetch_and_format_nwm_grids(
             json_paths,
             configuration,

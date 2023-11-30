@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 from teehr.utilities.generate_weights import generate_weights_file
-from teehr.loading.nwm22.const_nwm import CONUS_NWM_WKT
+from teehr.loading.nwm.const import CONUS_NWM_WKT
 
 
 TEST_DIR = Path("tests", "data", "nwm22")

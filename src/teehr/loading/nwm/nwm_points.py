@@ -161,6 +161,7 @@ def nwm_to_parquet(
             ignore_missing_file,
         )
 
+        # Create paths to local and/or remote kerchunk jsons
         json_paths = generate_json_paths(
             kerchunk_method,
             gcs_component_paths,
@@ -168,6 +169,7 @@ def nwm_to_parquet(
             ignore_missing_file
         )
 
+        # Fetch the data, saving to parquet files based on TEEHR data model
         fetch_and_format_nwm_points(
             json_paths,
             location_ids,
@@ -186,7 +188,7 @@ def nwm_to_parquet(
 if __name__ == "__main__":
     # analysis_assim_extend, short_range, analysis_assim_alaska
     configuration = (
-        "short_range"
+        "analysis_assim_extend"
     )
     output_type = "channel_rt"
     variable_name = "streamflow"
@@ -229,7 +231,7 @@ if __name__ == "__main__":
         nwm_version="nwm30",
         data_source="GCS",
         kerchunk_method="use_available",
-        t_minus_hours=[0, 1, 2],
+        t_minus_hours=[0],
         process_by_z_hour=process_by_z_hour,
         stepsize=stepsize,
         ignore_missing_file=ignore_missing_file,
