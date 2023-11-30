@@ -1,5 +1,6 @@
 from typing import Union, Optional, List
 from datetime import datetime
+from pathlib import Path
 
 from pydantic import validate_arguments  # validate_call in > 2
 
@@ -31,8 +32,8 @@ def nwm_to_parquet(
     start_date: Union[str, datetime],
     ingest_days: int,
     location_ids: List[int],
-    json_dir: str,
-    output_parquet_dir: str,
+    json_dir: Union[str, Path],
+    output_parquet_dir: Union[str, Path],
     nwm_version: SupportedNWMOperationalVersionsEnum,
     data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
     kerchunk_method: Optional[SupportedKerchunkMethod] = "create",

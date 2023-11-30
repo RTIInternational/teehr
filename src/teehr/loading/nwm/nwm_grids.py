@@ -1,5 +1,6 @@
 from typing import Union, Iterable, Optional
 from datetime import datetime
+from pathlib import Path
 
 from teehr.loading.nwm.grid_utils import fetch_and_format_nwm_grids
 from teehr.loading.nwm.utils import (
@@ -26,8 +27,8 @@ def nwm_grids_to_parquet(
     start_date: Union[str, datetime],
     ingest_days: int,
     zonal_weights_filepath: str,
-    json_dir: str,
-    output_parquet_dir: str,
+    json_dir: Union[str, Path],
+    output_parquet_dir: Union[str, Path],
     nwm_version: SupportedNWMOperationalVersionsEnum,
     data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
     kerchunk_method: Optional[SupportedKerchunkMethod] = "create",
