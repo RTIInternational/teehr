@@ -496,7 +496,7 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         order_by: List[str],
         include_metrics: Union[List[MetricEnum], "all"],
         filters: Union[List[dict], None] = None,
-        include_geometry: bool = True,
+        include_geometry: bool = False,
         return_query: bool = False,
     ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
         """Calculate performance metrics using database queries"""

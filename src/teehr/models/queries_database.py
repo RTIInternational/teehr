@@ -221,7 +221,7 @@ class MetricQuery(BaseModel):
     group_by: List[str]
     order_by: List[str]
     include_metrics: Union[List[MetricEnum], MetricEnum, str]
-    filters: Optional[List[Filter]] = []
+    filters: Optional[List[Filter]] = None
     return_query: Optional[bool] = False
 
     @field_validator("filters")
@@ -232,32 +232,21 @@ class MetricQuery(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def include_geometry_must_group_by_primary_location_id(
+    def validate_include_geometry_and_specified_fields(
         cls, data, info: ValidationInfo
     ):
-        # If geometry is included, group_by must contain 'primary_location_id'
-        if JoinedFieldNameEnum.primary_location_id not in data["group_by"]:
-            raise ValueError(
-                "`group_by` must contain `primary_location_id` "
-                "to include geometry in returned data"
-            )
-
-        # If group_by contains 'geometry' but 'include_geometry' is False
-        if (
-            JoinedFieldNameEnum.geometry in data["group_by"]
-            and data["include_geometry"] is False
-        ):
-            raise ValueError(
-                "group_by contains `geometry` field but `include_geometry` "
-                "is False, must be True"
-            )
+        if data["include_geometry"]:
+            # If geometry is included, group_by must contain 'primary_location_id'
+            if JoinedFieldNameEnum.primary_location_id not in data["group_by"]:
+                raise ValueError(
+                    "`group_by` must contain `primary_location_id` "
+                    "to include geometry in returned data"
+                )
 
         # order_by, group_by, and filter fields must currently exist in the database
         context = info.context
         if context:
             existing_fields = context.get("existing_fields", set())
-            if data["include_geometry"]:
-                existing_fields.append("geometry")  # HACK?
             for val in data["group_by"]:
                 if val not in existing_fields:
                     raise ValueError(
@@ -268,10 +257,11 @@ class MetricQuery(BaseModel):
                     raise ValueError(
                         f"The order_by field '{val}' does not exist in the database"
                     )
-            for val in data["filters"]:
-                if val["column"] not in existing_fields:
-                    raise ValueError(
-                        f"The filter field '{val}' does not exist in the database"
-                    )
+            if data["filters"]:
+                for val in data["filters"]:
+                    if val["column"] not in existing_fields:
+                        raise ValueError(
+                            f"The filter field '{val}' does not exist in the database"
+                        )
 
         return data
