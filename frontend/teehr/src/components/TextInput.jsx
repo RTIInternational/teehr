@@ -3,7 +3,7 @@ import FormControl from "@mui/material/FormControl";
 import TextField from "@mui/material/TextField";
 
 export default function TextInput(props) {
-  const { value, setValue, label, error, helperText } = props;
+  const { value, onChange, label, error, helperText } = props;
   return (
     <div>
       <FormControl sx={{ m: 1, display: "flex" }}>
@@ -13,7 +13,7 @@ export default function TextInput(props) {
           id="outlined-controlled"
           label={label}
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => onChange(e.target.value)}
         />
       </FormControl>
     </div>
@@ -22,7 +22,7 @@ export default function TextInput(props) {
 
 TextInput.propTypes = {
   value: PropTypes.string.isRequired,
-  setValue: PropTypes.func.isRequired,
+  onChange: PropTypes.func.isRequired,
   label: PropTypes.string,
   error: PropTypes.bool,
   helperText: PropTypes.string,

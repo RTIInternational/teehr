@@ -45,6 +45,19 @@ export default function Filter(props) {
     setError(false);
   };
 
+  const castType = (value) => {
+    switch (type) {
+      case "FLOAT":
+        return parseFloat(value);
+      case "INTERVAL":
+        return parseInt(value);
+      case "BOOLEAN":
+        return Boolean(value);
+      default:
+        return value;
+    }
+  };
+
   useEffect(() => {
     const validateInput = (value) => {
       if (!value) return;
@@ -106,7 +119,7 @@ export default function Filter(props) {
           <TextInput
             label={"Input"}
             value={value || ""}
-            setValue={setValue}
+            onChange={(value) => setValue(castType(value))}
             error={error}
             helperText={errorMessage}
           />
