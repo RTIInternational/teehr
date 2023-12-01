@@ -61,7 +61,7 @@ export default function OperatorSelect(props) {
         )}
         // MenuProps={MenuProps}
       >
-        {Object.entries(operators).map(([key, label]) => (
+        {Object.values(operators).map((label) => (
           <MenuItem
             key={label}
             value={label}

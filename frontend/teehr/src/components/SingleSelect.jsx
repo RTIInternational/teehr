@@ -6,7 +6,7 @@ import Select from "@mui/material/Select";
 import { OutlinedInput, Box } from "@mui/material";
 
 export default function SingleSelect(props) {
-  const { options, selectedOption, setSelectedOption } = props;
+  const { options, selectedOption, setSelectedOption, label } = props;
 
   const handleChange = (event) => {
     setSelectedOption(event.target.value);
@@ -15,7 +15,7 @@ export default function SingleSelect(props) {
   return (
     <div>
       <FormControl sx={{ m: 1, display: "flex" }}>
-        <InputLabel id="demo-multiple-chip-label">Group By Field</InputLabel>
+        <InputLabel id="demo-multiple-chip-label">{label}</InputLabel>
         <Select
           labelId="demo-multiple-chip-label"
           id="demo-multiple-chip"
@@ -53,4 +53,5 @@ SingleSelect.propTypes = {
   options: PropTypes.array.isRequired,
   selectedOption: PropTypes.string,
   setSelectedOption: PropTypes.func.isRequired,
+  label: PropTypes.string,
 };

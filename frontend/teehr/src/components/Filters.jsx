@@ -1,7 +1,6 @@
 import { useContext } from "react";
 import { Box, Button, Typography } from "@mui/material";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
-import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import DashboardContext from "../Context";
 import Filter from "./SingleFilter";
 
@@ -39,24 +38,8 @@ export default function Filters() {
               updateFilter(index, "operator", value)
             }
             setValue={(value) => updateFilter(index, "value", value)}
+            deleteFilter={() => deleteFilter(index)}
           />
-          <Box
-            sx={{
-              display: "flex",
-              flex: 1,
-              alignItems: "center",
-              justifyContent: "center",
-              flexDirection: { xs: "column", md: "row" },
-            }}
-          >
-            <Button
-              variant="standard"
-              onClick={() => deleteFilter(index)}
-              color="grey"
-            >
-              <DeleteOutlineOutlinedIcon />
-            </Button>
-          </Box>
         </div>
       ))}
       <Button variant="standard" onClick={addNewFilter} color="grey">

@@ -8,8 +8,12 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterLuxon } from "@mui/x-date-pickers/AdapterLuxon";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { DateTime } from "luxon";
+import { Grid, Button } from "@mui/material";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import axios from "axios";
 export default function Filter(props) {
-  const { groupByFields } = useContext(DashboardContext);
+  const { groupByFields, selectedDataset, setLoading, setErrors } =
+    useContext(DashboardContext);
   const {
     selectedGroupByField,
     selectedOperator,
@@ -17,11 +21,13 @@ export default function Filter(props) {
     setSelectedGroupByField,
     setSelectedOperator,
     setValue,
+    deleteFilter,
   } = props;
 
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [type, setType] = useState();
+  const [valueOptions, setValueOptions] = useState([]);
 
   const getFieldType = (fieldName) => {
     const field = groupByFields.find((field) => field.name === fieldName);
@@ -80,25 +86,47 @@ export default function Filter(props) {
       const type = getFieldType(selectedGroupByField);
       setType(type);
       setValue("");
+      setLoading(true);
+      if (type !== "TIMESTAMP") {
+        axios
+          .post(
+            `http://localhost:8000/datasets/${selectedDataset}/get_unique_field_values`,
+            {
+              field_name: selectedGroupByField,
+            }
+          )
+          .then((res) => {
+            console.log(res.data);
+            setLoading(false);
+            console.log({ options: res.data.map((o) => Object.values(o)[0]) });
+            setValueOptions(res.data.map((o) => Object.values(o)[0]));
+          })
+          .catch(function (err) {
+            console.log(err);
+            setErrors(err);
+            setLoading(false);
+          });
+      }
     }
   }, [selectedGroupByField]);
 
   return (
-    <div style={{ marginBottom: "8px", display: "flex" }}>
-      <div style={{ flex: 4, minWidth: "200px" }}>
+    <Grid container spacing={0}>
+      <Grid item xs={12} md={4.5}>
         <SingleSelect
           options={groupByFields.map((o) => o.name)}
           selectedOption={selectedGroupByField || ""}
           setSelectedOption={setSelectedGroupByField}
+          label={"Group By Field"}
         />
-      </div>
-      <div style={{ flex: 2 }}>
+      </Grid>
+      <Grid item xs={12} md={2}>
         <OperatorSelect
           selectedOperator={selectedOperator || ""}
           setSelectedOperator={setSelectedOperator}
         />
-      </div>
-      <div style={{ flex: 4 }}>
+      </Grid>
+      <Grid item xs={12} md={4.5}>
         {type === "TIMESTAMP" && (
           <LocalizationProvider dateAdapter={AdapterLuxon}>
             <TimePicker
@@ -116,16 +144,29 @@ export default function Filter(props) {
           </LocalizationProvider>
         )}
         {type !== "TIMESTAMP" && (
-          <TextInput
+          <SingleSelect
+            options={valueOptions}
+            selectedOption={value || ""}
+            setSelectedOption={(value) => setValue(castType(value))}
             label={"Input"}
-            value={value || ""}
-            onChange={(value) => setValue(castType(value))}
-            error={error}
-            helperText={errorMessage}
           />
         )}
-      </div>
-    </div>
+      </Grid>
+      <Grid
+        item
+        xs={12}
+        md={1}
+        sx={{
+          display: "flex",
+          alignContent: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Button variant="standard" onClick={deleteFilter} color="grey">
+          <DeleteOutlineOutlinedIcon />
+        </Button>
+      </Grid>
+    </Grid>
   );
 }
 
@@ -136,4 +177,5 @@ Filter.propTypes = {
   setSelectedGroupByField: PropTypes.func,
   setSelectedOperator: PropTypes.func,
   setValue: PropTypes.func,
+  deleteFilter: PropTypes.func,
 };
