@@ -25,7 +25,11 @@ def file_chunk_loop(
     nwm_version: str
 ):
     """Fetch NWM values and convert to tabular format for a single json"""
-    ds = get_dataset(row.filepath, ignore_missing_file)
+    ds = get_dataset(
+        row.filepath,
+        ignore_missing_file,
+        target_options={'anon': True}
+    )
     if not ds:
         return None
     ds = ds.sel(feature_id=location_ids)

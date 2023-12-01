@@ -45,7 +45,11 @@ def process_single_file(
 ):
     """Compute zonal mean for a single json reference file and format
     to a dataframe using the TEEHR data model"""
-    ds = get_dataset(row.filepath, ignore_missing_file)
+    ds = get_dataset(
+        row.filepath,
+        ignore_missing_file,
+        target_options={'anon': True}
+    )
     if not ds:
         return None
     yrmoday = row.day
