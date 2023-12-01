@@ -370,9 +370,6 @@ def create_get_timeseries_query(
 
     Parameters
     ----------
-    timeseries_filepath : str
-        File path to the timeseries data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/*.parquet"
     order_by : List[str]
         List of column/field names to order results by.
         Must provide at least one.

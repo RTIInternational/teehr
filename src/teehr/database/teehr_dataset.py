@@ -1,5 +1,5 @@
 """Defines the TEEHR dataset class and pre-processing methods"""
-from typing import Union, List, Callable, Tuple, Dict, Any
+from typing import Union, List, Callable, Dict, Any
 from pathlib import Path
 
 import re
@@ -23,8 +23,8 @@ from teehr.models.queries import MetricEnum
 
 
 class TEEHRDatasetAPI:
-    """Create instance of a TeehrDataset class and
-    initialize study area database"""
+    """Create an instance of a TEEHRDataset class and
+    initialize a study area database"""
 
     def __init__(
         self,
@@ -105,8 +105,15 @@ class TEEHRDatasetAPI:
         self.query(create_geometry_table)
 
     def get_joined_timeseries_schema(self) -> pd.DataFrame:
-        """Get field names and field data types from joined_timeseries,"""
+        """Get field names and field data types from the joined_timeseries,
+        table.
 
+        Returns
+        -------
+        pd.DataFrame
+            Includes column_name, column_type, null, key, default,
+            and extra columns
+        """
         desc = """DESCRIBE SELECT * FROM joined_timeseries;"""
         joined_df = self.query(desc, format="df")
 
@@ -114,6 +121,9 @@ class TEEHRDatasetAPI:
 
     @staticmethod
     def _sanitize_field_name(field_name: str) -> str:
+        """Replaces unallowed characters from user-defined field names
+        with an underscore.
+        """
         # I think we will need this
         allowed_chars = r"[^a-zA-Z0-9_]"
         search = re.compile(allowed_chars).search
@@ -128,9 +138,30 @@ class TEEHRDatasetAPI:
     def describe_inputs(
         primary_filepath: Union[str, Path],
         secondary_filepath: Union[str, Path],
-    ) -> Tuple[Dict]:
-        """Get descriptive stats on primary and secondary
-        timeseries parquet files"""
+    ) -> pd.DataFrame:
+        """Get descriptive statistics on the primary and secondary
+        timeseries by reading the parquet files.
+
+        Parameters
+        ----------
+        primary_filepath : Union[str, Path]
+            Path to the primary time series parquet file
+        secondary_filepath : Union[str, Path]
+            Path to the primary time series parquet file
+
+        Returns
+        -------
+        pd.DataFrame
+            A dataframe of descriptive statistics for each time series.
+            Currently includes:
+            - Number of unique location IDs
+            - Total number of rows
+            - Start date
+            - End date
+            - Number of duplicate rows
+            - Number of location IDs with duplicate value times
+            - Number of location IDs with missing time steps
+        """
         primary_dict = tqu_db.describe_timeseries(
             timeseries_filepath=primary_filepath
         )
@@ -161,7 +192,9 @@ class TEEHRDatasetAPI:
             )
 
     def _validate_query_model(self, query_model: Any) -> Any:
-        """Validate the query based on existing table fields."""
+        """Validate pydantic query models based on the existing fields
+        in the joined_timeseries table.
+        """
         schema_df = self.get_joined_timeseries_schema()
         validated_model = query_model.model_validate(
             query_model.model_dump(),
@@ -173,7 +206,106 @@ class TEEHRDatasetAPI:
         self,
         mq: MetricQuery,
     ) -> Union[pd.DataFrame, gpd.GeoDataFrame, str]:
-        """Calculate performance metrics using database queries"""
+        """Calculate performance metrics using database queries.
+
+        Parameters
+        ----------
+        mq : MetricQuery
+            Pydantic model containing query parameters
+
+        mq Fields
+        ----------
+        group_by : List[str]
+            List of column/field names to group timeseries data by.
+            Must provide at least one.
+        order_by : List[str]
+            List of column/field names to order results by.
+            Must provide at least one.
+        include_metrics = List[str]
+            List of metrics (see below) for allowable list, or "all" to return
+            all. Placeholder, currently ignored -> returns "all"
+        filters : Union[List[dict], None] = None
+            List of dictionaries describing the "where" clause to limit data
+            that is included in metrics.
+        include_geometry : bool
+            True joins the geometry to the query results.
+            Only works if `primary_location_id`
+            is included as a group_by field.
+        return_query: bool = False
+            True returns the query string instead of the data
+
+        Returns
+        -------
+        Union[pd.DataFrame, gpd.GeoDataFrame, str]
+            A DataFrame or optionally a GeoDataFrame containing query results,
+            or the query itself as a string
+
+        Filter, Order By and Group By Fields
+        -----------------------------------
+        * reference_time
+        * primary_location_id
+        * secondary_location_id
+        * primary_value
+        * secondary_value
+        * value_time
+        * configuration
+        * measurement_unit
+        * variable_name
+        * lead_time
+        * [any user-added fields]
+
+        Available Metrics
+        -----------------------
+        Basic
+        * primary_count
+        * secondary_count
+        * primary_minimum
+        * secondary_minimum
+        * primary_maximum
+        * secondary_maximum
+        * primary_average
+        * secondary_average
+        * primary_sum
+        * secondary_sum
+        * primary_variance
+        * secondary_variance
+        * max_value_delta
+            max(secondary_value) - max(primary_value)
+        * bias
+            sum(primary_value - secondary_value)/count(*)
+
+        HydroTools Metrics
+        * nash_sutcliffe_efficiency
+        * kling_gupta_efficiency
+        * coefficient_of_extrapolation
+        * coefficient_of_persistence
+        * mean_error
+        * mean_squared_error
+        * root_mean_squared_error
+
+        Time-based Metrics
+        * primary_max_value_time
+        * secondary_max_value_time
+        * max_value_timedelta
+
+        Examples:
+            order_by = ["lead_time", "primary_location_id"]
+            group_by = ["lead_time", "primary_location_id"]
+            filters = [
+                {
+                    "column": "primary_location_id",
+                    "operator": "=",
+                    "value": "gage-A",
+                },
+                {
+                    "column": "reference_time",
+                    "operator": "=",
+                    "value": "2022-01-01 00:00:00",
+                },
+                {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+            ]
+
+        """
 
         mq = self._validate_query_model(mq)
 
@@ -193,6 +325,45 @@ class TEEHRDatasetAPI:
         self,
         tq: TimeseriesQuery
     ) -> Union[pd.DataFrame, str]:
+        """Retrieve timeseries using database query.
+
+        Parameters
+        ----------
+        tq : TimeseriesQuery
+            Pydantic model containing query parameters
+
+        tq Fields
+        ----------
+        order_by : List[str]
+            List of column/field names to order results by.
+            Must provide at least one.
+        filters : Union[List[dict], None] = None
+            List of dictionaries describing the "where" clause to limit data
+            that is included in metrics.
+        return_query: bool = False
+            True returns the query string instead of the data
+
+
+        Returns
+        -------
+        Union[pd.DataFrame, str]
+            A DataFrame of query results or the query itself as a string
+
+        Filter and Order By Fields
+        -----------------------------------
+        * reference_time
+        * primary_location_id
+        * secondary_location_id
+        * primary_value
+        * secondary_value
+        * value_time
+        * configuration
+        * measurement_unit
+        * variable_name
+        * lead_time
+        * [any user-added fields]
+
+        """
 
         tq = self._validate_query_model(tq)
 
@@ -207,6 +378,75 @@ class TEEHRDatasetAPI:
     def get_timeseries_characteristics(
         self, tcq: TimeseriesCharQuery
     ) -> Union[str, pd.DataFrame]:
+        """Retrieve timeseries characteristics using database query.
+
+        Parameters
+        ----------
+        tq : TimeseriesQuery
+            Pydantic model containing query parameters
+
+        tcq Fields
+        ----------
+        order_by : List[str]
+            List of column/field names to order results by.
+            Must provide at least one.
+        filters : Union[List[dict], None] = None
+            List of dictionaries describing the "where" clause to limit data
+            that is included in metrics.
+        group_by : List[str]
+            List of column/field names to group timeseries data by.
+            Must provide at least one.
+        timeseries_name: TimeseriesNameEnum
+            Name of the time series to query (primary or secondary)
+        return_query: bool = False
+            True returns the query string instead of the data
+
+        Returns
+        -------
+        Union[str, pd.DataFrame]
+            A DataFrame of time series characteristics including:
+            - count
+            - min
+            - max
+            - average
+            - sum
+            - variance
+            or, the query itself as a string
+
+        Filter, Order By and Group By Fields
+        -----------------------------------
+        * reference_time
+        * primary_location_id
+        * secondary_location_id
+        * primary_value
+        * secondary_value
+        * value_time
+        * configuration
+        * measurement_unit
+        * variable_name
+        * lead_time
+        * [any user-added fields]
+
+        Examples:
+            order_by = ["lead_time", "primary_location_id"]
+            filters = [
+                {
+                    "column": "primary_location_id",
+                    "operator": "=",
+                    "value": "'123456'"
+                },
+                {
+                    "column": "reference_time",
+                    "operator": "=",
+                    "value": "'2022-01-01 00:00'"
+                },
+                {
+                    "column": "lead_time",
+                    "operator": "<=",
+                    "value": "'10 days'"
+                }
+            ]
+        """
 
         tcq = self._validate_query_model(tcq)
 
@@ -220,8 +460,22 @@ class TEEHRDatasetAPI:
 
         pass
 
-    def get_unique_field_values(self, fn: JoinedTimeseriesFieldName):
-        """Get unique values for a given field"""
+    def get_unique_field_values(
+        self,
+        fn: JoinedTimeseriesFieldName
+    ) -> pd.DataFrame:
+        """Get unique values for a given field.
+
+        Parameters
+        ----------
+        fn : JoinedTimeseriesFieldName
+            Pydantic model containing the joined_timeseries table field name
+
+        Returns
+        -------
+        pd.DataFrame
+            A dataframe containing unique values for the given field
+        """
         fn = self._validate_query_model(fn)
         query = tqu_db.create_unique_field_values_query(fn)
         df = self.query(query, format="df")
@@ -233,7 +487,7 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
     functionality."""
 
     def _drop_joined_timeseries_field(self, field_name: str):
-        """Drops a field by name from joined_timeseries table"""
+        """Drops the specified field by name from joined_timeseries table"""
         query = f"""
             ALTER TABLE joined_timeseries
             DROP COLUMN {field_name}
@@ -241,10 +495,12 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         self.query(query)
 
     def _validate_joined_timeseries_base_fields(self, drop_added_fields: bool):
-        """(WIP) Make sure no extra fields have been
-        added or base fields dropped."""
+        """Ensures that no user-defined fields have been added or base fields
+        have been dropped. This is necessary in order to add multiple
+        configurations into the joined_timeseries table.
+        """
         schema_df = self.get_joined_timeseries_schema()
-        if schema_df.index.size < 11:
+        if schema_df.index.size < len(JoinedFieldNameEnum) - 1:
             raise ValueError(
                 "There are missing fields in the joined_timeseries schema"
             )
@@ -260,6 +516,14 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
                     )
 
     def insert_geometry(self, geometry_filepath: Union[str, Path]):
+        """Inserts geometry from a parquet file into a geometry
+        database table.
+
+        Parameters
+        ----------
+        geometry_filepath : Union[str, Path]
+            Path to the geometry file
+        """
         # Load the geometry data into a separate table
         if geometry_filepath:
             query = f"""
@@ -292,10 +556,29 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         ],
         drop_added_fields=False,
     ):
-        """Join primary and secondary timeseries and insert
-        into the database.
-        """
+        """Joins the primary and secondary timeseries read from parquet files
+        and inserts into the database as the joined_timeseries table.
 
+        Parameters
+        ----------
+        primary_filepath : Union[str, Path]
+            File path to the "observed" data.  String must include path to
+            file(s) and can include wildcards.  For example,
+            "/path/to/parquet/*.parquet"
+        secondary_filepath : Union[str, Path]
+            File path to the "forecast" data.  String must include path to
+            file(s) and can include wildcards.  For example,
+            "/path/to/parquet/*.parquet"
+        crosswalk_filepath : Union[str, Path]
+            File path to single crosswalk file.
+        order_by : List[str], optional
+            List of column/field names to order results by,
+            by default ["reference_time", "primary_location_id"]
+        drop_added_fields : bool, optional
+            A flag to determine whether to drop any user-defined fields that
+            have been added to the table (True), or raise an error if added
+            fields exist (False). By default False
+        """
         self._validate_joined_timeseries_base_fields(drop_added_fields)
 
         jtq = JoinedTimeseriesQuery.model_validate(
@@ -312,7 +595,8 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
 
     def _get_unique_attributes(self, attributes_filepath: str) -> List:
         """Gets a list of unique attributes and attribute units from the
-        provided attribute table(s)"""
+        provided attribute table(s)
+        """
 
         query = f"""
             SELECT
@@ -320,7 +604,6 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
             FROM
                 read_parquet('{attributes_filepath}')
         ;"""
-        # attr_list = duckdb.sql(query).df().to_dict(orient="records")
         attr_list = self.query(query, format="df").to_dict(orient="records")
         return attr_list
 
@@ -384,7 +667,15 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
 
     def join_attributes(self, attributes_filepath: Union[str, Path]):
         """Joins attributes from the provided attribute table(s) to new
-        fields in the joined_timeseries table"""
+        fields in the joined_timeseries table
+
+        Parameters
+        ----------
+        attributes_filepath : Union[str, Path]
+            File path to the "attributes" data.  String must include path to
+            file(s) and can include wildcards.  For example,
+            "/path/to/parquet/*.parquet"
+        """
         attr_list = self._get_unique_attributes(str(attributes_filepath))
 
         for attr in attr_list:
@@ -412,7 +703,7 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         replace: bool = True,
     ):
         """Calculate a new field in joined_timeseries based on existing
-        fields and a user-defined function
+        fields and a user-defined function.
 
         Parameters
         ----------
@@ -499,7 +790,101 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         include_geometry: bool = False,
         return_query: bool = False,
     ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
-        """Calculate performance metrics using database queries"""
+        """Calculate performance metrics using database queries.
+
+        Parameters
+        ----------
+        group_by : List[str]
+            List of column/field names to group timeseries data by.
+            Must provide at least one.
+        order_by : List[str]
+            List of column/field names to order results by.
+            Must provide at least one.
+        include_metrics = List[str]
+            List of metrics (see below) for allowable list, or "all" to return
+            all. Placeholder, currently ignored -> returns "all"
+        filters : Union[List[dict], None] = None
+            List of dictionaries describing the "where" clause to limit data
+            that is included in metrics.
+        include_geometry : bool, optional
+            True joins the geometry to the query results.
+            Only works if `primary_location_id`
+            is included as a group_by field, by default False
+        return_query : bool, optional
+            True returns the query string instead of the data, by default False
+
+        Returns
+        -------
+        Union[pd.DataFrame, gpd.GeoDataFrame, str]
+            A DataFrame or optionally a GeoDataFrame containing query results,
+            or the query itself as a string
+
+        Filter, Order By and Group By Fields
+        -----------------------------------
+        * reference_time
+        * primary_location_id
+        * secondary_location_id
+        * primary_value
+        * secondary_value
+        * value_time
+        * configuration
+        * measurement_unit
+        * variable_name
+        * lead_time
+        * [any user-added fields]
+
+        Available Metrics
+        -----------------------
+        Basic
+        * primary_count
+        * secondary_count
+        * primary_minimum
+        * secondary_minimum
+        * primary_maximum
+        * secondary_maximum
+        * primary_average
+        * secondary_average
+        * primary_sum
+        * secondary_sum
+        * primary_variance
+        * secondary_variance
+        * max_value_delta
+            max(secondary_value) - max(primary_value)
+        * bias
+            sum(primary_value - secondary_value)/count(*)
+
+        HydroTools Metrics
+        * nash_sutcliffe_efficiency
+        * kling_gupta_efficiency
+        * coefficient_of_extrapolation
+        * coefficient_of_persistence
+        * mean_error
+        * mean_squared_error
+        * root_mean_squared_error
+
+        Time-based Metrics
+        * primary_max_value_time
+        * secondary_max_value_time
+        * max_value_timedelta
+
+        Examples:
+            order_by = ["lead_time", "primary_location_id"]
+            group_by = ["lead_time", "primary_location_id"]
+            filters = [
+                {
+                    "column": "primary_location_id",
+                    "operator": "=",
+                    "value": "gage-A",
+                },
+                {
+                    "column": "reference_time",
+                    "operator": "=",
+                    "value": "2022-01-01 00:00:00",
+                },
+                {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+            ]
+
+        """
 
         data = {
             "group_by": group_by,
@@ -529,7 +914,39 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         filters: Union[List[dict], None] = None,
         return_query: bool = False,
     ) -> Union[pd.DataFrame, str]:
+        """Retrieve timeseries using database query.
 
+        Parameters
+        ----------
+        order_by : List[str]
+            List of column/field names to order results by.
+            Must provide at least one.
+        filters : Union[List[dict], None], optional
+            List of dictionaries describing the "where" clause to limit data
+            that is included in metrics, by default None
+        return_query : bool, optional
+            True returns the query string instead of the data, by default False
+
+        Returns
+        -------
+        Union[pd.DataFrame, str]
+            A DataFrame of query results or the query itself as a string
+
+        Filter and Order By Fields
+        -----------------------------------
+        * reference_time
+        * primary_location_id
+        * secondary_location_id
+        * primary_value
+        * secondary_value
+        * value_time
+        * configuration
+        * measurement_unit
+        * variable_name
+        * lead_time
+        * [any user-added fields]
+
+        """
         data = {
             "order_by": order_by,
             "filters": filters,
@@ -553,7 +970,71 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         filters: Union[List[dict], None] = None,
         return_query: bool = False,
     ) -> Union[str, pd.DataFrame]:
+        """Retrieve timeseries characteristics using database query.
 
+        Parameters
+        ----------
+        group_by : List[str]
+            List of column/field names to group timeseries data by.
+            Must provide at least one.
+        order_by : List[str]
+            List of column/field names to order results by.
+            Must provide at least one.
+        timeseries_name : str
+            Name of the time series to query (primary or secondary)
+        filters : Union[List[dict], None], optional
+            List of dictionaries describing the "where" clause to limit data
+            that is included in metrics., by default None
+        return_query : bool, optional
+            True returns the query string instead of the data, by default False
+
+        Returns
+        -------
+        Union[str, pd.DataFrame]
+            A DataFrame of time series characteristics including:
+            - count
+            - min
+            - max
+            - average
+            - sum
+            - variance
+            or, the query itself as a string
+
+        Filter, Order By and Group By Fields
+        -----------------------------------
+        * reference_time
+        * primary_location_id
+        * secondary_location_id
+        * primary_value
+        * secondary_value
+        * value_time
+        * configuration
+        * measurement_unit
+        * variable_name
+        * lead_time
+        * [any user-added fields]
+
+        Examples:
+            order_by = ["lead_time", "primary_location_id"]
+            filters = [
+                {
+                    "column": "primary_location_id",
+                    "operator": "=",
+                    "value": "'123456'"
+                },
+                {
+                    "column": "reference_time",
+                    "operator": "=",
+                    "value": "'2022-01-01 00:00'"
+                },
+                {
+                    "column": "lead_time",
+                    "operator": "<=",
+                    "value": "'10 days'"
+                }
+            ]
+
+        """
         data = {
             "order_by": order_by,
             "group_by": group_by,
@@ -571,8 +1052,21 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
             df = self.query(query, format="df")
         return df
 
-    def get_unique_field_values(self, field_name: str):
-        """Get unique values for a given field"""
+    def get_unique_field_values(self, field_name: str) -> pd.DataFrame:
+        """Get unique values for a given field.
+
+        Parameters
+        ----------
+        field_name : str
+            Name of the joined_timeseries field
+
+        Returns
+        -------
+        pd.DataFrame
+            A dataframe containing unique values for the given field
+
+        """
+
         data = {"field_name": field_name}
         fn = self._validate_query_model(JoinedTimeseriesFieldName, data)
         query = tqu_db.create_unique_field_values_query(fn)
