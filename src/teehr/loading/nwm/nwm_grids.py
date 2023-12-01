@@ -63,16 +63,17 @@ def nwm_grids_to_parquet(
         Directory path for saving json reference files
     output_parquet_dir : str
         Path to the directory for the final parquet files
-    nwm_version: str
+    nwm_version: SupportedNWMOperationalVersionsEnum
         The NWM operational version
-        ("nwm22", "nwm30")
-    data_source: str
+        "nwm22", or "nwm30"
+    data_source: Optional[SupportedNWMDataSourcesEnum]
         Specifies the remote location from which to fetch the data
-        ("GCS", "NOMADS", "DSTOR")
-    kerchunk_method: str
+        "GCS" (default), "NOMADS", or "DSTOR"
+        Currently only "GCS" is implemented
+    kerchunk_method: Optional[SupportedKerchunkMethod]
         When data_source = "GCS", specifies the preference in creating Kerchunk
         reference json files.
-        "create" - always create new json files from netcdf files in GCS and
+        "create" - (default) always create new json files from netcdf files in GCS and
                    save locally
         "use_available" - read the CIROH pre-generated jsons from s3, ignoring
                           any that are unavailable
