@@ -1,9 +1,7 @@
 import { useState } from "react";
 import "../App.css";
 import axios from "axios";
-// import Box from '@mui/material/Box';
-// import Grid from '@mui/material/Grid';
-import { Button, Grid, Box } from "@mui/material";
+import { Button, Grid, Box, CircularProgress } from "@mui/material";
 
 import StationMap from "./StationMap";
 import MetricSelect from "./MetricSelect.jsx";
@@ -17,7 +15,7 @@ import DashboardContext from "../Context.js";
 
 function Dashboard() {
   const [errors, setErrors] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [data, setData] = useState({});
 
   const [datasets, setDatasets] = useState([]);
@@ -147,6 +145,22 @@ function Dashboard() {
           </Grid>
         </Grid>
       </Box>
+      {loading && (
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          position="fixed"
+          top={0}
+          left={0}
+          width="100%"
+          height="100%"
+          bgcolor="rgba(255, 255, 255, 0.7)"
+          zIndex="modal"
+        >
+          <CircularProgress />
+        </Box>
+      )}
     </DashboardContext.Provider>
   );
 }

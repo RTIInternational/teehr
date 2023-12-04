@@ -86,8 +86,8 @@ export default function Filter(props) {
       const type = getFieldType(selectedGroupByField);
       setType(type);
       setValue("");
-      setLoading(true);
       if (type !== "TIMESTAMP") {
+        setLoading(true);
         axios
           .post(
             `http://localhost:8000/datasets/${selectedDataset}/get_unique_field_values`,
