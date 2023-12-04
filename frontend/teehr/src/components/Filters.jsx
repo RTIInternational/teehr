@@ -30,7 +30,7 @@ export default function Filters() {
           <Filter
             selectedGroupByField={filter.column || ""}
             selectedOperator={filter.operator || ""}
-            value={filter.value || ""}
+            value={filter.value.toString() || ""}
             setSelectedGroupByField={(value) =>
               updateFilter(index, "column", value)
             }
