@@ -9,6 +9,7 @@ import {
   Checkbox,
   FormControlLabel,
   FormGroup,
+  Typography,
 } from "@mui/material";
 
 import StationMap from "./StationMap";
@@ -17,8 +18,9 @@ import DatasetSelect from "./DatasetSelect.jsx";
 import DisplayMetricSelect from "./DisplayMetricSelect.jsx";
 import GroupBySelect from "./GroupBySelect";
 import DataGridDemo from "./DataGrid";
-import Filters from "./Filters";
+import Filter from "./SingleFilter";
 import DashboardContext from "../Context.js";
+import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 // import MapWrapper from "./MapWrapper.jsx";
 
 function Dashboard() {
@@ -69,6 +71,21 @@ function Dashboard() {
       });
   };
 
+  const addFilter = () => {
+    setFilters([...filters, { column: "", operator: "", value: "" }]);
+  };
+
+  const updateFilter = (index, key, value) => {
+    const newFilters = [...filters];
+    newFilters[index][key] = value;
+    setFilters(newFilters);
+  };
+
+  const deleteFilter = (indexToRemove) => {
+    const newFilters = filters.filter((_, index) => index !== indexToRemove);
+    setFilters(newFilters);
+  };
+
   const contextValue = {
     datasets,
     metrics,
@@ -77,9 +94,13 @@ function Dashboard() {
     operators,
     errors,
     loading,
+    includeSpatialData,
     selectedDataset,
     selectedMetrics,
     selectedGroupByFields,
+    addFilter,
+    updateFilter,
+    deleteFilter,
     setDatasets,
     setMetrics,
     setGroupByFields,
@@ -119,8 +140,25 @@ function Dashboard() {
                   setSelectedGroupByFields={setSelectedGroupByFields}
                   selectedDataset={selectedDataset}
                 />
-                <Filters />
-
+                <Box>
+                  <Typography>Filters</Typography>
+                  {filters.map((filter, index) => (
+                    <div
+                      key={index}
+                      style={{ marginBottom: "8px", display: "flex" }}
+                    >
+                      <Filter
+                        index={index}
+                        selectedGroupByField={filter.column || ""}
+                        selectedOperator={filter.operator || ""}
+                        value={filter.value.toString() || ""}
+                      />
+                    </div>
+                  ))}
+                  <Button variant="standard" onClick={addFilter} color="grey">
+                    <AddOutlinedIcon />
+                  </Button>
+                </Box>
                 <Box sx={{ display: "flex", justifyContent: "center" }}>
                   <FormGroup>
                     <FormControlLabel

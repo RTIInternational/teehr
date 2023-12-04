@@ -3,14 +3,11 @@ import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
+import FormHelperText from "@mui/material/FormHelperText";
 import { OutlinedInput, Box } from "@mui/material";
 
 export default function SingleSelect(props) {
-  const { options, selectedOption, setSelectedOption, label } = props;
-
-  const handleChange = (event) => {
-    setSelectedOption(event.target.value);
-  };
+  const { options, value, onChange, label, error, errorMessage } = props;
 
   return (
     <div>
@@ -19,8 +16,8 @@ export default function SingleSelect(props) {
         <Select
           labelId="demo-multiple-chip-label"
           id="demo-multiple-chip"
-          value={selectedOption}
-          onChange={handleChange}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
           input={
             <OutlinedInput
               id="select-multiple-chip"
@@ -32,6 +29,7 @@ export default function SingleSelect(props) {
               {selected}
             </Box>
           )}
+          error={error}
           // MenuProps={MenuProps}
         >
           {options.map((name) => (
@@ -44,6 +42,7 @@ export default function SingleSelect(props) {
             </MenuItem>
           ))}
         </Select>
+        <FormHelperText>{errorMessage}</FormHelperText>
       </FormControl>
     </div>
   );
@@ -51,7 +50,9 @@ export default function SingleSelect(props) {
 
 SingleSelect.propTypes = {
   options: PropTypes.array.isRequired,
-  selectedOption: PropTypes.string,
-  setSelectedOption: PropTypes.func.isRequired,
+  value: PropTypes.string,
+  onChange: PropTypes.func.isRequired,
   label: PropTypes.string,
+  error: PropTypes.bool,
+  errorMessage: PropTypes.string,
 };

@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from "react";
+import { useState, useContext } from "react";
 import PropTypes from "prop-types";
 import SingleSelect from "./SingleSelect";
 import OperatorSelect from "./OperatorSelect";
@@ -12,47 +12,26 @@ import { Grid, Button } from "@mui/material";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import axios from "axios";
 export default function Filter(props) {
-  const { groupByFields, selectedDataset, setLoading, setErrors } =
-    useContext(DashboardContext);
+  const { selectedGroupByField, selectedOperator, value, index } = props;
   const {
-    selectedGroupByField,
-    selectedOperator,
-    value,
-    setSelectedGroupByField,
-    setSelectedOperator,
-    setValue,
+    groupByFields,
+    selectedDataset,
+    setLoading,
+    setErrors,
+    updateFilter,
     deleteFilter,
-  } = props;
+  } = useContext(DashboardContext);
 
-  const [error, setError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [type, setType] = useState();
-  const [valueOptions, setValueOptions] = useState([]);
+  const [fieldType, setFieldType] = useState();
+  const [fieldValueOptions, setFieldValueOptions] = useState([]);
 
   const getFieldType = (fieldName) => {
     const field = groupByFields.find((field) => field.name === fieldName);
     return field ? field.type : null;
   };
 
-  const validateTypes = (input, type) => {
-    if (type === "FLOAT" && isNaN(Number(input))) {
-      setError(true);
-      setErrorMessage("Input must be a number.");
-      return false;
-    } else if (
-      type === "TIMESTAMP" &&
-      new Date(input).toString() === "Invalid Date"
-    ) {
-      setError(true);
-      setErrorMessage("Invalid date.");
-      return false;
-    }
-    setErrorMessage("");
-    setError(false);
-  };
-
-  const castType = (value) => {
-    switch (type) {
+  const castFieldValue = (value) => {
+    switch (fieldType) {
       case "FLOAT":
         return parseFloat(value);
       case "INTERVAL":
@@ -64,91 +43,89 @@ export default function Filter(props) {
     }
   };
 
-  useEffect(() => {
-    const validateInput = (value) => {
-      if (!value) return;
-      const type = getFieldType(selectedGroupByField);
-      if (!type) {
-        setErrorMessage("Missing group by field");
-        setError(true);
-      } else if (!selectedOperator) {
-        setErrorMessage("Missing operator");
-        setError(true);
-      } else {
-        validateTypes(value, type);
-      }
-    };
-    validateInput(value);
-  }, [value, selectedGroupByField, selectedOperator, groupByFields]);
+  const fetchFieldValues = (selectedGroupByField) => {
+    setLoading(true);
+    axios
+      .post(
+        `http://localhost:8000/datasets/${selectedDataset}/get_unique_field_values`,
+        {
+          field_name: selectedGroupByField,
+        }
+      )
+      .then((res) => {
+        setFieldValueOptions(res.data.map((o) => Object.values(o)[0]));
+        setLoading(false);
+      })
+      .catch(function (err) {
+        setErrors(err);
+        setLoading(false);
+      });
+  };
 
-  useEffect(() => {
-    if (selectedGroupByField) {
-      const type = getFieldType(selectedGroupByField);
-      setType(type);
-      setValue("");
-      if (type !== "TIMESTAMP") {
-        setLoading(true);
-        axios
-          .post(
-            `http://localhost:8000/datasets/${selectedDataset}/get_unique_field_values`,
-            {
-              field_name: selectedGroupByField,
-            }
-          )
-          .then((res) => {
-            console.log(res.data);
-            setLoading(false);
-            console.log({ options: res.data.map((o) => Object.values(o)[0]) });
-            setValueOptions(res.data.map((o) => Object.values(o)[0]));
-          })
-          .catch(function (err) {
-            console.log(err);
-            setErrors(err);
-            setLoading(false);
-          });
-      }
+  const handleFilterFieldChange = (newField) => {
+    updateFilter(index, "column", newField);
+    updateFilter(index, "value", "");
+    const type = getFieldType(newField);
+    setFieldType(type);
+    if (type !== "TIMESTAMP") {
+      fetchFieldValues(newField);
     }
-  }, [selectedGroupByField]);
+  };
+
+  const handleOperatorChange = (value) => {
+    updateFilter(index, "operator", value);
+  };
+
+  const handleFieldValueChange = (value) => {
+    updateFilter(index, "value", castFieldValue(value));
+  };
+
+  const handleTimeValueChange = (value) => {
+    if (value) {
+      updateFilter(index, "value", value.toUTC().toISO());
+    }
+  };
 
   return (
     <Grid container spacing={0}>
       <Grid item xs={12} md={4.5}>
         <SingleSelect
+          value={selectedGroupByField || ""}
+          onChange={handleFilterFieldChange}
           options={groupByFields.map((o) => o.name)}
-          selectedOption={selectedGroupByField || ""}
-          setSelectedOption={setSelectedGroupByField}
           label={"Group By Field"}
         />
       </Grid>
       <Grid item xs={12} md={2}>
         <OperatorSelect
-          selectedOperator={selectedOperator || ""}
-          setSelectedOperator={setSelectedOperator}
+          value={selectedOperator || ""}
+          onChange={handleOperatorChange}
         />
       </Grid>
       <Grid item xs={12} md={4.5}>
-        {type === "TIMESTAMP" && (
+        {fieldType === "TIMESTAMP" && (
           <LocalizationProvider dateAdapter={AdapterLuxon}>
             <TimePicker
               label="Time"
               value={value ? DateTime.fromISO(value) : null}
-              onChange={(value) => {
-                if (value) {
-                  setValue(value.toUTC().toISO());
-                } else {
-                  null;
-                }
-              }}
+              onChange={handleTimeValueChange}
               sx={{ m: "8px" }}
             />
           </LocalizationProvider>
         )}
-        {type !== "TIMESTAMP" && (
+        {fieldType !== "TIMESTAMP" && selectedGroupByField && (
           <SingleSelect
-            options={valueOptions}
-            selectedOption={value || ""}
-            setSelectedOption={(value) => setValue(castType(value))}
+            value={value || ""}
+            onChange={handleFieldValueChange}
+            options={fieldValueOptions}
             label={"Input"}
+          />
+        )}
+        {fieldType !== "TIMESTAMP" && !selectedGroupByField && (
+          <TextInput
+            label={"Input"}
+            value={value || ""}
+            onChange={handleFieldValueChange}
           />
         )}
       </Grid>
@@ -162,7 +139,11 @@ export default function Filter(props) {
           justifyContent: "center",
         }}
       >
-        <Button variant="standard" onClick={deleteFilter} color="grey">
+        <Button
+          variant="standard"
+          onClick={() => deleteFilter(index)}
+          color="grey"
+        >
           <DeleteOutlineOutlinedIcon />
         </Button>
       </Grid>
@@ -171,11 +152,8 @@ export default function Filter(props) {
 }
 
 Filter.propTypes = {
+  index: PropTypes.number,
+  value: PropTypes.string,
   selectedGroupByField: PropTypes.string,
   selectedOperator: PropTypes.string,
-  value: PropTypes.string,
-  setSelectedGroupByField: PropTypes.func,
-  setSelectedOperator: PropTypes.func,
-  setValue: PropTypes.func,
-  deleteFilter: PropTypes.func,
 };

@@ -11,11 +11,7 @@ import DashboardContext from "../Context";
 export default function OperatorSelect(props) {
   const { operators, selectedDataset, setOperators, setLoading, setErrors } =
     useContext(DashboardContext);
-  const { selectedOperator, setSelectedOperator } = props;
-
-  const handleChange = (event) => {
-    setSelectedOperator(event.target.value);
-  };
+  const { value, onChange } = props;
 
   useEffect(() => {
     const fetchFilterOperators = () => {
@@ -46,8 +42,8 @@ export default function OperatorSelect(props) {
       <Select
         labelId="demo-multiple-chip-label"
         id="demo-multiple-chip"
-        value={selectedOperator}
-        onChange={handleChange}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
         input={
           <OutlinedInput
             id="select-multiple-chip"
@@ -76,6 +72,6 @@ export default function OperatorSelect(props) {
 }
 
 OperatorSelect.propTypes = {
-  selectedOperator: PropTypes.string,
-  setSelectedOperator: PropTypes.func.isRequired,
+  value: PropTypes.string,
+  onChange: PropTypes.func.isRequired,
 };
