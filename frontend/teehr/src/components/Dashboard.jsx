@@ -1,7 +1,15 @@
 import { useState } from "react";
 import "../App.css";
 import axios from "axios";
-import { Button, Grid, Box, CircularProgress } from "@mui/material";
+import {
+  Button,
+  Grid,
+  Box,
+  CircularProgress,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
+} from "@mui/material";
 
 import StationMap from "./StationMap";
 import MetricSelect from "./MetricSelect.jsx";
@@ -33,6 +41,7 @@ function Dashboard() {
   const [filters, setFilters] = useState([
     { column: "", operator: "", value: "" },
   ]);
+  const [includeSpatialData, setIncludeSpatialData] = useState(true);
 
   // const [orderByFields, setOrderByFields] = useState([]);
   // const [selectedOrderByFields, setSelectedOrderByFields] = useState([]);
@@ -112,14 +121,32 @@ function Dashboard() {
                 />
                 <Filters />
 
-                <Button
-                  variant="contained"
-                  onClick={() => {
-                    fetchStations();
-                  }}
-                >
-                  Fetch Data
-                </Button>
+                <Box sx={{ display: "flex", justifyContent: "center" }}>
+                  <FormGroup>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={includeSpatialData}
+                          onChange={() =>
+                            setIncludeSpatialData((prev) => !prev)
+                          }
+                          inputProps={{
+                            "aria-label": "Include Spatial Data Option",
+                          }}
+                        />
+                      }
+                      label="Include Spatial Data"
+                    ></FormControlLabel>
+                  </FormGroup>
+                  <Button
+                    variant="contained"
+                    onClick={() => {
+                      fetchStations();
+                    }}
+                  >
+                    Fetch Data
+                  </Button>
+                </Box>
               </Grid>
             )}
             <Grid>
