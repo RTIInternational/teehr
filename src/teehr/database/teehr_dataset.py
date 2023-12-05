@@ -94,7 +94,8 @@ class TEEHRDatasetAPI:
         self._initialize_database_tables()
 
     def profile_query(self, query: str):
-        """Helper function to profile query performance (runs EXPLAIN ANALYZE)"""
+        """Helper function to profile query performance.
+        (runs EXPLAIN ANALYZE and prints output to screen)"""
         query = "EXPLAIN ANALYZE " + query
         with duckdb.connect(self.database_filepath) as con:
             con.sql("PRAGMA enable_profiling;")
