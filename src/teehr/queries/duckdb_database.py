@@ -417,7 +417,7 @@ def create_get_timeseries_query(
                 ANY_VALUE(primary_value) AS value,
                 value_time,
                 primary_location_id AS location_id,
-                configuration,
+                'primary' as configuration,
                 measurement_unit,
                 variable_name,
             FROM
@@ -526,7 +526,7 @@ def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
                         ANY_VALUE(primary_value) AS primary_value,
                         value_time,
                         primary_location_id,
-                        configuration,
+                        'primary' as configuration,
                         measurement_unit,
                         variable_name,
                         {gb_fields}
