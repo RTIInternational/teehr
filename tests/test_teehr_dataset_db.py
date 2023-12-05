@@ -91,6 +91,13 @@ def test_metrics_query():
         },
         {"column": "lead_time", "operator": "<=", "value": "10 hours"},
     ]
+    # filters = [
+    #     {
+    #         "column": "configuration",
+    #         "operator": "=",
+    #         "value": "nwm22",
+    #     }
+    # ]
 
     group_by = ["primary_location_id"]
     order_by = ["primary_location_id"]
@@ -104,6 +111,7 @@ def test_metrics_query():
         filters=filters,
         include_geometry=True,
     )
+
     # print(df)
     assert df.index.size == 1
     assert df.columns.size == 24
@@ -277,29 +285,15 @@ def test_timeseries_query():
         drop_added_fields=True,
     )
 
-    filters = [
-        {
-            "column": "primary_location_id",
-            "operator": "=",
-            "value": "gage-A",
-        },
-        {
-            "column": "reference_time",
-            "operator": "=",
-            "value": "2022-01-01 00:00:00",
-        },
-        {"column": "lead_time", "operator": "<=", "value": "10 hours"},
-    ]
-
     order_by = ["primary_location_id"]
 
     df = tds.get_timeseries(
         order_by=order_by,
-        filters=filters
+        timeseries_name="primary",
+        return_query=False
     )
 
-    assert df.index.size == 11
-    pass
+    assert df.index.size == 26 * 3
 
 
 def test_timeseries_char_query():
@@ -316,25 +310,12 @@ def test_timeseries_char_query():
         drop_added_fields=True,
     )
 
-    # filters = [
-    #     {
-    #         "column": "primary_location_id",
-    #         "operator": "=",
-    #         "value": "gage-A",
-    #     },
-    #     {
-    #         "column": "reference_time",
-    #         "operator": "=",
-    #         "value": "2022-01-01 00:00:00",
-    #     },
-    #     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
-    # ]
     filters = []
     group_by = ["primary_location_id"]
     order_by = ["primary_location_id"]
-    timeseries_name = "secondary"  # "primary, secondary"
+    timeseries_name = "primary"  # "primary, secondary"
 
-    df = tds.get_timeseries_characteristics(
+    df = tds.get_timeseries_chars(
         order_by=order_by,
         group_by=group_by,
         timeseries_name=timeseries_name,

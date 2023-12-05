@@ -105,6 +105,7 @@ async def get_data_fields(
     )
     return fields[["name", "type"]].to_dict(orient="records")
 
+
 @app.get("/datasets/{dataset_id}/get_filter_operators")
 async def get_filter_operators(dataset_id: str):
     return {item.name: item.value for item in FilterOperatorEnum}
@@ -167,7 +168,7 @@ async def get_timeseries_chars_by_query(
 
     config = datasets["datasets"][dataset_id]
     tds = TEEHRDatasetAPI(config["database_filepath"])
-    df = tds.get_timeseries_characteristics(api_timeseries_char_query)
+    df = tds.get_timeseries_chars(api_timeseries_char_query)
 
     return format_response(df)
 

@@ -23,15 +23,85 @@ from teehr.models.queries import MetricEnum
 
 
 class TEEHRDatasetAPI:
-    """Create an instance of a TEEHRDataset class and
-    initialize a study area database"""
+    """Create an instance of a TEEHRDataset class for API-based queries and
+    initialize a study area database.
+
+    Methods
+    -------
+    __init__(database_filepath: Union[str, Path])
+        Initialize a study area database.
+
+    profile_query(query: str)
+        Helper function to profile query performance (runs EXPLAIN ANALYZE)
+
+    query(query: str, format: str = None, create_function_args: Dict = None)
+        Submit an SQL query string against the database.
+        Return formats include:
+        - a pandas dataframe (format='df')
+        - print results to screen (format='raw')
+        - DuckDBPyRelation, a symbolic representation of
+        the SQL query (format='relation')
+        A user-defined function can be registered to the database by
+        defining parameters in the create_function_args dictionary:
+            create_function_args = {
+            "function": user_defined_function,
+            "function_name": "user_defined_function",
+            "parameter_types": parameter_types,
+            "new_field_type": cf.new_field_type,
+        }
+
+    get_joined_timeseries_schema() -> pd.DataFrame
+        Get field names and field data types from the joined_timeseries,
+        table as a pandas dataframe.
+
+    describe_inputs(
+        primary_filepath: Union[str, Path],
+        secondary_filepath: Union[str, Path]
+    ) -> pd.DataFrame
+        Get descriptive statistics on the primary and secondary
+        timeseries by reading the parquet files as a pandas dataframe.
+
+    get_metrics(mq: MetricQuery) -> Union[pd.DataFrame, gpd.GeoDataFrame, str]
+        Calculate performance metrics using database queries.
+
+    get_timeseries(tq: TimeseriesQuery) -> Union[pd.DataFrame, str]
+        Retrieve timeseries using a database query.
+
+    get_timeseries_chars(tcq: TimeseriesCharQuery)-> Union[str, pd.DataFrame]
+        Retrieve timeseries characteristics using database query
+
+    get_unique_field_values(
+        fn: JoinedTimeseriesFieldName
+    ) -> pd.DataFrame
+        Get unique values for a given field as a pandas dataframe
+
+    """
 
     def __init__(
         self,
         database_filepath: Union[str, Path],
     ):
+        """Initialize a study area database. Creates the joined_timeseries
+        and geometry tables with a fixed schemas if they do not already
+        exist.
+
+        Parameters
+        ----------
+        database_filepath : Union[str, Path]
+            Filepath to the database
+        """
         self.database_filepath = str(database_filepath)
         self._initialize_database_tables()
+
+    def profile_query(self, query: str):
+        """Helper function to profile query performance (runs EXPLAIN ANALYZE)"""
+        query = "EXPLAIN ANALYZE " + query
+        with duckdb.connect(self.database_filepath) as con:
+            con.sql("PRAGMA enable_profiling;")
+            con.sql("PRAGMA enable_profiling='query_tree';")
+            # con.sql("PRAGMA enable_profiling='query_tree_optimizer';")
+            con.sql(query).show()
+            pass
 
     def query(
         self, query: str, format: str = None, create_function_args: Dict = None
@@ -45,7 +115,6 @@ class TEEHRDatasetAPI:
                     return con.sql(query).show()
                 elif format == "relation":
                     return con.sql(query)
-
                 con.sql(query)
                 return None
         else:
@@ -337,6 +406,8 @@ class TEEHRDatasetAPI:
         order_by : List[str]
             List of column/field names to order results by.
             Must provide at least one.
+        timeseries_name: TimeseriesNameEnum
+            Name of the time series to query (primary or secondary)
         filters : Union[List[dict], None] = None
             List of dictionaries describing the "where" clause to limit data
             that is included in metrics.
@@ -349,7 +420,7 @@ class TEEHRDatasetAPI:
         Union[pd.DataFrame, str]
             A DataFrame of query results or the query itself as a string
 
-        Filter and Order By Fields
+        Filter By Fields
         -----------------------------------
         * reference_time
         * primary_location_id
@@ -361,7 +432,20 @@ class TEEHRDatasetAPI:
         * measurement_unit
         * variable_name
         * lead_time
+        * absolute_difference
         * [any user-added fields]
+
+        Order By Fields
+        ---------------
+        * reference_time
+        * primary_location_id
+        * secondary_location_id
+        * primary_value
+        * secondary_value
+        * value_time
+        * configuration
+        * measurement_unit
+        * variable_name
 
         """
 
@@ -375,7 +459,7 @@ class TEEHRDatasetAPI:
             df = self.query(query, format="df")
         return df
 
-    def get_timeseries_characteristics(
+    def get_timeseries_chars(
         self, tcq: TimeseriesCharQuery
     ) -> Union[str, pd.DataFrame]:
         """Retrieve timeseries characteristics using database query.
@@ -405,6 +489,7 @@ class TEEHRDatasetAPI:
         -------
         Union[str, pd.DataFrame]
             A DataFrame of time series characteristics including:
+            - location_id
             - count
             - min
             - max
@@ -413,19 +498,21 @@ class TEEHRDatasetAPI:
             - variance
             or, the query itself as a string
 
-        Filter, Order By and Group By Fields
-        -----------------------------------
-        * reference_time
-        * primary_location_id
-        * secondary_location_id
-        * primary_value
-        * secondary_value
-        * value_time
-        * configuration
-        * measurement_unit
-        * variable_name
-        * lead_time
-        * [any user-added fields]
+        Group By Fields
+        ---------------
+        * any existing joined_timeseries field
+        * must include primary_location_id or
+        secondary_location_id
+
+        Order By Fields
+        ---------------
+        * Group By Fields plus
+        * count
+        * min
+        * max
+        * average
+        * sum
+        * variance
 
         Examples:
             order_by = ["lead_time", "primary_location_id"]
@@ -483,8 +570,117 @@ class TEEHRDatasetAPI:
 
 
 class TEEHRDatasetDB(TEEHRDatasetAPI):
-    """Extends TEEHRDatasetAPI class to provide additional
-    functionality."""
+    """Extends TEEHRDatasetAPI class with additional functionality
+    for local database-based queries.
+
+    Methods
+    -------
+    insert_geometry(geometry_filepath: Union[str, Path])
+        Inserts geometry from a parquet file into a separate
+        database table named 'geometry'.
+
+    insert_joined_timeseries(
+        primary_filepath: Union[str, Path],
+        secondary_filepath: Union[str, Path],
+        crosswalk_filepath: Union[str, Path],
+        order_by: List[str] = [
+            "reference_time",
+            "primary_location_id",
+        ],
+        drop_added_fields=False,
+    )
+        Joins the primary and secondary timeseries read from parquet files
+        and inserts into the database as the joined_timeseries table.
+
+    join_attributes(attributes_filepath: Union[str, Path])
+        Joins attributes from the provided attribute table(s) to new
+        fields in the joined_timeseries table
+
+    calculate_field(
+        self,
+        new_field_name: str,
+        new_field_type: str,
+        parameter_names: List[str],
+        user_defined_function: Callable,
+        replace: bool = True,
+    )
+        Calculate a new field in joined_timeseries based on existing
+        fields and a user-defined function.
+
+    profile_query(query: str)
+        Helper function to profile query performance (runs EXPLAIN ANALYZE).
+        Inherited from TEEHRDatasetAPI.
+
+    query(query: str, format: str = None, create_function_args: Dict = None)
+        Submit an SQL query string against the database.
+        Inherited from TEEHRDatasetAPI.
+
+        Return formats include:
+        - a pandas dataframe (format='df')
+        - print results to screen (format='raw')
+        - DuckDBPyRelation, a symbolic representation of
+        the SQL query (format='relation')
+        A user-defined function can be registered to the database by
+        defining parameters in the create_function_args dictionary:
+            create_function_args = {
+            "function": user_defined_function,
+            "function_name": "user_defined_function",
+            "parameter_types": parameter_types,
+            "new_field_type": cf.new_field_type,
+        }
+
+    get_joined_timeseries_schema() -> pd.DataFrame
+        Get field names and field data types from the joined_timeseries,
+        table as a pandas dataframe. Inherited from TEEHRDatasetAPI.
+
+    describe_inputs(
+        primary_filepath: Union[str, Path],
+        secondary_filepath: Union[str, Path]
+    ) -> pd.DataFrame
+        Get descriptive statistics on the primary and secondary
+        timeseries by reading the parquet files as a pandas dataframe.
+        Inherited from TEEHRDatasetAPI.
+
+    get_metrics(
+        group_by: List[str],
+        order_by: List[str],
+        include_metrics: Union[List[MetricEnum], "all"],
+        filters: Union[List[dict], None] = None,
+        include_geometry: bool = False,
+        return_query: bool = False,
+    ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
+        Calculate performance metrics using database queries
+        Overrides TEEHRDatasetAPI.
+
+    get_timeseries(
+        self,
+        order_by: List[str],
+        timeseries_name: str,
+        filters: Union[List[dict], None] = None,
+        return_query: bool = False,
+    ) -> Union[pd.DataFrame, str]
+        Retrieve timeseries using a database query.
+        Overrides TEEHRDatasetAPI.
+
+    get_timeseries_chars(
+        self,
+        group_by: List[str],
+        order_by: List[str],
+        timeseries_name: str,
+        filters: Union[List[dict], None] = None,
+        return_query: bool = False,
+    ) -> Union[str, pd.DataFrame]
+        Retrieve timeseries characteristics using database query
+        Overrides TEEHRDatasetAPI.
+
+    get_unique_field_values(
+        fn: JoinedTimeseriesFieldName
+    ) -> pd.DataFrame
+        Get unique values for a given field as a pandas dataframe.
+        Overrides TEEHRDatasetAPI.
+        Use get_joined_timeseries_schema() to see existing table fields.
+
+    """
 
     def _drop_joined_timeseries_field(self, field_name: str):
         """Drops the specified field by name from joined_timeseries table"""
@@ -516,8 +712,8 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
                     )
 
     def insert_geometry(self, geometry_filepath: Union[str, Path]):
-        """Inserts geometry from a parquet file into a geometry
-        database table.
+        """Inserts geometry from a parquet file into a separate
+        database table named 'geometry'.
 
         Parameters
         ----------
@@ -639,7 +835,8 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
     def _add_field_name_to_joined_timeseries(
         self, field_name: str, field_dtype="VARCHAR"
     ):
-        """Adds a field name to joined_timeseries if it does not already exist"""
+        """Adds a field name to joined_timeseries
+        if it does not already exist"""
         query = f"""
             ALTER TABLE
                 joined_timeseries
@@ -911,6 +1108,7 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
     def get_timeseries(
         self,
         order_by: List[str],
+        timeseries_name: str,
         filters: Union[List[dict], None] = None,
         return_query: bool = False,
     ) -> Union[pd.DataFrame, str]:
@@ -951,6 +1149,7 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
             "order_by": order_by,
             "filters": filters,
             "return_query": return_query,
+            "timeseries_name": timeseries_name,
         }
         tq = self._validate_query_model(TimeseriesQuery, data)
 
@@ -962,7 +1161,7 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
             df = self.query(query, format="df")
         return df
 
-    def get_timeseries_characteristics(
+    def get_timeseries_chars(
         self,
         group_by: List[str],
         order_by: List[str],

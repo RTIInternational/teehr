@@ -69,13 +69,14 @@ class JoinedTimeseriesFieldName(BaseModel):
     field_name: str
 
     @field_validator("field_name")
-    def field_name_must_exist_in_timeseries_table(cls, v, info: ValidationInfo):
+    def field_name_must_exist_in_timeseries_table(cls, v, info: ValidationInfo): # noqa
         context = info.context
         if context:
             existing_fields = context.get("existing_fields", set())
             if v not in existing_fields:
                 raise ValueError(
-                    f"The field name {v} does not exist in the joined_timseries table"
+                    f"The field name {v} does not exist in"
+                    "the joined_timseries table"
                 )
         return v
 
@@ -142,6 +143,7 @@ class TimeseriesQuery(BaseModel):
     order_by: List[str]
     filters: Optional[List[Filter]] = []
     return_query: Optional[bool] = False
+    timeseries_name: TimeseriesNameEnum
 
     @field_validator("filters")
     def filter_must_be_list(cls, v):
@@ -158,7 +160,8 @@ class TimeseriesQuery(BaseModel):
             for val in v:
                 if val not in existing_fields:
                     raise ValueError(
-                        f"The order_by field '{val}' does not exist in the database"
+                        f"The order_by field '{val}' does not"
+                        "exist in the database"
                     )
         return v
 
@@ -171,7 +174,8 @@ class TimeseriesQuery(BaseModel):
             for val in v:
                 if val.column not in existing_fields:
                     raise ValueError(
-                        f"The filters field {val.column} does not exist in the database"
+                        f"The filters field {val.column} does not"
+                        "exist in the database"
                     )
         return v
 
@@ -189,8 +193,28 @@ class TimeseriesCharQuery(BaseModel):
             return []
         return v
 
-    @field_validator("order_by", "group_by")
-    def order_by_must_exist_as_fields(cls, v, info: ValidationInfo):
+    @field_validator("order_by")
+    def order_by_must_exist_as_fields_or_chars(cls, v, info: ValidationInfo):
+        """order_by fields must currently exist in the database"""
+        context = info.context
+        if context:
+            existing_fields = context.get("existing_fields", set())
+            existing_fields.extend(["count",
+                                    "min",
+                                    "max",
+                                    "average",
+                                    "sum",
+                                    "variance"])
+            for val in v:
+                if val not in existing_fields:
+                    raise ValueError(
+                        f"The order_by or group_by field '{val}' does not"
+                        "exist in the database"
+                    )
+        return v
+
+    @field_validator("group_by")
+    def group_by_must_exist_as_fields(cls, v, info: ValidationInfo):
         """order_by fields must currently exist in the database"""
         context = info.context
         if context:
@@ -198,8 +222,19 @@ class TimeseriesCharQuery(BaseModel):
             for val in v:
                 if val not in existing_fields:
                     raise ValueError(
-                        f"The order_by or group_by field '{val}' does not exist in the database"
+                        f"The order_by or group_by field '{val}' does not"
+                        "exist in the database"
                     )
+        return v
+
+    @field_validator("group_by")
+    def group_by_must_contain_primary_or_secondary_id(cls, v):
+        id_list = ["primary_location_id", "secondary_location_id"]
+        if not any([val in id_list for val in v]):
+            raise ValueError(
+                "Group By must contain primary or secondary"
+                " location id"
+            )
         return v
 
     @field_validator("filters")
@@ -211,7 +246,8 @@ class TimeseriesCharQuery(BaseModel):
             for val in v:
                 if val.column not in existing_fields:
                     raise ValueError(
-                        f"The filters field {val.column} does not exist in the database"
+                        f"The filters field {val.column} does not"
+                        "exist in the database"
                     )
         return v
 
@@ -236,32 +272,37 @@ class MetricQuery(BaseModel):
         cls, data, info: ValidationInfo
     ):
         if data["include_geometry"]:
-            # If geometry is included, group_by must contain 'primary_location_id'
+            # If geometry is included, group_by must
+            # contain 'primary_location_id'
             if JoinedFieldNameEnum.primary_location_id not in data["group_by"]:
                 raise ValueError(
                     "`group_by` must contain `primary_location_id` "
                     "to include geometry in returned data"
                 )
 
-        # order_by, group_by, and filter fields must currently exist in the database
+        # order_by, group_by, and filter fields must
+        # currently exist in the database
         context = info.context
         if context:
             existing_fields = context.get("existing_fields", set())
             for val in data["group_by"]:
                 if val not in existing_fields:
                     raise ValueError(
-                        f"The group_by field '{val}' does not exist in the database"
+                        f"The group_by field '{val}' does not"
+                        "exist in the database"
                     )
             for val in data["order_by"]:
                 if val not in existing_fields:
                     raise ValueError(
-                        f"The order_by field '{val}' does not exist in the database"
+                        f"The order_by field '{val}' does not"
+                        "exist in the database"
                     )
             if data["filters"]:
                 for val in data["filters"]:
                     if val["column"] not in existing_fields:
                         raise ValueError(
-                            f"The filter field '{val}' does not exist in the database"
+                            f"The filter field '{val}' does not"
+                            "exist in the database"
                         )
 
         return data
