@@ -10,7 +10,9 @@ import {
   FormControlLabel,
   FormGroup,
   Typography,
+  Tab,
 } from "@mui/material";
+import { TabContext, TabList, TabPanel } from "@mui/lab";
 
 import StationMap from "./StationMap";
 import MetricSelect from "./MetricSelect.jsx";
@@ -40,10 +42,13 @@ function Dashboard() {
 
   const [operators, setOperators] = useState([]);
 
-  const [filters, setFilters] = useState([
-    { column: "", operator: "", value: "" },
-  ]);
+  const [filters, setFilters] = useState([]);
   const [includeSpatialData, setIncludeSpatialData] = useState(true);
+  const [selectedTab, setSelectedTab] = useState("1");
+
+  const handleTabChange = (e, value) => {
+    setSelectedTab(value);
+  };
 
   // const [orderByFields, setOrderByFields] = useState([]);
   // const [selectedOrderByFields, setSelectedOrderByFields] = useState([]);
@@ -97,6 +102,9 @@ function Dashboard() {
     if (includeSpatialData && !selectedGroupByFields.includes(locationField)) {
       setSelectedGroupByFields((prev) => [...prev, locationField]);
     }
+    if (!includeSpatialData && selectedTab === "1") {
+      setSelectedTab("2");
+    }
   }, [includeSpatialData, groupByFields, selectedGroupByFields, locationField]);
 
   const contextValue = {
@@ -125,9 +133,9 @@ function Dashboard() {
 
   return (
     <DashboardContext.Provider value={contextValue}>
-      <Box sx={{ flexGrow: 1 }}>
+      <Box sx={{ p: 2 }}>
         <Grid container spacing={2}>
-          <Grid item xs={5}>
+          <Grid item xs={5} sx={{ mt: 8 }}>
             <Grid>
               <DatasetSelect
                 datasets={datasets}
@@ -212,15 +220,26 @@ function Dashboard() {
             </Grid>
           </Grid>
           <Grid item xs={7}>
-            <Grid>
-              {data && displayMetric && (
-                <>
+            {data && displayMetric && (
+              <TabContext value={selectedTab}>
+                <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+                  <TabList
+                    onChange={handleTabChange}
+                    aria-label="Dashboard tabs"
+                    variant="fullWidth"
+                  >
+                    <Tab label="Map" value="1" disabled={!includeSpatialData} />
+                    <Tab label="Table" value="2" />
+                  </TabList>
+                </Box>
+                <TabPanel value="1">
                   <StationMap stations={data} metricName={displayMetric} />
+                </TabPanel>
+                <TabPanel value="2">
                   <DataGridDemo data={data} />
-                </>
-              )}
-            </Grid>
-            <Grid></Grid>
+                </TabPanel>
+              </TabContext>
+            )}
           </Grid>
         </Grid>
       </Box>
