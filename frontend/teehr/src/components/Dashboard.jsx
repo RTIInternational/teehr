@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../App.css";
 import axios from "axios";
 import {
@@ -86,6 +86,16 @@ function Dashboard() {
     setFilters(newFilters);
   };
 
+  const locationField = groupByFields.find(
+    (f) => f.name === "primary_location_id"
+  );
+
+  useEffect(() => {
+    if (includeSpatialData && !selectedGroupByFields.includes(locationField)) {
+      setSelectedGroupByFields((prev) => [...prev, locationField]);
+    }
+  }, [includeSpatialData, groupByFields, selectedGroupByFields, locationField]);
+
   const contextValue = {
     datasets,
     metrics,
@@ -139,6 +149,7 @@ function Dashboard() {
                   selectedGroupByFields={selectedGroupByFields}
                   setSelectedGroupByFields={setSelectedGroupByFields}
                   selectedDataset={selectedDataset}
+                  includeSpatialData={includeSpatialData}
                 />
                 <Box>
                   <Typography>Filters</Typography>

@@ -41,6 +41,7 @@ export default function GroupBySelect(props) {
     selectedGroupByFields,
     setSelectedGroupByFields,
     selectedDataset,
+    includeSpatialData,
   } = props;
 
   useEffect(() => {
@@ -53,6 +54,11 @@ export default function GroupBySelect(props) {
           .then((res) => {
             // console.log(res.data);
             setGroupByFields(res.data);
+            if (includeSpatialData) {
+              setSelectedGroupByFields(
+                res.data.filter((d) => d.name === "primary_location_id")
+              );
+            }
             setLoading(false);
           })
           .catch(function (err) {
@@ -131,4 +137,5 @@ GroupBySelect.propTypes = {
   selectedGroupByFields: PropTypes.array.isRequired,
   setSelectedGroupByFields: PropTypes.func.isRequired,
   selectedDataset: PropTypes.string.isRequired,
+  includeSpatialData: PropTypes.bool,
 };
