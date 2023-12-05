@@ -502,6 +502,8 @@ def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
 
     order_by = [f"chars.{val}" for val in tcq.order_by]
 
+    # Create the fts_clause to remove duplicates if primary time series
+    # has been specified
     if tcq.timeseries_name == "primary":
 
         selected_primary_fields = ["reference_time",
