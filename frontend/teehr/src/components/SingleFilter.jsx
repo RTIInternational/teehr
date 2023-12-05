@@ -25,6 +25,18 @@ export default function Filter(props) {
   const [fieldType, setFieldType] = useState();
   const [fieldValueOptions, setFieldValueOptions] = useState([]);
 
+  const nonListFields = [
+    "reference_time",
+    "value_time",
+    "secondary_value",
+    "primary_value",
+    "absolute_difference",
+    "upstream_area_km2",
+    "primary_normalized_discharge",
+    "exceed_2yr_recurrence",
+    "",
+  ];
+
   const getFieldType = (fieldName) => {
     const field = groupByFields.find((field) => field.name === fieldName);
     return field ? field.type : null;
@@ -67,7 +79,7 @@ export default function Filter(props) {
     updateFilter(index, "value", "");
     const type = getFieldType(newField);
     setFieldType(type);
-    if (type !== "TIMESTAMP") {
+    if (!nonListFields.includes(newField)) {
       fetchFieldValues(newField);
     }
   };
@@ -93,7 +105,7 @@ export default function Filter(props) {
           value={selectedGroupByField || ""}
           onChange={handleFilterFieldChange}
           options={groupByFields.map((o) => o.name)}
-          label={"Group By Field"}
+          label={"Filter Field"}
         />
       </Grid>
       <Grid item xs={12} md={2}>
@@ -113,21 +125,23 @@ export default function Filter(props) {
             />
           </LocalizationProvider>
         )}
-        {fieldType !== "TIMESTAMP" && selectedGroupByField && (
-          <SingleSelect
-            value={value || ""}
-            onChange={handleFieldValueChange}
-            options={fieldValueOptions}
-            label={"Input"}
-          />
-        )}
-        {fieldType !== "TIMESTAMP" && !selectedGroupByField && (
-          <TextInput
-            label={"Input"}
-            value={value || ""}
-            onChange={handleFieldValueChange}
-          />
-        )}
+        {fieldType !== "TIMESTAMP" &&
+          !nonListFields.includes(selectedGroupByField) && (
+            <SingleSelect
+              value={value || ""}
+              onChange={handleFieldValueChange}
+              options={fieldValueOptions}
+              label={"Input"}
+            />
+          )}
+        {fieldType !== "TIMESTAMP" &&
+          nonListFields.includes(selectedGroupByField) && (
+            <TextInput
+              label={"Input"}
+              value={value || ""}
+              onChange={handleFieldValueChange}
+            />
+          )}
       </Grid>
       <Grid
         item
