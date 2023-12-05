@@ -195,7 +195,8 @@ class TimeseriesCharQuery(BaseModel):
 
     @field_validator("order_by")
     def order_by_must_exist_as_fields_or_chars(cls, v, info: ValidationInfo):
-        """order_by fields must currently exist in the database"""
+        """order_by fields must currently exist in the database or be one of
+        the calculated stats."""
         context = info.context
         if context:
             existing_fields = context.get("existing_fields", set())
@@ -215,7 +216,7 @@ class TimeseriesCharQuery(BaseModel):
 
     @field_validator("group_by")
     def group_by_must_exist_as_fields(cls, v, info: ValidationInfo):
-        """order_by fields must currently exist in the database"""
+        """group_by fields must currently exist in the database"""
         context = info.context
         if context:
             existing_fields = context.get("existing_fields", set())
