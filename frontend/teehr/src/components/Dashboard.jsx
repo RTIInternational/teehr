@@ -53,6 +53,7 @@ function Dashboard() {
   };
 
   const fetchStations = () => {
+    setLoading(true);
     axios
       .post(`http://localhost:8000/datasets/${selectedDataset}/get_metrics`, {
         group_by: formatGroupByFields(selectedGroupByFields),
@@ -64,10 +65,12 @@ function Dashboard() {
       })
       .then((res) => {
         setData(res.data);
+        setLoading(false);
       })
       .catch(function (err) {
         console.log(err);
         setErrors(err);
+        setLoading(false);
       });
   };
 

@@ -14,6 +14,7 @@ export default function DatasetSelect(props) {
 
   useEffect(() => {
     const fetchDatasets = () => {
+      setLoading(true);
       axios
         .get(`http://localhost:8000/datasets/`)
         .then((res) => {
