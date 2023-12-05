@@ -35,7 +35,7 @@ export default function DataGridDemo(props) {
         })
         base.push(...arr)
         // console.log(arr)
-        setColumns(base)
+        setColumns(arr.some((o) => o.field === "id") ? arr : base);
       }
     }
     getColumns()
