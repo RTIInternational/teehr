@@ -62,6 +62,10 @@ def get_metrics(
         Only works if `primary_location_id`
         is included as a group_by field.
     deduplicate_primary: bool = True
+        True (default) removes rows with duplicate primary data where unique
+        values are defined by the value_time, location_id, configuration,
+        variable_name and measurement unit fields.
+        False ignores duplicates.
 
 
     Returns
@@ -160,9 +164,10 @@ def get_metrics(
                         row_number()
                     OVER(
                         PARTITION BY value_time,
-                                    location_id,
-                                    configuration,
-                                    variable_name
+                                     location_id,
+                                     configuration,
+                                     variable_name,
+                                     measurement_unit
                         ORDER BY reference_time desc
                         ) AS rn
                     FROM read_parquet("{str(mq.primary_filepath)}")
@@ -348,7 +353,11 @@ def get_joined_timeseries(
                 SELECT *,
                     row_number()
                 OVER(
-                    PARTITION BY value_time, location_id
+                    PARTITION BY value_time,
+                                 location_id,
+                                 configuration,
+                                 variable_name,
+                                 measurement_unit
                     ORDER BY reference_time desc
                     ) AS rn
                 FROM read_parquet("{str(jtq.primary_filepath)}")
