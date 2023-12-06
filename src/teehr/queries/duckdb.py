@@ -29,6 +29,7 @@ def get_metrics(
     return_query: bool = False,
     geometry_filepath: Union[str, None] = None,
     include_geometry: bool = False,
+    deduplicate_primary: bool = True,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
     """Calculate performance metrics using database queries.
 
@@ -60,6 +61,8 @@ def get_metrics(
         True joins the geometry to the query results.
         Only works if `primary_location_id`
         is included as a group_by field.
+    deduplicate_primary: bool = True
+
 
     Returns
     -------
@@ -149,20 +152,32 @@ def get_metrics(
         }
     )
 
+    if deduplicate_primary:
+        dedup_clause = f"""
+            WITH filtered_primary AS (
+                SELECT * FROM(
+                    SELECT *,
+                        row_number()
+                    OVER(
+                        PARTITION BY value_time,
+                                    location_id,
+                                    configuration,
+                                    variable_name
+                        ORDER BY reference_time desc
+                        ) AS rn
+                    FROM read_parquet("{str(mq.primary_filepath)}")
+                    )
+                WHERE rn = 1
+            ),
+            joined as (
+        """
+        pf = "filtered_primary"
+    else:
+        dedup_clause = "WITH joined as ("
+        pf = f"read_parquet('{str(mq.primary_filepath)}')"
+
     query = f"""
-        WITH filtered_primary AS (
-            SELECT * FROM(
-                SELECT *,
-                    row_number()
-                OVER(
-                    PARTITION BY value_time, location_id
-                    ORDER BY reference_time desc
-                    ) AS rn
-                FROM read_parquet("{str(mq.primary_filepath)}")
-                )
-            WHERE rn = 1
-        ),
-        joined as (
+            {dedup_clause}
             SELECT
                 sf.reference_time
                 , sf.value_time as value_time
@@ -178,7 +193,7 @@ def get_metrics(
             FROM read_parquet('{str(mq.secondary_filepath)}') sf
             JOIN read_parquet('{str(mq.crosswalk_filepath)}') cf
                 on cf.secondary_location_id = sf.location_id
-            JOIN filtered_primary pf
+            JOIN {pf} pf
                 on cf.primary_location_id = pf.location_id
                 and sf.value_time = pf.value_time
                 and sf.measurement_unit = pf.measurement_unit

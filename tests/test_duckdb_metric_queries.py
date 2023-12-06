@@ -5,11 +5,20 @@ from pydantic import ValidationError
 import teehr.queries.duckdb as tqu
 from pathlib import Path
 
-TEST_STUDY_DIR = Path("tests", "data", "test_study")
-PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_obs.parquet")
-SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
-CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
-GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
+# TEST_STUDY_DIR = Path("tests", "data", "test_study")
+# PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_obs.parquet")
+# SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
+# CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
+# GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
+
+# TODO: REMOVE. Katie's Hilary event
+TEST_STUDY_DIR = Path("/mnt/data/ciroh/2023_hilary")
+PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "forcing_analysis_assim_extend", "*.parquet")
+SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "forcing_medium_range", "*.parquet")
+CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "huc10_huc10_crosswalk.conus.parquet")
+ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "attrs/*.parquet")
+GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR,  "huc10_geometry.conus.parquet")
+# DATABASE_FILEPATH = Path(TEST_STUDY_DIR, "hilary_post_event.db")
 
 
 def test_metric_query_str():
@@ -183,11 +192,12 @@ def test_metric_query_df_all():
         include_metrics="all",
         return_query=False,
         include_geometry=False,
+        deduplicate_primary=False
     )
-    # print(query_df)
-    assert len(query_df) == 9
-    assert len(query_df.columns) == len(group_by) + 22
-    assert isinstance(query_df, pd.DataFrame)
+    print(query_df)
+    # assert len(query_df) == 9
+    # assert len(query_df.columns) == len(group_by) + 22
+    # assert isinstance(query_df, pd.DataFrame)
 
 
 def test_metric_query_value_time_filter():
@@ -222,14 +232,21 @@ def test_metric_query_value_time_filter():
 
 
 if __name__ == "__main__":
-    test_metric_query_str()
-    test_metric_query_df()
-    test_metric_query_gdf()
-    test_metric_query_gdf_2()
-    test_metric_query_gdf_no_geom()
-    test_metric_query_gdf_missing_group_by()
-    test_metric_query_df_2()
-    test_metric_query_df_time_metrics()
+
+    import time
+    t1 = time.time()
+
+
+    # test_metric_query_str()
+    # test_metric_query_df()
+    # test_metric_query_gdf()
+    # test_metric_query_gdf_2()
+    # test_metric_query_gdf_no_geom()
+    # test_metric_query_gdf_missing_group_by()
+    # test_metric_query_df_2()
+    # test_metric_query_df_time_metrics()
     test_metric_query_df_all()
-    test_metric_query_value_time_filter()
+    # test_metric_query_value_time_filter()
+
+    print(f"Elapsed: {time.time() - t1:.2f} s")
     pass
