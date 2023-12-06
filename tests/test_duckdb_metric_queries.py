@@ -5,20 +5,11 @@ from pydantic import ValidationError
 import teehr.queries.duckdb as tqu
 from pathlib import Path
 
-# TEST_STUDY_DIR = Path("tests", "data", "test_study")
-# PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_obs.parquet")
-# SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
-# CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
-# GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
-
-# TODO: REMOVE. Katie's Hilary event
-TEST_STUDY_DIR = Path("/mnt/data/ciroh/2023_hilary")
-PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "forcing_analysis_assim_extend", "*.parquet")
-SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "forcing_medium_range", "*.parquet")
-CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "huc10_huc10_crosswalk.conus.parquet")
-ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "attrs/*.parquet")
-GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR,  "huc10_geometry.conus.parquet")
-# DATABASE_FILEPATH = Path(TEST_STUDY_DIR, "hilary_post_event.db")
+TEST_STUDY_DIR = Path("tests", "data", "test_study")
+PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_obs.parquet")
+SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
+CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
+GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
 
 
 def test_metric_query_str():
@@ -30,7 +21,8 @@ def test_metric_query_str():
         group_by=["primary_location_id"],
         order_by=["primary_location_id"],
         include_metrics="all",
-        return_query=True
+        return_query=True,
+        deduplicate_primary=True
     )
     # print(query_str)
     assert isinstance(query_str, str)
@@ -46,6 +38,7 @@ def test_metric_query_df():
         order_by=["primary_location_id"],
         include_metrics="all",
         return_query=False,
+        deduplicate_primary=True
     )
     # print(query_df)
     assert len(query_df) == 3
@@ -64,6 +57,7 @@ def test_metric_query_gdf():
         include_metrics="all",
         return_query=False,
         include_geometry=True,
+        deduplicate_primary=True
     )
     # print(query_df)
     assert len(query_df) == 3
@@ -82,6 +76,7 @@ def test_metric_query_gdf_2():
         include_metrics="all",
         return_query=False,
         include_geometry=True,
+        deduplicate_primary=True
     )
     # print(query_df)
     assert len(query_df) == 9
@@ -99,6 +94,7 @@ def test_metric_query_gdf_no_geom():
             include_metrics="all",
             return_query=False,
             include_geometry=True,
+            deduplicate_primary=True
         )
 
 
@@ -114,6 +110,7 @@ def test_metric_query_gdf_missing_group_by():
             include_metrics="all",
             return_query=False,
             include_geometry=True,
+            deduplicate_primary=True
         )
 
 
@@ -149,6 +146,7 @@ def test_metric_query_df_2():
         include_metrics=include_metrics,
         return_query=False,
         include_geometry=False,
+        deduplicate_primary=True
     )
     # print(query_df)
     assert len(query_df) == 3
@@ -173,6 +171,7 @@ def test_metric_query_df_time_metrics():
         include_metrics=include_metrics,
         return_query=False,
         include_geometry=False,
+        deduplicate_primary=True
     )
     # print(query_df)
     assert len(query_df) == 9
@@ -192,12 +191,12 @@ def test_metric_query_df_all():
         include_metrics="all",
         return_query=False,
         include_geometry=False,
-        deduplicate_primary=False
+        deduplicate_primary=True
     )
-    print(query_df)
-    # assert len(query_df) == 9
-    # assert len(query_df.columns) == len(group_by) + 22
-    # assert isinstance(query_df, pd.DataFrame)
+    # print(query_df)
+    assert len(query_df) == 9
+    assert len(query_df.columns) == len(group_by) + 22
+    assert isinstance(query_df, pd.DataFrame)
 
 
 def test_metric_query_value_time_filter():
@@ -224,6 +223,7 @@ def test_metric_query_value_time_filter():
                 "value": f"{'2022-01-01 02:00:00'}"
             }
         ],
+        deduplicate_primary=True
     )
     # print(query_df)
     assert len(query_df) == 3
@@ -233,20 +233,14 @@ def test_metric_query_value_time_filter():
 
 if __name__ == "__main__":
 
-    import time
-    t1 = time.time()
-
-
-    # test_metric_query_str()
-    # test_metric_query_df()
-    # test_metric_query_gdf()
-    # test_metric_query_gdf_2()
-    # test_metric_query_gdf_no_geom()
-    # test_metric_query_gdf_missing_group_by()
-    # test_metric_query_df_2()
-    # test_metric_query_df_time_metrics()
+    test_metric_query_str()
+    test_metric_query_df()
+    test_metric_query_gdf()
+    test_metric_query_gdf_2()
+    test_metric_query_gdf_no_geom()
+    test_metric_query_gdf_missing_group_by()
+    test_metric_query_df_2()
+    test_metric_query_df_time_metrics()
     test_metric_query_df_all()
-    # test_metric_query_value_time_filter()
-
-    print(f"Elapsed: {time.time() - t1:.2f} s")
+    test_metric_query_value_time_filter()
     pass
