@@ -36,7 +36,7 @@ $ pip install 'teehr @ git+https://github.com/RTIInternational/teehr@[BRANCH_TAG
 Use Docker
 ```bash
 $ docker build -t teehr:v0.2.9 .
-$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.2.8 jupyter lab --ip 0.0.0.0 $HOME
+$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.2.9 jupyter lab --ip 0.0.0.0 $HOME
 ```
 
 ## Examples
