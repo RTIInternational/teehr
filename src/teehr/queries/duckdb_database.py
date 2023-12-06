@@ -426,7 +426,7 @@ def create_get_timeseries_query(
             GROUP BY
                 value_time,
                 primary_location_id,
-                configuration,
+                --configuration,
                 measurement_unit,
                 variable_name,
             ORDER BY
@@ -536,7 +536,7 @@ def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
                      GROUP BY
                         value_time,
                         primary_location_id,
-                        configuration,
+                        --configuration,
                         measurement_unit,
                         variable_name,
                     """
