@@ -62,9 +62,9 @@ def get_metrics(
         Only works if `primary_location_id`
         is included as a group_by field.
     deduplicate_primary: bool = True
-        True (default) removes rows with duplicate primary data where unique
+        True (default) removes rows with duplicate primary values, where unique
         values are defined by the value_time, location_id, configuration,
-        variable_name and measurement unit fields.
+        variable_name and measurement_unit fields.
         False ignores duplicates.
 
 
