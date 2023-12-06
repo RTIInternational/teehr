@@ -84,13 +84,13 @@ def generate_json_paths(
         List of filepaths to json files locally and/or in s3
     """
 
-    if kerchunk_method == SupportedKerchunkMethod.create:
+    if kerchunk_method == SupportedKerchunkMethod.local:
         # Create them manually first
         json_paths = build_zarr_references(gcs_component_paths,
                                            json_dir,
                                            ignore_missing_file)
 
-    elif kerchunk_method == SupportedKerchunkMethod.use_available:
+    elif kerchunk_method == SupportedKerchunkMethod.remote:
         # Use whatever pre-builts exist, skipping the rest
         fs = fsspec.filesystem("s3", anon=True)
         results = []

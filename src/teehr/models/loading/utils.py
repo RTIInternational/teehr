@@ -24,9 +24,9 @@ class SupportedNWMDataSourcesEnum(str, Enum):
 
 
 class SupportedKerchunkMethod(str, Enum):
-    create = "create"
+    local = "local"
+    remote = "remote"
     auto = "auto"
-    use_available = "use_available"
 
 
 # class NWM20RetroConfig(BaseModel):

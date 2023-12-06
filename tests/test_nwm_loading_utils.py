@@ -1,11 +1,11 @@
 from pathlib import Path
-import filecmp
 
 from teehr.loading.nwm.utils import (
     build_zarr_references,
     check_dates_against_nwm_version,
     build_remote_nwm_filelist,
-    generate_json_paths
+    generate_json_paths,
+    get_dataset
 )
 from teehr.loading.nwm.const import (
     NWM22_ANALYSIS_CONFIG,
@@ -22,7 +22,7 @@ def test_point_zarr_reference_file():
         "gcs://national-water-model/nwm.20231101/short_range_alaska/nwm.t00z.short_range.channel_rt.f001.alaska.nc" # noqa
     ]
 
-    json_file = build_zarr_references(
+    built_files = build_zarr_references(
         remote_paths=component_paths,
         json_dir=TEMP_DIR,
         ignore_missing_file=False
@@ -32,7 +32,13 @@ def test_point_zarr_reference_file():
         "nwm.20231101.nwm.t00z.short_range.channel_rt.f001.alaska.nc.json"
     )
 
-    assert filecmp.cmp(test_file, json_file[0], shallow=False)
+    test_ds = get_dataset(str(test_file), ignore_missing_file=False)
+    built_ds = get_dataset(built_files[0], ignore_missing_file=False)
+
+    # Two Datasets are identical if they have matching variables and
+    # coordinates, all of which are equal, and all dataset attributes
+    # and the attributes on all variables and coordinates are equal.
+    assert test_ds.identical(built_ds)
 
 
 def test_dates_and_nwm_version():
@@ -131,3 +137,4 @@ if __name__ == "__main__":
     test_building_nwm30_gcs_paths()
     test_building_nwm22_gcs_paths()
     test_generate_json_paths()
+    test_point_zarr_reference_file()

@@ -36,7 +36,7 @@ def nwm_to_parquet(
     output_parquet_dir: Union[str, Path],
     nwm_version: SupportedNWMOperationalVersionsEnum,
     data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
-    kerchunk_method: Optional[SupportedKerchunkMethod] = "create",
+    kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
     t_minus_hours: Optional[List[int]] = None,
     process_by_z_hour: Optional[bool] = True,
     stepsize: Optional[int] = 100,
@@ -77,12 +77,13 @@ def nwm_to_parquet(
     kerchunk_method: Optional[SupportedKerchunkMethod]
         When data_source = "GCS", specifies the preference in creating Kerchunk
         reference json files.
-        "create" - (default) always create new json files from netcdf files in GCS and
-                   save locally
-        "use_available" - read the CIROH pre-generated jsons from s3, ignoring
-                          any that are unavailable
+        "local" - (default) will create new json files from netcdf files in GCS and
+                   save to a local directory if they do not already exist locally,
+                   in which case the creation is skipped.
+        "remote" - read the CIROH pre-generated jsons from s3, ignoring
+                   any that are unavailable
         "auto" - read the CIROH pre-generated jsons from s3, and create
-                          any that are unavailable, storing locally
+                 any that are unavailable, storing locally
     t_minus_hours: Optional[List[int]]
         Specifies the look-back hours to include if an assimilation
         configuration is specified.
