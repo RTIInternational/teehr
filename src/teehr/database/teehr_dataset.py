@@ -98,11 +98,7 @@ class TEEHRDatasetAPI:
         (runs EXPLAIN ANALYZE and prints output to screen)"""
         query = "EXPLAIN ANALYZE " + query
         with duckdb.connect(self.database_filepath) as con:
-            con.sql("PRAGMA enable_profiling;")
-            con.sql("PRAGMA enable_profiling='query_tree';")
-            # con.sql("PRAGMA enable_profiling='query_tree_optimizer';")
-            con.sql(query).show()
-            pass
+            print(con.sql(query).df().explain_value.values[0])
 
     def query(
         self, query: str, format: str = None, create_function_args: Dict = None
@@ -1120,6 +1116,8 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         order_by : List[str]
             List of column/field names to order results by.
             Must provide at least one.
+        timeseries_name: str
+            Name of the time series to query ('primary' or 'secondary')
         filters : Union[List[dict], None], optional
             List of dictionaries describing the "where" clause to limit data
             that is included in metrics, by default None
