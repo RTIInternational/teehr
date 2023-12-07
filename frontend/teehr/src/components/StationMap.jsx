@@ -11,7 +11,6 @@ function StationMap(props) {
   const [map, setMap] = useState(null);
   const [metricMin, setMetricMin] = useState(null);
   const [metricMax, setMetricMax] = useState(null);
-  console.log({ stations });
 
   //set style
   const steps = 50;
