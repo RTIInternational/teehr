@@ -6,7 +6,7 @@ export default function TextInput(props) {
   const { value, onChange, label, error, helperText } = props;
   return (
     <div>
-      <FormControl sx={{ m: 1, display: "flex" }}>
+      <FormControl sx={{ display: "flex" }}>
         <TextField
           error={error}
           helperText={helperText}

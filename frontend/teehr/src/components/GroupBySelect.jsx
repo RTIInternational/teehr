@@ -85,7 +85,7 @@ export default function GroupBySelect(props) {
     <div>
       {!loading ? (
         !errors ? (
-          <FormControl sx={{ m: 1, display: "flex" }}>
+          <FormControl sx={{ mt: 1, mb: 1, display: "flex" }}>
             <InputLabel id="demo-multiple-chip-label">
               Group By Fields
             </InputLabel>

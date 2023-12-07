@@ -39,7 +39,7 @@ export default function DatasetSelect(props) {
     <div>
       {!loading ? (
         !errors ? (
-          <FormControl sx={{ m: 1, display: "flex" }}>
+          <FormControl sx={{ display: "flex" }}>
             <InputLabel id="demo-multiple-chip-label">
               Select Dataset
             </InputLabel>

@@ -37,7 +37,7 @@ export default function OperatorSelect(props) {
   }, [selectedDataset, setLoading, setErrors, setOperators]);
 
   return (
-    <FormControl sx={{ m: 1, display: "flex" }}>
+    <FormControl sx={{ display: "flex" }}>
       <InputLabel id="demo-multiple-chip-label">Operator</InputLabel>
       <Select
         labelId="demo-multiple-chip-label"

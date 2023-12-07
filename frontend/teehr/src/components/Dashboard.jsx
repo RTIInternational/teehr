@@ -163,7 +163,7 @@ function Dashboard() {
                   includeSpatialData={includeSpatialData}
                 />
                 <Box>
-                  <Typography>Filters</Typography>
+                  <Typography>Add Filter</Typography>
                   {filters.map((filter, index) => (
                     <div
                       key={index}

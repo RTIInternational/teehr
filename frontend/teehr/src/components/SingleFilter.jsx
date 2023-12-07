@@ -99,13 +99,13 @@ export default function Filter(props) {
   };
 
   return (
-    <Grid container spacing={0}>
+    <Grid container spacing={1}>
       <Grid item xs={12} md={4.5}>
         <SingleSelect
           value={selectedGroupByField || ""}
           onChange={handleFilterFieldChange}
           options={groupByFields.map((o) => o.name)}
-          label={"Filter Field"}
+          label={"Filter"}
         />
       </Grid>
       <Grid item xs={12} md={2}>
@@ -121,7 +121,6 @@ export default function Filter(props) {
               label="Time"
               value={value ? DateTime.fromISO(value) : null}
               onChange={handleTimeValueChange}
-              sx={{ m: "8px" }}
             />
           </LocalizationProvider>
         )}

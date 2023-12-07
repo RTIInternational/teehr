@@ -11,7 +11,7 @@ export default function SingleSelect(props) {
 
   return (
     <div>
-      <FormControl sx={{ m: 1, display: "flex" }}>
+      <FormControl sx={{ display: "flex" }}>
         <InputLabel id="demo-multiple-chip-label">{label}</InputLabel>
         <Select
           labelId="demo-multiple-chip-label"
