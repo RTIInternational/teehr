@@ -1,47 +1,48 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import '../App.css';
-import {
-  MapContainer,
-  TileLayer,
-  GeoJSON
-} from 'react-leaflet';
+import "../App.css";
+import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import L from "leaflet";
-import colormap from 'colormap';
+import colormap from "colormap";
 
 function StationMap(props) {
-  const position = [39, -98]
+  const position = [39, -98];
   const { stations, metricName } = props;
   const [map, setMap] = useState(null);
-  const [metricMin, setMetricMin] = useState(null)
-  const [metricMax, setMetricMax] = useState(null)
+  const [metricMin, setMetricMin] = useState(null);
+  const [metricMax, setMetricMax] = useState(null);
+  console.log({ stations });
 
   //set style
   const steps = 50;
   const ramp = colormap({
-    colormap: 'jet',
+    colormap: "jet",
     nshades: steps,
   });
   const clamp = (value, low, high) => {
     return Math.max(low, Math.min(value, high));
-  }
+  };
   const getColor = (feature) => {
-    const value = feature.properties[metricName]
-    const f = Math.pow(clamp((value - metricMin) / (metricMax - metricMin), 0, 1), 1 / 2);
+    const value = feature.properties[metricName];
+    const f = Math.pow(
+      clamp((value - metricMin) / (metricMax - metricMin), 0, 1),
+      1 / 2
+    );
     const index = Math.round(f * (steps - 1));
     return ramp[index];
-  }
+  };
 
   useEffect(() => {
     const setMinMax = (stations, metricName) => {
       if (stations) {
-        const values = stations.features.map((feature) => feature.properties[metricName]);
+        const values = stations.features.map(
+          (feature) => feature.properties[metricName]
+        );
         setMetricMin(Math.min(...values));
         setMetricMax(Math.max(...values));
       }
     };
     setMinMax(stations, metricName);
-
   }, [stations, metricName]);
 
   useEffect(() => {
@@ -67,7 +68,10 @@ function StationMap(props) {
       // },
       mouseover: () => {
         layer.bindTooltip(
-          feature.properties.primary_location_id + " (" + feature.properties[metricName].toFixed(3) + ")",
+          feature.properties.primary_location_id +
+            " (" +
+            feature.properties[metricName].toFixed(3) +
+            ")",
           { direction: "right" }
         );
         layer.openTooltip();
@@ -87,7 +91,7 @@ function StationMap(props) {
           return new L.CircleMarker(latlng, {
             radius: 5,
             color: getColor(feature),
-            fillOpacity: 1
+            fillOpacity: 1,
           });
         }}
         onEachFeature={onEachFeature}
@@ -108,7 +112,7 @@ function StationMap(props) {
       />
       <StationGeoJSON />
     </MapContainer>
-  )
+  );
 }
 
 StationMap.propTypes = {
@@ -116,4 +120,4 @@ StationMap.propTypes = {
   metricName: PropTypes.string.isRequired,
 };
 
-export default StationMap
+export default StationMap;

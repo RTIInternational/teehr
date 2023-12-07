@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useTheme } from "@mui/material/styles";
 import PropTypes from "prop-types";
 import Box from "@mui/material/Box";
@@ -10,6 +10,7 @@ import Select from "@mui/material/Select";
 import Chip from "@mui/material/Chip";
 import LinearProgress from "@mui/material/LinearProgress";
 import axios from "axios";
+import DashboardContext from "../Context";
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -31,7 +32,7 @@ function getStyles(name, personName, theme) {
   };
 }
 
-export default function MetricSelect(props) {
+export default function MetricSelect() {
   const theme = useTheme();
   const [errors, setErrors] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -41,7 +42,7 @@ export default function MetricSelect(props) {
     selectedMetrics,
     setSelectedMetrics,
     selectedDataset,
-  } = props;
+  } = useContext(DashboardContext);
 
   useEffect(() => {
     const fetchMetricFields = () => {
@@ -125,11 +126,3 @@ export default function MetricSelect(props) {
     </div>
   );
 }
-
-MetricSelect.propTypes = {
-  metrics: PropTypes.array.isRequired,
-  selectedMetrics: PropTypes.array.isRequired,
-  setSelectedMetrics: PropTypes.func.isRequired,
-  setMetrics: PropTypes.func.isRequired,
-  selectedDataset: PropTypes.string.isRequired,
-};

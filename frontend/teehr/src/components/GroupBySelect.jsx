@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useTheme } from "@mui/material/styles";
 import PropTypes from "prop-types";
 import Box from "@mui/material/Box";
@@ -10,6 +10,7 @@ import Select from "@mui/material/Select";
 import Chip from "@mui/material/Chip";
 import LinearProgress from "@mui/material/LinearProgress";
 import axios from "axios";
+import DashboardContext from "../Context";
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -33,6 +34,7 @@ function getStyles(name, personName, theme) {
 
 export default function GroupBySelect(props) {
   const theme = useTheme();
+  const { fieldValues, setFieldValues } = useContext(DashboardContext);
   const [errors, setErrors] = useState(false);
   const [loading, setLoading] = useState(true);
   const {
@@ -42,7 +44,7 @@ export default function GroupBySelect(props) {
     setSelectedGroupByFields,
     selectedDataset,
     includeSpatialData,
-  } = props;
+  } = useContext(DashboardContext);
 
   useEffect(() => {
     const fetchMetricFields = () => {
@@ -72,13 +74,36 @@ export default function GroupBySelect(props) {
   }, [selectedDataset, setGroupByFields, setLoading, setErrors]);
 
   const handleChange = (event) => {
-    const {
-      target: { value },
-    } = event;
-    setSelectedGroupByFields(
-      // On autofill we get a stringified value.
-      typeof value === "string" ? value.split(",") : value
-    );
+    const value = event.target.value;
+    // On autofill we get a stringified value.
+    const arr = typeof value === "string" ? value.split(",") : value;
+    arr.forEach((field) => {
+      if (
+        field.name in fieldValues ||
+        field.type === "TIMESTAMP" ||
+        field.name === "primary_location_id"
+      ) {
+        return;
+      }
+      axios
+        .post(
+          `http://localhost:8000/datasets/${selectedDataset}/get_unique_field_values`,
+          {
+            field_name: field.name,
+          }
+        )
+        .then((res) => {
+          const options = res.data.map((o) => Object.values(o)[0]);
+          setFieldValues((prev) => {
+            return { ...prev, [field.name]: options };
+          });
+        })
+        .catch(function (err) {
+          console.log(err);
+          setErrors(err);
+        });
+    });
+    setSelectedGroupByFields(arr);
   };
 
   return (
@@ -130,12 +155,3 @@ export default function GroupBySelect(props) {
     </div>
   );
 }
-
-GroupBySelect.propTypes = {
-  groupByFields: PropTypes.array.isRequired,
-  setGroupByFields: PropTypes.func.isRequired,
-  selectedGroupByFields: PropTypes.array.isRequired,
-  setSelectedGroupByFields: PropTypes.func.isRequired,
-  selectedDataset: PropTypes.string.isRequired,
-  includeSpatialData: PropTypes.bool,
-};

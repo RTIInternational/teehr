@@ -1,29 +1,14 @@
 import { useState, useEffect } from "react";
 import "../App.css";
-import axios from "axios";
-import {
-  Button,
-  Grid,
-  Box,
-  CircularProgress,
-  Checkbox,
-  FormControlLabel,
-  FormGroup,
-  Typography,
-  Tab,
-} from "@mui/material";
+import { Grid, Box, CircularProgress, Tab } from "@mui/material";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 
 import StationMap from "./StationMap";
-import MetricSelect from "./MetricSelect.jsx";
-import DatasetSelect from "./DatasetSelect.jsx";
-import DisplayMetricSelect from "./DisplayMetricSelect.jsx";
-import GroupBySelect from "./GroupBySelect";
 import DataGridDemo from "./DataGrid";
-import Filter from "./SingleFilter";
 import DashboardContext from "../Context.js";
-import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
-// import MapWrapper from "./MapWrapper.jsx";
+import QuerySection from "./QueryStep.jsx";
+import DisplayStep from "./DisplayStep.jsx";
+import Results from "./Results.jsx";
 
 function Dashboard() {
   const [errors, setErrors] = useState(false);
@@ -45,39 +30,7 @@ function Dashboard() {
   const [filters, setFilters] = useState([]);
   const [includeSpatialData, setIncludeSpatialData] = useState(true);
   const [selectedTab, setSelectedTab] = useState("1");
-
-  const handleTabChange = (e, value) => {
-    setSelectedTab(value);
-  };
-
-  // const [orderByFields, setOrderByFields] = useState([]);
-  // const [selectedOrderByFields, setSelectedOrderByFields] = useState([]);
-
-  const formatGroupByFields = (fields) => {
-    return fields.map((obj) => obj.name);
-  };
-
-  const fetchStations = () => {
-    setLoading(true);
-    axios
-      .post(`http://localhost:8000/datasets/${selectedDataset}/get_metrics`, {
-        group_by: formatGroupByFields(selectedGroupByFields),
-        order_by: ["primary_location_id"],
-        include_metrics: selectedMetrics,
-        filters: filters,
-        return_query: false,
-        include_geometry: true,
-      })
-      .then((res) => {
-        setData(res.data);
-        setLoading(false);
-      })
-      .catch(function (err) {
-        console.log(err);
-        setErrors(err);
-        setLoading(false);
-      });
-  };
+  const [fieldValues, setFieldValues] = useState({});
 
   const addFilter = () => {
     setFilters([...filters, { column: "", operator: "", value: "" }]);
@@ -94,23 +47,27 @@ function Dashboard() {
     setFilters(newFilters);
   };
 
-  const locationField = groupByFields.find(
-    (f) => f.name === "primary_location_id"
-  );
+  const nonListFields = [
+    "reference_time",
+    "value_time",
+    "secondary_value",
+    "primary_value",
+    "absolute_difference",
+    "upstream_area_km2",
+    "primary_normalized_discharge",
+    "exceed_2yr_recurrence",
+    "",
+  ];
 
-  useEffect(() => {
-    if (includeSpatialData && !selectedGroupByFields.includes(locationField)) {
-      setSelectedGroupByFields((prev) => [...prev, locationField]);
-    }
-    if (!includeSpatialData && selectedTab === "1") {
-      setSelectedTab("2");
-    }
-  }, [includeSpatialData, groupByFields, selectedGroupByFields, locationField]);
+  const [inputValues, setInputValues] = useState({});
 
   const contextValue = {
+    data,
+    displayMetric,
     datasets,
     metrics,
     groupByFields,
+    fieldValues,
     filters,
     operators,
     errors,
@@ -119,6 +76,7 @@ function Dashboard() {
     selectedDataset,
     selectedMetrics,
     selectedGroupByFields,
+    nonListFields,
     addFilter,
     updateFilter,
     deleteFilter,
@@ -129,117 +87,31 @@ function Dashboard() {
     setOperators,
     setErrors,
     setLoading,
+    setFieldValues,
+    setSelectedMetrics,
+    setSelectedGroupByFields,
+    setSelectedDataset,
+    setDisplayMetric,
+    setIncludeSpatialData,
+    setData,
+    inputValues,
+    setInputValues,
+    selectedTab,
+    setSelectedTab,
   };
+
+  useEffect(() => {
+    console.log({ inputValues });
+  }, [inputValues]);
 
   return (
     <DashboardContext.Provider value={contextValue}>
       <Box sx={{ p: 2 }}>
         <Grid container spacing={2}>
-          <Grid item xs={5} sx={{ mt: 8 }}>
-            <Grid>
-              <DatasetSelect
-                datasets={datasets}
-                setDatasets={setDatasets}
-                setSelectedDataset={setSelectedDataset}
-                selectedDataset={selectedDataset}
-              />
-            </Grid>
-            {metrics && selectedDataset && (
-              <Grid>
-                <MetricSelect
-                  metrics={metrics}
-                  setMetrics={setMetrics}
-                  selectedMetrics={selectedMetrics}
-                  setSelectedMetrics={setSelectedMetrics}
-                  selectedDataset={selectedDataset}
-                />
-
-                <GroupBySelect
-                  groupByFields={groupByFields}
-                  setGroupByFields={setGroupByFields}
-                  selectedGroupByFields={selectedGroupByFields}
-                  setSelectedGroupByFields={setSelectedGroupByFields}
-                  selectedDataset={selectedDataset}
-                  includeSpatialData={includeSpatialData}
-                />
-                <Box>
-                  <Typography>Add Filter</Typography>
-                  {filters.map((filter, index) => (
-                    <div
-                      key={index}
-                      style={{ marginBottom: "8px", display: "flex" }}
-                    >
-                      <Filter
-                        index={index}
-                        selectedGroupByField={filter.column || ""}
-                        selectedOperator={filter.operator || ""}
-                        value={filter.value.toString() || ""}
-                      />
-                    </div>
-                  ))}
-                  <Button variant="standard" onClick={addFilter} color="grey">
-                    <AddOutlinedIcon />
-                  </Button>
-                </Box>
-                <Box sx={{ display: "flex", justifyContent: "center" }}>
-                  <FormGroup>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={includeSpatialData}
-                          onChange={() =>
-                            setIncludeSpatialData((prev) => !prev)
-                          }
-                          inputProps={{
-                            "aria-label": "Include Spatial Data Option",
-                          }}
-                        />
-                      }
-                      label="Include Spatial Data"
-                    ></FormControlLabel>
-                  </FormGroup>
-                  <Button
-                    variant="contained"
-                    onClick={() => {
-                      fetchStations();
-                    }}
-                  >
-                    Fetch Data
-                  </Button>
-                </Box>
-              </Grid>
-            )}
-            <Grid>
-              {selectedDataset && (
-                <DisplayMetricSelect
-                  selectedMetrics={selectedMetrics}
-                  setSelectedDisplayMetric={setDisplayMetric}
-                  selectedDisplayMetric={displayMetric}
-                />
-              )}
-            </Grid>
-          </Grid>
-          <Grid item xs={7}>
-            {data && displayMetric && (
-              <TabContext value={selectedTab}>
-                <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-                  <TabList
-                    onChange={handleTabChange}
-                    aria-label="Dashboard tabs"
-                    variant="fullWidth"
-                  >
-                    <Tab label="Map" value="1" disabled={!includeSpatialData} />
-                    <Tab label="Table" value="2" />
-                  </TabList>
-                </Box>
-                <TabPanel value="1">
-                  <StationMap stations={data} metricName={displayMetric} />
-                </TabPanel>
-                <TabPanel value="2">
-                  <DataGridDemo data={data} />
-                </TabPanel>
-              </TabContext>
-            )}
+          <Grid item xs={5} sx={{ mt: 9 }}>
+            <QuerySection />
+            <DisplayStep />
+            <Results />
           </Grid>
         </Grid>
       </Box>

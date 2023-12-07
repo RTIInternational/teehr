@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import PropTypes from "prop-types";
 import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
@@ -6,11 +6,13 @@ import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 import axios from "axios";
 import { OutlinedInput, Box, LinearProgress } from "@mui/material";
+import DashboardContext from "../Context";
 
-export default function DatasetSelect(props) {
+export default function DatasetSelect() {
   const [errors, setErrors] = useState(false);
   const [loading, setLoading] = useState(true);
-  const { datasets, setDatasets, selectedDataset, setSelectedDataset } = props;
+  const { datasets, setDatasets, selectedDataset, setSelectedDataset } =
+    useContext(DashboardContext);
 
   useEffect(() => {
     const fetchDatasets = () => {
@@ -81,10 +83,3 @@ export default function DatasetSelect(props) {
     </div>
   );
 }
-
-DatasetSelect.propTypes = {
-  datasets: PropTypes.array.isRequired,
-  selectedDataset: PropTypes.string.isRequired,
-  setSelectedDataset: PropTypes.func.isRequired,
-  setDatasets: PropTypes.func.isRequired,
-};

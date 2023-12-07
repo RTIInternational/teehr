@@ -18,24 +18,14 @@ export default function Filter(props) {
     selectedDataset,
     setLoading,
     setErrors,
+    setFieldValues,
     updateFilter,
     deleteFilter,
+    nonListFields,
   } = useContext(DashboardContext);
 
   const [fieldType, setFieldType] = useState();
   const [fieldValueOptions, setFieldValueOptions] = useState([]);
-
-  const nonListFields = [
-    "reference_time",
-    "value_time",
-    "secondary_value",
-    "primary_value",
-    "absolute_difference",
-    "upstream_area_km2",
-    "primary_normalized_discharge",
-    "exceed_2yr_recurrence",
-    "",
-  ];
 
   const getFieldType = (fieldName) => {
     const field = groupByFields.find((field) => field.name === fieldName);
@@ -65,8 +55,14 @@ export default function Filter(props) {
         }
       )
       .then((res) => {
-        setFieldValueOptions(res.data.map((o) => Object.values(o)[0]));
+        const options = res.data.map((o) => Object.values(o)[0]);
+        setFieldValueOptions(options);
         setLoading(false);
+        setFieldValues((prev) => {
+          const newFieldValues = { ...prev };
+          newFieldValues[selectedGroupByField] = options;
+          return newFieldValues;
+        });
       })
       .catch(function (err) {
         setErrors(err);
@@ -99,7 +95,7 @@ export default function Filter(props) {
   };
 
   return (
-    <Grid container spacing={1}>
+    <Grid container spacing={1} sx={{ mb: 1 }}>
       <Grid item xs={12} md={4.5}>
         <SingleSelect
           value={selectedGroupByField || ""}
