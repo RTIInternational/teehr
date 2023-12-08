@@ -156,24 +156,49 @@ def metric_geometry_join_clause(
 def _filter_primary_cte(deduplicate_primary: bool):
     if deduplicate_primary:
         qry = """
-            SELECT * FROM(
+            SELECT
+                    reference_time
+                    , value_time
+                    , secondary_location_id
+                    , secondary_value
+                    , configuration
+                    , measurement_unit
+                    , variable_name
+                    , primary_value
+                    , primary_location_id
+                    , lead_time
+                    , absolute_difference
+            FROM(
                 SELECT *,
                     row_number()
                 OVER(
                     PARTITION BY value_time,
-                                    primary_location_id,
-                                    configuration,
-                                    variable_name,
-                                    measurement_unit
-                    ORDER BY reference_time desc
+                                 primary_location_id,
+                                 configuration,
+                                 variable_name,
+                                 measurement_unit,
+                                 reference_time
+                    ORDER BY primary_reference_time desc
                     ) AS rn
-                FROM joined
+                FROM pre_joined
                 )
             WHERE rn = 1
         """
     else:
         qry = """
-         SELECT * FROM joined
+         SELECT
+            reference_time
+            , value_time
+            , secondary_location_id
+            , secondary_value
+            , configuration
+            , measurement_unit
+            , variable_name
+            , primary_value
+            , primary_location_id
+            , lead_time
+            , absolute_difference
+         FROM pre_joined
         """
     return qry
 
@@ -213,7 +238,7 @@ def _nse_cte(mq: MetricQuery) -> str:
                     - avg(primary_value)
                     OVER(PARTITION BY {",".join(mq.group_by)}), 2
                 ) as primary_minus_primary_mean_squared
-            FROM joined_filtered
+            FROM joined
         )
         """
     return ""
@@ -235,7 +260,7 @@ def _pmxt_cte(mq: MetricQuery) -> str:
                         PARTITION BY {",".join(mq.group_by)}
                         ORDER BY value DESC, value_time
                     ) as n
-                FROM joined_filtered
+                FROM joined
             )
         """
     return ""
@@ -257,7 +282,7 @@ def _smxt_cte(mq: MetricQuery) -> str:
                     PARTITION BY {",".join(mq.group_by)}
                     ORDER BY value DESC, value_time
                 ) as n
-            FROM joined_filtered
+            FROM joined
         )
         """
     return ""
@@ -269,8 +294,8 @@ def _join_nse_cte(mq: MetricQuery) -> str:
         or mq.include_metrics == "all"
     ):
         return f"""
-            {_join_on(join="nse", join_to="joined_filtered", join_on=mq.group_by)}
-            AND nse.value_time = joined_filtered.value_time
+            {_join_on(join="nse", join_to="joined", join_on=mq.group_by)}
+            AND nse.value_time = joined.value_time
         """
     return ""
 

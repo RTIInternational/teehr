@@ -4,7 +4,7 @@ import teehr.queries.duckdb as tqu
 from pathlib import Path
 
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
-PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_obs.parquet")
+PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_obs2.parquet")
 SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
 GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
@@ -44,21 +44,13 @@ def test_metric_compare_1():
         "group_by": group_by,
         "order_by": ["primary_location_id"],
         "include_metrics": include_metrics,
-        "return_query": False
+        "return_query": False,
     }
     pandas_df = tqk.get_metrics(**args)
 
-    args = {
-        "primary_filepath": PRIMARY_FILEPATH,
-        "secondary_filepath": SECONDARY_FILEPATH,
-        "crosswalk_filepath": CROSSWALK_FILEPATH,
-        "geometry_filepath": GEOMETRY_FILEPATH,
-        "group_by": group_by,
-        "order_by": ["primary_location_id"],
-        "include_metrics": include_metrics,
-        "return_query": False,
-        "deduplicate_primary": False
-    }
+    args["deduplicate_primary"] = True
+    args["return_query"] = False
+
     duckdb_df = tqu.get_metrics(**args)
 
     for m in include_metrics:

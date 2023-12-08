@@ -152,41 +152,18 @@ def get_metrics(
             "filters": filters,
             "return_query": return_query,
             "include_geometry": include_geometry,
-            "geometry_filepath": geometry_filepath
+            "geometry_filepath": geometry_filepath,
+            "deduplicate_primary": deduplicate_primary
         }
     )
 
-    # if deduplicate_primary:
-    #     dedup_clause = f"""
-    #         WITH filtered_primary AS (
-    #             SELECT * FROM(
-    #                 SELECT *,
-    #                     row_number()
-    #                 OVER(
-    #                     PARTITION BY value_time,
-    #                                  location_id,
-    #                                  configuration,
-    #                                  variable_name,
-    #                                  measurement_unit
-    #                     ORDER BY reference_time desc
-    #                     ) AS rn
-    #                 FROM read_parquet("{str(mq.primary_filepath)}")
-    #                 )
-    #             WHERE rn = 1
-    #         ),
-    #         joined as (
-    #     """
-    #     pf = "filtered_primary"
-    # else:
-    #     dedup_clause = "WITH joined as ("
-    #     pf = f"read_parquet('{str(mq.primary_filepath)}')"
-
     query = f"""
-        WITH joined AS (
+        WITH pre_joined AS (
             SELECT
                 sf.reference_time
                 , sf.value_time as value_time
                 , sf.location_id as secondary_location_id
+                , pf.reference_time as primary_reference_time
                 , sf.value as secondary_value
                 , sf.configuration
                 , sf.measurement_unit
@@ -205,15 +182,15 @@ def get_metrics(
                 and sf.variable_name = pf.variable_name
             {tqu.filters_to_sql(mq.filters)}
         ),
-        joined_filtered AS (
-            {tqu._filter_primary_cte(deduplicate_primary)}
+        joined AS (
+            {tqu._filter_primary_cte(mq.deduplicate_primary)}
         )
         {tqu._nse_cte(mq)}
         {tqu._pmxt_cte(mq)}
         {tqu._smxt_cte(mq)}
         , metrics AS (
             SELECT
-                {",".join([f"joined_filtered.{gb}" for gb in mq.group_by])}
+                {",".join([f"joined.{gb}" for gb in mq.group_by])}
                 {tqu._select_primary_count(mq)}
                 {tqu._select_secondary_count(mq)}
                 {tqu._select_primary_minimum(mq)}
@@ -234,10 +211,10 @@ def get_metrics(
                 {tqu._select_mean_squared_error(mq)}
                 {tqu._select_root_mean_squared_error(mq)}
             FROM
-                joined_filtered
+                joined
             {tqu._join_nse_cte(mq)}
             GROUP BY
-                {",".join([f"joined_filtered.{gb}" for gb in mq.group_by])}
+                {",".join([f"joined.{gb}" for gb in mq.group_by])}
         )
         SELECT
             metrics.*
@@ -351,7 +328,32 @@ def get_joined_timeseries(
     )
 
     query = f"""
-        WITH filtered_primary AS (
+        pre_joined as (
+            SELECT
+                sf.reference_time,
+                sf.value_time,
+                sf.location_id as secondary_location_id,
+                sf.value as secondary_value,
+                sf.configuration,
+                sf.measurement_unit,
+                sf.variable_name,
+                pf.reference_time as primary_reference_time,
+                pf.value as primary_value,
+                pf.location_id as primary_location_id,
+                sf.value_time - sf.reference_time as lead_time
+                {tqu.geometry_select_clause(jtq)}
+            FROM read_parquet('{str(jtq.secondary_filepath)}') sf
+            JOIN read_parquet('{str(jtq.crosswalk_filepath)}') cf
+                on cf.secondary_location_id = sf.location_id
+            JOIN read_parquet("{str(jtq.primary_filepath)}") pf
+                on cf.primary_location_id = pf.location_id
+                and sf.value_time = pf.value_time
+                and sf.measurement_unit = pf.measurement_unit
+                and sf.variable_name = pf.variable_name
+            {tqu.geometry_join_clause(jtq)}
+            {tqu.filters_to_sql(jtq.filters)}
+        ),
+        joined AS (
             SELECT * FROM(
                 SELECT *,
                     row_number()
@@ -363,33 +365,9 @@ def get_joined_timeseries(
                                  measurement_unit
                     ORDER BY reference_time desc
                     ) AS rn
-                FROM read_parquet("{str(jtq.primary_filepath)}")
+                FROM pre_joined
                 )
             WHERE rn = 1
-        ),
-        joined as (
-            SELECT
-                sf.reference_time,
-                sf.value_time,
-                sf.location_id as secondary_location_id,
-                sf.value as secondary_value,
-                sf.configuration,
-                sf.measurement_unit,
-                sf.variable_name,
-                pf.value as primary_value,
-                pf.location_id as primary_location_id,
-                sf.value_time - sf.reference_time as lead_time
-                {tqu.geometry_select_clause(jtq)}
-            FROM read_parquet('{str(jtq.secondary_filepath)}') sf
-            JOIN read_parquet('{str(jtq.crosswalk_filepath)}') cf
-                on cf.secondary_location_id = sf.location_id
-            JOIN filtered_primary pf
-                on cf.primary_location_id = pf.location_id
-                and sf.value_time = pf.value_time
-                and sf.measurement_unit = pf.measurement_unit
-                and sf.variable_name = pf.variable_name
-            {tqu.geometry_join_clause(jtq)}
-            {tqu.filters_to_sql(jtq.filters)}
         )
         SELECT
             *

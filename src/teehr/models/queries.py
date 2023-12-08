@@ -143,6 +143,7 @@ class MetricQuery(BaseModel):
     return_query: bool
     geometry_filepath: Optional[Union[str, Path]]
     include_geometry: bool
+    deduplicate_primary: Optional[bool]
 
     @validator("include_geometry")
     def include_geometry_must_group_by_primary_location_id(cls, v, values):
