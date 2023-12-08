@@ -1,11 +1,13 @@
-import dask
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
+import re
+
+import dask
 import numpy as np
 import pandas as pd
 import xarray as xr
 
-from teehr.loading.nwm_common.utils_nwm import get_dataset, write_parquet_file
+from teehr.loading.nwm.utils import get_dataset, write_parquet_file
 
 
 def compute_zonal_mean(
@@ -34,7 +36,7 @@ def compute_zonal_mean(
 
 @dask.delayed
 def process_single_file(
-    singlefile: str,
+    row: Tuple,
     configuration: str,
     variable_name: str,
     weights_filepath: str,
@@ -43,17 +45,20 @@ def process_single_file(
 ):
     """Compute zonal mean for a single json reference file and format
     to a dataframe using the TEEHR data model"""
-    ds = get_dataset(singlefile, ignore_missing_file)
+    ds = get_dataset(
+        row.filepath,
+        ignore_missing_file,
+        target_options={'anon': True}
+    )
     if not ds:
         return None
-    filename = Path(singlefile).name
-    yrmoday = filename.split(".")[1]
-    z_hour = filename.split(".")[3][1:3]
+    yrmoday = row.day
+    z_hour = row.z_hour[1:3]
     ref_time = pd.to_datetime(yrmoday) \
         + pd.to_timedelta(int(z_hour), unit="H")
 
-    nwm22_units = ds[variable_name].attrs["units"]
-    teehr_units = units_format_dict.get(nwm22_units, nwm22_units)
+    nwm_units = ds[variable_name].attrs["units"]
+    teehr_units = units_format_dict.get(nwm_units, nwm_units)
     value_time = ds.time.values[0]
     da = ds[variable_name]
 
@@ -88,13 +93,19 @@ def fetch_and_format_nwm_grids(
         output_parquet_dir.mkdir(parents=True)
 
     # Format file list into a dataframe and group by reference time
+    pattern = re.compile(r'[0-9]+')
     days = []
     z_hours = []
-
     for path in json_paths:
         filename = Path(path).name
-        days.append(filename.split(".")[1])
-        z_hours.append(filename.split(".")[3])
+        if path.split(":")[0] == "s3":
+            # If it's a remote json day and z-hour are in the path
+            res = re.findall(pattern, path)
+            days.append(res[1])
+            z_hours.append(f"t{res[2]}z")
+        else:
+            days.append(filename.split(".")[1])
+            z_hours.append(filename.split(".")[3])
     df_refs = pd.DataFrame(
         {"day": days, "z_hour": z_hours, "filepath": json_paths}
     )
@@ -104,10 +115,10 @@ def fetch_and_format_nwm_grids(
         _, df = gp
 
         results = []
-        for singlefile in df.filepath.tolist():
+        for row in df.itertuples():
             results.append(
                 process_single_file(
-                    singlefile,
+                    row,
                     configuration,
                     variable_name,
                     zonal_weights_filepath,

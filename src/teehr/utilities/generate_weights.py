@@ -11,8 +11,8 @@ import pandas as pd
 import dask
 import shapely
 
-from teehr.loading.nwm_common.utils_nwm import load_gdf
-from teehr.loading.nwm30.const_nwm import AL_NWM_WKT
+from teehr.loading.nwm.utils import load_gdf
+from teehr.loading.nwm.const import AL_NWM_WKT
 
 
 @dask.delayed

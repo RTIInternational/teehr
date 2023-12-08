@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from hydrotools.nwis_client.iv import IVDataService
 from teehr.models.loading.utils import ChunkByEnum
 from pydantic import validate_arguments
-from teehr.loading.nwm_common.utils_nwm import write_parquet_file
+from teehr.loading.nwm.utils import write_parquet_file
 
 DATETIME_STR_FMT = "%Y-%m-%dT%H:%M:00+0000"
 
