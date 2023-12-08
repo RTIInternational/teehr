@@ -2,7 +2,7 @@ from typing import Union, Optional, List
 from datetime import datetime
 from pathlib import Path
 
-from pydantic import validate_arguments  # validate_call in > 2
+from pydantic import validate_call
 
 from teehr.loading.nwm.point_utils import (
     fetch_and_format_nwm_points,
@@ -24,7 +24,7 @@ from teehr.loading.nwm.const import (
 )
 
 
-@validate_arguments
+@validate_call()
 def nwm_to_parquet(
     configuration: str,
     output_type: str,
@@ -135,7 +135,7 @@ def nwm_to_parquet(
             output_type: variable_name,
         },
     }
-    cm = PointConfigurationModel.parse_obj(vars)
+    cm = PointConfigurationModel.model_validate(vars)
     configuration = cm.configuration.name
     forecast_obj = getattr(cm, configuration)
     output_type = forecast_obj.output_type.name

@@ -119,7 +119,7 @@ def nwm_grids_to_parquet(
         },
     }
 
-    cm = GridConfigurationModel.parse_obj(vars)
+    cm = GridConfigurationModel.model_validate(vars)
     configuration = cm.configuration.name
     forecast_obj = getattr(cm, configuration)
     output_type = forecast_obj.output_type.name

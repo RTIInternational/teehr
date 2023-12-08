@@ -116,94 +116,94 @@ class Long4OutputEnum(str, Enum):
 # POINT OUTPUT TYPE MODELS (needed for each configuration enum)
 class ShortAndAnalysis(BaseModel):
     output_type: ShortAndAnalysisOutputEnum
-    channel_rt: Optional[ChannelRtVariableEnum]
-    terrain_rt: Optional[TerrainRtVariableEnum]
-    reservoir: Optional[ReservoirVariableEnum]
+    channel_rt: Optional[ChannelRtVariableEnum] = None
+    terrain_rt: Optional[TerrainRtVariableEnum] = None
+    reservoir: Optional[ReservoirVariableEnum] = None
 
 
 class ShortAndAnalysisNoDA(BaseModel):
     output_type: ShortAndAnalysisOutputEnum
-    channel_rt: Optional[ChannelRtNoDAVariableEnum]
-    terrain_rt: Optional[TerrainRtVariableEnum]
-    reservoir: Optional[ReservoirVariableEnum]
+    channel_rt: Optional[ChannelRtNoDAVariableEnum] = None
+    terrain_rt: Optional[TerrainRtVariableEnum] = None
+    reservoir: Optional[ReservoirVariableEnum] = None
 
 
 class MediumRangeMem1(BaseModel):
     output_type: Medium1OutputEnum
-    channel_rt_1: Optional[ChannelRtVariableEnum]
-    terrain_rt_1: Optional[TerrainRtVariableEnum]
-    reservoir_1: Optional[ReservoirVariableEnum]
+    channel_rt_1: Optional[ChannelRtVariableEnum] = None
+    terrain_rt_1: Optional[TerrainRtVariableEnum] = None
+    reservoir_1: Optional[ReservoirVariableEnum] = None
 
 
 class MediumRangeMem2(BaseModel):
     output_type: Medium2OutputEnum
-    channel_rt_2: Optional[ChannelRtVariableEnum]
-    terrain_rt_2: Optional[TerrainRtVariableEnum]
-    reservoir_2: Optional[ReservoirVariableEnum]
+    channel_rt_2: Optional[ChannelRtVariableEnum] = None
+    terrain_rt_2: Optional[TerrainRtVariableEnum] = None
+    reservoir_2: Optional[ReservoirVariableEnum] = None
 
 
 class MediumRangeMem3(BaseModel):
     output_type: Medium3OutputEnum
-    channel_rt_3: Optional[ChannelRtVariableEnum]
-    terrain_rt_3: Optional[TerrainRtVariableEnum]
-    reservoir_3: Optional[ReservoirVariableEnum]
+    channel_rt_3: Optional[ChannelRtVariableEnum] = None
+    terrain_rt_3: Optional[TerrainRtVariableEnum] = None
+    reservoir_3: Optional[ReservoirVariableEnum] = None
 
 
 class MediumRangeMem4(BaseModel):
     output_type: Medium4OutputEnum
-    channel_rt_4: Optional[ChannelRtVariableEnum]
-    terrain_rt_4: Optional[TerrainRtVariableEnum]
-    reservoir_4: Optional[ReservoirVariableEnum]
+    channel_rt_4: Optional[ChannelRtVariableEnum] = None
+    terrain_rt_4: Optional[TerrainRtVariableEnum] = None
+    reservoir_4: Optional[ReservoirVariableEnum] = None
 
 
 class MediumRangeMem5(BaseModel):
     output_type: Medium5OutputEnum
-    channel_rt_5: Optional[ChannelRtVariableEnum]
-    terrain_rt_5: Optional[TerrainRtVariableEnum]
-    reservoir_5: Optional[ReservoirVariableEnum]
+    channel_rt_5: Optional[ChannelRtVariableEnum] = None
+    terrain_rt_5: Optional[TerrainRtVariableEnum] = None
+    reservoir_5: Optional[ReservoirVariableEnum] = None
 
 
 class MediumRangeMem6(BaseModel):
     output_type: Medium6OutputEnum
-    channel_rt_6: Optional[ChannelRtVariableEnum]
-    terrain_rt_6: Optional[TerrainRtVariableEnum]
-    reservoir_6: Optional[ReservoirVariableEnum]
+    channel_rt_6: Optional[ChannelRtVariableEnum] = None
+    terrain_rt_6: Optional[TerrainRtVariableEnum] = None
+    reservoir_6: Optional[ReservoirVariableEnum] = None
 
 
 class MediumRangeMem7(BaseModel):
     output_type: Medium7OutputEnum
-    channel_rt_7: Optional[ChannelRtVariableEnum]
-    terrain_rt_7: Optional[TerrainRtVariableEnum]
-    reservoir_7: Optional[ReservoirVariableEnum]
+    channel_rt_7: Optional[ChannelRtVariableEnum] = None
+    terrain_rt_7: Optional[TerrainRtVariableEnum] = None
+    reservoir_7: Optional[ReservoirVariableEnum] = None
 
 
 class MediumRangeNoDA(BaseModel):
-    output_type = MediumNoDAEnum
-    channel_rt: Optional[ChannelRtNoDAVariableEnum]
+    output_type: MediumNoDAEnum
+    channel_rt: Optional[ChannelRtNoDAVariableEnum] = None
 
 
 class LongRangeMem1(BaseModel):
     output_type: Long1OutputEnum
-    channel_rt_1: Optional[ChannelRtLongVariableEnum]
-    reservoir_1: Optional[ReservoirVariableEnum]
+    channel_rt_1: Optional[ChannelRtLongVariableEnum] = None
+    reservoir_1: Optional[ReservoirVariableEnum] = None
 
 
 class LongRangeMem2(BaseModel):
     output_type: Long2OutputEnum
-    channel_rt_2: Optional[ChannelRtLongVariableEnum]
-    reservoir_2: Optional[ReservoirVariableEnum]
+    channel_rt_2: Optional[ChannelRtLongVariableEnum] = None
+    reservoir_2: Optional[ReservoirVariableEnum] = None
 
 
 class LongRangeMem3(BaseModel):
     output_type: Long3OutputEnum
-    channel_rt_3: Optional[ChannelRtLongVariableEnum]
-    reservoir_3: Optional[ReservoirVariableEnum]
+    channel_rt_3: Optional[ChannelRtLongVariableEnum] = None
+    reservoir_3: Optional[ReservoirVariableEnum] = None
 
 
 class LongRangeMem4(BaseModel):
     output_type: Long4OutputEnum
-    channel_rt_4: Optional[ChannelRtLongVariableEnum]
-    reservoir_4: Optional[ReservoirVariableEnum]
+    channel_rt_4: Optional[ChannelRtLongVariableEnum] = None
+    reservoir_4: Optional[ReservoirVariableEnum] = None
 
 
 # POINT CONFIGURATION ENUM: Potential configuration names
@@ -239,34 +239,34 @@ class ConfigurationsEnum(str, Enum):
 
 # POINT CONFIGURATION MODEL
 class PointConfigurationModel(BaseModel):
-    configuration: ConfigurationsEnum
-    analysis_assim: Optional[ShortAndAnalysis]
-    analysis_assim_no_da: Optional[ShortAndAnalysisNoDA]
-    analysis_assim_extend: Optional[ShortAndAnalysis]
-    analysis_assim_extend_no_da: Optional[ShortAndAnalysisNoDA]
-    analysis_assim_long: Optional[ShortAndAnalysis]
-    analysis_assim_long_no_da: Optional[ShortAndAnalysisNoDA]
-    analysis_assim_hawaii: Optional[ShortAndAnalysis]
-    analysis_assim_hawaii_no_da: Optional[ShortAndAnalysisNoDA]
-    analysis_assim_puertorico: Optional[ShortAndAnalysis]
-    analysis_assim_puertorico_no_da: Optional[ShortAndAnalysisNoDA]
-    short_range: Optional[ShortAndAnalysis]
-    short_range_hawaii: Optional[ShortAndAnalysis]
-    short_range_puertorico: Optional[ShortAndAnalysis]
-    short_range_hawaii_no_da: Optional[ShortAndAnalysisNoDA]
-    short_range_puertorico_no_da: Optional[ShortAndAnalysisNoDA]
-    medium_range_mem1: Optional[MediumRangeMem1]
-    medium_range_mem2: Optional[MediumRangeMem2]
-    medium_range_mem3: Optional[MediumRangeMem3]
-    medium_range_mem4: Optional[MediumRangeMem4]
-    medium_range_mem5: Optional[MediumRangeMem5]
-    medium_range_mem6: Optional[MediumRangeMem6]
-    medium_range_mem7: Optional[MediumRangeMem7]
-    medium_range_no_da: Optional[MediumRangeNoDA]
-    long_range_mem1: Optional[LongRangeMem1]
-    long_range_mem2: Optional[LongRangeMem2]
-    long_range_mem3: Optional[LongRangeMem3]
-    long_range_mem4: Optional[LongRangeMem4]
+    configuration: ConfigurationsEnum = None
+    analysis_assim: Optional[ShortAndAnalysis] = None
+    analysis_assim_no_da: Optional[ShortAndAnalysisNoDA] = None
+    analysis_assim_extend: Optional[ShortAndAnalysis] = None
+    analysis_assim_extend_no_da: Optional[ShortAndAnalysisNoDA] = None
+    analysis_assim_long: Optional[ShortAndAnalysis] = None
+    analysis_assim_long_no_da: Optional[ShortAndAnalysisNoDA] = None
+    analysis_assim_hawaii: Optional[ShortAndAnalysis] = None
+    analysis_assim_hawaii_no_da: Optional[ShortAndAnalysisNoDA] = None
+    analysis_assim_puertorico: Optional[ShortAndAnalysis] = None
+    analysis_assim_puertorico_no_da: Optional[ShortAndAnalysisNoDA] = None
+    short_range: Optional[ShortAndAnalysis] = None
+    short_range_hawaii: Optional[ShortAndAnalysis] = None
+    short_range_puertorico: Optional[ShortAndAnalysis] = None
+    short_range_hawaii_no_da: Optional[ShortAndAnalysisNoDA] = None
+    short_range_puertorico_no_da: Optional[ShortAndAnalysisNoDA] = None
+    medium_range_mem1: Optional[MediumRangeMem1] = None
+    medium_range_mem2: Optional[MediumRangeMem2] = None
+    medium_range_mem3: Optional[MediumRangeMem3] = None
+    medium_range_mem4: Optional[MediumRangeMem4] = None
+    medium_range_mem5: Optional[MediumRangeMem5] = None
+    medium_range_mem6: Optional[MediumRangeMem6] = None
+    medium_range_mem7: Optional[MediumRangeMem7] = None
+    medium_range_no_da: Optional[MediumRangeNoDA] = None
+    long_range_mem1: Optional[LongRangeMem1] = None
+    long_range_mem2: Optional[LongRangeMem2] = None
+    long_range_mem3: Optional[LongRangeMem3] = None
+    long_range_mem4: Optional[LongRangeMem4] = None
 
 
 if __name__ == "__main__":
@@ -285,7 +285,7 @@ if __name__ == "__main__":
     }
 
     # Check input parameters
-    cm = PointConfigurationModel.parse_obj(vars)
+    cm = PointConfigurationModel.model_validate(vars)
 
     config = cm.configuration.name
     forecast_obj = getattr(cm, config)
