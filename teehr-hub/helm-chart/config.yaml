@@ -48,19 +48,19 @@ jupyterhub:
         mem_limit: null
         node_selector:
           node.kubernetes.io/instance-type: r5.4xlarge
-    - display_name: "TEEHR Evaluation System (4 vCPU/32GB memory) v0.3.0b"
+    - display_name: "TEEHR Evaluation System (4 vCPU/32GB memory) v0.3.0"
       default: True
       description: "A r5.xlarge EC2 instance $0.252/hour"
       kubespawner_override:
-        image: 935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr:v0.3.0b2
+        image: 935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr:v0.3.0
         cpu_limit: null
         mem_limit: null
         node_selector:
           node.kubernetes.io/instance-type: r5.xlarge
-    - display_name: "TEEHR Evaluation System (16 vCPU/128GB memory) v0.3.0b"
+    - display_name: "TEEHR Evaluation System (16 vCPU/128GB memory) v0.3.0"
       description: "A r5.4xlarge EC2 instance @ $1.008/hour"
       kubespawner_override:
-        image: 935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr:v0.3.0b2
+        image: 935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr:v0.3.0
         cpu_limit: null
         mem_limit: null
         node_selector:
