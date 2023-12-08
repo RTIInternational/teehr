@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2023-12-08
+
+### Added
+* Adds a dataclass and database that allows preprocessing of joined timeseries and attributes as well as the addition of user defined functions.
+* Adds an initial web service API that serves out `timeseries` and `metrics` along with some other supporting data.
+* Adds an initial interactive web application using the web service API.
+
+### Changed
+* Switches to poetry to manage Python venv
+* Upgrades to Pydantic 2+
+* Upgrades to Pangeo image `pangeo/pangeo-notebook:2023.09.11`
+
+
 ## [0.2.9] - 2023-12-08
 
 ### Added

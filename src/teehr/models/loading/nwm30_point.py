@@ -68,48 +68,48 @@ class ConfigurationsEnum(str, Enum):
 
 # POINT CONFIGURATION MODEL
 class PointConfigurationModel(BaseModel):
-    configuration: ConfigurationsEnum
-    analysis_assim: Optional[ShortAndAnalysis]
-    analysis_assim_no_da: Optional[ShortAndAnalysisNoDA]
-    analysis_assim_extend: Optional[ShortAndAnalysis]
-    analysis_assim_extend_no_da: Optional[ShortAndAnalysisNoDA]
-    analysis_assim_long: Optional[ShortAndAnalysis]
-    analysis_assim_long_no_da: Optional[ShortAndAnalysisNoDA]
-    analysis_assim_hawaii: Optional[ShortAndAnalysis]
-    analysis_assim_hawaii_no_da: Optional[ShortAndAnalysisNoDA]
-    analysis_assim_puertorico: Optional[ShortAndAnalysis]
-    analysis_assim_puertorico_no_da: Optional[ShortAndAnalysisNoDA]
-    analysis_assim_alaska: Optional[ShortAndAnalysis]
-    analysis_assim_alaska_no_da: Optional[ShortAndAnalysisNoDA]
-    analysis_assim_extend_alaska: Optional[ShortAndAnalysis]
-    analysis_assim_extend_alaska_no_da: Optional[ShortAndAnalysisNoDA]
-    short_range: Optional[ShortAndAnalysis]
-    short_range_hawaii: Optional[ShortAndAnalysis]
-    short_range_puertorico: Optional[ShortAndAnalysis]
-    short_range_hawaii_no_da: Optional[ShortAndAnalysisNoDA]
-    short_range_puertorico_no_da: Optional[ShortAndAnalysisNoDA]
-    short_range_alaska: Optional[ShortAndAnalysis]
-    medium_range_mem1: Optional[MediumRangeMem1]
-    medium_range_mem2: Optional[MediumRangeMem2]
-    medium_range_mem3: Optional[MediumRangeMem3]
-    medium_range_mem4: Optional[MediumRangeMem4]
-    medium_range_mem5: Optional[MediumRangeMem5]
-    medium_range_mem6: Optional[MediumRangeMem6]
-    medium_range_mem7: Optional[MediumRangeMem7]
-    medium_range_no_da: Optional[MediumRangeNoDA]
-    medium_range_alaska_mem1: Optional[MediumRangeMem1]
-    medium_range_alaska_mem2: Optional[MediumRangeMem2]
-    medium_range_alaska_mem3: Optional[MediumRangeMem3]
-    medium_range_alaska_mem4: Optional[MediumRangeMem4]
-    medium_range_alaska_mem5: Optional[MediumRangeMem5]
-    medium_range_alaska_mem6: Optional[MediumRangeMem6]
-    medium_range_alaska_no_da: Optional[ShortAndAnalysisNoDA]
-    medium_range_blend: Optional[ShortAndAnalysis]
-    medium_range_blend_alaska: Optional[ShortAndAnalysis]
-    long_range_mem1: Optional[LongRangeMem1]
-    long_range_mem2: Optional[LongRangeMem2]
-    long_range_mem3: Optional[LongRangeMem3]
-    long_range_mem4: Optional[LongRangeMem4]
+    configuration: ConfigurationsEnum = None
+    analysis_assim: Optional[ShortAndAnalysis] = None
+    analysis_assim_no_da: Optional[ShortAndAnalysisNoDA] = None
+    analysis_assim_extend: Optional[ShortAndAnalysis] = None
+    analysis_assim_extend_no_da: Optional[ShortAndAnalysisNoDA] = None
+    analysis_assim_long: Optional[ShortAndAnalysis] = None
+    analysis_assim_long_no_da: Optional[ShortAndAnalysisNoDA] = None
+    analysis_assim_hawaii: Optional[ShortAndAnalysis] = None
+    analysis_assim_hawaii_no_da: Optional[ShortAndAnalysisNoDA] = None
+    analysis_assim_puertorico: Optional[ShortAndAnalysis] = None
+    analysis_assim_puertorico_no_da: Optional[ShortAndAnalysisNoDA] = None
+    analysis_assim_alaska: Optional[ShortAndAnalysis] = None
+    analysis_assim_alaska_no_da: Optional[ShortAndAnalysisNoDA] = None
+    analysis_assim_extend_alaska: Optional[ShortAndAnalysis] = None
+    analysis_assim_extend_alaska_no_da: Optional[ShortAndAnalysisNoDA] = None
+    short_range: Optional[ShortAndAnalysis] = None
+    short_range_hawaii: Optional[ShortAndAnalysis] = None
+    short_range_puertorico: Optional[ShortAndAnalysis] = None
+    short_range_hawaii_no_da: Optional[ShortAndAnalysisNoDA] = None
+    short_range_puertorico_no_da: Optional[ShortAndAnalysisNoDA] = None
+    short_range_alaska: Optional[ShortAndAnalysis] = None
+    medium_range_mem1: Optional[MediumRangeMem1] = None
+    medium_range_mem2: Optional[MediumRangeMem2] = None
+    medium_range_mem3: Optional[MediumRangeMem3] = None
+    medium_range_mem4: Optional[MediumRangeMem4] = None
+    medium_range_mem5: Optional[MediumRangeMem5] = None
+    medium_range_mem6: Optional[MediumRangeMem6] = None
+    medium_range_mem7: Optional[MediumRangeMem7] = None
+    medium_range_no_da: Optional[MediumRangeNoDA] = None
+    medium_range_alaska_mem1: Optional[MediumRangeMem1] = None
+    medium_range_alaska_mem2: Optional[MediumRangeMem2] = None
+    medium_range_alaska_mem3: Optional[MediumRangeMem3] = None
+    medium_range_alaska_mem4: Optional[MediumRangeMem4] = None
+    medium_range_alaska_mem5: Optional[MediumRangeMem5] = None
+    medium_range_alaska_mem6: Optional[MediumRangeMem6] = None
+    medium_range_alaska_no_da: Optional[ShortAndAnalysisNoDA] = None
+    medium_range_blend: Optional[ShortAndAnalysis] = None
+    medium_range_blend_alaska: Optional[ShortAndAnalysis] = None
+    long_range_mem1: Optional[LongRangeMem1] = None
+    long_range_mem2: Optional[LongRangeMem2] = None
+    long_range_mem3: Optional[LongRangeMem3] = None
+    long_range_mem4: Optional[LongRangeMem4] = None
 
 
 if __name__ == "__main__":
@@ -128,7 +128,7 @@ if __name__ == "__main__":
     }
 
     # Check input parameters
-    cm = PointConfigurationModel.parse_obj(vars)
+    cm = PointConfigurationModel.model_validate(vars)
 
     config = cm.configuration.name
     forecast_obj = getattr(cm, config)

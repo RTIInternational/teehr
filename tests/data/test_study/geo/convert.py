@@ -1,5 +1,5 @@
 """
-This simple script converts `crosswalk.csv` and `gages.geojson` 
+This simple script converts `crosswalk.csv` and `gages.geojson`
 to parquet files.
 
 To run this:
@@ -19,3 +19,7 @@ df.to_parquet("crosswalk.parquet")
 print(f"gages.geojson")
 gdf = gpd.read_file("gages.geojson")
 gdf.to_parquet("gages.parquet")
+
+print("test_attr.csv")
+df = pd.read_csv("test_attr.csv")
+df.to_parquet("test_attr.parquet")

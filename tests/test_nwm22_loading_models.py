@@ -16,7 +16,7 @@ def test_point_model():
         },
     }
 
-    cm = PointConfigurationModel.parse_obj(vars)
+    cm = PointConfigurationModel.model_validate(vars)
 
     config = cm.configuration.name
     forecast_obj = getattr(cm, config)
@@ -42,8 +42,7 @@ def test_grid_model():
         },
     }
 
-    # Check input parameters
-    cm = GridConfigurationModel.parse_obj(vars)
+    cm = GridConfigurationModel.model_validate(vars)
 
     config = cm.configuration.name
     forecast_obj = getattr(cm, config)
