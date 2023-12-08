@@ -4,7 +4,7 @@ import teehr.queries.duckdb as tqu
 from pathlib import Path
 
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
-PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_obs2.parquet")
+PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_obs.parquet")
 SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
 GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
@@ -82,12 +82,6 @@ def test_metric_compare_time_metrics():
     }
     pandas_df = tqk.get_metrics(**args)
     duckdb_df = tqu.get_metrics(**args)
-
-    # Difference in significant digits
-    # for m in include_metrics:
-    #     duckdb_np = duckdb_df[m].astype('int64').to_numpy()
-    #     pandas_np = pandas_df[m].astype('int64').to_numpy()
-    #     assert np.allclose(duckdb_np, pandas_np)
 
     diff_df = pandas_df[include_metrics].compare(duckdb_df[include_metrics])
     assert diff_df.index.size == 0

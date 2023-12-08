@@ -5,7 +5,8 @@ from pathlib import Path
 from datetime import datetime
 
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
-PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_obs2.parquet")
+PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_obs.parquet")
+PRIMARY_FILEPATH_DUPS = Path(TEST_STUDY_DIR, "timeseries", "*_obs2.parquet")
 SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
 GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
@@ -13,7 +14,7 @@ GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
 
 def test_joined_timeseries_query_df():
     query_df = tqu.get_joined_timeseries(
-        primary_filepath=PRIMARY_FILEPATH,
+        primary_filepath=PRIMARY_FILEPATH_DUPS,
         secondary_filepath=SECONDARY_FILEPATH,
         crosswalk_filepath=CROSSWALK_FILEPATH,
         geometry_filepath=GEOMETRY_FILEPATH,
@@ -28,7 +29,7 @@ def test_joined_timeseries_query_df():
 
 def test_joined_timeseries_query_gdf():
     query_df = tqu.get_joined_timeseries(
-        primary_filepath=PRIMARY_FILEPATH,
+        primary_filepath=PRIMARY_FILEPATH_DUPS,
         secondary_filepath=SECONDARY_FILEPATH,
         crosswalk_filepath=CROSSWALK_FILEPATH,
         geometry_filepath=GEOMETRY_FILEPATH,
@@ -44,7 +45,7 @@ def test_joined_timeseries_query_gdf():
 
 def test_joined_timeseries_query_df_filter():
     query_df = tqu.get_joined_timeseries(
-        primary_filepath=PRIMARY_FILEPATH,
+        primary_filepath=PRIMARY_FILEPATH_DUPS,
         secondary_filepath=SECONDARY_FILEPATH,
         crosswalk_filepath=CROSSWALK_FILEPATH,
         geometry_filepath=GEOMETRY_FILEPATH,

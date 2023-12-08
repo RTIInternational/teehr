@@ -376,7 +376,7 @@ def get_joined_timeseries(
                                  variable_name,
                                  measurement_unit,
                                  reference_time
-                    ORDER BY reference_time desc
+                    ORDER BY primary_reference_time desc
                     ) AS rn
                 FROM joined
                 )
