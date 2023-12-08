@@ -47,6 +47,18 @@ def test_metric_compare_1():
         "return_query": False
     }
     pandas_df = tqk.get_metrics(**args)
+
+    args = {
+        "primary_filepath": PRIMARY_FILEPATH,
+        "secondary_filepath": SECONDARY_FILEPATH,
+        "crosswalk_filepath": CROSSWALK_FILEPATH,
+        "geometry_filepath": GEOMETRY_FILEPATH,
+        "group_by": group_by,
+        "order_by": ["primary_location_id"],
+        "include_metrics": include_metrics,
+        "return_query": False,
+        "deduplicate_primary": False
+    }
     duckdb_df = tqu.get_metrics(**args)
 
     for m in include_metrics:

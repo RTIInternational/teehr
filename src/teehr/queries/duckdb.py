@@ -156,33 +156,33 @@ def get_metrics(
         }
     )
 
-    if deduplicate_primary:
-        dedup_clause = f"""
-            WITH filtered_primary AS (
-                SELECT * FROM(
-                    SELECT *,
-                        row_number()
-                    OVER(
-                        PARTITION BY value_time,
-                                     location_id,
-                                     configuration,
-                                     variable_name,
-                                     measurement_unit
-                        ORDER BY reference_time desc
-                        ) AS rn
-                    FROM read_parquet("{str(mq.primary_filepath)}")
-                    )
-                WHERE rn = 1
-            ),
-            joined as (
-        """
-        pf = "filtered_primary"
-    else:
-        dedup_clause = "WITH joined as ("
-        pf = f"read_parquet('{str(mq.primary_filepath)}')"
+    # if deduplicate_primary:
+    #     dedup_clause = f"""
+    #         WITH filtered_primary AS (
+    #             SELECT * FROM(
+    #                 SELECT *,
+    #                     row_number()
+    #                 OVER(
+    #                     PARTITION BY value_time,
+    #                                  location_id,
+    #                                  configuration,
+    #                                  variable_name,
+    #                                  measurement_unit
+    #                     ORDER BY reference_time desc
+    #                     ) AS rn
+    #                 FROM read_parquet("{str(mq.primary_filepath)}")
+    #                 )
+    #             WHERE rn = 1
+    #         ),
+    #         joined as (
+    #     """
+    #     pf = "filtered_primary"
+    # else:
+    #     dedup_clause = "WITH joined as ("
+    #     pf = f"read_parquet('{str(mq.primary_filepath)}')"
 
     query = f"""
-            {dedup_clause}
+        WITH joined AS (
             SELECT
                 sf.reference_time
                 , sf.value_time as value_time
@@ -198,19 +198,22 @@ def get_metrics(
             FROM read_parquet('{str(mq.secondary_filepath)}') sf
             JOIN read_parquet('{str(mq.crosswalk_filepath)}') cf
                 on cf.secondary_location_id = sf.location_id
-            JOIN {pf} pf
+            JOIN read_parquet("{str(mq.primary_filepath)}") pf
                 on cf.primary_location_id = pf.location_id
                 and sf.value_time = pf.value_time
                 and sf.measurement_unit = pf.measurement_unit
                 and sf.variable_name = pf.variable_name
             {tqu.filters_to_sql(mq.filters)}
+        ),
+        joined_filtered AS (
+            {tqu._filter_primary_cte(deduplicate_primary)}
         )
         {tqu._nse_cte(mq)}
         {tqu._pmxt_cte(mq)}
         {tqu._smxt_cte(mq)}
         , metrics AS (
             SELECT
-                {",".join([f"joined.{gb}" for gb in mq.group_by])}
+                {",".join([f"joined_filtered.{gb}" for gb in mq.group_by])}
                 {tqu._select_primary_count(mq)}
                 {tqu._select_secondary_count(mq)}
                 {tqu._select_primary_minimum(mq)}
@@ -231,10 +234,10 @@ def get_metrics(
                 {tqu._select_mean_squared_error(mq)}
                 {tqu._select_root_mean_squared_error(mq)}
             FROM
-                joined
+                joined_filtered
             {tqu._join_nse_cte(mq)}
             GROUP BY
-                {",".join([f"joined.{gb}" for gb in mq.group_by])}
+                {",".join([f"joined_filtered.{gb}" for gb in mq.group_by])}
         )
         SELECT
             metrics.*
