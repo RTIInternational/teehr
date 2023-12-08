@@ -4,6 +4,7 @@ This document describes the release process which has some manual steps to compl
 Create branch with the following updated to the new version (find and replace version number):
 - `version.txt`
 - `README.md`
+- `pyproject.toml`
 
 Update the `CHANGELOG.md` to reflect the changes included in the release.
 

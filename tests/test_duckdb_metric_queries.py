@@ -29,7 +29,6 @@ def test_metric_query_str():
 
 
 def test_metric_query_df():
-
     query_df = tqu.get_metrics(
         primary_filepath=PRIMARY_FILEPATH_DUPS,
         secondary_filepath=SECONDARY_FILEPATH,
@@ -46,7 +45,6 @@ def test_metric_query_df():
 
 
 def test_metric_query_gdf():
-
     query_df = tqu.get_metrics(
         primary_filepath=PRIMARY_FILEPATH_DUPS,
         secondary_filepath=SECONDARY_FILEPATH,
@@ -65,7 +63,6 @@ def test_metric_query_gdf():
 
 
 def test_metric_query_gdf_2():
-
     query_df = tqu.get_metrics(
         primary_filepath=PRIMARY_FILEPATH_DUPS,
         secondary_filepath=SECONDARY_FILEPATH,
@@ -158,7 +155,7 @@ def test_metric_query_df_time_metrics():
     include_metrics = [
         "primary_max_value_time",
         "secondary_max_value_time",
-        "max_value_timedelta"
+        "max_value_timedelta",
     ]
     group_by = ["primary_location_id", "reference_time"]
     query_df = tqu.get_metrics(
@@ -215,13 +212,13 @@ def test_metric_query_value_time_filter():
             {
                 "column": "value_time",
                 "operator": ">=",
-                "value": f"{'2022-01-01 13:00:00'}"
+                "value": f"{'2022-01-01 13:00:00'}",
             },
             {
                 "column": "reference_time",
                 "operator": ">=",
-                "value": f"{'2022-01-01 02:00:00'}"
-            }
+                "value": f"{'2022-01-01 02:00:00'}",
+            },
         ],
         deduplicate_primary=True
     )

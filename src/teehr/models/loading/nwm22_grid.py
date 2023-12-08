@@ -109,36 +109,36 @@ class ForcingOutputEnum(str, Enum):
 # OUTPUT TYPE MODELS
 class Analysis(BaseModel):
     output_type: ShortAndAnalysisOutputEnum
-    land: Optional[LandAssimVariablesEnum]
+    land: Optional[LandAssimVariablesEnum] = None
 
 
 class ShortRange(BaseModel):
     output_type: ShortAndAnalysisOutputEnum
-    land: Optional[LandShortVariablesEnum]
+    land: Optional[LandShortVariablesEnum] = None
 
 
 class MediumRange(BaseModel):
     output_type: MediumOutputEnum
-    land_1: Optional[LandMediumVariablesEnum]
-    land_2: Optional[LandMediumVariablesEnum]
-    land_3: Optional[LandMediumVariablesEnum]
-    land_4: Optional[LandMediumVariablesEnum]
-    land_5: Optional[LandMediumVariablesEnum]
-    land_6: Optional[LandMediumVariablesEnum]
-    land_7: Optional[LandMediumVariablesEnum]
+    land_1: Optional[LandMediumVariablesEnum] = None
+    land_2: Optional[LandMediumVariablesEnum] = None
+    land_3: Optional[LandMediumVariablesEnum] = None
+    land_4: Optional[LandMediumVariablesEnum] = None
+    land_5: Optional[LandMediumVariablesEnum] = None
+    land_6: Optional[LandMediumVariablesEnum] = None
+    land_7: Optional[LandMediumVariablesEnum] = None
 
 
 class LongRange(BaseModel):
     output_type: LongOutputEnum
-    land_1: Optional[LandLongVariablesEnum]
-    land_2: Optional[LandLongVariablesEnum]
-    land_3: Optional[LandLongVariablesEnum]
-    land_4: Optional[LandLongVariablesEnum]
+    land_1: Optional[LandLongVariablesEnum] = None
+    land_2: Optional[LandLongVariablesEnum] = None
+    land_3: Optional[LandLongVariablesEnum] = None
+    land_4: Optional[LandLongVariablesEnum] = None
 
 
 class Forcing(BaseModel):
     output_type: ForcingOutputEnum
-    forcing: Optional[ForcingVariablesEnum]
+    forcing: Optional[ForcingVariablesEnum] = None
 
 
 # CONFIGURATIONS ENUM
@@ -182,41 +182,41 @@ class ConfigurationsEnum(str, Enum):
 # CONFIGURATION MODEL
 class GridConfigurationModel(BaseModel):
     configuration: ConfigurationsEnum
-    analysis_assim: Optional[Analysis]
-    analysis_assim_no_da: Optional[Analysis]
-    analysis_assim_extend: Optional[Analysis]
-    analysis_assim_extend_no_da: Optional[Analysis]
-    analysis_assim_long: Optional[Analysis]
-    analysis_assim_long_no_da: Optional[Analysis]
-    analysis_assim_hawaii: Optional[Analysis]
-    analysis_assim_hawaii_no_da: Optional[Analysis]
-    analysis_assim_puertorico: Optional[Analysis]
-    analysis_assim_puertorico_no_da: Optional[Analysis]
-    short_range: Optional[ShortRange]
-    short_range_hawaii: Optional[ShortRange]
-    short_range_puertorico: Optional[ShortRange]
-    short_range_hawaii_no_da: Optional[ShortRange]
-    short_range_puertorico_no_da: Optional[ShortRange]
-    medium_range_mem1: Optional[MediumRange]
-    medium_range_mem2: Optional[MediumRange]
-    medium_range_mem3: Optional[MediumRange]
-    medium_range_mem4: Optional[MediumRange]
-    medium_range_mem5: Optional[MediumRange]
-    medium_range_mem6: Optional[MediumRange]
-    medium_range_mem7: Optional[MediumRange]
-    medium_range_no_da: Optional[MediumRange]
-    long_range_mem1: Optional[LongRange]
-    long_range_mem2: Optional[LongRange]
-    long_range_mem3: Optional[LongRange]
-    long_range_mem4: Optional[LongRange]
-    forcing_medium_range: Optional[Forcing]
-    forcing_short_range: Optional[Forcing]
-    forcing_short_range_hawaii: Optional[Forcing]
-    forcing_short_range_puertorico: Optional[Forcing]
-    forcing_analysis_assim: Optional[Forcing]
-    forcing_analysis_assim_extend: Optional[Forcing]
-    forcing_analysis_assim_hawaii: Optional[Forcing]
-    forcing_analysis_assim_puertorico: Optional[Forcing]
+    analysis_assim: Optional[Analysis] = None
+    analysis_assim_no_da: Optional[Analysis] = None
+    analysis_assim_extend: Optional[Analysis] = None
+    analysis_assim_extend_no_da: Optional[Analysis] = None
+    analysis_assim_long: Optional[Analysis] = None
+    analysis_assim_long_no_da: Optional[Analysis] = None
+    analysis_assim_hawaii: Optional[Analysis] = None
+    analysis_assim_hawaii_no_da: Optional[Analysis] = None
+    analysis_assim_puertorico: Optional[Analysis] = None
+    analysis_assim_puertorico_no_da: Optional[Analysis] = None
+    short_range: Optional[ShortRange] = None
+    short_range_hawaii: Optional[ShortRange] = None
+    short_range_puertorico: Optional[ShortRange] = None
+    short_range_hawaii_no_da: Optional[ShortRange] = None
+    short_range_puertorico_no_da: Optional[ShortRange] = None
+    medium_range_mem1: Optional[MediumRange] = None
+    medium_range_mem2: Optional[MediumRange] = None
+    medium_range_mem3: Optional[MediumRange] = None
+    medium_range_mem4: Optional[MediumRange] = None
+    medium_range_mem5: Optional[MediumRange] = None
+    medium_range_mem6: Optional[MediumRange] = None
+    medium_range_mem7: Optional[MediumRange] = None
+    medium_range_no_da: Optional[MediumRange] = None
+    long_range_mem1: Optional[LongRange] = None
+    long_range_mem2: Optional[LongRange] = None
+    long_range_mem3: Optional[LongRange] = None
+    long_range_mem4: Optional[LongRange] = None
+    forcing_medium_range: Optional[Forcing] = None
+    forcing_short_range: Optional[Forcing] = None
+    forcing_short_range_hawaii: Optional[Forcing] = None
+    forcing_short_range_puertorico: Optional[Forcing] = None
+    forcing_analysis_assim: Optional[Forcing] = None
+    forcing_analysis_assim_extend: Optional[Forcing] = None
+    forcing_analysis_assim_hawaii: Optional[Forcing] = None
+    forcing_analysis_assim_puertorico: Optional[Forcing] = None
 
 
 if __name__ == "__main__":
@@ -237,7 +237,7 @@ if __name__ == "__main__":
     # import sys
     # Check input parameters
     # try:
-    cm = GridConfigurationModel.parse_obj(vars)
+    cm = GridConfigurationModel.model_validate(vars)
     # except ValidationError as e:
     #     print(e.errors()[0]["msg"])
     #     sys.exit()

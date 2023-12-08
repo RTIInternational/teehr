@@ -13,13 +13,14 @@ RUN TEEHR_VERSION=$(cat /teehr/version.txt) && \
 
 # Install TEEHR in the Pangeo Image
 # https://hub.docker.com/r/pangeo/pangeo-notebook/tags
-FROM pangeo/pangeo-notebook:2023.07.05
+# Subsequent images use python=3.11
+FROM pangeo/pangeo-notebook:2023.09.11
 
 USER root
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PATH ${NB_PYTHON_PREFIX}/bin:$PATH
 
-# Needed for apt-key to work
+# Needed for apt-key to work -- Is this part needed?
 RUN apt-get update -qq --yes > /dev/null && \
     apt-get install --yes -qq gnupg2 > /dev/null && \
     rm -rf /var/lib/apt/lists/*
