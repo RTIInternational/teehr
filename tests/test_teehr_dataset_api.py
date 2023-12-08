@@ -14,7 +14,7 @@ SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
 GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
 ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr.parquet")
-DATABASE_FILEPATH = Path(TEST_STUDY_DIR, "temp_test.db")
+DATABASE_FILEPATH = Path("tests", "data", "temp", "temp_test.db")
 
 # NOTE: These tests require the db and joined_timeseries values to exist
 
