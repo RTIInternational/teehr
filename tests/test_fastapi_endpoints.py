@@ -84,7 +84,8 @@ def test_get_timeseries():
             "column": "primary_location_id",
             "operator": "=",
             "value": "gage-A"
-        }]
+        }],
+        "timeseries_name": "primary"
     }
 
     response = client.post(
@@ -111,7 +112,7 @@ def test_get_timeseries_chars():
         "filters": [],
         "group_by": ["primary_location_id"],
         "order_by": ["primary_location_id"],
-        "timeseries_name": "secondary",
+        "timeseries_name": "primary",
         # "return_query": False
     }
 
@@ -143,5 +144,5 @@ if __name__ == "__main__":
     # test_get_metric_fields()
     # test_get_data_fields()
     # test_get_timeseries()
-    # test_get_timeseries_chars()
-    test_get_unique_field_values()
+    test_get_timeseries_chars()
+    # test_get_unique_field_values()
