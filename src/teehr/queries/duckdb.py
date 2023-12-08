@@ -328,7 +328,7 @@ def get_joined_timeseries(
     )
 
     query = f"""
-        pre_joined as (
+        WITH joined as (
             SELECT
                 sf.reference_time,
                 sf.value_time,
@@ -353,26 +353,39 @@ def get_joined_timeseries(
             {tqu.geometry_join_clause(jtq)}
             {tqu.filters_to_sql(jtq.filters)}
         ),
-        joined AS (
-            SELECT * FROM(
+        windowed AS (
+            SELECT
+                reference_time
+                , value_time
+                , secondary_location_id
+                , secondary_value
+                , configuration
+                , measurement_unit
+                , variable_name
+                , primary_value
+                , primary_location_id
+                , lead_time
+                {tqu.geometry_window_select_clause(jtq)}
+            FROM(
                 SELECT *,
                     row_number()
                 OVER(
                     PARTITION BY value_time,
-                                 location_id,
+                                 primary_location_id,
                                  configuration,
                                  variable_name,
-                                 measurement_unit
+                                 measurement_unit,
+                                 reference_time
                     ORDER BY reference_time desc
                     ) AS rn
-                FROM pre_joined
+                FROM joined
                 )
             WHERE rn = 1
         )
         SELECT
             *
         FROM
-            joined
+            windowed
         ORDER BY
             {",".join(jtq.order_by)}
     ;"""

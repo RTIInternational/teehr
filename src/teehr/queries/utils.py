@@ -142,6 +142,14 @@ def geometry_select_clause(
     return ""
 
 
+def geometry_window_select_clause(
+        q: Union[MetricQuery, JoinedTimeseriesQuery]
+) -> str:
+    if q.include_geometry:
+        return ", geometry"
+    return ""
+
+
 def metric_geometry_join_clause(
         q: Union[MetricQuery, JoinedTimeseriesQuery]
 ) -> str:
@@ -157,17 +165,17 @@ def _filter_primary_cte(deduplicate_primary: bool):
     if deduplicate_primary:
         qry = """
             SELECT
-                    reference_time
-                    , value_time
-                    , secondary_location_id
-                    , secondary_value
-                    , configuration
-                    , measurement_unit
-                    , variable_name
-                    , primary_value
-                    , primary_location_id
-                    , lead_time
-                    , absolute_difference
+                reference_time
+                , value_time
+                , secondary_location_id
+                , secondary_value
+                , configuration
+                , measurement_unit
+                , variable_name
+                , primary_value
+                , primary_location_id
+                , lead_time
+                , absolute_difference
             FROM(
                 SELECT *,
                     row_number()
