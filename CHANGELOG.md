@@ -1,16 +1,16 @@
--# Changelog
+# Changelog
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.9] - 2023-12-01
+## [0.2.9] - 2023-12-08
 
 ### Added
 * Three options related to kerchunk jsons
-  * `create` - current behavior, manually creates the jsons based on GCS netcdf files using Kerchunk's `SingleHdf5ToZarr`
-  * `use_available` - use pre-created jsons, skipping any that do not exist within the specified time frame.  Jsons are read directly from s3 using fsspec
+  * `local` - (default) previous behavior, manually creates the jsons based on GCS netcdf files using Kerchunk's `SingleHdf5ToZarr`. Any locally existing files will be used before creating new jsons from the remote store.
+  * `remote` - use pre-created jsons, skipping any that do not exist within the specified time frame.  Jsons are read directly from s3 using fsspec
   * `auto` - use pre-created jsons, creating any that do not exist within the specified time frame
 * Adds `nwm_version` (nwm22 or nwm30) and `data_source` (GCS, NOMADS, DSTOR - currently on GCS implemented) as loading arguments
 
