@@ -1,6 +1,8 @@
 from pathlib import Path
-from typing import Union, Optional, Iterable, List
+from typing import Union, Optional, Iterable, List, Dict
 from datetime import datetime
+from datetime import timedelta
+from dateutil.parser import parse
 
 import dask
 import fsspec
@@ -10,11 +12,158 @@ import pandas as pd
 import numpy as np
 import xarray as xr
 import geopandas as gpd
+import pyarrow as pa
+import pyarrow.parquet as pq
 
-from teehr.loading.nwm22.const_nwm import (
-    NWM22_ANALYSIS_CONFIG,
-    NWM_BUCKET,
+from teehr.models.loading.utils import (
+    SupportedKerchunkMethod
 )
+from teehr.models.loading.utils import (
+    SupportedNWMOperationalVersionsEnum
+)
+from teehr.loading.nwm.const import (
+    NWM_BUCKET,
+    NWM_S3_JSON_PATH,
+    NWM30_START_DATE
+)
+
+
+def check_dates_against_nwm_version(
+    nwm_version: str,
+    start_date: Union[str, datetime],
+    ingest_days: int
+):
+    """Make sure start/end dates work with specified NWM version."""
+    if isinstance(start_date, str):
+        start_date = parse(start_date)
+
+    if (
+        (nwm_version == SupportedNWMOperationalVersionsEnum.nwm30) &
+        (start_date < NWM30_START_DATE)
+    ):
+        raise ValueError(
+            f"The specified start date ({start_date}) is before the NWM "
+            f"v3.0 release date ({NWM30_START_DATE})"
+        )
+
+    end_date = start_date + timedelta(days=ingest_days)
+    if (
+        (nwm_version == SupportedNWMOperationalVersionsEnum.nwm22) &
+        (end_date > NWM30_START_DATE)
+    ):
+        raise ValueError(
+            f"The specified end date ({end_date}) is after the NWM "
+            f"v2.2 to v3.0 transition date ({NWM30_START_DATE})"
+        )
+
+
+def generate_json_paths(
+    kerchunk_method: str,
+    gcs_component_paths: List[str],
+    json_dir: str,
+    ignore_missing_file: bool
+) -> List[str]:
+    """Generates remote and/or local paths to Kerchunk reference json files
+    depending on the specified method
+
+    Parameters
+    ----------
+    kerchunk_method : str
+        Specifies the preference in creating Kerchunk reference json files.
+    gcs_component_paths : List[str]
+        Paths to NWM netcdf files in GCS
+    json_dir : str
+        Local directory for caching created json files
+    ignore_missing_file : bool
+        Flag specifying whether or not to fail if a missing
+        NWM file is encountered
+
+    Returns
+    -------
+    List[str]
+        List of filepaths to json files locally and/or in s3
+    """
+
+    if kerchunk_method == SupportedKerchunkMethod.local:
+        # Create them manually first
+        json_paths = build_zarr_references(gcs_component_paths,
+                                           json_dir,
+                                           ignore_missing_file)
+
+    elif kerchunk_method == SupportedKerchunkMethod.remote:
+        # Use whatever pre-builts exist, skipping the rest
+        fs = fsspec.filesystem("s3", anon=True)
+        results = []
+        for gcs_path in gcs_component_paths:
+            results.append(check_for_prebuilt_json_paths(fs, gcs_path))
+        json_paths = dask.compute(results)[0]
+        json_paths = [path for path in json_paths if path is not None]
+
+    elif kerchunk_method == SupportedKerchunkMethod.auto:
+        # Use whatever pre-builts exist, and create the missing
+        #  files, if any
+        fs = fsspec.filesystem("s3", anon=True)
+        results = []
+        for gcs_path in gcs_component_paths:
+            results.append(
+                check_for_prebuilt_json_paths(
+                    fs, gcs_path, return_gcs_path=True
+                )
+            )
+        s3_or_gcs_paths = dask.compute(results)[0]
+
+        # Build any jsons that do not already exist in s3
+        gcs_paths = []
+        json_paths = []
+        for path in s3_or_gcs_paths:
+            if path.split("://")[0] == "gcs":
+                gcs_paths.append(path)
+            else:
+                json_paths.append(path)
+
+        if len(gcs_paths) > 0:
+            json_paths.extend(
+                build_zarr_references(gcs_paths,
+                                      json_dir,
+                                      ignore_missing_file)
+            )
+
+    return json_paths
+
+
+def write_parquet_file(
+    filepath: Path,
+    overwrite_output: bool,
+    data: Union[pa.Table, pd.DataFrame]
+):
+    """Writes output timeseries parquet file with logic controlling
+    whether or not to overwrite an existing file.
+
+    Parameters
+    ----------
+    filepath : Path
+        Path to the output parquet file
+    overwrite : bool
+        Flag controlling overwrite behavior
+    data : Union[pa.Table, pd.DataFrame]
+        The output data as either a dataframe or pyarrow table
+    """
+    if not filepath.is_file():
+        if isinstance(data, pa.Table):
+            pq.write_table(data, filepath)
+        else:
+            data.to_parquet(filepath)
+    elif filepath.is_file() and overwrite_output:
+        print(f"Overwriting {filepath.name}")
+        if isinstance(data, pa.Table):
+            pq.write_table(data, filepath)
+        else:
+            data.to_parquet(filepath)
+    elif filepath.is_file() and not overwrite_output:
+        print(
+            f"{filepath.name} already exists and overwrite_output=False;"
+            " skipping"
+        )
 
 
 def load_gdf(filepath: Union[str, Path], **kwargs: str) -> gpd.GeoDataFrame:
@@ -45,13 +194,15 @@ def np_to_list(t):
     return [a.tolist() for a in t]
 
 
-def get_dataset(zarr_json: str, ignore_missing_file: bool) -> xr.Dataset:
+def get_dataset(
+    filepath: str, ignore_missing_file: bool, **kwargs
+) -> xr.Dataset:
     """Retrieve a blob from the data service as xarray.Dataset.
 
     Parameters
     ----------
-    blob_name: str, required
-        Name of blob to retrieve.
+    filepath: str, required
+        Path to the kerchunk json file. Can be local or remote.
 
     Returns
     -------
@@ -59,33 +210,51 @@ def get_dataset(zarr_json: str, ignore_missing_file: bool) -> xr.Dataset:
         The data stored in the blob.
 
     """
-    backend_args = {
-        "consolidated": False,
-        "storage_options": {
-            "fo": zarr_json,
-            "remote_protocol": "gcs",
-            "remote_options": {"anon": True},
-        },
-    }
     try:
-        ds = xr.open_dataset(
-            "reference://",
-            engine="zarr",
-            backend_kwargs=backend_args,
-        )
+        m = fsspec.filesystem(
+            "reference", fo=filepath, **kwargs
+        ).get_mapper()
     except FileNotFoundError as e:
         if not ignore_missing_file:
             raise e
         else:
-            # TODO: log missing file?
             return None
     except ValueError:
-        raise ValueError(f"There was a problem reading {zarr_json}")
-    return ds
+        raise ValueError(f"There was a problem reading {filepath}")
+    return xr.open_dataset(m, engine="zarr", consolidated=False)
 
 
 def list_to_np(lst):
     return tuple([np.array(a) for a in lst])
+
+
+@dask.delayed
+def check_for_prebuilt_json_paths(
+    fs: fsspec.filesystem, gcs_path: str, return_gcs_path=False
+) -> str:
+    """Check for existence of a pre-built kerchunk json in s3 based
+    on its GCS path
+
+    Parameters
+    ----------
+    fs : fsspec.filesystem
+        s3-based filesystem
+    gcs_path : str
+        Path to the netcdf file in GCS
+    return_gcs_path : bool, optional
+        Flag to return GCS path of s3 is missing, by default False
+
+    Returns
+    -------
+    str
+        Path to the json in s3 or netcdf file in GCS
+    """
+    s3_path = f"{NWM_S3_JSON_PATH}/{gcs_path.split('://')[1]}.json"
+    if fs.exists(s3_path):
+        return s3_path
+    else:
+        if return_gcs_path:
+            return gcs_path
 
 
 @dask.delayed
@@ -201,6 +370,7 @@ def construct_assim_paths(
     configuration_name_in_filepath: str,
     cycle_z_hours: Iterable[int],
     domain: str,
+    file_extension: str = "nc"
 ) -> list[str]:
     """Constructs paths to NWM point assimilation data based on specified
         parameters.
@@ -230,6 +400,8 @@ def construct_assim_paths(
     domain : str
         Geographic region covered by the assimilation configuration.
         Defined in const_nwm.py
+    file_extension: str
+        File extension ("nc" or "nc.json" for remote kerchunk)
 
     Returns
     -------
@@ -249,14 +421,14 @@ def construct_assim_paths(
                     for tm2 in [0, 15, 30, 45]:
                         if (tm * 100 + tm2) > cycle_hr * 100:
                             continue
-                        file_path = f"{gcs_dir}/nwm.{dt_str}/{configuration}/nwm.t{cycle_hr:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}{tm2:02d}.{domain}.nc"  # noqa
+                        file_path = f"{gcs_dir}/nwm.{dt_str}/{configuration}/nwm.t{cycle_hr:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}{tm2:02d}.{domain}.{file_extension}"  # noqa
                         component_paths.append(file_path)
         else:
             for cycle_hr in cycle_z_hours:
                 for tm in t_minus:
                     if tm > cycle_hr:
                         continue
-                    file_path = f"{gcs_dir}/nwm.{dt_str}/{configuration}/nwm.t{cycle_hr:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}.{domain}.nc"  # noqa
+                    file_path = f"{gcs_dir}/nwm.{dt_str}/{configuration}/nwm.t{cycle_hr:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}.{domain}.{file_extension}"  # noqa
                     component_paths.append(file_path)
 
         # Now add the values from the day following the end day,
@@ -267,7 +439,7 @@ def construct_assim_paths(
                 hr_add = dt_add.hour
                 if tm > hr_add:
                     dt_add_str = dt_add.strftime("%Y%m%d")
-                    file_path = f"{gcs_dir}/nwm.{dt_add_str}/{configuration}/nwm.t{hr_add:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}.{domain}.nc"  # noqa
+                    file_path = f"{gcs_dir}/nwm.{dt_add_str}/{configuration}/nwm.t{hr_add:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}.{domain}.{file_extension}"  # noqa
                     component_paths.append(file_path)
 
         elif "hawaii" in configuration:
@@ -281,7 +453,7 @@ def construct_assim_paths(
                             hr_add = dt_add.hour
                             if (tm * 100 + tm2) > hr_add * 100:
                                 dt_add_str = dt_add.strftime("%Y%m%d")
-                                file_path = f"{gcs_dir}/nwm.{dt_add_str}/{configuration}/nwm.t{hr_add:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}{tm2:02d}.{domain}.nc"  # noqa
+                                file_path = f"{gcs_dir}/nwm.{dt_add_str}/{configuration}/nwm.t{hr_add:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}{tm2:02d}.{domain}.{file_extension}"  # noqa
                                 component_paths.append(file_path)
         else:
             for cycle_hr2 in cycle_z_hours:
@@ -293,7 +465,7 @@ def construct_assim_paths(
                         hr_add = dt_add.hour
                         if tm > hr_add:
                             dt_add_str = dt_add.strftime("%Y%m%d")
-                            file_path = f"{gcs_dir}/nwm.{dt_add_str}/{configuration}/nwm.t{hr_add:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}.{domain}.nc"  # noqa
+                            file_path = f"{gcs_dir}/nwm.{dt_add_str}/{configuration}/nwm.t{hr_add:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}.{domain}.{file_extension}"  # noqa
                             component_paths.append(file_path)
 
     return sorted(component_paths)
@@ -304,6 +476,7 @@ def build_remote_nwm_filelist(
     output_type: str,
     start_dt: Union[str, datetime],
     ingest_days: int,
+    analysis_config_dict: Dict,
     t_minus_hours: Optional[Iterable[int]],
     ignore_missing_file: Optional[bool],
 ) -> List[str]:
@@ -339,12 +512,12 @@ def build_remote_nwm_filelist(
     dates = pd.date_range(start=start_dt, periods=ingest_days, freq="1d")
 
     if "assim" in configuration:
-        cycle_z_hours = NWM22_ANALYSIS_CONFIG[configuration]["cycle_z_hours"]
-        domain = NWM22_ANALYSIS_CONFIG[configuration]["domain"]
-        configuration_name_in_filepath = NWM22_ANALYSIS_CONFIG[configuration][
+        cycle_z_hours = analysis_config_dict[configuration]["cycle_z_hours"]
+        domain = analysis_config_dict[configuration]["domain"]
+        configuration_name_in_filepath = analysis_config_dict[configuration][
             "configuration_name_in_filepath"
         ]
-        max_lookback = NWM22_ANALYSIS_CONFIG[configuration]["num_lookback_hrs"]
+        max_lookback = analysis_config_dict[configuration]["num_lookback_hrs"]
 
         if max(t_minus_hours) > max_lookback - 1:
             raise ValueError(

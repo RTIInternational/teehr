@@ -153,9 +153,13 @@ def get_metrics(
         WITH filtered_primary AS (
             SELECT * FROM(
                 SELECT *,
-                    row_number() OVER(PARTITION BY value_time, location_id ORDER BY reference_time desc) AS rn
+                    row_number()
+                OVER(
+                    PARTITION BY value_time, location_id
+                    ORDER BY reference_time desc
+                    ) AS rn
                 FROM read_parquet("{str(mq.primary_filepath)}")
-                ) t
+                )
             WHERE rn = 1
         ),
         joined as (
@@ -327,9 +331,13 @@ def get_joined_timeseries(
         WITH filtered_primary AS (
             SELECT * FROM(
                 SELECT *,
-                    row_number() OVER(PARTITION BY value_time, location_id ORDER BY reference_time desc) AS rn
+                    row_number()
+                OVER(
+                    PARTITION BY value_time, location_id
+                    ORDER BY reference_time desc
+                    ) AS rn
                 FROM read_parquet("{str(jtq.primary_filepath)}")
-                ) t
+                )
             WHERE rn = 1
         ),
         joined as (
@@ -449,7 +457,7 @@ def get_timeseries(
                 sf.measurement_unit,
                 sf.variable_name
             FROM
-                read_parquet('{str(tq.timeseries_filepath)}') sf
+                read_parquet("{str(tq.timeseries_filepath)}") sf
             {tqu.filters_to_sql(tq.filters)}
         )
         SELECT * FROM

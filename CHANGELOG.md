@@ -1,17 +1,44 @@
--# Changelog
+# Changelog
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.9] - 2023-12-08
 
-## [0.2.7] - 2026-09-14
+### Added
+* Three options related to kerchunk jsons
+  * `local` - (default) previous behavior, manually creates the jsons based on GCS netcdf files using Kerchunk's `SingleHdf5ToZarr`. Any locally existing files will be used before creating new jsons from the remote store.
+  * `remote` - use pre-created jsons, skipping any that do not exist within the specified time frame.  Jsons are read directly from s3 using fsspec
+  * `auto` - use pre-created jsons, creating any that do not exist within the specified time frame
+* Adds `nwm_version` (nwm22 or nwm30) and `data_source` (GCS, NOMADS, DSTOR - currently on GCS implemented) as loading arguments
+
+### Changed
+* Combines loading modules into one directory `loading/nwm`
+* Updates to loading example notebooks
+* Updates to loading tests
+
+## [0.2.8] - 2023-11-14
+
+### Added
+- NWM v3.0 data loading and configuration models
+- Added check for duplicate rows in `get_metrics` and `get_joined_timeseries` queries (#69)
+- Added control for overwrite file behavior in loading (#77)
+- Significant refactor of the loading libraries
+- Added ability to select which retrospective version to download (v2.0 or v2.1) (#80)
+
+### Changed
+
+- Fixed NWM pydantic configurations models for v2.2
+- Refactored `models/loading` directory
+
+## [0.2.7] - 2023-09-14
 
 ### Added
 - More testing to NWM point and grid loading functions
 
-## [0.2.6] - 2026-09-14
+## [0.2.6] - 2023-09-14
 
 ### Changed
 

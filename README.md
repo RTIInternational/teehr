@@ -1,4 +1,10 @@
 ![alt text](docs/images/teehr.png)
+
+| | |
+| --- | --- |
+| ![alt text](https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png) | Funding for this project was provided by the National Oceanic & Atmospheric Administration (NOAA), awarded to the Cooperative Institute for Research to Operations in Hydrology (CIROH) through the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003). |
+
+
 # TEEHR - Tools for Exploratory Evaluation in Hydrologic Research
 TEEHR (pronounced "tier") is a python tool set for loading, storing,
 processing and visualizing hydrologic data, particularly National Water
@@ -32,8 +38,8 @@ $ poetry add git+https://github.com/RTIInternational/teehr.git#[BRANCH TAG]
 
 Use Docker
 ```bash
-$ docker build -t teehr:v0.2.7 .
-$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.2.7 jupyter lab --ip 0.0.0.0 $HOME
+$ docker build -t teehr:v0.2.9 .
+$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.2.9 jupyter lab --ip 0.0.0.0 $HOME
 ```
 
 ## Examples

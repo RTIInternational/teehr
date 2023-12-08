@@ -24,7 +24,7 @@ def test_metric_query_str():
         return_query=True,
         include_geometry=True,
     )
-    print(query_str)
+    # print(query_str)
     assert isinstance(query_str, str)
 
 

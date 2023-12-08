@@ -1,11 +1,12 @@
 import pandas as pd
 
-from typing import List, Union
+from typing import List, Union, Optional
 from pathlib import Path
 from datetime import datetime, timedelta
 from hydrotools.nwis_client.iv import IVDataService
-from teehr.models.loading import ChunkByEnum
+from teehr.models.loading.utils import ChunkByEnum
 from pydantic import validate_arguments
+from teehr.loading.nwm.utils import write_parquet_file
 
 DATETIME_STR_FMT = "%Y-%m-%dT%H:%M:00+0000"
 
@@ -114,7 +115,8 @@ def usgs_to_parquet(
     chunk_by: Union[ChunkByEnum, None] = None,
     filter_to_hourly: bool = True,
     filter_no_data: bool = True,
-    convert_to_si: bool = True
+    convert_to_si: bool = True,
+    overwrite_output: Optional[bool] = False,
 ):
     """Fetch USGS gage data and save as a Parquet file.
 
@@ -140,6 +142,9 @@ def usgs_to_parquet(
         Filter out -999 values
     convert_to_si: bool = True
         Multiplies values by 0.3048**3 and sets `measurement_units` to `m3/s`
+    overwrite_output: bool
+        Flag specifying whether or not to overwrite output files if they
+        already exist.  True = overwrite; False = fail
     """
 
     start_date = pd.Timestamp(start_date)
@@ -162,7 +167,11 @@ def usgs_to_parquet(
         )
         if len(usgs_df) > 0:
             output_filepath = Path(output_parquet_dir, "usgs.parquet")
-            usgs_df.to_parquet(output_filepath)
+            write_parquet_file(
+                filepath=output_filepath,
+                overwrite_output=overwrite_output,
+                data=usgs_df
+            )
             # output_filepath = Path(usgs.output_parquet_dir, "usgs.csv")
             # usgs_df.to_csv(output_filepath)
             # print(usgs_df)
@@ -200,7 +209,11 @@ def usgs_to_parquet(
                     output_parquet_dir,
                     f"{start_dt.strftime('%Y-%m-%d')}.parquet"
                 )
-                usgs_df.to_parquet(output_filepath)
+                write_parquet_file(
+                    filepath=output_filepath,
+                    overwrite_output=overwrite_output,
+                    data=usgs_df
+                )
                 # output_filepath = Path(
                 #     usgs.output_parquet_dir,
                 #     f"{start_dt.strftime('%Y-%m-%d')}.csv"
@@ -223,7 +236,11 @@ def usgs_to_parquet(
                     output_parquet_dir,
                     f"{site}.parquet"
                 )
-                usgs_df.to_parquet(output_filepath)
+                write_parquet_file(
+                    filepath=output_filepath,
+                    overwrite_output=overwrite_output,
+                    data=usgs_df
+                )
                 # output_filepath = Path(
                 #     usgs.output_parquet_dir,
                 #     f"{site}.csv"
@@ -242,7 +259,8 @@ if __name__ == "__main__":
         start_date=datetime(2023, 2, 20),
         end_date=datetime(2023, 2, 25),
         output_parquet_dir=Path(Path().home(), "temp", "usgs"),
-        chunk_by="location_id"
+        chunk_by="location_id",
+        overwrite_output=True
     )
 
     usgs_to_parquet(
@@ -253,7 +271,8 @@ if __name__ == "__main__":
         start_date=datetime(2023, 2, 20),
         end_date=datetime(2023, 2, 25),
         output_parquet_dir=Path(Path().home(), "temp", "usgs"),
-        chunk_by="day"
+        chunk_by="day",
+        overwrite_output=True
     )
 
     usgs_to_parquet(
@@ -264,5 +283,6 @@ if __name__ == "__main__":
         start_date=datetime(2023, 2, 20),
         end_date=datetime(2023, 2, 25),
         output_parquet_dir=Path(Path().home(), "temp", "usgs"),
+        overwrite_output=True
     )
     pass
