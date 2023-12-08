@@ -7,10 +7,13 @@ from datetime import datetime, timedelta
 
 from pathlib import Path
 from typing import Union, Iterable, Optional
-from teehr.loading.nwm22.const_nwm import NWM22_UNIT_LOOKUP
 
-from teehr.models.loading.utils import ChunkByEnum, SupportedNWMVersionsEnum
-from teehr.loading.nwm_common.utils_nwm import write_parquet_file
+from teehr.loading.nwm.const import NWM22_UNIT_LOOKUP
+from teehr.models.loading.utils import (
+    ChunkByEnum,
+    SupportedNWMRetroVersionsEnum
+)
+from teehr.loading.nwm.utils import write_parquet_file
 
 NWM20_MIN_DATE = datetime(1993, 1, 1)
 NWM20_MAX_DATE = datetime(2018, 12, 31, 23)
@@ -19,11 +22,11 @@ NWM21_MAX_DATE = pd.Timestamp(2020, 12, 31, 23)
 
 
 def validate_start_end_date(
-    nwm_version: SupportedNWMVersionsEnum,
+    nwm_version: SupportedNWMRetroVersionsEnum,
     start_date: Union[str, datetime],
     end_date: Union[str, datetime]
 ):
-    if nwm_version == SupportedNWMVersionsEnum.nwm20:
+    if nwm_version == SupportedNWMRetroVersionsEnum.nwm20:
         if end_date <= start_date:
             raise ValueError("start_date must be before end_date")
 
@@ -35,7 +38,7 @@ def validate_start_end_date(
         if end_date > NWM21_MAX_DATE:
             raise ValueError(f"end_date must be on or before {NWM20_MAX_DATE}")
 
-    elif nwm_version == SupportedNWMVersionsEnum.nwm21:
+    elif nwm_version == SupportedNWMRetroVersionsEnum.nwm21:
         if end_date <= start_date:
             raise ValueError("start_date must be before end_date")
 
@@ -51,7 +54,7 @@ def validate_start_end_date(
 
 
 def da_to_df(
-        nwm_version: SupportedNWMVersionsEnum,
+        nwm_version: SupportedNWMRetroVersionsEnum,
         da: xr.DataArray
 ) -> pd.DataFrame:
     """Format NWM retrospective data to TEEHR format."""
@@ -88,7 +91,7 @@ def datetime_to_date(dt: datetime) -> datetime:
 
 
 def nwm_retro_to_parquet(
-    nwm_version: SupportedNWMVersionsEnum,
+    nwm_version: SupportedNWMRetroVersionsEnum,
     variable_name: str,
     location_ids: Iterable[int],
     start_date: Union[str, datetime, pd.Timestamp],
@@ -101,7 +104,7 @@ def nwm_retro_to_parquet(
 
     Parameters
     ----------
-    nwm_version: SupportedNWMVersionsEnum
+    nwm_version: SupportedNWMRetroVersionsEnum
         NWM retrospective version to fetch.
         Currently `nwm20` and `nwm21` supported
     variable_name: str
@@ -128,9 +131,9 @@ def nwm_retro_to_parquet(
     None - saves file to specified path
 
     """
-    if nwm_version == SupportedNWMVersionsEnum.nwm20:
+    if nwm_version == SupportedNWMRetroVersionsEnum.nwm20:
         s3_zarr_url = 's3://noaa-nwm-retro-v2-zarr-pds'
-    elif nwm_version == SupportedNWMVersionsEnum.nwm21:
+    elif nwm_version == SupportedNWMRetroVersionsEnum.nwm21:
         s3_zarr_url = "s3://noaa-nwm-retrospective-2-1-zarr-pds/chrtout.zarr/"
     else:
         raise ValueError(f"unsupported NWM version {nwm_version}")

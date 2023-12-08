@@ -1,14 +1,16 @@
 from pathlib import Path
-from teehr.loading.nwm_common.utils_nwm import get_dataset, write_parquet_file
-
+from typing import Dict, Iterable, List, Tuple
+import re
 
 import dask
 import numpy as np
 import pandas as pd
 import pyarrow as pa
 
-
-from typing import Dict, Iterable, List, Tuple
+from teehr.loading.nwm.utils import (
+    get_dataset,
+    write_parquet_file,
+)
 
 
 @dask.delayed
@@ -20,9 +22,14 @@ def file_chunk_loop(
     schema: pa.Schema,
     ignore_missing_file: bool,
     units_format_dict: Dict,
+    nwm_version: str
 ):
     """Fetch NWM values and convert to tabular format for a single json"""
-    ds = get_dataset(row.filepath, ignore_missing_file)
+    ds = get_dataset(
+        row.filepath,
+        ignore_missing_file,
+        target_options={'anon': True}
+    )
     if not ds:
         return None
     ds = ds.sel(feature_id=location_ids)
@@ -34,7 +41,8 @@ def file_chunk_loop(
 
     valid_time = ds.time.values
     feature_ids = ds.feature_id.astype("int32").values
-    teehr_location_ids = [f"nwm22-{feat_id}" for feat_id in feature_ids]
+    teehr_location_ids = \
+        [f"{nwm_version}-{feat_id}" for feat_id in feature_ids]
     num_vals = vals.size
 
     output_table = pa.table(
@@ -63,6 +71,7 @@ def process_chunk_of_files(
     ignore_missing_file: bool,
     units_format_dict: Dict,
     overwrite_output: bool,
+    nwm_version: str
 ):
     """Assemble a table for a chunk of NWM files"""
 
@@ -91,6 +100,7 @@ def process_chunk_of_files(
                 schema,
                 ignore_missing_file,
                 units_format_dict,
+                nwm_version
             )
         )
     output = dask.compute(*results)
@@ -133,6 +143,7 @@ def fetch_and_format_nwm_points(
     ignore_missing_file: bool,
     units_format_dict: Dict,
     overwrite_output: bool,
+    nwm_version: str
 ):
     """Reads in the single reference jsons, subsets the
         NWM data based on provided IDs and formats and saves
@@ -165,6 +176,8 @@ def fetch_and_format_nwm_points(
     overwrite_output: bool
         Flag specifying whether or not to overwrite output files if
         they already exist.  True = overwrite; False = fail
+    nwm_version: str
+        Specified NWM version
     """
 
     output_parquet_dir = Path(output_parquet_dir)
@@ -172,12 +185,19 @@ def fetch_and_format_nwm_points(
         output_parquet_dir.mkdir(parents=True)
 
     # Format file list into a dataframe and group by specified method
+    pattern = re.compile(r'[0-9]+')
     days = []
     z_hours = []
     for path in json_paths:
         filename = Path(path).name
-        days.append(filename.split(".")[1])
-        z_hours.append(filename.split(".")[3])
+        if path.split(":")[0] == "s3":
+            # If it's a remote json day and z-hour are in the path
+            res = re.findall(pattern, path)
+            days.append(res[1])
+            z_hours.append(f"t{res[2]}z")
+        else:
+            days.append(filename.split(".")[1])
+            z_hours.append(filename.split(".")[3])
     df_refs = pd.DataFrame(
         {"day": days, "z_hour": z_hours, "filepath": json_paths}
     )
@@ -204,4 +224,5 @@ def fetch_and_format_nwm_points(
             ignore_missing_file,
             units_format_dict,
             overwrite_output,
+            nwm_version
         )
