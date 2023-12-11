@@ -207,6 +207,14 @@ def geometry_select_clause(
     return ""
 
 
+def geometry_joined_select_clause(
+        q: Union[MetricQuery, JoinedTimeseriesQuery]
+) -> str:
+    if q.include_geometry:
+        return ", geometry"
+    return ""
+
+
 def geometry_select_clause_db(
     q: Union[MetricQuery, JoinedTimeseriesQuery]
 ) -> str:
@@ -235,6 +243,112 @@ def metric_geometry_join_clause(
             on primary_location_id = gf.id
         """
     return ""
+
+
+def _remove_duplicates_jtq_cte(
+    q: JoinedTimeseriesQuery
+) -> str:
+    if q.remove_duplicates:
+        qry = f"""
+            SELECT
+                reference_time
+                , value_time
+                , secondary_location_id
+                , secondary_value
+                , configuration
+                , measurement_unit
+                , variable_name
+                , primary_value
+                , primary_location_id
+                , lead_time
+                {geometry_joined_select_clause(q)}
+            FROM(
+                SELECT *,
+                    row_number()
+                OVER(
+                    PARTITION BY value_time,
+                                 primary_location_id,
+                                 configuration,
+                                 variable_name,
+                                 measurement_unit,
+                                 reference_time
+                    ORDER BY primary_reference_time desc
+                    ) AS rn
+                FROM initial_joined
+                )
+            WHERE rn = 1
+        """
+    else:
+        qry = f"""
+            SELECT
+                reference_time
+                , value_time
+                , secondary_location_id
+                , secondary_value
+                , configuration
+                , measurement_unit
+                , variable_name
+                , primary_value
+                , primary_location_id
+                , lead_time
+                {geometry_joined_select_clause(q)}
+            FROM
+                initial_joined
+        """
+    return qry
+
+
+def _remove_duplicates_mq_cte(
+    q: MetricQuery
+) -> str:
+    if q.remove_duplicates:
+        qry = """
+            SELECT
+                reference_time
+                , value_time
+                , secondary_location_id
+                , secondary_value
+                , configuration
+                , measurement_unit
+                , variable_name
+                , primary_value
+                , primary_location_id
+                , lead_time
+                , absolute_difference
+            FROM(
+                SELECT *,
+                    row_number()
+                OVER(
+                    PARTITION BY value_time,
+                                 primary_location_id,
+                                 configuration,
+                                 variable_name,
+                                 measurement_unit,
+                                 reference_time
+                    ORDER BY primary_reference_time desc
+                    ) AS rn
+                FROM initial_joined
+                )
+            WHERE rn = 1
+        """
+    else:
+        qry = """
+            SELECT
+                reference_time
+                , value_time
+                , secondary_location_id
+                , secondary_value
+                , configuration
+                , measurement_unit
+                , variable_name
+                , primary_value
+                , primary_location_id
+                , lead_time
+                , absolute_difference
+            FROM
+                initial_joined
+        """
+    return qry
 
 
 def _join_time_on(join: str, join_to: str, join_on: List[str]):

@@ -8,7 +8,8 @@ import teehr.queries.duckdb as tqu
 from teehr.database.teehr_dataset import TEEHRDatasetDB
 
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
-PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_obs.parquet")
+PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*short_obs.parquet")
+PRIMARY_FILEPATH_DUPS = Path(TEST_STUDY_DIR, "timeseries", "*dup_obs.parquet")
 SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
 GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
@@ -71,6 +72,9 @@ def test_metric_compare_1():
                              include_metrics=include_metrics)
 
     pandas_df = tqk.get_metrics(**args)
+
+    args["primary_filepath"] = PRIMARY_FILEPATH_DUPS
+    args["remove_duplicates"] = True
     duckdb_df = tqu.get_metrics(**args)
 
     pandas_df["primary_count"] = pandas_df.primary_count.astype(int)

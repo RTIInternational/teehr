@@ -348,6 +348,9 @@ def calculate_group_metrics(
         )
         data["root_mean_squared_error"] = rmse
 
+    # Ensure the first occurrence of a repeated value gets selected
+    group = group.sort_values(by=["reference_time", "value_time"])
+
     # Time-based Metrics
     time_indexed_df = group.set_index("value_time")
     if (
