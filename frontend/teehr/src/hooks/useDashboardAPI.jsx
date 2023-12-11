@@ -103,7 +103,13 @@ const useDashboardAPI = () => {
       });
   };
 
-  const fetchStations = (dataset, groupFields, metrics, filters) => {
+  const fetchStations = (
+    dataset,
+    groupFields,
+    metrics,
+    filters,
+    includeSpatialData
+  ) => {
     setLoading(true);
     return axios
       .post(`${baseURL}/datasets/${dataset}/get_metrics`, {
@@ -112,7 +118,7 @@ const useDashboardAPI = () => {
         include_metrics: metrics,
         filters: filters,
         return_query: false,
-        include_geometry: true,
+        include_geometry: includeSpatialData,
       })
       .then((res) => {
         setLoading(false);

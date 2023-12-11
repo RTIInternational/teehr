@@ -72,7 +72,8 @@ function Dashboard() {
       selectedDataset,
       fields,
       selectedMetrics,
-      filters
+      filters,
+      includeSpatialData
     ).then((res) => {
       setData(res.data);
       return;
