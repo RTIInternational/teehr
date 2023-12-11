@@ -16,25 +16,20 @@ import DisplayStep from "./Step3Results.jsx";
 import useDashboardAPI from "../../hooks/useDashboardAPI.jsx";
 
 function Dashboard() {
-  const { loading, fetchStations, fetchDatasets } = useDashboardAPI();
-  const [errors, setErrors] = useState(false);
-  const [data, setData] = useState({});
-  const [fieldOptions, setFieldOptions] = useState({});
+  const { loading, errors, fetchStations, fetchDatasets } = useDashboardAPI();
 
   const [datasets, setDatasets] = useState([]);
-  const [selectedDataset, setSelectedDataset] = useState("");
-
   const [metrics, setMetrics] = useState([]);
-  const [selectedMetrics, setSelectedMetrics] = useState([]);
-  const [displayMetric, setDisplayMetric] = useState("");
-
   const [groupByFields, setGroupByFields] = useState([]);
-  const [selectedGroupByFields, setSelectedGroupByFields] = useState([]);
+  const [operatorOptions, setOperatorOptions] = useState([]);
+  const [fieldOptions, setFieldOptions] = useState({});
+  const [data, setData] = useState({});
 
+  const [selectedDataset, setSelectedDataset] = useState("");
+  const [selectedMetrics, setSelectedMetrics] = useState([]);
+  const [selectedGroupByFields, setSelectedGroupByFields] = useState([]);
   const [filters, setFilters] = useState([]);
   const [includeSpatialData, setIncludeSpatialData] = useState(true);
-  const [selectedTab, setSelectedTab] = useState("1");
-  const [fieldValues, setFieldValues] = useState({});
 
   const nonListFields = [
     "reference_time",
@@ -49,8 +44,6 @@ function Dashboard() {
   ];
 
   const [activeStep, setActiveStep] = React.useState(0);
-  const [skipped, setSkipped] = React.useState(new Set());
-  const [operatorOptions, setOperatorOptions] = useState([]);
 
   const steps = ["Query", "Add Filters", "View Results"];
 
@@ -58,19 +51,8 @@ function Dashboard() {
     return step === 1;
   };
 
-  const isStepSkipped = (step) => {
-    return skipped.has(step);
-  };
-
   const handleNext = () => {
-    let newSkipped = skipped;
-    if (isStepSkipped(activeStep)) {
-      newSkipped = new Set(newSkipped.values());
-      newSkipped.delete(activeStep);
-    }
-
     setActiveStep((prevActiveStep) => prevActiveStep + 1);
-    setSkipped(newSkipped);
   };
 
   const handleBack = () => {
@@ -109,14 +91,10 @@ function Dashboard() {
     operatorOptions,
     setOperatorOptions,
     data,
-    displayMetric,
     datasets,
     metrics,
     groupByFields,
-    fieldValues,
     filters,
-    errors,
-    loading,
     includeSpatialData,
     selectedDataset,
     selectedMetrics,
@@ -126,19 +104,22 @@ function Dashboard() {
     setMetrics,
     setGroupByFields,
     setFilters,
-    setErrors,
-    setFieldValues,
     setSelectedMetrics,
     setSelectedGroupByFields,
     setSelectedDataset,
-    setDisplayMetric,
     setIncludeSpatialData,
     setData,
-    selectedTab,
-    setSelectedTab,
-    activeStep,
     handleFetchData,
   };
+
+  if (errors) {
+    return (
+      <>
+        <div>Something went wrong:</div>
+        <div> {errors?.message}</div>
+      </>
+    );
+  }
 
   return (
     <DashboardContext.Provider value={contextValue}>
@@ -152,9 +133,6 @@ function Dashboard() {
                 labelProps.optional = (
                   <Typography variant="caption">Optional</Typography>
                 );
-              }
-              if (isStepSkipped(index)) {
-                stepProps.completed = false;
               }
               return (
                 <Step key={label} {...stepProps}>

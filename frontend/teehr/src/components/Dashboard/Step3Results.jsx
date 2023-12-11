@@ -16,13 +16,12 @@ const DisplayStep = (props) => {
     selectedGroupByFields,
     fieldOptions,
     selectedMetrics,
-    setDisplayMetric,
     data,
-    displayMetric,
     includeSpatialData,
-    selectedTab,
-    setSelectedTab,
   } = useContext(DashboardContext);
+
+  const [selectedTab, setSelectedTab] = useState("1");
+  const [displayMetric, setDisplayMetric] = useState("");
 
   const [groupByFilters, setGroupByFilters] = useState(() => {
     return selectedGroupByFields.reduce((obj, item) => {
