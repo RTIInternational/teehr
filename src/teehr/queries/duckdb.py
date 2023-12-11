@@ -29,7 +29,7 @@ def get_metrics(
     return_query: bool = False,
     geometry_filepath: Union[str, None] = None,
     include_geometry: bool = False,
-    deduplicate_primary: bool = True,
+    remove_duplicates: bool = True,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
     """Calculate performance metrics using database queries.
 
@@ -61,11 +61,14 @@ def get_metrics(
         True joins the geometry to the query results.
         Only works if `primary_location_id`
         is included as a group_by field.
-    deduplicate_primary: bool = True
-        True (default) removes rows with duplicate primary values, where unique
-        values are defined by the value_time, location_id, configuration,
+    remove_duplicates: bool = True
+        True (default) removes joined timeseries rows with duplicate primary
+        values, where unique values are defined by the value_time,
+        secondary_reference_time, location_id, configuration,
         variable_name and measurement_unit fields.
-        False ignores duplicates.
+        False does not check for or remove duplicate values.
+        This option can be used to improve performance if you are certain you
+        do not have duplicate primary_values.
 
 
     Returns
@@ -153,12 +156,12 @@ def get_metrics(
             "return_query": return_query,
             "include_geometry": include_geometry,
             "geometry_filepath": geometry_filepath,
-            "deduplicate_primary": deduplicate_primary
+            "remove_duplicates": remove_duplicates
         }
     )
 
     query = f"""
-        WITH pre_joined AS (
+        WITH initial_joined AS (
             SELECT
                 sf.reference_time
                 , sf.value_time as value_time
@@ -183,7 +186,7 @@ def get_metrics(
             {tqu.filters_to_sql(mq.filters)}
         ),
         joined AS (
-            {tqu._filter_primary_cte(mq.deduplicate_primary)}
+            {tqu._remove_duplicates_mq_cte(mq)}
         )
         {tqu._nse_cte(mq)}
         {tqu._pmxt_cte(mq)}
@@ -228,7 +231,7 @@ def get_metrics(
         {tqu._join_secondary_join_max_time(mq)}
         ORDER BY
             {",".join([f"metrics.{ob}" for ob in mq.order_by])}
-    ;""" # noqa
+    ;"""
 
     if mq.return_query:
         return tqu.remove_empty_lines(query)
@@ -250,6 +253,7 @@ def get_joined_timeseries(
     return_query: bool = False,
     geometry_filepath: Union[str, None] = None,
     include_geometry: bool = False,
+    remove_duplicates: bool = True,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
     """Retrieve joined timeseries using database query.
 
@@ -275,6 +279,14 @@ def get_joined_timeseries(
         True joins the geometry to the query results.
         Only works if `primary_location_id`.
         is included as a group_by field.
+    remove_duplicates: bool = True
+        True (default) removes joined timeseries rows with duplicate primary
+        values, where unique values are defined by the value_time,
+        secondary_reference_time, location_id, configuration,
+        variable_name and measurement_unit fields.
+        False does not check for or remove duplicate values.
+        This option can be used to improve performance if you are certain you
+        do not have duplicate primary_values.
 
     Returns
     -------
@@ -324,11 +336,12 @@ def get_joined_timeseries(
             "return_query": return_query,
             "include_geometry": include_geometry,
             "geometry_filepath": geometry_filepath,
+            "remove_duplicates": remove_duplicates
         }
     )
 
     query = f"""
-        WITH joined as (
+        WITH initial_joined as (
             SELECT
                 sf.reference_time,
                 sf.value_time,
@@ -353,42 +366,16 @@ def get_joined_timeseries(
             {tqu.geometry_join_clause(jtq)}
             {tqu.filters_to_sql(jtq.filters)}
         ),
-        windowed AS (
-            SELECT
-                reference_time
-                , value_time
-                , secondary_location_id
-                , secondary_value
-                , configuration
-                , measurement_unit
-                , variable_name
-                , primary_value
-                , primary_location_id
-                , lead_time
-                {tqu.geometry_window_select_clause(jtq)}
-            FROM(
-                SELECT *,
-                    row_number()
-                OVER(
-                    PARTITION BY value_time,
-                                 primary_location_id,
-                                 configuration,
-                                 variable_name,
-                                 measurement_unit,
-                                 reference_time
-                    ORDER BY primary_reference_time desc
-                    ) AS rn
-                FROM joined
-                )
-            WHERE rn = 1
+        joined AS (
+            {tqu._remove_duplicates_jtq_cte(jtq)}
         )
         SELECT
             *
         FROM
-            windowed
+            joined
         ORDER BY
             {",".join(jtq.order_by)}
-    ;"""  # noqa
+    ;"""
 
     if jtq.return_query:
         return tqu.remove_empty_lines(query)
@@ -398,7 +385,7 @@ def get_joined_timeseries(
     df["primary_location_id"] = df["primary_location_id"].astype("category")
     df["secondary_location_id"] = df["secondary_location_id"].astype(
         "category"
-    )  # noqa
+    )
     df["configuration"] = df["configuration"].astype("category")
     df["measurement_unit"] = df["measurement_unit"].astype("category")
     df["variable_name"] = df["variable_name"].astype("category")

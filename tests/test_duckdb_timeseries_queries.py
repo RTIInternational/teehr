@@ -5,8 +5,8 @@ from pathlib import Path
 from datetime import datetime
 
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
-PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_obs.parquet")
-PRIMARY_FILEPATH_DUPS = Path(TEST_STUDY_DIR, "timeseries", "*_obs2.parquet")
+PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*short_obs.parquet")
+PRIMARY_FILEPATH_DUPS = Path(TEST_STUDY_DIR, "timeseries", "*dup_obs.parquet")
 SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
 GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
@@ -20,10 +20,27 @@ def test_joined_timeseries_query_df():
         geometry_filepath=GEOMETRY_FILEPATH,
         order_by=["primary_location_id", "lead_time"],
         return_query=False,
+        remove_duplicates=True
     )
 
     # print(query_df.info())
     assert len(query_df) == 3 * 3 * 24
+    assert isinstance(query_df, pd.DataFrame)
+
+
+def test_joined_timeseries_with_dups_query_df():
+    query_df = tqu.get_joined_timeseries(
+        primary_filepath=PRIMARY_FILEPATH_DUPS,
+        secondary_filepath=SECONDARY_FILEPATH,
+        crosswalk_filepath=CROSSWALK_FILEPATH,
+        geometry_filepath=GEOMETRY_FILEPATH,
+        order_by=["primary_location_id", "lead_time"],
+        return_query=False,
+        remove_duplicates=False
+    )
+
+    # print(query_df.info())
+    assert len(query_df) == 231
     assert isinstance(query_df, pd.DataFrame)
 
 
@@ -68,6 +85,9 @@ def test_joined_timeseries_query_df_filter():
     # print(query_df.info())
     assert len(query_df) == 24
     assert isinstance(query_df, pd.DataFrame)
+    # Make sure the correct duplicate value was selected
+    query_df.set_index("value_time", inplace=True)
+    assert query_df.loc["2022-01-01T10:00:00"].primary_value == 0.9
 
 
 def test_timeseries_query_df():
@@ -186,6 +206,7 @@ def test_timeseries_char_query_filter_df():
 
 if __name__ == "__main__":
     test_joined_timeseries_query_df()
+    test_joined_timeseries_with_dups_query_df()
     test_joined_timeseries_query_gdf()
     test_joined_timeseries_query_df_filter()
     test_timeseries_query_df()

@@ -6,7 +6,7 @@ import teehr.queries.duckdb as tqu
 from pathlib import Path
 
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
-PRIMARY_FILEPATH_DUPS = Path(TEST_STUDY_DIR, "timeseries", "*_obs2.parquet")
+PRIMARY_FILEPATH_DUPS = Path(TEST_STUDY_DIR, "timeseries", "*dup_obs.parquet")
 SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
 GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
@@ -22,7 +22,7 @@ def test_metric_query_str():
         order_by=["primary_location_id"],
         include_metrics="all",
         return_query=True,
-        deduplicate_primary=True
+        remove_duplicates=True
     )
     # print(query_str)
     assert isinstance(query_str, str)
@@ -37,7 +37,7 @@ def test_metric_query_df():
         order_by=["primary_location_id"],
         include_metrics="all",
         return_query=False,
-        deduplicate_primary=True
+        remove_duplicates=True
     )
     # print(query_df)
     assert len(query_df) == 3
@@ -55,7 +55,7 @@ def test_metric_query_gdf():
         include_metrics="all",
         return_query=False,
         include_geometry=True,
-        deduplicate_primary=True
+        remove_duplicates=True
     )
     # print(query_df)
     assert len(query_df) == 3
@@ -73,7 +73,7 @@ def test_metric_query_gdf_2():
         include_metrics="all",
         return_query=False,
         include_geometry=True,
-        deduplicate_primary=True
+        remove_duplicates=True
     )
     # print(query_df)
     assert len(query_df) == 9
@@ -91,7 +91,7 @@ def test_metric_query_gdf_no_geom():
             include_metrics="all",
             return_query=False,
             include_geometry=True,
-            deduplicate_primary=True
+            remove_duplicates=True
         )
 
 
@@ -107,7 +107,7 @@ def test_metric_query_gdf_missing_group_by():
             include_metrics="all",
             return_query=False,
             include_geometry=True,
-            deduplicate_primary=True
+            remove_duplicates=True
         )
 
 
@@ -143,7 +143,7 @@ def test_metric_query_df_2():
         include_metrics=include_metrics,
         return_query=False,
         include_geometry=False,
-        deduplicate_primary=True
+        remove_duplicates=True
     )
     # print(query_df)
     assert len(query_df) == 3
@@ -168,7 +168,7 @@ def test_metric_query_df_time_metrics():
         include_metrics=include_metrics,
         return_query=False,
         include_geometry=False,
-        deduplicate_primary=True
+        remove_duplicates=True
     )
     # print(query_df)
     assert len(query_df) == 9
@@ -188,7 +188,7 @@ def test_metric_query_df_all():
         include_metrics="all",
         return_query=False,
         include_geometry=False,
-        deduplicate_primary=True
+        remove_duplicates=True
     )
     # print(query_df)
     assert len(query_df) == 9
@@ -220,7 +220,7 @@ def test_metric_query_value_time_filter():
                 "value": f"{'2022-01-01 02:00:00'}",
             },
         ],
-        deduplicate_primary=True
+        remove_duplicates=True
     )
     # print(query_df)
     assert len(query_df) == 3

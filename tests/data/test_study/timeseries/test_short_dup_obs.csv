@@ -10,11 +10,11 @@ reference_time,value_time,value,variable_name,measurement_unit,configuration,loc
 2022-01-01T08:00:00,2022-01-01T08:00:00,0.7,streamflow,m^3/s,test_obs,gage-A
 2022-01-01T09:00:00,2022-01-01T09:00:00,0.8,streamflow,m^3/s,test_obs,gage-A
 2022-01-01T10:00:00,2022-01-01T10:00:00,0.9,streamflow,m^3/s,test_obs,gage-A
-2022-01-01T10:00:00,2022-01-01T10:00:00,0.9,streamflow,m^3/s,test_obs,gage-A
-2022-01-01T10:00:00,2022-01-01T10:00:00,0.9,streamflow,m^3/s,test_obs,gage-A
-2022-01-01T10:00:00,2022-01-01T10:00:00,0.9,streamflow,m^3/s,test_obs,gage-A
-2022-01-01T10:00:00,2022-01-01T10:00:00,0.9,streamflow,m^3/s,test_obs,gage-A
-2022-01-01T10:00:00,2022-01-01T10:00:00,0.9,streamflow,m^3/s,test_obs,gage-A
+2022-01-01T09:00:00,2022-01-01T10:00:00,0.5,streamflow,m^3/s,test_obs,gage-A
+2022-01-01T08:00:00,2022-01-01T10:00:00,0.4,streamflow,m^3/s,test_obs,gage-A
+2022-01-01T07:00:00,2022-01-01T10:00:00,0.3,streamflow,m^3/s,test_obs,gage-A
+2022-01-01T06:00:00,2022-01-01T10:00:00,0.2,streamflow,m^3/s,test_obs,gage-A
+2022-01-01T05:00:00,2022-01-01T10:00:00,0.1,streamflow,m^3/s,test_obs,gage-A
 2022-01-01T11:00:00,2022-01-01T11:00:00,1,streamflow,m^3/s,test_obs,gage-A
 2022-01-01T12:00:00,2022-01-01T12:00:00,2,streamflow,m^3/s,test_obs,gage-A
 2022-01-01T13:00:00,2022-01-01T13:00:00,3,streamflow,m^3/s,test_obs,gage-A
