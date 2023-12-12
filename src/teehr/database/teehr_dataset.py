@@ -745,7 +745,10 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         crosswalk_filepath: Union[str, Path],
         order_by: List[str] = [
             "primary_location_id",
-            "reference_time",
+            "configuration",
+            "variable_name",
+            "measurement_unit",
+            "value_time"
         ],
         drop_added_fields=False,
     ):

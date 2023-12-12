@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Changed `primary_max_value_time`, `secondary_max_value_time` and `max_value_timedelta`
   queries to use built-in functions instead of CTEs.  This improves speed significantly.
 * Fixed bug in queries when filtering by `configuration`, `measurement_unit` and `variable.`
+* Refactored `join_attributes` in `TEEHRDatasetDB` to better handle attributes with no units.
+* Refactored `create_join_and_save_timeseries_query queries` so that the de-duplication
+CTE is after the intial join CTE for improved performance.
+* Changes default list of `order_by` variables in `insert_joined_timeseries` to improve
+query performance
 
 
 ## [0.3.1] - 2023-12-08
