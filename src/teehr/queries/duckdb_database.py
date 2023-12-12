@@ -182,22 +182,7 @@ def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQuery) -> str:
     """
 
     query = f"""
-    WITH filtered_primary AS (
-        SELECT * FROM(
-            SELECT *,
-                row_number() OVER(
-                    PARTITION BY value_time,
-                                 location_id,
-                                 configuration,
-                                 measurement_unit,
-                                 variable_name
-                    ORDER BY reference_time desc)
-                    AS rn
-            FROM read_parquet("{str(jtq.primary_filepath)}")
-            ) t
-        WHERE rn = 1
-    ),
-    joined as (
+    WITH initial_joined as (
         SELECT
             sf.reference_time,
             sf.value_time,
@@ -205,6 +190,7 @@ def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQuery) -> str:
             sf.value as secondary_value,
             sf.configuration,
             sf.measurement_unit,
+            pf.reference_time as primary_reference_time,
             sf.variable_name,
             pf.value as primary_value,
             pf.location_id as primary_location_id,
@@ -213,11 +199,40 @@ def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQuery) -> str:
         FROM read_parquet('{str(jtq.secondary_filepath)}') sf
         JOIN read_parquet('{str(jtq.crosswalk_filepath)}') cf
             on cf.secondary_location_id = sf.location_id
-        JOIN filtered_primary pf
+        JOIN read_parquet("{str(jtq.primary_filepath)}") pf
             on cf.primary_location_id = pf.location_id
             and sf.value_time = pf.value_time
             and sf.measurement_unit = pf.measurement_unit
             and sf.variable_name = pf.variable_name
+    ),
+    joined AS (
+        SELECT
+            reference_time
+            , value_time
+            , secondary_location_id
+            , secondary_value
+            , configuration
+            , measurement_unit
+            , variable_name
+            , primary_value
+            , primary_location_id
+            , lead_time
+            , absolute_difference
+        FROM(
+            SELECT *,
+                row_number()
+            OVER(
+                PARTITION BY value_time,
+                             primary_location_id,
+                             configuration,
+                             variable_name,
+                             measurement_unit,
+                             reference_time
+                ORDER BY primary_reference_time desc
+                ) AS rn
+            FROM initial_joined
+            )
+        WHERE rn = 1
     )
     INSERT INTO joined_timeseries
     SELECT
@@ -226,7 +241,7 @@ def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQuery) -> str:
         joined
     ORDER BY
         {",".join(jtq.order_by)}
-    ;"""  # noqa
+    ;"""
 
     return query
 

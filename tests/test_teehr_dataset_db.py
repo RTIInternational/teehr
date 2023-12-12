@@ -7,6 +7,7 @@ from teehr.database.teehr_dataset import TEEHRDatasetDB
 # Test data
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
 PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*short_obs.parquet")
+PRIMARY_FILEPATH_DUPS = Path(TEST_STUDY_DIR, "timeseries", "*dup_obs.parquet")
 SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
 GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
@@ -23,7 +24,7 @@ def test_insert_joined_timeseries():
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
-        primary_filepath=PRIMARY_FILEPATH,
+        primary_filepath=PRIMARY_FILEPATH_DUPS,
         secondary_filepath=SECONDARY_FILEPATH,
         crosswalk_filepath=CROSSWALK_FILEPATH,
         drop_added_fields=True,
@@ -253,7 +254,9 @@ def test_join_attributes():
         df.drainage_area_sq_mi.astype(float).sum(), 28800.0, significant=5
     )
 
-    assert (df.ecoregion.unique() == ["coastal_plain", "piedmont", "blue_ridge"]).all()
+    assert (
+        df.ecoregion.unique() == ["coastal_plain", "piedmont", "blue_ridge"]
+    ).all()
 
 
 def test_get_joined_timeseries_schema():
