@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2023-12-08
+
+### Added
+* Adds a boolean flag to parquet-based metric query control whether or not to de-duplicate.
+* Adds a test primary timeseries file including duplicate values for testing.
+
+### Changed
+* Refactored parquet-based `get_metrics` and `get_joined_timeseries` queries to that so that the de-duplication
+CTE is after the intial join CTE for improved performance.
+
+
 ## [0.3.0] - 2023-12-08
 
 ### Added
