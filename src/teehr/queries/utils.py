@@ -447,8 +447,8 @@ def _select_max_value_timedelta(mq: MetricQuery) -> str:
         "max_value_timedelta" in mq.include_metrics
         or mq.include_metrics == "all"
     ):
-        return """, arg_max(joined.value_time, secondary_value)
-        - arg_max(joined.value_time, primary_value) as max_value_timedelta"""
+        return """, arg_max(joined.value_time, secondary_value ORDER BY joined.value_time ASC)
+        - arg_max(joined.value_time, primary_value ORDER BY joined.value_time ASC) as max_value_timedelta"""
     return ""
 
 
@@ -457,7 +457,7 @@ def _select_secondary_max_value_time(mq: MetricQuery) -> str:
         "secondary_max_value_time" in mq.include_metrics
         or mq.include_metrics == "all"
     ):
-        return """, arg_max(joined.value_time, secondary_value)
+        return """, arg_max(joined.value_time, secondary_value ORDER BY joined.value_time ASC)
         as secondary_max_value_time"""
     return ""
 
@@ -467,7 +467,7 @@ def _select_primary_max_value_time(mq: MetricQuery) -> str:
         "primary_max_value_time" in mq.include_metrics
         or mq.include_metrics == "all"
     ):
-        return """, arg_max(joined.value_time, primary_value)
+        return """, arg_max(joined.value_time, primary_value ORDER BY joined.value_time ASC)
         as primary_max_value_time"""
     return ""
 
