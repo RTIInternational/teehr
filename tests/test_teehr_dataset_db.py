@@ -218,7 +218,7 @@ def test_join_attributes():
     # Add attributes
     tds.join_attributes(ATTRIBUTES_FILEPATH)
 
-    df = tds.get_joined_timeseries_schema()
+    df = tds.query("SELECT * FROM joined_timeseries;", format="df")
 
     cols = [
         "reference_time",
@@ -233,22 +233,27 @@ def test_join_attributes():
         "lead_time",
         "absolute_difference",
         "drainage_area_sq_km",
-        "year_2_discharge_cfs",
+        "drainage_area_sq_mi",
+        "year_2_discharge_ft_3_s",
+        "ecoregion"
     ]
     # Make sure attribute fields have been added
-    assert sorted(df.column_name.tolist()) == sorted(cols)
+    assert sorted(df.columns.tolist()) == sorted(cols)
 
     # Make sure attribute values are correct
-    df = tds.query("SELECT * FROM joined_timeseries", format="df")
     np.testing.assert_approx_equal(
-        df.year_2_discharge_cfs.astype(float).sum(), 72000.0, significant=6
+        df.year_2_discharge_ft_3_s.astype(float).sum(), 72000.0, significant=6
     )
 
     np.testing.assert_approx_equal(
         df.drainage_area_sq_km.astype(float).sum(), 7200.0, significant=5
     )
 
-    pass
+    np.testing.assert_approx_equal(
+        df.drainage_area_sq_mi.astype(float).sum(), 28800.0, significant=5
+    )
+
+    assert (df.ecoregion.unique() == ["coastal_plain", "piedmont", "blue_ridge"]).all()
 
 
 def test_get_joined_timeseries_schema():

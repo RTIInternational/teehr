@@ -744,8 +744,8 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         secondary_filepath: Union[str, Path],
         crosswalk_filepath: Union[str, Path],
         order_by: List[str] = [
-            "reference_time",
             "primary_location_id",
+            "reference_time",
         ],
         drop_added_fields=False,
     ):
@@ -800,35 +800,6 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         attr_list = self.query(query, format="df").to_dict(orient="records")
         return attr_list
 
-    def _pivot_attribute_table(
-        self, attributes_filepath: str, attr: duckdb.DuckDBPyRelation
-    ) -> duckdb.DuckDBPyRelation:
-        """Pivots an attribute table selected as a name-unit pair.
-        The schema of the returned table consists of a field whose name
-        is a combination of attribute_name and attribute_unit, and whose
-        values are attribute_value"""
-
-        query = f"""
-            WITH attribute AS (
-                SELECT *
-                FROM
-                    read_parquet('{attributes_filepath}')
-                WHERE
-                    attribute_name = '{attr["attribute_name"]}'
-                AND
-                    attribute_unit = '{attr["attribute_unit"]}'
-            )
-            PIVOT
-                attribute
-            ON
-                attribute_name, attribute_unit
-            USING
-                FIRST(attribute_value)
-        ;"""
-        attr_pivot = self.query(query=query, format="relation")
-
-        return attr_pivot
-
     def _add_field_name_to_joined_timeseries(
         self, field_name: str, field_dtype="VARCHAR"
     ):
@@ -841,23 +812,6 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
                 {field_name} {field_dtype}
         ;"""
         self.query(query)
-
-    def _join_attribute_values(self, field_name: str):
-        """Join values of the new attr field on location_id"""
-        update_query = f"""
-            UPDATE
-                joined_timeseries
-            SET
-                {field_name} = (
-            SELECT
-                attr_pivot.{field_name}
-            FROM
-                attr_pivot
-            WHERE
-                joined_timeseries.primary_location_id = attr_pivot.location_id)
-        ;"""
-        print(f"Joining {field_name} values to joined_timeseries")
-        self.query(update_query)
 
     def join_attributes(self, attributes_filepath: Union[str, Path]):
         """Joins attributes from the provided attribute table(s) to new
@@ -873,20 +827,47 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         attr_list = self._get_unique_attributes(str(attributes_filepath))
 
         for attr in attr_list:
-            # Pivot the single attribute
-            attr_pivot = self._pivot_attribute_table(
-                str(attributes_filepath), attr
-            )
 
-            # Add the attr field name to joined_timeseries
-            field_name = attr_pivot.columns
-            field_name.remove("location_id")
-            field_name = self._sanitize_field_name(field_name[0])
+            if attr["attribute_unit"]:
+                field_name = (
+                    f"{attr['attribute_name']}_{attr['attribute_unit']}"
+                )
+                unit_clause = (
+                    f"AND attribute_unit = '{attr['attribute_unit']}'"
+                )
+            else:
+                field_name = attr["attribute_name"]
+                unit_clause = ""
+
+            field_name = self._sanitize_field_name(field_name)
 
             self._add_field_name_to_joined_timeseries(field_name)
 
-            # Join the attribute values to the new field, attr_pivot
-            self._join_attribute_values(field_name)
+            query = f"""
+                WITH selected_attribute AS (
+                    SELECT
+                        *
+                    FROM
+                        read_parquet('{attributes_filepath}')
+                    WHERE
+                        attribute_name = '{attr['attribute_name']}'
+                    {unit_clause}
+                )
+                UPDATE
+                    joined_timeseries
+                SET
+                    {field_name} = (
+                        SELECT
+                            CAST(attribute_value AS VARCHAR)
+                        FROM
+                            selected_attribute
+                        WHERE
+                            joined_timeseries.primary_location_id =
+                                selected_attribute.location_id
+                    )
+            ;"""
+
+            self.query(query)
 
     def calculate_field(
         self,

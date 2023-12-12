@@ -2,6 +2,12 @@ location_id,attribute_name,attribute_value,attribute_unit
 gage-A,drainage_area,50,sq_km
 gage-B,drainage_area,20,sq_km
 gage-C,drainage_area,30,sq_km
-gage-A,year_2_discharge,500,cfs
-gage-B,year_2_discharge,200,cfs
-gage-C,year_2_discharge,300,cfs
+gage-A,year_2_discharge,500,ft^3/s
+gage-B,year_2_discharge,200,ft^3/s
+gage-C,year_2_discharge,300,ft^3/s
+gage-A,ecoregion,coastal_plain
+gage-B,ecoregion,piedmont
+gage-C,ecoregion,blue_ridge
+gage-A,drainage_area,150,sq_mi
+gage-B,drainage_area,120,sq_mi
+gage-C,drainage_area,130,sq_mi
