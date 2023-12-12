@@ -228,6 +228,32 @@ def test_metric_query_value_time_filter():
     assert isinstance(query_df, pd.DataFrame)
 
 
+def test_metric_query_config_filter():
+    group_by = ["primary_location_id", "reference_time"]
+    query_df = tqu.get_metrics(
+        primary_filepath=PRIMARY_FILEPATH_DUPS,
+        secondary_filepath=SECONDARY_FILEPATH,
+        crosswalk_filepath=CROSSWALK_FILEPATH,
+        geometry_filepath=GEOMETRY_FILEPATH,
+        group_by=group_by,
+        order_by=["primary_location_id", "reference_time"],
+        include_metrics="all",
+        return_query=False,
+        include_geometry=False,
+        filters=[
+            {
+                "column": "configuration",
+                "operator": "=",
+                "value": "test_short",
+            },
+        ],
+        remove_duplicates=True
+    )
+    # print(query_df)
+    assert len(query_df) == 9
+    assert isinstance(query_df, pd.DataFrame)
+
+
 if __name__ == "__main__":
 
     test_metric_query_str()
