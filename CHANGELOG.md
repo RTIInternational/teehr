@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2023-12-12
+
+### Added
+* None
+
+### Changed
+* Fixed the `bias` metric so that it is `sum(secondary_value - primary_value)/count(*)` instead of
+  `sum(primary_value - secondary_value)/count(*)` which resulted in the wrong sign.
+* Changed `primary_max_value_time`, `secondary_max_value_time` and `max_value_timedelta`
+  queries to use built-in functions instead of CTEs.  This improves speed significantly.
+* Fixed bug in queries when filtering by `configuration`, `measurement_unit` and `variable.`
+
+
 ## [0.3.1] - 2023-12-08
 
 ### Added

@@ -90,20 +90,15 @@ def test_metrics_query():
             "operator": "=",
             "value": "2022-01-01 00:00:00",
         },
-        {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+        {
+            "column": "lead_time",
+            "operator": "<=",
+            "value": "10 hours"
+        },
     ]
-    # filters = [
-    #     {
-    #         "column": "configuration",
-    #         "operator": "=",
-    #         "value": "nwm22",
-    #     }
-    # ]
-
     group_by = ["primary_location_id"]
     order_by = ["primary_location_id"]
     include_metrics = "all"
-    # filters = []
 
     df = tds.get_metrics(
         group_by=group_by,
@@ -116,6 +111,47 @@ def test_metrics_query():
     # print(df)
     assert df.index.size == 1
     assert df.columns.size == 24
+
+
+def test_metrics_query_config_filter():
+    if DATABASE_FILEPATH.is_file():
+        DATABASE_FILEPATH.unlink()
+
+    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+
+    # Perform the join and insert into duckdb database
+    tds.insert_joined_timeseries(
+        primary_filepath=PRIMARY_FILEPATH,
+        secondary_filepath=SECONDARY_FILEPATH,
+        crosswalk_filepath=CROSSWALK_FILEPATH,
+        drop_added_fields=True,
+    )
+
+    # Insert geometry
+    tds.insert_geometry(GEOMETRY_FILEPATH)
+
+    # Get metrics
+    filters = [
+        {
+            "column": "configuration",
+            "operator": "=",
+            "value": "test_short",
+        },
+    ]
+    group_by = ["primary_location_id"]
+    order_by = ["primary_location_id"]
+    include_metrics = "all"
+
+    df = tds.get_metrics(
+        group_by=group_by,
+        order_by=order_by,
+        include_metrics=include_metrics,
+        filters=filters,
+        include_geometry=True,
+    )
+
+    # print(df)
+    assert df.index.size == 3
 
 
 def test_describe_inputs():

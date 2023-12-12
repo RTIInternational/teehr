@@ -277,7 +277,7 @@ def calculate_group_metrics(
         data["secondary_variance"] = np.var(group["secondary_value"])
 
     if include_metrics == "all" or "bias" in include_metrics:
-        group["difference"] = group["primary_value"] - group["secondary_value"]
+        group["difference"] = group["secondary_value"] - group["primary_value"]
         data["bias"] = np.sum(group["difference"])/len(group)
 
     if include_metrics == "all" or "max_value_delta" in include_metrics:
