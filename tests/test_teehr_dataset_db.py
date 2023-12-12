@@ -7,6 +7,7 @@ from teehr.database.teehr_dataset import TEEHRDatasetDB
 # Test data
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
 PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*short_obs.parquet")
+PRIMARY_FILEPATH_DUPS = Path(TEST_STUDY_DIR, "timeseries", "*dup_obs.parquet")
 SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
 GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
@@ -23,7 +24,7 @@ def test_insert_joined_timeseries():
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
-        primary_filepath=PRIMARY_FILEPATH,
+        primary_filepath=PRIMARY_FILEPATH_DUPS,
         secondary_filepath=SECONDARY_FILEPATH,
         crosswalk_filepath=CROSSWALK_FILEPATH,
         drop_added_fields=True,
@@ -254,7 +255,7 @@ def test_join_attributes():
     # Add attributes
     tds.join_attributes(ATTRIBUTES_FILEPATH)
 
-    df = tds.get_joined_timeseries_schema()
+    df = tds.query("SELECT * FROM joined_timeseries;", format="df")
 
     cols = [
         "reference_time",
@@ -269,22 +270,29 @@ def test_join_attributes():
         "lead_time",
         "absolute_difference",
         "drainage_area_sq_km",
-        "year_2_discharge_cfs",
+        "drainage_area_sq_mi",
+        "year_2_discharge_ft_3_s",
+        "ecoregion"
     ]
     # Make sure attribute fields have been added
-    assert sorted(df.column_name.tolist()) == sorted(cols)
+    assert sorted(df.columns.tolist()) == sorted(cols)
 
     # Make sure attribute values are correct
-    df = tds.query("SELECT * FROM joined_timeseries", format="df")
     np.testing.assert_approx_equal(
-        df.year_2_discharge_cfs.astype(float).sum(), 72000.0, significant=6
+        df.year_2_discharge_ft_3_s.astype(float).sum(), 72000.0, significant=6
     )
 
     np.testing.assert_approx_equal(
         df.drainage_area_sq_km.astype(float).sum(), 7200.0, significant=5
     )
 
-    pass
+    np.testing.assert_approx_equal(
+        df.drainage_area_sq_mi.astype(float).sum(), 28800.0, significant=5
+    )
+
+    assert (
+        df.ecoregion.unique() == ["coastal_plain", "piedmont", "blue_ridge"]
+    ).all()
 
 
 def test_get_joined_timeseries_schema():
