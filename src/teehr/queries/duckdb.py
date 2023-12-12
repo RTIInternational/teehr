@@ -189,8 +189,6 @@ def get_metrics(
             {tqu._remove_duplicates_mq_cte(mq)}
         )
         {tqu._nse_cte(mq)}
-        {tqu._pmxt_cte(mq)}
-        {tqu._smxt_cte(mq)}
         , metrics AS (
             SELECT
                 {",".join([f"joined.{gb}" for gb in mq.group_by])}
@@ -213,6 +211,9 @@ def get_metrics(
                 {tqu._select_mean_error(mq)}
                 {tqu._select_mean_squared_error(mq)}
                 {tqu._select_root_mean_squared_error(mq)}
+                {tqu._select_primary_max_value_time(mq)}
+                {tqu._select_secondary_max_value_time(mq)}
+                {tqu._select_max_value_timedelta(mq)}
             FROM
                 joined
             {tqu._join_nse_cte(mq)}
@@ -221,14 +222,9 @@ def get_metrics(
         )
         SELECT
             metrics.*
-            {tqu._select_primary_max_value_time(mq)}
-            {tqu._select_secondary_max_value_time(mq)}
-            {tqu._select_max_value_timedelta(mq)}
             {tqu.geometry_select_clause(mq)}
         FROM metrics
-        {tqu.metric_geometry_join_clause(mq)}
-        {tqu._join_primary_join_max_time(mq)}
-        {tqu._join_secondary_join_max_time(mq)}
+            {tqu.metric_geometry_join_clause(mq)}
         ORDER BY
             {",".join([f"metrics.{ob}" for ob in mq.order_by])}
     ;"""

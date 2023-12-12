@@ -377,63 +377,58 @@ def _nse_cte(mq: MetricQuery) -> str:
         ,nse AS (
             SELECT
                 {",".join(mq.group_by)}
-                , value_time
-                , pow(
-                    primary_value - secondary_value, 2
-                ) as primary_minus_secondary_squared
-                , pow(
-                    primary_value
-                    - avg(primary_value)
-                    OVER(PARTITION BY {",".join(mq.group_by)}), 2
-                ) as primary_minus_primary_mean_squared
-            FROM joined
-        )
-        """
-    return ""
-
-
-def _pmxt_cte(mq: MetricQuery) -> str:
-    if (
-        "primary_max_value_time" in mq.include_metrics
-        or "max_value_timedelta" in mq.include_metrics
-        or mq.include_metrics == "all"
-    ):
-        return f"""
-            , pmxt AS (
-                SELECT
-                    {",".join(mq.group_by)}
-                    , primary_value as value
-                    , value_time
-                    , ROW_NUMBER() OVER(
-                        PARTITION BY {",".join(mq.group_by)}
-                        ORDER BY value DESC, value_time
-                    ) as n
-                FROM joined
-            )
-        """
-    return ""
-
-
-def _smxt_cte(mq: MetricQuery) -> str:
-    if (
-        "secondary_max_value_time" in mq.include_metrics
-        or "max_value_timedelta" in mq.include_metrics
-        or mq.include_metrics == "all"
-    ):
-        return f"""
-            , smxt AS (
-            SELECT
+                ,AVG(primary_value) AS avg_primary_value
+            FROM
+                joined
+            GROUP BY
                 {",".join(mq.group_by)}
-                , secondary_value as value
-                , value_time
-                , ROW_NUMBER() OVER(
-                    PARTITION BY {",".join(mq.group_by)}
-                    ORDER BY value DESC, value_time
-                ) as n
-            FROM joined
         )
         """
     return ""
+
+
+# def _pmxt_cte(mq: MetricQuery) -> str:
+#     if (
+#         "primary_max_value_time" in mq.include_metrics
+#         or "max_value_timedelta" in mq.include_metrics
+#         or mq.include_metrics == "all"
+#     ):
+#         return f"""
+#             , pmxt AS (
+#                 SELECT
+#                     {",".join(mq.group_by)}
+#                     , primary_value as value
+#                     , value_time
+#                     , ROW_NUMBER() OVER(
+#                         PARTITION BY {",".join(mq.group_by)}
+#                         ORDER BY value DESC, value_time
+#                     ) as n
+#                 FROM joined
+#             )
+#         """
+#     return ""
+
+
+# def _smxt_cte(mq: MetricQuery) -> str:
+#     if (
+#         "secondary_max_value_time" in mq.include_metrics
+#         or "max_value_timedelta" in mq.include_metrics
+#         or mq.include_metrics == "all"
+#     ):
+#         return f"""
+#             , smxt AS (
+#             SELECT
+#                 {",".join(mq.group_by)}
+#                 , secondary_value as value
+#                 , value_time
+#                 , ROW_NUMBER() OVER(
+#                     PARTITION BY {",".join(mq.group_by)}
+#                     ORDER BY value DESC, value_time
+#                 ) as n
+#             FROM joined
+#         )
+#         """
+#     return ""
 
 
 def _join_nse_cte(mq: MetricQuery) -> str:
@@ -443,7 +438,6 @@ def _join_nse_cte(mq: MetricQuery) -> str:
     ):
         return f"""
             {_join_on(join="nse", join_to="joined", join_on=mq.group_by)}
-            AND nse.value_time = joined.value_time
         """
     return ""
 
@@ -453,7 +447,8 @@ def _select_max_value_timedelta(mq: MetricQuery) -> str:
         "max_value_timedelta" in mq.include_metrics
         or mq.include_metrics == "all"
     ):
-        return """, smxt.value_time - pmxt.value_time as max_value_timedelta"""
+        return """, arg_max(joined.value_time, secondary_value)
+        - arg_max(joined.value_time, primary_value) as max_value_timedelta"""
     return ""
 
 
@@ -462,7 +457,8 @@ def _select_secondary_max_value_time(mq: MetricQuery) -> str:
         "secondary_max_value_time" in mq.include_metrics
         or mq.include_metrics == "all"
     ):
-        return """, smxt.value_time as secondary_max_value_time"""
+        return """, arg_max(joined.value_time, secondary_value)
+        as secondary_max_value_time"""
     return ""
 
 
@@ -471,7 +467,8 @@ def _select_primary_max_value_time(mq: MetricQuery) -> str:
         "primary_max_value_time" in mq.include_metrics
         or mq.include_metrics == "all"
     ):
-        return """, pmxt.value_time as primary_max_value_time"""
+        return """, arg_max(joined.value_time, primary_value)
+        as primary_max_value_time"""
     return ""
 
 
@@ -513,7 +510,7 @@ def _select_kling_gupta_efficiency(mq: MetricQuery) -> str:
             + pow(stddev(secondary_value)
                 / stddev(primary_value) - 1, 2)
             + pow(avg(secondary_value) / avg(primary_value) - 1, 2)
-        ) AS kling_gupta_efficiency
+        ) as kling_gupta_efficiency
         """
     return ""
 
@@ -524,9 +521,9 @@ def _select_nash_sutcliffe_efficiency(mq: MetricQuery) -> str:
         or mq.include_metrics == "all"
     ):
         return """, 1 - (
-                sum(nse.primary_minus_secondary_squared)
-                /sum(nse.primary_minus_primary_mean_squared)
-            ) as nash_sutcliffe_efficiency
+            sum(pow(joined.primary_value - joined.secondary_value, 2))
+            / sum(pow(joined.primary_value - nse.avg_primary_value, 2))
+        ) as nash_sutcliffe_efficiency
         """
     return ""
 
@@ -629,28 +626,28 @@ def _select_secondary_variance(mq: MetricQuery) -> str:
     return ""
 
 
-def _join_primary_join_max_time(mq: MetricQuery) -> str:
-    if (
-        "primary_max_value_time" in mq.include_metrics
-        or "max_value_timedelta" in mq.include_metrics
-        or mq.include_metrics == "all"
-    ):
-        return _join_time_on(
-            join="pmxt", join_to="metrics", join_on=mq.group_by
-        )
-    return ""
+# def _join_primary_join_max_time(mq: MetricQuery) -> str:
+#     if (
+#         "primary_max_value_time" in mq.include_metrics
+#         or "max_value_timedelta" in mq.include_metrics
+#         or mq.include_metrics == "all"
+#     ):
+#         return _join_time_on(
+#             join="pmxt", join_to="metrics", join_on=mq.group_by
+#         )
+#     return ""
 
 
-def _join_secondary_join_max_time(mq: MetricQuery) -> str:
-    if (
-        "secondary_max_value_time" in mq.include_metrics
-        or "max_value_timedelta" in mq.include_metrics
-        or mq.include_metrics == "all"
-    ):
-        return _join_time_on(
-            join="smxt", join_to="metrics", join_on=mq.group_by
-        )
-    return ""
+# def _join_secondary_join_max_time(mq: MetricQuery) -> str:
+#     if (
+#         "secondary_max_value_time" in mq.include_metrics
+#         or "max_value_timedelta" in mq.include_metrics
+#         or mq.include_metrics == "all"
+#     ):
+#         return _join_time_on(
+#             join="smxt", join_to="metrics", join_on=mq.group_by
+#         )
+#     return ""
 
 
 def df_to_gdf(df: pd.DataFrame) -> gpd.GeoDataFrame:
