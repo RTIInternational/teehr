@@ -1,7 +1,7 @@
 import "@src/App.css";
 import { TextField, Box, Button, Tab, Grid } from "@mui/material";
 import DashboardContext from "../../Context.js";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import PropTypes from "prop-types";
 import FormSingleSelect from "../form-components/FormSingleSelect.jsx";
@@ -20,9 +20,12 @@ const DisplayStep = (props) => {
     includeSpatialData,
   } = useContext(DashboardContext);
 
-  const [selectedTab, setSelectedTab] = useState("1");
+  const [geoJSON, setGeoJSON] = useState({ features: [] });
+  const [tabularData, setTabularData] = useState([]);
+  const [selectedTab, setSelectedTab] = useState(
+    includeSpatialData ? "1" : "2"
+  );
   const [displayMetric, setDisplayMetric] = useState("");
-
   const [groupByFilters, setGroupByFilters] = useState(() => {
     return selectedGroupByFields.reduce((obj, item) => {
       obj[item] = (fieldOptions[item] && fieldOptions[item][0]) || "";
@@ -31,23 +34,21 @@ const DisplayStep = (props) => {
   });
 
   const filterDataByGroupByFilters = (data, groupByFilters) => {
-    const filteredFeatures = data.features.filter((feature) => {
-      return Object.entries(groupByFilters).every(([key, value]) => {
+    const filterLogic = (item) =>
+      Object.entries(groupByFilters).every(([key, value]) => {
         if (!value) return true;
-        const featureValue = String(feature.properties[key]);
-        const filterValue = String(value);
-        return featureValue === filterValue;
+        return String(item[key]) === String(value);
       });
-    });
-    return {
-      ...data,
-      features: filteredFeatures,
-    };
-  };
 
-  const [filteredData, setFilteredData] = useState(() => {
-    return filterDataByGroupByFilters(data, groupByFilters);
-  });
+    if (includeSpatialData) {
+      const filteredFeatures = data.features.filter(filterLogic);
+      setGeoJSON({ ...data, features: filteredFeatures });
+      setTabularData(filteredFeatures.map((feature) => feature.properties));
+    } else {
+      const filteredData = data.filter(filterLogic);
+      setTabularData(filteredData);
+    }
+  };
 
   const handleTabChange = (e, value) => {
     setSelectedTab(value);
@@ -60,9 +61,7 @@ const DisplayStep = (props) => {
 
   const handleGroupFilterChange = (newValue, onChange, field) => {
     setGroupByFilters((prev) => ({ ...prev, [field]: newValue }));
-    setFilteredData(
-      filterDataByGroupByFilters(data, { ...groupByFilters, [field]: newValue })
-    );
+    filterDataByGroupByFilters(data, { ...groupByFilters, [field]: newValue });
     onChange(newValue);
   };
 
@@ -73,92 +72,102 @@ const DisplayStep = (props) => {
     },
   });
 
+  useEffect(() => {
+    filterDataByGroupByFilters(data, groupByFilters);
+  }, []);
+
   return (
     <>
+      {(!data || data.length === 0) && <div>Response returned no data.</div>}
       <form>
-        <Grid container>
-          <Grid item xs={12} md={5} sx={{ mt: 9 }}>
-            <FormSingleSelect
-              name={"displayMetric"}
-              control={control}
-              label={"Select Display Metric"}
-              options={selectedMetrics || []}
-              onChange={handleDisplayMetricChange}
-              formStyle={{ m: 0 }}
-            />
-            {selectedGroupByFields.map((field, index) => (
-              <Box
-                key={index}
-                sx={{
-                  display: "flex",
-                }}
-              >
-                <TextField
-                  size="small"
-                  value={field}
-                  disabled
-                  sx={{ m: 0.5, width: "50%" }}
-                />
-                {field in fieldOptions && (
-                  <FormSingleSelect
-                    name={`${field}`}
-                    control={control}
-                    label={"Value"}
-                    options={fieldOptions[field] || []}
-                    rules={{ required: "Required." }}
-                    onChange={(e, fn) => handleGroupFilterChange(e, fn, field)}
+        {data.length > 0 && (
+          <Grid container>
+            <Grid item xs={12} md={5} sx={{ mt: 9 }}>
+              <FormSingleSelect
+                name={"displayMetric"}
+                control={control}
+                label={"Select Display Metric"}
+                options={selectedMetrics || []}
+                onChange={handleDisplayMetricChange}
+                formStyle={{ m: 0 }}
+              />
+              {selectedGroupByFields.map((field, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    display: "flex",
+                  }}
+                >
+                  <TextField
+                    size="small"
+                    value={field}
+                    disabled
+                    sx={{ m: 0.5, width: "50%" }}
                   />
-                )}
-                {!(field in fieldOptions) && (
-                  <FormInputText
-                    name={`${field}`}
-                    control={control}
-                    label={"Value"}
-                    options={fieldOptions[field] || []}
-                    rules={{ required: "Required." }}
-                    onChange={(e, fn) => handleGroupFilterChange(e, fn, field)}
-                  />
-                )}
-              </Box>
-            ))}
-          </Grid>
-          <Grid item xs={12} md={7}>
-            {filteredData && Object.keys(data).length > 0 && (
-              <TabContext value={selectedTab}>
-                <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-                  <TabList
-                    onChange={handleTabChange}
-                    aria-label="Dashboard tabs"
-                    variant="fullWidth"
-                  >
-                    <Tab label="Map" value="1" disabled={!includeSpatialData} />
-                    <Tab label="Table" value="2" />
-                  </TabList>
-                </Box>
-                <TabPanel value="1">
-                  {Object.keys(filteredData.features).length > 0 && (
-                    <StationMap
-                      stations={filteredData}
-                      metricName={displayMetric}
+                  {field in fieldOptions && (
+                    <FormSingleSelect
+                      name={`${field}`}
+                      control={control}
+                      label={"Value"}
+                      options={fieldOptions[field] || []}
+                      rules={{ required: "Required." }}
+                      onChange={(e, fn) =>
+                        handleGroupFilterChange(e, fn, field)
+                      }
                     />
                   )}
-                  {Object.keys(filteredData.features).length === 0 && (
-                    <div>No data to display.</div>
+                  {!(field in fieldOptions) && (
+                    <FormInputText
+                      name={`${field}`}
+                      control={control}
+                      label={"Value"}
+                      options={fieldOptions[field] || []}
+                      rules={{ required: "Required." }}
+                      onChange={(e, fn) =>
+                        handleGroupFilterChange(e, fn, field)
+                      }
+                    />
                   )}
-                </TabPanel>
-                <TabPanel value="2">
-                  {Object.keys(filteredData.features).length > 0 && (
-                    <DataGridDemo data={filteredData} />
-                  )}
-                  {Object.keys(filteredData.features).length === 0 && (
-                    <div>No data to display.</div>
-                  )}
-                </TabPanel>
-              </TabContext>
-            )}
+                </Box>
+              ))}
+            </Grid>
+            <Grid item xs={12} md={7}>
+              {data && Object.keys(data).length > 0 && (
+                <TabContext value={selectedTab}>
+                  <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+                    <TabList
+                      onChange={handleTabChange}
+                      aria-label="Dashboard tabs"
+                      variant="fullWidth"
+                    >
+                      <Tab
+                        label="Map"
+                        value="1"
+                        disabled={!includeSpatialData}
+                      />
+                      <Tab label="Table" value="2" />
+                    </TabList>
+                  </Box>
+                  <TabPanel value="1">
+                    {Object.keys(geoJSON.features).length > 0 && (
+                      <StationMap
+                        stations={geoJSON}
+                        metricName={displayMetric}
+                      />
+                    )}
+                  </TabPanel>
+                  <TabPanel value="2">
+                    {Object.keys(tabularData).length > 0 && (
+                      <DataGridDemo data={tabularData} />
+                    )}
+                  </TabPanel>
+                </TabContext>
+              )}
+            </Grid>
           </Grid>
-        </Grid>
+        )}
       </form>
+
       <Box sx={{ display: "flex", flexDirection: "row", pt: 2 }}>
         <Button color="inherit" onClick={onBack} sx={{ mr: 1 }}>
           Back

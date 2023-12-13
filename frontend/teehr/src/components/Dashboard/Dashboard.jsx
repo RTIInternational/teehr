@@ -116,7 +116,7 @@ function Dashboard() {
   if (errors) {
     return (
       <>
-        <div>Something went wrong:</div>
+        <div>An error occurred:</div>
         <div> {errors?.message}</div>
       </>
     );

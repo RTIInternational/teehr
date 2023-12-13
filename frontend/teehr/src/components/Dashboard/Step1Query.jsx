@@ -45,8 +45,8 @@ const QuerySection = (props) => {
 
   const { handleSubmit, control } = useForm({ defaultValues });
 
-  const onSubmit = () => {
-    getFieldOptions();
+  const onSubmit = async () => {
+    await getFieldOptions();
     onNext();
   };
 

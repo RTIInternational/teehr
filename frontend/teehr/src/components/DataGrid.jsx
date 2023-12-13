@@ -5,18 +5,13 @@ import PropTypes from "prop-types";
 import { DataGrid } from "@mui/x-data-grid";
 
 export default function DataGridDemo(props) {
-  const [columns, setColumns] = useState(null);
-  const [rows, setRows] = useState(null);
-
   const { data } = props;
-
-  // function getRowId(row) {
-  //   return row.primary_location_id;
-  // }
+  const [columns, setColumns] = useState([]);
+  const [rows, setRows] = useState([]);
 
   useEffect(() => {
     const getColumns = () => {
-      if (data) {
+      if (data && data.length > 0) {
         const base = [
           {
             field: "id",
@@ -24,16 +19,15 @@ export default function DataGridDemo(props) {
             editable: false,
           },
         ];
-        const arr = Object.keys(data.features[0].properties).map((c) => {
+        const headers = Object.keys(data[0]).map((c) => {
           return {
             field: c,
             headerName: c,
             editable: false,
           };
         });
-        base.push(...arr);
-        // console.log(arr)
-        setColumns(arr.some((o) => o.field === "id") ? arr : base);
+        base.push(...headers);
+        setColumns(headers.some((o) => o.field === "id") ? headers : base);
       }
     };
     getColumns();
@@ -42,12 +36,13 @@ export default function DataGridDemo(props) {
   useEffect(() => {
     const getRows = () => {
       if (data) {
-        const arr = data.features.map((feat) => {
-          const obj = feat.properties;
-          obj["id"] = feat.id;
+        const arr = data.map((d, index) => {
+          const obj = { ...d };
+          if (!("id" in obj)) {
+            obj["id"] = index;
+          }
           return obj;
         });
-        //console.log(arr)
         setRows(arr);
       }
     };
@@ -71,7 +66,6 @@ export default function DataGridDemo(props) {
           pageSizeOptions={[5]}
           checkboxSelection
           disableRowSelectionOnClick
-          // getRowId={getRowId}
         />
       </Box>
     )
@@ -79,5 +73,5 @@ export default function DataGridDemo(props) {
 }
 
 DataGridDemo.propTypes = {
-  data: PropTypes.object.isRequired,
+  data: PropTypes.array.isRequired,
 };
