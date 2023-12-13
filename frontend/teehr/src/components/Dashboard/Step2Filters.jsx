@@ -8,6 +8,7 @@ import FormInputText from "../form-components/FormInputText";
 import useDashboardAPI from "../../hooks/useDashboardAPI";
 import PropTypes from "prop-types";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import { nonListFields } from "./constants";
 
 const castFieldValue = (value, fieldType) => {
   switch (fieldType) {
@@ -26,7 +27,6 @@ const FiltersSection = (props) => {
   const { onNext, onBack } = props;
   const { fetchOptionsForField, fetchStations } = useDashboardAPI();
   const {
-    nonListFields,
     groupByFields,
     operatorOptions,
     fieldOptions,

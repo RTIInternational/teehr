@@ -8,6 +8,7 @@ import useDashboardAPI from "../../hooks/useDashboardAPI.jsx";
 import FormMultipleSelect from "../form-components/FormMultipleSelect.jsx";
 import FormSingleSelect from "../form-components/FormSingleSelect.jsx";
 import PropTypes from "prop-types";
+import { nonListFields } from "./constants";
 
 const QuerySection = (props) => {
   const { onNext } = props;
@@ -25,7 +26,6 @@ const QuerySection = (props) => {
     setGroupByFields,
     setOperatorOptions,
     fieldOptions,
-    nonListFields,
     setFieldOptions,
     formData,
     setFormData,

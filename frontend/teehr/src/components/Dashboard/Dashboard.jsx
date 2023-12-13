@@ -14,6 +14,7 @@ import QuerySection from "./Step1Query.jsx";
 import FiltersSection from "./Step2Filters.jsx";
 import DisplayStep from "./Step3Results.jsx";
 import useDashboardAPI from "../../hooks/useDashboardAPI.jsx";
+import { defaultFormState } from "./constants";
 
 function Dashboard() {
   const { loading, errors, fetchDatasets } = useDashboardAPI();
@@ -57,14 +58,13 @@ function Dashboard() {
     datasets,
     metrics,
     groupByFields,
+    operatorOptions,
     fieldOptions,
     data,
     setFormData,
     setDatasets,
     setFieldOptions,
-    operatorOptions,
     setOperatorOptions,
-    nonListFields,
     setMetrics,
     setGroupByFields,
     setData,
@@ -131,25 +131,5 @@ function Dashboard() {
     </DashboardContext.Provider>
   );
 }
-
-const defaultFormState = {
-  selectedDataset: "",
-  selectedMetrics: [],
-  selectedGroupByFields: [],
-  selectedFilters: [],
-  includeSpatialData: true,
-};
-
-const nonListFields = [
-  "reference_time",
-  "value_time",
-  "secondary_value",
-  "primary_value",
-  "absolute_difference",
-  "upstream_area_km2",
-  "primary_normalized_discharge",
-  "exceed_2yr_recurrence",
-  "",
-];
 
 export default Dashboard;
