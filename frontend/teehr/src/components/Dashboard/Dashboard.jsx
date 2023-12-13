@@ -44,6 +44,7 @@ function Dashboard() {
   };
 
   const handleReset = () => {
+    setFormData(defaultFormState);
     setActiveStep(0);
   };
 

@@ -81,92 +81,79 @@ const DisplayStep = (props) => {
     <>
       {(!data || data.length === 0) && <div>Response returned no data.</div>}
       <form>
-        {data.length > 0 && (
-          <Grid container>
-            <Grid item xs={12} md={5} sx={{ mt: 9 }}>
-              <FormSingleSelect
-                name={"displayMetric"}
-                control={control}
-                label={"Select Display Metric"}
-                options={selectedMetrics || []}
-                onChange={handleDisplayMetricChange}
-                formStyle={{ m: 0 }}
-              />
-              {selectedGroupByFields.map((field, index) => (
-                <Box
-                  key={index}
-                  sx={{
-                    display: "flex",
-                  }}
-                >
-                  <TextField
-                    size="small"
-                    value={field}
-                    disabled
-                    sx={{ m: 0.5, width: "50%" }}
+        <Grid container>
+          <Grid item xs={12} md={5} sx={{ mt: 9 }}>
+            <FormSingleSelect
+              name={"displayMetric"}
+              control={control}
+              label={"Select Display Metric"}
+              options={selectedMetrics || []}
+              onChange={handleDisplayMetricChange}
+              formStyle={{ m: 0 }}
+            />
+            {selectedGroupByFields.map((field, index) => (
+              <Box
+                key={index}
+                sx={{
+                  display: "flex",
+                }}
+              >
+                <TextField
+                  size="small"
+                  value={field}
+                  disabled
+                  sx={{ m: 0.5, width: "50%" }}
+                />
+                {field in fieldOptions && (
+                  <FormSingleSelect
+                    name={`${field}`}
+                    control={control}
+                    label={"Value"}
+                    options={fieldOptions[field] || []}
+                    rules={{ required: "Required." }}
+                    onChange={(e, fn) => handleGroupFilterChange(e, fn, field)}
                   />
-                  {field in fieldOptions && (
-                    <FormSingleSelect
-                      name={`${field}`}
-                      control={control}
-                      label={"Value"}
-                      options={fieldOptions[field] || []}
-                      rules={{ required: "Required." }}
-                      onChange={(e, fn) =>
-                        handleGroupFilterChange(e, fn, field)
-                      }
-                    />
-                  )}
-                  {!(field in fieldOptions) && (
-                    <FormInputText
-                      name={`${field}`}
-                      control={control}
-                      label={"Value"}
-                      options={fieldOptions[field] || []}
-                      rules={{ required: "Required." }}
-                      onChange={(e, fn) =>
-                        handleGroupFilterChange(e, fn, field)
-                      }
-                    />
-                  )}
-                </Box>
-              ))}
-            </Grid>
-            <Grid item xs={12} md={7}>
-              {data && Object.keys(data).length > 0 && (
-                <TabContext value={selectedTab}>
-                  <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-                    <TabList
-                      onChange={handleTabChange}
-                      aria-label="Dashboard tabs"
-                      variant="fullWidth"
-                    >
-                      <Tab
-                        label="Map"
-                        value="1"
-                        disabled={!includeSpatialData}
-                      />
-                      <Tab label="Table" value="2" />
-                    </TabList>
-                  </Box>
-                  <TabPanel value="1">
-                    {Object.keys(geoJSON.features).length > 0 && (
-                      <StationMap
-                        stations={geoJSON}
-                        metricName={displayMetric}
-                      />
-                    )}
-                  </TabPanel>
-                  <TabPanel value="2">
-                    {Object.keys(tabularData).length > 0 && (
-                      <DataGridDemo data={tabularData} />
-                    )}
-                  </TabPanel>
-                </TabContext>
-              )}
-            </Grid>
+                )}
+                {!(field in fieldOptions) && (
+                  <FormInputText
+                    name={`${field}`}
+                    control={control}
+                    label={"Value"}
+                    options={fieldOptions[field] || []}
+                    rules={{ required: "Required." }}
+                    onChange={(e, fn) => handleGroupFilterChange(e, fn, field)}
+                  />
+                )}
+              </Box>
+            ))}
           </Grid>
-        )}
+          <Grid item xs={12} md={7}>
+            {data && Object.keys(data).length > 0 && (
+              <TabContext value={selectedTab}>
+                <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+                  <TabList
+                    onChange={handleTabChange}
+                    aria-label="Dashboard tabs"
+                    variant="fullWidth"
+                  >
+                    <Tab label="Map" value="1" disabled={!includeSpatialData} />
+                    <Tab label="Table" value="2" />
+                  </TabList>
+                </Box>
+                <TabPanel value="1">
+                  {Object.keys(geoJSON.features).length > 0 && (
+                    <StationMap stations={geoJSON} metricName={displayMetric} />
+                  )}
+                </TabPanel>
+                <TabPanel value="2">
+                  {Object.keys(tabularData).length > 0 && (
+                    <DataGridDemo data={tabularData} />
+                  )}
+                </TabPanel>
+              </TabContext>
+            )}
+          </Grid>
+        </Grid>
       </form>
 
       <Box sx={{ display: "flex", flexDirection: "row", pt: 2 }}>
@@ -174,9 +161,7 @@ const DisplayStep = (props) => {
           Back
         </Button>
         <Box sx={{ flex: "1 1 auto" }} />
-        <Button disabled onClick={onReset}>
-          Reset
-        </Button>
+        <Button onClick={onReset}>Reset</Button>
       </Box>
     </>
   );

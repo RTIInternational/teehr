@@ -17,6 +17,7 @@ export default function DataGridDemo(props) {
             field: "id",
             headerName: "id",
             editable: false,
+            flex: 0.25,
           },
         ];
         const headers = Object.keys(data[0]).map((c) => {
@@ -24,6 +25,7 @@ export default function DataGridDemo(props) {
             field: c,
             headerName: c,
             editable: false,
+            flex: 1,
           };
         });
         base.push(...headers);
