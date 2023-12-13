@@ -16,32 +16,15 @@ import DisplayStep from "./Step3Results.jsx";
 import useDashboardAPI from "../../hooks/useDashboardAPI.jsx";
 
 function Dashboard() {
-  const { loading, errors, fetchStations, fetchDatasets } = useDashboardAPI();
+  const { loading, errors, fetchDatasets } = useDashboardAPI();
 
+  const [formData, setFormData] = useState(defaultFormState);
   const [datasets, setDatasets] = useState([]);
   const [metrics, setMetrics] = useState([]);
   const [groupByFields, setGroupByFields] = useState([]);
   const [operatorOptions, setOperatorOptions] = useState([]);
   const [fieldOptions, setFieldOptions] = useState({});
   const [data, setData] = useState({});
-
-  const [selectedDataset, setSelectedDataset] = useState("");
-  const [selectedMetrics, setSelectedMetrics] = useState([]);
-  const [selectedGroupByFields, setSelectedGroupByFields] = useState([]);
-  const [filters, setFilters] = useState([]);
-  const [includeSpatialData, setIncludeSpatialData] = useState(true);
-
-  const nonListFields = [
-    "reference_time",
-    "value_time",
-    "secondary_value",
-    "primary_value",
-    "absolute_difference",
-    "upstream_area_km2",
-    "primary_normalized_discharge",
-    "exceed_2yr_recurrence",
-    "",
-  ];
 
   const [activeStep, setActiveStep] = React.useState(0);
 
@@ -63,23 +46,6 @@ function Dashboard() {
     setActiveStep(0);
   };
 
-  const handleFetchData = async (filters) => {
-    let fields = [...selectedGroupByFields];
-    if (includeSpatialData && !fields.includes("primary_location_id")) {
-      fields.push("primary_location_id");
-    }
-    return fetchStations(
-      selectedDataset,
-      fields,
-      selectedMetrics,
-      filters,
-      includeSpatialData
-    ).then((res) => {
-      setData(res.data);
-      return;
-    });
-  };
-
   useEffect(() => {
     fetchDatasets().then((datasets) => {
       setDatasets(datasets);
@@ -87,30 +53,21 @@ function Dashboard() {
   }, []);
 
   const contextValue = {
-    fieldOptions,
-    setFieldOptions,
-    operatorOptions,
-    setOperatorOptions,
-    data,
+    formData,
     datasets,
     metrics,
     groupByFields,
-    filters,
-    includeSpatialData,
-    selectedDataset,
-    selectedMetrics,
-    selectedGroupByFields,
-    nonListFields,
+    fieldOptions,
+    data,
+    setFormData,
     setDatasets,
+    setFieldOptions,
+    operatorOptions,
+    setOperatorOptions,
+    nonListFields,
     setMetrics,
     setGroupByFields,
-    setFilters,
-    setSelectedMetrics,
-    setSelectedGroupByFields,
-    setSelectedDataset,
-    setIncludeSpatialData,
     setData,
-    handleFetchData,
   };
 
   if (errors) {
@@ -174,5 +131,25 @@ function Dashboard() {
     </DashboardContext.Provider>
   );
 }
+
+const defaultFormState = {
+  selectedDataset: "",
+  selectedMetrics: [],
+  selectedGroupByFields: [],
+  selectedFilters: [],
+  includeSpatialData: true,
+};
+
+const nonListFields = [
+  "reference_time",
+  "value_time",
+  "secondary_value",
+  "primary_value",
+  "absolute_difference",
+  "upstream_area_km2",
+  "primary_normalized_discharge",
+  "exceed_2yr_recurrence",
+  "",
+];
 
 export default Dashboard;

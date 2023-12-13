@@ -12,13 +12,10 @@ import FormInputText from "../form-components/FormInputText.jsx";
 
 const DisplayStep = (props) => {
   const { onBack, onReset } = props;
-  const {
-    selectedGroupByFields,
-    fieldOptions,
-    selectedMetrics,
-    data,
-    includeSpatialData,
-  } = useContext(DashboardContext);
+  const { formData, fieldOptions, data } = useContext(DashboardContext);
+
+  const { selectedGroupByFields, selectedMetrics, includeSpatialData } =
+    formData;
 
   const [geoJSON, setGeoJSON] = useState({ features: [] });
   const [tabularData, setTabularData] = useState([]);
@@ -34,18 +31,22 @@ const DisplayStep = (props) => {
   });
 
   const filterDataByGroupByFilters = (data, groupByFilters) => {
-    const filterLogic = (item) =>
-      Object.entries(groupByFilters).every(([key, value]) => {
-        if (!value) return true;
-        return String(item[key]) === String(value);
-      });
-
     if (includeSpatialData) {
-      const filteredFeatures = data.features.filter(filterLogic);
-      setGeoJSON({ ...data, features: filteredFeatures });
+      const filteredFeatures = data.features.filter((feature) => {
+        return Object.entries(groupByFilters).every(([key, value]) => {
+          if (!value) return true;
+          return String(feature.properties[key]) === String(value);
+        });
+      });
+      setGeoJSON({ features: filteredFeatures });
       setTabularData(filteredFeatures.map((feature) => feature.properties));
     } else {
-      const filteredData = data.filter(filterLogic);
+      const filteredData = data.filter((d) => {
+        return Object.entries(groupByFilters).every(([key, value]) => {
+          if (!value) return true;
+          return String(d[key]) === String(value);
+        });
+      });
       setTabularData(filteredData);
     }
   };

@@ -21,26 +21,28 @@ const QuerySection = (props) => {
     datasets,
     metrics,
     groupByFields,
-    selectedDataset,
-    selectedMetrics,
-    selectedGroupByFields,
-    setSelectedGroupByFields,
-    setIncludeSpatialData,
     setMetrics,
-    setSelectedMetrics,
     setGroupByFields,
-    setSelectedDataset,
     setOperatorOptions,
     fieldOptions,
     nonListFields,
     setFieldOptions,
+    formData,
+    setFormData,
   } = React.useContext(DashboardContext);
+
+  const {
+    selectedDataset,
+    selectedMetrics,
+    selectedGroupByFields,
+    includeSpatialData,
+  } = formData;
 
   const defaultValues = {
     selectedDataset: selectedDataset || "",
     selectedMetrics: selectedMetrics || [],
     selectedGroupByFields: selectedGroupByFields || [],
-    includeSpatialData: true,
+    includeSpatialData: includeSpatialData,
   };
 
   const { handleSubmit, control } = useForm({ defaultValues });
@@ -60,22 +62,28 @@ const QuerySection = (props) => {
     fetchFilterOperators().then((res) => {
       setOperatorOptions(res);
     });
-    setSelectedDataset(newDataset);
+    setFormData((prev) => ({ ...prev, selectedDataset: newDataset }));
     onChange(newDataset);
   };
 
   const handleMetricChange = (newMetrics, onChange) => {
-    setSelectedMetrics(newMetrics);
+    setFormData((prev) => ({ ...prev, selectedMetrics: newMetrics }));
     onChange(newMetrics);
   };
 
   const handleGroupByFieldChange = (newGroupByFields, onChange) => {
-    setSelectedGroupByFields(newGroupByFields);
+    setFormData((prev) => ({
+      ...prev,
+      selectedGroupByFields: newGroupByFields,
+    }));
     onChange(newGroupByFields);
   };
 
   const handleSpatialDataChange = (newIncludeSpatialData, onChange) => {
-    setIncludeSpatialData(newIncludeSpatialData);
+    setFormData((prev) => ({
+      ...prev,
+      includeSpatialData: newIncludeSpatialData,
+    }));
     onChange(newIncludeSpatialData);
   };
 

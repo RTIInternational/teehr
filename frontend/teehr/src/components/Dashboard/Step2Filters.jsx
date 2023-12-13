@@ -24,18 +24,25 @@ const castFieldValue = (value, fieldType) => {
 
 const FiltersSection = (props) => {
   const { onNext, onBack } = props;
-  const { fetchOptionsForField } = useDashboardAPI();
+  const { fetchOptionsForField, fetchStations } = useDashboardAPI();
   const {
     nonListFields,
-    selectedDataset,
     groupByFields,
-    setFilters,
-    handleFetchData,
     operatorOptions,
     fieldOptions,
     setFieldOptions,
-    filters,
+    formData,
+    setFormData,
+    setData,
   } = useContext(DashboardContext);
+
+  const {
+    selectedDataset,
+    selectedFilters,
+    selectedGroupByFields,
+    selectedMetrics,
+    includeSpatialData,
+  } = formData;
 
   const getFieldType = (fieldName) => {
     const field = groupByFields.find((field) => field.name === fieldName);
@@ -43,7 +50,7 @@ const FiltersSection = (props) => {
   };
 
   const [filterMetadata, setFilterMetadata] = useState(() => {
-    return filters.reduce((obj, item, index) => {
+    return selectedFilters.reduce((obj, item, index) => {
       obj[index] = {
         type: getFieldType(item.column),
         column: item.column,
@@ -81,7 +88,7 @@ const FiltersSection = (props) => {
 
   const { control, handleSubmit } = useForm({
     defaultValues: {
-      filters: filters,
+      filters: selectedFilters,
     },
   });
 
@@ -91,7 +98,7 @@ const FiltersSection = (props) => {
   });
 
   const onSubmit = async (data) => {
-    setFilters(data.filters);
+    setFormData((prev) => ({ ...prev, selectedFilters: data.filters }));
     const modifiedFilters = data.filters.map((filter) => {
       const fieldType = getFieldType(filter.column);
       return {
@@ -101,6 +108,26 @@ const FiltersSection = (props) => {
     });
     await handleFetchData(modifiedFilters);
     onNext();
+  };
+
+  const handleFetchData = async (filters) => {
+    let fields = [...selectedGroupByFields];
+    if (
+      formData.includeSpatialData &&
+      !fields.includes("primary_location_id")
+    ) {
+      fields.push("primary_location_id");
+    }
+    return fetchStations(
+      selectedDataset,
+      fields,
+      selectedMetrics,
+      filters,
+      includeSpatialData
+    ).then((res) => {
+      setData(res.data);
+      return;
+    });
   };
 
   return (
