@@ -1,10 +1,10 @@
 from pathlib import Path
-# import numpy as np
 
 from teehr.database.teehr_dataset import TEEHRDatasetAPI
 from teehr.models.queries_database import (
     MetricQuery,
-    JoinedTimeseriesFieldName
+    JoinedTimeseriesFieldName,
+    JoinedTimeseriesQuery
 )
 
 # Test data
@@ -74,7 +74,38 @@ def test_describe_inputs():
     assert df.index.size == 7
 
 
+def test_get_joined_timeseries():
+    tds = TEEHRDatasetAPI(DATABASE_FILEPATH)
+    order_by = ["primary_location_id"]
+    filters = [
+        {
+            "column": "primary_location_id",
+            "operator": "=",
+            "value": "gage-A",
+        },
+        {
+            "column": "reference_time",
+            "operator": "=",
+            "value": "2022-01-01 00:00:00",
+        },
+        {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+    ]
+
+    jtq = JoinedTimeseriesQuery.model_validate(
+        {
+            "order_by": order_by,
+            "filters": filters,
+            "include_geometry": False,
+        },
+    )
+
+    df = tds.get_joined_timeseries(jtq)
+
+    assert df.index.size == 11
+
+
 if __name__ == "__main__":
-    # test_unique_field_values()
-    # test_describe_inputs()
+    test_unique_field_values()
+    test_describe_inputs()
     test_metrics_query()
+    test_get_joined_timeseries()

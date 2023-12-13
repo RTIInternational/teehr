@@ -4,6 +4,7 @@ from typing import Dict
 
 from teehr.models.queries_database import (
     MetricQuery,
+    InsertJoinedTimeseriesQuery,
     JoinedTimeseriesQuery,
     TimeseriesQuery,
     TimeseriesCharQuery,
@@ -32,6 +33,12 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
     filters : Union[List[dict], None] = None
         List of dictionaries describing the "where" clause to limit data that
         is included in metrics.
+    include_geometry : bool
+        True joins the geometry to the query results.
+        Only works if `primary_location_id`
+        is included as a group_by field.
+    return_query: bool = False
+        True returns the query string instead of the data
 
     Returns
     -------
@@ -153,7 +160,9 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
     return query
 
 
-def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQuery) -> str:
+def create_join_and_save_timeseries_query(
+    jtq: InsertJoinedTimeseriesQuery
+) -> str:
     """Load joined timeseries into a duckdb persistent database
     using database query.
 
@@ -378,6 +387,71 @@ def describe_timeseries(timeseries_filepath: str) -> Dict:
     return output_report
 
 
+def create_get_joined_timeseries_query(
+    jtq: JoinedTimeseriesQuery
+) -> str:
+    """Retrieve joined timeseries using database query.
+
+    jtq
+    ----------
+    order_by : List[str]
+        List of column/field names to order results by.
+        Must provide at least one.
+    filters : Union[List[dict], None] = None
+        List of dictionaries describing the "where" clause to limit data that
+        is included in metrics.
+    include_geometry : bool
+        True joins the geometry to the query results.
+        Only works if `primary_location_id`
+        is included as a group_by field.
+    return_query: bool = False
+        True returns the query string instead of the data
+
+    Returns
+    -------
+    query : str
+
+    Order By and Filter By Fields
+    -----------------------------------
+    * reference_time
+    * primary_location_id
+    * secondary_location_id
+    * primary_value
+    * secondary_value
+    * value_time
+    * configuration
+    * measurement_unit
+    * variable_name
+    * lead_time
+    * absolute_difference
+    * [any user-added fields]
+
+    Examples:
+        order_by = ["primary_location_id"]
+        filters = [
+            {
+                "column": "primary_location_id",
+                "operator": "in",
+                "value": [12345, 54321]
+            },
+        ]
+    """
+
+    query = f"""
+        SELECT
+            sf.*
+        {tqu.geometry_select_clause(jtq)}
+        FROM
+            joined_timeseries sf
+        {tqu.metric_geometry_join_clause_db(jtq)}
+        {tqu.filters_to_sql(jtq.filters)}
+        ORDER BY
+            {",".join(jtq.order_by)}
+    ;"""
+
+    return query
+
+
 def create_get_timeseries_query(
     tq: TimeseriesQuery
 ) -> str:
@@ -398,23 +472,40 @@ def create_get_timeseries_query(
 
     Returns
     -------
-    results : Union[str, pd.DataFram]
+    query : str
 
-    Filter and Order By Fields
-    --------------------------
-    * value_time
-    * location_id
-    * value
-    * measurement_unit
+    Filter By Fields
+    -----------------------------------
     * reference_time
+    * primary_location_id
+    * secondary_location_id
+    * primary_value
+    * secondary_value
+    * value_time
     * configuration
+    * measurement_unit
+    * variable_name
+    * lead_time
+    * absolute_difference
+    * [any user-added fields]
+
+    Order By Fields
+    ---------------
+    * reference_time
+    * primary_location_id
+    * secondary_location_id
+    * primary_value
+    * secondary_value
+    * value_time
+    * configuration
+    * measurement_unit
     * variable_name
 
     Examples:
-        order_by = ["lead_time", "primary_location_id"]
+        order_by = ["primary_location_id"]
         filters = [
             {
-                "column": "location_id",
+                "column": "primary_location_id",
                 "operator": "in",
                 "value": [12345, 54321]
             },

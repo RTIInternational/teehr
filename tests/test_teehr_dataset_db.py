@@ -1,6 +1,7 @@
 from pathlib import Path
 import numpy as np
 import pandas as pd
+import geopandas as gpd
 
 from teehr.database.teehr_dataset import TEEHRDatasetDB
 
@@ -315,6 +316,34 @@ def test_get_joined_timeseries_schema():
     pass
 
 
+def test_joined_timeseries_query_gdf():
+    if DATABASE_FILEPATH.is_file():
+        DATABASE_FILEPATH.unlink()
+
+    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+
+    # Perform the join and insert into duckdb database
+    tds.insert_joined_timeseries(
+        primary_filepath=PRIMARY_FILEPATH,
+        secondary_filepath=SECONDARY_FILEPATH,
+        crosswalk_filepath=CROSSWALK_FILEPATH,
+        drop_added_fields=True,
+    )
+
+    tds.insert_geometry(GEOMETRY_FILEPATH)
+
+    order_by = ["primary_location_id"]
+
+    df = tds.get_joined_timeseries(
+        order_by=order_by,
+        return_query=False,
+        include_geometry=True,
+    )
+
+    assert df.index.size == 216
+    assert isinstance(df, gpd.GeoDataFrame)
+
+
 def test_timeseries_query():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
@@ -373,12 +402,14 @@ def test_timeseries_char_query():
 if __name__ == "__main__":
 
     test_insert_joined_timeseries()
-    test_join_attributes()
-    test_unique_field_values()
-    test_describe_inputs()
-    test_calculate_field()
     test_unique_field_values()
     test_metrics_query()
+    test_metrics_query_config_filter()
+    test_describe_inputs()
+    test_calculate_field()
+    test_join_attributes()
     test_get_joined_timeseries_schema()
+    test_joined_timeseries_query_gdf()
     test_timeseries_query()
     test_timeseries_char_query()
+

@@ -220,14 +220,6 @@ def geometry_joined_select_clause(
     return ""
 
 
-def geometry_select_clause_db(
-    q: Union[MetricQuery, JoinedTimeseriesQuery]
-) -> str:
-    if q.include_geometry:
-        return ", geometry"
-    return ""
-
-
 def metric_geometry_join_clause_db(
     q: Union[MetricQuery, JoinedTimeseriesQuery]
 ) -> str:
