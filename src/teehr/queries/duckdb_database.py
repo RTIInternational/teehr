@@ -113,8 +113,8 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
         WITH joined as (
             SELECT
                 *
-            FROM joined_timeseries
-            {tqu.filters_to_sql_db(mq.filters)}
+            FROM joined_timeseries sf
+            {tqu.filters_to_sql(mq.filters)}
         )
         {tqu._nse_cte(mq)}
         , metrics AS (
@@ -523,8 +523,8 @@ def create_get_timeseries_query(
                 measurement_unit,
                 variable_name,
             FROM
-                joined_timeseries
-            {tqu.filters_to_sql_db(tq.filters)}
+                joined_timeseries sf
+            {tqu.filters_to_sql(tq.filters)}
             GROUP BY
                 value_time,
                 primary_location_id,
@@ -545,8 +545,8 @@ def create_get_timeseries_query(
                 measurement_unit,
                 variable_name,
             FROM
-                joined_timeseries
-            {tqu.filters_to_sql_db(tq.filters)}
+                joined_timeseries sf
+            {tqu.filters_to_sql(tq.filters)}
             ORDER BY
                 {",".join(tq.order_by)}
         ;"""
@@ -633,8 +633,8 @@ def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
                         variable_name,
                         {gb_fields}
                      FROM
-                         joined_timeseries
-                     {tqu.filters_to_sql_db(tcq.filters)}
+                         joined_timeseries sf
+                     {tqu.filters_to_sql(tcq.filters)}
                      GROUP BY
                         value_time,
                         primary_location_id,
@@ -647,8 +647,8 @@ def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
                       SELECT
                         *
                       FROM
-                          joined_timeseries
-                      {tqu.filters_to_sql_db(tcq.filters)}
+                          joined_timeseries sf
+                      {tqu.filters_to_sql(tcq.filters)}
                       """
 
     query = f"""

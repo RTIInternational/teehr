@@ -357,12 +357,20 @@ def test_timeseries_query():
         crosswalk_filepath=CROSSWALK_FILEPATH,
         drop_added_fields=True,
     )
+    filters = [
+        {
+            "column": "configuration",
+            "operator": "=",
+            "value": "test_short",
+        },
+    ]
 
     order_by = ["primary_location_id"]
 
     df = tds.get_timeseries(
         order_by=order_by,
         timeseries_name="primary",
+        filters=filters,
         return_query=False
     )
 
@@ -383,7 +391,13 @@ def test_timeseries_char_query():
         drop_added_fields=True,
     )
 
-    filters = []
+    filters = [
+        {
+            "column": "configuration",
+            "operator": "=",
+            "value": "test_short",
+        },
+    ]
     group_by = ["primary_location_id"]
     order_by = ["primary_location_id"]
     timeseries_name = "primary"  # "primary, secondary"
@@ -412,4 +426,3 @@ if __name__ == "__main__":
     test_joined_timeseries_query_gdf()
     test_timeseries_query()
     test_timeseries_char_query()
-
