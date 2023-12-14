@@ -107,8 +107,8 @@ def filters_to_sql(
 
     Parameters
     ----------
-    filters : List[MetricFilter]
-        A list of MetricFilter objects describing the filters.
+    filters : Union[List[tmq.JoinedFilter], List[tmqd.Filter]]
+        A list of Filter objects describing the filters.
 
     Returns
     -------
