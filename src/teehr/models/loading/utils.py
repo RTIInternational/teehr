@@ -5,6 +5,9 @@ from enum import Enum
 class ChunkByEnum(str, Enum):
     day = "day"
     location_id = "location_id"
+    week = "week"
+    month = "month"
+    year = "year"
 
 
 class SupportedNWMRetroVersionsEnum(str, Enum):
