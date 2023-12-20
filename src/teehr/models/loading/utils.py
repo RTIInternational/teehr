@@ -13,6 +13,7 @@ class ChunkByEnum(str, Enum):
 class SupportedNWMRetroVersionsEnum(str, Enum):
     nwm20 = "nwm20"
     nwm21 = "nwm21"
+    nwm30 = "nwm30"
 
 
 class SupportedNWMOperationalVersionsEnum(str, Enum):

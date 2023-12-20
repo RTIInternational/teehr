@@ -19,6 +19,8 @@ NWM20_MIN_DATE = datetime(1993, 1, 1)
 NWM20_MAX_DATE = datetime(2018, 12, 31, 23)
 NWM21_MIN_DATE = pd.Timestamp(1979, 1, 1)
 NWM21_MAX_DATE = pd.Timestamp(2020, 12, 31, 23)
+NWM30_MIN_DATE = pd.Timestamp(1979, 2, 1, 1)
+NWM30_MAX_DATE = pd.Timestamp(2023, 1, 31, 23)
 
 
 def validate_start_end_date(
@@ -49,6 +51,17 @@ def validate_start_end_date(
 
         if end_date > NWM21_MAX_DATE:
             raise ValueError(f"end_date must be on or before {NWM21_MAX_DATE}")
+    elif nwm_version == SupportedNWMRetroVersionsEnum.nwm30:
+        if end_date <= start_date:
+            raise ValueError("start_date must be before end_date")
+
+        if start_date < NWM30_MIN_DATE:
+            raise ValueError(
+                f"start_date must be on or after {NWM30_MIN_DATE}"
+            )
+
+        if end_date > NWM30_MAX_DATE:
+            raise ValueError(f"end_date must be on or before {NWM30_MAX_DATE}")
     else:
         raise ValueError(f"unsupported NWM version {nwm_version}")
 
@@ -157,10 +170,15 @@ def nwm_retro_to_parquet(
     None - saves file to specified path
 
     """
+
     if nwm_version == SupportedNWMRetroVersionsEnum.nwm20:
-        s3_zarr_url = 's3://noaa-nwm-retro-v2-zarr-pds'
+        s3_zarr_url = "s3://noaa-nwm-retro-v2-zarr-pds"
     elif nwm_version == SupportedNWMRetroVersionsEnum.nwm21:
         s3_zarr_url = "s3://noaa-nwm-retrospective-2-1-zarr-pds/chrtout.zarr/"
+    elif nwm_version == SupportedNWMRetroVersionsEnum.nwm30:
+        s3_zarr_url = (
+            "s3://noaa-nwm-retrospective-3-0-pds/CONUS/zarr/chrtout.zarr"
+        )
     else:
         raise ValueError(f"unsupported NWM version {nwm_version}")
 
