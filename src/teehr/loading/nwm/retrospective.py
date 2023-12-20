@@ -220,7 +220,7 @@ def nwm_retro_to_parquet(
         # Calendar year
         gps = ds.groupby("time.year")
 
-    for i, ds_i in gps:
+    for _, ds_i in gps:
         df = da_to_df(nwm_version, ds_i[variable_name])
         output_filename = format_output_filename(ds_i)
         output_filepath = Path(

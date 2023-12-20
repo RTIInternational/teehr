@@ -106,6 +106,17 @@ def _fetch_usgs(
     return usgs_df
 
 
+def _format_output_filename(chunk_by: str, start_dt, end_dt) -> str:
+    """Formats the output filename based on min and max
+    datetime in the dataset."""
+    if chunk_by == "day":
+        return f"{start_dt.strftime('%Y-%m-%d')}.parquet"
+    else:
+        start = start_dt.strftime('%Y-%m-%d')
+        end = end_dt.strftime('%Y-%m-%d')
+        return f"{start}_{end}.parquet"
+
+
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def usgs_to_parquet(
     sites: List[str],
@@ -172,54 +183,7 @@ def usgs_to_parquet(
                 overwrite_output=overwrite_output,
                 data=usgs_df
             )
-            # output_filepath = Path(usgs.output_parquet_dir, "usgs.csv")
-            # usgs_df.to_csv(output_filepath)
-            # print(usgs_df)
-
-    if chunk_by == "day":
-        # Determine number of days to fetch
-        period_length = timedelta(days=1)
-        start_date = _datetime_to_date(start_date)
-        end_date = _datetime_to_date(end_date)
-        period = end_date - start_date
-        if period < period_length:
-            period = period_length
-        number_of_days = period.days
-
-        # Fetch data in daily batches
-        for day in range(number_of_days):
-
-            # Setup start and end date for fetch
-            start_dt = (start_date + period_length * day)
-            end_dt = (
-                start_date
-                + period_length * (day + 1)
-                - timedelta(minutes=1)
-            )
-            usgs_df = _fetch_usgs(
-                sites=sites,
-                start_date=start_dt,
-                end_date=end_dt,
-                filter_to_hourly=filter_to_hourly,
-                filter_no_data=filter_no_data,
-                convert_to_si=convert_to_si
-            )
-            if len(usgs_df) > 0:
-                output_filepath = Path(
-                    output_parquet_dir,
-                    f"{start_dt.strftime('%Y-%m-%d')}.parquet"
-                )
-                write_parquet_file(
-                    filepath=output_filepath,
-                    overwrite_output=overwrite_output,
-                    data=usgs_df
-                )
-                # output_filepath = Path(
-                #     usgs.output_parquet_dir,
-                #     f"{start_dt.strftime('%Y-%m-%d')}.csv"
-                # )
-                # usgs_df.to_csv(output_filepath)
-                # print(usgs_df)
+        return
 
     if chunk_by == "location_id":
         for site in sites:
@@ -241,12 +205,61 @@ def usgs_to_parquet(
                     overwrite_output=overwrite_output,
                     data=usgs_df
                 )
-                # output_filepath = Path(
-                #     usgs.output_parquet_dir,
-                #     f"{site}.csv"
-                # )
-                # usgs_df.to_csv(output_filepath)
-                # print(usgs_df)
+        return
+
+    # TODO: Print warning if chunk_by is bigger than start and end dates?
+
+    if chunk_by == "day":
+        date_intervals = pd.date_range(start_date, end_date, freq="D")
+
+    if chunk_by == "week":
+        date_intervals = pd.date_range(start_date, end_date, freq="W")
+
+    if chunk_by == "month":
+        date_intervals = pd.date_range(start_date, end_date, freq="M")
+
+    if chunk_by == "year":
+        date_intervals = pd.date_range(start_date, end_date, freq="Y")
+
+    # If the start date is not within the specified interval,
+    # it is not included, so add it here if it does not already exist.
+    date_intervals = date_intervals.union(
+        pd.DatetimeIndex([start_date]), sort=True
+    )
+
+    for i, dt_intvl in enumerate(date_intervals):
+        if i == 0:
+            start_dt = start_date
+        else:
+            start_dt = dt_intvl
+
+        if i == len(date_intervals) - 1:
+            # Include data for the last day
+            end_dt = end_date + timedelta(hours=24) - timedelta(minutes=1)
+        else:
+            end_dt = date_intervals[i + 1] - timedelta(minutes=1)
+
+        usgs_df = _fetch_usgs(
+            sites=sites,
+            start_date=start_dt,
+            end_date=end_dt,
+            filter_to_hourly=filter_to_hourly,
+            filter_no_data=filter_no_data,
+            convert_to_si=convert_to_si
+        )
+
+        if len(usgs_df) > 0:
+
+            output_filename = _format_output_filename(
+                chunk_by, start_dt, end_dt
+            )
+
+            output_filepath = Path(output_parquet_dir, output_filename)
+            write_parquet_file(
+                filepath=output_filepath,
+                overwrite_output=overwrite_output,
+                data=usgs_df
+            )
 
 
 if __name__ == "__main__":
