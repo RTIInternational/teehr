@@ -106,7 +106,7 @@ def datetime_to_date(dt: datetime) -> datetime:
     return dt
 
 
-def format_output_filename(ds_i: xr.Dataset) -> str:
+def format_output_filename(ds_i: xr.Dataset, nwm_version: str) -> str:
     """Formats the output filename based on min and max
     datetime in the dataset."""
     min_year = ds_i.time.min().dt.year
@@ -121,9 +121,9 @@ def format_output_filename(ds_i: xr.Dataset) -> str:
     max_time = f"{max_year.values}-{max_month.values:02d}-{max_day.values:02d}"
 
     if min_time == max_time:
-        return f"{min_time}.parquet"
+        return f"{min_time}_{nwm_version}_retrospective.parquet"
     else:
-        return f"{min_time}_{max_time}.parquet"
+        return f"{min_time}_{max_time}_{nwm_version}_retrospective.parquet"
 
 
 @validate_call(config=dict(arbitrary_types_allowed=True))
@@ -214,10 +214,11 @@ def nwm_retro_to_parquet(
     if chunk_by == "location_id":
         for location_id in location_ids:
 
-            da = ds[variable_name]
+            da = ds[variable_name].sel(feature_id=location_id)
             df = da_to_df(nwm_version, da)
             output_filepath = Path(
-                output_parquet_dir, f"{location_id}.parquet"
+                output_parquet_dir,
+                f"{location_id}_{nwm_version}_retrospective.parquet"
             )
             write_parquet_file(output_filepath, overwrite_output, df)
         return
@@ -238,9 +239,10 @@ def nwm_retro_to_parquet(
         # Calendar year
         gps = ds.groupby("time.year")
 
+    # Process the data by selected chunk
     for _, ds_i in gps:
         df = da_to_df(nwm_version, ds_i[variable_name])
-        output_filename = format_output_filename(ds_i)
+        output_filename = format_output_filename(ds_i, nwm_version)
         output_filepath = Path(
             output_parquet_dir, output_filename
         )

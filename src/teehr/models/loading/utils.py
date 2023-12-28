@@ -33,6 +33,12 @@ class SupportedKerchunkMethod(str, Enum):
     auto = "auto"
 
 
+class SupportedNWMRetroDomainsEnum(str, Enum):
+    CONUS = "CONUS"
+    Alaska = "Alaska"
+    PR = "PR"
+    Hawaii = "Hawaii"
+
 # class NWM20RetroConfig(BaseModel):
 #     URL = 's3://noaa-nwm-retro-v2-zarr-pds'
 #     MIN_DATE = datetime(1993, 1, 1)
