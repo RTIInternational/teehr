@@ -27,7 +27,7 @@ from teehr.loading.nwm.retrospective_points import (
 def get_data_array(var_da: xr.DataArray, rows: np.array, cols: np.array):
     """Read the forcing variable into memory for the grouped
     timesteps and zone rows and cols."""
-    var_arr = var_da.compute().values[:, rows, cols]
+    var_arr = var_da.values[:, rows, cols]
     return var_arr
 
 
@@ -54,7 +54,7 @@ def process_group(
         weights_df["value"] = var_arr[i, :] * weight_vals
         # Compute mean per group/location
         df = weights_df.groupby(
-            by="location_id", observed=False  # TODO: What's 'observed'?
+            by="location_id", observed=True
         )["value"].mean().to_frame()
         df["value_time"] = pd.to_datetime(dt)
         df.reset_index(inplace=True)
@@ -67,7 +67,7 @@ def process_group(
     chunk_df["measurement_unit"] = teehr_units
     chunk_df["configuration"] = f"{nwm_version}_retrospective"
     chunk_df["variable_name"] = variable_name
-    chunk_df["location_id"] = f"{nwm_version}-" + df["location_id"].astype(str)
+    chunk_df["location_id"] = f"{nwm_version}-" + chunk_df["location_id"].astype(str)
     return chunk_df
 
 
@@ -231,9 +231,8 @@ def nwm_retro_grids_to_parquet(
             )
 
         if chunk_by == "year":
-            # TODO: Is this even feasible?
-            gps = nwm21_paths.groupby(
-                pd.Grouper(key='datetime', axis=0, freq='Y', sort=True)
+            raise ValueError(
+                "Chunkby 'year' is not yet implemented for gridded data"
             )
 
         for _, df in gps:
@@ -295,6 +294,7 @@ def nwm_retro_grids_to_parquet(
             columns=["row", "col", "weight", "location_id"]
         )
         weights_df["location_id"] = weights_df.location_id.astype("category")
+
         rows = weights_df.row.values
         cols = weights_df.col.values
         weight_vals = weights_df.weight.values
@@ -309,8 +309,9 @@ def nwm_retro_grids_to_parquet(
             gps = var_da.groupby("time.month")
 
         if chunk_by == "year":
-            # TODO: Better memory handling
-            gps = var_da.groupby("time.year")
+            raise ValueError(
+                "Chunkby 'year' is not yet implemented for gridded data"
+            )
 
         for _, da_i in gps:
 
