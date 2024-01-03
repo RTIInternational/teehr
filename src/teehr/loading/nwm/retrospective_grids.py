@@ -61,13 +61,15 @@ def process_group(
         hourly_dfs.append(df)
 
     chunk_df = pd.concat(hourly_dfs)
-    chunk_df["reference_time"] = df.value_time
+    chunk_df["reference_time"] = chunk_df.value_time
     nwm_units = da_i.attrs["units"]
     teehr_units = units_format_dict.get(nwm_units, nwm_units)
     chunk_df["measurement_unit"] = teehr_units
     chunk_df["configuration"] = f"{nwm_version}_retrospective"
     chunk_df["variable_name"] = variable_name
-    chunk_df["location_id"] = f"{nwm_version}-" + chunk_df["location_id"].astype(str)
+    chunk_df["location_id"] = (
+        f"{nwm_version}-" + chunk_df["location_id"].astype(str)
+    )
     return chunk_df
 
 
