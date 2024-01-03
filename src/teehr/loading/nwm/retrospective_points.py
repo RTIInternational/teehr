@@ -11,7 +11,8 @@ from typing import Union, List, Optional
 from teehr.loading.nwm.const import NWM22_UNIT_LOOKUP
 from teehr.models.loading.utils import (
     ChunkByEnum,
-    SupportedNWMRetroVersionsEnum
+    SupportedNWMRetroVersionsEnum,
+    SupportedNWMRetroDomainsEnum
 )
 from teehr.loading.nwm.utils import write_parquet_file
 
@@ -106,7 +107,7 @@ def datetime_to_date(dt: datetime) -> datetime:
     return dt
 
 
-def format_output_filename(ds_i: xr.Dataset, nwm_version: str) -> str:
+def format_grouped_filename(ds_i: xr.Dataset) -> str:
     """Formats the output filename based on min and max
     datetime in the dataset."""
     min_year = ds_i.time.min().dt.year
@@ -117,13 +118,13 @@ def format_output_filename(ds_i: xr.Dataset, nwm_version: str) -> str:
     max_month = ds_i.time.max().dt.month
     max_day = ds_i.time.max().dt.day
 
-    min_time = f"{min_year.values}-{min_month.values:02d}-{min_day.values:02d}"
-    max_time = f"{max_year.values}-{max_month.values:02d}-{max_day.values:02d}"
+    min_time = f"{min_year.values}{min_month.values:02d}{min_day.values:02d}Z"
+    max_time = f"{max_year.values}{max_month.values:02d}{max_day.values:02d}Z"
 
     if min_time == max_time:
-        return f"{min_time}_{nwm_version}_retrospective.parquet"
+        return f"{min_time}.parquet"
     else:
-        return f"{min_time}_{max_time}_{nwm_version}_retrospective.parquet"
+        return f"{min_time}_{max_time}.parquet"
 
 
 @validate_call(config=dict(arbitrary_types_allowed=True))
@@ -136,6 +137,7 @@ def nwm_retro_to_parquet(
     output_parquet_dir: Union[str, Path],
     chunk_by: Union[ChunkByEnum, None] = None,
     overwrite_output: Optional[bool] = False,
+    domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS"
 ):
     """Fetch NWM retrospective at NWM COMIDs and store as Parquet file.
 
@@ -143,7 +145,7 @@ def nwm_retro_to_parquet(
     ----------
     nwm_version: SupportedNWMRetroVersionsEnum
         NWM retrospective version to fetch.
-        Currently `nwm20` and `nwm21` supported
+        Currently `nwm20`, `nwm21`, and `nwm30` supported
     variable_name: str
         Name of the NWM data variable to download.
         (e.g., "streamflow", "velocity", ...)
@@ -164,6 +166,10 @@ def nwm_retro_to_parquet(
         Can be: 'location_id', 'day', 'week', 'month', or 'year'
     overwrite_output: bool = False,
         Whether output should overwrite files if they exist.  Default is False.
+    domain: str = "CONUS"
+        Geographical domain when NWM version is v3.0.
+        Acceptable values are "Alaska", "CONUS" (default), "Hawaii", and "PR".
+        Only used when NWM version equals `nwm30`
 
     Returns
     -------
@@ -177,7 +183,7 @@ def nwm_retro_to_parquet(
         s3_zarr_url = "s3://noaa-nwm-retrospective-2-1-zarr-pds/chrtout.zarr/"
     elif nwm_version == SupportedNWMRetroVersionsEnum.nwm30:
         s3_zarr_url = (
-            "s3://noaa-nwm-retrospective-3-0-pds/CONUS/zarr/chrtout.zarr"
+            f"s3://noaa-nwm-retrospective-3-0-pds/{domain}/zarr/chrtout.zarr"
         )
     else:
         raise ValueError(f"unsupported NWM version {nwm_version}")
@@ -204,8 +210,10 @@ def nwm_retro_to_parquet(
 
         da = ds[variable_name]
         df = da_to_df(nwm_version, da)
+        min_time = df.value_time.min().strftime("%Y%m%d%HZ")
+        max_time = df.value_time.max().strftime("%Y%m%d%HZ")
         output_filepath = Path(
-            output_parquet_dir, f"{nwm_version}_retrospective.parquet"
+            output_parquet_dir, f"{min_time}_{max_time}.parquet"
         )
         write_parquet_file(output_filepath, overwrite_output, df)
         return
@@ -216,9 +224,11 @@ def nwm_retro_to_parquet(
 
             da = ds[variable_name].sel(feature_id=location_id)
             df = da_to_df(nwm_version, da)
+            min_time = df.value_time.min().strftime("%Y%m%d%HZ")
+            max_time = df.value_time.max().strftime("%Y%m%d%HZ")
             output_filepath = Path(
                 output_parquet_dir,
-                f"{location_id}_{nwm_version}_retrospective.parquet"
+                f"{location_id}_{min_time}_{max_time}.parquet"
             )
             write_parquet_file(output_filepath, overwrite_output, df)
         return
@@ -242,7 +252,7 @@ def nwm_retro_to_parquet(
     # Process the data by selected chunk
     for _, ds_i in gps:
         df = da_to_df(nwm_version, ds_i[variable_name])
-        output_filename = format_output_filename(ds_i, nwm_version)
+        output_filename = format_grouped_filename(ds_i)
         output_filepath = Path(
             output_parquet_dir, output_filename
         )
