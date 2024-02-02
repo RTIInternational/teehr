@@ -1,0 +1,29 @@
+models package
+==============
+
+Submodules
+----------
+
+models.queries module
+---------------------
+
+.. automodule:: models.queries
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+models.queries\_database module
+-------------------------------
+
+.. automodule:: models.queries_database
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: models
+   :members:
+   :undoc-members:
+   :show-inheritance:

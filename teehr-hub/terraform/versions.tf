@@ -12,7 +12,7 @@ terraform {
       version = ">= 2.10"
     }
   }
-  
+
   backend "s3" {
     bucket = "teehr-terraform-state"
     key    = "terraform/state"

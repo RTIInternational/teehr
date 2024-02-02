@@ -1,3 +1,4 @@
+"""Module for loading and processing NWM gridded data."""
 from typing import Union, Iterable, Optional
 from datetime import datetime
 from pathlib import Path
@@ -37,67 +38,119 @@ def nwm_grids_to_parquet(
     overwrite_output: Optional[bool] = False,
 ):
     """
-    Fetches NWM gridded data, calculates zonal statistics (mean) of selected
-    variable for given zones, converts and saves to TEEHR tabular format
+    Fetch NWM gridded data, calculate zonal statistics (currently only
+    mean is available) of selected variable for given zones, convert
+    and save to TEEHR tabular format.
 
     Parameters
     ----------
     configuration : str
         NWM forecast category.
-        (e.g., "analysis_assim", "short_range", ...)
+        (e.g., "analysis_assim", "short_range", ...).
     output_type : str
         Output component of the configuration.
-        (e.g., "channel_rt", "reservoir", ...)
+        (e.g., "channel_rt", "reservoir", ...).
     variable_name : str
         Name of the NWM data variable to download.
-        (e.g., "streamflow", "velocity", ...)
+        (e.g., "streamflow", "velocity", ...).
     start_date : str or datetime
         Date to begin data ingest.
-        Str formats can include YYYY-MM-DD or MM/DD/YYYY
+        Str formats can include YYYY-MM-DD or MM/DD/YYYY.
     ingest_days : int
-        Number of days to ingest data after start date
-    zonal_weights_filepath: str
+        Number of days to ingest data after start date.
+    zonal_weights_filepath : str
         Path to the array containing fraction of pixel overlap
-        for each zone
+        for each zone.
     json_dir : str
-        Directory path for saving json reference files
+        Directory path for saving json reference files.
     output_parquet_dir : str
-        Path to the directory for the final parquet files
-    nwm_version: SupportedNWMOperationalVersionsEnum
-        The NWM operational version
-        "nwm22", or "nwm30"
-    data_source: Optional[SupportedNWMDataSourcesEnum]
+        Path to the directory for the final parquet files.
+    nwm_version : SupportedNWMOperationalVersionsEnum
+        The NWM operational version.
+        "nwm22", or "nwm30".
+    data_source : Optional[SupportedNWMDataSourcesEnum]
         Specifies the remote location from which to fetch the data
-        "GCS" (default), "NOMADS", or "DSTOR"
-        Currently only "GCS" is implemented
-    kerchunk_method: Optional[SupportedKerchunkMethod]
+        "GCS" (default), "NOMADS", or "DSTOR".
+        Currently only "GCS" is implemented.
+    kerchunk_method : Optional[SupportedKerchunkMethod]
         When data_source = "GCS", specifies the preference in creating Kerchunk
-        reference json files.
-        "local" - (default) will create new json files from netcdf files in GCS and
-                   save to a local directory if they do not already exist locally,
-                   in which case the creation is skipped.
-        "remote" - read the CIROH pre-generated jsons from s3, ignoring
-                   any that are unavailable
-        "auto" - read the CIROH pre-generated jsons from s3, and create
-                 any that are unavailable, storing locally
-    t_minus_hours: Optional[Iterable[int]]
+        reference json files. "local" (default) will create new json files from
+        netcdf files in GCS and save to a local directory if they do not already
+        exist locally, in which case the creation is skipped. "remote" - read the
+        CIROH pre-generated jsons from s3, ignoring any that are unavailable.
+        "auto" - read the CIROH pre-generated jsons from s3, and create any that
+        are unavailable, storing locally.
+    t_minus_hours : Optional[Iterable[int]]
         Specifies the look-back hours to include if an assimilation
         configuration is specified.
-    ignore_missing_file: bool
+    ignore_missing_file : bool
         Flag specifying whether or not to fail if a missing NWM file is encountered
-        True = skip and continue; False = fail
-    overwrite_output: bool
+        True = skip and continue; False = fail.
+    overwrite_output : bool
         Flag specifying whether or not to overwrite output files if they already
-        exist.  True = overwrite; False = fail
+        exist.  True = overwrite; False = fail.
 
+    See Also
+    --------
+    teehr.utilities.generate_weights.generate_weights_file : Weighted average.
+
+    Notes
+    -----
     The NWM configuration variables, including configuration, output_type, and
     variable_name are stored as a pydantic model in grid_config_models.py
 
     Forecast and assimilation data is grouped and saved one file per reference
     time, using the file name convention "YYYYMMDDTHHZ".  The tabular output
-    parquet files follow the timeseries data model described here:
-    https://github.com/RTIInternational/teehr/blob/main/docs/data_models.md#timeseries  # noqa
-    """
+    parquet files follow the timeseries data model described in the
+    :ref:`data model <data_model>`.
+
+    Examples
+    --------
+    Here we will calculate mean areal precipitation using NWM forcing data for
+    some watersheds (polygons) a using pre-calculated weights file
+    (see: :func:`generate_weights_file()
+    <teehr.utilities.generate_weights.generate_weights_file>` for weights calculation).
+
+    Import the necessary module.
+
+    >>> import teehr.loading.nwm.nwm_grids as tlg
+
+    Specify the input variables.
+
+    >>> CONFIGURATION = "forcing_short_range"
+    >>> OUTPUT_TYPE = "forcing"
+    >>> VARIABLE_NAME = "RAINRATE"
+    >>> START_DATE = "2020-12-18"
+    >>> INGEST_DAYS = 1
+    >>> ZONAL_WEIGHTS_FILEPATH = Path(Path.home(), "nextgen_03S_weights.parquet")
+    >>> JSON_DIR = Path(Path.home(), "temp/parquet/jsons/")
+    >>> OUTPUT_DIR = Path(Path.home(), "temp/parquet")
+    >>> NWM_VERSION = "nwm22"
+    >>> DATA_SOURCE = "GCS"
+    >>> KERCHUNK_METHOD = "auto"
+    >>> T_MINUS = [0, 1, 2]
+    >>> IGNORE_MISSING_FILE = True
+    >>> OVERWRITE_OUTPUT = True
+
+    Perform the calculations, writing to the specified directory.
+
+    >>> tlg.nwm_grids_to_parquet(
+    >>>     configuration=CONFIGURATION,
+    >>>     output_type=OUTPUT_TYPE,
+    >>>     variable_name=VARIABLE_NAME,
+    >>>     start_date=START_DATE,
+    >>>     ingest_days=INGEST_DAYS,
+    >>>     zonal_weights_filepath=ZONAL_WEIGHTS_FILEPATH,
+    >>>     json_dir=JSON_DIR,
+    >>>     output_parquet_dir=OUTPUT_DIR,
+    >>>     nwm_version=NWM_VERSION,
+    >>>     data_source=DATA_SOURCE,
+    >>>     kerchunk_method=KERCHUNK_METHOD,
+    >>>     t_minus_hours=T_MINUS,
+    >>>     ignore_missing_file=IGNORE_MISSING_FILE,
+    >>>     overwrite_output=OVERWRITE_OUTPUT
+    >>> )
+    """ # noqa
     # Import appropriate config model and dicts based on NWM version
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
         from teehr.models.loading.nwm22_grid import GridConfigurationModel
@@ -169,28 +222,28 @@ def nwm_grids_to_parquet(
         )
 
 
-if __name__ == "__main__":
-    # Local testing
-    weights_parquet = "/mnt/data/ciroh/wbdhuc10_weights.parquet"
+# if __name__ == "__main__":
+#     # Local testing
+#     weights_parquet = "/mnt/data/ciroh/wbdhuc10_weights.parquet"
 
-    import time
-    t1 = time.time()
+#     import time
+#     t1 = time.time()
 
-    nwm_grids_to_parquet(
-        configuration="forcing_analysis_assim",
-        output_type="forcing",
-        variable_name="RAINRATE",
-        start_date="2023-11-28",
-        ingest_days=1,
-        zonal_weights_filepath=weights_parquet,
-        json_dir="/mnt/data/ciroh/jsons",
-        output_parquet_dir="/mnt/data/ciroh/parquet",
-        nwm_version="nwm30",
-        data_source="GCS",
-        kerchunk_method="use_available",
-        t_minus_hours=[0],
-        ignore_missing_file=False,
-        overwrite_output=True
-    )
+#     nwm_grids_to_parquet(
+#         configuration="forcing_analysis_assim",
+#         output_type="forcing",
+#         variable_name="RAINRATE",
+#         start_date="2023-11-28",
+#         ingest_days=1,
+#         zonal_weights_filepath=weights_parquet,
+#         json_dir="/mnt/data/ciroh/jsons",
+#         output_parquet_dir="/mnt/data/ciroh/parquet",
+#         nwm_version="nwm30",
+#         data_source="GCS",
+#         kerchunk_method="use_available",
+#         t_minus_hours=[0],
+#         ignore_missing_file=False,
+#         overwrite_output=True
+#     )
 
-    print(f"elapsed: {time.time() - t1:.2f} s")
+#     print(f"elapsed: {time.time() - t1:.2f} s")

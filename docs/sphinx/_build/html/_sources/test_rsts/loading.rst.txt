@@ -1,0 +1,20 @@
+loading package
+===============
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   loading.nextgen
+   loading.nwm
+   loading.usgs
+
+Module contents
+---------------
+
+.. automodule:: loading
+   :members:
+   :undoc-members:
+   :show-inheritance:

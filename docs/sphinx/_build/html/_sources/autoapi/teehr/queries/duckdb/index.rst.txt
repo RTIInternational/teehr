@@ -1,0 +1,424 @@
+:py:mod:`teehr.queries.duckdb`
+==============================
+
+.. py:module:: teehr.queries.duckdb
+
+.. autoapi-nested-parse::
+
+   A module defining duckdb sql queries for parquet files.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.queries.duckdb.get_metrics
+   teehr.queries.duckdb.get_joined_timeseries
+   teehr.queries.duckdb.get_timeseries
+   teehr.queries.duckdb.get_timeseries_chars
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.queries.duckdb.SQL_DATETIME_STR_FORMAT
+
+
+.. py:data:: SQL_DATETIME_STR_FORMAT
+   :value: '%Y-%m-%d %H:%M:%S'
+
+
+
+.. py:function:: get_metrics(primary_filepath: str, secondary_filepath: str, crosswalk_filepath: str, group_by: List[str], order_by: List[str], include_metrics: Union[List[teehr.models.queries.MetricEnum], all], filters: Union[List[dict], None] = None, return_query: bool = False, geometry_filepath: Union[str, None] = None, include_geometry: bool = False, remove_duplicates: bool = True) -> Union[str, pandas.DataFrame, geopandas.GeoDataFrame]
+
+
+   Calculate performance metrics using a parquet query.
+
+
+   :Parameters:
+
+       **primary_filepath** : str
+           File path to the "observed" data.  String must include path to file(s)
+           and can include wildcards.  For example, "/path/to/parquet/*.parquet".
+
+       **secondary_filepath** : str
+           File path to the "forecast" data.  String must include path to file(s)
+           and can include wildcards.  For example, "/path/to/parquet/*.parquet".
+
+       **crosswalk_filepath** : str
+           File path to single crosswalk file.
+
+       **group_by** : List[str]
+           List of column/field names to group timeseries data by.
+           Must provide at least one.
+
+       **order_by** : List[str]
+           List of column/field names to order results by.
+           Must provide at least one.
+
+       **include_metrics** : List[str]
+           List of metrics (see below) for allowable list, or "all" to return all
+           Placeholder, currently ignored -> returns "all".
+
+       **filters** : Union[List[dict], None] = None
+           List of dictionaries describing the "where" clause to limit data that
+           is included in metrics.
+
+       **return_query** : bool = False
+           True returns the query string instead of the data.
+
+       **include_geometry** : bool = True
+           True joins the geometry to the query results.
+           Only works if `primary_location_id`
+           is included as a group_by field.
+
+       **remove_duplicates** : bool = True
+           True (default) removes joined timeseries rows with duplicate primary
+           values, where unique values are defined by the value_time,
+           secondary_reference_time, location_id, configuration,
+           variable_name and measurement_unit fields.
+           False does not check for or remove duplicate values.
+           This option can be used to improve performance if you are certain you
+           do not have duplicate primary_values.
+
+   :Returns:
+
+       Union[str, pd.DataFrame, gpd.GeoDataFrame]
+           The query string or a DataFrame or GeoDataFrame of query results.
+
+
+
+
+
+
+
+
+   .. rubric:: Notes
+
+   Filter, Order By and Group By Fields:
+
+   * reference_time
+   * primary_location_id
+   * secondary_location_id
+   * primary_value
+   * secondary_value
+   * value_time
+   * configuration
+   * measurement_unit
+   * variable_name
+   * lead_time
+   * [any user-added fields]
+
+   Basic Metrics:
+
+   * primary_count
+   * secondary_count
+   * primary_minimum
+   * secondary_minimum
+   * primary_maximum
+   * secondary_maximum
+   * primary_average
+   * secondary_average
+   * primary_sum
+   * secondary_sum
+   * primary_variance
+   * secondary_variance
+   * max_value_delta
+
+     * max(secondary_value) - max(primary_value)
+   * bias
+
+     * sum(primary_value - secondary_value)/count(*)
+
+   HydroTools Metrics:
+
+   * nash_sutcliffe_efficiency
+   * kling_gupta_efficiency
+   * coefficient_of_extrapolation
+   * coefficient_of_persistence
+   * mean_error
+   * mean_squared_error
+   * root_mean_squared_error
+
+   Time-based Metrics:
+
+   * primary_max_value_time
+   * secondary_max_value_time
+   * max_value_timedelta
+
+
+   .. rubric:: Examples
+
+   >>> order_by = ["lead_time", "primary_location_id"]
+
+   >>> group_by = ["lead_time", "primary_location_id"]
+
+   >>> filters = [
+   >>>     {
+   >>>         "column": "primary_location_id",
+   >>>         "operator": "=",
+   >>>         "value": "gage-A",
+   >>>     },
+   >>>     {
+   >>>         "column": "reference_time",
+   >>>         "operator": "=",
+   >>>         "value": "2022-01-01 00:00:00",
+   >>>     },
+   >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+   >>> ]
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_joined_timeseries(primary_filepath: str, secondary_filepath: str, crosswalk_filepath: str, order_by: List[str], filters: Union[List[dict], None] = None, return_query: bool = False, geometry_filepath: Union[str, None] = None, include_geometry: bool = False, remove_duplicates: bool = True) -> Union[str, pandas.DataFrame, geopandas.GeoDataFrame]
+
+
+   Retrieve joined timeseries using a parquet query.
+
+
+   :Parameters:
+
+       **primary_filepath** : str
+           File path to the "observed" data.  String must include path to file(s)
+           and can include wildcards.  For example, "/path/to/parquet/*.parquet".
+
+       **secondary_filepath** : str
+           File path to the "forecast" data.  String must include path to file(s)
+           and can include wildcards.  For example, "/path/to/parquet/*.parquet".
+
+       **crosswalk_filepath** : str
+           File path to single crosswalk file.
+
+       **order_by** : List[str]
+           List of column/field names to order results by.
+           Must provide at least one.
+
+       **filters** : Union[List[dict], None] = None
+           List of dictionaries describing the "where" clause to limit data that
+           is included in metrics.
+
+       **return_query** : bool = False
+           True returns the query string instead of the data.
+
+       **include_geometry** : bool = True
+           True joins the geometry to the query results.
+           Only works if `primary_location_id`.
+           is included as a group_by field.
+
+       **remove_duplicates** : bool = True
+           True (default) removes joined timeseries rows with duplicate primary
+           values, where unique values are defined by the value_time,
+           secondary_reference_time, location_id, configuration,
+           variable_name and measurement_unit fields.
+           False does not check for or remove duplicate values.
+           This option can be used to improve performance if you are certain you
+           do not have duplicate primary_values.
+
+   :Returns:
+
+       Union[str, pd.DataFrame, gpd.GeoDataFrame]
+           The query string or a DataFrame or GeoDataFrame of query results.
+
+
+
+
+
+
+
+
+   .. rubric:: Notes
+
+   Filter and Order By Fields:
+
+   * reference_time
+   * primary_location_id
+   * secondary_location_id
+   * primary_value
+   * secondary_value
+   * value_time
+   * configuration
+   * measurement_unit
+   * variable_name
+   * lead_time
+
+
+   .. rubric:: Examples
+
+   >>> order_by = ["lead_time", "primary_location_id"]
+   >>> filters = [
+   >>>     {
+   >>>         "column": "primary_location_id",
+   >>>         "operator": "=",
+   >>>         "value": "'123456'"
+   >>>     },
+   >>>     {
+   >>>         "column": "reference_time",
+   >>>         "operator": "=",
+   >>>         "value": "'2022-01-01 00:00'"
+   >>>     },
+   >>>     {
+   >>>         "column": "lead_time",
+   >>>         "operator": "<=",
+   >>>         "value": "'10 days'"
+   >>>     }
+   >>> ]
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_timeseries(timeseries_filepath: str, order_by: List[str], filters: Union[List[dict], None] = None, return_query: bool = False) -> Union[str, pandas.DataFrame, geopandas.GeoDataFrame]
+
+
+   Retrieve timeseries using a parquet query.
+
+
+   :Parameters:
+
+       **timeseries_filepath** : str
+           File path to the timeseries data.  String must include path to file(s)
+           and can include wildcards.  For example, "/path/to/parquet/*.parquet".
+
+       **order_by** : List[str]
+           List of column/field names to order results by.
+           Must provide at least one.
+
+       **filters** : Union[List[dict], None] = None
+           List of dictionaries describing the "where" clause to limit data that
+           is included in metrics.
+
+       **return_query** : bool = False
+           True returns the query string instead of the data.
+
+   :Returns:
+
+       Union[str, pd.DataFrame, gpd.GeoDataFrame]
+           The query string or a DataFrame or GeoDataFrame of query results.
+
+
+
+
+
+
+
+
+   .. rubric:: Notes
+
+   Filter and Order By Fields:
+
+   * value_time
+   * location_id
+   * value
+   * measurement_unit
+   * reference_time
+   * configuration
+   * variable_name
+
+
+   .. rubric:: Examples
+
+   >>> order_by = ["lead_time", "primary_location_id"]
+   >>> filters = [
+   >>>     {
+   >>>         "column": "location_id",
+   >>>         "operator": "in",
+   >>>         "value": [12345, 54321]
+   >>>     },
+   >>> ]
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_timeseries_chars(timeseries_filepath: str, group_by: list[str], order_by: List[str], filters: Union[List[dict], None] = None, return_query: bool = False) -> Union[str, pandas.DataFrame, geopandas.GeoDataFrame]
+
+
+   Retrieve timeseries characteristics using a parquet query.
+
+
+   :Parameters:
+
+       **timeseries_filepath** : str
+           File path to the "observed" data.  String must include path to file(s)
+           and can include wildcards.  For example, "/path/to/parquet/*.parquet".
+
+       **group_by** : List[str]
+           List of column/field names to group timeseries data by.
+           Must provide at least one.
+
+       **order_by** : List[str]
+           List of column/field names to order results by.
+           Must provide at least one.
+
+       **filters** : Union[List[dict], None] = None
+           List of dictionaries describing the "where" clause to limit data that
+           is included in metrics.
+
+       **return_query** : bool = False
+           True returns the query string instead of the data.
+
+   :Returns:
+
+       Union[str, pd.DataFrame, gpd.GeoDataFrame]
+           The query string or a DataFrame or GeoDataFrame of query results.
+
+
+
+
+
+
+
+
+   .. rubric:: Notes
+
+   Filter, Group By and Order By Fields
+
+   * value_time
+   * location_id
+   * value
+   * measurement_unit
+   * reference_time
+   * configuration
+   * variable_name
+
+
+   .. rubric:: Examples
+
+   >>> order_by = ["lead_time", "primary_location_id"]
+   >>> filters = [
+   >>>     {
+   >>>         "column": "primary_location_id",
+   >>>         "operator": "=",
+   >>>         "value": "'123456'"
+   >>>     },
+   >>>     {
+   >>>         "column": "reference_time",
+   >>>         "operator": "=",
+   >>>         "value": "'2022-01-01 00:00'"
+   >>>     },
+   >>>     {
+   >>>         "column": "lead_time",
+   >>>         "operator": "<=",
+   >>>         "value": "'10 days'"
+   >>>     }
+   >>> ]
+
+
+
+   ..
+       !! processed by numpydoc !!

@@ -1,3 +1,4 @@
+"""A module for defining SQL queries against Pandas DataFrames."""
 import numpy as np
 import pandas as pd
 import geopandas as gpd
@@ -32,10 +33,10 @@ def get_metrics(
     ----------
     primary_filepath : str
         File path to the "observed" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/*.parquet"
+        and can include wildcards.  For example, "/path/to/parquet/*.parquet".
     secondary_filepath : str
         File path to the "forecast" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/*.parquet"
+        and can include wildcards.  For example, "/path/to/parquet/*.parquet".
     crosswalk_filepath : str
         File path to single crosswalk file.
     group_by : List[str]
@@ -44,25 +45,27 @@ def get_metrics(
     order_by : List[str]
         List of column/field names to order results by.
         Must provide at least one.
-    include_metrics = List[str]
-        List of metrics (see below) for allowable list, or "all" to return all
+    include_metrics : List[str]
+        List of metrics (see below) for allowable list, or "all" to return all.
     filters : Union[List[dict], None] = None
         List of dictionaries describing the "where" clause to limit data that
         is included in metrics.
-    return_query: bool = False
-        True returns the query string instead of the data
-    include_geometry: bool = True
+    return_query : bool = False
+        True returns the query string instead of the data.
+    include_geometry : bool = True
         True joins the geometry to the query results.
         Only works if `primary_location_id`
         is included as a group_by field.
 
     Returns
     -------
-    results : Union[str, pd.DataFrame, gpd.GeoDataFrame]
+    Union[str, pd.DataFrame, gpd.GeoDataFrame]
+        The query string or a DataFrame or GeoDataFrame of query results.
 
-    Available Metrics
-    -----------------------
-    Basic
+    Notes
+    -----
+    Basic Metrics:
+
     * primary_count
     * secondary_count
     * primary_minimum
@@ -76,11 +79,14 @@ def get_metrics(
     * primary_variance
     * secondary_variance
     * max_value_delta
-        max(secondary_value) - max(primary_value)
-    * bias
-        sum(primary_value - secondary_value)/count(*)
 
-    HydroTools Metrics
+      * max(secondary_value) - max(primary_value)
+    * bias
+
+      * sum(primary_value - secondary_value)/count(*)
+
+    HydroTools Metrics:
+
     * nash_sutcliffe_efficiency
     * kling_gupta_efficiency
     * coefficient_of_extrapolation
@@ -89,35 +95,12 @@ def get_metrics(
     * mean_squared_error
     * root_mean_squared_error
 
-    Time-based Metrics
+    Time-based Metrics:
+
     * primary_max_value_time
     * secondary_max_value_time
     * max_value_timedelta
-
-    Examples
-    --------
-        group_by = ["lead_time", "primary_location_id"]
-        order_by = ["lead_time", "primary_location_id"]
-        filters = [
-            {
-                "column": "primary_location_id",
-                "operator": "=",
-                "value": "'123456'"
-            },
-            {
-                "column": "reference_time",
-                "operator": "=",
-                "value": "'2022-01-01 00:00'"
-            },
-            {
-                "column": "lead_time",
-                "operator": "<=",
-                "value": "'10 days'"
-            }
-        ]
-        include_metrics=["nash_sutcliffe_efficiency"]
     """
-
     mq = tmq.MetricQuery.model_validate(
         {
             "primary_filepath": primary_filepath,
@@ -183,28 +166,28 @@ def calculate_group_metrics(
 ):
     """Calculate metrics on a pd.DataFrame.
 
-    Note this approach to calculating metrics is not as fast as
+    Parameters
+    ----------
+    group : pd.DataFrame
+        Represents a population group to calculate the metrics on.
+    include_metrics : List[str]
+        List of metrics (see below) for allowable list, or "all" to
+        return all.
+
+    Returns
+    -------
+    pd.DataFrame
+        A DataFrame of calculated metrics.
+
+    Notes
+    -----
+    This approach to calculating metrics is not as fast as
     `teehr.queries.duckdb.get_metrics()` but is easier to update
     and contains more metrics.  It also serves as the reference
     implementation for the duckdb queries.
 
-    Parameters
-    ----------
-    group : pd.DataFrame
-        Represents a population group to calculate the metrics on
-    include_metrics = List[str]
-        List of metrics (see below) for allowable list, or "all" to
-        return all
+    Basic Metrics:
 
-
-    Returns
-    -------
-    calculated_metrics : pd.DataFrame
-
-
-    Available Metrics
-    -----------------------
-    Basic
     * primary_count
     * secondary_count
     * primary_minimum
@@ -218,11 +201,14 @@ def calculate_group_metrics(
     * primary_variance
     * secondary_variance
     * max_value_delta
-        max(secondary_value) - max(primary_value)
-    * bias
-        sum(primary_value - secondary_value)/count(*)
 
-    HydroTools Metrics
+      * max(secondary_value) - max(primary_value)
+    * bias
+
+      * sum(primary_value - secondary_value)/count(*)
+
+    HydroTools Metrics:
+
     * nash_sutcliffe_efficiency
     * kling_gupta_efficiency
     * coefficient_of_extrapolation
@@ -231,11 +217,10 @@ def calculate_group_metrics(
     * mean_squared_error
     * root_mean_squared_error
 
-    Time-based Metrics
+    Time-based Metrics:
     * primary_max_value_time
     * secondary_max_value_time
     * max_value_timedelta
-
     """
     data = {}
 

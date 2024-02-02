@@ -1,0 +1,45 @@
+queries package
+===============
+
+Submodules
+----------
+
+queries.duckdb module
+---------------------
+
+.. automodule:: queries.duckdb
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+queries.duckdb\_database module
+-------------------------------
+
+.. automodule:: queries.duckdb_database
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+queries.pandas module
+---------------------
+
+.. automodule:: queries.pandas
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+queries.utils module
+--------------------
+
+.. automodule:: queries.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: queries
+   :members:
+   :undoc-members:
+   :show-inheritance:

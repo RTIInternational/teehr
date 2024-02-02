@@ -1,3 +1,4 @@
+"""Test weight generation."""
 import pandas as pd
 from pathlib import Path
 from teehr.utilities.generate_weights import generate_weights_file
@@ -12,6 +13,7 @@ WEIGHTS_FILEPATH = Path(TEST_DIR, "test_weights_results.parquet")
 
 
 def test_weights():
+    """Test generate weights file."""
     df = generate_weights_file(
         zone_polygon_filepath=ZONES_FILEPATH,
         template_dataset=TEMPLATE_FILEPATH,

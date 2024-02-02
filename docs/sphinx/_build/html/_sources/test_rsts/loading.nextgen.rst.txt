@@ -1,0 +1,21 @@
+loading.nextgen package
+=======================
+
+Submodules
+----------
+
+loading.nextgen.ngen module
+---------------------------
+
+.. automodule:: loading.nextgen.ngen
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: loading.nextgen
+   :members:
+   :undoc-members:
+   :show-inheritance:

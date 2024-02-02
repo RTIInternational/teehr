@@ -1,0 +1,7 @@
+teehr.queries.duckdb module
+===========================
+
+.. automodule:: teehr.queries.duckdb
+   :members:
+   :undoc-members:
+   :show-inheritance:

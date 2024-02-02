@@ -19,4 +19,3 @@ This feature joined two different tables of timeseries together based on locatio
 ## Metrics
 This feature starts by joining the timeseries as described above, then the timeseries are grouped to create populations, then the requested metrics are calculated.
 ![metrics](images/metrics.png "Metrics")
-

@@ -1,0 +1,45 @@
+teehr.queries package
+=====================
+
+Submodules
+----------
+
+teehr.queries.duckdb module
+---------------------------
+
+.. automodule:: teehr.queries.duckdb
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+teehr.queries.duckdb\_database module
+-------------------------------------
+
+.. automodule:: teehr.queries.duckdb_database
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+teehr.queries.pandas module
+---------------------------
+
+.. automodule:: teehr.queries.pandas
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+teehr.queries.utils module
+--------------------------
+
+.. automodule:: teehr.queries.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: teehr.queries
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,3 +1,4 @@
+"""Test duckdb metric queries."""
 import pandas as pd
 import geopandas as gpd
 import pytest
@@ -13,6 +14,7 @@ GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
 
 
 def test_metric_query_str():
+    """Test return metric query as a string."""
     query_str = tqu.get_metrics(
         primary_filepath=PRIMARY_FILEPATH_DUPS,
         secondary_filepath=SECONDARY_FILEPATH,
@@ -29,6 +31,7 @@ def test_metric_query_str():
 
 
 def test_metric_query_df():
+    """Test return metric query as a dataframe."""
     query_df = tqu.get_metrics(
         primary_filepath=PRIMARY_FILEPATH_DUPS,
         secondary_filepath=SECONDARY_FILEPATH,
@@ -45,6 +48,7 @@ def test_metric_query_df():
 
 
 def test_metric_query_gdf():
+    """Test return metric query as a geodataframe."""
     query_df = tqu.get_metrics(
         primary_filepath=PRIMARY_FILEPATH_DUPS,
         secondary_filepath=SECONDARY_FILEPATH,
@@ -63,6 +67,7 @@ def test_metric_query_gdf():
 
 
 def test_metric_query_gdf_2():
+    """Test return metric query as a geodataframe v2."""
     query_df = tqu.get_metrics(
         primary_filepath=PRIMARY_FILEPATH_DUPS,
         secondary_filepath=SECONDARY_FILEPATH,
@@ -81,6 +86,7 @@ def test_metric_query_gdf_2():
 
 
 def test_metric_query_gdf_no_geom():
+    """Test metric query no geometry."""
     with pytest.raises(ValidationError):
         tqu.get_metrics(
             primary_filepath=PRIMARY_FILEPATH_DUPS,
@@ -96,6 +102,7 @@ def test_metric_query_gdf_no_geom():
 
 
 def test_metric_query_gdf_missing_group_by():
+    """Test metric query missing group by."""
     with pytest.raises(ValidationError):
         tqu.get_metrics(
             primary_filepath=PRIMARY_FILEPATH_DUPS,
@@ -112,6 +119,7 @@ def test_metric_query_gdf_missing_group_by():
 
 
 def test_metric_query_df_2():
+    """Test metric query as a dataframe v2."""
     include_metrics = [
         "primary_count",
         "secondary_count",
@@ -152,6 +160,7 @@ def test_metric_query_df_2():
 
 
 def test_metric_query_df_time_metrics():
+    """Test metric query with time metrics."""
     include_metrics = [
         "primary_max_value_time",
         "secondary_max_value_time",
@@ -177,6 +186,7 @@ def test_metric_query_df_time_metrics():
 
 
 def test_metric_query_df_all():
+    """Test metric query all metrics."""
     group_by = ["primary_location_id", "reference_time"]
     query_df = tqu.get_metrics(
         primary_filepath=PRIMARY_FILEPATH_DUPS,
@@ -197,6 +207,7 @@ def test_metric_query_df_all():
 
 
 def test_metric_query_value_time_filter():
+    """Test metric query value time filter."""
     group_by = ["primary_location_id", "reference_time"]
     query_df = tqu.get_metrics(
         primary_filepath=PRIMARY_FILEPATH_DUPS,
@@ -229,6 +240,7 @@ def test_metric_query_value_time_filter():
 
 
 def test_metric_query_config_filter():
+    """Test metric query config filter."""
     group_by = ["primary_location_id", "reference_time"]
     query_df = tqu.get_metrics(
         primary_filepath=PRIMARY_FILEPATH_DUPS,

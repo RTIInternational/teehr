@@ -1,3 +1,4 @@
+"""A module defining duckdb sql queries for a persistent database."""
 import duckdb
 
 from typing import Dict
@@ -7,6 +8,7 @@ from teehr.models.queries_database import (
     JoinedTimeseriesQuery,
     TimeseriesQuery,
     TimeseriesCharQuery,
+    JoinedTimeseriesFieldName
 )
 
 import teehr.queries.utils as tqu
@@ -18,27 +20,20 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
     """Build the query string to calculate performance metrics
     using database queries.
 
-    mq Fields
+    Parameters
     ----------
-    group_by : List[str]
-        List of column/field names to group timeseries data by.
-        Must provide at least one.
-    order_by : List[str]
-        List of column/field names to order results by.
-        Must provide at least one.
-    include_metrics = List[str]
-        List of metrics (see below) for allowable list, or "all" to return all
-        Placeholder, currently ignored -> returns "all"
-    filters : Union[List[dict], None] = None
-        List of dictionaries describing the "where" clause to limit data that
-        is included in metrics.
+    mq : MetricQuery
+        Pydantic model containing query parameters.
 
     Returns
     -------
-    query : str
+    str
+        The query string.
 
-    Filter, Order By and Group By Fields
-    -----------------------------------
+    Notes
+    -----
+    Filter, Order By and Group By Fields:
+
     * reference_time
     * primary_location_id
     * secondary_location_id
@@ -49,10 +44,10 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
     * measurement_unit
     * variable_name
     * lead_time
+    * [any user-added fields]
 
-    Available Metrics
-    -----------------------
-    Basic
+    Basic Metrics:
+
     * primary_count
     * secondary_count
     * primary_minimum
@@ -66,11 +61,14 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
     * primary_variance
     * secondary_variance
     * max_value_delta
-        max(secondary_value) - max(primary_value)
-    * bias
-        sum(primary_value - secondary_value)/count(*)
 
-    HydroTools Metrics
+      * max(secondary_value) - max(primary_value)
+    * bias
+
+      * sum(primary_value - secondary_value)/count(*)
+
+    HydroTools Metrics:
+
     * nash_sutcliffe_efficiency
     * kling_gupta_efficiency
     * coefficient_of_extrapolation
@@ -79,29 +77,32 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
     * mean_squared_error
     * root_mean_squared_error
 
-    Time-based Metrics
+    Time-based Metrics:
+
     * primary_max_value_time
     * secondary_max_value_time
     * max_value_timedelta
 
-    Examples:
-        order_by = ["lead_time", "primary_location_id"]
-        group_by = ["lead_time", "primary_location_id"]
-        filters = [
-            {
-                "column": "primary_location_id",
-                "operator": "=",
-                "value": "gage-A",
-            },
-            {
-                "column": "reference_time",
-                "operator": "=",
-                "value": "2022-01-01 00:00:00",
-            },
-            {"column": "lead_time", "operator": "<=", "value": "10 hours"},
-        ]
-    """
+    Examples
+    --------
+    >>> order_by = ["lead_time", "primary_location_id"]
 
+    >>> group_by = ["lead_time", "primary_location_id"]
+
+    >>> filters = [
+    >>>     {
+    >>>         "column": "primary_location_id",
+    >>>         "operator": "=",
+    >>>         "value": "gage-A",
+    >>>     },
+    >>>     {
+    >>>         "column": "reference_time",
+    >>>         "operator": "=",
+    >>>         "value": "2022-01-01 00:00:00",
+    >>>     },
+    >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+    >>> ]
+    """
     query = f"""
         WITH joined as (
             SELECT
@@ -154,29 +155,19 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
 
 
 def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQuery) -> str:
-    """Load joined timeseries into a duckdb persistent database
-    using database query.
+    """Load joined timeseries into a duckdb persistent database using
+    database query.
 
-    jtq Fields
+    Parameters
     ----------
-    primary_filepath : str
-        File path to the "observed" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/*.parquet"
-    secondary_filepath : str
-        File path to the "forecast" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/*.parquet"
-    crosswalk_filepath : str
-        File path to single crosswalk file.
-    order_by : Optional[List[str]]
-        List of column/field names to order results by.
-        Must provide at least one.
-
+    jtq : JoinedTimeseriesQuery
+        Pydantic model containing query parameters.
 
     Returns
     -------
-    query : str
+    str
+        The query string.
     """
-
     query = f"""
     WITH initial_joined as (
         SELECT
@@ -249,13 +240,13 @@ def describe_timeseries(timeseries_filepath: str) -> Dict:
     ----------
     timeseries_filepath : str
         File path to the "observed" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/*.parquet"
+        and can include wildcards.  For example, "/path/to/parquet/*.parquet".
 
     Returns
     -------
-    output_report : Union[str, pd.DataFrame, gpd.GeoDataFrame]
+    Dict
+        A dictionary of summary statistics for a timeseries.
     """
-
     # TEST QUERIES
 
     # Find number of rows and unique locations
@@ -383,44 +374,65 @@ def create_get_timeseries_query(
 ) -> str:
     """Retrieve joined timeseries using database query.
 
-    tq fields
+    Parameters
     ----------
-    order_by : List[str]
-        List of column/field names to order results by.
-        Must provide at least one.
-    timeseries_name: TimeseriesNameEnum
-        Name of the time series to query (primary or secondary)
-    filters : Union[List[dict], None] = None
-        List of dictionaries describing the "where" clause to limit data that
-        is included in metrics.
-    return_query: bool = False
-        True returns the query string instead of the data
+    tq : TimeseriesQuery
+        Pydantic model containing query parameters.
 
     Returns
     -------
-    results : Union[str, pd.DataFram]
+    str
+        The query string.
 
-    Filter and Order By Fields
-    --------------------------
-    * value_time
-    * location_id
-    * value
-    * measurement_unit
+    Notes
+    -----
+    Filter By Fields:
+
     * reference_time
+    * primary_location_id
+    * secondary_location_id
+    * primary_value
+    * secondary_value
+    * value_time
     * configuration
+    * measurement_unit
+    * variable_name
+    * lead_time
+    * absolute_difference
+    * [any user-added fields]
+
+    Order By Fields:
+
+    * reference_time
+    * primary_location_id
+    * secondary_location_id
+    * primary_value
+    * secondary_value
+    * value_time
+    * configuration
+    * measurement_unit
     * variable_name
 
-    Examples:
-        order_by = ["lead_time", "primary_location_id"]
-        filters = [
-            {
-                "column": "location_id",
-                "operator": "in",
-                "value": [12345, 54321]
-            },
-        ]
-    """
+    Examples
+    --------
+    >>> order_by = ["lead_time", "primary_location_id"]
 
+    >>> group_by = ["lead_time", "primary_location_id"]
+
+    >>> filters = [
+    >>>     {
+    >>>         "column": "primary_location_id",
+    >>>         "operator": "=",
+    >>>         "value": "gage-A",
+    >>>     },
+    >>>     {
+    >>>         "column": "reference_time",
+    >>>         "operator": "=",
+    >>>         "value": "2022-01-01 00:00:00",
+    >>>     },
+    >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+    >>> ]
+    """
     if tq.timeseries_name == "primary":
         query = f"""
             SELECT
@@ -466,45 +478,51 @@ def create_get_timeseries_query(
 def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
     """Retrieve joined timeseries using database query.
 
-    tcq fields
+    Parameters
     ----------
-    order_by : List[str]
-        List of column/field names to order results by.
-        Must provide at least one.
-    group_by : List[str]
-        List of column/field names to group timeseries data by.
-        Must provide at least one.
-    timeseries_name: TimeseriesNameEnum
-        Name of the time series to query (primary or secondary)
-    filters : Union[List[dict], None] = None
-        List of dictionaries describing the "where" clause to limit data that
-        is included in metrics.
-    return_query: bool = False
-        True returns the query string instead of the data
+    tcq : TimeseriesCharQuery
+        Pydantic model containing query parameters.
 
     Returns
     -------
-    query : str
+    str
+        The query string.
 
-    Examples:
-        order_by = ["lead_time", "primary_location_id"]
-        filters = [
-            {
-                "column": "primary_location_id",
-                "operator": "=",
-                "value": "'123456'"
-            },
-            {
-                "column": "reference_time",
-                "operator": "=",
-                "value": "'2022-01-01 00:00'"
-            },
-            {
-                "column": "lead_time",
-                "operator": "<=",
-                "value": "'10 days'"
-            }
-        ]
+    Notes
+    -----
+    Filter, Order By and Group By Fields
+
+    * reference_time
+    * primary_location_id
+    * secondary_location_id
+    * primary_value
+    * secondary_value
+    * value_time
+    * configuration
+    * measurement_unit
+    * variable_name
+    * lead_time
+    * [any user-added fields]
+
+    Examples
+    --------
+    >>> order_by = ["lead_time", "primary_location_id"]
+
+    >>> group_by = ["lead_time", "primary_location_id"]
+
+    >>> filters = [
+    >>>     {
+    >>>         "column": "primary_location_id",
+    >>>         "operator": "=",
+    >>>         "value": "gage-A",
+    >>>     },
+    >>>     {
+    >>>         "column": "reference_time",
+    >>>         "operator": "=",
+    >>>         "value": "2022-01-01 00:00:00",
+    >>>     },
+    >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+    >>> ]
     """
 
     join_max_time_on = tqu._join_time_on(
@@ -607,8 +625,19 @@ def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
     return query
 
 
-def create_unique_field_values_query(fn) -> str:
+def create_unique_field_values_query(fn: JoinedTimeseriesFieldName) -> str:
+    """Create a query for identifying unique values in a field.
 
+    Parameters
+    ----------
+    fn : JoinedTimeseriesFieldName
+        Name of the field to query for unique values.
+
+    Returns
+    -------
+    str
+        The query string.
+    """
     query = f"""
         SELECT
         DISTINCT

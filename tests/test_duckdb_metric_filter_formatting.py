@@ -1,3 +1,4 @@
+"""Test duckdb metric filter formatting."""
 from datetime import datetime
 
 import teehr.models.queries as tmq
@@ -5,6 +6,7 @@ import teehr.queries.utils as tqu
 
 
 def test_multiple_filters():
+    """Test multiple filters."""
     filter_1 = tmq.JoinedFilter(
         column="secondary_location_id",
         operator="in",
@@ -20,6 +22,7 @@ def test_multiple_filters():
 
 
 def test_no_filters():
+    """Test no filters."""
     filter_str = tqu.filters_to_sql([])
     assert filter_str == "--no where clause"
 

@@ -1,0 +1,37 @@
+teehr.models package
+====================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   teehr.models.loading
+
+Submodules
+----------
+
+teehr.models.queries module
+---------------------------
+
+.. automodule:: teehr.models.queries
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+teehr.models.queries\_database module
+-------------------------------------
+
+.. automodule:: teehr.models.queries_database
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: teehr.models
+   :members:
+   :undoc-members:
+   :show-inheritance:

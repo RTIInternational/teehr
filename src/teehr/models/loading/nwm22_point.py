@@ -1,3 +1,4 @@
+"""Module describing NWM v2.2 point data configuration variables."""
 from enum import Enum
 from typing import Optional
 
@@ -6,6 +7,7 @@ from pydantic import BaseModel
 
 # VARIABLE ENUMS: Potential variable names for each output_type
 class ChannelRtVariableEnum(str, Enum):
+    """ChannelRtVariableEnum."""
     nudge = "nudge"
     qBtmVertRunoff = "qBtmVertRunoff"
     qBucket = "qBucket"
@@ -15,6 +17,7 @@ class ChannelRtVariableEnum(str, Enum):
 
 
 class ChannelRtNoDAVariableEnum(str, Enum):
+    """ChannelRtNoDAVariableEnum."""
     nudge = "nudge"
     qBucket = "qBucket"
     qSfcLatRunoff = "qSfcLatRunoff"
@@ -23,17 +26,20 @@ class ChannelRtNoDAVariableEnum(str, Enum):
 
 
 class ChannelRtLongVariableEnum(str, Enum):
+    """ChannelRtLongVariableEnum."""
     nudge = "nudge"
     streamflow = "streamflow"
     velocity = "velocity"
 
 
 class TerrainRtVariableEnum(str, Enum):
+    """TerrainRtVariableEnum."""
     sfcheadsubrt = "sfcheadsubrt"
     zwattablrt = "zwattablrt"
 
 
 class ReservoirVariableEnum(str, Enum):
+    """ReservoirVariableEnum."""
     inflow = "inflow"
     outflow = "outflow"
     reservoir_assimiated_value = "reservoir_assimiated_value"
@@ -42,79 +48,93 @@ class ReservoirVariableEnum(str, Enum):
 
 # OUTPUT ENUMS: Potential output names for each configuration
 class ShortAndAnalysisOutputEnum(str, Enum):
+    """ShortAndAnalysisOutputEnum."""
     channel_rt = "channel_rt"
     terrain_rt = "terrain_rt"
     reservoir = "reservoir"
 
 
 class Medium1OutputEnum(str, Enum):
+    """Medium1OutputEnum."""
     channel_rt_1 = "channel_rt_1"
     terrain_rt_1 = "terrain_rt_1"
     reservoir_1 = "reservoir_1"
 
 
 class Medium2OutputEnum(str, Enum):
+    """Medium2OutputEnum."""
     channel_rt_2 = "channel_rt_2"
     terrain_rt_2 = "terrain_rt_2"
     reservoir_2 = "reservoir_2"
 
 
 class Medium3OutputEnum(str, Enum):
+    """Medium3OutputEnum."""
     channel_rt_3 = "channel_rt_3"
     terrain_rt_3 = "terrain_rt_3"
     reservoir_3 = "reservoir_3"
 
 
 class Medium4OutputEnum(str, Enum):
+    """Medium4OutputEnum."""
     channel_rt_4 = "channel_rt_4"
     terrain_rt_4 = "terrain_rt_4"
     reservoir_4 = "reservoir_4"
 
 
 class Medium5OutputEnum(str, Enum):
+    """Medium5OutputEnum."""
     channel_rt_5 = "channel_rt_5"
     terrain_rt_5 = "terrain_rt_5"
     reservoir_5 = "reservoir_5"
 
 
 class Medium6OutputEnum(str, Enum):
+    """Medium6OutputEnum."""
     channel_rt_6 = "channel_rt_6"
     terrain_rt_6 = "terrain_rt_6"
     reservoir_6 = "reservoir_6"
 
 
 class Medium7OutputEnum(str, Enum):
+    """Medium7OutputEnum."""
     channel_rt_7 = "channel_rt_7"
     terrain_rt_7 = "terrain_rt_7"
     reservoir_7 = "reservoir_7"
 
 
 class MediumNoDAEnum(str, Enum):
+    """MediumNoDAEnum."""
     channel_rt = "channel_rt"
 
 
 class Long1OutputEnum(str, Enum):
+    """Long1OutputEnum."""
     channel_rt_1 = "channel_rt_1"
     reservoir_1 = "reservoir_1"
 
 
 class Long2OutputEnum(str, Enum):
+    """Long2OutputEnum."""
     channel_rt_2 = "channel_rt_2"
     reservoir_2 = "reservoir_2"
 
 
 class Long3OutputEnum(str, Enum):
+    """Long3OutputEnum."""
     channel_rt_3 = "channel_rt_3"
     reservoir_3 = "reservoir_3"
 
 
 class Long4OutputEnum(str, Enum):
+    """Long4OutputEnum."""
     channel_rt_4 = "channel_rt_4"
     reservoir_4 = "reservoir_4"
 
 
 # POINT OUTPUT TYPE MODELS (needed for each configuration enum)
 class ShortAndAnalysis(BaseModel):
+    """ShortAndAnalysis."""
     output_type: ShortAndAnalysisOutputEnum
     channel_rt: Optional[ChannelRtVariableEnum] = None
     terrain_rt: Optional[TerrainRtVariableEnum] = None
@@ -122,6 +142,7 @@ class ShortAndAnalysis(BaseModel):
 
 
 class ShortAndAnalysisNoDA(BaseModel):
+    """ShortAndAnalysisNoDA."""
     output_type: ShortAndAnalysisOutputEnum
     channel_rt: Optional[ChannelRtNoDAVariableEnum] = None
     terrain_rt: Optional[TerrainRtVariableEnum] = None
@@ -129,6 +150,7 @@ class ShortAndAnalysisNoDA(BaseModel):
 
 
 class MediumRangeMem1(BaseModel):
+    """MediumRangeMem1."""
     output_type: Medium1OutputEnum
     channel_rt_1: Optional[ChannelRtVariableEnum] = None
     terrain_rt_1: Optional[TerrainRtVariableEnum] = None
@@ -136,6 +158,7 @@ class MediumRangeMem1(BaseModel):
 
 
 class MediumRangeMem2(BaseModel):
+    """MediumRangeMem2."""
     output_type: Medium2OutputEnum
     channel_rt_2: Optional[ChannelRtVariableEnum] = None
     terrain_rt_2: Optional[TerrainRtVariableEnum] = None
@@ -143,6 +166,7 @@ class MediumRangeMem2(BaseModel):
 
 
 class MediumRangeMem3(BaseModel):
+    """MediumRangeMem3."""
     output_type: Medium3OutputEnum
     channel_rt_3: Optional[ChannelRtVariableEnum] = None
     terrain_rt_3: Optional[TerrainRtVariableEnum] = None
@@ -150,6 +174,7 @@ class MediumRangeMem3(BaseModel):
 
 
 class MediumRangeMem4(BaseModel):
+    """MediumRangeMem4."""
     output_type: Medium4OutputEnum
     channel_rt_4: Optional[ChannelRtVariableEnum] = None
     terrain_rt_4: Optional[TerrainRtVariableEnum] = None
@@ -157,6 +182,7 @@ class MediumRangeMem4(BaseModel):
 
 
 class MediumRangeMem5(BaseModel):
+    """MediumRangeMem5."""
     output_type: Medium5OutputEnum
     channel_rt_5: Optional[ChannelRtVariableEnum] = None
     terrain_rt_5: Optional[TerrainRtVariableEnum] = None
@@ -164,6 +190,7 @@ class MediumRangeMem5(BaseModel):
 
 
 class MediumRangeMem6(BaseModel):
+    """MediumRangeMem6."""
     output_type: Medium6OutputEnum
     channel_rt_6: Optional[ChannelRtVariableEnum] = None
     terrain_rt_6: Optional[TerrainRtVariableEnum] = None
@@ -171,6 +198,7 @@ class MediumRangeMem6(BaseModel):
 
 
 class MediumRangeMem7(BaseModel):
+    """MediumRangeMem7."""
     output_type: Medium7OutputEnum
     channel_rt_7: Optional[ChannelRtVariableEnum] = None
     terrain_rt_7: Optional[TerrainRtVariableEnum] = None
@@ -178,29 +206,34 @@ class MediumRangeMem7(BaseModel):
 
 
 class MediumRangeNoDA(BaseModel):
+    """MediumRangeNoDA."""
     output_type: MediumNoDAEnum
     channel_rt: Optional[ChannelRtNoDAVariableEnum] = None
 
 
 class LongRangeMem1(BaseModel):
+    """LongRangeMem1."""
     output_type: Long1OutputEnum
     channel_rt_1: Optional[ChannelRtLongVariableEnum] = None
     reservoir_1: Optional[ReservoirVariableEnum] = None
 
 
 class LongRangeMem2(BaseModel):
+    """LongRangeMem2."""
     output_type: Long2OutputEnum
     channel_rt_2: Optional[ChannelRtLongVariableEnum] = None
     reservoir_2: Optional[ReservoirVariableEnum] = None
 
 
 class LongRangeMem3(BaseModel):
+    """LongRangeMem3."""
     output_type: Long3OutputEnum
     channel_rt_3: Optional[ChannelRtLongVariableEnum] = None
     reservoir_3: Optional[ReservoirVariableEnum] = None
 
 
 class LongRangeMem4(BaseModel):
+    """LongRangeMem4."""
     output_type: Long4OutputEnum
     channel_rt_4: Optional[ChannelRtLongVariableEnum] = None
     reservoir_4: Optional[ReservoirVariableEnum] = None
@@ -208,6 +241,7 @@ class LongRangeMem4(BaseModel):
 
 # POINT CONFIGURATION ENUM: Potential configuration names
 class ConfigurationsEnum(str, Enum):
+    """ConfigurationsEnum."""
     analysis_assim = "analysis_assim"
     analysis_assim_no_da = "analysis_assim_no_da"
     analysis_assim_extend = "analysis_assim_extend"
@@ -239,6 +273,7 @@ class ConfigurationsEnum(str, Enum):
 
 # POINT CONFIGURATION MODEL
 class PointConfigurationModel(BaseModel):
+    """NWM v2.2 PointConfigurationModel."""
     configuration: ConfigurationsEnum = None
     analysis_assim: Optional[ShortAndAnalysis] = None
     analysis_assim_no_da: Optional[ShortAndAnalysisNoDA] = None

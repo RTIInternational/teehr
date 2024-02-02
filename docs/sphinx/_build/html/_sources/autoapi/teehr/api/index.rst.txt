@@ -1,0 +1,13 @@
+:py:mod:`teehr.api`
+===================
+
+.. py:module:: teehr.api
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   main/index.rst

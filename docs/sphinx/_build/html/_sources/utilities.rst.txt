@@ -1,0 +1,21 @@
+utilities package
+=================
+
+Submodules
+----------
+
+utilities.generate\_weights module
+----------------------------------
+
+.. automodule:: utilities.generate_weights
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: utilities
+   :members:
+   :undoc-members:
+   :show-inheritance:

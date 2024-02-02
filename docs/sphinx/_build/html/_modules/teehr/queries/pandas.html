@@ -1,0 +1,839 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>teehr.queries.pandas &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.2 documentation</title>
+
+
+
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+
+  <link href="../../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/teehr.css?v=d714f16e" />
+
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../../../_static/documentation_options.js?v=71d9d8e6"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/teehr/queries/pandas';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+
+
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+
+
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+
+  <div id="pst-scroll-pixel-helper"></div>
+
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+
+
+  <div class="col-lg-3 navbar-header-items__start">
+
+      <div class="navbar-item">
+
+
+
+<a class="navbar-brand logo" href="../../../index.html">
+
+
+
+
+
+
+
+
+
+
+    <img src="../../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.2 documentation - Home"/>
+    <script>document.write(`<img src="../../../_static/teehr.png" class="logo__image only-dark" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.2 documentation - Home"/>`);</script>
+
+
+</a></div>
+
+  </div>
+
+  <div class="col-lg-9 navbar-header-items">
+
+    <div class="me-auto navbar-header-items__center">
+
+        <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+                        Getting started
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+                        User Guide
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../development/index.html">
+                        Developer Guide
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../changelog/index.html">
+                        Release Notes
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../autoapi/index.html">
+                        API Reference
+                      </a>
+                    </li>
+
+  </ul>
+</nav></div>
+
+    </div>
+
+
+    <div class="navbar-header-items__end">
+
+        <div class="navbar-item navbar-persistent--container">
+
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+
+
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+
+        <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+
+    </div>
+
+  </div>
+
+
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+
+
+
+</div>
+
+    </header>
+
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+
+
+
+
+
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+
+
+
+  <div class="sidebar-header-items sidebar-primary__section">
+
+
+      <div class="sidebar-header-items__center">
+
+          <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+                        Getting started
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+                        User Guide
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../development/index.html">
+                        Developer Guide
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../changelog/index.html">
+                        Release Notes
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../autoapi/index.html">
+                        API Reference
+                      </a>
+                    </li>
+
+  </ul>
+</nav></div>
+
+      </div>
+
+
+
+      <div class="sidebar-header-items__end">
+
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+
+          <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+
+      </div>
+
+  </div>
+
+
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+
+      <main id="main-content" class="bd-main">
+
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+
+    <div class="header-article-items__start">
+
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+
+    <li class="breadcrumb-item active" aria-current="page">teehr.queries.pandas</li>
+  </ul>
+</nav>
+</div>
+
+    </div>
+
+
+</div>
+</div>
+
+
+
+
+<div id="searchbox"></div>
+                <article class="bd-article">
+
+  <h1>Source code for teehr.queries.pandas</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;A module for defining SQL queries against Pandas DataFrames.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">geopandas</span> <span class="k">as</span> <span class="nn">gpd</span>
+<span class="c1"># import dask.dataframe as dd</span>
+
+<span class="kn">from</span> <span class="nn">hydrotools.metrics</span> <span class="kn">import</span> <span class="n">metrics</span> <span class="k">as</span> <span class="n">hm</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">teehr.models.queries</span> <span class="k">as</span> <span class="nn">tmq</span>
+<span class="kn">import</span> <span class="nn">teehr.queries.duckdb</span> <span class="k">as</span> <span class="nn">tqu</span>
+
+
+<span class="n">SQL_DATETIME_STR_FORMAT</span> <span class="o">=</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span>
+
+
+<div class="viewcode-block" id="get_metrics">
+<a class="viewcode-back" href="../../../autoapi/teehr/queries/pandas/index.html#teehr.queries.pandas.get_metrics">[docs]</a>
+<span class="k">def</span> <span class="nf">get_metrics</span><span class="p">(</span>
+    <span class="n">primary_filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">secondary_filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">crosswalk_filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">group_by</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">order_by</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">include_metrics</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricEnum</span><span class="p">],</span> <span class="s2">&quot;all&quot;</span><span class="p">],</span>
+    <span class="n">filters</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">return_query</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">geometry_filepath</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">include_geometry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate performance metrics using a Pandas or Dask DataFrame.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    primary_filepath : str</span>
+<span class="sd">        File path to the &quot;observed&quot; data.  String must include path to file(s)</span>
+<span class="sd">        and can include wildcards.  For example, &quot;/path/to/parquet/*.parquet&quot;.</span>
+<span class="sd">    secondary_filepath : str</span>
+<span class="sd">        File path to the &quot;forecast&quot; data.  String must include path to file(s)</span>
+<span class="sd">        and can include wildcards.  For example, &quot;/path/to/parquet/*.parquet&quot;.</span>
+<span class="sd">    crosswalk_filepath : str</span>
+<span class="sd">        File path to single crosswalk file.</span>
+<span class="sd">    group_by : List[str]</span>
+<span class="sd">        List of column/field names to group timeseries data by.</span>
+<span class="sd">        Must provide at least one.</span>
+<span class="sd">    order_by : List[str]</span>
+<span class="sd">        List of column/field names to order results by.</span>
+<span class="sd">        Must provide at least one.</span>
+<span class="sd">    include_metrics : List[str]</span>
+<span class="sd">        List of metrics (see below) for allowable list, or &quot;all&quot; to return all.</span>
+<span class="sd">    filters : Union[List[dict], None] = None</span>
+<span class="sd">        List of dictionaries describing the &quot;where&quot; clause to limit data that</span>
+<span class="sd">        is included in metrics.</span>
+<span class="sd">    return_query : bool = False</span>
+<span class="sd">        True returns the query string instead of the data.</span>
+<span class="sd">    include_geometry : bool = True</span>
+<span class="sd">        True joins the geometry to the query results.</span>
+<span class="sd">        Only works if `primary_location_id`</span>
+<span class="sd">        is included as a group_by field.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Union[str, pd.DataFrame, gpd.GeoDataFrame]</span>
+<span class="sd">        The query string or a DataFrame or GeoDataFrame of query results.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Basic Metrics:</span>
+
+<span class="sd">    * primary_count</span>
+<span class="sd">    * secondary_count</span>
+<span class="sd">    * primary_minimum</span>
+<span class="sd">    * secondary_minimum</span>
+<span class="sd">    * primary_maximum</span>
+<span class="sd">    * secondary_maximum</span>
+<span class="sd">    * primary_average</span>
+<span class="sd">    * secondary_average</span>
+<span class="sd">    * primary_sum</span>
+<span class="sd">    * secondary_sum</span>
+<span class="sd">    * primary_variance</span>
+<span class="sd">    * secondary_variance</span>
+<span class="sd">    * max_value_delta</span>
+
+<span class="sd">      * max(secondary_value) - max(primary_value)</span>
+<span class="sd">    * bias</span>
+
+<span class="sd">      * sum(primary_value - secondary_value)/count(*)</span>
+
+<span class="sd">    HydroTools Metrics:</span>
+
+<span class="sd">    * nash_sutcliffe_efficiency</span>
+<span class="sd">    * kling_gupta_efficiency</span>
+<span class="sd">    * coefficient_of_extrapolation</span>
+<span class="sd">    * coefficient_of_persistence</span>
+<span class="sd">    * mean_error</span>
+<span class="sd">    * mean_squared_error</span>
+<span class="sd">    * root_mean_squared_error</span>
+
+<span class="sd">    Time-based Metrics:</span>
+
+<span class="sd">    * primary_max_value_time</span>
+<span class="sd">    * secondary_max_value_time</span>
+<span class="sd">    * max_value_timedelta</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mq</span> <span class="o">=</span> <span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;primary_filepath&quot;</span><span class="p">:</span> <span class="n">primary_filepath</span><span class="p">,</span>
+            <span class="s2">&quot;secondary_filepath&quot;</span><span class="p">:</span> <span class="n">secondary_filepath</span><span class="p">,</span>
+            <span class="s2">&quot;crosswalk_filepath&quot;</span><span class="p">:</span> <span class="n">crosswalk_filepath</span><span class="p">,</span>
+            <span class="s2">&quot;group_by&quot;</span><span class="p">:</span> <span class="n">group_by</span><span class="p">,</span>
+            <span class="s2">&quot;order_by&quot;</span><span class="p">:</span> <span class="n">order_by</span><span class="p">,</span>
+            <span class="s2">&quot;include_metrics&quot;</span><span class="p">:</span> <span class="n">include_metrics</span><span class="p">,</span>
+            <span class="s2">&quot;filters&quot;</span><span class="p">:</span> <span class="n">filters</span><span class="p">,</span>
+            <span class="s2">&quot;return_query&quot;</span><span class="p">:</span> <span class="n">return_query</span><span class="p">,</span>
+            <span class="s2">&quot;include_geometry&quot;</span><span class="p">:</span> <span class="n">include_geometry</span><span class="p">,</span>
+            <span class="s2">&quot;geometry_filepath&quot;</span><span class="p">:</span> <span class="n">geometry_filepath</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">mq</span><span class="o">.</span><span class="n">return_query</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;`return query` is not a valid option &quot;</span>
+            <span class="s2">&quot;for `dataframe.get_metrics()`.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># This loads all the timeseries in memory</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">tqu</span><span class="o">.</span><span class="n">get_joined_timeseries</span><span class="p">(</span>
+        <span class="n">primary_filepath</span><span class="o">=</span><span class="n">mq</span><span class="o">.</span><span class="n">primary_filepath</span><span class="p">,</span>
+        <span class="n">secondary_filepath</span><span class="o">=</span><span class="n">mq</span><span class="o">.</span><span class="n">secondary_filepath</span><span class="p">,</span>
+        <span class="n">crosswalk_filepath</span><span class="o">=</span><span class="n">mq</span><span class="o">.</span><span class="n">crosswalk_filepath</span><span class="p">,</span>
+        <span class="n">order_by</span><span class="o">=</span><span class="n">mq</span><span class="o">.</span><span class="n">order_by</span><span class="p">,</span>
+        <span class="n">filters</span><span class="o">=</span><span class="n">mq</span><span class="o">.</span><span class="n">filters</span><span class="p">,</span>
+        <span class="n">return_query</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Pandas DataFrame GroupBy approach (works).</span>
+    <span class="n">grouped</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">mq</span><span class="o">.</span><span class="n">group_by</span><span class="p">,</span> <span class="n">as_index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">observed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">calculated_metrics</span> <span class="o">=</span> <span class="n">grouped</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+        <span class="n">calculate_group_metrics</span><span class="p">,</span>
+        <span class="n">include_metrics</span><span class="o">=</span><span class="n">include_metrics</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Dask DataFrame GroupBy approach (does not work).</span>
+    <span class="c1"># ddf = dd.from_pandas(df, npartitions=4)</span>
+    <span class="c1"># calculated_metrics = ddf.groupby(mq.group_by).apply(</span>
+    <span class="c1">#     calculate_metrics_on_groups,</span>
+    <span class="c1">#     metrics=[&quot;primary_count&quot;],</span>
+    <span class="c1">#     meta={&quot;primary_count&quot;: &quot;int&quot;}</span>
+    <span class="c1"># ).compute()</span>
+
+    <span class="k">if</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_geometry</span><span class="p">:</span>
+        <span class="n">gdf</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">mq</span><span class="o">.</span><span class="n">geometry_filepath</span><span class="p">)</span>
+        <span class="n">merged_gdf</span> <span class="o">=</span> <span class="n">gdf</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+            <span class="n">calculated_metrics</span><span class="p">,</span>
+            <span class="n">left_on</span><span class="o">=</span><span class="s2">&quot;id&quot;</span><span class="p">,</span>
+            <span class="n">right_on</span><span class="o">=</span><span class="s2">&quot;primary_location_id&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">merged_gdf</span>
+
+    <span class="k">return</span> <span class="n">calculated_metrics</span></div>
+
+
+
+<div class="viewcode-block" id="calculate_group_metrics">
+<a class="viewcode-back" href="../../../autoapi/teehr/queries/pandas/index.html#teehr.queries.pandas.calculate_group_metrics">[docs]</a>
+<span class="k">def</span> <span class="nf">calculate_group_metrics</span><span class="p">(</span>
+        <span class="n">group</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">include_metrics</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="nb">str</span><span class="p">]</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate metrics on a pd.DataFrame.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    group : pd.DataFrame</span>
+<span class="sd">        Represents a population group to calculate the metrics on.</span>
+<span class="sd">    include_metrics : List[str]</span>
+<span class="sd">        List of metrics (see below) for allowable list, or &quot;all&quot; to</span>
+<span class="sd">        return all.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pd.DataFrame</span>
+<span class="sd">        A DataFrame of calculated metrics.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This approach to calculating metrics is not as fast as</span>
+<span class="sd">    `teehr.queries.duckdb.get_metrics()` but is easier to update</span>
+<span class="sd">    and contains more metrics.  It also serves as the reference</span>
+<span class="sd">    implementation for the duckdb queries.</span>
+
+<span class="sd">    Basic Metrics:</span>
+
+<span class="sd">    * primary_count</span>
+<span class="sd">    * secondary_count</span>
+<span class="sd">    * primary_minimum</span>
+<span class="sd">    * secondary_minimum</span>
+<span class="sd">    * primary_maximum</span>
+<span class="sd">    * secondary_maximum</span>
+<span class="sd">    * primary_average</span>
+<span class="sd">    * secondary_average</span>
+<span class="sd">    * primary_sum</span>
+<span class="sd">    * secondary_sum</span>
+<span class="sd">    * primary_variance</span>
+<span class="sd">    * secondary_variance</span>
+<span class="sd">    * max_value_delta</span>
+
+<span class="sd">      * max(secondary_value) - max(primary_value)</span>
+<span class="sd">    * bias</span>
+
+<span class="sd">      * sum(primary_value - secondary_value)/count(*)</span>
+
+<span class="sd">    HydroTools Metrics:</span>
+
+<span class="sd">    * nash_sutcliffe_efficiency</span>
+<span class="sd">    * kling_gupta_efficiency</span>
+<span class="sd">    * coefficient_of_extrapolation</span>
+<span class="sd">    * coefficient_of_persistence</span>
+<span class="sd">    * mean_error</span>
+<span class="sd">    * mean_squared_error</span>
+<span class="sd">    * root_mean_squared_error</span>
+
+<span class="sd">    Time-based Metrics:</span>
+<span class="sd">    * primary_max_value_time</span>
+<span class="sd">    * secondary_max_value_time</span>
+<span class="sd">    * max_value_timedelta</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Simple Metrics</span>
+    <span class="k">if</span> <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="ow">or</span> <span class="s2">&quot;primary_count&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;primary_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="ow">or</span> <span class="s2">&quot;secondary_count&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;secondary_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="s2">&quot;secondary_value&quot;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="ow">or</span> <span class="s2">&quot;primary_minimum&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;primary_minimum&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="ow">or</span> <span class="s2">&quot;secondary_minimum&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;secondary_minimum&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="s2">&quot;secondary_value&quot;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="ow">or</span> <span class="s2">&quot;primary_maximum&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;primary_maximum&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="ow">or</span> <span class="s2">&quot;secondary_maximum&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;secondary_maximum&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="s2">&quot;secondary_value&quot;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="ow">or</span> <span class="s2">&quot;primary_average&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;primary_average&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="ow">or</span> <span class="s2">&quot;secondary_average&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;secondary_average&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="s2">&quot;secondary_value&quot;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="ow">or</span> <span class="s2">&quot;primary_sum&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;primary_sum&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="ow">or</span> <span class="s2">&quot;secondary_sum&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;secondary_sum&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="s2">&quot;secondary_value&quot;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="ow">or</span> <span class="s2">&quot;primary_variance&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;primary_variance&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="ow">or</span> <span class="s2">&quot;secondary_variance&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;secondary_variance&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="s2">&quot;secondary_value&quot;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="ow">or</span> <span class="s2">&quot;bias&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span><span class="p">:</span>
+        <span class="n">group</span><span class="p">[</span><span class="s2">&quot;difference&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">group</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">]</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;bias&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="s2">&quot;difference&quot;</span><span class="p">])</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="ow">or</span> <span class="s2">&quot;max_value_delta&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;max_value_delta&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="s2">&quot;secondary_value&quot;</span><span class="p">])</span>
+            <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">])</span>
+        <span class="p">)</span>
+
+    <span class="c1"># HydroTools Forecast Metrics</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span>
+        <span class="ow">or</span> <span class="s2">&quot;nash_sutcliffe_efficiency&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span>
+    <span class="p">):</span>
+        <span class="n">nse</span> <span class="o">=</span> <span class="n">hm</span><span class="o">.</span><span class="n">nash_sutcliffe_efficiency</span><span class="p">(</span>
+            <span class="n">group</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">],</span>
+            <span class="n">group</span><span class="p">[</span><span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;nash_sutcliffe_efficiency&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nse</span>
+
+    <span class="k">if</span> <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="ow">or</span> <span class="s2">&quot;kling_gupta_efficiency&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span><span class="p">:</span>
+        <span class="n">kge</span> <span class="o">=</span> <span class="n">hm</span><span class="o">.</span><span class="n">kling_gupta_efficiency</span><span class="p">(</span>
+            <span class="n">group</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">],</span>
+            <span class="n">group</span><span class="p">[</span><span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;kling_gupta_efficiency&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kge</span>
+
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span>
+        <span class="ow">or</span> <span class="s2">&quot;coefficient_of_extrapolation&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span>
+    <span class="p">):</span>
+        <span class="n">coe</span> <span class="o">=</span> <span class="n">hm</span><span class="o">.</span><span class="n">coefficient_of_extrapolation</span><span class="p">(</span>
+            <span class="n">group</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">],</span>
+            <span class="n">group</span><span class="p">[</span><span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;coefficient_of_extrapolation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">coe</span>
+
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span>
+        <span class="ow">or</span> <span class="s2">&quot;coefficient_of_persistence&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span>
+    <span class="p">):</span>
+        <span class="n">cop</span> <span class="o">=</span> <span class="n">hm</span><span class="o">.</span><span class="n">coefficient_of_persistence</span><span class="p">(</span>
+            <span class="n">group</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">],</span>
+            <span class="n">group</span><span class="p">[</span><span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;coefficient_of_persistence&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cop</span>
+
+    <span class="k">if</span> <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="ow">or</span> <span class="s2">&quot;mean_error&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span><span class="p">:</span>
+        <span class="n">me</span> <span class="o">=</span> <span class="n">hm</span><span class="o">.</span><span class="n">mean_error</span><span class="p">(</span>
+            <span class="n">group</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">],</span>
+            <span class="n">group</span><span class="p">[</span><span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;mean_error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">me</span>
+
+    <span class="k">if</span> <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="ow">or</span> <span class="s2">&quot;mean_squared_error&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span><span class="p">:</span>
+        <span class="n">mse</span> <span class="o">=</span> <span class="n">hm</span><span class="o">.</span><span class="n">mean_squared_error</span><span class="p">(</span>
+            <span class="n">group</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">],</span>
+            <span class="n">group</span><span class="p">[</span><span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;mean_squared_error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mse</span>
+
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span>
+        <span class="ow">or</span> <span class="s2">&quot;root_mean_squared_error&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span>
+    <span class="p">):</span>
+        <span class="n">rmse</span> <span class="o">=</span> <span class="n">hm</span><span class="o">.</span><span class="n">root_mean_squared_error</span><span class="p">(</span>
+            <span class="n">group</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">],</span>
+            <span class="n">group</span><span class="p">[</span><span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;root_mean_squared_error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rmse</span>
+
+    <span class="c1"># Ensure the first occurrence of a repeated value gets selected</span>
+    <span class="n">group</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;reference_time&quot;</span><span class="p">,</span> <span class="s2">&quot;value_time&quot;</span><span class="p">])</span>
+
+    <span class="c1"># Time-based Metrics</span>
+    <span class="n">time_indexed_df</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">&quot;value_time&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span>
+        <span class="ow">or</span> <span class="s2">&quot;primary_max_value_time&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span>
+    <span class="p">):</span>
+        <span class="n">pmvt</span> <span class="o">=</span> <span class="n">time_indexed_df</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">idxmax</span><span class="p">()</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;primary_max_value_time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pmvt</span>
+
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span>
+        <span class="ow">or</span> <span class="s2">&quot;secondary_max_value_time&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span>
+    <span class="p">):</span>
+        <span class="n">smvt</span> <span class="o">=</span> <span class="n">time_indexed_df</span><span class="p">[</span><span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">idxmax</span><span class="p">()</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;secondary_max_value_time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">smvt</span>
+
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span>
+        <span class="ow">or</span> <span class="s2">&quot;max_value_timedelta&quot;</span> <span class="ow">in</span> <span class="n">include_metrics</span>
+    <span class="p">):</span>
+        <span class="n">pmvt</span> <span class="o">=</span> <span class="n">time_indexed_df</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">idxmax</span><span class="p">()</span>
+        <span class="n">smvt</span> <span class="o">=</span> <span class="n">time_indexed_df</span><span class="p">[</span><span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">idxmax</span><span class="p">()</span>
+        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;max_value_timedelta&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">smvt</span> <span class="o">-</span> <span class="n">pmvt</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+
+
+
+
+
+                <footer class="prev-next-footer">
+
+<div class="prev-next-area">
+</div>
+                </footer>
+
+            </div>
+
+
+
+                <div class="bd-sidebar-secondary bd-toc"></div>
+
+
+          </div>
+          <footer class="bd-footer-content">
+
+          </footer>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+
+    <div class="footer-items__start">
+
+        <div class="footer-item">
+
+  <p class="copyright">
+
+      © Copyright 2024 RTI International.
+      <br/>
+
+  </p>
+</div>
+
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    <br/>
+  </p>
+</div>
+
+    </div>
+
+
+
+    <div class="footer-items__end">
+
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.2.
+</p></div>
+
+    </div>
+
+</div>
+
+  </footer>
+  </body>
+</html>

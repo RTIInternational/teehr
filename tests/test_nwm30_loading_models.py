@@ -1,8 +1,10 @@
+"""Test NWM30 configuration models."""
 from teehr.models.loading.nwm30_grid import GridConfigurationModel
 from teehr.models.loading.nwm30_point import PointConfigurationModel
 
 
 def test_point_model():
+    """Test point model."""
     configuration = "short_range_alaska"
     output_type = "channel_rt"
     variable_name = "streamflow"
@@ -29,6 +31,7 @@ def test_point_model():
 
 
 def test_grid_model():
+    """Test grid model."""
     configuration = "forcing_medium_range_blend_alaska"
     output_type = "forcing"
     variable_name = "RAINRATE"

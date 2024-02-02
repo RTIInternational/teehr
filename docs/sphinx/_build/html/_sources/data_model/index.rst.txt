@@ -1,0 +1,8 @@
+.. _data_model:
+
+==========
+Data Model
+==========
+
+.. image:: ../../images/data_model.png
+  :width: 400

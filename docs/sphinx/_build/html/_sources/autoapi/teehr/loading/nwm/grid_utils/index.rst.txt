@@ -1,0 +1,98 @@
+:py:mod:`teehr.loading.nwm.grid_utils`
+======================================
+
+.. py:module:: teehr.loading.nwm.grid_utils
+
+.. autoapi-nested-parse::
+
+   Module defining shared functions for processing NWM grid data.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.loading.nwm.grid_utils.compute_zonal_mean
+   teehr.loading.nwm.grid_utils.process_single_file
+   teehr.loading.nwm.grid_utils.fetch_and_format_nwm_grids
+
+
+
+.. py:function:: compute_zonal_mean(da: xarray.DataArray, weights_filepath: str) -> pandas.DataFrame
+
+
+   Compute zonal mean of area-weighted pixels for given
+   zones and weights.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: process_single_file(row: Tuple, configuration: str, variable_name: str, weights_filepath: str, ignore_missing_file: bool, units_format_dict: Dict) -> pandas.DataFrame
+
+
+   Fetch a single json reference file and format     to a dataframe using the TEEHR data model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: fetch_and_format_nwm_grids(json_paths: List[str], configuration: str, variable_name: str, output_parquet_dir: str, zonal_weights_filepath: str, ignore_missing_file: bool, units_format_dict: Dict, overwrite_output: bool)
+
+
+   Read in the single reference jsons, subset the NWM data based on
+   provided IDs and format and save the data as a parquet files.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!

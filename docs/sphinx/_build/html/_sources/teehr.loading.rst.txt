@@ -1,0 +1,20 @@
+teehr.loading package
+=====================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   teehr.loading.nextgen
+   teehr.loading.nwm
+   teehr.loading.usgs
+
+Module contents
+---------------
+
+.. automodule:: teehr.loading
+   :members:
+   :undoc-members:
+   :show-inheritance:

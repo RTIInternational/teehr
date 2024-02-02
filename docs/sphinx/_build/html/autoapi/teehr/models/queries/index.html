@@ -1,0 +1,1368 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>teehr.models.queries &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.2 documentation</title>
+
+
+
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../../../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+
+  <link href="../../../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/teehr.css?v=d714f16e" />
+
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../../../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../../../../_static/documentation_options.js?v=71d9d8e6"></script>
+    <script src="../../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/teehr/models/queries/index';</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="teehr.models.queries_database" href="../queries_database/index.html" />
+    <link rel="prev" title="teehr.models.loading.utils" href="../loading/utils/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+
+
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+
+
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+
+  <div id="pst-scroll-pixel-helper"></div>
+
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+
+
+  <div class="col-lg-3 navbar-header-items__start">
+
+      <div class="navbar-item">
+
+
+
+<a class="navbar-brand logo" href="../../../../index.html">
+
+
+
+
+
+
+
+
+
+
+    <img src="../../../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.2 documentation - Home"/>
+    <script>document.write(`<img src="../../../../_static/teehr.png" class="logo__image only-dark" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.2 documentation - Home"/>`);</script>
+
+
+</a></div>
+
+  </div>
+
+  <div class="col-lg-9 navbar-header-items">
+
+    <div class="me-auto navbar-header-items__center">
+
+        <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../../getting_started/index.html">
+                        Getting started
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../../user_guide/index.html">
+                        User Guide
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../../development/index.html">
+                        Developer Guide
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../../changelog/index.html">
+                        Release Notes
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="../../../index.html">
+                        API Reference
+                      </a>
+                    </li>
+
+  </ul>
+</nav></div>
+
+    </div>
+
+
+    <div class="navbar-header-items__end">
+
+        <div class="navbar-item navbar-persistent--container">
+
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+
+
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+
+        <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+
+    </div>
+
+  </div>
+
+
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+
+
+
+    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+
+</div>
+
+    </header>
+
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+
+
+
+      <div class="bd-sidebar-primary bd-sidebar">
+
+
+
+  <div class="sidebar-header-items sidebar-primary__section">
+
+
+      <div class="sidebar-header-items__center">
+
+          <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../../getting_started/index.html">
+                        Getting started
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../../user_guide/index.html">
+                        User Guide
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../../development/index.html">
+                        Developer Guide
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../../changelog/index.html">
+                        Release Notes
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="../../../index.html">
+                        API Reference
+                      </a>
+                    </li>
+
+  </ul>
+</nav></div>
+
+      </div>
+
+
+
+      <div class="sidebar-header-items__end">
+
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+
+          <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+
+      </div>
+
+  </div>
+
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr</span></code></a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.api</span></code></a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/main/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.api.main</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../database/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.database</span></code></a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../database/teehr_dataset/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.database.teehr_dataset</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../loading/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading</span></code></a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../loading/nextgen/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nextgen</span></code></a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nextgen/ngen/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nextgen.ngen</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../loading/nwm/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm</span></code></a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/const/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.const</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/grid_utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.grid_utils</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/nwm_grids/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.nwm_grids</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/nwm_points/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.nwm_points</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/point_utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.point_utils</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/retrospective/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.retrospective</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.utils</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../loading/usgs/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.usgs</span></code></a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/usgs/usgs/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.usgs.usgs</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models</span></code></a><input checked="" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="../loading/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models.loading</span></code></a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../loading/nwm22_grid/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models.loading.nwm22_grid</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../loading/nwm22_point/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models.loading.nwm22_point</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../loading/nwm30_grid/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models.loading.nwm30_grid</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../loading/nwm30_point/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models.loading.nwm30_point</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../loading/utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models.loading.utils</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models.queries</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../queries_database/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models.queries_database</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../queries/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.queries</span></code></a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../queries/duckdb/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.queries.duckdb</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../queries/duckdb_database/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.queries.duckdb_database</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../queries/pandas/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.queries.pandas</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../queries/utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.queries.utils</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../utilities/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.utilities</span></code></a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../utilities/generate_weights/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.utilities.generate_weights</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</nav></div>
+    </div>
+
+
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+
+      <main id="main-content" class="bd-main">
+
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+
+    <div class="header-article-items__start">
+
+        <div class="header-article-item">
+
+
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">API Reference</a></li>
+
+
+    <li class="breadcrumb-item"><i class="fa-solid fa-ellipsis"></i></li>
+
+
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models</span></code></a></li>
+
+    <li class="breadcrumb-item active" aria-current="page"><code...</li>
+  </ul>
+</nav>
+</div>
+
+    </div>
+
+
+</div>
+</div>
+
+
+
+
+<div id="searchbox"></div>
+                <article class="bd-article">
+
+  <section id="module-teehr.models.queries">
+<span id="teehr-models-queries"></span><h1><a class="reference internal" href="#module-teehr.models.queries" title="teehr.models.queries"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models.queries</span></code></a><a class="headerlink" href="#module-teehr.models.queries" title="Link to this heading">#</a></h1>
+<p>Module for parquet-based query models.</p>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">#</a></h2>
+<section id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h3>
+<table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.models.queries.BaseModel" title="teehr.models.queries.BaseModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code></a></p></td>
+<td><p>Basemodel configuration.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.models.queries.FilterOperatorEnum" title="teehr.models.queries.FilterOperatorEnum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FilterOperatorEnum</span></code></a></p></td>
+<td><p>Filter symbols.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.models.queries.MetricEnum" title="teehr.models.queries.MetricEnum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MetricEnum</span></code></a></p></td>
+<td><p>Available metrics.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.models.queries.JoinedFilterFieldEnum" title="teehr.models.queries.JoinedFilterFieldEnum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">JoinedFilterFieldEnum</span></code></a></p></td>
+<td><p>Joined filter fields.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.models.queries.TimeseriesFilterFieldEnum" title="teehr.models.queries.TimeseriesFilterFieldEnum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TimeseriesFilterFieldEnum</span></code></a></p></td>
+<td><p>Timeseries filter fields.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.models.queries.ChunkByEnum" title="teehr.models.queries.ChunkByEnum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ChunkByEnum</span></code></a></p></td>
+<td><p>Chunk by options.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.models.queries.JoinedFilter" title="teehr.models.queries.JoinedFilter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">JoinedFilter</span></code></a></p></td>
+<td><p>Joined filter model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.models.queries.TimeseriesFilter" title="teehr.models.queries.TimeseriesFilter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TimeseriesFilter</span></code></a></p></td>
+<td><p>Timeseries filter model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MetricQuery</span></code></a></p></td>
+<td><p>Metric query model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.models.queries.JoinedTimeseriesQuery" title="teehr.models.queries.JoinedTimeseriesQuery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery</span></code></a></p></td>
+<td><p>Joined timeseries query model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.models.queries.TimeseriesQuery" title="teehr.models.queries.TimeseriesQuery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TimeseriesQuery</span></code></a></p></td>
+<td><p>Timeseries query model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.models.queries.TimeseriesCharQuery" title="teehr.models.queries.TimeseriesCharQuery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TimeseriesCharQuery</span></code></a></p></td>
+<td><p>Timeseries char query model.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.models.queries.BaseModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">teehr.models.queries.</span></span><span class="sig-name descname"><span class="pre">BaseModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#BaseModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.BaseModel" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">pydantic.BaseModel</span></code></p>
+<p>Basemodel configuration.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.models.queries.BaseModel.ConfigDict">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ConfigDict</span></span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#BaseModel.ConfigDict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.BaseModel.ConfigDict" title="Link to this definition">#</a></dt>
+<dd><p>ConfigDict.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.BaseModel.ConfigDict.arbitrary_types_allowed">
+<span class="sig-name descname"><span class="pre">arbitrary_types_allowed</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#teehr.models.queries.BaseModel.ConfigDict.arbitrary_types_allowed" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.models.queries.FilterOperatorEnum">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">teehr.models.queries.</span></span><span class="sig-name descname"><span class="pre">FilterOperatorEnum</span></span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#FilterOperatorEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.FilterOperatorEnum" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Filter symbols.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.FilterOperatorEnum.eq">
+<span class="sig-name descname"><span class="pre">eq</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'='</span></em><a class="headerlink" href="#teehr.models.queries.FilterOperatorEnum.eq" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.FilterOperatorEnum.gt">
+<span class="sig-name descname"><span class="pre">gt</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'&gt;'</span></em><a class="headerlink" href="#teehr.models.queries.FilterOperatorEnum.gt" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.FilterOperatorEnum.lt">
+<span class="sig-name descname"><span class="pre">lt</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'&lt;'</span></em><a class="headerlink" href="#teehr.models.queries.FilterOperatorEnum.lt" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.FilterOperatorEnum.gte">
+<span class="sig-name descname"><span class="pre">gte</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'&gt;='</span></em><a class="headerlink" href="#teehr.models.queries.FilterOperatorEnum.gte" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.FilterOperatorEnum.lte">
+<span class="sig-name descname"><span class="pre">lte</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'&lt;='</span></em><a class="headerlink" href="#teehr.models.queries.FilterOperatorEnum.lte" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.FilterOperatorEnum.islike">
+<span class="sig-name descname"><span class="pre">islike</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'like'</span></em><a class="headerlink" href="#teehr.models.queries.FilterOperatorEnum.islike" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.FilterOperatorEnum.isin">
+<span class="sig-name descname"><span class="pre">isin</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'in'</span></em><a class="headerlink" href="#teehr.models.queries.FilterOperatorEnum.isin" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">teehr.models.queries.</span></span><span class="sig-name descname"><span class="pre">MetricEnum</span></span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#MetricEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.MetricEnum" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Available metrics.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.primary_count">
+<span class="sig-name descname"><span class="pre">primary_count</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'primary_count'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.primary_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.secondary_count">
+<span class="sig-name descname"><span class="pre">secondary_count</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'secondary_count'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.secondary_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.primary_minimum">
+<span class="sig-name descname"><span class="pre">primary_minimum</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'primary_minimum'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.primary_minimum" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.secondary_minimum">
+<span class="sig-name descname"><span class="pre">secondary_minimum</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'secondary_minimum'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.secondary_minimum" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.primary_maximum">
+<span class="sig-name descname"><span class="pre">primary_maximum</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'primary_maximum'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.primary_maximum" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.secondary_maximum">
+<span class="sig-name descname"><span class="pre">secondary_maximum</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'secondary_maximum'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.secondary_maximum" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.primary_average">
+<span class="sig-name descname"><span class="pre">primary_average</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'primary_average'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.primary_average" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.secondary_average">
+<span class="sig-name descname"><span class="pre">secondary_average</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'secondary_average'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.secondary_average" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.primary_sum">
+<span class="sig-name descname"><span class="pre">primary_sum</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'primary_sum'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.primary_sum" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.secondary_sum">
+<span class="sig-name descname"><span class="pre">secondary_sum</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'secondary_sum'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.secondary_sum" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.primary_variance">
+<span class="sig-name descname"><span class="pre">primary_variance</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'primary_variance'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.primary_variance" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.secondary_variance">
+<span class="sig-name descname"><span class="pre">secondary_variance</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'secondary_variance'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.secondary_variance" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.max_value_delta">
+<span class="sig-name descname"><span class="pre">max_value_delta</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'max_value_delta'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.max_value_delta" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.bias">
+<span class="sig-name descname"><span class="pre">bias</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'bias'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.bias" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.nash_sutcliffe_efficiency">
+<span class="sig-name descname"><span class="pre">nash_sutcliffe_efficiency</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'nash_sutcliffe_efficiency'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.nash_sutcliffe_efficiency" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.kling_gupta_efficiency">
+<span class="sig-name descname"><span class="pre">kling_gupta_efficiency</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'kling_gupta_efficiency'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.kling_gupta_efficiency" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.mean_error">
+<span class="sig-name descname"><span class="pre">mean_error</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'mean_error'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.mean_error" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.mean_squared_error">
+<span class="sig-name descname"><span class="pre">mean_squared_error</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'mean_squared_error'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.mean_squared_error" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.root_mean_squared_error">
+<span class="sig-name descname"><span class="pre">root_mean_squared_error</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'root_mean_squared_error'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.root_mean_squared_error" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.primary_max_value_time">
+<span class="sig-name descname"><span class="pre">primary_max_value_time</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'primary_max_value_time'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.primary_max_value_time" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.secondary_max_value_time">
+<span class="sig-name descname"><span class="pre">secondary_max_value_time</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'secondary_max_value_time'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.secondary_max_value_time" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricEnum.max_value_timedelta">
+<span class="sig-name descname"><span class="pre">max_value_timedelta</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'max_value_timedelta'</span></em><a class="headerlink" href="#teehr.models.queries.MetricEnum.max_value_timedelta" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedFilterFieldEnum">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">teehr.models.queries.</span></span><span class="sig-name descname"><span class="pre">JoinedFilterFieldEnum</span></span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#JoinedFilterFieldEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.JoinedFilterFieldEnum" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Joined filter fields.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedFilterFieldEnum.value_time">
+<span class="sig-name descname"><span class="pre">value_time</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'value_time'</span></em><a class="headerlink" href="#teehr.models.queries.JoinedFilterFieldEnum.value_time" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedFilterFieldEnum.reference_time">
+<span class="sig-name descname"><span class="pre">reference_time</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'reference_time'</span></em><a class="headerlink" href="#teehr.models.queries.JoinedFilterFieldEnum.reference_time" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedFilterFieldEnum.secondary_location_id">
+<span class="sig-name descname"><span class="pre">secondary_location_id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'secondary_location_id'</span></em><a class="headerlink" href="#teehr.models.queries.JoinedFilterFieldEnum.secondary_location_id" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedFilterFieldEnum.secondary_value">
+<span class="sig-name descname"><span class="pre">secondary_value</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'secondary_value'</span></em><a class="headerlink" href="#teehr.models.queries.JoinedFilterFieldEnum.secondary_value" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedFilterFieldEnum.configuration">
+<span class="sig-name descname"><span class="pre">configuration</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'configuration'</span></em><a class="headerlink" href="#teehr.models.queries.JoinedFilterFieldEnum.configuration" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedFilterFieldEnum.measurement_unit">
+<span class="sig-name descname"><span class="pre">measurement_unit</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'measurement_unit'</span></em><a class="headerlink" href="#teehr.models.queries.JoinedFilterFieldEnum.measurement_unit" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedFilterFieldEnum.variable_name">
+<span class="sig-name descname"><span class="pre">variable_name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'variable_name'</span></em><a class="headerlink" href="#teehr.models.queries.JoinedFilterFieldEnum.variable_name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedFilterFieldEnum.primary_value">
+<span class="sig-name descname"><span class="pre">primary_value</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'primary_value'</span></em><a class="headerlink" href="#teehr.models.queries.JoinedFilterFieldEnum.primary_value" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedFilterFieldEnum.primary_location_id">
+<span class="sig-name descname"><span class="pre">primary_location_id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'primary_location_id'</span></em><a class="headerlink" href="#teehr.models.queries.JoinedFilterFieldEnum.primary_location_id" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedFilterFieldEnum.lead_time">
+<span class="sig-name descname"><span class="pre">lead_time</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'lead_time'</span></em><a class="headerlink" href="#teehr.models.queries.JoinedFilterFieldEnum.lead_time" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedFilterFieldEnum.geometry">
+<span class="sig-name descname"><span class="pre">geometry</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'geometry'</span></em><a class="headerlink" href="#teehr.models.queries.JoinedFilterFieldEnum.geometry" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesFilterFieldEnum">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">teehr.models.queries.</span></span><span class="sig-name descname"><span class="pre">TimeseriesFilterFieldEnum</span></span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#TimeseriesFilterFieldEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.TimeseriesFilterFieldEnum" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Timeseries filter fields.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesFilterFieldEnum.value_time">
+<span class="sig-name descname"><span class="pre">value_time</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'value_time'</span></em><a class="headerlink" href="#teehr.models.queries.TimeseriesFilterFieldEnum.value_time" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesFilterFieldEnum.reference_time">
+<span class="sig-name descname"><span class="pre">reference_time</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'reference_time'</span></em><a class="headerlink" href="#teehr.models.queries.TimeseriesFilterFieldEnum.reference_time" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesFilterFieldEnum.location_id">
+<span class="sig-name descname"><span class="pre">location_id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'location_id'</span></em><a class="headerlink" href="#teehr.models.queries.TimeseriesFilterFieldEnum.location_id" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesFilterFieldEnum.value">
+<span class="sig-name descname"><span class="pre">value</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'value'</span></em><a class="headerlink" href="#teehr.models.queries.TimeseriesFilterFieldEnum.value" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesFilterFieldEnum.configuration">
+<span class="sig-name descname"><span class="pre">configuration</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'configuration'</span></em><a class="headerlink" href="#teehr.models.queries.TimeseriesFilterFieldEnum.configuration" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesFilterFieldEnum.measurement_unit">
+<span class="sig-name descname"><span class="pre">measurement_unit</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'measurement_unit'</span></em><a class="headerlink" href="#teehr.models.queries.TimeseriesFilterFieldEnum.measurement_unit" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesFilterFieldEnum.variable_name">
+<span class="sig-name descname"><span class="pre">variable_name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'variable_name'</span></em><a class="headerlink" href="#teehr.models.queries.TimeseriesFilterFieldEnum.variable_name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesFilterFieldEnum.lead_time">
+<span class="sig-name descname"><span class="pre">lead_time</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'lead_time'</span></em><a class="headerlink" href="#teehr.models.queries.TimeseriesFilterFieldEnum.lead_time" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesFilterFieldEnum.geometry">
+<span class="sig-name descname"><span class="pre">geometry</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'geometry'</span></em><a class="headerlink" href="#teehr.models.queries.TimeseriesFilterFieldEnum.geometry" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.models.queries.ChunkByEnum">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">teehr.models.queries.</span></span><span class="sig-name descname"><span class="pre">ChunkByEnum</span></span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#ChunkByEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.ChunkByEnum" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Chunk by options.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.ChunkByEnum.day">
+<span class="sig-name descname"><span class="pre">day</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'day'</span></em><a class="headerlink" href="#teehr.models.queries.ChunkByEnum.day" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.ChunkByEnum.site">
+<span class="sig-name descname"><span class="pre">site</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'site'</span></em><a class="headerlink" href="#teehr.models.queries.ChunkByEnum.site" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedFilter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">teehr.models.queries.</span></span><span class="sig-name descname"><span class="pre">JoinedFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#JoinedFilter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.JoinedFilter" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#teehr.models.queries.BaseModel" title="teehr.models.queries.BaseModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code></a></p>
+<p>Joined filter model.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedFilter.column">
+<span class="sig-name descname"><span class="pre">column</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#teehr.models.queries.JoinedFilterFieldEnum" title="teehr.models.queries.JoinedFilterFieldEnum"><span class="pre">JoinedFilterFieldEnum</span></a></em><a class="headerlink" href="#teehr.models.queries.JoinedFilter.column" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedFilter.operator">
+<span class="sig-name descname"><span class="pre">operator</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#teehr.models.queries.FilterOperatorEnum" title="teehr.models.queries.FilterOperatorEnum"><span class="pre">FilterOperatorEnum</span></a></em><a class="headerlink" href="#teehr.models.queries.JoinedFilter.operator" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedFilter.value">
+<span class="sig-name descname"><span class="pre">value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime.datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime.datetime</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#teehr.models.queries.JoinedFilter.value" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedFilter.is_iterable_not_str">
+<span class="sig-name descname"><span class="pre">is_iterable_not_str</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#JoinedFilter.is_iterable_not_str"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.JoinedFilter.is_iterable_not_str" title="Link to this definition">#</a></dt>
+<dd><p>Check if is type Iterable and not str.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedFilter.in_operator_must_have_iterable">
+<span class="sig-name descname"><span class="pre">in_operator_must_have_iterable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pydantic.ValidationInfo</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#JoinedFilter.in_operator_must_have_iterable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.JoinedFilter.in_operator_must_have_iterable" title="Link to this definition">#</a></dt>
+<dd><p>Ensure that an ‘in’ operator has an iterable type.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesFilter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">teehr.models.queries.</span></span><span class="sig-name descname"><span class="pre">TimeseriesFilter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#TimeseriesFilter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.TimeseriesFilter" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#teehr.models.queries.BaseModel" title="teehr.models.queries.BaseModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code></a></p>
+<p>Timeseries filter model.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesFilter.column">
+<span class="sig-name descname"><span class="pre">column</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#teehr.models.queries.TimeseriesFilterFieldEnum" title="teehr.models.queries.TimeseriesFilterFieldEnum"><span class="pre">TimeseriesFilterFieldEnum</span></a></em><a class="headerlink" href="#teehr.models.queries.TimeseriesFilter.column" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesFilter.operator">
+<span class="sig-name descname"><span class="pre">operator</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#teehr.models.queries.FilterOperatorEnum" title="teehr.models.queries.FilterOperatorEnum"><span class="pre">FilterOperatorEnum</span></a></em><a class="headerlink" href="#teehr.models.queries.TimeseriesFilter.operator" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesFilter.value">
+<span class="sig-name descname"><span class="pre">value</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime.datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime.datetime</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#teehr.models.queries.TimeseriesFilter.value" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesFilter.is_iterable_not_str">
+<span class="sig-name descname"><span class="pre">is_iterable_not_str</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#TimeseriesFilter.is_iterable_not_str"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.TimeseriesFilter.is_iterable_not_str" title="Link to this definition">#</a></dt>
+<dd><p>Check if is type Iterable and not str.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesFilter.in_operator_must_have_iterable">
+<span class="sig-name descname"><span class="pre">in_operator_must_have_iterable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pydantic.ValidationInfo</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#TimeseriesFilter.in_operator_must_have_iterable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.TimeseriesFilter.in_operator_must_have_iterable" title="Link to this definition">#</a></dt>
+<dd><p>Ensure that an ‘in’ operator has an iterable type.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricQuery">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">teehr.models.queries.</span></span><span class="sig-name descname"><span class="pre">MetricQuery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#MetricQuery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.MetricQuery" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#teehr.models.queries.BaseModel" title="teehr.models.queries.BaseModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code></a></p>
+<p>Metric query model.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricQuery.primary_filepath">
+<span class="sig-name descname"><span class="pre">primary_filepath</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span></em><a class="headerlink" href="#teehr.models.queries.MetricQuery.primary_filepath" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricQuery.secondary_filepath">
+<span class="sig-name descname"><span class="pre">secondary_filepath</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span></em><a class="headerlink" href="#teehr.models.queries.MetricQuery.secondary_filepath" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricQuery.crosswalk_filepath">
+<span class="sig-name descname"><span class="pre">crosswalk_filepath</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span></em><a class="headerlink" href="#teehr.models.queries.MetricQuery.crosswalk_filepath" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricQuery.group_by">
+<span class="sig-name descname"><span class="pre">group_by</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#teehr.models.queries.JoinedFilterFieldEnum" title="teehr.models.queries.JoinedFilterFieldEnum"><span class="pre">JoinedFilterFieldEnum</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#teehr.models.queries.MetricQuery.group_by" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricQuery.order_by">
+<span class="sig-name descname"><span class="pre">order_by</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#teehr.models.queries.JoinedFilterFieldEnum" title="teehr.models.queries.JoinedFilterFieldEnum"><span class="pre">JoinedFilterFieldEnum</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#teehr.models.queries.MetricQuery.order_by" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricQuery.include_metrics">
+<span class="sig-name descname"><span class="pre">include_metrics</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#teehr.models.queries.MetricEnum" title="teehr.models.queries.MetricEnum"><span class="pre">MetricEnum</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#teehr.models.queries.MetricEnum" title="teehr.models.queries.MetricEnum"><span class="pre">MetricEnum</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#teehr.models.queries.MetricQuery.include_metrics" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricQuery.filters">
+<span class="sig-name descname"><span class="pre">filters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#teehr.models.queries.JoinedFilter" title="teehr.models.queries.JoinedFilter"><span class="pre">JoinedFilter</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#teehr.models.queries.MetricQuery.filters" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricQuery.return_query">
+<span class="sig-name descname"><span class="pre">return_query</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#teehr.models.queries.MetricQuery.return_query" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricQuery.geometry_filepath">
+<span class="sig-name descname"><span class="pre">geometry_filepath</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#teehr.models.queries.MetricQuery.geometry_filepath" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricQuery.include_geometry">
+<span class="sig-name descname"><span class="pre">include_geometry</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#teehr.models.queries.MetricQuery.include_geometry" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricQuery.remove_duplicates">
+<span class="sig-name descname"><span class="pre">remove_duplicates</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#teehr.models.queries.MetricQuery.remove_duplicates" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricQuery.include_geometry_must_group_by_primary_location_id">
+<span class="sig-name descname"><span class="pre">include_geometry_must_group_by_primary_location_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pydantic.ValidationInfo</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#MetricQuery.include_geometry_must_group_by_primary_location_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.MetricQuery.include_geometry_must_group_by_primary_location_id" title="Link to this definition">#</a></dt>
+<dd><p>Include_geometry must groupby primary_location_id.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.models.queries.MetricQuery.filter_must_be_list">
+<span class="sig-name descname"><span class="pre">filter_must_be_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#MetricQuery.filter_must_be_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.MetricQuery.filter_must_be_list" title="Link to this definition">#</a></dt>
+<dd><p>Filter must be a list.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedTimeseriesQuery">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">teehr.models.queries.</span></span><span class="sig-name descname"><span class="pre">JoinedTimeseriesQuery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#JoinedTimeseriesQuery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.JoinedTimeseriesQuery" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#teehr.models.queries.BaseModel" title="teehr.models.queries.BaseModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code></a></p>
+<p>Joined timeseries query model.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedTimeseriesQuery.primary_filepath">
+<span class="sig-name descname"><span class="pre">primary_filepath</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span></em><a class="headerlink" href="#teehr.models.queries.JoinedTimeseriesQuery.primary_filepath" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedTimeseriesQuery.secondary_filepath">
+<span class="sig-name descname"><span class="pre">secondary_filepath</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span></em><a class="headerlink" href="#teehr.models.queries.JoinedTimeseriesQuery.secondary_filepath" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedTimeseriesQuery.crosswalk_filepath">
+<span class="sig-name descname"><span class="pre">crosswalk_filepath</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span></em><a class="headerlink" href="#teehr.models.queries.JoinedTimeseriesQuery.crosswalk_filepath" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedTimeseriesQuery.order_by">
+<span class="sig-name descname"><span class="pre">order_by</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#teehr.models.queries.JoinedFilterFieldEnum" title="teehr.models.queries.JoinedFilterFieldEnum"><span class="pre">JoinedFilterFieldEnum</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#teehr.models.queries.JoinedTimeseriesQuery.order_by" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedTimeseriesQuery.filters">
+<span class="sig-name descname"><span class="pre">filters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#teehr.models.queries.JoinedFilter" title="teehr.models.queries.JoinedFilter"><span class="pre">JoinedFilter</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#teehr.models.queries.JoinedTimeseriesQuery.filters" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedTimeseriesQuery.return_query">
+<span class="sig-name descname"><span class="pre">return_query</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#teehr.models.queries.JoinedTimeseriesQuery.return_query" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedTimeseriesQuery.geometry_filepath">
+<span class="sig-name descname"><span class="pre">geometry_filepath</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#teehr.models.queries.JoinedTimeseriesQuery.geometry_filepath" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedTimeseriesQuery.include_geometry">
+<span class="sig-name descname"><span class="pre">include_geometry</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#teehr.models.queries.JoinedTimeseriesQuery.include_geometry" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedTimeseriesQuery.remove_duplicates">
+<span class="sig-name descname"><span class="pre">remove_duplicates</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#teehr.models.queries.JoinedTimeseriesQuery.remove_duplicates" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedTimeseriesQuery.include_geometry_must_group_by_primary_location_id">
+<span class="sig-name descname"><span class="pre">include_geometry_must_group_by_primary_location_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pydantic.ValidationInfo</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#JoinedTimeseriesQuery.include_geometry_must_group_by_primary_location_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.JoinedTimeseriesQuery.include_geometry_must_group_by_primary_location_id" title="Link to this definition">#</a></dt>
+<dd><p>Include_geometry must groupby primary_location_id.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.models.queries.JoinedTimeseriesQuery.filter_must_be_list">
+<span class="sig-name descname"><span class="pre">filter_must_be_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#JoinedTimeseriesQuery.filter_must_be_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.JoinedTimeseriesQuery.filter_must_be_list" title="Link to this definition">#</a></dt>
+<dd><p>Filter must be a list.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesQuery">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">teehr.models.queries.</span></span><span class="sig-name descname"><span class="pre">TimeseriesQuery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#TimeseriesQuery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.TimeseriesQuery" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#teehr.models.queries.BaseModel" title="teehr.models.queries.BaseModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code></a></p>
+<p>Timeseries query model.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesQuery.timeseries_filepath">
+<span class="sig-name descname"><span class="pre">timeseries_filepath</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span></em><a class="headerlink" href="#teehr.models.queries.TimeseriesQuery.timeseries_filepath" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesQuery.order_by">
+<span class="sig-name descname"><span class="pre">order_by</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#teehr.models.queries.TimeseriesFilterFieldEnum" title="teehr.models.queries.TimeseriesFilterFieldEnum"><span class="pre">TimeseriesFilterFieldEnum</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#teehr.models.queries.TimeseriesQuery.order_by" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesQuery.filters">
+<span class="sig-name descname"><span class="pre">filters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#teehr.models.queries.TimeseriesFilter" title="teehr.models.queries.TimeseriesFilter"><span class="pre">TimeseriesFilter</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#teehr.models.queries.TimeseriesQuery.filters" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesQuery.return_query">
+<span class="sig-name descname"><span class="pre">return_query</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#teehr.models.queries.TimeseriesQuery.return_query" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesQuery.filter_must_be_list">
+<span class="sig-name descname"><span class="pre">filter_must_be_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#TimeseriesQuery.filter_must_be_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.TimeseriesQuery.filter_must_be_list" title="Link to this definition">#</a></dt>
+<dd><p>Filter must be a list.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesCharQuery">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">teehr.models.queries.</span></span><span class="sig-name descname"><span class="pre">TimeseriesCharQuery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#TimeseriesCharQuery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.TimeseriesCharQuery" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#teehr.models.queries.BaseModel" title="teehr.models.queries.BaseModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code></a></p>
+<p>Timeseries char query model.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesCharQuery.timeseries_filepath">
+<span class="sig-name descname"><span class="pre">timeseries_filepath</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span></em><a class="headerlink" href="#teehr.models.queries.TimeseriesCharQuery.timeseries_filepath" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesCharQuery.order_by">
+<span class="sig-name descname"><span class="pre">order_by</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#teehr.models.queries.TimeseriesFilterFieldEnum" title="teehr.models.queries.TimeseriesFilterFieldEnum"><span class="pre">TimeseriesFilterFieldEnum</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#teehr.models.queries.TimeseriesCharQuery.order_by" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesCharQuery.group_by">
+<span class="sig-name descname"><span class="pre">group_by</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#teehr.models.queries.TimeseriesFilterFieldEnum" title="teehr.models.queries.TimeseriesFilterFieldEnum"><span class="pre">TimeseriesFilterFieldEnum</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#teehr.models.queries.TimeseriesCharQuery.group_by" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesCharQuery.filters">
+<span class="sig-name descname"><span class="pre">filters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#teehr.models.queries.TimeseriesFilter" title="teehr.models.queries.TimeseriesFilter"><span class="pre">TimeseriesFilter</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#teehr.models.queries.TimeseriesCharQuery.filters" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesCharQuery.return_query">
+<span class="sig-name descname"><span class="pre">return_query</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#teehr.models.queries.TimeseriesCharQuery.return_query" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.models.queries.TimeseriesCharQuery.filter_must_be_list">
+<span class="sig-name descname"><span class="pre">filter_must_be_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries.html#TimeseriesCharQuery.filter_must_be_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries.TimeseriesCharQuery.filter_must_be_list" title="Link to this definition">#</a></dt>
+<dd><p>Filter must be a list.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+                </article>
+
+
+
+
+
+                <footer class="prev-next-footer">
+
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../loading/utils/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models.loading.utils</span></code></p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../queries_database/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models.queries_database</span></code></p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+
+            </div>
+
+
+
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.BaseModel"><code class="docutils literal notranslate"><span class="pre">BaseModel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.BaseModel.ConfigDict"><code class="docutils literal notranslate"><span class="pre">BaseModel.ConfigDict</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h6 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.BaseModel.ConfigDict.arbitrary_types_allowed"><code class="docutils literal notranslate"><span class="pre">BaseModel.ConfigDict.arbitrary_types_allowed</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.FilterOperatorEnum"><code class="docutils literal notranslate"><span class="pre">FilterOperatorEnum</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.FilterOperatorEnum.eq"><code class="docutils literal notranslate"><span class="pre">FilterOperatorEnum.eq</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.FilterOperatorEnum.gt"><code class="docutils literal notranslate"><span class="pre">FilterOperatorEnum.gt</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.FilterOperatorEnum.lt"><code class="docutils literal notranslate"><span class="pre">FilterOperatorEnum.lt</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.FilterOperatorEnum.gte"><code class="docutils literal notranslate"><span class="pre">FilterOperatorEnum.gte</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.FilterOperatorEnum.lte"><code class="docutils literal notranslate"><span class="pre">FilterOperatorEnum.lte</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.FilterOperatorEnum.islike"><code class="docutils literal notranslate"><span class="pre">FilterOperatorEnum.islike</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.FilterOperatorEnum.isin"><code class="docutils literal notranslate"><span class="pre">FilterOperatorEnum.isin</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum"><code class="docutils literal notranslate"><span class="pre">MetricEnum</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.primary_count"><code class="docutils literal notranslate"><span class="pre">MetricEnum.primary_count</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.secondary_count"><code class="docutils literal notranslate"><span class="pre">MetricEnum.secondary_count</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.primary_minimum"><code class="docutils literal notranslate"><span class="pre">MetricEnum.primary_minimum</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.secondary_minimum"><code class="docutils literal notranslate"><span class="pre">MetricEnum.secondary_minimum</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.primary_maximum"><code class="docutils literal notranslate"><span class="pre">MetricEnum.primary_maximum</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.secondary_maximum"><code class="docutils literal notranslate"><span class="pre">MetricEnum.secondary_maximum</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.primary_average"><code class="docutils literal notranslate"><span class="pre">MetricEnum.primary_average</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.secondary_average"><code class="docutils literal notranslate"><span class="pre">MetricEnum.secondary_average</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.primary_sum"><code class="docutils literal notranslate"><span class="pre">MetricEnum.primary_sum</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.secondary_sum"><code class="docutils literal notranslate"><span class="pre">MetricEnum.secondary_sum</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.primary_variance"><code class="docutils literal notranslate"><span class="pre">MetricEnum.primary_variance</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.secondary_variance"><code class="docutils literal notranslate"><span class="pre">MetricEnum.secondary_variance</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.max_value_delta"><code class="docutils literal notranslate"><span class="pre">MetricEnum.max_value_delta</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.bias"><code class="docutils literal notranslate"><span class="pre">MetricEnum.bias</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.nash_sutcliffe_efficiency"><code class="docutils literal notranslate"><span class="pre">MetricEnum.nash_sutcliffe_efficiency</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.kling_gupta_efficiency"><code class="docutils literal notranslate"><span class="pre">MetricEnum.kling_gupta_efficiency</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.mean_error"><code class="docutils literal notranslate"><span class="pre">MetricEnum.mean_error</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.mean_squared_error"><code class="docutils literal notranslate"><span class="pre">MetricEnum.mean_squared_error</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.root_mean_squared_error"><code class="docutils literal notranslate"><span class="pre">MetricEnum.root_mean_squared_error</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.primary_max_value_time"><code class="docutils literal notranslate"><span class="pre">MetricEnum.primary_max_value_time</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.secondary_max_value_time"><code class="docutils literal notranslate"><span class="pre">MetricEnum.secondary_max_value_time</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricEnum.max_value_timedelta"><code class="docutils literal notranslate"><span class="pre">MetricEnum.max_value_timedelta</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedFilterFieldEnum"><code class="docutils literal notranslate"><span class="pre">JoinedFilterFieldEnum</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedFilterFieldEnum.value_time"><code class="docutils literal notranslate"><span class="pre">JoinedFilterFieldEnum.value_time</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedFilterFieldEnum.reference_time"><code class="docutils literal notranslate"><span class="pre">JoinedFilterFieldEnum.reference_time</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedFilterFieldEnum.secondary_location_id"><code class="docutils literal notranslate"><span class="pre">JoinedFilterFieldEnum.secondary_location_id</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedFilterFieldEnum.secondary_value"><code class="docutils literal notranslate"><span class="pre">JoinedFilterFieldEnum.secondary_value</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedFilterFieldEnum.configuration"><code class="docutils literal notranslate"><span class="pre">JoinedFilterFieldEnum.configuration</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedFilterFieldEnum.measurement_unit"><code class="docutils literal notranslate"><span class="pre">JoinedFilterFieldEnum.measurement_unit</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedFilterFieldEnum.variable_name"><code class="docutils literal notranslate"><span class="pre">JoinedFilterFieldEnum.variable_name</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedFilterFieldEnum.primary_value"><code class="docutils literal notranslate"><span class="pre">JoinedFilterFieldEnum.primary_value</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedFilterFieldEnum.primary_location_id"><code class="docutils literal notranslate"><span class="pre">JoinedFilterFieldEnum.primary_location_id</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedFilterFieldEnum.lead_time"><code class="docutils literal notranslate"><span class="pre">JoinedFilterFieldEnum.lead_time</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedFilterFieldEnum.geometry"><code class="docutils literal notranslate"><span class="pre">JoinedFilterFieldEnum.geometry</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesFilterFieldEnum"><code class="docutils literal notranslate"><span class="pre">TimeseriesFilterFieldEnum</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesFilterFieldEnum.value_time"><code class="docutils literal notranslate"><span class="pre">TimeseriesFilterFieldEnum.value_time</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesFilterFieldEnum.reference_time"><code class="docutils literal notranslate"><span class="pre">TimeseriesFilterFieldEnum.reference_time</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesFilterFieldEnum.location_id"><code class="docutils literal notranslate"><span class="pre">TimeseriesFilterFieldEnum.location_id</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesFilterFieldEnum.value"><code class="docutils literal notranslate"><span class="pre">TimeseriesFilterFieldEnum.value</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesFilterFieldEnum.configuration"><code class="docutils literal notranslate"><span class="pre">TimeseriesFilterFieldEnum.configuration</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesFilterFieldEnum.measurement_unit"><code class="docutils literal notranslate"><span class="pre">TimeseriesFilterFieldEnum.measurement_unit</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesFilterFieldEnum.variable_name"><code class="docutils literal notranslate"><span class="pre">TimeseriesFilterFieldEnum.variable_name</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesFilterFieldEnum.lead_time"><code class="docutils literal notranslate"><span class="pre">TimeseriesFilterFieldEnum.lead_time</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesFilterFieldEnum.geometry"><code class="docutils literal notranslate"><span class="pre">TimeseriesFilterFieldEnum.geometry</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.ChunkByEnum"><code class="docutils literal notranslate"><span class="pre">ChunkByEnum</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.ChunkByEnum.day"><code class="docutils literal notranslate"><span class="pre">ChunkByEnum.day</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.ChunkByEnum.site"><code class="docutils literal notranslate"><span class="pre">ChunkByEnum.site</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedFilter"><code class="docutils literal notranslate"><span class="pre">JoinedFilter</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedFilter.column"><code class="docutils literal notranslate"><span class="pre">JoinedFilter.column</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedFilter.operator"><code class="docutils literal notranslate"><span class="pre">JoinedFilter.operator</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedFilter.value"><code class="docutils literal notranslate"><span class="pre">JoinedFilter.value</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedFilter.is_iterable_not_str"><code class="docutils literal notranslate"><span class="pre">JoinedFilter.is_iterable_not_str()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedFilter.in_operator_must_have_iterable"><code class="docutils literal notranslate"><span class="pre">JoinedFilter.in_operator_must_have_iterable()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesFilter"><code class="docutils literal notranslate"><span class="pre">TimeseriesFilter</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesFilter.column"><code class="docutils literal notranslate"><span class="pre">TimeseriesFilter.column</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesFilter.operator"><code class="docutils literal notranslate"><span class="pre">TimeseriesFilter.operator</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesFilter.value"><code class="docutils literal notranslate"><span class="pre">TimeseriesFilter.value</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesFilter.is_iterable_not_str"><code class="docutils literal notranslate"><span class="pre">TimeseriesFilter.is_iterable_not_str()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesFilter.in_operator_must_have_iterable"><code class="docutils literal notranslate"><span class="pre">TimeseriesFilter.in_operator_must_have_iterable()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricQuery"><code class="docutils literal notranslate"><span class="pre">MetricQuery</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricQuery.primary_filepath"><code class="docutils literal notranslate"><span class="pre">MetricQuery.primary_filepath</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricQuery.secondary_filepath"><code class="docutils literal notranslate"><span class="pre">MetricQuery.secondary_filepath</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricQuery.crosswalk_filepath"><code class="docutils literal notranslate"><span class="pre">MetricQuery.crosswalk_filepath</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricQuery.group_by"><code class="docutils literal notranslate"><span class="pre">MetricQuery.group_by</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricQuery.order_by"><code class="docutils literal notranslate"><span class="pre">MetricQuery.order_by</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricQuery.include_metrics"><code class="docutils literal notranslate"><span class="pre">MetricQuery.include_metrics</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricQuery.filters"><code class="docutils literal notranslate"><span class="pre">MetricQuery.filters</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricQuery.return_query"><code class="docutils literal notranslate"><span class="pre">MetricQuery.return_query</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricQuery.geometry_filepath"><code class="docutils literal notranslate"><span class="pre">MetricQuery.geometry_filepath</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricQuery.include_geometry"><code class="docutils literal notranslate"><span class="pre">MetricQuery.include_geometry</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricQuery.remove_duplicates"><code class="docutils literal notranslate"><span class="pre">MetricQuery.remove_duplicates</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricQuery.include_geometry_must_group_by_primary_location_id"><code class="docutils literal notranslate"><span class="pre">MetricQuery.include_geometry_must_group_by_primary_location_id()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.MetricQuery.filter_must_be_list"><code class="docutils literal notranslate"><span class="pre">MetricQuery.filter_must_be_list()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedTimeseriesQuery"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedTimeseriesQuery.primary_filepath"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.primary_filepath</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedTimeseriesQuery.secondary_filepath"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.secondary_filepath</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedTimeseriesQuery.crosswalk_filepath"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.crosswalk_filepath</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedTimeseriesQuery.order_by"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.order_by</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedTimeseriesQuery.filters"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.filters</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedTimeseriesQuery.return_query"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.return_query</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedTimeseriesQuery.geometry_filepath"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.geometry_filepath</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedTimeseriesQuery.include_geometry"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.include_geometry</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedTimeseriesQuery.remove_duplicates"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.remove_duplicates</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedTimeseriesQuery.include_geometry_must_group_by_primary_location_id"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.include_geometry_must_group_by_primary_location_id()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.JoinedTimeseriesQuery.filter_must_be_list"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.filter_must_be_list()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesQuery"><code class="docutils literal notranslate"><span class="pre">TimeseriesQuery</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesQuery.timeseries_filepath"><code class="docutils literal notranslate"><span class="pre">TimeseriesQuery.timeseries_filepath</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesQuery.order_by"><code class="docutils literal notranslate"><span class="pre">TimeseriesQuery.order_by</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesQuery.filters"><code class="docutils literal notranslate"><span class="pre">TimeseriesQuery.filters</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesQuery.return_query"><code class="docutils literal notranslate"><span class="pre">TimeseriesQuery.return_query</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesQuery.filter_must_be_list"><code class="docutils literal notranslate"><span class="pre">TimeseriesQuery.filter_must_be_list()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesCharQuery"><code class="docutils literal notranslate"><span class="pre">TimeseriesCharQuery</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesCharQuery.timeseries_filepath"><code class="docutils literal notranslate"><span class="pre">TimeseriesCharQuery.timeseries_filepath</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesCharQuery.order_by"><code class="docutils literal notranslate"><span class="pre">TimeseriesCharQuery.order_by</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesCharQuery.group_by"><code class="docutils literal notranslate"><span class="pre">TimeseriesCharQuery.group_by</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesCharQuery.filters"><code class="docutils literal notranslate"><span class="pre">TimeseriesCharQuery.filters</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesCharQuery.return_query"><code class="docutils literal notranslate"><span class="pre">TimeseriesCharQuery.return_query</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries.TimeseriesCharQuery.filter_must_be_list"><code class="docutils literal notranslate"><span class="pre">TimeseriesCharQuery.filter_must_be_list()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../../../_sources/autoapi/teehr/models/queries/index.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+
+
+          </div>
+          <footer class="bd-footer-content">
+
+          </footer>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+
+    <div class="footer-items__start">
+
+        <div class="footer-item">
+
+  <p class="copyright">
+
+      © Copyright 2024 RTI International.
+      <br/>
+
+  </p>
+</div>
+
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    <br/>
+  </p>
+</div>
+
+    </div>
+
+
+
+    <div class="footer-items__end">
+
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.2.
+</p></div>
+
+    </div>
+
+</div>
+
+  </footer>
+  </body>
+</html>

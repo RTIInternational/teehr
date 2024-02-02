@@ -25,7 +25,7 @@ Login to AWS with `aws configure`
 eksctl create cluster --name teehr --region us-east-2
 ```
 ```
-eksctl delete cluster teehr 
+eksctl delete cluster teehr
 ```
 
 ## enable/install CSI Driver
@@ -160,7 +160,7 @@ eksctl create cluster --config-file=$CLUSTER_NAME.eksctl.yaml
 ```
 
 ## Trying to understand all the Helm Charts
-Seems that daskhub uses `jupyterhub` and `dask-gateway` charts.  
+Seems that daskhub uses `jupyterhub` and `dask-gateway` charts.
 I think these configs describe the available settings and syntax.
 
 Jupyterhub

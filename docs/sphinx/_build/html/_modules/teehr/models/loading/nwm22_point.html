@@ -1,0 +1,889 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>teehr.models.loading.nwm22_point &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.2 documentation</title>
+
+
+
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../../../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+
+  <link href="../../../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/teehr.css?v=d714f16e" />
+
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../../../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../../../../_static/documentation_options.js?v=71d9d8e6"></script>
+    <script src="../../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/teehr/models/loading/nwm22_point';</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+
+
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+
+
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+
+  <div id="pst-scroll-pixel-helper"></div>
+
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+
+
+  <div class="col-lg-3 navbar-header-items__start">
+
+      <div class="navbar-item">
+
+
+
+<a class="navbar-brand logo" href="../../../../index.html">
+
+
+
+
+
+
+
+
+
+
+    <img src="../../../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.2 documentation - Home"/>
+    <script>document.write(`<img src="../../../../_static/teehr.png" class="logo__image only-dark" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.2 documentation - Home"/>`);</script>
+
+
+</a></div>
+
+  </div>
+
+  <div class="col-lg-9 navbar-header-items">
+
+    <div class="me-auto navbar-header-items__center">
+
+        <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../../getting_started/index.html">
+                        Getting started
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../../development/index.html">
+                        Developer Guide
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../../user_guide/index.html">
+                        User Guide
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../../autoapi/index.html">
+                        API Reference
+                      </a>
+                    </li>
+
+  </ul>
+</nav></div>
+
+    </div>
+
+
+    <div class="navbar-header-items__end">
+
+        <div class="navbar-item navbar-persistent--container">
+
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+
+
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+
+        <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+
+    </div>
+
+  </div>
+
+
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+
+
+
+</div>
+
+    </header>
+
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+
+
+
+
+
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+
+
+
+  <div class="sidebar-header-items sidebar-primary__section">
+
+
+      <div class="sidebar-header-items__center">
+
+          <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../../getting_started/index.html">
+                        Getting started
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../../development/index.html">
+                        Developer Guide
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../../user_guide/index.html">
+                        User Guide
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../../autoapi/index.html">
+                        API Reference
+                      </a>
+                    </li>
+
+  </ul>
+</nav></div>
+
+      </div>
+
+
+
+      <div class="sidebar-header-items__end">
+
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+
+          <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+
+      </div>
+
+  </div>
+
+
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+
+      <main id="main-content" class="bd-main">
+
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+
+    <div class="header-article-items__start">
+
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">Module code</a></li>
+
+    <li class="breadcrumb-item active" aria-current="page">teehr.models...</li>
+  </ul>
+</nav>
+</div>
+
+    </div>
+
+
+</div>
+</div>
+
+
+
+
+<div id="searchbox"></div>
+                <article class="bd-article">
+
+  <h1>Source code for teehr.models.loading.nwm22_point</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Module describing NWM v2.2 point data configuration variables.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>
+
+
+<span class="c1"># VARIABLE ENUMS: Potential variable names for each output_type</span>
+<div class="viewcode-block" id="ChannelRtVariableEnum">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.ChannelRtVariableEnum">[docs]</a>
+<span class="k">class</span> <span class="nc">ChannelRtVariableEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;ChannelRtVariableEnum.&quot;&quot;&quot;</span>
+    <span class="n">nudge</span> <span class="o">=</span> <span class="s2">&quot;nudge&quot;</span>
+    <span class="n">qBtmVertRunoff</span> <span class="o">=</span> <span class="s2">&quot;qBtmVertRunoff&quot;</span>
+    <span class="n">qBucket</span> <span class="o">=</span> <span class="s2">&quot;qBucket&quot;</span>
+    <span class="n">qSfcLatRunoff</span> <span class="o">=</span> <span class="s2">&quot;qSfcLatRunoff&quot;</span>
+    <span class="n">streamflow</span> <span class="o">=</span> <span class="s2">&quot;streamflow&quot;</span>
+    <span class="n">velocity</span> <span class="o">=</span> <span class="s2">&quot;velocity&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="ChannelRtNoDAVariableEnum">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.ChannelRtNoDAVariableEnum">[docs]</a>
+<span class="k">class</span> <span class="nc">ChannelRtNoDAVariableEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;ChannelRtNoDAVariableEnum.&quot;&quot;&quot;</span>
+    <span class="n">nudge</span> <span class="o">=</span> <span class="s2">&quot;nudge&quot;</span>
+    <span class="n">qBucket</span> <span class="o">=</span> <span class="s2">&quot;qBucket&quot;</span>
+    <span class="n">qSfcLatRunoff</span> <span class="o">=</span> <span class="s2">&quot;qSfcLatRunoff&quot;</span>
+    <span class="n">streamflow</span> <span class="o">=</span> <span class="s2">&quot;streamflow&quot;</span>
+    <span class="n">velocity</span> <span class="o">=</span> <span class="s2">&quot;velocity&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="ChannelRtLongVariableEnum">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.ChannelRtLongVariableEnum">[docs]</a>
+<span class="k">class</span> <span class="nc">ChannelRtLongVariableEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;ChannelRtLongVariableEnum.&quot;&quot;&quot;</span>
+    <span class="n">nudge</span> <span class="o">=</span> <span class="s2">&quot;nudge&quot;</span>
+    <span class="n">streamflow</span> <span class="o">=</span> <span class="s2">&quot;streamflow&quot;</span>
+    <span class="n">velocity</span> <span class="o">=</span> <span class="s2">&quot;velocity&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="TerrainRtVariableEnum">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.TerrainRtVariableEnum">[docs]</a>
+<span class="k">class</span> <span class="nc">TerrainRtVariableEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;TerrainRtVariableEnum.&quot;&quot;&quot;</span>
+    <span class="n">sfcheadsubrt</span> <span class="o">=</span> <span class="s2">&quot;sfcheadsubrt&quot;</span>
+    <span class="n">zwattablrt</span> <span class="o">=</span> <span class="s2">&quot;zwattablrt&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="ReservoirVariableEnum">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.ReservoirVariableEnum">[docs]</a>
+<span class="k">class</span> <span class="nc">ReservoirVariableEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;ReservoirVariableEnum.&quot;&quot;&quot;</span>
+    <span class="n">inflow</span> <span class="o">=</span> <span class="s2">&quot;inflow&quot;</span>
+    <span class="n">outflow</span> <span class="o">=</span> <span class="s2">&quot;outflow&quot;</span>
+    <span class="n">reservoir_assimiated_value</span> <span class="o">=</span> <span class="s2">&quot;reservoir_assimiated_value&quot;</span>
+    <span class="n">water_sfc_elev</span> <span class="o">=</span> <span class="s2">&quot;water_sfc_elev&quot;</span></div>
+
+
+
+<span class="c1"># OUTPUT ENUMS: Potential output names for each configuration</span>
+<div class="viewcode-block" id="ShortAndAnalysisOutputEnum">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.ShortAndAnalysisOutputEnum">[docs]</a>
+<span class="k">class</span> <span class="nc">ShortAndAnalysisOutputEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;ShortAndAnalysisOutputEnum.&quot;&quot;&quot;</span>
+    <span class="n">channel_rt</span> <span class="o">=</span> <span class="s2">&quot;channel_rt&quot;</span>
+    <span class="n">terrain_rt</span> <span class="o">=</span> <span class="s2">&quot;terrain_rt&quot;</span>
+    <span class="n">reservoir</span> <span class="o">=</span> <span class="s2">&quot;reservoir&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Medium1OutputEnum">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.Medium1OutputEnum">[docs]</a>
+<span class="k">class</span> <span class="nc">Medium1OutputEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Medium1OutputEnum.&quot;&quot;&quot;</span>
+    <span class="n">channel_rt_1</span> <span class="o">=</span> <span class="s2">&quot;channel_rt_1&quot;</span>
+    <span class="n">terrain_rt_1</span> <span class="o">=</span> <span class="s2">&quot;terrain_rt_1&quot;</span>
+    <span class="n">reservoir_1</span> <span class="o">=</span> <span class="s2">&quot;reservoir_1&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Medium2OutputEnum">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.Medium2OutputEnum">[docs]</a>
+<span class="k">class</span> <span class="nc">Medium2OutputEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Medium2OutputEnum.&quot;&quot;&quot;</span>
+    <span class="n">channel_rt_2</span> <span class="o">=</span> <span class="s2">&quot;channel_rt_2&quot;</span>
+    <span class="n">terrain_rt_2</span> <span class="o">=</span> <span class="s2">&quot;terrain_rt_2&quot;</span>
+    <span class="n">reservoir_2</span> <span class="o">=</span> <span class="s2">&quot;reservoir_2&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Medium3OutputEnum">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.Medium3OutputEnum">[docs]</a>
+<span class="k">class</span> <span class="nc">Medium3OutputEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Medium3OutputEnum.&quot;&quot;&quot;</span>
+    <span class="n">channel_rt_3</span> <span class="o">=</span> <span class="s2">&quot;channel_rt_3&quot;</span>
+    <span class="n">terrain_rt_3</span> <span class="o">=</span> <span class="s2">&quot;terrain_rt_3&quot;</span>
+    <span class="n">reservoir_3</span> <span class="o">=</span> <span class="s2">&quot;reservoir_3&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Medium4OutputEnum">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.Medium4OutputEnum">[docs]</a>
+<span class="k">class</span> <span class="nc">Medium4OutputEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Medium4OutputEnum.&quot;&quot;&quot;</span>
+    <span class="n">channel_rt_4</span> <span class="o">=</span> <span class="s2">&quot;channel_rt_4&quot;</span>
+    <span class="n">terrain_rt_4</span> <span class="o">=</span> <span class="s2">&quot;terrain_rt_4&quot;</span>
+    <span class="n">reservoir_4</span> <span class="o">=</span> <span class="s2">&quot;reservoir_4&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Medium5OutputEnum">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.Medium5OutputEnum">[docs]</a>
+<span class="k">class</span> <span class="nc">Medium5OutputEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Medium5OutputEnum.&quot;&quot;&quot;</span>
+    <span class="n">channel_rt_5</span> <span class="o">=</span> <span class="s2">&quot;channel_rt_5&quot;</span>
+    <span class="n">terrain_rt_5</span> <span class="o">=</span> <span class="s2">&quot;terrain_rt_5&quot;</span>
+    <span class="n">reservoir_5</span> <span class="o">=</span> <span class="s2">&quot;reservoir_5&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Medium6OutputEnum">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.Medium6OutputEnum">[docs]</a>
+<span class="k">class</span> <span class="nc">Medium6OutputEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Medium6OutputEnum.&quot;&quot;&quot;</span>
+    <span class="n">channel_rt_6</span> <span class="o">=</span> <span class="s2">&quot;channel_rt_6&quot;</span>
+    <span class="n">terrain_rt_6</span> <span class="o">=</span> <span class="s2">&quot;terrain_rt_6&quot;</span>
+    <span class="n">reservoir_6</span> <span class="o">=</span> <span class="s2">&quot;reservoir_6&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Medium7OutputEnum">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.Medium7OutputEnum">[docs]</a>
+<span class="k">class</span> <span class="nc">Medium7OutputEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Medium7OutputEnum.&quot;&quot;&quot;</span>
+    <span class="n">channel_rt_7</span> <span class="o">=</span> <span class="s2">&quot;channel_rt_7&quot;</span>
+    <span class="n">terrain_rt_7</span> <span class="o">=</span> <span class="s2">&quot;terrain_rt_7&quot;</span>
+    <span class="n">reservoir_7</span> <span class="o">=</span> <span class="s2">&quot;reservoir_7&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="MediumNoDAEnum">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.MediumNoDAEnum">[docs]</a>
+<span class="k">class</span> <span class="nc">MediumNoDAEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;MediumNoDAEnum.&quot;&quot;&quot;</span>
+    <span class="n">channel_rt</span> <span class="o">=</span> <span class="s2">&quot;channel_rt&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Long1OutputEnum">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.Long1OutputEnum">[docs]</a>
+<span class="k">class</span> <span class="nc">Long1OutputEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Long1OutputEnum.&quot;&quot;&quot;</span>
+    <span class="n">channel_rt_1</span> <span class="o">=</span> <span class="s2">&quot;channel_rt_1&quot;</span>
+    <span class="n">reservoir_1</span> <span class="o">=</span> <span class="s2">&quot;reservoir_1&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Long2OutputEnum">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.Long2OutputEnum">[docs]</a>
+<span class="k">class</span> <span class="nc">Long2OutputEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Long2OutputEnum.&quot;&quot;&quot;</span>
+    <span class="n">channel_rt_2</span> <span class="o">=</span> <span class="s2">&quot;channel_rt_2&quot;</span>
+    <span class="n">reservoir_2</span> <span class="o">=</span> <span class="s2">&quot;reservoir_2&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Long3OutputEnum">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.Long3OutputEnum">[docs]</a>
+<span class="k">class</span> <span class="nc">Long3OutputEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Long3OutputEnum.&quot;&quot;&quot;</span>
+    <span class="n">channel_rt_3</span> <span class="o">=</span> <span class="s2">&quot;channel_rt_3&quot;</span>
+    <span class="n">reservoir_3</span> <span class="o">=</span> <span class="s2">&quot;reservoir_3&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="Long4OutputEnum">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.Long4OutputEnum">[docs]</a>
+<span class="k">class</span> <span class="nc">Long4OutputEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Long4OutputEnum.&quot;&quot;&quot;</span>
+    <span class="n">channel_rt_4</span> <span class="o">=</span> <span class="s2">&quot;channel_rt_4&quot;</span>
+    <span class="n">reservoir_4</span> <span class="o">=</span> <span class="s2">&quot;reservoir_4&quot;</span></div>
+
+
+
+<span class="c1"># POINT OUTPUT TYPE MODELS (needed for each configuration enum)</span>
+<div class="viewcode-block" id="ShortAndAnalysis">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.ShortAndAnalysis">[docs]</a>
+<span class="k">class</span> <span class="nc">ShortAndAnalysis</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;ShortAndAnalysis.&quot;&quot;&quot;</span>
+    <span class="n">output_type</span><span class="p">:</span> <span class="n">ShortAndAnalysisOutputEnum</span>
+    <span class="n">channel_rt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChannelRtVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">terrain_rt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TerrainRtVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">reservoir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ReservoirVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="ShortAndAnalysisNoDA">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.ShortAndAnalysisNoDA">[docs]</a>
+<span class="k">class</span> <span class="nc">ShortAndAnalysisNoDA</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;ShortAndAnalysisNoDA.&quot;&quot;&quot;</span>
+    <span class="n">output_type</span><span class="p">:</span> <span class="n">ShortAndAnalysisOutputEnum</span>
+    <span class="n">channel_rt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChannelRtNoDAVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">terrain_rt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TerrainRtVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">reservoir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ReservoirVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="MediumRangeMem1">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.MediumRangeMem1">[docs]</a>
+<span class="k">class</span> <span class="nc">MediumRangeMem1</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;MediumRangeMem1.&quot;&quot;&quot;</span>
+    <span class="n">output_type</span><span class="p">:</span> <span class="n">Medium1OutputEnum</span>
+    <span class="n">channel_rt_1</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChannelRtVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">terrain_rt_1</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TerrainRtVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">reservoir_1</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ReservoirVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="MediumRangeMem2">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.MediumRangeMem2">[docs]</a>
+<span class="k">class</span> <span class="nc">MediumRangeMem2</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;MediumRangeMem2.&quot;&quot;&quot;</span>
+    <span class="n">output_type</span><span class="p">:</span> <span class="n">Medium2OutputEnum</span>
+    <span class="n">channel_rt_2</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChannelRtVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">terrain_rt_2</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TerrainRtVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">reservoir_2</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ReservoirVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="MediumRangeMem3">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.MediumRangeMem3">[docs]</a>
+<span class="k">class</span> <span class="nc">MediumRangeMem3</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;MediumRangeMem3.&quot;&quot;&quot;</span>
+    <span class="n">output_type</span><span class="p">:</span> <span class="n">Medium3OutputEnum</span>
+    <span class="n">channel_rt_3</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChannelRtVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">terrain_rt_3</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TerrainRtVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">reservoir_3</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ReservoirVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="MediumRangeMem4">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.MediumRangeMem4">[docs]</a>
+<span class="k">class</span> <span class="nc">MediumRangeMem4</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;MediumRangeMem4.&quot;&quot;&quot;</span>
+    <span class="n">output_type</span><span class="p">:</span> <span class="n">Medium4OutputEnum</span>
+    <span class="n">channel_rt_4</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChannelRtVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">terrain_rt_4</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TerrainRtVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">reservoir_4</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ReservoirVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="MediumRangeMem5">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.MediumRangeMem5">[docs]</a>
+<span class="k">class</span> <span class="nc">MediumRangeMem5</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;MediumRangeMem5.&quot;&quot;&quot;</span>
+    <span class="n">output_type</span><span class="p">:</span> <span class="n">Medium5OutputEnum</span>
+    <span class="n">channel_rt_5</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChannelRtVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">terrain_rt_5</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TerrainRtVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">reservoir_5</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ReservoirVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="MediumRangeMem6">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.MediumRangeMem6">[docs]</a>
+<span class="k">class</span> <span class="nc">MediumRangeMem6</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;MediumRangeMem6.&quot;&quot;&quot;</span>
+    <span class="n">output_type</span><span class="p">:</span> <span class="n">Medium6OutputEnum</span>
+    <span class="n">channel_rt_6</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChannelRtVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">terrain_rt_6</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TerrainRtVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">reservoir_6</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ReservoirVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="MediumRangeMem7">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.MediumRangeMem7">[docs]</a>
+<span class="k">class</span> <span class="nc">MediumRangeMem7</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;MediumRangeMem7.&quot;&quot;&quot;</span>
+    <span class="n">output_type</span><span class="p">:</span> <span class="n">Medium7OutputEnum</span>
+    <span class="n">channel_rt_7</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChannelRtVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">terrain_rt_7</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TerrainRtVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">reservoir_7</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ReservoirVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="MediumRangeNoDA">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.MediumRangeNoDA">[docs]</a>
+<span class="k">class</span> <span class="nc">MediumRangeNoDA</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;MediumRangeNoDA.&quot;&quot;&quot;</span>
+    <span class="n">output_type</span><span class="p">:</span> <span class="n">MediumNoDAEnum</span>
+    <span class="n">channel_rt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChannelRtNoDAVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="LongRangeMem1">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.LongRangeMem1">[docs]</a>
+<span class="k">class</span> <span class="nc">LongRangeMem1</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;LongRangeMem1.&quot;&quot;&quot;</span>
+    <span class="n">output_type</span><span class="p">:</span> <span class="n">Long1OutputEnum</span>
+    <span class="n">channel_rt_1</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChannelRtLongVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">reservoir_1</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ReservoirVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="LongRangeMem2">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.LongRangeMem2">[docs]</a>
+<span class="k">class</span> <span class="nc">LongRangeMem2</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;LongRangeMem2.&quot;&quot;&quot;</span>
+    <span class="n">output_type</span><span class="p">:</span> <span class="n">Long2OutputEnum</span>
+    <span class="n">channel_rt_2</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChannelRtLongVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">reservoir_2</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ReservoirVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="LongRangeMem3">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.LongRangeMem3">[docs]</a>
+<span class="k">class</span> <span class="nc">LongRangeMem3</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;LongRangeMem3.&quot;&quot;&quot;</span>
+    <span class="n">output_type</span><span class="p">:</span> <span class="n">Long3OutputEnum</span>
+    <span class="n">channel_rt_3</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChannelRtLongVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">reservoir_3</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ReservoirVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="LongRangeMem4">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.LongRangeMem4">[docs]</a>
+<span class="k">class</span> <span class="nc">LongRangeMem4</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;LongRangeMem4.&quot;&quot;&quot;</span>
+    <span class="n">output_type</span><span class="p">:</span> <span class="n">Long4OutputEnum</span>
+    <span class="n">channel_rt_4</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ChannelRtLongVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">reservoir_4</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ReservoirVariableEnum</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<span class="c1"># POINT CONFIGURATION ENUM: Potential configuration names</span>
+<div class="viewcode-block" id="ConfigurationsEnum">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.ConfigurationsEnum">[docs]</a>
+<span class="k">class</span> <span class="nc">ConfigurationsEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;ConfigurationsEnum.&quot;&quot;&quot;</span>
+    <span class="n">analysis_assim</span> <span class="o">=</span> <span class="s2">&quot;analysis_assim&quot;</span>
+    <span class="n">analysis_assim_no_da</span> <span class="o">=</span> <span class="s2">&quot;analysis_assim_no_da&quot;</span>
+    <span class="n">analysis_assim_extend</span> <span class="o">=</span> <span class="s2">&quot;analysis_assim_extend&quot;</span>
+    <span class="n">analysis_assim_extend_no_da</span> <span class="o">=</span> <span class="s2">&quot;analysis_assim_extend_no_da&quot;</span>
+    <span class="n">analysis_assim_long</span> <span class="o">=</span> <span class="s2">&quot;analysis_assim_long&quot;</span>
+    <span class="n">analysis_assim_long_no_da</span> <span class="o">=</span> <span class="s2">&quot;analysis_assim_long_no_da&quot;</span>
+    <span class="n">analysis_assim_hawaii</span> <span class="o">=</span> <span class="s2">&quot;analysis_assim_hawaii&quot;</span>
+    <span class="n">analysis_assim_hawaii_no_da</span> <span class="o">=</span> <span class="s2">&quot;analysis_assim_hawaii_no_da&quot;</span>
+    <span class="n">analysis_assim_puertorico</span> <span class="o">=</span> <span class="s2">&quot;analysis_assim_puertorico&quot;</span>
+    <span class="n">analysis_assim_puertorico_no_da</span> <span class="o">=</span> <span class="s2">&quot;analysis_assim_puertorico_no_da&quot;</span>
+    <span class="n">short_range</span> <span class="o">=</span> <span class="s2">&quot;short_range&quot;</span>
+    <span class="n">short_range_hawaii</span> <span class="o">=</span> <span class="s2">&quot;short_range_hawaii&quot;</span>
+    <span class="n">short_range_puertorico</span> <span class="o">=</span> <span class="s2">&quot;short_range_puertorico&quot;</span>
+    <span class="n">short_range_hawaii_no_da</span> <span class="o">=</span> <span class="s2">&quot;short_range_hawaii_no_da&quot;</span>
+    <span class="n">short_range_puertorico_no_da</span> <span class="o">=</span> <span class="s2">&quot;short_range_puertorico_no_da&quot;</span>
+    <span class="n">medium_range_mem1</span> <span class="o">=</span> <span class="s2">&quot;medium_range_mem1&quot;</span>
+    <span class="n">medium_range_mem2</span> <span class="o">=</span> <span class="s2">&quot;medium_range_mem2&quot;</span>
+    <span class="n">medium_range_mem3</span> <span class="o">=</span> <span class="s2">&quot;medium_range_mem3&quot;</span>
+    <span class="n">medium_range_mem4</span> <span class="o">=</span> <span class="s2">&quot;medium_range_mem4&quot;</span>
+    <span class="n">medium_range_mem5</span> <span class="o">=</span> <span class="s2">&quot;medium_range_mem5&quot;</span>
+    <span class="n">medium_range_mem6</span> <span class="o">=</span> <span class="s2">&quot;medium_range_mem6&quot;</span>
+    <span class="n">medium_range_mem7</span> <span class="o">=</span> <span class="s2">&quot;medium_range_mem7&quot;</span>
+    <span class="n">medium_range_no_da</span> <span class="o">=</span> <span class="s2">&quot;medium_range_no_da&quot;</span>
+    <span class="n">long_range_mem1</span> <span class="o">=</span> <span class="s2">&quot;long_range_mem1&quot;</span>
+    <span class="n">long_range_mem2</span> <span class="o">=</span> <span class="s2">&quot;long_range_mem2&quot;</span>
+    <span class="n">long_range_mem3</span> <span class="o">=</span> <span class="s2">&quot;long_range_mem3&quot;</span>
+    <span class="n">long_range_mem4</span> <span class="o">=</span> <span class="s2">&quot;long_range_mem4&quot;</span></div>
+
+
+
+<span class="c1"># POINT CONFIGURATION MODEL</span>
+<div class="viewcode-block" id="PointConfigurationModel">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/nwm22_point/index.html#teehr.models.loading.nwm22_point.PointConfigurationModel">[docs]</a>
+<span class="k">class</span> <span class="nc">PointConfigurationModel</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;NWM v2.2 PointConfigurationModel.&quot;&quot;&quot;</span>
+    <span class="n">configuration</span><span class="p">:</span> <span class="n">ConfigurationsEnum</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">analysis_assim</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ShortAndAnalysis</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">analysis_assim_no_da</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ShortAndAnalysisNoDA</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">analysis_assim_extend</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ShortAndAnalysis</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">analysis_assim_extend_no_da</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ShortAndAnalysisNoDA</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">analysis_assim_long</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ShortAndAnalysis</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">analysis_assim_long_no_da</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ShortAndAnalysisNoDA</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">analysis_assim_hawaii</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ShortAndAnalysis</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">analysis_assim_hawaii_no_da</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ShortAndAnalysisNoDA</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">analysis_assim_puertorico</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ShortAndAnalysis</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">analysis_assim_puertorico_no_da</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ShortAndAnalysisNoDA</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">short_range</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ShortAndAnalysis</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">short_range_hawaii</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ShortAndAnalysis</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">short_range_puertorico</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ShortAndAnalysis</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">short_range_hawaii_no_da</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ShortAndAnalysisNoDA</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">short_range_puertorico_no_da</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ShortAndAnalysisNoDA</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">medium_range_mem1</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MediumRangeMem1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">medium_range_mem2</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MediumRangeMem2</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">medium_range_mem3</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MediumRangeMem3</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">medium_range_mem4</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MediumRangeMem4</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">medium_range_mem5</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MediumRangeMem5</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">medium_range_mem6</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MediumRangeMem6</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">medium_range_mem7</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MediumRangeMem7</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">medium_range_no_da</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MediumRangeNoDA</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">long_range_mem1</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LongRangeMem1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">long_range_mem2</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LongRangeMem2</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">long_range_mem3</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LongRangeMem3</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">long_range_mem4</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LongRangeMem4</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="c1"># So for example:</span>
+    <span class="n">configuration</span> <span class="o">=</span> <span class="s2">&quot;medium_range_mem1&quot;</span>
+    <span class="n">output_type</span> <span class="o">=</span> <span class="s2">&quot;channel_rt_1&quot;</span>
+    <span class="n">variable_name</span> <span class="o">=</span> <span class="s2">&quot;streamflow&quot;</span>
+
+    <span class="c1"># Assemble input parameters</span>
+    <span class="nb">vars</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;configuration&quot;</span><span class="p">:</span> <span class="n">configuration</span><span class="p">,</span>
+        <span class="n">configuration</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;output_type&quot;</span><span class="p">:</span> <span class="n">output_type</span><span class="p">,</span>
+            <span class="n">output_type</span><span class="p">:</span> <span class="n">variable_name</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+
+    <span class="c1"># Check input parameters</span>
+    <span class="n">cm</span> <span class="o">=</span> <span class="n">PointConfigurationModel</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="nb">vars</span><span class="p">)</span>
+
+    <span class="n">config</span> <span class="o">=</span> <span class="n">cm</span><span class="o">.</span><span class="n">configuration</span><span class="o">.</span><span class="n">name</span>
+    <span class="n">forecast_obj</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">cm</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+    <span class="n">out_type</span> <span class="o">=</span> <span class="n">forecast_obj</span><span class="o">.</span><span class="n">output_type</span><span class="o">.</span><span class="n">name</span>
+    <span class="n">var_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">forecast_obj</span><span class="p">,</span> <span class="n">out_type</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="k">pass</span>
+</pre></div>
+
+                </article>
+
+
+
+
+
+                <footer class="prev-next-footer">
+
+<div class="prev-next-area">
+</div>
+                </footer>
+
+            </div>
+
+
+
+                <div class="bd-sidebar-secondary bd-toc"></div>
+
+
+          </div>
+          <footer class="bd-footer-content">
+
+          </footer>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+
+    <div class="footer-items__start">
+
+        <div class="footer-item">
+
+  <p class="copyright">
+
+      © Copyright 2024 RTI International.
+      <br/>
+
+  </p>
+</div>
+
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    <br/>
+  </p>
+</div>
+
+    </div>
+
+
+
+    <div class="footer-items__end">
+
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.2.
+</p></div>
+
+    </div>
+
+</div>
+
+  </footer>
+  </body>
+</html>

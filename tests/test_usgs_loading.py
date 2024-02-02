@@ -1,3 +1,4 @@
+"""Test USGS loading."""
 from datetime import datetime
 from pathlib import Path
 
@@ -9,7 +10,7 @@ TEMP_DIR = Path("tests", "data", "temp", "usgs")
 
 
 def test_chunkby_location_id():
-
+    """Test chunkby location id."""
     usgs_to_parquet(
         sites=[
             "02449838",
@@ -32,7 +33,7 @@ def test_chunkby_location_id():
 
 
 def test_chunkby_day():
-
+    """Test chunkby day."""
     usgs_to_parquet(
         sites=[
             "02449838",
@@ -57,7 +58,7 @@ def test_chunkby_day():
 
 
 def test_chunkby_all():
-
+    """Test chunkby all."""
     usgs_to_parquet(
         sites=[
             "02449838",

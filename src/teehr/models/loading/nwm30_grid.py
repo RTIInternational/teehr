@@ -1,3 +1,4 @@
+"""Module describing NWM v3.0 grid configuration variables."""
 from enum import Enum
 from typing import Optional
 
@@ -14,6 +15,7 @@ from teehr.models.loading.nwm22_grid import (
 
 # CONFIGURATIONS ENUM: All possible configuration
 class ConfigurationsEnum(str, Enum):
+    """ConfigurationsEnum."""
     analysis_assim = "analysis_assim"
     analysis_assim_no_da = "analysis_assim_no_da"
     analysis_assim_extend = "analysis_assim_extend"
@@ -57,6 +59,7 @@ class ConfigurationsEnum(str, Enum):
 
 # CONFIGURATION MODEL
 class GridConfigurationModel(BaseModel):
+    """NWM v3.0 GridConfigurationModel."""
     configuration: ConfigurationsEnum
     analysis_assim: Optional[Analysis] = None
     analysis_assim_no_da: Optional[Analysis] = None

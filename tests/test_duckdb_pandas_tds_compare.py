@@ -1,3 +1,4 @@
+"""Tests for comparing pandas and duckdb query methods."""
 from pathlib import Path
 
 import numpy as np
@@ -30,6 +31,7 @@ TDS.insert_joined_timeseries(
 
 
 def test_metric_compare_1():
+    """Test metric compare v1."""
     include_metrics = [
         "primary_count",
         "secondary_count",
@@ -91,6 +93,7 @@ def test_metric_compare_1():
 
 
 def test_metric_compare_time_metrics():
+    """Test metric compare time metrics."""
     include_metrics = [
         "primary_max_value_time",
         "secondary_max_value_time",
@@ -126,6 +129,7 @@ def test_metric_compare_time_metrics():
 
 
 def test_primary_timeseries_compare():
+    """Test primary timeseries compare."""
     query_df = tqu.get_timeseries(
         timeseries_filepath=PRIMARY_FILEPATH,
         order_by=["location_id"],
@@ -143,6 +147,7 @@ def test_primary_timeseries_compare():
 
 
 def test_secondary_timeseries_compare():
+    """Test secondary timeseries compare."""
     query_df = tqu.get_timeseries(
         timeseries_filepath=SECONDARY_FILEPATH,
         order_by=["location_id"],
@@ -157,6 +162,7 @@ def test_secondary_timeseries_compare():
 
 
 def test_primary_timeseries_char_compare():
+    """Test primary timeseries char compare."""
     query_df = tqu.get_timeseries_chars(
         timeseries_filepath=PRIMARY_FILEPATH,
         group_by=["location_id"],
@@ -209,6 +215,7 @@ def test_primary_timeseries_char_compare():
 
 
 def test_secondary_timeseries_char_compare():
+    """Test secondary timeseries char compare."""
     query_df = tqu.get_timeseries_chars(
         timeseries_filepath=SECONDARY_FILEPATH,
         group_by=["location_id"],

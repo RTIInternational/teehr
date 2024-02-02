@@ -1,3 +1,4 @@
+"""Test NWM loading utils."""
 from pathlib import Path
 
 from teehr.loading.nwm.utils import (
@@ -17,7 +18,7 @@ TEMP_DIR = Path("tests", "data", "temp")
 
 
 def test_point_zarr_reference_file():
-
+    """Test the point zarr reference file creation."""
     component_paths = [
         "gcs://national-water-model/nwm.20231101/short_range_alaska/nwm.t00z.short_range.channel_rt.f001.alaska.nc" # noqa
     ]
@@ -43,7 +44,6 @@ def test_point_zarr_reference_file():
 
 def test_dates_and_nwm_version():
     """Make sure start/end dates work with specified NWM version."""
-
     nwm_version = "nwm30"
     start_date = "2023-11-20"
     ingest_days = 1
@@ -58,7 +58,7 @@ def test_dates_and_nwm_version():
 
 
 def test_building_nwm30_gcs_paths():
-
+    """Test building NWM30 GCS paths."""
     configuration = "analysis_assim_extend"
     output_type = "channel_rt"
     start_date = "2023-11-28"
@@ -85,7 +85,7 @@ def test_building_nwm30_gcs_paths():
 
 
 def test_building_nwm22_gcs_paths():
-
+    """Test building NWM22 GCS paths."""
     configuration = "analysis_assim_extend"
     output_type = "channel_rt"
     start_date = "2019-01-12"
@@ -112,7 +112,7 @@ def test_building_nwm22_gcs_paths():
 
 
 def test_generate_json_paths():
-
+    """Test generating kerchunk json paths."""
     kerchunk_method = "auto"
     gcs_component_paths = \
         ['gcs://national-water-model/nwm.20220112/analysis_assim_extend/nwm.t16z.analysis_assim_extend.channel_rt.tm00.conus.nc'] # noqa

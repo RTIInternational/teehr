@@ -2,7 +2,7 @@
 # EKSCTL Approach (Not used in favor of Terraform, but could be...)
 NOTE: you must clean up complete from other approaches before running this.
 
-Login to AWS.  You need to login with a user that has sufficient permissions.  
+Login to AWS.  You need to login with a user that has sufficient permissions.
 For now we are using Admin, but will work to define the minimum set of permissions required.
 ```bash
 aws configure
@@ -56,7 +56,7 @@ Set alias in DNS provider
 
 Delete pods and let it recreate
 ```bash
-kubectl delete pods -l component=autohttps -n teehr-hub 
+kubectl delete pods -l component=autohttps -n teehr-hub
 ```
 
 Update NFS DNS in manifests, then run

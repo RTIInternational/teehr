@@ -1,1 +1,2 @@
+"""Queries init."""
 import duckdb

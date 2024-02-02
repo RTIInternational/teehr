@@ -1,0 +1,7 @@
+.. _api:
+
+======================
+Not so sure about this
+======================
+
+.. include:: ../_build/html/autoapi/index.html

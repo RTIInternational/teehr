@@ -1,0 +1,1141 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>teehr.queries.duckdb_database &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.2 documentation</title>
+
+
+
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+
+  <link href="../../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/teehr.css?v=d714f16e" />
+
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../../../_static/documentation_options.js?v=71d9d8e6"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/teehr/queries/duckdb_database';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+
+
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+
+
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+
+  <div id="pst-scroll-pixel-helper"></div>
+
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+
+
+  <div class="col-lg-3 navbar-header-items__start">
+
+      <div class="navbar-item">
+
+
+
+<a class="navbar-brand logo" href="../../../index.html">
+
+
+
+
+
+
+
+
+
+
+    <img src="../../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.2 documentation - Home"/>
+    <script>document.write(`<img src="../../../_static/teehr.png" class="logo__image only-dark" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.2 documentation - Home"/>`);</script>
+
+
+</a></div>
+
+  </div>
+
+  <div class="col-lg-9 navbar-header-items">
+
+    <div class="me-auto navbar-header-items__center">
+
+        <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+                        Getting started
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+                        User Guide
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../development/index.html">
+                        Developer Guide
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../changelog/index.html">
+                        Release Notes
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../autoapi/index.html">
+                        API Reference
+                      </a>
+                    </li>
+
+  </ul>
+</nav></div>
+
+    </div>
+
+
+    <div class="navbar-header-items__end">
+
+        <div class="navbar-item navbar-persistent--container">
+
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+
+
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+
+        <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+
+    </div>
+
+  </div>
+
+
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+
+
+
+</div>
+
+    </header>
+
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+
+
+
+
+
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+
+
+
+  <div class="sidebar-header-items sidebar-primary__section">
+
+
+      <div class="sidebar-header-items__center">
+
+          <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+                        Getting started
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+                        User Guide
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../development/index.html">
+                        Developer Guide
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../changelog/index.html">
+                        Release Notes
+                      </a>
+                    </li>
+
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../autoapi/index.html">
+                        API Reference
+                      </a>
+                    </li>
+
+  </ul>
+</nav></div>
+
+      </div>
+
+
+
+      <div class="sidebar-header-items__end">
+
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+
+          <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+
+
+
+
+
+
+
+
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i></span>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+
+      </div>
+
+  </div>
+
+
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+
+      <main id="main-content" class="bd-main">
+
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+
+    <div class="header-article-items__start">
+
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+
+    <li class="breadcrumb-item active" aria-current="page">teehr.querie...</li>
+  </ul>
+</nav>
+</div>
+
+    </div>
+
+
+</div>
+</div>
+
+
+
+
+<div id="searchbox"></div>
+                <article class="bd-article">
+
+  <h1>Source code for teehr.queries.duckdb_database</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;A module defining duckdb sql queries for a persistent database.&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">duckdb</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span>
+
+<span class="kn">from</span> <span class="nn">teehr.models.queries_database</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">MetricQuery</span><span class="p">,</span>
+    <span class="n">JoinedTimeseriesQuery</span><span class="p">,</span>
+    <span class="n">TimeseriesQuery</span><span class="p">,</span>
+    <span class="n">TimeseriesCharQuery</span><span class="p">,</span>
+    <span class="n">JoinedTimeseriesFieldName</span>
+<span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">teehr.queries.utils</span> <span class="k">as</span> <span class="nn">tqu</span>
+
+<span class="n">SQL_DATETIME_STR_FORMAT</span> <span class="o">=</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span>
+
+
+<div class="viewcode-block" id="create_get_metrics_query">
+<a class="viewcode-back" href="../../../autoapi/teehr/queries/duckdb_database/index.html#teehr.queries.duckdb_database.create_get_metrics_query">[docs]</a>
+<span class="k">def</span> <span class="nf">create_get_metrics_query</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the query string to calculate performance metrics</span>
+<span class="sd">    using database queries.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mq : MetricQuery</span>
+<span class="sd">        Pydantic model containing query parameters.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The query string.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Filter, Order By and Group By Fields:</span>
+
+<span class="sd">    * reference_time</span>
+<span class="sd">    * primary_location_id</span>
+<span class="sd">    * secondary_location_id</span>
+<span class="sd">    * primary_value</span>
+<span class="sd">    * secondary_value</span>
+<span class="sd">    * value_time</span>
+<span class="sd">    * configuration</span>
+<span class="sd">    * measurement_unit</span>
+<span class="sd">    * variable_name</span>
+<span class="sd">    * lead_time</span>
+<span class="sd">    * [any user-added fields]</span>
+
+<span class="sd">    Basic Metrics:</span>
+
+<span class="sd">    * primary_count</span>
+<span class="sd">    * secondary_count</span>
+<span class="sd">    * primary_minimum</span>
+<span class="sd">    * secondary_minimum</span>
+<span class="sd">    * primary_maximum</span>
+<span class="sd">    * secondary_maximum</span>
+<span class="sd">    * primary_average</span>
+<span class="sd">    * secondary_average</span>
+<span class="sd">    * primary_sum</span>
+<span class="sd">    * secondary_sum</span>
+<span class="sd">    * primary_variance</span>
+<span class="sd">    * secondary_variance</span>
+<span class="sd">    * max_value_delta</span>
+
+<span class="sd">      * max(secondary_value) - max(primary_value)</span>
+<span class="sd">    * bias</span>
+
+<span class="sd">      * sum(primary_value - secondary_value)/count(*)</span>
+
+<span class="sd">    HydroTools Metrics:</span>
+
+<span class="sd">    * nash_sutcliffe_efficiency</span>
+<span class="sd">    * kling_gupta_efficiency</span>
+<span class="sd">    * coefficient_of_extrapolation</span>
+<span class="sd">    * coefficient_of_persistence</span>
+<span class="sd">    * mean_error</span>
+<span class="sd">    * mean_squared_error</span>
+<span class="sd">    * root_mean_squared_error</span>
+
+<span class="sd">    Time-based Metrics:</span>
+
+<span class="sd">    * primary_max_value_time</span>
+<span class="sd">    * secondary_max_value_time</span>
+<span class="sd">    * max_value_timedelta</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; order_by = [&quot;lead_time&quot;, &quot;primary_location_id&quot;]</span>
+
+<span class="sd">    &gt;&gt;&gt; group_by = [&quot;lead_time&quot;, &quot;primary_location_id&quot;]</span>
+
+<span class="sd">    &gt;&gt;&gt; filters = [</span>
+<span class="sd">    &gt;&gt;&gt;     {</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;column&quot;: &quot;primary_location_id&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;operator&quot;: &quot;=&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;value&quot;: &quot;gage-A&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;     },</span>
+<span class="sd">    &gt;&gt;&gt;     {</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;column&quot;: &quot;reference_time&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;operator&quot;: &quot;=&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;value&quot;: &quot;2022-01-01 00:00:00&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;     },</span>
+<span class="sd">    &gt;&gt;&gt;     {&quot;column&quot;: &quot;lead_time&quot;, &quot;operator&quot;: &quot;&lt;=&quot;, &quot;value&quot;: &quot;10 hours&quot;},</span>
+<span class="sd">    &gt;&gt;&gt; ]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        WITH joined as (</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                *</span>
+<span class="s2">            FROM joined_timeseries</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">filters_to_sql_db</span><span class="p">(</span><span class="n">mq</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">        )</span>
+<span class="s2">        </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_nse_cte</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">        , metrics AS (</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                </span><span class="si">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;joined.</span><span class="si">{</span><span class="n">gb</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">gb</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">mq</span><span class="o">.</span><span class="n">group_by</span><span class="p">])</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_primary_count</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_secondary_count</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_primary_minimum</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_secondary_minimum</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_primary_maximum</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_secondary_maximum</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_primary_average</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_secondary_average</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_primary_sum</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_secondary_sum</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_primary_variance</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_secondary_variance</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_max_value_delta</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_bias</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_nash_sutcliffe_efficiency</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_kling_gupta_efficiency</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_mean_error</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_mean_squared_error</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_root_mean_squared_error</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_primary_max_value_time</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_secondary_max_value_time</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_select_max_value_timedelta</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">            FROM</span>
+<span class="s2">                joined</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_join_nse_cte</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">            GROUP BY</span>
+<span class="s2">                </span><span class="si">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;joined.</span><span class="si">{</span><span class="n">gb</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">gb</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">mq</span><span class="o">.</span><span class="n">group_by</span><span class="p">])</span><span class="si">}</span>
+<span class="s2">        )</span>
+<span class="s2">        SELECT</span>
+<span class="s2">            metrics.*</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">geometry_select_clause</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">        FROM metrics</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">metric_geometry_join_clause_db</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">        ORDER BY</span>
+<span class="s2">            </span><span class="si">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;metrics.</span><span class="si">{</span><span class="n">ob</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">ob</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">mq</span><span class="o">.</span><span class="n">order_by</span><span class="p">])</span><span class="si">}</span>
+<span class="s2">    ;&quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">query</span></div>
+
+
+
+<div class="viewcode-block" id="create_join_and_save_timeseries_query">
+<a class="viewcode-back" href="../../../autoapi/teehr/queries/duckdb_database/index.html#teehr.queries.duckdb_database.create_join_and_save_timeseries_query">[docs]</a>
+<span class="k">def</span> <span class="nf">create_join_and_save_timeseries_query</span><span class="p">(</span><span class="n">jtq</span><span class="p">:</span> <span class="n">JoinedTimeseriesQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load joined timeseries into a duckdb persistent database using</span>
+<span class="sd">    database query.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    jtq : JoinedTimeseriesQuery</span>
+<span class="sd">        Pydantic model containing query parameters.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The query string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    WITH initial_joined as (</span>
+<span class="s2">        SELECT</span>
+<span class="s2">            sf.reference_time,</span>
+<span class="s2">            sf.value_time,</span>
+<span class="s2">            sf.location_id as secondary_location_id,</span>
+<span class="s2">            sf.value as secondary_value,</span>
+<span class="s2">            sf.configuration,</span>
+<span class="s2">            sf.measurement_unit,</span>
+<span class="s2">            pf.reference_time as primary_reference_time,</span>
+<span class="s2">            sf.variable_name,</span>
+<span class="s2">            pf.value as primary_value,</span>
+<span class="s2">            pf.location_id as primary_location_id,</span>
+<span class="s2">            sf.value_time - sf.reference_time as lead_time,</span>
+<span class="s2">            abs(primary_value - secondary_value) as absolute_difference</span>
+<span class="s2">        FROM read_parquet(&#39;</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">jtq</span><span class="o">.</span><span class="n">secondary_filepath</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;) sf</span>
+<span class="s2">        JOIN read_parquet(&#39;</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">jtq</span><span class="o">.</span><span class="n">crosswalk_filepath</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;) cf</span>
+<span class="s2">            on cf.secondary_location_id = sf.location_id</span>
+<span class="s2">        JOIN read_parquet(&quot;</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">jtq</span><span class="o">.</span><span class="n">primary_filepath</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;) pf</span>
+<span class="s2">            on cf.primary_location_id = pf.location_id</span>
+<span class="s2">            and sf.value_time = pf.value_time</span>
+<span class="s2">            and sf.measurement_unit = pf.measurement_unit</span>
+<span class="s2">            and sf.variable_name = pf.variable_name</span>
+<span class="s2">    ),</span>
+<span class="s2">    joined AS (</span>
+<span class="s2">        SELECT</span>
+<span class="s2">            reference_time</span>
+<span class="s2">            , value_time</span>
+<span class="s2">            , secondary_location_id</span>
+<span class="s2">            , secondary_value</span>
+<span class="s2">            , configuration</span>
+<span class="s2">            , measurement_unit</span>
+<span class="s2">            , variable_name</span>
+<span class="s2">            , primary_value</span>
+<span class="s2">            , primary_location_id</span>
+<span class="s2">            , lead_time</span>
+<span class="s2">            , absolute_difference</span>
+<span class="s2">        FROM(</span>
+<span class="s2">            SELECT *,</span>
+<span class="s2">                row_number()</span>
+<span class="s2">            OVER(</span>
+<span class="s2">                PARTITION BY value_time,</span>
+<span class="s2">                             primary_location_id,</span>
+<span class="s2">                             configuration,</span>
+<span class="s2">                             variable_name,</span>
+<span class="s2">                             measurement_unit,</span>
+<span class="s2">                             reference_time</span>
+<span class="s2">                ORDER BY primary_reference_time desc</span>
+<span class="s2">                ) AS rn</span>
+<span class="s2">            FROM initial_joined</span>
+<span class="s2">            )</span>
+<span class="s2">        WHERE rn = 1</span>
+<span class="s2">    )</span>
+<span class="s2">    INSERT INTO joined_timeseries</span>
+<span class="s2">    SELECT</span>
+<span class="s2">        *</span>
+<span class="s2">    FROM</span>
+<span class="s2">        joined</span>
+<span class="s2">    ORDER BY</span>
+<span class="s2">        </span><span class="si">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">jtq</span><span class="o">.</span><span class="n">order_by</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">    ;&quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">query</span></div>
+
+
+
+<div class="viewcode-block" id="describe_timeseries">
+<a class="viewcode-back" href="../../../autoapi/teehr/queries/duckdb_database/index.html#teehr.queries.duckdb_database.describe_timeseries">[docs]</a>
+<span class="k">def</span> <span class="nf">describe_timeseries</span><span class="p">(</span><span class="n">timeseries_filepath</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Retrieve descriptive stats for a time series.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    timeseries_filepath : str</span>
+<span class="sd">        File path to the &quot;observed&quot; data.  String must include path to file(s)</span>
+<span class="sd">        and can include wildcards.  For example, &quot;/path/to/parquet/*.parquet&quot;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Dict</span>
+<span class="sd">        A dictionary of summary statistics for a timeseries.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TEST QUERIES</span>
+
+    <span class="c1"># Find number of rows and unique locations</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT</span>
+<span class="s2">        COUNT ( DISTINCT</span>
+<span class="s2">            location_id</span>
+<span class="s2">        )</span>
+<span class="s2">        AS num_location_ids,</span>
+<span class="s2">        COUNT(*) AS num_rows,</span>
+<span class="s2">        MAX(value_time) as end_date,</span>
+<span class="s2">        MIN(value_time) as start_date</span>
+<span class="s2">        FROM read_parquet(&quot;</span><span class="si">{</span><span class="n">timeseries_filepath</span><span class="si">}</span><span class="s2">&quot;)</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">duckdb</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">to_df</span><span class="p">()</span>
+    <span class="n">num_location_ids</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;num_location_ids&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">total_num_rows</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;num_rows&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">start_date</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;start_date&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">end_date</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;end_date&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Find number of duplicates from all columns</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT</span>
+<span class="s2">            value_time,</span>
+<span class="s2">            location_id,</span>
+<span class="s2">            value,</span>
+<span class="s2">            measurement_unit,</span>
+<span class="s2">            reference_time,</span>
+<span class="s2">            configuration,</span>
+<span class="s2">            variable_name,</span>
+<span class="s2">        COUNT(*)</span>
+<span class="s2">        FROM read_parquet(&quot;</span><span class="si">{</span><span class="n">timeseries_filepath</span><span class="si">}</span><span class="s2">&quot;)</span>
+<span class="s2">        GROUP BY</span>
+<span class="s2">            value_time,</span>
+<span class="s2">            location_id,</span>
+<span class="s2">            value,</span>
+<span class="s2">            measurement_unit,</span>
+<span class="s2">            reference_time,</span>
+<span class="s2">            configuration,</span>
+<span class="s2">            variable_name,</span>
+<span class="s2">        HAVING COUNT(*) &gt; 1</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">duckdb</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">to_df</span><span class="p">()</span>
+    <span class="n">num_duplicate_rows</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">size</span>
+
+    <span class="c1"># Find number of duplicate value_times per location_id</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        WITH find_duplicates AS (</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                value_time,</span>
+<span class="s2">                location_id,</span>
+<span class="s2">                measurement_unit,</span>
+<span class="s2">                configuration,</span>
+<span class="s2">                variable_name,</span>
+<span class="s2">            COUNT(*) AS num_duplicates</span>
+<span class="s2">            FROM read_parquet(&quot;</span><span class="si">{</span><span class="n">timeseries_filepath</span><span class="si">}</span><span class="s2">&quot;)</span>
+<span class="s2">            GROUP BY</span>
+<span class="s2">                value_time,</span>
+<span class="s2">                location_id,</span>
+<span class="s2">                measurement_unit,</span>
+<span class="s2">                configuration,</span>
+<span class="s2">                variable_name,</span>
+<span class="s2">            HAVING COUNT(*) &gt; 1</span>
+<span class="s2">        )</span>
+<span class="s2">        SELECT</span>
+<span class="s2">        COUNT( DISTINCT location_id)</span>
+<span class="s2">        AS num_locations_with_duplicates</span>
+<span class="s2">        FROM find_duplicates</span>
+<span class="s2">        WHERE num_duplicates &gt; 1</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">duckdb</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">to_df</span><span class="p">()</span>
+    <span class="n">num_locations_with_duplicate_value_times</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span>
+        <span class="s2">&quot;num_locations_with_duplicates&quot;</span>
+    <span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Check time step integrity by reference_time and location_id</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        WITH value_time_diff AS (</span>
+<span class="s2">            SELECT *,</span>
+<span class="s2">                value_time - LAG(value_time)</span>
+<span class="s2">            OVER(PARTITION BY</span>
+<span class="s2">                location_id,</span>
+<span class="s2">                reference_time</span>
+<span class="s2">            ORDER BY value_time)</span>
+<span class="s2">            AS value_time_step</span>
+<span class="s2">            FROM read_parquet(&quot;</span><span class="si">{</span><span class="n">timeseries_filepath</span><span class="si">}</span><span class="s2">&quot;)</span>
+<span class="s2">        ),</span>
+<span class="s2">        missing_timesteps AS (</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                location_id,</span>
+<span class="s2">                reference_time,</span>
+<span class="s2">                MAX(value_time_step) AS max_timestep,</span>
+<span class="s2">                MIN(value_time_step) AS min_timestep,</span>
+<span class="s2">                max_timestep = min_timestep AS none_missing</span>
+<span class="s2">            FROM value_time_diff</span>
+<span class="s2">            GROUP BY location_id, reference_time</span>
+<span class="s2">        )</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                location_id,</span>
+<span class="s2">                reference_time,</span>
+<span class="s2">                none_missing</span>
+<span class="s2">            FROM missing_timesteps</span>
+<span class="s2">            WHERE none_missing != TRUE</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">duckdb</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">to_df</span><span class="p">()</span>
+    <span class="n">num_locations_with_missing_timesteps</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">size</span>
+
+    <span class="n">output_report</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;Number of unique location IDs&quot;</span><span class="p">:</span> <span class="n">num_location_ids</span><span class="p">,</span>
+        <span class="s2">&quot;Total number of rows&quot;</span><span class="p">:</span> <span class="n">total_num_rows</span><span class="p">,</span>
+        <span class="s2">&quot;Start Date&quot;</span><span class="p">:</span> <span class="n">start_date</span><span class="p">,</span>
+        <span class="s2">&quot;End Date&quot;</span><span class="p">:</span> <span class="n">end_date</span><span class="p">,</span>
+        <span class="s2">&quot;Number of duplicate rows&quot;</span><span class="p">:</span> <span class="n">num_duplicate_rows</span><span class="p">,</span>
+        <span class="s2">&quot;Number of location IDs with duplicate value times&quot;</span><span class="p">:</span>
+            <span class="n">num_locations_with_duplicate_value_times</span><span class="p">,</span>
+        <span class="s2">&quot;Number of location IDs with missing time steps&quot;</span><span class="p">:</span>
+            <span class="n">num_locations_with_missing_timesteps</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">output_report</span></div>
+
+
+
+<div class="viewcode-block" id="create_get_timeseries_query">
+<a class="viewcode-back" href="../../../autoapi/teehr/queries/duckdb_database/index.html#teehr.queries.duckdb_database.create_get_timeseries_query">[docs]</a>
+<span class="k">def</span> <span class="nf">create_get_timeseries_query</span><span class="p">(</span>
+    <span class="n">tq</span><span class="p">:</span> <span class="n">TimeseriesQuery</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Retrieve joined timeseries using database query.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tq : TimeseriesQuery</span>
+<span class="sd">        Pydantic model containing query parameters.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The query string.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Filter By Fields:</span>
+
+<span class="sd">    * reference_time</span>
+<span class="sd">    * primary_location_id</span>
+<span class="sd">    * secondary_location_id</span>
+<span class="sd">    * primary_value</span>
+<span class="sd">    * secondary_value</span>
+<span class="sd">    * value_time</span>
+<span class="sd">    * configuration</span>
+<span class="sd">    * measurement_unit</span>
+<span class="sd">    * variable_name</span>
+<span class="sd">    * lead_time</span>
+<span class="sd">    * absolute_difference</span>
+<span class="sd">    * [any user-added fields]</span>
+
+<span class="sd">    Order By Fields:</span>
+
+<span class="sd">    * reference_time</span>
+<span class="sd">    * primary_location_id</span>
+<span class="sd">    * secondary_location_id</span>
+<span class="sd">    * primary_value</span>
+<span class="sd">    * secondary_value</span>
+<span class="sd">    * value_time</span>
+<span class="sd">    * configuration</span>
+<span class="sd">    * measurement_unit</span>
+<span class="sd">    * variable_name</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; order_by = [&quot;lead_time&quot;, &quot;primary_location_id&quot;]</span>
+
+<span class="sd">    &gt;&gt;&gt; group_by = [&quot;lead_time&quot;, &quot;primary_location_id&quot;]</span>
+
+<span class="sd">    &gt;&gt;&gt; filters = [</span>
+<span class="sd">    &gt;&gt;&gt;     {</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;column&quot;: &quot;primary_location_id&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;operator&quot;: &quot;=&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;value&quot;: &quot;gage-A&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;     },</span>
+<span class="sd">    &gt;&gt;&gt;     {</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;column&quot;: &quot;reference_time&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;operator&quot;: &quot;=&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;value&quot;: &quot;2022-01-01 00:00:00&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;     },</span>
+<span class="sd">    &gt;&gt;&gt;     {&quot;column&quot;: &quot;lead_time&quot;, &quot;operator&quot;: &quot;&lt;=&quot;, &quot;value&quot;: &quot;10 hours&quot;},</span>
+<span class="sd">    &gt;&gt;&gt; ]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">tq</span><span class="o">.</span><span class="n">timeseries_name</span> <span class="o">==</span> <span class="s2">&quot;primary&quot;</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                ANY_VALUE(reference_time) AS reference_time,</span>
+<span class="s2">                ANY_VALUE(primary_value) AS value,</span>
+<span class="s2">                value_time,</span>
+<span class="s2">                primary_location_id AS location_id,</span>
+<span class="s2">                &#39;primary&#39; as configuration,</span>
+<span class="s2">                measurement_unit,</span>
+<span class="s2">                variable_name,</span>
+<span class="s2">            FROM</span>
+<span class="s2">                joined_timeseries</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">filters_to_sql_db</span><span class="p">(</span><span class="n">tq</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">            GROUP BY</span>
+<span class="s2">                value_time,</span>
+<span class="s2">                primary_location_id,</span>
+<span class="s2">                --configuration,</span>
+<span class="s2">                measurement_unit,</span>
+<span class="s2">                variable_name,</span>
+<span class="s2">            ORDER BY</span>
+<span class="s2">                </span><span class="si">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tq</span><span class="o">.</span><span class="n">order_by</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">        ;&quot;&quot;&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                reference_time,</span>
+<span class="s2">                value_time,</span>
+<span class="s2">                secondary_location_id AS location_id,</span>
+<span class="s2">                secondary_value AS value,</span>
+<span class="s2">                configuration,</span>
+<span class="s2">                measurement_unit,</span>
+<span class="s2">                variable_name,</span>
+<span class="s2">            FROM</span>
+<span class="s2">                joined_timeseries</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">filters_to_sql_db</span><span class="p">(</span><span class="n">tq</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">            ORDER BY</span>
+<span class="s2">                </span><span class="si">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tq</span><span class="o">.</span><span class="n">order_by</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">        ;&quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">query</span></div>
+
+
+
+<div class="viewcode-block" id="create_get_timeseries_char_query">
+<a class="viewcode-back" href="../../../autoapi/teehr/queries/duckdb_database/index.html#teehr.queries.duckdb_database.create_get_timeseries_char_query">[docs]</a>
+<span class="k">def</span> <span class="nf">create_get_timeseries_char_query</span><span class="p">(</span><span class="n">tcq</span><span class="p">:</span> <span class="n">TimeseriesCharQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Retrieve joined timeseries using database query.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tcq : TimeseriesCharQuery</span>
+<span class="sd">        Pydantic model containing query parameters.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The query string.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Filter, Order By and Group By Fields</span>
+
+<span class="sd">    * reference_time</span>
+<span class="sd">    * primary_location_id</span>
+<span class="sd">    * secondary_location_id</span>
+<span class="sd">    * primary_value</span>
+<span class="sd">    * secondary_value</span>
+<span class="sd">    * value_time</span>
+<span class="sd">    * configuration</span>
+<span class="sd">    * measurement_unit</span>
+<span class="sd">    * variable_name</span>
+<span class="sd">    * lead_time</span>
+<span class="sd">    * [any user-added fields]</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; order_by = [&quot;lead_time&quot;, &quot;primary_location_id&quot;]</span>
+
+<span class="sd">    &gt;&gt;&gt; group_by = [&quot;lead_time&quot;, &quot;primary_location_id&quot;]</span>
+
+<span class="sd">    &gt;&gt;&gt; filters = [</span>
+<span class="sd">    &gt;&gt;&gt;     {</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;column&quot;: &quot;primary_location_id&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;operator&quot;: &quot;=&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;value&quot;: &quot;gage-A&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;     },</span>
+<span class="sd">    &gt;&gt;&gt;     {</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;column&quot;: &quot;reference_time&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;operator&quot;: &quot;=&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;value&quot;: &quot;2022-01-01 00:00:00&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;     },</span>
+<span class="sd">    &gt;&gt;&gt;     {&quot;column&quot;: &quot;lead_time&quot;, &quot;operator&quot;: &quot;&lt;=&quot;, &quot;value&quot;: &quot;10 hours&quot;},</span>
+<span class="sd">    &gt;&gt;&gt; ]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">join_max_time_on</span> <span class="o">=</span> <span class="n">tqu</span><span class="o">.</span><span class="n">_join_time_on</span><span class="p">(</span>
+        <span class="n">join</span><span class="o">=</span><span class="s2">&quot;mxt&quot;</span><span class="p">,</span> <span class="n">join_to</span><span class="o">=</span><span class="s2">&quot;chars&quot;</span><span class="p">,</span> <span class="n">join_on</span><span class="o">=</span><span class="n">tcq</span><span class="o">.</span><span class="n">group_by</span>
+    <span class="p">)</span>
+
+    <span class="n">order_by</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;chars.</span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">tcq</span><span class="o">.</span><span class="n">order_by</span><span class="p">]</span>
+
+    <span class="c1"># Create the fts_clause to remove duplicates if primary time series</span>
+    <span class="c1"># has been specified</span>
+    <span class="k">if</span> <span class="n">tcq</span><span class="o">.</span><span class="n">timeseries_name</span> <span class="o">==</span> <span class="s2">&quot;primary&quot;</span><span class="p">:</span>
+
+        <span class="n">selected_primary_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;reference_time&quot;</span><span class="p">,</span>
+                                   <span class="s2">&quot;primary_value&quot;</span><span class="p">,</span>
+                                   <span class="s2">&quot;value_time&quot;</span><span class="p">,</span>
+                                   <span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span>
+                                   <span class="s2">&quot;configuration&quot;</span><span class="p">,</span>
+                                   <span class="s2">&quot;measurement_unit&quot;</span><span class="p">,</span>
+                                   <span class="s2">&quot;variable_name&quot;</span><span class="p">]</span>
+        <span class="c1"># Format any group by fields that are not selected</span>
+        <span class="c1"># by default</span>
+        <span class="n">gb_fields</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">gb_fld</span> <span class="ow">in</span> <span class="n">tcq</span><span class="o">.</span><span class="n">group_by</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">gb_fld</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">selected_primary_fields</span><span class="p">:</span>
+                <span class="n">gb_fields</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;ANY_VALUE(</span><span class="si">{</span><span class="n">gb_fld</span><span class="si">}</span><span class="s2">) as </span><span class="si">{</span><span class="n">gb_fld</span><span class="si">}</span><span class="s2">, &quot;</span>
+
+        <span class="n">fts_clause</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                     SELECT</span>
+<span class="s2">                        ANY_VALUE(reference_time) AS reference_time,</span>
+<span class="s2">                        ANY_VALUE(primary_value) AS primary_value,</span>
+<span class="s2">                        value_time,</span>
+<span class="s2">                        primary_location_id,</span>
+<span class="s2">                        &#39;primary&#39; as configuration,</span>
+<span class="s2">                        measurement_unit,</span>
+<span class="s2">                        variable_name,</span>
+<span class="s2">                        </span><span class="si">{</span><span class="n">gb_fields</span><span class="si">}</span>
+<span class="s2">                     FROM</span>
+<span class="s2">                         joined_timeseries</span>
+<span class="s2">                     </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">filters_to_sql_db</span><span class="p">(</span><span class="n">tcq</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                     GROUP BY</span>
+<span class="s2">                        value_time,</span>
+<span class="s2">                        primary_location_id,</span>
+<span class="s2">                        --configuration,</span>
+<span class="s2">                        measurement_unit,</span>
+<span class="s2">                        variable_name,</span>
+<span class="s2">                    &quot;&quot;&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fts_clause</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                      SELECT</span>
+<span class="s2">                        *</span>
+<span class="s2">                      FROM</span>
+<span class="s2">                          joined_timeseries</span>
+<span class="s2">                      </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">filters_to_sql_db</span><span class="p">(</span><span class="n">tcq</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                      &quot;&quot;&quot;</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        WITH fts AS (</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">fts_clause</span><span class="si">}</span>
+<span class="s2">        ),</span>
+<span class="s2">        mxt AS (</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                </span><span class="si">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tcq</span><span class="o">.</span><span class="n">group_by</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                , </span><span class="si">{</span><span class="n">tcq</span><span class="o">.</span><span class="n">timeseries_name</span><span class="si">}</span><span class="s2">_value</span>
+<span class="s2">                , value_time</span>
+<span class="s2">                , ROW_NUMBER() OVER(</span>
+<span class="s2">                    PARTITION BY </span><span class="si">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tcq</span><span class="o">.</span><span class="n">group_by</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                    ORDER BY </span><span class="si">{</span><span class="n">tcq</span><span class="o">.</span><span class="n">timeseries_name</span><span class="si">}</span><span class="s2">_value DESC, value_time</span>
+<span class="s2">                ) as n</span>
+<span class="s2">            FROM fts</span>
+<span class="s2">        ),</span>
+<span class="s2">        chars AS (</span>
+<span class="s2">            SELECT</span>
+<span class="s2">                </span><span class="si">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tcq</span><span class="o">.</span><span class="n">group_by</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                ,count(fts.</span><span class="si">{</span><span class="n">tcq</span><span class="o">.</span><span class="n">timeseries_name</span><span class="si">}</span><span class="s2">_value) as count</span>
+<span class="s2">                ,min(fts.</span><span class="si">{</span><span class="n">tcq</span><span class="o">.</span><span class="n">timeseries_name</span><span class="si">}</span><span class="s2">_value) as min</span>
+<span class="s2">                ,max(fts.</span><span class="si">{</span><span class="n">tcq</span><span class="o">.</span><span class="n">timeseries_name</span><span class="si">}</span><span class="s2">_value) as max</span>
+<span class="s2">                ,avg(fts.</span><span class="si">{</span><span class="n">tcq</span><span class="o">.</span><span class="n">timeseries_name</span><span class="si">}</span><span class="s2">_value) as average</span>
+<span class="s2">                ,sum(fts.</span><span class="si">{</span><span class="n">tcq</span><span class="o">.</span><span class="n">timeseries_name</span><span class="si">}</span><span class="s2">_value) as sum</span>
+<span class="s2">                ,var_pop(fts.</span><span class="si">{</span><span class="n">tcq</span><span class="o">.</span><span class="n">timeseries_name</span><span class="si">}</span><span class="s2">_value) as variance</span>
+<span class="s2">            FROM</span>
+<span class="s2">                fts</span>
+<span class="s2">            GROUP BY</span>
+<span class="s2">                </span><span class="si">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tcq</span><span class="o">.</span><span class="n">group_by</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">        )</span>
+<span class="s2">        SELECT</span>
+<span class="s2">            chars.</span><span class="si">{</span><span class="n">tcq</span><span class="o">.</span><span class="n">timeseries_name</span><span class="si">}</span><span class="s2">_location_id as location_id,</span>
+<span class="s2">            chars.count,</span>
+<span class="s2">            chars.min,</span>
+<span class="s2">            chars.max,</span>
+<span class="s2">            chars.average,</span>
+<span class="s2">            chars.sum,</span>
+<span class="s2">            chars.variance,</span>
+<span class="s2">            mxt.value_time as max_value_time</span>
+<span class="s2">        FROM chars</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">join_max_time_on</span><span class="si">}</span>
+<span class="s2">        ORDER BY</span>
+<span class="s2">            </span><span class="si">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">order_by</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">    ;&quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">query</span></div>
+
+
+
+<div class="viewcode-block" id="create_unique_field_values_query">
+<a class="viewcode-back" href="../../../autoapi/teehr/queries/duckdb_database/index.html#teehr.queries.duckdb_database.create_unique_field_values_query">[docs]</a>
+<span class="k">def</span> <span class="nf">create_unique_field_values_query</span><span class="p">(</span><span class="n">fn</span><span class="p">:</span> <span class="n">JoinedTimeseriesFieldName</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a query for identifying unique values in a field.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fn : JoinedTimeseriesFieldName</span>
+<span class="sd">        Name of the field to query for unique values.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The query string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT</span>
+<span class="s2">        DISTINCT</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">fn</span><span class="o">.</span><span class="n">field_name</span><span class="si">}</span>
+<span class="s2">        AS unique_</span><span class="si">{</span><span class="n">fn</span><span class="o">.</span><span class="n">field_name</span><span class="si">}</span><span class="s2">_values,</span>
+<span class="s2">        FROM</span>
+<span class="s2">            joined_timeseries</span>
+<span class="s2">        ORDER BY</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">fn</span><span class="o">.</span><span class="n">field_name</span><span class="si">}</span>
+<span class="s2">        &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">query</span></div>
+
+</pre></div>
+
+                </article>
+
+
+
+
+
+                <footer class="prev-next-footer">
+
+<div class="prev-next-area">
+</div>
+                </footer>
+
+            </div>
+
+
+
+                <div class="bd-sidebar-secondary bd-toc"></div>
+
+
+          </div>
+          <footer class="bd-footer-content">
+
+          </footer>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+
+    <div class="footer-items__start">
+
+        <div class="footer-item">
+
+  <p class="copyright">
+
+      © Copyright 2024 RTI International.
+      <br/>
+
+  </p>
+</div>
+
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    <br/>
+  </p>
+</div>
+
+    </div>
+
+
+
+    <div class="footer-items__end">
+
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.2.
+</p></div>
+
+    </div>
+
+</div>
+
+  </footer>
+  </body>
+</html>

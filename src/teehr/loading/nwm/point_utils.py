@@ -1,3 +1,4 @@
+"""Module defining shared functions for processing NWM point data."""
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 import re
@@ -24,7 +25,7 @@ def file_chunk_loop(
     units_format_dict: Dict,
     nwm_version: str
 ):
-    """Fetch NWM values and convert to tabular format for a single json"""
+    """Fetch NWM values and convert to tabular format for a single json."""
     ds = get_dataset(
         row.filepath,
         ignore_missing_file,
@@ -73,7 +74,7 @@ def process_chunk_of_files(
     overwrite_output: bool,
     nwm_version: str
 ):
-    """Assemble a table for a chunk of NWM files"""
+    """Assemble a table for a chunk of NWM files."""
 
     location_ids = np.array(location_ids).astype(int)
 
@@ -145,39 +146,39 @@ def fetch_and_format_nwm_points(
     overwrite_output: bool,
     nwm_version: str
 ):
-    """Reads in the single reference jsons, subsets the
-        NWM data based on provided IDs and formats and saves
-        the data as a parquet files using Dask.
+    """Read in the single reference jsons, subset the
+        NWM data based on provided IDs and formats and save
+        the data as parquet files using Dask.
 
     Parameters
     ----------
-    json_paths: list
-        List of the single json reference filepaths
+    json_paths : list
+        List of the single json reference filepaths.
     location_ids : Iterable[int]
-        Array specifying NWM IDs of interest
+        Array specifying NWM IDs of interest.
     configuration : str
-        NWM forecast category
+        NWM forecast category.
     variable_name : str
-        Name of the NWM data variable to download
+        Name of the NWM data variable to download.
     output_parquet_dir : str
-        Path to the directory for the final parquet files
-    process_by_z_hour: bool
+        Path to the directory for the final parquet files.
+    process_by_z_hour : bool
         A boolean flag that determines the method of grouping files
         for processing.
-    stepsize: int
+    stepsize : int
         The number of json files to process at one time.
-    ignore_missing_file: bool
+    ignore_missing_file : bool
         Flag specifying whether or not to fail if a missing NWM
         file is encountered
         True = skip and continue
-        False = fail
-    units_format_dict: Dict,
-        Dictionary of unit formats
-    overwrite_output: bool
+        False = fail.
+    units_format_dict : Dict,
+        Dictionary of unit formats.
+    overwrite_output : bool
         Flag specifying whether or not to overwrite output files if
-        they already exist.  True = overwrite; False = fail
-    nwm_version: str
-        Specified NWM version
+        they already exist.  True = overwrite; False = fail.
+    nwm_version : str
+        Specified NWM version.
     """
 
     output_parquet_dir = Path(output_parquet_dir)

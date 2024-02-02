@@ -1,3 +1,4 @@
+"""Module for database queries via FastAPI."""
 import json
 
 from yaml import load  # , dump
@@ -9,7 +10,7 @@ except ImportError:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from typing import Union
+from typing import Union, Dict, List
 # from pydantic import validator
 from pathlib import Path
 
@@ -53,7 +54,19 @@ with open(Path(Path(__file__).resolve().parent, "data.yaml")) as f:
     datasets = load(f.read(), Loader)
 
 
-def format_response(df: Union[gpd.GeoDataFrame, pd.DataFrame]) -> dict:
+def format_response(df: Union[gpd.GeoDataFrame, pd.DataFrame]) -> List[Dict]:
+    """Convert the query response format from the dataframe to a dict.
+
+    Parameters
+    ----------
+    df : Union[gpd.GeoDataFrame, pd.DataFrame]
+        Dataframe or Geodataframe.
+
+    Returns
+    -------
+    List[Dict]
+        A list of dictionaries.
+    """
     # print(df.info())
     if isinstance(df, gpd.GeoDataFrame):
         # convert datetime/duration to string
@@ -69,30 +82,68 @@ def format_response(df: Union[gpd.GeoDataFrame, pd.DataFrame]) -> dict:
 
 @app.get("/")
 def read_root():
+    """Root message."""
     return {"msg": "Welcome to TEEHR"}
 
 
 @app.get("/datasets/")
 async def get_datasets():
+    """Get datasets."""
     return datasets["datasets"]
 
 
 @app.get("/datasets/{dataset_id}")
-async def read_dataset_by_id(dataset_id: str):
+async def read_dataset_by_id(dataset_id: str) -> Dict:
+    """Get a dataset by its ID.
+
+    Parameters
+    ----------
+    dataset_id : str
+        Dataset ID.
+
+    Returns
+    -------
+    Dict
+        Dataset filepaths.
+    """
     return datasets["datasets"][dataset_id]
 
 
 @app.get("/datasets/{dataset_id}/get_metric_fields")
 async def get_metric_fields(
     dataset_id: str,
-):
+) -> List[str]:
+    """Get metric fields.
+
+    Parameters
+    ----------
+    dataset_id : str
+        Dataset ID.
+
+    Returns
+    -------
+    List
+        List of available metrics.
+    """
     return list(MetricEnum)
 
 
 @app.get("/datasets/{dataset_id}/get_data_fields")
 async def get_data_fields(
     dataset_id: str,
-):
+) -> List[Dict]:
+    """Get data fields and datatypes.
+
+    Parameters
+    ----------
+    dataset_id : str
+        Dataset ID.
+
+    Returns
+    -------
+    List
+        A list of dictionaries of database fields and their types.
+    """
     config = datasets["datasets"][dataset_id]
     tds = TEEHRDatasetAPI(config["database_filepath"])
     fields = tds.get_joined_timeseries_schema()
@@ -107,7 +158,19 @@ async def get_data_fields(
 
 
 @app.get("/datasets/{dataset_id}/get_filter_operators")
-async def get_filter_operators(dataset_id: str):
+async def get_filter_operators(dataset_id: str) -> Dict:
+    """Get filter operators.
+
+    Parameters
+    ----------
+    dataset_id : str
+        Dataset ID.
+
+    Returns
+    -------
+    Dict
+        A dictionary of filter operator keywords and their symbols.
+    """
     return {item.name: item.value for item in FilterOperatorEnum}
 
 
@@ -139,7 +202,21 @@ async def get_filter_operators(dataset_id: str):
 async def get_metrics_by_query(
     dataset_id: str,
     api_metrics_query: MetricQuery
-):
+) -> List[Dict]:
+    """Get metrics by query.
+
+    Parameters
+    ----------
+    dataset_id : str
+        Dataset ID.
+    api_metrics_query : MetricQuery
+        Pydantic model of query variables.
+
+    Returns
+    -------
+    List[Dict]
+        A list of dictionaries of query results.
+    """
     config = datasets["datasets"][dataset_id]
     tds = TEEHRDatasetAPI(config["database_filepath"])
     df = tds.get_metrics(api_metrics_query)
@@ -151,8 +228,21 @@ async def get_metrics_by_query(
 async def get_timeseries_by_query(
     dataset_id: str,
     api_timeseries_query: TimeseriesQuery
-):
+) -> List[Dict]:
+    """Get timeseries by query.
 
+    Parameters
+    ----------
+    dataset_id : str
+        Dataset ID.
+    api_timeseries_query : TimeseriesQuery
+        Pydantic model of query variables.
+
+    Returns
+    -------
+    List[Dict]
+        A list of dictionaries of query results.
+    """
     config = datasets["datasets"][dataset_id]
     tds = TEEHRDatasetAPI(config["database_filepath"])
     df = tds.get_timeseries(api_timeseries_query)
@@ -164,8 +254,21 @@ async def get_timeseries_by_query(
 async def get_timeseries_chars_by_query(
     dataset_id: str,
     api_timeseries_char_query: TimeseriesCharQuery
-):
+) -> List[Dict]:
+    """Get time series characteristics by query.
 
+    Parameters
+    ----------
+    dataset_id : str
+        Dataset ID.
+    api_timeseries_char_query : TimeseriesCharQuery
+        Pydantic model of query variables.
+
+    Returns
+    -------
+    List[Dict]
+        A list of dictionaries of query results.
+    """
     config = datasets["datasets"][dataset_id]
     tds = TEEHRDatasetAPI(config["database_filepath"])
     df = tds.get_timeseries_chars(api_timeseries_char_query)
@@ -177,7 +280,21 @@ async def get_timeseries_chars_by_query(
 async def get_unique_field_vals(
     dataset_id: str,
     api_field_name: JoinedTimeseriesFieldName
-):
+) -> List[Dict]:
+    """Get unique field names in the joined_timeseries table.
+
+    Parameters
+    ----------
+    dataset_id : str
+        Dataset ID.
+    api_field_name : JoinedTimeseriesFieldName
+        Pydantic model of query variables.
+
+    Returns
+    -------
+    List[Dict]
+        Pydantic model of query variables.
+    """
     config = datasets["datasets"][dataset_id]
     tds = TEEHRDatasetAPI(config["database_filepath"])
     df = tds.get_unique_field_values(api_field_name)

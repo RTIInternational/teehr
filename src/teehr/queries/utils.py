@@ -1,3 +1,4 @@
+"""A module defining common utilities for queries."""
 import pandas as pd
 import geopandas as gpd
 import warnings
@@ -17,13 +18,14 @@ SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def _get_datetime_list_string(values):
+    """Get a datetime list as a list of strings."""
     return [f"'{v.strftime(SQL_DATETIME_STR_FORMAT)}'" for v in values]
 
 
 def _format_iterable_value(
     values: Iterable[Union[str, int, float, datetime]]
 ) -> str:
-    """Returns an SQL formatted string from list of values.
+    """Return an SQL formatted string from list of values.
 
     Parameters
     ----------
@@ -35,10 +37,9 @@ def _format_iterable_value(
 
     Returns
     -------
-    formatted_string : str
-
+    str
+        An SQL formatted string from list of values.
     """
-
     # string
     if isinstance(values[0], str):
         return f"""({",".join([f"'{v}'" for v in values])})"""
@@ -58,17 +59,17 @@ def _format_iterable_value(
 def _format_filter_item_db(
     filter: Union[JoinedFilter, TimeseriesFilter]
 ) -> str:
-    """Returns an SQL formatted string for single filter object.
+    """Return an SQL formatted string for single filter object.
 
     Parameters
     ----------
-    filter: models.*Filter
+    filter : models.*Filter
         A single *Filter object.
 
     Returns
     -------
-    formatted_string : str
-
+    str
+        An SQL formatted string for single filter object.
     """
     column = filter.column
 
@@ -101,8 +102,8 @@ def filters_to_sql_db(filters: List[JoinedFilter]) -> List[str]:
 
     Returns
     -------
-    where_clause : str
-        A where clause formatted string
+    str
+        A where clause formatted string.
     """
     if len(filters) > 0:
         filter_strs = []
@@ -115,17 +116,17 @@ def filters_to_sql_db(filters: List[JoinedFilter]) -> List[str]:
 
 
 def _format_filter_item(filter: Union[JoinedFilter, TimeseriesFilter]) -> str:
-    """Returns an SQL formatted string for single filter object.
+    """Return an SQL formatted string for single filter object.
 
     Parameters
     ----------
-    filter: models.*Filter
+    filter : models.*Filter
         A single *Filter object.
 
     Returns
     -------
-    formatted_string : str
-
+    str
+        An SQL formatted string for single filter object.
     """
     column = filter.column
     prepend_sf_list = [
@@ -171,8 +172,8 @@ def filters_to_sql(filters: List[JoinedFilter]) -> List[str]:
 
     Returns
     -------
-    where_clause : str
-        A where clause formatted string
+    str
+        A where clause formatted string.
     """
     if len(filters) > 0:
         filter_strs = []
@@ -187,7 +188,7 @@ def filters_to_sql(filters: List[JoinedFilter]) -> List[str]:
 def geometry_join_clause_db(
     q: Union[MetricQuery, JoinedTimeseriesQuery]
 ) -> str:
-    """Generate the join clause for"""
+    """Generate the join clause."""
     if q.include_geometry:
         return """JOIN geometry gf
             on pf.location_id = gf.id
@@ -196,7 +197,7 @@ def geometry_join_clause_db(
 
 
 def geometry_join_clause(q: Union[MetricQuery, JoinedTimeseriesQuery]) -> str:
-    """Generate the join clause for"""
+    """Generate the join clause."""
     if q.include_geometry:
         return f"""JOIN read_parquet('{str(q.geometry_filepath)}') gf
             on pf.location_id = gf.id
@@ -207,6 +208,7 @@ def geometry_join_clause(q: Union[MetricQuery, JoinedTimeseriesQuery]) -> str:
 def geometry_select_clause(
     q: Union[MetricQuery, JoinedTimeseriesQuery]
 ) -> str:
+    """"Generate the geometry select clause."""
     if q.include_geometry:
         return ",gf.geometry as geometry"
     return ""
@@ -215,6 +217,7 @@ def geometry_select_clause(
 def geometry_joined_select_clause(
         q: Union[MetricQuery, JoinedTimeseriesQuery]
 ) -> str:
+    """Generate the geometry joined select clause."""
     if q.include_geometry:
         return ", geometry"
     return ""
@@ -223,6 +226,7 @@ def geometry_joined_select_clause(
 def geometry_select_clause_db(
     q: Union[MetricQuery, JoinedTimeseriesQuery]
 ) -> str:
+    """Generate the geometry select clause for a database."""
     if q.include_geometry:
         return ", geometry"
     return ""
@@ -231,7 +235,7 @@ def geometry_select_clause_db(
 def metric_geometry_join_clause_db(
     q: Union[MetricQuery, JoinedTimeseriesQuery]
 ) -> str:
-    """Generate the join clause for"""
+    """Generate the metric geometry join clause for a database."""
     if q.include_geometry:
         return """JOIN geometry gf
             on primary_location_id = gf.id
@@ -242,7 +246,7 @@ def metric_geometry_join_clause_db(
 def metric_geometry_join_clause(
     q: Union[MetricQuery, JoinedTimeseriesQuery]
 ) -> str:
-    """Generate the join clause for"""
+    """Generate the metric geometry join clause."""
     if q.include_geometry:
         return f"""JOIN read_parquet('{str(q.geometry_filepath)}') gf
             on primary_location_id = gf.id
@@ -253,6 +257,7 @@ def metric_geometry_join_clause(
 def _remove_duplicates_jtq_cte(
     q: JoinedTimeseriesQuery
 ) -> str:
+    """Generate the remove duplicates CTE for the JoinedTimeseriesQuery."""
     if q.remove_duplicates:
         qry = f"""
             SELECT
@@ -306,6 +311,7 @@ def _remove_duplicates_jtq_cte(
 def _remove_duplicates_mq_cte(
     q: MetricQuery
 ) -> str:
+    """Generate the remove duplicates CTE for the MetricQuery."""
     if q.remove_duplicates:
         qry = """
             SELECT
@@ -357,6 +363,7 @@ def _remove_duplicates_mq_cte(
 
 
 def _join_time_on(join: str, join_to: str, join_on: List[str]):
+    """Generate the join time on query."""
     qry = f"""
         INNER JOIN {join}
         ON {f" AND ".join([f"{join}.{jo} = {join_to}.{jo}" for jo in join_on])}
@@ -366,6 +373,7 @@ def _join_time_on(join: str, join_to: str, join_on: List[str]):
 
 
 def _join_on(join: str, join_to: str, join_on: List[str]) -> str:
+    """Generate the join on query."""
     qry = f"""
         INNER JOIN {join}
         ON {f" AND ".join([f"{join}.{jo} = {join_to}.{jo}" for jo in join_on])}
@@ -374,6 +382,7 @@ def _join_on(join: str, join_to: str, join_on: List[str]) -> str:
 
 
 def _nse_cte(mq: MetricQuery) -> str:
+    """Generate the nash-sutcliffe-efficiency CTE."""
     if (
         "nash_sutcliffe_efficiency" in mq.include_metrics
         or mq.include_metrics == "all"
@@ -393,6 +402,7 @@ def _nse_cte(mq: MetricQuery) -> str:
 
 
 def _join_nse_cte(mq: MetricQuery) -> str:
+    """Generate the join nash-sutcliffe-efficiency CTE."""
     if (
         "nash_sutcliffe_efficiency" in mq.include_metrics
         or mq.include_metrics == "all"
@@ -404,6 +414,7 @@ def _join_nse_cte(mq: MetricQuery) -> str:
 
 
 def _select_max_value_timedelta(mq: MetricQuery) -> str:
+    """Generate the select max value timedelta query segment."""
     if (
         "max_value_timedelta" in mq.include_metrics
         or mq.include_metrics == "all"
@@ -420,6 +431,7 @@ def _select_max_value_timedelta(mq: MetricQuery) -> str:
 
 
 def _select_secondary_max_value_time(mq: MetricQuery) -> str:
+    """Generate the select secondary max value time query segment."""
     if (
         "secondary_max_value_time" in mq.include_metrics
         or mq.include_metrics == "all"
@@ -432,6 +444,7 @@ def _select_secondary_max_value_time(mq: MetricQuery) -> str:
 
 
 def _select_primary_max_value_time(mq: MetricQuery) -> str:
+    """Generate the select primary max value time query segment."""
     if (
         "primary_max_value_time" in mq.include_metrics
         or mq.include_metrics == "all"
@@ -444,6 +457,7 @@ def _select_primary_max_value_time(mq: MetricQuery) -> str:
 
 
 def _select_root_mean_squared_error(mq: MetricQuery) -> str:
+    """Generate the select root mean squared error query segment."""
     if (
         "root_mean_squared_error" in mq.include_metrics
         or mq.include_metrics == "all"
@@ -455,6 +469,7 @@ def _select_root_mean_squared_error(mq: MetricQuery) -> str:
 
 
 def _select_mean_squared_error(mq: MetricQuery) -> str:
+    """Generate the select mean squared error query segment."""
     if (
         "mean_squared_error" in mq.include_metrics
         or mq.include_metrics == "all"
@@ -466,12 +481,14 @@ def _select_mean_squared_error(mq: MetricQuery) -> str:
 
 
 def _select_mean_error(mq: MetricQuery) -> str:
+    """Generate the select mean error query segment."""
     if "mean_error" in mq.include_metrics or mq.include_metrics == "all":
         return """, sum(absolute_difference)/count(*) as mean_error"""
     return ""
 
 
 def _select_kling_gupta_efficiency(mq: MetricQuery) -> str:
+    """Generate the select kling gupta efficiency query segment."""
     if (
         "kling_gupta_efficiency" in mq.include_metrics
         or mq.include_metrics == "all"
@@ -487,6 +504,7 @@ def _select_kling_gupta_efficiency(mq: MetricQuery) -> str:
 
 
 def _select_nash_sutcliffe_efficiency(mq: MetricQuery) -> str:
+    """Generate the select nash sutcliffe efficiency query segment."""
     if (
         "nash_sutcliffe_efficiency" in mq.include_metrics
         or mq.include_metrics == "all"
@@ -500,12 +518,14 @@ def _select_nash_sutcliffe_efficiency(mq: MetricQuery) -> str:
 
 
 def _select_bias(mq: MetricQuery) -> str:
+    """Generate the select bias  query segment."""
     if "bias" in mq.include_metrics or mq.include_metrics == "all":
         return """, sum(secondary_value - primary_value)/count(*) as bias"""
     return ""
 
 
 def _select_max_value_delta(mq: MetricQuery) -> str:
+    """Generate the select max value delta query segment."""
     if "max_value_delta" in mq.include_metrics or mq.include_metrics == "all":
         return """, max(secondary_value) - max(primary_value)
             as max_value_delta
@@ -514,24 +534,28 @@ def _select_max_value_delta(mq: MetricQuery) -> str:
 
 
 def _select_primary_count(mq: MetricQuery) -> str:
+    """Generate the select primary count query segment."""
     if "primary_count" in mq.include_metrics or mq.include_metrics == "all":
         return """, count(primary_value) as primary_count"""
     return ""
 
 
 def _select_secondary_count(mq: MetricQuery) -> str:
+    """Generate the select secondary count query segment."""
     if "secondary_count" in mq.include_metrics or mq.include_metrics == "all":
         return """, count(secondary_value) as secondary_count"""
     return ""
 
 
 def _select_primary_minimum(mq: MetricQuery) -> str:
+    """Generate the select primary minimum query segment."""
     if "primary_minimum" in mq.include_metrics or mq.include_metrics == "all":
         return """, min(primary_value) as primary_minimum"""
     return ""
 
 
 def _select_secondary_minimum(mq: MetricQuery) -> str:
+    """Generate the select secondary minimum query segment."""
     if (
         "secondary_minimum" in mq.include_metrics
         or mq.include_metrics == "all"
@@ -541,12 +565,14 @@ def _select_secondary_minimum(mq: MetricQuery) -> str:
 
 
 def _select_primary_maximum(mq: MetricQuery) -> str:
+    """Generate the select primary maximum query segment."""
     if "primary_maximum" in mq.include_metrics or mq.include_metrics == "all":
         return """, max(primary_value) as primary_maximum"""
     return ""
 
 
 def _select_secondary_maximum(mq: MetricQuery) -> str:
+    """Generate the select secondary maximum query segment."""
     if (
         "secondary_maximum" in mq.include_metrics
         or mq.include_metrics == "all"
@@ -556,12 +582,14 @@ def _select_secondary_maximum(mq: MetricQuery) -> str:
 
 
 def _select_primary_average(mq: MetricQuery) -> str:
+    """Generate the select primary average query segment."""
     if "primary_average" in mq.include_metrics or mq.include_metrics == "all":
         return """, avg(primary_value) as primary_average"""
     return ""
 
 
 def _select_secondary_average(mq: MetricQuery) -> str:
+    """Generate the select secondary average query segment."""
     if (
         "secondary_average" in mq.include_metrics
         or mq.include_metrics == "all"
@@ -571,24 +599,28 @@ def _select_secondary_average(mq: MetricQuery) -> str:
 
 
 def _select_primary_sum(mq: MetricQuery) -> str:
+    """Generate the select primary sum query segment."""
     if "primary_sum" in mq.include_metrics or mq.include_metrics == "all":
         return """, sum(primary_value) as primary_sum"""
     return ""
 
 
 def _select_secondary_sum(mq: MetricQuery) -> str:
+    """Generate the select secondary sum query segment."""
     if "secondary_sum" in mq.include_metrics or mq.include_metrics == "all":
         return """, sum(secondary_value) as secondary_sum"""
     return ""
 
 
 def _select_primary_variance(mq: MetricQuery) -> str:
+    """Generate the select primary variance query segment."""
     if "primary_variance" in mq.include_metrics or mq.include_metrics == "all":
         return """, var_pop(primary_value) as primary_variance"""
     return ""
 
 
 def _select_secondary_variance(mq: MetricQuery) -> str:
+    """Generate the select secondary variance query segment."""
     if (
         "secondary_variance" in mq.include_metrics
         or mq.include_metrics == "all"
@@ -613,9 +645,8 @@ def df_to_gdf(df: pd.DataFrame) -> gpd.GeoDataFrame:
 
     Returns
     -------
-    gdf : gpd.GeoDataFrame
+    gpd.GeoDataFrame
         GeoDataFrame with a valid `geometry` column.
-
     """
     df["geometry"] = gpd.GeoSeries.from_wkb(
         df["geometry"].apply(lambda x: bytes(x))

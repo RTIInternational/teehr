@@ -1,3 +1,4 @@
+"""Test for fetching and formatting NWM data."""
 from pathlib import Path
 
 import pandas as pd
@@ -12,7 +13,7 @@ TEMP_DIR = Path("tests", "data", "temp")
 
 
 def test_nwm22_point_fetch_and_format():
-
+    """Test NWM22 point fetch and format."""
     test_dir = Path("tests", "data", "nwm22")
 
     json_paths = [Path(
@@ -51,7 +52,7 @@ def test_nwm22_point_fetch_and_format():
 
 
 def test_nwm30_point_fetch_and_format():
-
+    """Test NWM30 point fetch and format."""
     test_dir = Path("tests", "data", "nwm30")
 
     json_paths = [Path(
@@ -90,7 +91,7 @@ def test_nwm30_point_fetch_and_format():
 
 
 def test_nwm22_grid_fetch_and_format():
-
+    """Test NWM22 grid fetch and format."""
     test_dir = Path("tests", "data", "nwm22")
     weights_filepath = Path(test_dir, "onehuc10_weights.parquet")
 
@@ -119,7 +120,7 @@ def test_nwm22_grid_fetch_and_format():
 
 
 def test_nwm30_grid_fetch_and_format():
-
+    """Test NWM30 grid fetch and format."""
     test_dir = Path("tests", "data", "nwm30")
     weights_filepat = Path(test_dir, "one_huc10_alaska_weights.parquet")
 

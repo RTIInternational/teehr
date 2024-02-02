@@ -1,3 +1,4 @@
+"""Test pandas metric queries."""
 import pandas as pd
 import geopandas as gpd
 # import pytest
@@ -13,6 +14,7 @@ GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
 
 
 def test_metric_query_df():
+    """Test metric query df."""
     query_df = tqk.get_metrics(
         primary_filepath=PRIMARY_FILEPATH,
         secondary_filepath=SECONDARY_FILEPATH,
@@ -28,6 +30,7 @@ def test_metric_query_df():
 
 
 def test_metric_query_df2():
+    """Test metric query df v2."""
     query_df = tqk.get_metrics(
         primary_filepath=PRIMARY_FILEPATH,
         secondary_filepath=SECONDARY_FILEPATH,
@@ -43,6 +46,7 @@ def test_metric_query_df2():
 
 
 def test_metric_query_filter_df():
+    """Test metric query df with filter."""
     query_df = tqk.get_metrics(
         primary_filepath=PRIMARY_FILEPATH,
         secondary_filepath=SECONDARY_FILEPATH,
@@ -65,6 +69,7 @@ def test_metric_query_filter_df():
 
 
 def test_metric_query_gdf():
+    """Test metric query gdf."""
     query_df = tqk.get_metrics(
         primary_filepath=PRIMARY_FILEPATH,
         secondary_filepath=SECONDARY_FILEPATH,
@@ -82,6 +87,7 @@ def test_metric_query_gdf():
 
 
 def test_metric_query_df_limit_metrics():
+    """Test metric query df limit metrics."""
     include_metrics = [
         "bias",
         "root_mean_squared_error",
@@ -109,6 +115,7 @@ def test_metric_query_df_limit_metrics():
 
 
 def test_metric_query_df_time_metrics():
+    """Test metric query df time metrics."""
     include_metrics = [
         "primary_max_value_time",
         "secondary_max_value_time",

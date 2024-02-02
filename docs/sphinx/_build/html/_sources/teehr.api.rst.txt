@@ -1,0 +1,21 @@
+teehr.api package
+=================
+
+Submodules
+----------
+
+teehr.api.main module
+---------------------
+
+.. automodule:: teehr.api.main
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: teehr.api
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,21 @@
+teehr.database package
+======================
+
+Submodules
+----------
+
+teehr.database.teehr\_dataset module
+------------------------------------
+
+.. automodule:: teehr.database.teehr_dataset
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: teehr.database
+   :members:
+   :undoc-members:
+   :show-inheritance:

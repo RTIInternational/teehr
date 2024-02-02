@@ -1,0 +1,7 @@
+teehr.queries.utils module
+==========================
+
+.. automodule:: teehr.queries.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:

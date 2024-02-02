@@ -1,3 +1,4 @@
+"""Tests for the TEEHR dataset API."""
 from pathlib import Path
 # import numpy as np
 
@@ -20,6 +21,7 @@ DATABASE_FILEPATH = Path("tests", "data", "temp", "temp_test.db")
 
 
 def test_unique_field_values():
+    """Test the unique field values query."""
     tds = TEEHRDatasetAPI(DATABASE_FILEPATH)
 
     jtn = JoinedTimeseriesFieldName.model_validate(
@@ -36,6 +38,7 @@ def test_unique_field_values():
 
 
 def test_metrics_query():
+    """Test the metrics query."""
     tds = TEEHRDatasetAPI(DATABASE_FILEPATH)
 
     # Get metrics
@@ -69,6 +72,7 @@ def test_metrics_query():
 
 
 def test_describe_inputs():
+    """Test the describe inputs query."""
     tds = TEEHRDatasetAPI(DATABASE_FILEPATH)
     df = tds.describe_inputs(PRIMARY_FILEPATH, SECONDARY_FILEPATH)
     assert df.index.size == 7
