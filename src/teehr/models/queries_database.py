@@ -132,18 +132,18 @@ class Filter(BaseModel):
         return v
 
 
-class JoinedTimeseriesQuery(BaseModel):
+class InsertJoinedTimeseriesQuery(BaseModel):
     primary_filepath: Union[str, Path]
     secondary_filepath: Union[str, Path]
     crosswalk_filepath: Union[str, Path]
     order_by: Optional[List[JoinedFieldNameEnum]] = []
 
 
-class TimeseriesQuery(BaseModel):
+class JoinedTimeseriesQuery(BaseModel):
     order_by: List[str]
     filters: Optional[List[Filter]] = []
     return_query: Optional[bool] = False
-    timeseries_name: TimeseriesNameEnum
+    include_geometry: bool
 
     @field_validator("filters")
     def filter_must_be_list(cls, v):
@@ -163,6 +163,58 @@ class TimeseriesQuery(BaseModel):
                         f"The order_by field '{val}' does not"
                         "exist in the database"
                     )
+        return v
+
+    @field_validator("filters")
+    def filters_must_exist_as_fields(cls, v, info: ValidationInfo):
+        """filters fields must currently exist in the database"""
+        context = info.context
+        if context:
+            existing_fields = context.get("existing_fields", set())
+            for val in v:
+                if val.column not in existing_fields:
+                    raise ValueError(
+                        f"The filters field {val.column} does not"
+                        "exist in the database"
+                    )
+        return v
+
+
+class TimeseriesQuery(BaseModel):
+    order_by: List[str]
+    filters: Optional[List[Filter]] = []
+    return_query: Optional[bool] = False
+    timeseries_name: TimeseriesNameEnum
+
+    @field_validator("filters")
+    def filter_must_be_list(cls, v):
+        if v is None:
+            return []
+        return v
+
+    @field_validator("order_by")
+    def order_by_must_exist_as_fields(cls, v, info: ValidationInfo):
+        """order_by fields must be part one of the selected fields or
+        its alias"""
+        validation_fields = [
+            "location_id",
+            "reference_time",
+            "value",
+            "primary_value",
+            "secondary_value",
+            "value_time",
+            "primary_location_id",
+            "secondary_location_id",
+            "configuration",
+            "measurement_unit",
+            "variable_name"
+        ]
+        for val in v:
+            if val not in validation_fields:
+                raise ValueError(
+                    f"The order_by field '{val}' must be a timeseries"
+                    f" field or its alias: {validation_fields}"
+                )
         return v
 
     @field_validator("filters")

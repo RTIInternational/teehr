@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.3] - 2023-12-13
+
+### Added
+* Adds `get_joined_timeseries` method to TEEHR Dataset classes.
+
+### Changed
+* Updated validation fields in the `TimeSeriesQuery` pydantic model to accept only selected fields
+rather than existing database fields.
+* Updated function argument typing in `queries/utils.py` to be more explicit
+
 ## [0.3.2] - 2023-12-12
 
 ### Added
