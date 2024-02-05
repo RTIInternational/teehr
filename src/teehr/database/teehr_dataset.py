@@ -12,6 +12,7 @@ import teehr.queries.duckdb_database as tqu_db
 import teehr.queries.utils as tqu
 from teehr.models.queries_database import (
     JoinedFieldNameEnum,
+    InsertJoinedTimeseriesQuery,
     JoinedTimeseriesQuery,
     CalculateField,
     MetricQuery,
@@ -330,6 +331,69 @@ class TEEHRDatasetAPI:
             df = self.query(query, format="df")
         return df
 
+    def get_joined_timeseries(
+        self,
+        jtq: JoinedTimeseriesQuery
+    ) -> Union[pd.DataFrame, gpd.GeoDataFrame, str]:
+        """Retrieve joined timeseries using database query.
+
+        Parameters
+        ----------
+        jtq : JoinedTimeseriesQuery
+            Pydantic model containing query parameters
+
+        tq Fields
+        ----------
+        order_by : List[str]
+            List of column/field names to order results by.
+            Must provide at least one.
+        filters : Union[List[dict], None] = None
+            List of dictionaries describing the "where" clause to limit data
+            that is included in metrics.
+        return_query: bool = False
+            True returns the query string instead of the data
+        include_geometry : bool
+            True joins the geometry to the query results.
+            Only works if `primary_location_id`
+            is included as a group_by field.
+
+        Returns
+        -------
+        Union[pd.DataFrame, gpd.GeoDataFrame, str]
+            A DataFrame or GeoDataFrame of query results
+            or the query itself as a string
+
+        Order By and Filter By Fields
+        -----------------------------------
+        * reference_time
+        * primary_location_id
+        * secondary_location_id
+        * primary_value
+        * secondary_value
+        * value_time
+        * configuration
+        * measurement_unit
+        * variable_name
+        * lead_time
+        * absolute_difference
+        * [any user-added fields]
+
+        """
+
+        jtq = self._validate_query_model(jtq)
+
+        query = tqu_db.create_get_joined_timeseries_query(jtq)
+
+        if jtq.return_query:
+            return tqu.remove_empty_lines(query)
+        elif jtq.include_geometry:
+            self._check_if_geometry_is_inserted()
+            df = self.query(query, format="df")
+            return tqu.df_to_gdf(df)
+        else:
+            df = self.query(query, format="df")
+        return df
+
     def get_timeseries(
         self,
         tq: TimeseriesQuery
@@ -377,9 +441,10 @@ class TEEHRDatasetAPI:
 
         Order By Fields
         ---------------
-        * reference_time
         * primary_location_id
         * secondary_location_id
+        * location_id
+        * value
         * primary_value
         * secondary_value
         * value_time
@@ -802,7 +867,7 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         """
         self._validate_joined_timeseries_base_fields(drop_added_fields)
 
-        jtq = JoinedTimeseriesQuery.model_validate(
+        jtq = InsertJoinedTimeseriesQuery.model_validate(
             {
                 "primary_filepath": primary_filepath,
                 "secondary_filepath": secondary_filepath,
@@ -1111,6 +1176,73 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
             df = self.query(query, read_only=True, format="df")
         return df
 
+    def get_joined_timeseries(
+        self,
+        order_by: List[str],
+        filters: Union[List[dict], None] = None,
+        include_geometry: bool = False,
+        return_query: bool = False,
+    ) -> Union[pd.DataFrame, gpd.GeoDataFrame, str]:
+        """Retrieve joined timeseries using database query.
+
+        Parameters
+        ----------
+        order_by : List[str]
+            List of column/field names to order results by.
+            Must provide at least one.
+        filters : Union[List[dict], None] = None
+            List of dictionaries describing the "where" clause to limit data
+            that is included in metrics.
+        include_geometry : bool
+            True joins the geometry to the query results.
+            Only works if `primary_location_id`
+            is included as a group_by field.
+        return_query: bool = False
+            True returns the query string instead of the data
+
+        Returns
+        -------
+        Union[pd.DataFrame, gpd.GeoDataFrame str]
+            A DataFrame or GeoDataFrame of query results
+            or the query itself as a string
+
+        Order By and Filter By Fields
+        -----------------------------------
+        * reference_time
+        * primary_location_id
+        * secondary_location_id
+        * primary_value
+        * secondary_value
+        * value_time
+        * configuration
+        * measurement_unit
+        * variable_name
+        * lead_time
+        * absolute_difference
+        * [any user-added fields]
+
+        """
+
+        data = {
+            "order_by": order_by,
+            "filters": filters,
+            "return_query": return_query,
+            "include_geometry": include_geometry,
+        }
+        jtq = self._validate_query_model(JoinedTimeseriesQuery, data)
+
+        query = tqu_db.create_get_joined_timeseries_query(jtq)
+
+        if jtq.return_query:
+            return tqu.remove_empty_lines(query)
+        elif jtq.include_geometry:
+            self._check_if_geometry_is_inserted()
+            df = self.query(query, format="df")
+            return tqu.df_to_gdf(df)
+        else:
+            df = self.query(query, format="df")
+        return df
+
     def get_timeseries(
         self,
         order_by: List[str],
@@ -1151,6 +1283,19 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         * variable_name
         * lead_time
         * [any user-added fields]
+
+        Order By Fields
+        ---------------
+        * primary_location_id
+        * secondary_location_id
+        * location_id
+        * value
+        * primary_value
+        * secondary_value
+        * value_time
+        * configuration
+        * measurement_unit
+        * variable_name
 
         """
         data = {
