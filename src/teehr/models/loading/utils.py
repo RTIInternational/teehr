@@ -5,11 +5,15 @@ from enum import Enum
 class ChunkByEnum(str, Enum):
     day = "day"
     location_id = "location_id"
+    week = "week"
+    month = "month"
+    year = "year"
 
 
 class SupportedNWMRetroVersionsEnum(str, Enum):
     nwm20 = "nwm20"
     nwm21 = "nwm21"
+    nwm30 = "nwm30"
 
 
 class SupportedNWMOperationalVersionsEnum(str, Enum):
@@ -28,6 +32,12 @@ class SupportedKerchunkMethod(str, Enum):
     remote = "remote"
     auto = "auto"
 
+
+class SupportedNWMRetroDomainsEnum(str, Enum):
+    CONUS = "CONUS"
+    Alaska = "Alaska"
+    PR = "PR"
+    Hawaii = "Hawaii"
 
 # class NWM20RetroConfig(BaseModel):
 #     URL = 's3://noaa-nwm-retro-v2-zarr-pds'
