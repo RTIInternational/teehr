@@ -1,7 +1,0 @@
-teehr.queries.pandas module
-===========================
-
-.. automodule:: teehr.queries.pandas
-   :members:
-   :undoc-members:
-   :show-inheritance:

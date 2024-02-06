@@ -1,7 +1,0 @@
-loading
-=======
-
-.. toctree::
-   :maxdepth: 4
-
-   loading

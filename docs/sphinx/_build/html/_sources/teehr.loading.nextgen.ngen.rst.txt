@@ -1,7 +1,0 @@
-teehr.loading.nextgen.ngen module
-=================================
-
-.. automodule:: teehr.loading.nextgen.ngen
-   :members:
-   :undoc-members:
-   :show-inheritance:

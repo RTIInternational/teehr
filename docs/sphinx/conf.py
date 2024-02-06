@@ -40,7 +40,9 @@ extensions = [
     # "myst_parser",
     "sphinx.ext.viewcode",  # links to source code
     # "nbsphinx"  # for rendering jupyter notebooks  ?? or myst-nb ??
-    # "myst_nb"
+    "myst_nb",
+    'IPython.sphinxext.ipython_console_highlighting',
+    'IPython.sphinxext.ipython_directive'
 ]
 
 # -- Options for autodoc ----------------------------------------------------
@@ -72,6 +74,9 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 # The main toctree document.
 master_doc = 'index'
+
+# MyST-NB options
+nb_execution_mode = "off"
 
 
 # -- Options for HTML output -------------------------------------------------

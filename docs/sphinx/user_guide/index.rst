@@ -38,11 +38,26 @@ TEEHR-Hub
 * ... ?
 
 
+Some Tests
+----------
 
-.. toctree:
+ipython example:
+
+.. ipython:: python
+
+   import pandas as pd
+
+   s = pd.Series([1, 3, 5, np.nan, 6, 8])
+   s
+
+:download:`Download this example notebook (right-click, Save-As) <notebooks/loading/grid_loading_example.ipynb>`
+
+.. toctree::
    :maxdepth: 2
+   :hidden:
 
-   notebook_examples_index
+   notebooks/loading_examples_index
+   notebooks/queries_examples_index
 
 
 .. include: grid_loading_example.ipynb

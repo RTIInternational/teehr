@@ -1,4 +1,4 @@
-teehr.database
+﻿teehr.database
 ==============
 
 .. automodule:: teehr.database

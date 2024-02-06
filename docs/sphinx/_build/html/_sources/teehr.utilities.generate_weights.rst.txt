@@ -1,7 +1,0 @@
-teehr.utilities.generate\_weights module
-========================================
-
-.. automodule:: teehr.utilities.generate_weights
-   :members:
-   :undoc-members:
-   :show-inheritance:

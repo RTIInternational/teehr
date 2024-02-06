@@ -1,7 +1,0 @@
-teehr.api.main module
-=====================
-
-.. automodule:: teehr.api.main
-   :members:
-   :undoc-members:
-   :show-inheritance:

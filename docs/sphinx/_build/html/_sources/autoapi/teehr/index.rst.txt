@@ -3,6 +3,29 @@
 
 .. py:module:: teehr
 
+.. autoapi-nested-parse::
+
+
+   TEEHR source.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
 
 Subpackages
 -----------

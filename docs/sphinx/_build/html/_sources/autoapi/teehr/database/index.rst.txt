@@ -3,6 +3,29 @@
 
 .. py:module:: teehr.database
 
+.. autoapi-nested-parse::
+
+
+   TEEHR database init.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
 
 Submodules
 ----------

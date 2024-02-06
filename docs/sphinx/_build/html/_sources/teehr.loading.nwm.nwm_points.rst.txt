@@ -1,7 +1,0 @@
-teehr.loading.nwm.nwm\_points module
-====================================
-
-.. automodule:: teehr.loading.nwm.nwm_points
-   :members:
-   :undoc-members:
-   :show-inheritance:

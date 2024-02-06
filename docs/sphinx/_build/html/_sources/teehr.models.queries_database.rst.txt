@@ -1,7 +1,0 @@
-teehr.models.queries\_database module
-=====================================
-
-.. automodule:: teehr.models.queries_database
-   :members:
-   :undoc-members:
-   :show-inheritance:

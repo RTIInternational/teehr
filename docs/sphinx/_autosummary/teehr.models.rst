@@ -1,4 +1,4 @@
-teehr.models
+﻿teehr.models
 ============
 
 .. automodule:: teehr.models

@@ -1,4 +1,4 @@
-teehr.queries
+﻿teehr.queries
 =============
 
 .. automodule:: teehr.queries

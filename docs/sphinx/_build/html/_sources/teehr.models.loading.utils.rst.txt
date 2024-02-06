@@ -1,7 +1,0 @@
-teehr.models.loading.utils module
-=================================
-
-.. automodule:: teehr.models.loading.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:

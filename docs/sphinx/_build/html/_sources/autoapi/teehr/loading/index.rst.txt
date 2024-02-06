@@ -3,6 +3,29 @@
 
 .. py:module:: teehr.loading
 
+.. autoapi-nested-parse::
+
+
+   TEEHR Loading init.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
 
 Subpackages
 -----------

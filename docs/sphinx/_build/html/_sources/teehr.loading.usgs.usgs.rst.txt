@@ -1,7 +1,0 @@
-teehr.loading.usgs.usgs module
-==============================
-
-.. automodule:: teehr.loading.usgs.usgs
-   :members:
-   :undoc-members:
-   :show-inheritance:
