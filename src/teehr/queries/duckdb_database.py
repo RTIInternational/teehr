@@ -5,6 +5,7 @@ from typing import Dict
 
 from teehr.models.queries_database import (
     MetricQuery,
+    InsertJoinedTimeseriesQuery,
     JoinedTimeseriesQuery,
     TimeseriesQuery,
     TimeseriesCharQuery,
@@ -107,8 +108,8 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
         WITH joined as (
             SELECT
                 *
-            FROM joined_timeseries
-            {tqu.filters_to_sql_db(mq.filters)}
+            FROM joined_timeseries sf
+            {tqu.filters_to_sql(mq.filters)}
         )
         {tqu._nse_cte(mq)}
         , metrics AS (
@@ -155,7 +156,7 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
 
 
 def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQuery) -> str:
-    """Load joined timeseries into a duckdb persistent database using
+    """Load joined timeseries into a duckdb persistent database using a
     database query.
 
     Parameters
@@ -369,6 +370,86 @@ def describe_timeseries(timeseries_filepath: str) -> Dict:
     return output_report
 
 
+def create_get_joined_timeseries_query(
+    jtq: JoinedTimeseriesQuery
+) -> str:
+    """Retrieve joined timeseries using database query.
+
+    Parameters
+    ----------
+    jtq : JoinedTimeseriesQuery
+        Pydantic model containing query parameters.
+
+    Returns
+    -------
+    str
+        The query string.
+
+    Notes
+    -----
+    Filter By Fields:
+
+    * reference_time
+    * primary_location_id
+    * secondary_location_id
+    * primary_value
+    * secondary_value
+    * value_time
+    * configuration
+    * measurement_unit
+    * variable_name
+    * lead_time
+    * absolute_difference
+    * [any user-added fields]
+
+    Order By Fields:
+
+    * reference_time
+    * primary_location_id
+    * secondary_location_id
+    * primary_value
+    * secondary_value
+    * value_time
+    * configuration
+    * measurement_unit
+    * variable_name
+
+    Examples
+    --------
+    >>> order_by = ["lead_time", "primary_location_id"]
+
+    >>> group_by = ["lead_time", "primary_location_id"]
+
+    >>> filters = [
+    >>>     {
+    >>>         "column": "primary_location_id",
+    >>>         "operator": "=",
+    >>>         "value": "gage-A",
+    >>>     },
+    >>>     {
+    >>>         "column": "reference_time",
+    >>>         "operator": "=",
+    >>>         "value": "2022-01-01 00:00:00",
+    >>>     },
+    >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+    >>> ]
+    """
+
+    query = f"""
+        SELECT
+            sf.*
+        {tqu.geometry_select_clause(jtq)}
+        FROM
+            joined_timeseries sf
+        {tqu.metric_geometry_join_clause_db(jtq)}
+        {tqu.filters_to_sql(jtq.filters)}
+        ORDER BY
+            {",".join(jtq.order_by)}
+    ;"""
+
+    return query
+
+
 def create_get_timeseries_query(
     tq: TimeseriesQuery
 ) -> str:
@@ -444,8 +525,8 @@ def create_get_timeseries_query(
                 measurement_unit,
                 variable_name,
             FROM
-                joined_timeseries
-            {tqu.filters_to_sql_db(tq.filters)}
+                joined_timeseries sf
+            {tqu.filters_to_sql(tq.filters)}
             GROUP BY
                 value_time,
                 primary_location_id,
@@ -466,8 +547,8 @@ def create_get_timeseries_query(
                 measurement_unit,
                 variable_name,
             FROM
-                joined_timeseries
-            {tqu.filters_to_sql_db(tq.filters)}
+                joined_timeseries sf
+            {tqu.filters_to_sql(tq.filters)}
             ORDER BY
                 {",".join(tq.order_by)}
         ;"""
@@ -560,8 +641,8 @@ def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
                         variable_name,
                         {gb_fields}
                      FROM
-                         joined_timeseries
-                     {tqu.filters_to_sql_db(tcq.filters)}
+                         joined_timeseries sf
+                     {tqu.filters_to_sql(tcq.filters)}
                      GROUP BY
                         value_time,
                         primary_location_id,
@@ -574,8 +655,8 @@ def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
                       SELECT
                         *
                       FROM
-                          joined_timeseries
-                      {tqu.filters_to_sql_db(tcq.filters)}
+                          joined_timeseries sf
+                      {tqu.filters_to_sql(tcq.filters)}
                       """
 
     query = f"""

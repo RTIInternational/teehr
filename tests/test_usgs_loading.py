@@ -54,7 +54,47 @@ def test_chunkby_day():
     df = pd.read_parquet(Path(TEMP_DIR, "2023-02-23.parquet"))
     assert len(df) == 48
     df = pd.read_parquet(Path(TEMP_DIR, "2023-02-24.parquet"))
-    assert len(df) == 47
+    assert len(df) == 47  # missing hour 17
+    df = pd.read_parquet(Path(TEMP_DIR, "2023-02-25.parquet"))
+    assert len(df) == 48
+
+
+def test_chunkby_week():
+    """Test chunk by week."""
+    usgs_to_parquet(
+        sites=[
+            "02449838",
+            "02450825"
+        ],
+        start_date=datetime(2023, 2, 20),
+        end_date=datetime(2023, 3, 3),
+        output_parquet_dir=TEMP_DIR,
+        chunk_by="week",
+        overwrite_output=True
+    )
+    df = pd.read_parquet(Path(TEMP_DIR, "2023-02-20_2023-02-25.parquet"))
+    assert len(df) == 287
+    df = pd.read_parquet(Path(TEMP_DIR, "2023-02-26_2023-03-03.parquet"))
+    assert len(df) == 266
+
+
+def test_chunkby_month():
+    """Test chunk by month."""
+    usgs_to_parquet(
+        sites=[
+            "02449838",
+            "02450825"
+        ],
+        start_date=datetime(2023, 2, 20),
+        end_date=datetime(2023, 3, 25),
+        output_parquet_dir=TEMP_DIR,
+        chunk_by="month",
+        overwrite_output=True
+    )
+    df = pd.read_parquet(Path(TEMP_DIR, "2023-02-20_2023-02-27.parquet"))
+    assert len(df) == 383
+    df = pd.read_parquet(Path(TEMP_DIR, "2023-02-28_2023-03-25.parquet"))
+    assert len(df) == 1188  # missing final hour 23
 
 
 def test_chunkby_all():
@@ -78,4 +118,6 @@ def test_chunkby_all():
 if __name__ == "__main__":
     test_chunkby_location_id()
     test_chunkby_day()
+    test_chunkby_week()
+    test_chunkby_month()
     test_chunkby_all()

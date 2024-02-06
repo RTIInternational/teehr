@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.5] - 2023-12-18
+
+### Added
+* Adds additional chunking methods for USGS and NWM retrospective loading to allow
+  week, month and year chunking.
+* Adds mean areal summaries for NWM retrospective gridded forcing variables
+* Adds NWM v3.0 to retrospective loading
+
+### Changed
+* Fixes USGS loading to include last date of range
+* Removes extra fields from v2.1 retro output
+
+## [0.3.4] - 2023-12-18
+
+### Added
+* Adds the `read_only` argument to the `query` method in the TEEHRDatasetDB class with default values
+specified in the query methods.
+
+### Changed
+* Establishes a read-only database connection as a class variable to the TEEHRDatasetAPI class so it can
+be re-used for each class instance.
+
+## [0.3.3] - 2023-12-13
+
+### Added
+* Adds `get_joined_timeseries` method to TEEHR Dataset classes.
+
+### Changed
+* Updated validation fields in the `TimeSeriesQuery` pydantic model to accept only selected fields
+rather than existing database fields.
+* Updated function argument typing in `queries/utils.py` to be more explicit
+
 ## [0.3.2] - 2023-12-12
 
 ### Added

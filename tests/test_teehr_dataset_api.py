@@ -1,11 +1,11 @@
 """Tests for the TEEHR dataset API."""
 from pathlib import Path
-# import numpy as np
 
 from teehr.database.teehr_dataset import TEEHRDatasetAPI
 from teehr.models.queries_database import (
     MetricQuery,
-    JoinedTimeseriesFieldName
+    JoinedTimeseriesFieldName,
+    JoinedTimeseriesQuery
 )
 
 # Test data
@@ -15,9 +15,7 @@ SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
 GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
 ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr.parquet")
-DATABASE_FILEPATH = Path("tests", "data", "temp", "temp_test.db")
-
-# NOTE: These tests require the db and joined_timeseries values to exist
+DATABASE_FILEPATH = Path("tests", "data", "test_study", "temp_test_api.db")
 
 
 def test_unique_field_values():
@@ -34,7 +32,6 @@ def test_unique_field_values():
         "gage-B",
         "gage-C",
     ]
-    pass
 
 
 def test_metrics_query():
@@ -64,7 +61,7 @@ def test_metrics_query():
             "order_by": order_by,
             "include_metrics": "all",
             "filters": filters,
-            "include_geometry": False,
+            "include_geometry": True,
         },
     )
     df = tds.get_metrics(mq)
@@ -78,7 +75,39 @@ def test_describe_inputs():
     assert df.index.size == 7
 
 
+def test_get_joined_timeseries():
+    """Test the get joined timeseries query."""
+    tds = TEEHRDatasetAPI(DATABASE_FILEPATH)
+    order_by = ["primary_location_id"]
+    filters = [
+        {
+            "column": "primary_location_id",
+            "operator": "=",
+            "value": "gage-A",
+        },
+        {
+            "column": "reference_time",
+            "operator": "=",
+            "value": "2022-01-01 00:00:00",
+        },
+        {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+    ]
+
+    jtq = JoinedTimeseriesQuery.model_validate(
+        {
+            "order_by": order_by,
+            "filters": filters,
+            "include_geometry": False,
+        },
+    )
+
+    df = tds.get_joined_timeseries(jtq)
+
+    assert df.index.size == 11
+
+
 if __name__ == "__main__":
-    # test_unique_field_values()
-    # test_describe_inputs()
+    test_unique_field_values()
+    test_describe_inputs()
     test_metrics_query()
+    test_get_joined_timeseries()

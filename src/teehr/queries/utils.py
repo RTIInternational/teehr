@@ -7,12 +7,8 @@ from collections.abc import Iterable
 from datetime import datetime
 from typing import List, Union
 
-from teehr.models.queries import (
-    JoinedFilter,
-    MetricQuery,
-    JoinedTimeseriesQuery,
-    TimeseriesFilter,
-)
+import teehr.models.queries as tmq
+import teehr.models.queries_database as tmqd
 
 SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -56,66 +52,9 @@ def _format_iterable_value(
         return f"""({",".join([f"'{str(v)}'" for v in values])})"""
 
 
-def _format_filter_item_db(
-    filter: Union[JoinedFilter, TimeseriesFilter]
+def _format_filter_item(
+    filter: Union[tmq.JoinedFilter, tmq.TimeseriesFilter, tmqd.Filter]
 ) -> str:
-    """Return an SQL formatted string for single filter object.
-
-    Parameters
-    ----------
-    filter : models.*Filter
-        A single *Filter object.
-
-    Returns
-    -------
-    str
-        An SQL formatted string for single filter object.
-    """
-    column = filter.column
-
-    if isinstance(filter.value, str):
-        return f"""{column} {filter.operator} '{filter.value}'"""
-    elif isinstance(filter.value, int) or isinstance(filter.value, float):
-        return f"""{column} {filter.operator} {filter.value}"""
-    elif isinstance(filter.value, datetime):
-        dt_str = filter.value.strftime(SQL_DATETIME_STR_FORMAT)
-        return f"""{column} {filter.operator} '{dt_str}'"""
-    elif isinstance(filter.value, Iterable) and not isinstance(
-        filter.value, str
-    ):
-        value = _format_iterable_value(filter.value)
-        return f"""{column} {filter.operator} {value}"""
-    else:
-        warnings.warn(
-            "treating value as string because didn't know what else to do."
-        )
-        return f"""{column} {filter.operator} '{str(filter.value)}'"""
-
-
-def filters_to_sql_db(filters: List[JoinedFilter]) -> List[str]:
-    """Generate SQL where clause string from filters.
-
-    Parameters
-    ----------
-    filters : List[MetricFilter]
-        A list of MetricFilter objects describing the filters.
-
-    Returns
-    -------
-    str
-        A where clause formatted string.
-    """
-    if len(filters) > 0:
-        filter_strs = []
-        for f in filters:
-            filter_strs.append(_format_filter_item_db(f))
-        qry = f"""WHERE {f" AND ".join(filter_strs)}"""
-        return qry
-
-    return "--no where clause"
-
-
-def _format_filter_item(filter: Union[JoinedFilter, TimeseriesFilter]) -> str:
     """Return an SQL formatted string for single filter object.
 
     Parameters
@@ -162,13 +101,15 @@ def _format_filter_item(filter: Union[JoinedFilter, TimeseriesFilter]) -> str:
         return f"""{column} {filter.operator} '{str(filter.value)}'"""
 
 
-def filters_to_sql(filters: List[JoinedFilter]) -> List[str]:
+def filters_to_sql(
+    filters: Union[List[tmq.JoinedFilter], List[tmqd.Filter]]
+) -> List[str]:
     """Generate SQL where clause string from filters.
 
     Parameters
     ----------
-    filters : List[MetricFilter]
-        A list of MetricFilter objects describing the filters.
+    filters : Union[List[tmq.JoinedFilter], List[tmqd.Filter]]
+        A list of Filter objects describing the filters.
 
     Returns
     -------
@@ -185,19 +126,10 @@ def filters_to_sql(filters: List[JoinedFilter]) -> List[str]:
     return "--no where clause"
 
 
-def geometry_join_clause_db(
-    q: Union[MetricQuery, JoinedTimeseriesQuery]
+def geometry_join_clause(
+    q: Union[tmq.MetricQuery, tmq.JoinedTimeseriesQuery]
 ) -> str:
-    """Generate the join clause."""
-    if q.include_geometry:
-        return """JOIN geometry gf
-            on pf.location_id = gf.id
-        """
-    return ""
-
-
-def geometry_join_clause(q: Union[MetricQuery, JoinedTimeseriesQuery]) -> str:
-    """Generate the join clause."""
+    """Generate the join clause for geometry."""
     if q.include_geometry:
         return f"""JOIN read_parquet('{str(q.geometry_filepath)}') gf
             on pf.location_id = gf.id
@@ -206,7 +138,10 @@ def geometry_join_clause(q: Union[MetricQuery, JoinedTimeseriesQuery]) -> str:
 
 
 def geometry_select_clause(
-    q: Union[MetricQuery, JoinedTimeseriesQuery]
+    q: Union[tmq.MetricQuery,
+             tmq.JoinedTimeseriesQuery,
+             tmqd.MetricQuery,
+             tmqd.JoinedTimeseriesQuery]
 ) -> str:
     """"Generate the geometry select clause."""
     if q.include_geometry:
@@ -215,16 +150,7 @@ def geometry_select_clause(
 
 
 def geometry_joined_select_clause(
-        q: Union[MetricQuery, JoinedTimeseriesQuery]
-) -> str:
-    """Generate the geometry joined select clause."""
-    if q.include_geometry:
-        return ", geometry"
-    return ""
-
-
-def geometry_select_clause_db(
-    q: Union[MetricQuery, JoinedTimeseriesQuery]
+        q: Union[tmq.MetricQuery, tmq.JoinedTimeseriesQuery]
 ) -> str:
     """Generate the geometry select clause for a database."""
     if q.include_geometry:
@@ -233,7 +159,7 @@ def geometry_select_clause_db(
 
 
 def metric_geometry_join_clause_db(
-    q: Union[MetricQuery, JoinedTimeseriesQuery]
+    q: Union[tmqd.MetricQuery, tmqd.JoinedTimeseriesQuery]
 ) -> str:
     """Generate the metric geometry join clause for a database."""
     if q.include_geometry:
@@ -244,7 +170,7 @@ def metric_geometry_join_clause_db(
 
 
 def metric_geometry_join_clause(
-    q: Union[MetricQuery, JoinedTimeseriesQuery]
+    q: Union[tmq.MetricQuery, tmq.JoinedTimeseriesQuery]
 ) -> str:
     """Generate the metric geometry join clause."""
     if q.include_geometry:
@@ -255,7 +181,7 @@ def metric_geometry_join_clause(
 
 
 def _remove_duplicates_jtq_cte(
-    q: JoinedTimeseriesQuery
+    q: tmq.JoinedTimeseriesQuery
 ) -> str:
     """Generate the remove duplicates CTE for the JoinedTimeseriesQuery."""
     if q.remove_duplicates:
@@ -309,7 +235,7 @@ def _remove_duplicates_jtq_cte(
 
 
 def _remove_duplicates_mq_cte(
-    q: MetricQuery
+    q: tmq.MetricQuery
 ) -> str:
     """Generate the remove duplicates CTE for the MetricQuery."""
     if q.remove_duplicates:
@@ -381,7 +307,7 @@ def _join_on(join: str, join_to: str, join_on: List[str]) -> str:
     return qry
 
 
-def _nse_cte(mq: MetricQuery) -> str:
+def _nse_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     """Generate the nash-sutcliffe-efficiency CTE."""
     if (
         "nash_sutcliffe_efficiency" in mq.include_metrics
@@ -401,7 +327,7 @@ def _nse_cte(mq: MetricQuery) -> str:
     return ""
 
 
-def _join_nse_cte(mq: MetricQuery) -> str:
+def _join_nse_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     """Generate the join nash-sutcliffe-efficiency CTE."""
     if (
         "nash_sutcliffe_efficiency" in mq.include_metrics
@@ -413,7 +339,9 @@ def _join_nse_cte(mq: MetricQuery) -> str:
     return ""
 
 
-def _select_max_value_timedelta(mq: MetricQuery) -> str:
+def _select_max_value_timedelta(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
     """Generate the select max value timedelta query segment."""
     if (
         "max_value_timedelta" in mq.include_metrics
@@ -430,7 +358,9 @@ def _select_max_value_timedelta(mq: MetricQuery) -> str:
     return ""
 
 
-def _select_secondary_max_value_time(mq: MetricQuery) -> str:
+def _select_secondary_max_value_time(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
     """Generate the select secondary max value time query segment."""
     if (
         "secondary_max_value_time" in mq.include_metrics
@@ -443,7 +373,9 @@ def _select_secondary_max_value_time(mq: MetricQuery) -> str:
     return ""
 
 
-def _select_primary_max_value_time(mq: MetricQuery) -> str:
+def _select_primary_max_value_time(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
     """Generate the select primary max value time query segment."""
     if (
         "primary_max_value_time" in mq.include_metrics
@@ -456,7 +388,9 @@ def _select_primary_max_value_time(mq: MetricQuery) -> str:
     return ""
 
 
-def _select_root_mean_squared_error(mq: MetricQuery) -> str:
+def _select_root_mean_squared_error(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
     """Generate the select root mean squared error query segment."""
     if (
         "root_mean_squared_error" in mq.include_metrics
@@ -468,7 +402,9 @@ def _select_root_mean_squared_error(mq: MetricQuery) -> str:
     return ""
 
 
-def _select_mean_squared_error(mq: MetricQuery) -> str:
+def _select_mean_squared_error(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
     """Generate the select mean squared error query segment."""
     if (
         "mean_squared_error" in mq.include_metrics
@@ -480,14 +416,16 @@ def _select_mean_squared_error(mq: MetricQuery) -> str:
     return ""
 
 
-def _select_mean_error(mq: MetricQuery) -> str:
+def _select_mean_error(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     """Generate the select mean error query segment."""
     if "mean_error" in mq.include_metrics or mq.include_metrics == "all":
         return """, sum(absolute_difference)/count(*) as mean_error"""
     return ""
 
 
-def _select_kling_gupta_efficiency(mq: MetricQuery) -> str:
+def _select_kling_gupta_efficiency(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
     """Generate the select kling gupta efficiency query segment."""
     if (
         "kling_gupta_efficiency" in mq.include_metrics
@@ -503,7 +441,9 @@ def _select_kling_gupta_efficiency(mq: MetricQuery) -> str:
     return ""
 
 
-def _select_nash_sutcliffe_efficiency(mq: MetricQuery) -> str:
+def _select_nash_sutcliffe_efficiency(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
     """Generate the select nash sutcliffe efficiency query segment."""
     if (
         "nash_sutcliffe_efficiency" in mq.include_metrics
@@ -517,14 +457,16 @@ def _select_nash_sutcliffe_efficiency(mq: MetricQuery) -> str:
     return ""
 
 
-def _select_bias(mq: MetricQuery) -> str:
+def _select_bias(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     """Generate the select bias  query segment."""
     if "bias" in mq.include_metrics or mq.include_metrics == "all":
         return """, sum(secondary_value - primary_value)/count(*) as bias"""
     return ""
 
 
-def _select_max_value_delta(mq: MetricQuery) -> str:
+def _select_max_value_delta(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
     """Generate the select max value delta query segment."""
     if "max_value_delta" in mq.include_metrics or mq.include_metrics == "all":
         return """, max(secondary_value) - max(primary_value)
@@ -533,28 +475,34 @@ def _select_max_value_delta(mq: MetricQuery) -> str:
     return ""
 
 
-def _select_primary_count(mq: MetricQuery) -> str:
+def _select_primary_count(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     """Generate the select primary count query segment."""
     if "primary_count" in mq.include_metrics or mq.include_metrics == "all":
         return """, count(primary_value) as primary_count"""
     return ""
 
 
-def _select_secondary_count(mq: MetricQuery) -> str:
+def _select_secondary_count(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
     """Generate the select secondary count query segment."""
     if "secondary_count" in mq.include_metrics or mq.include_metrics == "all":
         return """, count(secondary_value) as secondary_count"""
     return ""
 
 
-def _select_primary_minimum(mq: MetricQuery) -> str:
+def _select_primary_minimum(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
     """Generate the select primary minimum query segment."""
     if "primary_minimum" in mq.include_metrics or mq.include_metrics == "all":
         return """, min(primary_value) as primary_minimum"""
     return ""
 
 
-def _select_secondary_minimum(mq: MetricQuery) -> str:
+def _select_secondary_minimum(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
     """Generate the select secondary minimum query segment."""
     if (
         "secondary_minimum" in mq.include_metrics
@@ -564,14 +512,18 @@ def _select_secondary_minimum(mq: MetricQuery) -> str:
     return ""
 
 
-def _select_primary_maximum(mq: MetricQuery) -> str:
+def _select_primary_maximum(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
     """Generate the select primary maximum query segment."""
     if "primary_maximum" in mq.include_metrics or mq.include_metrics == "all":
         return """, max(primary_value) as primary_maximum"""
     return ""
 
 
-def _select_secondary_maximum(mq: MetricQuery) -> str:
+def _select_secondary_maximum(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
     """Generate the select secondary maximum query segment."""
     if (
         "secondary_maximum" in mq.include_metrics
@@ -581,14 +533,18 @@ def _select_secondary_maximum(mq: MetricQuery) -> str:
     return ""
 
 
-def _select_primary_average(mq: MetricQuery) -> str:
+def _select_primary_average(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
     """Generate the select primary average query segment."""
     if "primary_average" in mq.include_metrics or mq.include_metrics == "all":
         return """, avg(primary_value) as primary_average"""
     return ""
 
 
-def _select_secondary_average(mq: MetricQuery) -> str:
+def _select_secondary_average(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
     """Generate the select secondary average query segment."""
     if (
         "secondary_average" in mq.include_metrics
@@ -598,28 +554,32 @@ def _select_secondary_average(mq: MetricQuery) -> str:
     return ""
 
 
-def _select_primary_sum(mq: MetricQuery) -> str:
+def _select_primary_sum(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     """Generate the select primary sum query segment."""
     if "primary_sum" in mq.include_metrics or mq.include_metrics == "all":
         return """, sum(primary_value) as primary_sum"""
     return ""
 
 
-def _select_secondary_sum(mq: MetricQuery) -> str:
+def _select_secondary_sum(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     """Generate the select secondary sum query segment."""
     if "secondary_sum" in mq.include_metrics or mq.include_metrics == "all":
         return """, sum(secondary_value) as secondary_sum"""
     return ""
 
 
-def _select_primary_variance(mq: MetricQuery) -> str:
+def _select_primary_variance(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
     """Generate the select primary variance query segment."""
     if "primary_variance" in mq.include_metrics or mq.include_metrics == "all":
         return """, var_pop(primary_value) as primary_variance"""
     return ""
 
 
-def _select_secondary_variance(mq: MetricQuery) -> str:
+def _select_secondary_variance(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
     """Generate the select secondary variance query segment."""
     if (
         "secondary_variance" in mq.include_metrics

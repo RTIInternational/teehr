@@ -82,12 +82,6 @@ class TimeseriesFilterFieldEnum(str, Enum):
     geometry = "geometry"
 
 
-class ChunkByEnum(str, Enum):
-    """Chunk by options."""
-    day = "day"
-    site = "site"
-
-
 class JoinedFilter(BaseModel):
     """Joined filter model."""
     column: JoinedFilterFieldEnum

@@ -12,6 +12,7 @@ import teehr.queries.duckdb_database as tqu_db
 import teehr.queries.utils as tqu
 from teehr.models.queries_database import (
     JoinedFieldNameEnum,
+    InsertJoinedTimeseriesQuery,
     JoinedTimeseriesQuery,
     CalculateField,
     MetricQuery,
@@ -29,7 +30,7 @@ class TEEHRDatasetAPI:
     Methods
     -------
     __init__(database_filepath: Union[str, Path])
-        Initialize a study area database.
+        Establish a connection to an existing study area database.
 
     profile_query(query: str)
         A helper function to profile query performance (runs EXPLAIN ANALYZE).
@@ -63,7 +64,8 @@ class TEEHRDatasetAPI:
         self,
         database_filepath: Union[str, Path],
     ):
-        """Initialize a study area database.
+        """Set the path to the pre-existing study area database,
+        and establishe a read-only database connection.
 
         Parameters
         ----------
@@ -71,18 +73,19 @@ class TEEHRDatasetAPI:
             Filepath to the database.
         """
         self.database_filepath = str(database_filepath)
-        self._initialize_database_tables()
+        self.con = duckdb.connect(self.database_filepath, read_only=True)
 
     def profile_query(self, query: str):
         """A helper function to profile query performance,
         which runs EXPLAIN ANALYZE and prints the output to screen.
         """
         query = "EXPLAIN ANALYZE " + query
-        with duckdb.connect(self.database_filepath) as con:
-            print(con.sql(query).df().explain_value.values[0])
+        print(self.query(query, format="df").explain_value.values[0])
 
     def query(
-        self, query: str, format: str = None, create_function_args: Dict = None
+        self,
+        query: str,
+        format: str = None,
     ):
         """Run an SQL query against the class's database.
 
@@ -92,84 +95,15 @@ class TEEHRDatasetAPI:
         * Results bprinted to the screen (format='raw')
         * A DuckDBPyRelation, a symbolic representation of the SQL query
         (format='relation').
-
-        Examples
-        --------
-        A user-defined function can be registered to the database by
-        defining parameters in the create_function_args argument:
-
-        >>>     create_function_args = {
-        >>>     "function": your_user_defined_function,
-        >>>     "function_name": "user_defined_function_name",
-        >>>     "parameter_types": function_parameter_data_types,
-        >>>     "new_field_type": new_field_data_type,
-        >>> }
         """
-        if not create_function_args:
-            with duckdb.connect(self.database_filepath) as con:
-                if format == "df":
-                    return con.sql(query).df()
-                elif format == "raw":
-                    return con.sql(query).show()
-                elif format == "relation":
-                    return con.sql(query)
-                con.sql(query)
-                return None
-        else:
-            user_defined_function = create_function_args["function"]
-            function_name = create_function_args["function_name"]
-            parameter_types = create_function_args["parameter_types"]
-            new_field_type = create_function_args["new_field_type"]
-            with duckdb.connect(self.database_filepath) as con:
-                # Register the function
-                con.create_function(
-                    function_name,
-                    user_defined_function,
-                    parameter_types,
-                    new_field_type,
-                )
-                # Call the function and add the results to joined_timeseries
-                con.sql(query)
-
-    def _initialize_database_tables(self):
-        """Create the persistent study database and empty table(s)."""
-        create_timeseries_table = """
-            CREATE TABLE IF NOT EXISTS joined_timeseries(
-                reference_time DATETIME,
-                value_time DATETIME,
-                secondary_location_id VARCHAR,
-                secondary_value FLOAT,
-                configuration VARCHAR,
-                measurement_unit VARCHAR,
-                variable_name VARCHAR,
-                primary_value FLOAT,
-                primary_location_id VARCHAR,
-                lead_time INTERVAL,
-                absolute_difference FLOAT
-                );"""
-
-        self.query(create_timeseries_table)
-
-        # Adding a unique index ~ doubles the size of the database on disk.
-        # Doing so might start to get us close to PostgreSQL/TimescaleDB sizes?
-        # add_index = """
-        #     CREATE UNIQUE INDEX unique_ts_idx ON joined_timeseries (
-        #         reference_time,
-        #         value_time,
-        #         configuration,
-        #         variable_name,
-        #         primary_location_id
-        #         );"""
-        # self.query(add_index)
-
-        # Also initialize the geometry table (what if multiple geometry types?)
-        create_geometry_table = """
-            CREATE TABLE IF NOT EXISTS geometry(
-                id VARCHAR,
-                name VARCHAR,
-                geometry BLOB
-                );"""
-        self.query(create_geometry_table)
+        if format == "df":
+            return self.con.sql(query).df()
+        elif format == "raw":
+            return self.con.sql(query).show()
+        elif format == "relation":
+            return self.con.sql(query)
+        self.con.sql(query)
+        return None
 
     def get_joined_timeseries_schema(self) -> pd.DataFrame:
         """Get field names and field data types from the joined_timeseries \
@@ -300,6 +234,43 @@ class TEEHRDatasetAPI:
         if mq.return_query:
             return tqu.remove_empty_lines(query)
         elif mq.include_geometry:
+            self._check_if_geometry_is_inserted()
+            df = self.query(query, format="df")
+            return tqu.df_to_gdf(df)
+        else:
+            df = self.query(query, format="df")
+        return df
+
+    def get_joined_timeseries(
+        self,
+        jtq: JoinedTimeseriesQuery
+    ) -> Union[pd.DataFrame, gpd.GeoDataFrame, str]:
+        """Retrieve joined timeseries using database query.
+
+        Parameters
+        ----------
+        jtq : JoinedTimeseriesQuery
+            Pydantic model containing query parameters.
+
+        Returns
+        -------
+        Union[pd.DataFrame, gpd.GeoDataFrame, str]
+            A DataFrame or GeoDataFrame of query results
+            or the query itself as a string.
+
+        See Also
+        --------
+        teehr.queries.duckdb_database.create_get_joined_timeseries_query : \
+            Create the get joined timeseries query.
+        """
+
+        jtq = self._validate_query_model(jtq)
+
+        query = tqu_db.create_get_joined_timeseries_query(jtq)
+
+        if jtq.return_query:
+            return tqu.remove_empty_lines(query)
+        elif jtq.include_geometry:
             self._check_if_geometry_is_inserted()
             df = self.query(query, format="df")
             return tqu.df_to_gdf(df)
@@ -498,6 +469,88 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         Use get_joined_timeseries_schema() to see existing table fields.
     """
 
+    def __init__(
+        self,
+        database_filepath: Union[str, Path],
+    ):
+        """Initialize a study area database. Create the joined_timeseries
+        and geometry tables with a fixed schemas if they do not already
+        exist.
+
+        Parameters
+        ----------
+        database_filepath : Union[str, Path]
+            Filepath to the database.
+        """
+        self.database_filepath = str(database_filepath)
+        self._initialize_database_tables()
+
+    def query(
+        self,
+        query: str,
+        read_only: bool = False,
+        format: str = None,
+        create_function_args: Dict = None
+    ):
+        """Run query against the class's database."""
+        if not create_function_args:
+            with duckdb.connect(
+                self.database_filepath, read_only=read_only
+            ) as con:
+                if format == "df":
+                    return con.sql(query).df()
+                elif format == "raw":
+                    return con.sql(query).show()
+                elif format == "relation":
+                    return con.sql(query)
+                con.sql(query)
+                con.close()
+                return None
+        else:
+            user_defined_function = create_function_args["function"]
+            function_name = create_function_args["function_name"]
+            parameter_types = create_function_args["parameter_types"]
+            new_field_type = create_function_args["new_field_type"]
+            with duckdb.connect(self.database_filepath) as con:
+                # Register the function
+                con.create_function(
+                    function_name,
+                    user_defined_function,
+                    parameter_types,
+                    new_field_type,
+                )
+                # Call the function and add the results to joined_timeseries
+                con.sql(query)
+                con.close()
+
+    def _initialize_database_tables(self):
+        """Create the persistent study database and empty table(s)."""
+        create_timeseries_table = """
+            CREATE TABLE IF NOT EXISTS joined_timeseries(
+                reference_time DATETIME,
+                value_time DATETIME,
+                secondary_location_id VARCHAR,
+                secondary_value FLOAT,
+                configuration VARCHAR,
+                measurement_unit VARCHAR,
+                variable_name VARCHAR,
+                primary_value FLOAT,
+                primary_location_id VARCHAR,
+                lead_time INTERVAL,
+                absolute_difference FLOAT
+                );"""
+
+        self.query(create_timeseries_table)
+
+        # Also initialize the geometry table (what if multiple geometry types?)
+        create_geometry_table = """
+            CREATE TABLE IF NOT EXISTS geometry(
+                id VARCHAR,
+                name VARCHAR,
+                geometry BLOB
+                );"""
+        self.query(create_geometry_table)
+
     def _drop_joined_timeseries_field(self, field_name: str):
         """Drop the specified field by name from joined_timeseries table."""
         query = f"""
@@ -601,7 +654,7 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         """
         self._validate_joined_timeseries_base_fields(drop_added_fields)
 
-        jtq = JoinedTimeseriesQuery.model_validate(
+        jtq = InsertJoinedTimeseriesQuery.model_validate(
             {
                 "primary_filepath": primary_filepath,
                 "secondary_filepath": secondary_filepath,
@@ -843,6 +896,62 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
             return tqu.remove_empty_lines(query)
         elif mq.include_geometry:
             self._check_if_geometry_is_inserted()
+            df = self.query(query, read_only=True, format="df")
+            return tqu.df_to_gdf(df)
+        else:
+            df = self.query(query, read_only=True, format="df")
+        return df
+
+    def get_joined_timeseries(
+        self,
+        order_by: List[str],
+        filters: Union[List[dict], None] = None,
+        include_geometry: bool = False,
+        return_query: bool = False,
+    ) -> Union[pd.DataFrame, gpd.GeoDataFrame, str]:
+        """Retrieve joined timeseries using database query.
+
+        Parameters
+        ----------
+        order_by : List[str]
+            List of column/field names to order results by.
+            Must provide at least one.
+        filters : Union[List[dict], None] = None
+            List of dictionaries describing the "where" clause to limit data
+            that is included in metrics.
+        include_geometry : bool
+            True joins the geometry to the query results.
+            Only works if `primary_location_id`
+            is included as a group_by field.
+        return_query : bool = False
+            True returns the query string instead of the data.
+
+        Returns
+        -------
+        Union[pd.DataFrame, gpd.GeoDataFrame str]
+            A DataFrame or GeoDataFrame of query results
+            or the query itself as a string.
+
+        See Also
+        --------
+        teehr.queries.duckdb_database.create_get_joined_timeseries_query : \
+            Create the get joined timeseries query.
+        """
+
+        data = {
+            "order_by": order_by,
+            "filters": filters,
+            "return_query": return_query,
+            "include_geometry": include_geometry,
+        }
+        jtq = self._validate_query_model(JoinedTimeseriesQuery, data)
+
+        query = tqu_db.create_get_joined_timeseries_query(jtq)
+
+        if jtq.return_query:
+            return tqu.remove_empty_lines(query)
+        elif jtq.include_geometry:
+            self._check_if_geometry_is_inserted()
             df = self.query(query, format="df")
             return tqu.df_to_gdf(df)
         else:
@@ -895,7 +1004,7 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         if tq.return_query:
             return tqu.remove_empty_lines(query)
         else:
-            df = self.query(query, format="df")
+            df = self.query(query, read_only=True, format="df")
         return df
 
     def get_timeseries_chars(
@@ -956,7 +1065,7 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         if tcq.return_query:
             return tqu.remove_empty_lines(query)
         else:
-            df = self.query(query, format="df")
+            df = self.query(query, read_only=True, format="df")
         return df
 
     def get_unique_field_values(self, field_name: str) -> pd.DataFrame:
@@ -977,9 +1086,8 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         teehr.queries.duckdb_database.create_unique_field_values_query : \
             Create the get unique field values query.
         """
-
         data = {"field_name": field_name}
         fn = self._validate_query_model(JoinedTimeseriesFieldName, data)
         query = tqu_db.create_unique_field_values_query(fn)
-        df = self.query(query, format="df")
+        df = self.query(query, read_only=True, format="df")
         return df
