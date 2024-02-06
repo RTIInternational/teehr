@@ -75,11 +75,6 @@ class TimeseriesFilterFieldEnum(str, Enum):
     geometry = "geometry"
 
 
-class ChunkByEnum(str, Enum):
-    day = "day"
-    site = "site"
-
-
 class JoinedFilter(BaseModel):
     column: JoinedFilterFieldEnum
     operator: FilterOperatorEnum
@@ -140,6 +135,7 @@ class MetricQuery(BaseModel):
     return_query: bool
     geometry_filepath: Optional[Union[str, Path]]
     include_geometry: bool
+    remove_duplicates: Optional[bool] = True
 
     @field_validator("include_geometry")
     def include_geometry_must_group_by_primary_location_id(
@@ -188,6 +184,7 @@ class JoinedTimeseriesQuery(BaseModel):
     return_query: bool
     geometry_filepath: Optional[Union[str, Path]]
     include_geometry: bool
+    remove_duplicates: Optional[bool] = True
 
     @field_validator("include_geometry")
     def include_geometry_must_group_by_primary_location_id(

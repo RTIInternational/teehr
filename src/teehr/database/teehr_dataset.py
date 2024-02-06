@@ -12,6 +12,7 @@ import teehr.queries.duckdb_database as tqu_db
 import teehr.queries.utils as tqu
 from teehr.models.queries_database import (
     JoinedFieldNameEnum,
+    InsertJoinedTimeseriesQuery,
     JoinedTimeseriesQuery,
     CalculateField,
     MetricQuery,
@@ -29,7 +30,7 @@ class TEEHRDatasetAPI:
     Methods
     -------
     __init__(database_filepath: Union[str, Path])
-        Initialize a study area database.
+        Establish a connection to an existing study area database.
 
     profile_query(query: str)
         Helper function to profile query performance (runs EXPLAIN ANALYZE)
@@ -81,9 +82,8 @@ class TEEHRDatasetAPI:
         self,
         database_filepath: Union[str, Path],
     ):
-        """Initialize a study area database. Creates the joined_timeseries
-        and geometry tables with a fixed schemas if they do not already
-        exist.
+        """Sets the path to the pre-existing study area database,
+        and establishes a read-only database connection.
 
         Parameters
         ----------
@@ -91,84 +91,28 @@ class TEEHRDatasetAPI:
             Filepath to the database
         """
         self.database_filepath = str(database_filepath)
-        self._initialize_database_tables()
+        self.con = duckdb.connect(self.database_filepath, read_only=True)
 
     def profile_query(self, query: str):
         """Helper function to profile query performance.
         (runs EXPLAIN ANALYZE and prints output to screen)"""
         query = "EXPLAIN ANALYZE " + query
-        with duckdb.connect(self.database_filepath) as con:
-            print(con.sql(query).df().explain_value.values[0])
+        print(self.query(query, format="df").explain_value.values[0])
 
     def query(
-        self, query: str, format: str = None, create_function_args: Dict = None
+        self,
+        query: str,
+        format: str = None,
     ):
         """Run query against the class's database."""
-        if not create_function_args:
-            with duckdb.connect(self.database_filepath) as con:
-                if format == "df":
-                    return con.sql(query).df()
-                elif format == "raw":
-                    return con.sql(query).show()
-                elif format == "relation":
-                    return con.sql(query)
-                con.sql(query)
-                return None
-        else:
-            user_defined_function = create_function_args["function"]
-            function_name = create_function_args["function_name"]
-            parameter_types = create_function_args["parameter_types"]
-            new_field_type = create_function_args["new_field_type"]
-            with duckdb.connect(self.database_filepath) as con:
-                # Register the function
-                con.create_function(
-                    function_name,
-                    user_defined_function,
-                    parameter_types,
-                    new_field_type,
-                )
-                # Call the function and add the results to joined_timeseries
-                con.sql(query)
-
-    def _initialize_database_tables(self):
-        """Create the persistent study database and empty table(s)"""
-        create_timeseries_table = """
-            CREATE TABLE IF NOT EXISTS joined_timeseries(
-                reference_time DATETIME,
-                value_time DATETIME,
-                secondary_location_id VARCHAR,
-                secondary_value FLOAT,
-                configuration VARCHAR,
-                measurement_unit VARCHAR,
-                variable_name VARCHAR,
-                primary_value FLOAT,
-                primary_location_id VARCHAR,
-                lead_time INTERVAL,
-                absolute_difference FLOAT
-                );"""
-
-        self.query(create_timeseries_table)
-
-        # Adding a unique index ~ doubles the size of the database on disk.
-        # Doing so might start to get us close to PostgreSQL/TimescaleDB sizes?
-        # add_index = """
-        #     CREATE UNIQUE INDEX unique_ts_idx ON joined_timeseries (
-        #         reference_time,
-        #         value_time,
-        #         configuration,
-        #         variable_name,
-        #         primary_location_id
-        #         );"""
-        # self.query(add_index)
-
-        # Also initialize the geometry table (what if multiple geometry types?)
-        create_geometry_table = """
-            CREATE TABLE IF NOT EXISTS geometry(
-                id VARCHAR,
-                name VARCHAR,
-                geometry BLOB
-                );"""
-        self.query(create_geometry_table)
+        if format == "df":
+            return self.con.sql(query).df()
+        elif format == "raw":
+            return self.con.sql(query).show()
+        elif format == "relation":
+            return self.con.sql(query)
+        self.con.sql(query)
+        return None
 
     def get_joined_timeseries_schema(self) -> pd.DataFrame:
         """Get field names and field data types from the joined_timeseries,
@@ -387,6 +331,69 @@ class TEEHRDatasetAPI:
             df = self.query(query, format="df")
         return df
 
+    def get_joined_timeseries(
+        self,
+        jtq: JoinedTimeseriesQuery
+    ) -> Union[pd.DataFrame, gpd.GeoDataFrame, str]:
+        """Retrieve joined timeseries using database query.
+
+        Parameters
+        ----------
+        jtq : JoinedTimeseriesQuery
+            Pydantic model containing query parameters
+
+        tq Fields
+        ----------
+        order_by : List[str]
+            List of column/field names to order results by.
+            Must provide at least one.
+        filters : Union[List[dict], None] = None
+            List of dictionaries describing the "where" clause to limit data
+            that is included in metrics.
+        return_query: bool = False
+            True returns the query string instead of the data
+        include_geometry : bool
+            True joins the geometry to the query results.
+            Only works if `primary_location_id`
+            is included as a group_by field.
+
+        Returns
+        -------
+        Union[pd.DataFrame, gpd.GeoDataFrame, str]
+            A DataFrame or GeoDataFrame of query results
+            or the query itself as a string
+
+        Order By and Filter By Fields
+        -----------------------------------
+        * reference_time
+        * primary_location_id
+        * secondary_location_id
+        * primary_value
+        * secondary_value
+        * value_time
+        * configuration
+        * measurement_unit
+        * variable_name
+        * lead_time
+        * absolute_difference
+        * [any user-added fields]
+
+        """
+
+        jtq = self._validate_query_model(jtq)
+
+        query = tqu_db.create_get_joined_timeseries_query(jtq)
+
+        if jtq.return_query:
+            return tqu.remove_empty_lines(query)
+        elif jtq.include_geometry:
+            self._check_if_geometry_is_inserted()
+            df = self.query(query, format="df")
+            return tqu.df_to_gdf(df)
+        else:
+            df = self.query(query, format="df")
+        return df
+
     def get_timeseries(
         self,
         tq: TimeseriesQuery
@@ -434,9 +441,10 @@ class TEEHRDatasetAPI:
 
         Order By Fields
         ---------------
-        * reference_time
         * primary_location_id
         * secondary_location_id
+        * location_id
+        * value
         * primary_value
         * secondary_value
         * value_time
@@ -679,6 +687,88 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
 
     """
 
+    def __init__(
+        self,
+        database_filepath: Union[str, Path],
+    ):
+        """Initialize a study area database. Creates the joined_timeseries
+        and geometry tables with a fixed schemas if they do not already
+        exist.
+
+        Parameters
+        ----------
+        database_filepath : Union[str, Path]
+            Filepath to the database
+        """
+        self.database_filepath = str(database_filepath)
+        self._initialize_database_tables()
+
+    def query(
+        self,
+        query: str,
+        read_only: bool = False,
+        format: str = None,
+        create_function_args: Dict = None
+    ):
+        """Run query against the class's database."""
+        if not create_function_args:
+            with duckdb.connect(
+                self.database_filepath, read_only=read_only
+            ) as con:
+                if format == "df":
+                    return con.sql(query).df()
+                elif format == "raw":
+                    return con.sql(query).show()
+                elif format == "relation":
+                    return con.sql(query)
+                con.sql(query)
+                con.close()
+                return None
+        else:
+            user_defined_function = create_function_args["function"]
+            function_name = create_function_args["function_name"]
+            parameter_types = create_function_args["parameter_types"]
+            new_field_type = create_function_args["new_field_type"]
+            with duckdb.connect(self.database_filepath) as con:
+                # Register the function
+                con.create_function(
+                    function_name,
+                    user_defined_function,
+                    parameter_types,
+                    new_field_type,
+                )
+                # Call the function and add the results to joined_timeseries
+                con.sql(query)
+                con.close()
+
+    def _initialize_database_tables(self):
+        """Create the persistent study database and empty table(s)"""
+        create_timeseries_table = """
+            CREATE TABLE IF NOT EXISTS joined_timeseries(
+                reference_time DATETIME,
+                value_time DATETIME,
+                secondary_location_id VARCHAR,
+                secondary_value FLOAT,
+                configuration VARCHAR,
+                measurement_unit VARCHAR,
+                variable_name VARCHAR,
+                primary_value FLOAT,
+                primary_location_id VARCHAR,
+                lead_time INTERVAL,
+                absolute_difference FLOAT
+                );"""
+
+        self.query(create_timeseries_table)
+
+        # Also initialize the geometry table (what if multiple geometry types?)
+        create_geometry_table = """
+            CREATE TABLE IF NOT EXISTS geometry(
+                id VARCHAR,
+                name VARCHAR,
+                geometry BLOB
+                );"""
+        self.query(create_geometry_table)
+
     def _drop_joined_timeseries_field(self, field_name: str):
         """Drops the specified field by name from joined_timeseries table"""
         query = f"""
@@ -744,8 +834,11 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         secondary_filepath: Union[str, Path],
         crosswalk_filepath: Union[str, Path],
         order_by: List[str] = [
-            "reference_time",
             "primary_location_id",
+            "configuration",
+            "variable_name",
+            "measurement_unit",
+            "value_time"
         ],
         drop_added_fields=False,
     ):
@@ -774,7 +867,7 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         """
         self._validate_joined_timeseries_base_fields(drop_added_fields)
 
-        jtq = JoinedTimeseriesQuery.model_validate(
+        jtq = InsertJoinedTimeseriesQuery.model_validate(
             {
                 "primary_filepath": primary_filepath,
                 "secondary_filepath": secondary_filepath,
@@ -800,35 +893,6 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         attr_list = self.query(query, format="df").to_dict(orient="records")
         return attr_list
 
-    def _pivot_attribute_table(
-        self, attributes_filepath: str, attr: duckdb.DuckDBPyRelation
-    ) -> duckdb.DuckDBPyRelation:
-        """Pivots an attribute table selected as a name-unit pair.
-        The schema of the returned table consists of a field whose name
-        is a combination of attribute_name and attribute_unit, and whose
-        values are attribute_value"""
-
-        query = f"""
-            WITH attribute AS (
-                SELECT *
-                FROM
-                    read_parquet('{attributes_filepath}')
-                WHERE
-                    attribute_name = '{attr["attribute_name"]}'
-                AND
-                    attribute_unit = '{attr["attribute_unit"]}'
-            )
-            PIVOT
-                attribute
-            ON
-                attribute_name, attribute_unit
-            USING
-                FIRST(attribute_value)
-        ;"""
-        attr_pivot = self.query(query=query, format="relation")
-
-        return attr_pivot
-
     def _add_field_name_to_joined_timeseries(
         self, field_name: str, field_dtype="VARCHAR"
     ):
@@ -841,23 +905,6 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
                 {field_name} {field_dtype}
         ;"""
         self.query(query)
-
-    def _join_attribute_values(self, field_name: str):
-        """Join values of the new attr field on location_id"""
-        update_query = f"""
-            UPDATE
-                joined_timeseries
-            SET
-                {field_name} = (
-            SELECT
-                attr_pivot.{field_name}
-            FROM
-                attr_pivot
-            WHERE
-                joined_timeseries.primary_location_id = attr_pivot.location_id)
-        ;"""
-        print(f"Joining {field_name} values to joined_timeseries")
-        self.query(update_query)
 
     def join_attributes(self, attributes_filepath: Union[str, Path]):
         """Joins attributes from the provided attribute table(s) to new
@@ -873,20 +920,47 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         attr_list = self._get_unique_attributes(str(attributes_filepath))
 
         for attr in attr_list:
-            # Pivot the single attribute
-            attr_pivot = self._pivot_attribute_table(
-                str(attributes_filepath), attr
-            )
 
-            # Add the attr field name to joined_timeseries
-            field_name = attr_pivot.columns
-            field_name.remove("location_id")
-            field_name = self._sanitize_field_name(field_name[0])
+            if attr["attribute_unit"]:
+                field_name = (
+                    f"{attr['attribute_name']}_{attr['attribute_unit']}"
+                )
+                unit_clause = (
+                    f"AND attribute_unit = '{attr['attribute_unit']}'"
+                )
+            else:
+                field_name = attr["attribute_name"]
+                unit_clause = ""
+
+            field_name = self._sanitize_field_name(field_name)
 
             self._add_field_name_to_joined_timeseries(field_name)
 
-            # Join the attribute values to the new field, attr_pivot
-            self._join_attribute_values(field_name)
+            query = f"""
+                WITH selected_attribute AS (
+                    SELECT
+                        *
+                    FROM
+                        read_parquet('{attributes_filepath}')
+                    WHERE
+                        attribute_name = '{attr['attribute_name']}'
+                    {unit_clause}
+                )
+                UPDATE
+                    joined_timeseries
+                SET
+                    {field_name} = (
+                        SELECT
+                            CAST(attribute_value AS VARCHAR)
+                        FROM
+                            selected_attribute
+                        WHERE
+                            joined_timeseries.primary_location_id =
+                                selected_attribute.location_id
+                    )
+            ;"""
+
+            self.query(query)
 
     def calculate_field(
         self,
@@ -1096,6 +1170,73 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
             return tqu.remove_empty_lines(query)
         elif mq.include_geometry:
             self._check_if_geometry_is_inserted()
+            df = self.query(query, read_only=True, format="df")
+            return tqu.df_to_gdf(df)
+        else:
+            df = self.query(query, read_only=True, format="df")
+        return df
+
+    def get_joined_timeseries(
+        self,
+        order_by: List[str],
+        filters: Union[List[dict], None] = None,
+        include_geometry: bool = False,
+        return_query: bool = False,
+    ) -> Union[pd.DataFrame, gpd.GeoDataFrame, str]:
+        """Retrieve joined timeseries using database query.
+
+        Parameters
+        ----------
+        order_by : List[str]
+            List of column/field names to order results by.
+            Must provide at least one.
+        filters : Union[List[dict], None] = None
+            List of dictionaries describing the "where" clause to limit data
+            that is included in metrics.
+        include_geometry : bool
+            True joins the geometry to the query results.
+            Only works if `primary_location_id`
+            is included as a group_by field.
+        return_query: bool = False
+            True returns the query string instead of the data
+
+        Returns
+        -------
+        Union[pd.DataFrame, gpd.GeoDataFrame str]
+            A DataFrame or GeoDataFrame of query results
+            or the query itself as a string
+
+        Order By and Filter By Fields
+        -----------------------------------
+        * reference_time
+        * primary_location_id
+        * secondary_location_id
+        * primary_value
+        * secondary_value
+        * value_time
+        * configuration
+        * measurement_unit
+        * variable_name
+        * lead_time
+        * absolute_difference
+        * [any user-added fields]
+
+        """
+
+        data = {
+            "order_by": order_by,
+            "filters": filters,
+            "return_query": return_query,
+            "include_geometry": include_geometry,
+        }
+        jtq = self._validate_query_model(JoinedTimeseriesQuery, data)
+
+        query = tqu_db.create_get_joined_timeseries_query(jtq)
+
+        if jtq.return_query:
+            return tqu.remove_empty_lines(query)
+        elif jtq.include_geometry:
+            self._check_if_geometry_is_inserted()
             df = self.query(query, format="df")
             return tqu.df_to_gdf(df)
         else:
@@ -1143,6 +1284,19 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         * lead_time
         * [any user-added fields]
 
+        Order By Fields
+        ---------------
+        * primary_location_id
+        * secondary_location_id
+        * location_id
+        * value
+        * primary_value
+        * secondary_value
+        * value_time
+        * configuration
+        * measurement_unit
+        * variable_name
+
         """
         data = {
             "order_by": order_by,
@@ -1157,7 +1311,7 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         if tq.return_query:
             return tqu.remove_empty_lines(query)
         else:
-            df = self.query(query, format="df")
+            df = self.query(query, read_only=True, format="df")
         return df
 
     def get_timeseries_chars(
@@ -1247,7 +1401,7 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         if tcq.return_query:
             return tqu.remove_empty_lines(query)
         else:
-            df = self.query(query, format="df")
+            df = self.query(query, read_only=True, format="df")
         return df
 
     def get_unique_field_values(self, field_name: str) -> pd.DataFrame:
@@ -1268,5 +1422,5 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         data = {"field_name": field_name}
         fn = self._validate_query_model(JoinedTimeseriesFieldName, data)
         query = tqu_db.create_unique_field_values_query(fn)
-        df = self.query(query, format="df")
+        df = self.query(query, read_only=True, format="df")
         return df
