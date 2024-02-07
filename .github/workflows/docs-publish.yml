@@ -27,8 +27,6 @@ jobs:
 
       - name: Sphinx build
         run: |
-          mkdir docs/sphinx/test_data
-          cp tests/data/test_study/timeseries/*.parquet docs/sphinx/test_data
           cd docs/sphinx
           make clean html
 
