@@ -89,6 +89,7 @@ html_theme = 'pydata_sphinx_theme'
 html_theme_options = {
   "show_toc_level": 2,
   "github_url": "https://github.com/RTIInternational/teehr",
+  "footer_center": ["footer_center.html"]
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
