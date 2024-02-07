@@ -124,31 +124,6 @@ to create a persisent database, allowing for efficient exploration and metric qu
    CROSSWALK_FILEPATH = "../../tests/data/test_study/geo/crosswalk.parquet"
    DATABASE_FILEPATH = Path("../../tests/data/temp/temp_test.db")
 
-   # Delete the test database if it already exists.
-   if DATABASE_FILEPATH.is_file():
-       DATABASE_FILEPATH.unlink()
-
-   .. # Initialize a database.
-   .. tds = TEEHRDatasetDB(DATABASE_FILEPATH)
-
-   .. # Join the primary and secondary timeseries using the crosswalk table
-   .. # and insert the data into the `joined_timeseries` database table.
-   .. tds.insert_joined_timeseries(
-   ..     primary_filepath=PRIMARY_FILEPATH,
-   ..     secondary_filepath=SECONDARY_FILEPATH,
-   ..     crosswalk_filepath=CROSSWALK_FILEPATH,
-   ..     drop_added_fields=True,
-   .. )
-
-   .. # Let's look at the table schema.
-   .. schema_df = tds.get_joined_timeseries_schema()
-   .. schema_df
-
-   .. # Now we can perform queries and calculate metrics.
-   .. df = tds.query("SELECT * FROM joined_timeseries", format="df")
-   .. df
-
-
 
 Example notebooks
 ^^^^^^^^^^^^^^^^^
