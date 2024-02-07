@@ -50,3 +50,9 @@
   .card, .card img {
     background-color: var(--pst-color-background);
   }
+
+  .ciroh-card {
+    margin: 10px;
+    height: 140px;
+    background: none !important;
+  }

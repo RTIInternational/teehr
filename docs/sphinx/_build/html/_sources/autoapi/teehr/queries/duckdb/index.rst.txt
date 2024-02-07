@@ -38,11 +38,11 @@ Attributes
 .. py:data:: SQL_DATETIME_STR_FORMAT
    :value: '%Y-%m-%d %H:%M:%S'
 
-
+   
 
 .. py:function:: get_metrics(primary_filepath: str, secondary_filepath: str, crosswalk_filepath: str, group_by: List[str], order_by: List[str], include_metrics: Union[List[teehr.models.queries.MetricEnum], all], filters: Union[List[dict], None] = None, return_query: bool = False, geometry_filepath: Union[str, None] = None, include_geometry: bool = False, remove_duplicates: bool = True) -> Union[str, pandas.DataFrame, geopandas.GeoDataFrame]
 
-
+   
    Calculate performance metrics using a parquet query.
 
 
@@ -185,7 +185,7 @@ Attributes
 
 .. py:function:: get_joined_timeseries(primary_filepath: str, secondary_filepath: str, crosswalk_filepath: str, order_by: List[str], filters: Union[List[dict], None] = None, return_query: bool = False, geometry_filepath: Union[str, None] = None, include_geometry: bool = False, remove_duplicates: bool = True) -> Union[str, pandas.DataFrame, geopandas.GeoDataFrame]
 
-
+   
    Retrieve joined timeseries using a parquet query.
 
 
@@ -283,7 +283,7 @@ Attributes
 
 .. py:function:: get_timeseries(timeseries_filepath: str, order_by: List[str], filters: Union[List[dict], None] = None, return_query: bool = False) -> Union[str, pandas.DataFrame, geopandas.GeoDataFrame]
 
-
+   
    Retrieve timeseries using a parquet query.
 
 
@@ -347,7 +347,7 @@ Attributes
 
 .. py:function:: get_timeseries_chars(timeseries_filepath: str, group_by: list[str], order_by: List[str], filters: Union[List[dict], None] = None, return_query: bool = False) -> Union[str, pandas.DataFrame, geopandas.GeoDataFrame]
 
-
+   
    Retrieve timeseries characteristics using a parquet query.
 
 
@@ -422,3 +422,4 @@ Attributes
 
    ..
        !! processed by numpydoc !!
+

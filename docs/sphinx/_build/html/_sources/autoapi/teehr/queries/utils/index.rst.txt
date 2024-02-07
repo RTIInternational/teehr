@@ -73,11 +73,11 @@ Attributes
 .. py:data:: SQL_DATETIME_STR_FORMAT
    :value: '%Y-%m-%d %H:%M:%S'
 
-
+   
 
 .. py:function:: _get_datetime_list_string(values)
 
-
+   
    Get a datetime list as a list of strings.
 
 
@@ -100,7 +100,7 @@ Attributes
 
 .. py:function:: _format_iterable_value(values: collections.abc.Iterable[Union[str, int, float, datetime.datetime]]) -> str
 
-
+   
    Return an SQL formatted string from list of values.
 
 
@@ -134,7 +134,7 @@ Attributes
 
 .. py:function:: _format_filter_item(filter: Union[teehr.models.queries.JoinedFilter, teehr.models.queries.TimeseriesFilter, teehr.models.queries_database.Filter]) -> str
 
-
+   
    Return an SQL formatted string for single filter object.
 
 
@@ -165,7 +165,7 @@ Attributes
 
 .. py:function:: filters_to_sql(filters: Union[List[teehr.models.queries.JoinedFilter], List[teehr.models.queries_database.Filter]]) -> List[str]
 
-
+   
    Generate SQL where clause string from filters.
 
 
@@ -196,7 +196,7 @@ Attributes
 
 .. py:function:: geometry_join_clause(q: Union[teehr.models.queries.MetricQuery, teehr.models.queries.JoinedTimeseriesQuery]) -> str
 
-
+   
    Generate the join clause for geometry.
 
 
@@ -219,7 +219,7 @@ Attributes
 
 .. py:function:: geometry_select_clause(q: Union[teehr.models.queries.MetricQuery, teehr.models.queries.JoinedTimeseriesQuery, teehr.models.queries_database.MetricQuery, teehr.models.queries_database.JoinedTimeseriesQuery]) -> str
 
-
+   
    "Generate the geometry select clause.
 
 
@@ -242,7 +242,7 @@ Attributes
 
 .. py:function:: geometry_joined_select_clause(q: Union[teehr.models.queries.MetricQuery, teehr.models.queries.JoinedTimeseriesQuery]) -> str
 
-
+   
    Generate the geometry select clause for a database.
 
 
@@ -265,7 +265,7 @@ Attributes
 
 .. py:function:: metric_geometry_join_clause_db(q: Union[teehr.models.queries_database.MetricQuery, teehr.models.queries_database.JoinedTimeseriesQuery]) -> str
 
-
+   
    Generate the metric geometry join clause for a database.
 
 
@@ -288,7 +288,7 @@ Attributes
 
 .. py:function:: metric_geometry_join_clause(q: Union[teehr.models.queries.MetricQuery, teehr.models.queries.JoinedTimeseriesQuery]) -> str
 
-
+   
    Generate the metric geometry join clause.
 
 
@@ -311,7 +311,7 @@ Attributes
 
 .. py:function:: _remove_duplicates_jtq_cte(q: teehr.models.queries.JoinedTimeseriesQuery) -> str
 
-
+   
    Generate the remove duplicates CTE for the JoinedTimeseriesQuery.
 
 
@@ -334,7 +334,7 @@ Attributes
 
 .. py:function:: _remove_duplicates_mq_cte(q: teehr.models.queries.MetricQuery) -> str
 
-
+   
    Generate the remove duplicates CTE for the MetricQuery.
 
 
@@ -357,7 +357,7 @@ Attributes
 
 .. py:function:: _join_time_on(join: str, join_to: str, join_on: List[str])
 
-
+   
    Generate the join time on query.
 
 
@@ -380,7 +380,7 @@ Attributes
 
 .. py:function:: _join_on(join: str, join_to: str, join_on: List[str]) -> str
 
-
+   
    Generate the join on query.
 
 
@@ -403,7 +403,7 @@ Attributes
 
 .. py:function:: _nse_cte(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the nash-sutcliffe-efficiency CTE.
 
 
@@ -426,7 +426,7 @@ Attributes
 
 .. py:function:: _join_nse_cte(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the join nash-sutcliffe-efficiency CTE.
 
 
@@ -449,7 +449,7 @@ Attributes
 
 .. py:function:: _select_max_value_timedelta(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select max value timedelta query segment.
 
 
@@ -472,7 +472,7 @@ Attributes
 
 .. py:function:: _select_secondary_max_value_time(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select secondary max value time query segment.
 
 
@@ -495,7 +495,7 @@ Attributes
 
 .. py:function:: _select_primary_max_value_time(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select primary max value time query segment.
 
 
@@ -518,7 +518,7 @@ Attributes
 
 .. py:function:: _select_root_mean_squared_error(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select root mean squared error query segment.
 
 
@@ -541,7 +541,7 @@ Attributes
 
 .. py:function:: _select_mean_squared_error(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select mean squared error query segment.
 
 
@@ -564,7 +564,7 @@ Attributes
 
 .. py:function:: _select_mean_error(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select mean error query segment.
 
 
@@ -587,7 +587,7 @@ Attributes
 
 .. py:function:: _select_kling_gupta_efficiency(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select kling gupta efficiency query segment.
 
 
@@ -610,7 +610,7 @@ Attributes
 
 .. py:function:: _select_nash_sutcliffe_efficiency(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select nash sutcliffe efficiency query segment.
 
 
@@ -633,7 +633,7 @@ Attributes
 
 .. py:function:: _select_bias(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select bias  query segment.
 
 
@@ -656,7 +656,7 @@ Attributes
 
 .. py:function:: _select_max_value_delta(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select max value delta query segment.
 
 
@@ -679,7 +679,7 @@ Attributes
 
 .. py:function:: _select_primary_count(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select primary count query segment.
 
 
@@ -702,7 +702,7 @@ Attributes
 
 .. py:function:: _select_secondary_count(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select secondary count query segment.
 
 
@@ -725,7 +725,7 @@ Attributes
 
 .. py:function:: _select_primary_minimum(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select primary minimum query segment.
 
 
@@ -748,7 +748,7 @@ Attributes
 
 .. py:function:: _select_secondary_minimum(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select secondary minimum query segment.
 
 
@@ -771,7 +771,7 @@ Attributes
 
 .. py:function:: _select_primary_maximum(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select primary maximum query segment.
 
 
@@ -794,7 +794,7 @@ Attributes
 
 .. py:function:: _select_secondary_maximum(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select secondary maximum query segment.
 
 
@@ -817,7 +817,7 @@ Attributes
 
 .. py:function:: _select_primary_average(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select primary average query segment.
 
 
@@ -840,7 +840,7 @@ Attributes
 
 .. py:function:: _select_secondary_average(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select secondary average query segment.
 
 
@@ -863,7 +863,7 @@ Attributes
 
 .. py:function:: _select_primary_sum(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select primary sum query segment.
 
 
@@ -886,7 +886,7 @@ Attributes
 
 .. py:function:: _select_secondary_sum(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select secondary sum query segment.
 
 
@@ -909,7 +909,7 @@ Attributes
 
 .. py:function:: _select_primary_variance(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select primary variance query segment.
 
 
@@ -932,7 +932,7 @@ Attributes
 
 .. py:function:: _select_secondary_variance(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
 
-
+   
    Generate the select secondary variance query segment.
 
 
@@ -955,7 +955,7 @@ Attributes
 
 .. py:function:: df_to_gdf(df: pandas.DataFrame) -> geopandas.GeoDataFrame
 
-
+   
    Convert pd.DataFrame to gpd.GeoDataFrame.
 
    When the `geometry` column is read from a parquet file using DuckBD
@@ -991,7 +991,7 @@ Attributes
 
 .. py:function:: remove_empty_lines(text: str) -> str
 
-
+   
    Remove empty lines from string.
 
 
@@ -1011,3 +1011,4 @@ Attributes
 
    ..
        !! processed by numpydoc !!
+

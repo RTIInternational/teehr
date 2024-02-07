@@ -28,7 +28,7 @@ Functions
 
 .. py:function:: file_chunk_loop(row: Tuple, location_ids: numpy.array, variable_name: str, configuration: str, schema: pyarrow.Schema, ignore_missing_file: bool, units_format_dict: Dict, nwm_version: str)
 
-
+   
    Fetch NWM values and convert to tabular format for a single json.
 
 
@@ -51,7 +51,7 @@ Functions
 
 .. py:function:: process_chunk_of_files(df: pandas.DataFrame, location_ids: Iterable[int], configuration: str, variable_name: str, output_parquet_dir: str, process_by_z_hour: bool, ignore_missing_file: bool, units_format_dict: Dict, overwrite_output: bool, nwm_version: str)
 
-
+   
    Assemble a table for a chunk of NWM files.
 
 
@@ -74,7 +74,7 @@ Functions
 
 .. py:function:: fetch_and_format_nwm_points(json_paths: List[str], location_ids: Iterable[int], configuration: str, variable_name: str, output_parquet_dir: str, process_by_z_hour: bool, stepsize: int, ignore_missing_file: bool, units_format_dict: Dict, overwrite_output: bool, nwm_version: str)
 
-
+   
    Read in the single reference jsons, subset the
        NWM data based on provided IDs and formats and save
        the data as parquet files using Dask.
@@ -135,3 +135,4 @@ Functions
 
    ..
        !! processed by numpydoc !!
+

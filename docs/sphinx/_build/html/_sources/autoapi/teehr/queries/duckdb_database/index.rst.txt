@@ -41,11 +41,11 @@ Attributes
 .. py:data:: SQL_DATETIME_STR_FORMAT
    :value: '%Y-%m-%d %H:%M:%S'
 
-
+   
 
 .. py:function:: create_get_metrics_query(mq: teehr.models.queries_database.MetricQuery) -> str
 
-
+   
    Build the query string to calculate performance metrics
    using database queries.
 
@@ -148,7 +148,7 @@ Attributes
 
 .. py:function:: create_join_and_save_timeseries_query(jtq: teehr.models.queries_database.JoinedTimeseriesQuery) -> str
 
-
+   
    Load joined timeseries into a duckdb persistent database using a
    database query.
 
@@ -180,7 +180,7 @@ Attributes
 
 .. py:function:: describe_timeseries(timeseries_filepath: str) -> Dict
 
-
+   
    Retrieve descriptive stats for a time series.
 
 
@@ -212,7 +212,7 @@ Attributes
 
 .. py:function:: create_get_joined_timeseries_query(jtq: teehr.models.queries_database.JoinedTimeseriesQuery) -> str
 
-
+   
    Retrieve joined timeseries using database query.
 
 
@@ -290,7 +290,7 @@ Attributes
 
 .. py:function:: create_get_timeseries_query(tq: teehr.models.queries_database.TimeseriesQuery) -> str
 
-
+   
    Retrieve joined timeseries using database query.
 
 
@@ -368,7 +368,7 @@ Attributes
 
 .. py:function:: create_get_timeseries_char_query(tcq: teehr.models.queries_database.TimeseriesCharQuery) -> str
 
-
+   
    Retrieve joined timeseries using database query.
 
 
@@ -433,7 +433,7 @@ Attributes
 
 .. py:function:: create_unique_field_values_query(fn: teehr.models.queries_database.JoinedTimeseriesFieldName) -> str
 
-
+   
    Create a query for identifying unique values in a field.
 
 
@@ -461,3 +461,4 @@ Attributes
 
    ..
        !! processed by numpydoc !!
+

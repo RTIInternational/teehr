@@ -36,11 +36,11 @@ Attributes
 .. py:data:: SQL_DATETIME_STR_FORMAT
    :value: '%Y-%m-%d %H:%M:%S'
 
-
+   
 
 .. py:function:: get_metrics(primary_filepath: str, secondary_filepath: str, crosswalk_filepath: str, group_by: List[str], order_by: List[str], include_metrics: Union[List[teehr.models.queries.MetricEnum], all], filters: Union[List[dict], None] = None, return_query: bool = False, geometry_filepath: Union[str, None] = None, include_geometry: bool = False) -> Union[str, pandas.DataFrame, geopandas.GeoDataFrame]
 
-
+   
    Calculate performance metrics using a Pandas or Dask DataFrame.
 
 
@@ -140,7 +140,7 @@ Attributes
 
 .. py:function:: calculate_group_metrics(group: pandas.DataFrame, include_metrics: Union[List[str], str])
 
-
+   
    Calculate metrics on a pd.DataFrame.
 
 
@@ -214,3 +214,4 @@ Attributes
 
    ..
        !! processed by numpydoc !!
+

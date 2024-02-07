@@ -5,7 +5,7 @@
 
 .. autoapi-nested-parse::
 
-
+   
    Queries init.
 
 
@@ -37,3 +37,5 @@ Submodules
    duckdb_database/index.rst
    pandas/index.rst
    utils/index.rst
+
+

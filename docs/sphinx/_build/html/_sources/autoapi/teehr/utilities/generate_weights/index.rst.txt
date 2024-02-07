@@ -30,7 +30,7 @@ Functions
 
 .. py:function:: vectorize(data_array: xarray.DataArray) -> geopandas.GeoDataFrame
 
-
+   
    Convert 2D xarray.DataArray into a geopandas.GeoDataFrame.
 
 
@@ -57,7 +57,7 @@ Functions
 
 .. py:function:: overlay_zones(grid: geopandas.GeoDataFrame, zones: geopandas.GeoDataFrame) -> geopandas.GeoDataFrame
 
-
+   
    Overlay zone polygons on vectorized grid cells.
 
 
@@ -80,7 +80,7 @@ Functions
 
 .. py:function:: vectorize_grid(src_da: xarray.DataArray, nodata_val: float, crs_wkt: str, vectorize_chunk: float = 40) -> geopandas.GeoDataFrame
 
-
+   
    Vectorize pixels in the template array in chunks using dask.
 
 
@@ -108,7 +108,7 @@ Functions
 
 .. py:function:: calculate_weights(grid_gdf: geopandas.GeoDataFrame, zone_gdf: geopandas.GeoDataFrame, overlay_chunk: float = 250) -> geopandas.GeoDataFrame
 
-
+   
    Overlay vectorized pixels and zone polygons, and calculate
    areal weights, returning a geodataframe.
 
@@ -137,7 +137,7 @@ Functions
 
 .. py:function:: generate_weights_file(zone_polygon_filepath: Union[pathlib.Path, str], template_dataset: Union[str, pathlib.Path], variable_name: str, output_weights_filepath: Union[str, pathlib.Path], crs_wkt: str, unique_zone_id: str = None, **read_args: Dict) -> None
 
-
+   
    Generate a file of row/col indices and weights for pixels intersecting
       given zone polyons.
 
@@ -213,3 +213,4 @@ Functions
 
    ..
        !! processed by numpydoc !!
+

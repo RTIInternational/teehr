@@ -91,7 +91,25 @@ TEEHR (pronounced "tier") is a python tool set for loading, storing, processing 
             To the development guide
 
 
-TODO: Add funding source and CIROH image.
+.. grid:: 1 2 3 4
+
+    .. grid-item-card::
+        :img-top: https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png
+        :columns: 3
+        :class-card: ciroh-card
+        :link: https://ciroh.ua.edu/
+
+
+    .. grid-item-card::
+        :columns: 9
+        :class-card: ciroh-card
+        :margin: 4 0 0 0
+
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+
 
 .. toctree::
    :hidden:

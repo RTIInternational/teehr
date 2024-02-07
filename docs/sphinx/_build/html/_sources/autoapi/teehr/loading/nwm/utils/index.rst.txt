@@ -38,7 +38,7 @@ Functions
 
 .. py:function:: check_dates_against_nwm_version(nwm_version: str, start_date: Union[str, datetime.datetime], ingest_days: int)
 
-
+   
    Make sure start/end dates work with specified NWM version.
 
 
@@ -61,7 +61,7 @@ Functions
 
 .. py:function:: generate_json_paths(kerchunk_method: str, gcs_component_paths: List[str], json_dir: str, ignore_missing_file: bool) -> List[str]
 
-
+   
    Generate remote and/or local paths to Kerchunk reference json files
    depending on the specified method.
 
@@ -103,7 +103,7 @@ Functions
 
 .. py:function:: write_parquet_file(filepath: pathlib.Path, overwrite_output: bool, data: Union[pyarrow.Table, pandas.DataFrame])
 
-
+   
    Write output timeseries parquet file with logic controlling
    whether or not to overwrite an existing file.
 
@@ -137,7 +137,7 @@ Functions
 
 .. py:function:: load_gdf(filepath: Union[str, pathlib.Path], **kwargs: str) -> geopandas.GeoDataFrame
 
-
+   
    Load any supported geospatial file type into a gdf using GeoPandas.
 
 
@@ -160,7 +160,7 @@ Functions
 
 .. py:function:: parquet_to_gdf(parquet_filepath: str) -> geopandas.GeoDataFrame
 
-
+   
    Read parquet as GeoDataFrame.
 
 
@@ -183,7 +183,7 @@ Functions
 
 .. py:function:: np_to_list(t)
 
-
+   
    Convert numpy array to list.
 
 
@@ -206,7 +206,7 @@ Functions
 
 .. py:function:: get_dataset(filepath: str, ignore_missing_file: bool, **kwargs) -> xarray.Dataset
 
-
+   
    Retrieve a blob from the data service as xarray.Dataset.
 
 
@@ -240,7 +240,7 @@ Functions
 
 .. py:function:: list_to_np(lst)
 
-
+   
    Convert list to a tuple.
 
 
@@ -263,7 +263,7 @@ Functions
 
 .. py:function:: check_for_prebuilt_json_paths(fs: fsspec.filesystem, gcs_path: str, return_gcs_path=False) -> str
 
-
+   
    Check for existence of a pre-built kerchunk json in s3 based
    on its GCS path.
 
@@ -301,7 +301,7 @@ Functions
 
 .. py:function:: gen_json(remote_path: str, fs: fsspec.filesystem, json_dir: Union[str, pathlib.Path], ignore_missing_file: bool) -> str
 
-
+   
    Helper function for creating single-file kerchunk reference JSONs.
 
 
@@ -338,7 +338,7 @@ Functions
 
 .. py:function:: build_zarr_references(remote_paths: List[str], json_dir: Union[str, pathlib.Path], ignore_missing_file: bool) -> list[str]
 
-
+   
    Build the single file zarr json reference files using kerchunk.
 
 
@@ -372,7 +372,7 @@ Functions
 
 .. py:function:: construct_assim_paths(gcs_dir: str, configuration: str, output_type: str, dates: pandas.DatetimeIndex, t_minus: Iterable[int], configuration_name_in_filepath: str, cycle_z_hours: Iterable[int], domain: str, file_extension: str = 'nc') -> list[str]
 
-
+   
    Construct paths to NWM point assimilation data based on specified
        parameters.
 
@@ -434,7 +434,7 @@ Functions
 
 .. py:function:: build_remote_nwm_filelist(configuration: str, output_type: str, start_dt: Union[str, datetime.datetime], ingest_days: int, analysis_config_dict: Dict, t_minus_hours: Optional[Iterable[int]], ignore_missing_file: Optional[bool]) -> List[str]
 
-
+   
    Assemble a list of remote NWM files in GCS based on specified user
        parameters.
 
@@ -483,3 +483,4 @@ Functions
 
    ..
        !! processed by numpydoc !!
+

@@ -42,11 +42,11 @@ Attributes
 .. py:data:: DATETIME_STR_FMT
    :value: '%Y-%m-%dT%H:%M:00+0000'
 
-
+   
 
 .. py:function:: _filter_to_hourly(df: pandas.DataFrame) -> pandas.DataFrame
 
-
+   
    Filter out data not reported on the hour.
 
 
@@ -69,7 +69,7 @@ Attributes
 
 .. py:function:: _filter_no_data(df: pandas.DataFrame, no_data_value=-999) -> pandas.DataFrame
 
-
+   
    Filter out no data values.
 
 
@@ -92,7 +92,7 @@ Attributes
 
 .. py:function:: _convert_to_si_units(df: pandas.DataFrame) -> pandas.DataFrame
 
-
+   
    Convert streamflow values from english to metric.
 
 
@@ -115,7 +115,7 @@ Attributes
 
 .. py:function:: _datetime_to_date(dt: datetime.datetime) -> datetime.datetime
 
-
+   
    Convert datetime to date only.
 
 
@@ -138,7 +138,7 @@ Attributes
 
 .. py:function:: _format_df(df: pandas.DataFrame) -> pandas.DataFrame
 
-
+   
    Format HydroTools dataframe columns to TEEHR data model.
 
 
@@ -161,7 +161,7 @@ Attributes
 
 .. py:function:: _fetch_usgs(sites: List[str], start_date: datetime.datetime, end_date: datetime.datetime, filter_to_hourly: bool = True, filter_no_data: bool = True, convert_to_si: bool = True) -> pandas.DataFrame
 
-
+   
    Fetch USGS gage data and format to TEEHR format.
 
 
@@ -184,7 +184,7 @@ Attributes
 
 .. py:function:: _format_output_filename(chunk_by: str, start_dt, end_dt) -> str
 
-
+   
    Format the output filename based on min and max
    datetime in the dataset.
 
@@ -208,7 +208,7 @@ Attributes
 
 .. py:function:: usgs_to_parquet(sites: List[str], start_date: Union[str, datetime.datetime, pandas.Timestamp], end_date: Union[str, datetime.datetime, pandas.Timestamp], output_parquet_dir: Union[str, pathlib.Path], chunk_by: Union[teehr.models.loading.utils.ChunkByEnum, None] = None, filter_to_hourly: bool = True, filter_no_data: bool = True, convert_to_si: bool = True, overwrite_output: Optional[bool] = False)
 
-
+   
    Fetch USGS gage data and save as a Parquet file.
 
 
@@ -289,3 +289,4 @@ Attributes
 
    ..
        !! processed by numpydoc !!
+

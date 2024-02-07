@@ -26,7 +26,7 @@ Functions
 
 .. py:function:: nwm_grids_to_parquet(configuration: str, output_type: str, variable_name: str, start_date: Union[str, datetime.datetime], ingest_days: int, zonal_weights_filepath: str, json_dir: Union[str, pathlib.Path], output_parquet_dir: Union[str, pathlib.Path], nwm_version: teehr.models.loading.utils.SupportedNWMOperationalVersionsEnum, data_source: Optional[teehr.models.loading.utils.SupportedNWMDataSourcesEnum] = 'GCS', kerchunk_method: Optional[teehr.models.loading.utils.SupportedKerchunkMethod] = 'local', t_minus_hours: Optional[Iterable[int]] = None, ignore_missing_file: Optional[bool] = True, overwrite_output: Optional[bool] = False)
 
-
+   
    Fetch NWM gridded data, calculate zonal statistics (currently only
    mean is available) of selected variable for given zones, convert
    and save to TEEHR tabular format.
@@ -102,11 +102,11 @@ Functions
 
    .. seealso::
 
-
+       
        :obj:`teehr.utilities.generate_weights.generate_weights_file`
            Weighted average.
-
-
+       
+       
    .. rubric:: Notes
 
    The NWM configuration variables, including configuration, output_type, and
@@ -169,3 +169,4 @@ Functions
 
    ..
        !! processed by numpydoc !!
+

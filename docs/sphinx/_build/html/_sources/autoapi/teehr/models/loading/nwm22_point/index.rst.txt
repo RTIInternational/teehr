@@ -70,7 +70,7 @@ Attributes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    ChannelRtVariableEnum.
 
 
@@ -93,32 +93,32 @@ Attributes
    .. py:attribute:: nudge
       :value: 'nudge'
 
-
+      
 
    .. py:attribute:: qBtmVertRunoff
       :value: 'qBtmVertRunoff'
 
-
+      
 
    .. py:attribute:: qBucket
       :value: 'qBucket'
 
-
+      
 
    .. py:attribute:: qSfcLatRunoff
       :value: 'qSfcLatRunoff'
 
-
+      
 
    .. py:attribute:: streamflow
       :value: 'streamflow'
 
-
+      
 
    .. py:attribute:: velocity
       :value: 'velocity'
 
-
+      
 
 
 .. py:class:: ChannelRtNoDAVariableEnum
@@ -126,7 +126,7 @@ Attributes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    ChannelRtNoDAVariableEnum.
 
 
@@ -149,27 +149,27 @@ Attributes
    .. py:attribute:: nudge
       :value: 'nudge'
 
-
+      
 
    .. py:attribute:: qBucket
       :value: 'qBucket'
 
-
+      
 
    .. py:attribute:: qSfcLatRunoff
       :value: 'qSfcLatRunoff'
 
-
+      
 
    .. py:attribute:: streamflow
       :value: 'streamflow'
 
-
+      
 
    .. py:attribute:: velocity
       :value: 'velocity'
 
-
+      
 
 
 .. py:class:: ChannelRtLongVariableEnum
@@ -177,7 +177,7 @@ Attributes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    ChannelRtLongVariableEnum.
 
 
@@ -200,17 +200,17 @@ Attributes
    .. py:attribute:: nudge
       :value: 'nudge'
 
-
+      
 
    .. py:attribute:: streamflow
       :value: 'streamflow'
 
-
+      
 
    .. py:attribute:: velocity
       :value: 'velocity'
 
-
+      
 
 
 .. py:class:: TerrainRtVariableEnum
@@ -218,7 +218,7 @@ Attributes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    TerrainRtVariableEnum.
 
 
@@ -241,12 +241,12 @@ Attributes
    .. py:attribute:: sfcheadsubrt
       :value: 'sfcheadsubrt'
 
-
+      
 
    .. py:attribute:: zwattablrt
       :value: 'zwattablrt'
 
-
+      
 
 
 .. py:class:: ReservoirVariableEnum
@@ -254,7 +254,7 @@ Attributes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    ReservoirVariableEnum.
 
 
@@ -277,22 +277,22 @@ Attributes
    .. py:attribute:: inflow
       :value: 'inflow'
 
-
+      
 
    .. py:attribute:: outflow
       :value: 'outflow'
 
-
+      
 
    .. py:attribute:: reservoir_assimiated_value
       :value: 'reservoir_assimiated_value'
 
-
+      
 
    .. py:attribute:: water_sfc_elev
       :value: 'water_sfc_elev'
 
-
+      
 
 
 .. py:class:: ShortAndAnalysisOutputEnum
@@ -300,7 +300,7 @@ Attributes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    ShortAndAnalysisOutputEnum.
 
 
@@ -323,17 +323,17 @@ Attributes
    .. py:attribute:: channel_rt
       :value: 'channel_rt'
 
-
+      
 
    .. py:attribute:: terrain_rt
       :value: 'terrain_rt'
 
-
+      
 
    .. py:attribute:: reservoir
       :value: 'reservoir'
 
-
+      
 
 
 .. py:class:: Medium1OutputEnum
@@ -341,7 +341,7 @@ Attributes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    Medium1OutputEnum.
 
 
@@ -364,17 +364,17 @@ Attributes
    .. py:attribute:: channel_rt_1
       :value: 'channel_rt_1'
 
-
+      
 
    .. py:attribute:: terrain_rt_1
       :value: 'terrain_rt_1'
 
-
+      
 
    .. py:attribute:: reservoir_1
       :value: 'reservoir_1'
 
-
+      
 
 
 .. py:class:: Medium2OutputEnum
@@ -382,7 +382,7 @@ Attributes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    Medium2OutputEnum.
 
 
@@ -405,17 +405,17 @@ Attributes
    .. py:attribute:: channel_rt_2
       :value: 'channel_rt_2'
 
-
+      
 
    .. py:attribute:: terrain_rt_2
       :value: 'terrain_rt_2'
 
-
+      
 
    .. py:attribute:: reservoir_2
       :value: 'reservoir_2'
 
-
+      
 
 
 .. py:class:: Medium3OutputEnum
@@ -423,7 +423,7 @@ Attributes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    Medium3OutputEnum.
 
 
@@ -446,17 +446,17 @@ Attributes
    .. py:attribute:: channel_rt_3
       :value: 'channel_rt_3'
 
-
+      
 
    .. py:attribute:: terrain_rt_3
       :value: 'terrain_rt_3'
 
-
+      
 
    .. py:attribute:: reservoir_3
       :value: 'reservoir_3'
 
-
+      
 
 
 .. py:class:: Medium4OutputEnum
@@ -464,7 +464,7 @@ Attributes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    Medium4OutputEnum.
 
 
@@ -487,17 +487,17 @@ Attributes
    .. py:attribute:: channel_rt_4
       :value: 'channel_rt_4'
 
-
+      
 
    .. py:attribute:: terrain_rt_4
       :value: 'terrain_rt_4'
 
-
+      
 
    .. py:attribute:: reservoir_4
       :value: 'reservoir_4'
 
-
+      
 
 
 .. py:class:: Medium5OutputEnum
@@ -505,7 +505,7 @@ Attributes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    Medium5OutputEnum.
 
 
@@ -528,17 +528,17 @@ Attributes
    .. py:attribute:: channel_rt_5
       :value: 'channel_rt_5'
 
-
+      
 
    .. py:attribute:: terrain_rt_5
       :value: 'terrain_rt_5'
 
-
+      
 
    .. py:attribute:: reservoir_5
       :value: 'reservoir_5'
 
-
+      
 
 
 .. py:class:: Medium6OutputEnum
@@ -546,7 +546,7 @@ Attributes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    Medium6OutputEnum.
 
 
@@ -569,17 +569,17 @@ Attributes
    .. py:attribute:: channel_rt_6
       :value: 'channel_rt_6'
 
-
+      
 
    .. py:attribute:: terrain_rt_6
       :value: 'terrain_rt_6'
 
-
+      
 
    .. py:attribute:: reservoir_6
       :value: 'reservoir_6'
 
-
+      
 
 
 .. py:class:: Medium7OutputEnum
@@ -587,7 +587,7 @@ Attributes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    Medium7OutputEnum.
 
 
@@ -610,17 +610,17 @@ Attributes
    .. py:attribute:: channel_rt_7
       :value: 'channel_rt_7'
 
-
+      
 
    .. py:attribute:: terrain_rt_7
       :value: 'terrain_rt_7'
 
-
+      
 
    .. py:attribute:: reservoir_7
       :value: 'reservoir_7'
 
-
+      
 
 
 .. py:class:: MediumNoDAEnum
@@ -628,7 +628,7 @@ Attributes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    MediumNoDAEnum.
 
 
@@ -651,7 +651,7 @@ Attributes
    .. py:attribute:: channel_rt
       :value: 'channel_rt'
 
-
+      
 
 
 .. py:class:: Long1OutputEnum
@@ -659,7 +659,7 @@ Attributes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    Long1OutputEnum.
 
 
@@ -682,12 +682,12 @@ Attributes
    .. py:attribute:: channel_rt_1
       :value: 'channel_rt_1'
 
-
+      
 
    .. py:attribute:: reservoir_1
       :value: 'reservoir_1'
 
-
+      
 
 
 .. py:class:: Long2OutputEnum
@@ -695,7 +695,7 @@ Attributes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    Long2OutputEnum.
 
 
@@ -718,12 +718,12 @@ Attributes
    .. py:attribute:: channel_rt_2
       :value: 'channel_rt_2'
 
-
+      
 
    .. py:attribute:: reservoir_2
       :value: 'reservoir_2'
 
-
+      
 
 
 .. py:class:: Long3OutputEnum
@@ -731,7 +731,7 @@ Attributes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    Long3OutputEnum.
 
 
@@ -754,12 +754,12 @@ Attributes
    .. py:attribute:: channel_rt_3
       :value: 'channel_rt_3'
 
-
+      
 
    .. py:attribute:: reservoir_3
       :value: 'reservoir_3'
 
-
+      
 
 
 .. py:class:: Long4OutputEnum
@@ -767,7 +767,7 @@ Attributes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    Long4OutputEnum.
 
 
@@ -790,12 +790,12 @@ Attributes
    .. py:attribute:: channel_rt_4
       :value: 'channel_rt_4'
 
-
+      
 
    .. py:attribute:: reservoir_4
       :value: 'reservoir_4'
 
-
+      
 
 
 .. py:class:: ShortAndAnalysis(**data: Any)
@@ -803,7 +803,7 @@ Attributes
 
    Bases: :py:obj:`pydantic.BaseModel`
 
-
+   
    ShortAndAnalysis.
 
 
@@ -826,22 +826,22 @@ Attributes
    .. py:attribute:: output_type
       :type: ShortAndAnalysisOutputEnum
 
-
+      
 
    .. py:attribute:: channel_rt
       :type: Optional[ChannelRtVariableEnum]
 
-
+      
 
    .. py:attribute:: terrain_rt
       :type: Optional[TerrainRtVariableEnum]
 
-
+      
 
    .. py:attribute:: reservoir
       :type: Optional[ReservoirVariableEnum]
 
-
+      
 
 
 .. py:class:: ShortAndAnalysisNoDA(**data: Any)
@@ -849,7 +849,7 @@ Attributes
 
    Bases: :py:obj:`pydantic.BaseModel`
 
-
+   
    ShortAndAnalysisNoDA.
 
 
@@ -872,22 +872,22 @@ Attributes
    .. py:attribute:: output_type
       :type: ShortAndAnalysisOutputEnum
 
-
+      
 
    .. py:attribute:: channel_rt
       :type: Optional[ChannelRtNoDAVariableEnum]
 
-
+      
 
    .. py:attribute:: terrain_rt
       :type: Optional[TerrainRtVariableEnum]
 
-
+      
 
    .. py:attribute:: reservoir
       :type: Optional[ReservoirVariableEnum]
 
-
+      
 
 
 .. py:class:: MediumRangeMem1(**data: Any)
@@ -895,7 +895,7 @@ Attributes
 
    Bases: :py:obj:`pydantic.BaseModel`
 
-
+   
    MediumRangeMem1.
 
 
@@ -918,22 +918,22 @@ Attributes
    .. py:attribute:: output_type
       :type: Medium1OutputEnum
 
-
+      
 
    .. py:attribute:: channel_rt_1
       :type: Optional[ChannelRtVariableEnum]
 
-
+      
 
    .. py:attribute:: terrain_rt_1
       :type: Optional[TerrainRtVariableEnum]
 
-
+      
 
    .. py:attribute:: reservoir_1
       :type: Optional[ReservoirVariableEnum]
 
-
+      
 
 
 .. py:class:: MediumRangeMem2(**data: Any)
@@ -941,7 +941,7 @@ Attributes
 
    Bases: :py:obj:`pydantic.BaseModel`
 
-
+   
    MediumRangeMem2.
 
 
@@ -964,22 +964,22 @@ Attributes
    .. py:attribute:: output_type
       :type: Medium2OutputEnum
 
-
+      
 
    .. py:attribute:: channel_rt_2
       :type: Optional[ChannelRtVariableEnum]
 
-
+      
 
    .. py:attribute:: terrain_rt_2
       :type: Optional[TerrainRtVariableEnum]
 
-
+      
 
    .. py:attribute:: reservoir_2
       :type: Optional[ReservoirVariableEnum]
 
-
+      
 
 
 .. py:class:: MediumRangeMem3(**data: Any)
@@ -987,7 +987,7 @@ Attributes
 
    Bases: :py:obj:`pydantic.BaseModel`
 
-
+   
    MediumRangeMem3.
 
 
@@ -1010,22 +1010,22 @@ Attributes
    .. py:attribute:: output_type
       :type: Medium3OutputEnum
 
-
+      
 
    .. py:attribute:: channel_rt_3
       :type: Optional[ChannelRtVariableEnum]
 
-
+      
 
    .. py:attribute:: terrain_rt_3
       :type: Optional[TerrainRtVariableEnum]
 
-
+      
 
    .. py:attribute:: reservoir_3
       :type: Optional[ReservoirVariableEnum]
 
-
+      
 
 
 .. py:class:: MediumRangeMem4(**data: Any)
@@ -1033,7 +1033,7 @@ Attributes
 
    Bases: :py:obj:`pydantic.BaseModel`
 
-
+   
    MediumRangeMem4.
 
 
@@ -1056,22 +1056,22 @@ Attributes
    .. py:attribute:: output_type
       :type: Medium4OutputEnum
 
-
+      
 
    .. py:attribute:: channel_rt_4
       :type: Optional[ChannelRtVariableEnum]
 
-
+      
 
    .. py:attribute:: terrain_rt_4
       :type: Optional[TerrainRtVariableEnum]
 
-
+      
 
    .. py:attribute:: reservoir_4
       :type: Optional[ReservoirVariableEnum]
 
-
+      
 
 
 .. py:class:: MediumRangeMem5(**data: Any)
@@ -1079,7 +1079,7 @@ Attributes
 
    Bases: :py:obj:`pydantic.BaseModel`
 
-
+   
    MediumRangeMem5.
 
 
@@ -1102,22 +1102,22 @@ Attributes
    .. py:attribute:: output_type
       :type: Medium5OutputEnum
 
-
+      
 
    .. py:attribute:: channel_rt_5
       :type: Optional[ChannelRtVariableEnum]
 
-
+      
 
    .. py:attribute:: terrain_rt_5
       :type: Optional[TerrainRtVariableEnum]
 
-
+      
 
    .. py:attribute:: reservoir_5
       :type: Optional[ReservoirVariableEnum]
 
-
+      
 
 
 .. py:class:: MediumRangeMem6(**data: Any)
@@ -1125,7 +1125,7 @@ Attributes
 
    Bases: :py:obj:`pydantic.BaseModel`
 
-
+   
    MediumRangeMem6.
 
 
@@ -1148,22 +1148,22 @@ Attributes
    .. py:attribute:: output_type
       :type: Medium6OutputEnum
 
-
+      
 
    .. py:attribute:: channel_rt_6
       :type: Optional[ChannelRtVariableEnum]
 
-
+      
 
    .. py:attribute:: terrain_rt_6
       :type: Optional[TerrainRtVariableEnum]
 
-
+      
 
    .. py:attribute:: reservoir_6
       :type: Optional[ReservoirVariableEnum]
 
-
+      
 
 
 .. py:class:: MediumRangeMem7(**data: Any)
@@ -1171,7 +1171,7 @@ Attributes
 
    Bases: :py:obj:`pydantic.BaseModel`
 
-
+   
    MediumRangeMem7.
 
 
@@ -1194,22 +1194,22 @@ Attributes
    .. py:attribute:: output_type
       :type: Medium7OutputEnum
 
-
+      
 
    .. py:attribute:: channel_rt_7
       :type: Optional[ChannelRtVariableEnum]
 
-
+      
 
    .. py:attribute:: terrain_rt_7
       :type: Optional[TerrainRtVariableEnum]
 
-
+      
 
    .. py:attribute:: reservoir_7
       :type: Optional[ReservoirVariableEnum]
 
-
+      
 
 
 .. py:class:: MediumRangeNoDA(**data: Any)
@@ -1217,7 +1217,7 @@ Attributes
 
    Bases: :py:obj:`pydantic.BaseModel`
 
-
+   
    MediumRangeNoDA.
 
 
@@ -1240,12 +1240,12 @@ Attributes
    .. py:attribute:: output_type
       :type: MediumNoDAEnum
 
-
+      
 
    .. py:attribute:: channel_rt
       :type: Optional[ChannelRtNoDAVariableEnum]
 
-
+      
 
 
 .. py:class:: LongRangeMem1(**data: Any)
@@ -1253,7 +1253,7 @@ Attributes
 
    Bases: :py:obj:`pydantic.BaseModel`
 
-
+   
    LongRangeMem1.
 
 
@@ -1276,17 +1276,17 @@ Attributes
    .. py:attribute:: output_type
       :type: Long1OutputEnum
 
-
+      
 
    .. py:attribute:: channel_rt_1
       :type: Optional[ChannelRtLongVariableEnum]
 
-
+      
 
    .. py:attribute:: reservoir_1
       :type: Optional[ReservoirVariableEnum]
 
-
+      
 
 
 .. py:class:: LongRangeMem2(**data: Any)
@@ -1294,7 +1294,7 @@ Attributes
 
    Bases: :py:obj:`pydantic.BaseModel`
 
-
+   
    LongRangeMem2.
 
 
@@ -1317,17 +1317,17 @@ Attributes
    .. py:attribute:: output_type
       :type: Long2OutputEnum
 
-
+      
 
    .. py:attribute:: channel_rt_2
       :type: Optional[ChannelRtLongVariableEnum]
 
-
+      
 
    .. py:attribute:: reservoir_2
       :type: Optional[ReservoirVariableEnum]
 
-
+      
 
 
 .. py:class:: LongRangeMem3(**data: Any)
@@ -1335,7 +1335,7 @@ Attributes
 
    Bases: :py:obj:`pydantic.BaseModel`
 
-
+   
    LongRangeMem3.
 
 
@@ -1358,17 +1358,17 @@ Attributes
    .. py:attribute:: output_type
       :type: Long3OutputEnum
 
-
+      
 
    .. py:attribute:: channel_rt_3
       :type: Optional[ChannelRtLongVariableEnum]
 
-
+      
 
    .. py:attribute:: reservoir_3
       :type: Optional[ReservoirVariableEnum]
 
-
+      
 
 
 .. py:class:: LongRangeMem4(**data: Any)
@@ -1376,7 +1376,7 @@ Attributes
 
    Bases: :py:obj:`pydantic.BaseModel`
 
-
+   
    LongRangeMem4.
 
 
@@ -1399,17 +1399,17 @@ Attributes
    .. py:attribute:: output_type
       :type: Long4OutputEnum
 
-
+      
 
    .. py:attribute:: channel_rt_4
       :type: Optional[ChannelRtLongVariableEnum]
 
-
+      
 
    .. py:attribute:: reservoir_4
       :type: Optional[ReservoirVariableEnum]
 
-
+      
 
 
 .. py:class:: ConfigurationsEnum
@@ -1417,7 +1417,7 @@ Attributes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    ConfigurationsEnum.
 
 
@@ -1440,137 +1440,137 @@ Attributes
    .. py:attribute:: analysis_assim
       :value: 'analysis_assim'
 
-
+      
 
    .. py:attribute:: analysis_assim_no_da
       :value: 'analysis_assim_no_da'
 
-
+      
 
    .. py:attribute:: analysis_assim_extend
       :value: 'analysis_assim_extend'
 
-
+      
 
    .. py:attribute:: analysis_assim_extend_no_da
       :value: 'analysis_assim_extend_no_da'
 
-
+      
 
    .. py:attribute:: analysis_assim_long
       :value: 'analysis_assim_long'
 
-
+      
 
    .. py:attribute:: analysis_assim_long_no_da
       :value: 'analysis_assim_long_no_da'
 
-
+      
 
    .. py:attribute:: analysis_assim_hawaii
       :value: 'analysis_assim_hawaii'
 
-
+      
 
    .. py:attribute:: analysis_assim_hawaii_no_da
       :value: 'analysis_assim_hawaii_no_da'
 
-
+      
 
    .. py:attribute:: analysis_assim_puertorico
       :value: 'analysis_assim_puertorico'
 
-
+      
 
    .. py:attribute:: analysis_assim_puertorico_no_da
       :value: 'analysis_assim_puertorico_no_da'
 
-
+      
 
    .. py:attribute:: short_range
       :value: 'short_range'
 
-
+      
 
    .. py:attribute:: short_range_hawaii
       :value: 'short_range_hawaii'
 
-
+      
 
    .. py:attribute:: short_range_puertorico
       :value: 'short_range_puertorico'
 
-
+      
 
    .. py:attribute:: short_range_hawaii_no_da
       :value: 'short_range_hawaii_no_da'
 
-
+      
 
    .. py:attribute:: short_range_puertorico_no_da
       :value: 'short_range_puertorico_no_da'
 
-
+      
 
    .. py:attribute:: medium_range_mem1
       :value: 'medium_range_mem1'
 
-
+      
 
    .. py:attribute:: medium_range_mem2
       :value: 'medium_range_mem2'
 
-
+      
 
    .. py:attribute:: medium_range_mem3
       :value: 'medium_range_mem3'
 
-
+      
 
    .. py:attribute:: medium_range_mem4
       :value: 'medium_range_mem4'
 
-
+      
 
    .. py:attribute:: medium_range_mem5
       :value: 'medium_range_mem5'
 
-
+      
 
    .. py:attribute:: medium_range_mem6
       :value: 'medium_range_mem6'
 
-
+      
 
    .. py:attribute:: medium_range_mem7
       :value: 'medium_range_mem7'
 
-
+      
 
    .. py:attribute:: medium_range_no_da
       :value: 'medium_range_no_da'
 
-
+      
 
    .. py:attribute:: long_range_mem1
       :value: 'long_range_mem1'
 
-
+      
 
    .. py:attribute:: long_range_mem2
       :value: 'long_range_mem2'
 
-
+      
 
    .. py:attribute:: long_range_mem3
       :value: 'long_range_mem3'
 
-
+      
 
    .. py:attribute:: long_range_mem4
       :value: 'long_range_mem4'
 
-
+      
 
 
 .. py:class:: PointConfigurationModel(**data: Any)
@@ -1578,7 +1578,7 @@ Attributes
 
    Bases: :py:obj:`pydantic.BaseModel`
 
-
+   
    NWM v2.2 PointConfigurationModel.
 
 
@@ -1601,143 +1601,146 @@ Attributes
    .. py:attribute:: configuration
       :type: ConfigurationsEnum
 
-
+      
 
    .. py:attribute:: analysis_assim
       :type: Optional[ShortAndAnalysis]
 
-
+      
 
    .. py:attribute:: analysis_assim_no_da
       :type: Optional[ShortAndAnalysisNoDA]
 
-
+      
 
    .. py:attribute:: analysis_assim_extend
       :type: Optional[ShortAndAnalysis]
 
-
+      
 
    .. py:attribute:: analysis_assim_extend_no_da
       :type: Optional[ShortAndAnalysisNoDA]
 
-
+      
 
    .. py:attribute:: analysis_assim_long
       :type: Optional[ShortAndAnalysis]
 
-
+      
 
    .. py:attribute:: analysis_assim_long_no_da
       :type: Optional[ShortAndAnalysisNoDA]
 
-
+      
 
    .. py:attribute:: analysis_assim_hawaii
       :type: Optional[ShortAndAnalysis]
 
-
+      
 
    .. py:attribute:: analysis_assim_hawaii_no_da
       :type: Optional[ShortAndAnalysisNoDA]
 
-
+      
 
    .. py:attribute:: analysis_assim_puertorico
       :type: Optional[ShortAndAnalysis]
 
-
+      
 
    .. py:attribute:: analysis_assim_puertorico_no_da
       :type: Optional[ShortAndAnalysisNoDA]
 
-
+      
 
    .. py:attribute:: short_range
       :type: Optional[ShortAndAnalysis]
 
-
+      
 
    .. py:attribute:: short_range_hawaii
       :type: Optional[ShortAndAnalysis]
 
-
+      
 
    .. py:attribute:: short_range_puertorico
       :type: Optional[ShortAndAnalysis]
 
-
+      
 
    .. py:attribute:: short_range_hawaii_no_da
       :type: Optional[ShortAndAnalysisNoDA]
 
-
+      
 
    .. py:attribute:: short_range_puertorico_no_da
       :type: Optional[ShortAndAnalysisNoDA]
 
-
+      
 
    .. py:attribute:: medium_range_mem1
       :type: Optional[MediumRangeMem1]
 
-
+      
 
    .. py:attribute:: medium_range_mem2
       :type: Optional[MediumRangeMem2]
 
-
+      
 
    .. py:attribute:: medium_range_mem3
       :type: Optional[MediumRangeMem3]
 
-
+      
 
    .. py:attribute:: medium_range_mem4
       :type: Optional[MediumRangeMem4]
 
-
+      
 
    .. py:attribute:: medium_range_mem5
       :type: Optional[MediumRangeMem5]
 
-
+      
 
    .. py:attribute:: medium_range_mem6
       :type: Optional[MediumRangeMem6]
 
-
+      
 
    .. py:attribute:: medium_range_mem7
       :type: Optional[MediumRangeMem7]
 
-
+      
 
    .. py:attribute:: medium_range_no_da
       :type: Optional[MediumRangeNoDA]
 
-
+      
 
    .. py:attribute:: long_range_mem1
       :type: Optional[LongRangeMem1]
 
-
+      
 
    .. py:attribute:: long_range_mem2
       :type: Optional[LongRangeMem2]
 
-
+      
 
    .. py:attribute:: long_range_mem3
       :type: Optional[LongRangeMem3]
 
-
+      
 
    .. py:attribute:: long_range_mem4
       :type: Optional[LongRangeMem4]
 
-
+      
 
 
 .. py:data:: configuration
    :value: 'medium_range_mem1'
+
+   
+

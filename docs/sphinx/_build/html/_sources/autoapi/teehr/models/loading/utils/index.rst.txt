@@ -34,7 +34,7 @@ Classes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    ChunkByEnum.
 
 
@@ -57,27 +57,27 @@ Classes
    .. py:attribute:: day
       :value: 'day'
 
-
+      
 
    .. py:attribute:: location_id
       :value: 'location_id'
 
-
+      
 
    .. py:attribute:: week
       :value: 'week'
 
-
+      
 
    .. py:attribute:: month
       :value: 'month'
 
-
+      
 
    .. py:attribute:: year
       :value: 'year'
 
-
+      
 
 
 .. py:class:: SupportedNWMRetroVersionsEnum
@@ -85,7 +85,7 @@ Classes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    SupportedNWMRetroVersionsEnum.
 
 
@@ -108,17 +108,17 @@ Classes
    .. py:attribute:: nwm20
       :value: 'nwm20'
 
-
+      
 
    .. py:attribute:: nwm21
       :value: 'nwm21'
 
-
+      
 
    .. py:attribute:: nwm30
       :value: 'nwm30'
 
-
+      
 
 
 .. py:class:: SupportedNWMOperationalVersionsEnum
@@ -126,7 +126,7 @@ Classes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    SupportedNWMOperationalVersionsEnum.
 
 
@@ -149,12 +149,12 @@ Classes
    .. py:attribute:: nwm22
       :value: 'nwm22'
 
-
+      
 
    .. py:attribute:: nwm30
       :value: 'nwm30'
 
-
+      
 
 
 .. py:class:: SupportedNWMDataSourcesEnum
@@ -162,7 +162,7 @@ Classes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    SupportedNWMDataSourcesEnum.
 
 
@@ -185,17 +185,17 @@ Classes
    .. py:attribute:: GCS
       :value: 'GCS'
 
-
+      
 
    .. py:attribute:: NOMADS
       :value: 'NOMADS'
 
-
+      
 
    .. py:attribute:: DSTOR
       :value: 'DSTOR'
 
-
+      
 
 
 .. py:class:: SupportedKerchunkMethod
@@ -203,7 +203,7 @@ Classes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    SupportedKerchunkMethod.
 
 
@@ -226,17 +226,17 @@ Classes
    .. py:attribute:: local
       :value: 'local'
 
-
+      
 
    .. py:attribute:: remote
       :value: 'remote'
 
-
+      
 
    .. py:attribute:: auto
       :value: 'auto'
 
-
+      
 
 
 .. py:class:: SupportedNWMRetroDomainsEnum
@@ -244,7 +244,7 @@ Classes
 
    Bases: :py:obj:`str`, :py:obj:`enum.Enum`
 
-
+   
    SupportedNWMRetroDomainsEnum.
 
 
@@ -267,17 +267,21 @@ Classes
    .. py:attribute:: CONUS
       :value: 'CONUS'
 
-
+      
 
    .. py:attribute:: Alaska
       :value: 'Alaska'
 
-
+      
 
    .. py:attribute:: PR
       :value: 'PR'
 
-
+      
 
    .. py:attribute:: Hawaii
       :value: 'Hawaii'
+
+      
+
+
