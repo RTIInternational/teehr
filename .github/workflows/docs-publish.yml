@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install sphinx pydata-sphinx-theme myst-nb sphinx-design sphinx-autoapi numpydoc ghp-import
+          pip install sphinx pydata-sphinx-theme myst-nb sphinx-design sphinx-autoapi numpydoc ghp-import -e .
 
       - name: Sphinx build
         run: |
