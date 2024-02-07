@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from teehr.loading.nwm.utils import (
     build_zarr_references,
     check_dates_against_nwm_version,
@@ -132,9 +134,27 @@ def test_generate_json_paths():
     pass
 
 
+def test_generate_json_for_bad_file():
+    """Test generating json paths for a corrupt GCS file."""
+    kerchunk_method = "local"
+    gcs_component_paths = \
+        ['gcs://national-water-model/nwm.20240125/forcing_medium_range/nwm.t18z.medium_range.forcing.f104.conus.nc'] # noqa
+    json_dir = ""
+    ignore_missing_file = False
+
+    with pytest.raises(Exception):
+        _ = generate_json_paths(
+            kerchunk_method,
+            gcs_component_paths,
+            json_dir,
+            ignore_missing_file
+        )
+
+
 if __name__ == "__main__":
     test_dates_and_nwm_version()
     test_building_nwm30_gcs_paths()
     test_building_nwm22_gcs_paths()
     test_generate_json_paths()
     test_point_zarr_reference_file()
+    test_generate_json_for_bad_file()

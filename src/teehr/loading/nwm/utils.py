@@ -292,9 +292,16 @@ def gen_json(
             date = p[3]
             fname = p[5]
             outf = str(Path(json_dir, f"{date}.{fname}.json"))
-            h5chunks = SingleHdf5ToZarr(infile,
-                                        remote_path,
-                                        inline_threshold=300)
+            try:
+                h5chunks = SingleHdf5ToZarr(infile,
+                                            remote_path,
+                                            inline_threshold=300)
+            except OSError as err:
+                if not ignore_missing_file:
+                    raise Exception(f"Corrupt file: {remote_path}") from err
+                else:
+                    # TODO: log missing file?
+                    return None
             with open(outf, "wb") as f:
                 f.write(ujson.dumps(h5chunks.translate()).encode())
     except FileNotFoundError as e:
@@ -353,8 +360,9 @@ def build_zarr_references(
     json_paths.extend(existing_jsons)
 
     if not any(json_paths):
-        raise FileNotFoundError("No NWM files for specified input \
-                                configuration were found in GCS!")
+        raise FileNotFoundError(
+            "No NWM files for specified input configuration were found in GCS!"
+        )
 
     json_paths = [path for path in json_paths if path is not None]
 
