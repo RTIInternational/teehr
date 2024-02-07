@@ -27,17 +27,10 @@ jobs:
 
       - name: Sphinx build
         run: |
+          mkdir docs/sphinx/test_data
+          cp tests/data/test_study/timeseries/*.parquet docs/sphinx/test_data
           cd docs/sphinx
           make clean html
-
-    #   - name: Deploy to GitHub Pages
-    #     uses: peaceiris/actions-gh-pages@v3
-    #     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-    #     with:
-    #       publish_branch: gh-pages
-    #       github_token: ${{ secrets.GITHUB_TOKEN }}
-    #       publish_dir: docs/sphinx/_build/
-    #       force_orphan: true
 
       - name: Run ghp-import
         run: |
