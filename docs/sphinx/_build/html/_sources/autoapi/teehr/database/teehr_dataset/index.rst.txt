@@ -50,7 +50,7 @@ Classes
 
 
    =================================================================================================  ==========
-                                                   **__init__(database_filepath: Union[str, Path])**  Initialize a study area database.
+                                                   **__init__(database_filepath: Union[str, Path])**  Establish a connection to an existing study area database.
                                                                        **profile_query(query: str)**  A helper function to profile query performance (runs EXPLAIN ANALYZE).
                         **query(query: str, format: str = None, create_function_args: Dict = None)**  Submit an SQL query string against the database.
                                                                   **get_joined_timeseries_schema()**  Get field names and field data types from the joined_timeseries, table as a pandas dataframe.
@@ -87,7 +87,7 @@ Classes
       ..
           !! processed by numpydoc !!
 
-   .. py:method:: query(query: str, format: str = None, create_function_args: Dict = None)
+   .. py:method:: query(query: str, format: str = None)
 
 
       Run an SQL query against the class's database.
@@ -98,40 +98,6 @@ Classes
       * Results bprinted to the screen (format='raw')
       * A DuckDBPyRelation, a symbolic representation of the SQL query
       (format='relation').
-
-
-
-
-
-
-
-
-
-
-
-
-      .. rubric:: Examples
-
-      A user-defined function can be registered to the database by
-      defining parameters in the create_function_args argument:
-
-      >>>     create_function_args = {
-      >>>     "function": your_user_defined_function,
-      >>>     "function_name": "user_defined_function_name",
-      >>>     "parameter_types": function_parameter_data_types,
-      >>>     "new_field_type": new_field_data_type,
-      >>> }
-
-
-
-      ..
-          !! processed by numpydoc !!
-
-   .. py:method:: _initialize_database_tables()
-
-
-      Create the persistent study database and empty table(s).
-
 
 
 
@@ -334,6 +300,44 @@ Classes
       ..
           !! processed by numpydoc !!
 
+   .. py:method:: get_joined_timeseries(jtq: teehr.models.queries_database.JoinedTimeseriesQuery) -> Union[pandas.DataFrame, geopandas.GeoDataFrame, str]
+
+
+      Retrieve joined timeseries using database query.
+
+
+      :Parameters:
+
+          **jtq** : JoinedTimeseriesQuery
+              Pydantic model containing query parameters.
+
+      :Returns:
+
+          Union[pd.DataFrame, gpd.GeoDataFrame, str]
+              A DataFrame or GeoDataFrame of query results
+              or the query itself as a string.
+
+
+
+
+
+
+
+      .. seealso::
+
+
+          :obj:`teehr.queries.duckdb_database.create_get_joined_timeseries_query`
+              Create the get joined timeseries query.
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
    .. py:method:: get_timeseries(tq: teehr.models.queries_database.TimeseriesQuery) -> Union[pandas.DataFrame, str]
 
 
@@ -498,6 +502,52 @@ Classes
 
    ..
        !! processed by numpydoc !!
+   .. py:method:: query(query: str, read_only: bool = False, format: str = None, create_function_args: Dict = None)
+
+
+      Run query against the class's database.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _initialize_database_tables()
+
+
+      Create the persistent study database and empty table(s).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
    .. py:method:: _drop_joined_timeseries_field(field_name: str)
 
 
@@ -820,6 +870,57 @@ Classes
 
           :obj:`teehr.queries.duckdb_database.create_get_metrics_query`
               Create the get metrics query.
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: get_joined_timeseries(order_by: List[str], filters: Union[List[dict], None] = None, include_geometry: bool = False, return_query: bool = False) -> Union[pandas.DataFrame, geopandas.GeoDataFrame, str]
+
+
+      Retrieve joined timeseries using database query.
+
+
+      :Parameters:
+
+          **order_by** : List[str]
+              List of column/field names to order results by.
+              Must provide at least one.
+
+          **filters** : Union[List[dict], None] = None
+              List of dictionaries describing the "where" clause to limit data
+              that is included in metrics.
+
+          **include_geometry** : bool
+              True joins the geometry to the query results.
+              Only works if `primary_location_id`
+              is included as a group_by field.
+
+          **return_query** : bool = False
+              True returns the query string instead of the data.
+
+      :Returns:
+
+          Union[pd.DataFrame, gpd.GeoDataFrame str]
+              A DataFrame or GeoDataFrame of query results
+              or the query itself as a string.
+
+
+
+
+
+
+
+      .. seealso::
+
+
+          :obj:`teehr.queries.duckdb_database.create_get_joined_timeseries_query`
+              Create the get joined timeseries query.
 
 
 

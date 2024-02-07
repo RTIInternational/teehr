@@ -373,7 +373,8 @@ document.write(`
 <li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/nwm_grids/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.nwm_grids</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/nwm_points/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.nwm_points</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/point_utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.point_utils</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/retrospective/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.retrospective</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/retrospective_grids/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.retrospective_grids</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/retrospective_points/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.retrospective_points</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.utils</span></code></a></li>
 </ul>
 </li>
@@ -504,16 +505,19 @@ document.write(`
 <tr class="row-odd"><td><p><a class="reference internal" href="#teehr.models.queries_database.Filter" title="teehr.models.queries_database.Filter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Filter</span></code></a></p></td>
 <td><p>Filter model.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#teehr.models.queries_database.JoinedTimeseriesQuery" title="teehr.models.queries_database.JoinedTimeseriesQuery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery</span></code></a></p></td>
-<td><p>Joined timeseries query model.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.models.queries_database.InsertJoinedTimeseriesQuery" title="teehr.models.queries_database.InsertJoinedTimeseriesQuery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InsertJoinedTimeseriesQuery</span></code></a></p></td>
+<td><p>InsertJoinedTimeseriesQuery model.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.models.queries_database.TimeseriesQuery" title="teehr.models.queries_database.TimeseriesQuery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TimeseriesQuery</span></code></a></p></td>
-<td><p>Timeseries query model.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.models.queries_database.JoinedTimeseriesQuery" title="teehr.models.queries_database.JoinedTimeseriesQuery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery</span></code></a></p></td>
+<td><p>JoinedTimeseriesQuery model.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#teehr.models.queries_database.TimeseriesCharQuery" title="teehr.models.queries_database.TimeseriesCharQuery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TimeseriesCharQuery</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.models.queries_database.TimeseriesQuery" title="teehr.models.queries_database.TimeseriesQuery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TimeseriesQuery</span></code></a></p></td>
+<td><p>TimeseriesQuery model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.models.queries_database.TimeseriesCharQuery" title="teehr.models.queries_database.TimeseriesCharQuery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TimeseriesCharQuery</span></code></a></p></td>
 <td><p>Timeseries char query model.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MetricQuery</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MetricQuery</span></code></a></p></td>
 <td><p>Metric query model.</p></td>
 </tr>
 </tbody>
@@ -824,29 +828,74 @@ document.write(`
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="teehr.models.queries_database.InsertJoinedTimeseriesQuery">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">teehr.models.queries_database.</span></span><span class="sig-name descname"><span class="pre">InsertJoinedTimeseriesQuery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries_database.html#InsertJoinedTimeseriesQuery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries_database.InsertJoinedTimeseriesQuery" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#teehr.models.queries_database.BaseModel" title="teehr.models.queries_database.BaseModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code></a></p>
+<p>InsertJoinedTimeseriesQuery model.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries_database.InsertJoinedTimeseriesQuery.primary_filepath">
+<span class="sig-name descname"><span class="pre">primary_filepath</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span></em><a class="headerlink" href="#teehr.models.queries_database.InsertJoinedTimeseriesQuery.primary_filepath" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries_database.InsertJoinedTimeseriesQuery.secondary_filepath">
+<span class="sig-name descname"><span class="pre">secondary_filepath</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span></em><a class="headerlink" href="#teehr.models.queries_database.InsertJoinedTimeseriesQuery.secondary_filepath" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries_database.InsertJoinedTimeseriesQuery.crosswalk_filepath">
+<span class="sig-name descname"><span class="pre">crosswalk_filepath</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span></em><a class="headerlink" href="#teehr.models.queries_database.InsertJoinedTimeseriesQuery.crosswalk_filepath" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries_database.InsertJoinedTimeseriesQuery.order_by">
+<span class="sig-name descname"><span class="pre">order_by</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#teehr.models.queries_database.JoinedFieldNameEnum" title="teehr.models.queries_database.JoinedFieldNameEnum"><span class="pre">JoinedFieldNameEnum</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#teehr.models.queries_database.InsertJoinedTimeseriesQuery.order_by" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="teehr.models.queries_database.JoinedTimeseriesQuery">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">teehr.models.queries_database.</span></span><span class="sig-name descname"><span class="pre">JoinedTimeseriesQuery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries_database.html#JoinedTimeseriesQuery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries_database.JoinedTimeseriesQuery" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#teehr.models.queries_database.BaseModel" title="teehr.models.queries_database.BaseModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code></a></p>
-<p>Joined timeseries query model.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="teehr.models.queries_database.JoinedTimeseriesQuery.primary_filepath">
-<span class="sig-name descname"><span class="pre">primary_filepath</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span></em><a class="headerlink" href="#teehr.models.queries_database.JoinedTimeseriesQuery.primary_filepath" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="teehr.models.queries_database.JoinedTimeseriesQuery.secondary_filepath">
-<span class="sig-name descname"><span class="pre">secondary_filepath</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span></em><a class="headerlink" href="#teehr.models.queries_database.JoinedTimeseriesQuery.secondary_filepath" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="teehr.models.queries_database.JoinedTimeseriesQuery.crosswalk_filepath">
-<span class="sig-name descname"><span class="pre">crosswalk_filepath</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pathlib.Path</span></em><a class="headerlink" href="#teehr.models.queries_database.JoinedTimeseriesQuery.crosswalk_filepath" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
+<p>JoinedTimeseriesQuery model.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="teehr.models.queries_database.JoinedTimeseriesQuery.order_by">
-<span class="sig-name descname"><span class="pre">order_by</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#teehr.models.queries_database.JoinedFieldNameEnum" title="teehr.models.queries_database.JoinedFieldNameEnum"><span class="pre">JoinedFieldNameEnum</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#teehr.models.queries_database.JoinedTimeseriesQuery.order_by" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">order_by</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#teehr.models.queries_database.JoinedTimeseriesQuery.order_by" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries_database.JoinedTimeseriesQuery.filters">
+<span class="sig-name descname"><span class="pre">filters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#teehr.models.queries_database.Filter" title="teehr.models.queries_database.Filter"><span class="pre">Filter</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[]</span></em><a class="headerlink" href="#teehr.models.queries_database.JoinedTimeseriesQuery.filters" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries_database.JoinedTimeseriesQuery.return_query">
+<span class="sig-name descname"><span class="pre">return_query</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#teehr.models.queries_database.JoinedTimeseriesQuery.return_query" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.queries_database.JoinedTimeseriesQuery.include_geometry">
+<span class="sig-name descname"><span class="pre">include_geometry</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#teehr.models.queries_database.JoinedTimeseriesQuery.include_geometry" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.models.queries_database.JoinedTimeseriesQuery.filter_must_be_list">
+<span class="sig-name descname"><span class="pre">filter_must_be_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries_database.html#JoinedTimeseriesQuery.filter_must_be_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries_database.JoinedTimeseriesQuery.filter_must_be_list" title="Link to this definition">#</a></dt>
+<dd><p>Filter must be a list.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.models.queries_database.JoinedTimeseriesQuery.order_by_must_exist_as_fields">
+<span class="sig-name descname"><span class="pre">order_by_must_exist_as_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pydantic.ValidationInfo</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries_database.html#JoinedTimeseriesQuery.order_by_must_exist_as_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries_database.JoinedTimeseriesQuery.order_by_must_exist_as_fields" title="Link to this definition">#</a></dt>
+<dd><p>Order_by fields must currently exist in the database.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.models.queries_database.JoinedTimeseriesQuery.filters_must_exist_as_fields">
+<span class="sig-name descname"><span class="pre">filters_must_exist_as_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pydantic.ValidationInfo</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries_database.html#JoinedTimeseriesQuery.filters_must_exist_as_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries_database.JoinedTimeseriesQuery.filters_must_exist_as_fields" title="Link to this definition">#</a></dt>
+<dd><p>Filter fields must currently exist in the database.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -854,7 +903,7 @@ document.write(`
 <dt class="sig sig-object py" id="teehr.models.queries_database.TimeseriesQuery">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">teehr.models.queries_database.</span></span><span class="sig-name descname"><span class="pre">TimeseriesQuery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries_database.html#TimeseriesQuery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries_database.TimeseriesQuery" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#teehr.models.queries_database.BaseModel" title="teehr.models.queries_database.BaseModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseModel</span></code></a></p>
-<p>Timeseries query model.</p>
+<p>TimeseriesQuery model.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="teehr.models.queries_database.TimeseriesQuery.order_by">
 <span class="sig-name descname"><span class="pre">order_by</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#teehr.models.queries_database.TimeseriesQuery.order_by" title="Link to this definition">#</a></dt>
@@ -884,7 +933,8 @@ document.write(`
 <dl class="py method">
 <dt class="sig sig-object py" id="teehr.models.queries_database.TimeseriesQuery.order_by_must_exist_as_fields">
 <span class="sig-name descname"><span class="pre">order_by_must_exist_as_fields</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pydantic.ValidationInfo</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/models/queries_database.html#TimeseriesQuery.order_by_must_exist_as_fields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.queries_database.TimeseriesQuery.order_by_must_exist_as_fields" title="Link to this definition">#</a></dt>
-<dd><p>Order_by fields must currently exist in the database.</p>
+<dd><p>Order_by fields must be part one of the selected fields or
+its alias.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1133,11 +1183,21 @@ and filters fields.</p>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries_database.Filter.in_operator_must_have_iterable"><code class="docutils literal notranslate"><span class="pre">Filter.in_operator_must_have_iterable()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries_database.InsertJoinedTimeseriesQuery"><code class="docutils literal notranslate"><span class="pre">InsertJoinedTimeseriesQuery</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries_database.InsertJoinedTimeseriesQuery.primary_filepath"><code class="docutils literal notranslate"><span class="pre">InsertJoinedTimeseriesQuery.primary_filepath</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries_database.InsertJoinedTimeseriesQuery.secondary_filepath"><code class="docutils literal notranslate"><span class="pre">InsertJoinedTimeseriesQuery.secondary_filepath</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries_database.InsertJoinedTimeseriesQuery.crosswalk_filepath"><code class="docutils literal notranslate"><span class="pre">InsertJoinedTimeseriesQuery.crosswalk_filepath</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries_database.InsertJoinedTimeseriesQuery.order_by"><code class="docutils literal notranslate"><span class="pre">InsertJoinedTimeseriesQuery.order_by</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries_database.JoinedTimeseriesQuery"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries_database.JoinedTimeseriesQuery.primary_filepath"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.primary_filepath</span></code></a></li>
-<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries_database.JoinedTimeseriesQuery.secondary_filepath"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.secondary_filepath</span></code></a></li>
-<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries_database.JoinedTimeseriesQuery.crosswalk_filepath"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.crosswalk_filepath</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries_database.JoinedTimeseriesQuery.order_by"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.order_by</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries_database.JoinedTimeseriesQuery.filters"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.filters</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries_database.JoinedTimeseriesQuery.return_query"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.return_query</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries_database.JoinedTimeseriesQuery.include_geometry"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.include_geometry</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries_database.JoinedTimeseriesQuery.filter_must_be_list"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.filter_must_be_list()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries_database.JoinedTimeseriesQuery.order_by_must_exist_as_fields"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.order_by_must_exist_as_fields()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries_database.JoinedTimeseriesQuery.filters_must_exist_as_fields"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesQuery.filters_must_exist_as_fields()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.queries_database.TimeseriesQuery"><code class="docutils literal notranslate"><span class="pre">TimeseriesQuery</span></code></a><ul class="nav section-nav flex-column">

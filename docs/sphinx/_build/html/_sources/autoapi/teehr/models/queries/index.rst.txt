@@ -24,7 +24,6 @@ Classes
    teehr.models.queries.MetricEnum
    teehr.models.queries.JoinedFilterFieldEnum
    teehr.models.queries.TimeseriesFilterFieldEnum
-   teehr.models.queries.ChunkByEnum
    teehr.models.queries.JoinedFilter
    teehr.models.queries.TimeseriesFilter
    teehr.models.queries.MetricQuery
@@ -435,42 +434,6 @@ Classes
 
    .. py:attribute:: geometry
       :value: 'geometry'
-
-
-
-
-.. py:class:: ChunkByEnum
-
-
-   Bases: :py:obj:`str`, :py:obj:`enum.Enum`
-
-
-   Chunk by options.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   ..
-       !! processed by numpydoc !!
-   .. py:attribute:: day
-      :value: 'day'
-
-
-
-   .. py:attribute:: site
-      :value: 'site'
 
 
 

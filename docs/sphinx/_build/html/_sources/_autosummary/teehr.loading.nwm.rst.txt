@@ -32,5 +32,6 @@ teehr.loading.nwm
    teehr.loading.nwm.nwm_grids
    teehr.loading.nwm.nwm_points
    teehr.loading.nwm.point_utils
-   teehr.loading.nwm.retrospective
+   teehr.loading.nwm.retrospective_grids
+   teehr.loading.nwm.retrospective_points
    teehr.loading.nwm.utils

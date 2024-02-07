@@ -522,6 +522,20 @@ document.write(`
 
 
 
+<div class="viewcode-block" id="_format_output_filename">
+<a class="viewcode-back" href="../../../../autoapi/teehr/loading/usgs/usgs/index.html#teehr.loading.usgs.usgs._format_output_filename">[docs]</a>
+<span class="k">def</span> <span class="nf">_format_output_filename</span><span class="p">(</span><span class="n">chunk_by</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">start_dt</span><span class="p">,</span> <span class="n">end_dt</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Format the output filename based on min and max</span>
+<span class="sd">    datetime in the dataset.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">chunk_by</span> <span class="o">==</span> <span class="s2">&quot;day&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">start_dt</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">.parquet&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">start_dt</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">end_dt</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">end</span><span class="si">}</span><span class="s2">.parquet&quot;</span></div>
+
+
+
 <div class="viewcode-block" id="usgs_to_parquet">
 <a class="viewcode-back" href="../../../../autoapi/teehr/loading/usgs/usgs/index.html#teehr.loading.usgs.usgs.usgs_to_parquet">[docs]</a>
 <span class="nd">@validate_call</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">ConfigDict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
@@ -619,54 +633,7 @@ document.write(`
                 <span class="n">overwrite_output</span><span class="o">=</span><span class="n">overwrite_output</span><span class="p">,</span>
                 <span class="n">data</span><span class="o">=</span><span class="n">usgs_df</span>
             <span class="p">)</span>
-            <span class="c1"># output_filepath = Path(usgs.output_parquet_dir, &quot;usgs.csv&quot;)</span>
-            <span class="c1"># usgs_df.to_csv(output_filepath)</span>
-            <span class="c1"># print(usgs_df)</span>
-
-    <span class="k">if</span> <span class="n">chunk_by</span> <span class="o">==</span> <span class="s2">&quot;day&quot;</span><span class="p">:</span>
-        <span class="c1"># Determine number of days to fetch</span>
-        <span class="n">period_length</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">start_date</span> <span class="o">=</span> <span class="n">_datetime_to_date</span><span class="p">(</span><span class="n">start_date</span><span class="p">)</span>
-        <span class="n">end_date</span> <span class="o">=</span> <span class="n">_datetime_to_date</span><span class="p">(</span><span class="n">end_date</span><span class="p">)</span>
-        <span class="n">period</span> <span class="o">=</span> <span class="n">end_date</span> <span class="o">-</span> <span class="n">start_date</span>
-        <span class="k">if</span> <span class="n">period</span> <span class="o">&lt;</span> <span class="n">period_length</span><span class="p">:</span>
-            <span class="n">period</span> <span class="o">=</span> <span class="n">period_length</span>
-        <span class="n">number_of_days</span> <span class="o">=</span> <span class="n">period</span><span class="o">.</span><span class="n">days</span>
-
-        <span class="c1"># Fetch data in daily batches</span>
-        <span class="k">for</span> <span class="n">day</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">number_of_days</span><span class="p">):</span>
-
-            <span class="c1"># Setup start and end date for fetch</span>
-            <span class="n">start_dt</span> <span class="o">=</span> <span class="p">(</span><span class="n">start_date</span> <span class="o">+</span> <span class="n">period_length</span> <span class="o">*</span> <span class="n">day</span><span class="p">)</span>
-            <span class="n">end_dt</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">start_date</span>
-                <span class="o">+</span> <span class="n">period_length</span> <span class="o">*</span> <span class="p">(</span><span class="n">day</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-                <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="n">usgs_df</span> <span class="o">=</span> <span class="n">_fetch_usgs</span><span class="p">(</span>
-                <span class="n">sites</span><span class="o">=</span><span class="n">sites</span><span class="p">,</span>
-                <span class="n">start_date</span><span class="o">=</span><span class="n">start_dt</span><span class="p">,</span>
-                <span class="n">end_date</span><span class="o">=</span><span class="n">end_dt</span><span class="p">,</span>
-                <span class="n">filter_to_hourly</span><span class="o">=</span><span class="n">filter_to_hourly</span><span class="p">,</span>
-                <span class="n">filter_no_data</span><span class="o">=</span><span class="n">filter_no_data</span><span class="p">,</span>
-                <span class="n">convert_to_si</span><span class="o">=</span><span class="n">convert_to_si</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">usgs_df</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">output_filepath</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span>
-                    <span class="n">output_parquet_dir</span><span class="p">,</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">start_dt</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">.parquet&quot;</span>
-                <span class="p">)</span>
-                <span class="n">write_parquet_file</span><span class="p">(</span>
-                    <span class="n">filepath</span><span class="o">=</span><span class="n">output_filepath</span><span class="p">,</span>
-                    <span class="n">overwrite_output</span><span class="o">=</span><span class="n">overwrite_output</span><span class="p">,</span>
-                    <span class="n">data</span><span class="o">=</span><span class="n">usgs_df</span>
-                <span class="p">)</span>
-                <span class="c1"># output_filepath = Path(</span>
-                <span class="c1">#     usgs.output_parquet_dir,</span>
-                <span class="c1">#     f&quot;{start_dt.strftime(&#39;%Y-%m-%d&#39;)}.csv&quot;</span>
-                <span class="c1"># )</span>
-                <span class="c1"># usgs_df.to_csv(output_filepath)</span>
-                <span class="c1"># print(usgs_df)</span>
+        <span class="k">return</span>
 
     <span class="k">if</span> <span class="n">chunk_by</span> <span class="o">==</span> <span class="s2">&quot;location_id&quot;</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">site</span> <span class="ow">in</span> <span class="n">sites</span><span class="p">:</span>
@@ -687,14 +654,63 @@ document.write(`
                     <span class="n">filepath</span><span class="o">=</span><span class="n">output_filepath</span><span class="p">,</span>
                     <span class="n">overwrite_output</span><span class="o">=</span><span class="n">overwrite_output</span><span class="p">,</span>
                     <span class="n">data</span><span class="o">=</span><span class="n">usgs_df</span>
-                <span class="p">)</span></div>
+                <span class="p">)</span>
+        <span class="k">return</span>
 
-                <span class="c1"># output_filepath = Path(</span>
-                <span class="c1">#     usgs.output_parquet_dir,</span>
-                <span class="c1">#     f&quot;{site}.csv&quot;</span>
-                <span class="c1"># )</span>
-                <span class="c1"># usgs_df.to_csv(output_filepath)</span>
-                <span class="c1"># print(usgs_df)</span>
+    <span class="c1"># TODO: Print warning if chunk_by is bigger than start and end dates?</span>
+
+    <span class="k">if</span> <span class="n">chunk_by</span> <span class="o">==</span> <span class="s2">&quot;day&quot;</span><span class="p">:</span>
+        <span class="n">date_intervals</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;D&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">chunk_by</span> <span class="o">==</span> <span class="s2">&quot;week&quot;</span><span class="p">:</span>
+        <span class="n">date_intervals</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;W&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">chunk_by</span> <span class="o">==</span> <span class="s2">&quot;month&quot;</span><span class="p">:</span>
+        <span class="n">date_intervals</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;M&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">chunk_by</span> <span class="o">==</span> <span class="s2">&quot;year&quot;</span><span class="p">:</span>
+        <span class="n">date_intervals</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;Y&quot;</span><span class="p">)</span>
+
+    <span class="c1"># If the start date is not within the specified interval,</span>
+    <span class="c1"># it is not included, so add it here if it does not already exist.</span>
+    <span class="n">date_intervals</span> <span class="o">=</span> <span class="n">date_intervals</span><span class="o">.</span><span class="n">union</span><span class="p">(</span>
+        <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">([</span><span class="n">start_date</span><span class="p">]),</span> <span class="n">sort</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">dt_intvl</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">date_intervals</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">start_dt</span> <span class="o">=</span> <span class="n">start_date</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">start_dt</span> <span class="o">=</span> <span class="n">dt_intvl</span>
+
+        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">date_intervals</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Include data for the last day</span>
+            <span class="n">end_dt</span> <span class="o">=</span> <span class="n">end_date</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">end_dt</span> <span class="o">=</span> <span class="n">date_intervals</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">usgs_df</span> <span class="o">=</span> <span class="n">_fetch_usgs</span><span class="p">(</span>
+            <span class="n">sites</span><span class="o">=</span><span class="n">sites</span><span class="p">,</span>
+            <span class="n">start_date</span><span class="o">=</span><span class="n">start_dt</span><span class="p">,</span>
+            <span class="n">end_date</span><span class="o">=</span><span class="n">end_dt</span><span class="p">,</span>
+            <span class="n">filter_to_hourly</span><span class="o">=</span><span class="n">filter_to_hourly</span><span class="p">,</span>
+            <span class="n">filter_no_data</span><span class="o">=</span><span class="n">filter_no_data</span><span class="p">,</span>
+            <span class="n">convert_to_si</span><span class="o">=</span><span class="n">convert_to_si</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">usgs_df</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+
+            <span class="n">output_filename</span> <span class="o">=</span> <span class="n">_format_output_filename</span><span class="p">(</span>
+                <span class="n">chunk_by</span><span class="p">,</span> <span class="n">start_dt</span><span class="p">,</span> <span class="n">end_dt</span>
+            <span class="p">)</span>
+
+            <span class="n">output_filepath</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">output_parquet_dir</span><span class="p">,</span> <span class="n">output_filename</span><span class="p">)</span>
+            <span class="n">write_parquet_file</span><span class="p">(</span>
+                <span class="n">filepath</span><span class="o">=</span><span class="n">output_filepath</span><span class="p">,</span>
+                <span class="n">overwrite_output</span><span class="o">=</span><span class="n">overwrite_output</span><span class="p">,</span>
+                <span class="n">data</span><span class="o">=</span><span class="n">usgs_df</span>
+            <span class="p">)</span></div>
+
 
 
 <span class="c1"># if __name__ == &quot;__main__&quot;:</span>

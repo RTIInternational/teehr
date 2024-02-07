@@ -13,6 +13,7 @@ teehr.queries.duckdb\_database
 
    .. autosummary::
 
+      create_get_joined_timeseries_query
       create_get_metrics_query
       create_get_timeseries_char_query
       create_get_timeseries_query

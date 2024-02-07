@@ -26,6 +26,7 @@ Functions
    teehr.loading.usgs.usgs._datetime_to_date
    teehr.loading.usgs.usgs._format_df
    teehr.loading.usgs.usgs._fetch_usgs
+   teehr.loading.usgs.usgs._format_output_filename
    teehr.loading.usgs.usgs.usgs_to_parquet
 
 
@@ -162,6 +163,30 @@ Attributes
 
 
    Fetch USGS gage data and format to TEEHR format.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: _format_output_filename(chunk_by: str, start_dt, end_dt) -> str
+
+
+   Format the output filename based on min and max
+   datetime in the dataset.
 
 
 

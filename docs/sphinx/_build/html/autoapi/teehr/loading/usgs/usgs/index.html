@@ -373,7 +373,8 @@ document.write(`
 <li class="toctree-l4"><a class="reference internal" href="../../nwm/nwm_grids/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.nwm_grids</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../nwm/nwm_points/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.nwm_points</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../nwm/point_utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.point_utils</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../nwm/retrospective/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.retrospective</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nwm/retrospective_grids/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.retrospective_grids</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../nwm/retrospective_points/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.retrospective_points</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../nwm/utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.utils</span></code></a></li>
 </ul>
 </li>
@@ -501,7 +502,10 @@ document.write(`
 <tr class="row-even"><td><p><a class="reference internal" href="#teehr.loading.usgs.usgs._fetch_usgs" title="teehr.loading.usgs.usgs._fetch_usgs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_fetch_usgs</span></code></a>(→ pandas.DataFrame)</p></td>
 <td><p>Fetch USGS gage data and format to TEEHR format.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.loading.usgs.usgs.usgs_to_parquet" title="teehr.loading.usgs.usgs.usgs_to_parquet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">usgs_to_parquet</span></code></a>(sites, start_date, end_date, ...[, ...])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.loading.usgs.usgs._format_output_filename" title="teehr.loading.usgs.usgs._format_output_filename"><code class="xref py py-obj docutils literal notranslate"><span class="pre">_format_output_filename</span></code></a>(→ str)</p></td>
+<td><p>Format the output filename based on min and max</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.loading.usgs.usgs.usgs_to_parquet" title="teehr.loading.usgs.usgs.usgs_to_parquet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">usgs_to_parquet</span></code></a>(sites, start_date, end_date, ...[, ...])</p></td>
 <td><p>Fetch USGS gage data and save as a Parquet file.</p></td>
 </tr>
 </tbody>
@@ -555,6 +559,13 @@ document.write(`
 <dt class="sig sig-object py" id="teehr.loading.usgs.usgs._fetch_usgs">
 <span class="sig-prename descclassname"><span class="pre">teehr.loading.usgs.usgs.</span></span><span class="sig-name descname"><span class="pre">_fetch_usgs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sites</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">datetime.datetime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">datetime.datetime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_to_hourly</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_no_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convert_to_si</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.DataFrame</span></span></span><a class="reference internal" href="../../../../../_modules/teehr/loading/usgs/usgs.html#_fetch_usgs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.loading.usgs.usgs._fetch_usgs" title="Link to this definition">#</a></dt>
 <dd><p>Fetch USGS gage data and format to TEEHR format.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.loading.usgs.usgs._format_output_filename">
+<span class="sig-prename descclassname"><span class="pre">teehr.loading.usgs.usgs.</span></span><span class="sig-name descname"><span class="pre">_format_output_filename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">chunk_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_dt</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../../_modules/teehr/loading/usgs/usgs.html#_format_output_filename"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.loading.usgs.usgs._format_output_filename" title="Link to this definition">#</a></dt>
+<dd><p>Format the output filename based on min and max
+datetime in the dataset.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -679,6 +690,7 @@ chunking by day.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.loading.usgs.usgs._datetime_to_date"><code class="docutils literal notranslate"><span class="pre">_datetime_to_date()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.loading.usgs.usgs._format_df"><code class="docutils literal notranslate"><span class="pre">_format_df()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.loading.usgs.usgs._fetch_usgs"><code class="docutils literal notranslate"><span class="pre">_fetch_usgs()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.loading.usgs.usgs._format_output_filename"><code class="docutils literal notranslate"><span class="pre">_format_output_filename()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.loading.usgs.usgs.usgs_to_parquet"><code class="docutils literal notranslate"><span class="pre">usgs_to_parquet()</span></code></a></li>
 </ul>
 </li>

@@ -409,6 +409,7 @@ document.write(`
 <span class="kn">import</span> <span class="nn">teehr.queries.utils</span> <span class="k">as</span> <span class="nn">tqu</span>
 <span class="kn">from</span> <span class="nn">teehr.models.queries_database</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">JoinedFieldNameEnum</span><span class="p">,</span>
+    <span class="n">InsertJoinedTimeseriesQuery</span><span class="p">,</span>
     <span class="n">JoinedTimeseriesQuery</span><span class="p">,</span>
     <span class="n">CalculateField</span><span class="p">,</span>
     <span class="n">MetricQuery</span><span class="p">,</span>
@@ -428,7 +429,7 @@ document.write(`
 <span class="sd">    Methods</span>
 <span class="sd">    -------</span>
 <span class="sd">    __init__(database_filepath: Union[str, Path])</span>
-<span class="sd">        Initialize a study area database.</span>
+<span class="sd">        Establish a connection to an existing study area database.</span>
 
 <span class="sd">    profile_query(query: str)</span>
 <span class="sd">        A helper function to profile query performance (runs EXPLAIN ANALYZE).</span>
@@ -462,7 +463,8 @@ document.write(`
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">database_filepath</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
     <span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a study area database.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set the path to the pre-existing study area database,</span>
+<span class="sd">        and establishe a read-only database connection.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -470,7 +472,7 @@ document.write(`
 <span class="sd">            Filepath to the database.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">database_filepath</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">database_filepath</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_database_tables</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">con</span> <span class="o">=</span> <span class="n">duckdb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">database_filepath</span><span class="p">,</span> <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TEEHRDatasetAPI.profile_query">
 <a class="viewcode-back" href="../../../autoapi/teehr/database/teehr_dataset/index.html#teehr.database.teehr_dataset.TEEHRDatasetAPI.profile_query">[docs]</a>
@@ -479,14 +481,15 @@ document.write(`
 <span class="sd">        which runs EXPLAIN ANALYZE and prints the output to screen.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;EXPLAIN ANALYZE &quot;</span> <span class="o">+</span> <span class="n">query</span>
-        <span class="k">with</span> <span class="n">duckdb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">database_filepath</span><span class="p">)</span> <span class="k">as</span> <span class="n">con</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">con</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">df</span><span class="p">()</span><span class="o">.</span><span class="n">explain_value</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;df&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">explain_value</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span></div>
 
 
 <div class="viewcode-block" id="TEEHRDatasetAPI.query">
 <a class="viewcode-back" href="../../../autoapi/teehr/database/teehr_dataset/index.html#teehr.database.teehr_dataset.TEEHRDatasetAPI.query">[docs]</a>
     <span class="k">def</span> <span class="nf">query</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">create_function_args</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run an SQL query against the class&#39;s database.</span>
 
@@ -496,87 +499,15 @@ document.write(`
 <span class="sd">        * Results bprinted to the screen (format=&#39;raw&#39;)</span>
 <span class="sd">        * A DuckDBPyRelation, a symbolic representation of the SQL query</span>
 <span class="sd">        (format=&#39;relation&#39;).</span>
-
-<span class="sd">        Examples</span>
-<span class="sd">        --------</span>
-<span class="sd">        A user-defined function can be registered to the database by</span>
-<span class="sd">        defining parameters in the create_function_args argument:</span>
-
-<span class="sd">        &gt;&gt;&gt;     create_function_args = {</span>
-<span class="sd">        &gt;&gt;&gt;     &quot;function&quot;: your_user_defined_function,</span>
-<span class="sd">        &gt;&gt;&gt;     &quot;function_name&quot;: &quot;user_defined_function_name&quot;,</span>
-<span class="sd">        &gt;&gt;&gt;     &quot;parameter_types&quot;: function_parameter_data_types,</span>
-<span class="sd">        &gt;&gt;&gt;     &quot;new_field_type&quot;: new_field_data_type,</span>
-<span class="sd">        &gt;&gt;&gt; }</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">create_function_args</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">duckdb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">database_filepath</span><span class="p">)</span> <span class="k">as</span> <span class="n">con</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;df&quot;</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="n">con</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">df</span><span class="p">()</span>
-                <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;raw&quot;</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="n">con</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-                <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;relation&quot;</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="n">con</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
-                <span class="n">con</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
-                <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">user_defined_function</span> <span class="o">=</span> <span class="n">create_function_args</span><span class="p">[</span><span class="s2">&quot;function&quot;</span><span class="p">]</span>
-            <span class="n">function_name</span> <span class="o">=</span> <span class="n">create_function_args</span><span class="p">[</span><span class="s2">&quot;function_name&quot;</span><span class="p">]</span>
-            <span class="n">parameter_types</span> <span class="o">=</span> <span class="n">create_function_args</span><span class="p">[</span><span class="s2">&quot;parameter_types&quot;</span><span class="p">]</span>
-            <span class="n">new_field_type</span> <span class="o">=</span> <span class="n">create_function_args</span><span class="p">[</span><span class="s2">&quot;new_field_type&quot;</span><span class="p">]</span>
-            <span class="k">with</span> <span class="n">duckdb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">database_filepath</span><span class="p">)</span> <span class="k">as</span> <span class="n">con</span><span class="p">:</span>
-                <span class="c1"># Register the function</span>
-                <span class="n">con</span><span class="o">.</span><span class="n">create_function</span><span class="p">(</span>
-                    <span class="n">function_name</span><span class="p">,</span>
-                    <span class="n">user_defined_function</span><span class="p">,</span>
-                    <span class="n">parameter_types</span><span class="p">,</span>
-                    <span class="n">new_field_type</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="c1"># Call the function and add the results to joined_timeseries</span>
-                <span class="n">con</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="TEEHRDatasetAPI._initialize_database_tables">
-<a class="viewcode-back" href="../../../autoapi/teehr/database/teehr_dataset/index.html#teehr.database.teehr_dataset.TEEHRDatasetAPI._initialize_database_tables">[docs]</a>
-    <span class="k">def</span> <span class="nf">_initialize_database_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create the persistent study database and empty table(s).&quot;&quot;&quot;</span>
-        <span class="n">create_timeseries_table</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">            CREATE TABLE IF NOT EXISTS joined_timeseries(</span>
-<span class="s2">                reference_time DATETIME,</span>
-<span class="s2">                value_time DATETIME,</span>
-<span class="s2">                secondary_location_id VARCHAR,</span>
-<span class="s2">                secondary_value FLOAT,</span>
-<span class="s2">                configuration VARCHAR,</span>
-<span class="s2">                measurement_unit VARCHAR,</span>
-<span class="s2">                variable_name VARCHAR,</span>
-<span class="s2">                primary_value FLOAT,</span>
-<span class="s2">                primary_location_id VARCHAR,</span>
-<span class="s2">                lead_time INTERVAL,</span>
-<span class="s2">                absolute_difference FLOAT</span>
-<span class="s2">                );&quot;&quot;&quot;</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">create_timeseries_table</span><span class="p">)</span>
-
-        <span class="c1"># Adding a unique index ~ doubles the size of the database on disk.</span>
-        <span class="c1"># Doing so might start to get us close to PostgreSQL/TimescaleDB sizes?</span>
-        <span class="c1"># add_index = &quot;&quot;&quot;</span>
-        <span class="c1">#     CREATE UNIQUE INDEX unique_ts_idx ON joined_timeseries (</span>
-        <span class="c1">#         reference_time,</span>
-        <span class="c1">#         value_time,</span>
-        <span class="c1">#         configuration,</span>
-        <span class="c1">#         variable_name,</span>
-        <span class="c1">#         primary_location_id</span>
-        <span class="c1">#         );&quot;&quot;&quot;</span>
-        <span class="c1"># self.query(add_index)</span>
-
-        <span class="c1"># Also initialize the geometry table (what if multiple geometry types?)</span>
-        <span class="n">create_geometry_table</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">            CREATE TABLE IF NOT EXISTS geometry(</span>
-<span class="s2">                id VARCHAR,</span>
-<span class="s2">                name VARCHAR,</span>
-<span class="s2">                geometry BLOB</span>
-<span class="s2">                );&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">create_geometry_table</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;df&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">con</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">df</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;raw&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">con</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;relation&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">con</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">con</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 
 
 <div class="viewcode-block" id="TEEHRDatasetAPI.get_joined_timeseries_schema">
@@ -725,6 +656,46 @@ document.write(`
         <span class="k">if</span> <span class="n">mq</span><span class="o">.</span><span class="n">return_query</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">tqu</span><span class="o">.</span><span class="n">remove_empty_lines</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_geometry</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_if_geometry_is_inserted</span><span class="p">()</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;df&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">tqu</span><span class="o">.</span><span class="n">df_to_gdf</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;df&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">df</span></div>
+
+
+<div class="viewcode-block" id="TEEHRDatasetAPI.get_joined_timeseries">
+<a class="viewcode-back" href="../../../autoapi/teehr/database/teehr_dataset/index.html#teehr.database.teehr_dataset.TEEHRDatasetAPI.get_joined_timeseries">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_joined_timeseries</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">jtq</span><span class="p">:</span> <span class="n">JoinedTimeseriesQuery</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Retrieve joined timeseries using database query.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        jtq : JoinedTimeseriesQuery</span>
+<span class="sd">            Pydantic model containing query parameters.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Union[pd.DataFrame, gpd.GeoDataFrame, str]</span>
+<span class="sd">            A DataFrame or GeoDataFrame of query results</span>
+<span class="sd">            or the query itself as a string.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        teehr.queries.duckdb_database.create_get_joined_timeseries_query : \</span>
+<span class="sd">            Create the get joined timeseries query.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">jtq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_query_model</span><span class="p">(</span><span class="n">jtq</span><span class="p">)</span>
+
+        <span class="n">query</span> <span class="o">=</span> <span class="n">tqu_db</span><span class="o">.</span><span class="n">create_get_joined_timeseries_query</span><span class="p">(</span><span class="n">jtq</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">jtq</span><span class="o">.</span><span class="n">return_query</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">tqu</span><span class="o">.</span><span class="n">remove_empty_lines</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">jtq</span><span class="o">.</span><span class="n">include_geometry</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_check_if_geometry_is_inserted</span><span class="p">()</span>
             <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;df&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">tqu</span><span class="o">.</span><span class="n">df_to_gdf</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
@@ -936,6 +907,94 @@ document.write(`
 <span class="sd">        Use get_joined_timeseries_schema() to see existing table fields.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">database_filepath</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">],</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a study area database. Create the joined_timeseries</span>
+<span class="sd">        and geometry tables with a fixed schemas if they do not already</span>
+<span class="sd">        exist.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        database_filepath : Union[str, Path]</span>
+<span class="sd">            Filepath to the database.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">database_filepath</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">database_filepath</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_database_tables</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TEEHRDatasetDB.query">
+<a class="viewcode-back" href="../../../autoapi/teehr/database/teehr_dataset/index.html#teehr.database.teehr_dataset.TEEHRDatasetDB.query">[docs]</a>
+    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">read_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">create_function_args</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run query against the class&#39;s database.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">create_function_args</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">duckdb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">database_filepath</span><span class="p">,</span> <span class="n">read_only</span><span class="o">=</span><span class="n">read_only</span>
+            <span class="p">)</span> <span class="k">as</span> <span class="n">con</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;df&quot;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">con</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">df</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;raw&quot;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">con</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+                <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;relation&quot;</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">con</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+                <span class="n">con</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+                <span class="n">con</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">user_defined_function</span> <span class="o">=</span> <span class="n">create_function_args</span><span class="p">[</span><span class="s2">&quot;function&quot;</span><span class="p">]</span>
+            <span class="n">function_name</span> <span class="o">=</span> <span class="n">create_function_args</span><span class="p">[</span><span class="s2">&quot;function_name&quot;</span><span class="p">]</span>
+            <span class="n">parameter_types</span> <span class="o">=</span> <span class="n">create_function_args</span><span class="p">[</span><span class="s2">&quot;parameter_types&quot;</span><span class="p">]</span>
+            <span class="n">new_field_type</span> <span class="o">=</span> <span class="n">create_function_args</span><span class="p">[</span><span class="s2">&quot;new_field_type&quot;</span><span class="p">]</span>
+            <span class="k">with</span> <span class="n">duckdb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">database_filepath</span><span class="p">)</span> <span class="k">as</span> <span class="n">con</span><span class="p">:</span>
+                <span class="c1"># Register the function</span>
+                <span class="n">con</span><span class="o">.</span><span class="n">create_function</span><span class="p">(</span>
+                    <span class="n">function_name</span><span class="p">,</span>
+                    <span class="n">user_defined_function</span><span class="p">,</span>
+                    <span class="n">parameter_types</span><span class="p">,</span>
+                    <span class="n">new_field_type</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="c1"># Call the function and add the results to joined_timeseries</span>
+                <span class="n">con</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+                <span class="n">con</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TEEHRDatasetDB._initialize_database_tables">
+<a class="viewcode-back" href="../../../autoapi/teehr/database/teehr_dataset/index.html#teehr.database.teehr_dataset.TEEHRDatasetDB._initialize_database_tables">[docs]</a>
+    <span class="k">def</span> <span class="nf">_initialize_database_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create the persistent study database and empty table(s).&quot;&quot;&quot;</span>
+        <span class="n">create_timeseries_table</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            CREATE TABLE IF NOT EXISTS joined_timeseries(</span>
+<span class="s2">                reference_time DATETIME,</span>
+<span class="s2">                value_time DATETIME,</span>
+<span class="s2">                secondary_location_id VARCHAR,</span>
+<span class="s2">                secondary_value FLOAT,</span>
+<span class="s2">                configuration VARCHAR,</span>
+<span class="s2">                measurement_unit VARCHAR,</span>
+<span class="s2">                variable_name VARCHAR,</span>
+<span class="s2">                primary_value FLOAT,</span>
+<span class="s2">                primary_location_id VARCHAR,</span>
+<span class="s2">                lead_time INTERVAL,</span>
+<span class="s2">                absolute_difference FLOAT</span>
+<span class="s2">                );&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">create_timeseries_table</span><span class="p">)</span>
+
+        <span class="c1"># Also initialize the geometry table (what if multiple geometry types?)</span>
+        <span class="n">create_geometry_table</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">            CREATE TABLE IF NOT EXISTS geometry(</span>
+<span class="s2">                id VARCHAR,</span>
+<span class="s2">                name VARCHAR,</span>
+<span class="s2">                geometry BLOB</span>
+<span class="s2">                );&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">create_geometry_table</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="TEEHRDatasetDB._drop_joined_timeseries_field">
 <a class="viewcode-back" href="../../../autoapi/teehr/database/teehr_dataset/index.html#teehr.database.teehr_dataset.TEEHRDatasetDB._drop_joined_timeseries_field">[docs]</a>
     <span class="k">def</span> <span class="nf">_drop_joined_timeseries_field</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
@@ -1050,7 +1109,7 @@ document.write(`
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_joined_timeseries_base_fields</span><span class="p">(</span><span class="n">drop_added_fields</span><span class="p">)</span>
 
-        <span class="n">jtq</span> <span class="o">=</span> <span class="n">JoinedTimeseriesQuery</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span>
+        <span class="n">jtq</span> <span class="o">=</span> <span class="n">InsertJoinedTimeseriesQuery</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span>
             <span class="p">{</span>
                 <span class="s2">&quot;primary_filepath&quot;</span><span class="p">:</span> <span class="n">primary_filepath</span><span class="p">,</span>
                 <span class="s2">&quot;secondary_filepath&quot;</span><span class="p">:</span> <span class="n">secondary_filepath</span><span class="p">,</span>
@@ -1310,6 +1369,65 @@ document.write(`
             <span class="k">return</span> <span class="n">tqu</span><span class="o">.</span><span class="n">remove_empty_lines</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_geometry</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_check_if_geometry_is_inserted</span><span class="p">()</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;df&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">tqu</span><span class="o">.</span><span class="n">df_to_gdf</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;df&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">df</span></div>
+
+
+<div class="viewcode-block" id="TEEHRDatasetDB.get_joined_timeseries">
+<a class="viewcode-back" href="../../../autoapi/teehr/database/teehr_dataset/index.html#teehr.database.teehr_dataset.TEEHRDatasetDB.get_joined_timeseries">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_joined_timeseries</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">order_by</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">filters</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">include_geometry</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">return_query</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">gpd</span><span class="o">.</span><span class="n">GeoDataFrame</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Retrieve joined timeseries using database query.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        order_by : List[str]</span>
+<span class="sd">            List of column/field names to order results by.</span>
+<span class="sd">            Must provide at least one.</span>
+<span class="sd">        filters : Union[List[dict], None] = None</span>
+<span class="sd">            List of dictionaries describing the &quot;where&quot; clause to limit data</span>
+<span class="sd">            that is included in metrics.</span>
+<span class="sd">        include_geometry : bool</span>
+<span class="sd">            True joins the geometry to the query results.</span>
+<span class="sd">            Only works if `primary_location_id`</span>
+<span class="sd">            is included as a group_by field.</span>
+<span class="sd">        return_query : bool = False</span>
+<span class="sd">            True returns the query string instead of the data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Union[pd.DataFrame, gpd.GeoDataFrame str]</span>
+<span class="sd">            A DataFrame or GeoDataFrame of query results</span>
+<span class="sd">            or the query itself as a string.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        teehr.queries.duckdb_database.create_get_joined_timeseries_query : \</span>
+<span class="sd">            Create the get joined timeseries query.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;order_by&quot;</span><span class="p">:</span> <span class="n">order_by</span><span class="p">,</span>
+            <span class="s2">&quot;filters&quot;</span><span class="p">:</span> <span class="n">filters</span><span class="p">,</span>
+            <span class="s2">&quot;return_query&quot;</span><span class="p">:</span> <span class="n">return_query</span><span class="p">,</span>
+            <span class="s2">&quot;include_geometry&quot;</span><span class="p">:</span> <span class="n">include_geometry</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">jtq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_query_model</span><span class="p">(</span><span class="n">JoinedTimeseriesQuery</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+
+        <span class="n">query</span> <span class="o">=</span> <span class="n">tqu_db</span><span class="o">.</span><span class="n">create_get_joined_timeseries_query</span><span class="p">(</span><span class="n">jtq</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">jtq</span><span class="o">.</span><span class="n">return_query</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">tqu</span><span class="o">.</span><span class="n">remove_empty_lines</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">jtq</span><span class="o">.</span><span class="n">include_geometry</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_if_geometry_is_inserted</span><span class="p">()</span>
             <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;df&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">tqu</span><span class="o">.</span><span class="n">df_to_gdf</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1365,7 +1483,7 @@ document.write(`
         <span class="k">if</span> <span class="n">tq</span><span class="o">.</span><span class="n">return_query</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">tqu</span><span class="o">.</span><span class="n">remove_empty_lines</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;df&quot;</span><span class="p">)</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;df&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">df</span></div>
 
 
@@ -1429,7 +1547,7 @@ document.write(`
         <span class="k">if</span> <span class="n">tcq</span><span class="o">.</span><span class="n">return_query</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">tqu</span><span class="o">.</span><span class="n">remove_empty_lines</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;df&quot;</span><span class="p">)</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;df&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">df</span></div>
 
 
@@ -1453,11 +1571,10 @@ document.write(`
 <span class="sd">        teehr.queries.duckdb_database.create_unique_field_values_query : \</span>
 <span class="sd">            Create the get unique field values query.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;field_name&quot;</span><span class="p">:</span> <span class="n">field_name</span><span class="p">}</span>
         <span class="n">fn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_query_model</span><span class="p">(</span><span class="n">JoinedTimeseriesFieldName</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
         <span class="n">query</span> <span class="o">=</span> <span class="n">tqu_db</span><span class="o">.</span><span class="n">create_unique_field_values_query</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;df&quot;</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;df&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">df</span></div>
 </div>
 

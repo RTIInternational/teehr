@@ -21,6 +21,7 @@ teehr.models.queries\_database
       CalculateField
       FieldTypeEnum
       Filter
+      InsertJoinedTimeseriesQuery
       JoinedFieldNameEnum
       JoinedTimeseriesFieldName
       JoinedTimeseriesQuery

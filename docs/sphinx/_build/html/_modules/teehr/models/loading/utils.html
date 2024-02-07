@@ -405,7 +405,10 @@ document.write(`
 <span class="k">class</span> <span class="nc">ChunkByEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;ChunkByEnum.&quot;&quot;&quot;</span>
     <span class="n">day</span> <span class="o">=</span> <span class="s2">&quot;day&quot;</span>
-    <span class="n">location_id</span> <span class="o">=</span> <span class="s2">&quot;location_id&quot;</span></div>
+    <span class="n">location_id</span> <span class="o">=</span> <span class="s2">&quot;location_id&quot;</span>
+    <span class="n">week</span> <span class="o">=</span> <span class="s2">&quot;week&quot;</span>
+    <span class="n">month</span> <span class="o">=</span> <span class="s2">&quot;month&quot;</span>
+    <span class="n">year</span> <span class="o">=</span> <span class="s2">&quot;year&quot;</span></div>
 
 
 
@@ -414,7 +417,8 @@ document.write(`
 <span class="k">class</span> <span class="nc">SupportedNWMRetroVersionsEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;SupportedNWMRetroVersionsEnum.&quot;&quot;&quot;</span>
     <span class="n">nwm20</span> <span class="o">=</span> <span class="s2">&quot;nwm20&quot;</span>
-    <span class="n">nwm21</span> <span class="o">=</span> <span class="s2">&quot;nwm21&quot;</span></div>
+    <span class="n">nwm21</span> <span class="o">=</span> <span class="s2">&quot;nwm21&quot;</span>
+    <span class="n">nwm30</span> <span class="o">=</span> <span class="s2">&quot;nwm30&quot;</span></div>
 
 
 
@@ -445,6 +449,16 @@ document.write(`
     <span class="n">remote</span> <span class="o">=</span> <span class="s2">&quot;remote&quot;</span>
     <span class="n">auto</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span></div>
 
+
+
+<div class="viewcode-block" id="SupportedNWMRetroDomainsEnum">
+<a class="viewcode-back" href="../../../../autoapi/teehr/models/loading/utils/index.html#teehr.models.loading.utils.SupportedNWMRetroDomainsEnum">[docs]</a>
+<span class="k">class</span> <span class="nc">SupportedNWMRetroDomainsEnum</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;SupportedNWMRetroDomainsEnum.&quot;&quot;&quot;</span>
+    <span class="n">CONUS</span> <span class="o">=</span> <span class="s2">&quot;CONUS&quot;</span>
+    <span class="n">Alaska</span> <span class="o">=</span> <span class="s2">&quot;Alaska&quot;</span>
+    <span class="n">PR</span> <span class="o">=</span> <span class="s2">&quot;PR&quot;</span>
+    <span class="n">Hawaii</span> <span class="o">=</span> <span class="s2">&quot;Hawaii&quot;</span></div>
 
 
 <span class="c1"># class NWM20RetroConfig(BaseModel):</span>

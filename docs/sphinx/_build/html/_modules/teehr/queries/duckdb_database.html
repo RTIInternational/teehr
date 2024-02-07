@@ -402,6 +402,7 @@ document.write(`
 
 <span class="kn">from</span> <span class="nn">teehr.models.queries_database</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">MetricQuery</span><span class="p">,</span>
+    <span class="n">InsertJoinedTimeseriesQuery</span><span class="p">,</span>
     <span class="n">JoinedTimeseriesQuery</span><span class="p">,</span>
     <span class="n">TimeseriesQuery</span><span class="p">,</span>
     <span class="n">TimeseriesCharQuery</span><span class="p">,</span>
@@ -506,8 +507,8 @@ document.write(`
 <span class="s2">        WITH joined as (</span>
 <span class="s2">            SELECT</span>
 <span class="s2">                *</span>
-<span class="s2">            FROM joined_timeseries</span>
-<span class="s2">            </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">filters_to_sql_db</span><span class="p">(</span><span class="n">mq</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">            FROM joined_timeseries sf</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">filters_to_sql</span><span class="p">(</span><span class="n">mq</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span><span class="si">}</span>
 <span class="s2">        )</span>
 <span class="s2">        </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">_nse_cte</span><span class="p">(</span><span class="n">mq</span><span class="p">)</span><span class="si">}</span>
 <span class="s2">        , metrics AS (</span>
@@ -557,7 +558,7 @@ document.write(`
 <div class="viewcode-block" id="create_join_and_save_timeseries_query">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/duckdb_database/index.html#teehr.queries.duckdb_database.create_join_and_save_timeseries_query">[docs]</a>
 <span class="k">def</span> <span class="nf">create_join_and_save_timeseries_query</span><span class="p">(</span><span class="n">jtq</span><span class="p">:</span> <span class="n">JoinedTimeseriesQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load joined timeseries into a duckdb persistent database using</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load joined timeseries into a duckdb persistent database using a</span>
 <span class="sd">    database query.</span>
 
 <span class="sd">    Parameters</span>
@@ -775,6 +776,89 @@ document.write(`
 
 
 
+<div class="viewcode-block" id="create_get_joined_timeseries_query">
+<a class="viewcode-back" href="../../../autoapi/teehr/queries/duckdb_database/index.html#teehr.queries.duckdb_database.create_get_joined_timeseries_query">[docs]</a>
+<span class="k">def</span> <span class="nf">create_get_joined_timeseries_query</span><span class="p">(</span>
+    <span class="n">jtq</span><span class="p">:</span> <span class="n">JoinedTimeseriesQuery</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Retrieve joined timeseries using database query.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    jtq : JoinedTimeseriesQuery</span>
+<span class="sd">        Pydantic model containing query parameters.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The query string.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Filter By Fields:</span>
+
+<span class="sd">    * reference_time</span>
+<span class="sd">    * primary_location_id</span>
+<span class="sd">    * secondary_location_id</span>
+<span class="sd">    * primary_value</span>
+<span class="sd">    * secondary_value</span>
+<span class="sd">    * value_time</span>
+<span class="sd">    * configuration</span>
+<span class="sd">    * measurement_unit</span>
+<span class="sd">    * variable_name</span>
+<span class="sd">    * lead_time</span>
+<span class="sd">    * absolute_difference</span>
+<span class="sd">    * [any user-added fields]</span>
+
+<span class="sd">    Order By Fields:</span>
+
+<span class="sd">    * reference_time</span>
+<span class="sd">    * primary_location_id</span>
+<span class="sd">    * secondary_location_id</span>
+<span class="sd">    * primary_value</span>
+<span class="sd">    * secondary_value</span>
+<span class="sd">    * value_time</span>
+<span class="sd">    * configuration</span>
+<span class="sd">    * measurement_unit</span>
+<span class="sd">    * variable_name</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; order_by = [&quot;lead_time&quot;, &quot;primary_location_id&quot;]</span>
+
+<span class="sd">    &gt;&gt;&gt; group_by = [&quot;lead_time&quot;, &quot;primary_location_id&quot;]</span>
+
+<span class="sd">    &gt;&gt;&gt; filters = [</span>
+<span class="sd">    &gt;&gt;&gt;     {</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;column&quot;: &quot;primary_location_id&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;operator&quot;: &quot;=&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;value&quot;: &quot;gage-A&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;     },</span>
+<span class="sd">    &gt;&gt;&gt;     {</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;column&quot;: &quot;reference_time&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;operator&quot;: &quot;=&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;         &quot;value&quot;: &quot;2022-01-01 00:00:00&quot;,</span>
+<span class="sd">    &gt;&gt;&gt;     },</span>
+<span class="sd">    &gt;&gt;&gt;     {&quot;column&quot;: &quot;lead_time&quot;, &quot;operator&quot;: &quot;&lt;=&quot;, &quot;value&quot;: &quot;10 hours&quot;},</span>
+<span class="sd">    &gt;&gt;&gt; ]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        SELECT</span>
+<span class="s2">            sf.*</span>
+<span class="s2">        </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">geometry_select_clause</span><span class="p">(</span><span class="n">jtq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">        FROM</span>
+<span class="s2">            joined_timeseries sf</span>
+<span class="s2">        </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">metric_geometry_join_clause_db</span><span class="p">(</span><span class="n">jtq</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">        </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">filters_to_sql</span><span class="p">(</span><span class="n">jtq</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">        ORDER BY</span>
+<span class="s2">            </span><span class="si">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">jtq</span><span class="o">.</span><span class="n">order_by</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">    ;&quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">query</span></div>
+
+
+
 <div class="viewcode-block" id="create_get_timeseries_query">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/duckdb_database/index.html#teehr.queries.duckdb_database.create_get_timeseries_query">[docs]</a>
 <span class="k">def</span> <span class="nf">create_get_timeseries_query</span><span class="p">(</span>
@@ -852,8 +936,8 @@ document.write(`
 <span class="s2">                measurement_unit,</span>
 <span class="s2">                variable_name,</span>
 <span class="s2">            FROM</span>
-<span class="s2">                joined_timeseries</span>
-<span class="s2">            </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">filters_to_sql_db</span><span class="p">(</span><span class="n">tq</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                joined_timeseries sf</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">filters_to_sql</span><span class="p">(</span><span class="n">tq</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span><span class="si">}</span>
 <span class="s2">            GROUP BY</span>
 <span class="s2">                value_time,</span>
 <span class="s2">                primary_location_id,</span>
@@ -874,8 +958,8 @@ document.write(`
 <span class="s2">                measurement_unit,</span>
 <span class="s2">                variable_name,</span>
 <span class="s2">            FROM</span>
-<span class="s2">                joined_timeseries</span>
-<span class="s2">            </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">filters_to_sql_db</span><span class="p">(</span><span class="n">tq</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                joined_timeseries sf</span>
+<span class="s2">            </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">filters_to_sql</span><span class="p">(</span><span class="n">tq</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span><span class="si">}</span>
 <span class="s2">            ORDER BY</span>
 <span class="s2">                </span><span class="si">{</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tq</span><span class="o">.</span><span class="n">order_by</span><span class="p">)</span><span class="si">}</span>
 <span class="s2">        ;&quot;&quot;&quot;</span>
@@ -971,8 +1055,8 @@ document.write(`
 <span class="s2">                        variable_name,</span>
 <span class="s2">                        </span><span class="si">{</span><span class="n">gb_fields</span><span class="si">}</span>
 <span class="s2">                     FROM</span>
-<span class="s2">                         joined_timeseries</span>
-<span class="s2">                     </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">filters_to_sql_db</span><span class="p">(</span><span class="n">tcq</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                         joined_timeseries sf</span>
+<span class="s2">                     </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">filters_to_sql</span><span class="p">(</span><span class="n">tcq</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span><span class="si">}</span>
 <span class="s2">                     GROUP BY</span>
 <span class="s2">                        value_time,</span>
 <span class="s2">                        primary_location_id,</span>
@@ -985,8 +1069,8 @@ document.write(`
 <span class="s2">                      SELECT</span>
 <span class="s2">                        *</span>
 <span class="s2">                      FROM</span>
-<span class="s2">                          joined_timeseries</span>
-<span class="s2">                      </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">filters_to_sql_db</span><span class="p">(</span><span class="n">tcq</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                          joined_timeseries sf</span>
+<span class="s2">                      </span><span class="si">{</span><span class="n">tqu</span><span class="o">.</span><span class="n">filters_to_sql</span><span class="p">(</span><span class="n">tcq</span><span class="o">.</span><span class="n">filters</span><span class="p">)</span><span class="si">}</span>
 <span class="s2">                      &quot;&quot;&quot;</span>
 
     <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>

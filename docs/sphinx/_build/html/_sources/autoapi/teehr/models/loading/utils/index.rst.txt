@@ -24,6 +24,7 @@ Classes
    teehr.models.loading.utils.SupportedNWMOperationalVersionsEnum
    teehr.models.loading.utils.SupportedNWMDataSourcesEnum
    teehr.models.loading.utils.SupportedKerchunkMethod
+   teehr.models.loading.utils.SupportedNWMRetroDomainsEnum
 
 
 
@@ -63,6 +64,21 @@ Classes
 
 
 
+   .. py:attribute:: week
+      :value: 'week'
+
+
+
+   .. py:attribute:: month
+      :value: 'month'
+
+
+
+   .. py:attribute:: year
+      :value: 'year'
+
+
+
 
 .. py:class:: SupportedNWMRetroVersionsEnum
 
@@ -96,6 +112,11 @@ Classes
 
    .. py:attribute:: nwm21
       :value: 'nwm21'
+
+
+
+   .. py:attribute:: nwm30
+      :value: 'nwm30'
 
 
 
@@ -214,3 +235,49 @@ Classes
 
    .. py:attribute:: auto
       :value: 'auto'
+
+
+
+
+.. py:class:: SupportedNWMRetroDomainsEnum
+
+
+   Bases: :py:obj:`str`, :py:obj:`enum.Enum`
+
+
+   SupportedNWMRetroDomainsEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: CONUS
+      :value: 'CONUS'
+
+
+
+   .. py:attribute:: Alaska
+      :value: 'Alaska'
+
+
+
+   .. py:attribute:: PR
+      :value: 'PR'
+
+
+
+   .. py:attribute:: Hawaii
+      :value: 'Hawaii'

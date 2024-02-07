@@ -467,6 +467,8 @@ especially loading, and you should see performance improvements by starting a lo
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
+<section id="fetching-nwm-data">
+<h3>Fetching NWM Data<a class="headerlink" href="#fetching-nwm-data" title="Link to this heading">#</a></h3>
 <p>An example of using TEEHR to fetch retrospective NWM v2.0 data and format into the TEEHR data model
 is shown here.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Import the packages.</span>
@@ -495,6 +497,63 @@ is shown here.</p>
 <span class="p">)</span>
 </pre></div>
 </div>
+</section>
+<section id="teehr-database">
+<h3>TEEHR Database<a class="headerlink" href="#teehr-database" title="Link to this heading">#</a></h3>
+<p>Once the data adheres to the TEEHR data model, we can use the <cite>TEEHRDatasetDB</cite> class
+to create a persisent database, allowing for efficient exploration and metric queries.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [3]: </span><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="gp">In [4]: </span><span class="kn">from</span> <span class="nn">teehr.database.teehr_dataset</span> <span class="kn">import</span> <span class="n">TEEHRDatasetDB</span>
+
+<span class="go"># Define file paths the test data</span>
+<span class="gp">In [5]: </span><span class="n">PRIMARY_FILEPATH</span> <span class="o">=</span> <span class="s2">&quot;../../tests/data/test_study/timeseries/*short_obs.parquet&quot;</span>
+
+<span class="gp">In [6]: </span><span class="n">SECONDARY_FILEPATH</span> <span class="o">=</span> <span class="s2">&quot;../../tests/data/test_study/timeseries/*_fcast.parquet&quot;</span>
+
+<span class="gp">In [7]: </span><span class="n">CROSSWALK_FILEPATH</span> <span class="o">=</span> <span class="s2">&quot;../../tests/data/test_study/geo/crosswalk.parquet&quot;</span>
+
+<span class="gp">In [8]: </span><span class="n">DATABASE_FILEPATH</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;../../tests/data/temp/temp_test.db&quot;</span><span class="p">)</span>
+
+<span class="go"># Delete the test database if it already exists.</span>
+<span class="gp">In [9]: </span><span class="k">if</span> <span class="n">DATABASE_FILEPATH</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
+<span class="gp">   ...: </span>    <span class="n">DATABASE_FILEPATH</span><span class="o">.</span><span class="n">unlink</span><span class="p">()</span>
+<span class="gp">   ...: </span>
+
+<span class="go"># Initialize a database.</span>
+<span class="gp">In [10]: </span><span class="n">tds</span> <span class="o">=</span> <span class="n">TEEHRDatasetDB</span><span class="p">(</span><span class="n">DATABASE_FILEPATH</span><span class="p">)</span>
+
+<span class="go"># Join the primary and secondary timeseries using the crosswalk table</span>
+<span class="go"># and insert the data into the `joined_timeseries` database table.</span>
+<span class="gp">In [11]: </span><span class="n">tds</span><span class="o">.</span><span class="n">insert_joined_timeseries</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="n">primary_filepath</span><span class="o">=</span><span class="n">PRIMARY_FILEPATH</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="n">secondary_filepath</span><span class="o">=</span><span class="n">SECONDARY_FILEPATH</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="n">crosswalk_filepath</span><span class="o">=</span><span class="n">CROSSWALK_FILEPATH</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="n">drop_added_fields</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">   ....: </span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [12]: </span><span class="n">df</span> <span class="o">=</span> <span class="n">tds</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;SELECT * FROM joined_timeseries&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;df&quot;</span><span class="p">)</span>
+
+<span class="gp">In [13]: </span><span class="n">df</span>
+<span class="gh">Out[13]: </span>
+<span class="go">         reference_time          value_time  ...       lead_time  absolute_difference</span>
+<span class="go">0   2022-01-01 00:00:00 2022-01-01 00:00:00  ... 0 days 00:00:00                 0.10</span>
+<span class="go">1   2022-01-01 00:00:00 2022-01-01 01:00:00  ... 0 days 01:00:00                 1.00</span>
+<span class="go">2   2022-01-01 01:00:00 2022-01-01 01:00:00  ... 0 days 00:00:00                 1.00</span>
+<span class="go">3   2022-01-01 01:00:00 2022-01-01 02:00:00  ... 0 days 01:00:00                 0.10</span>
+<span class="go">4   2022-01-01 00:00:00 2022-01-01 02:00:00  ... 0 days 02:00:00                 0.10</span>
+<span class="go">..                  ...                 ...  ...             ...                  ...</span>
+<span class="go">211 2022-01-01 02:00:00 2022-01-01 23:00:00  ... 0 days 21:00:00                 3.70</span>
+<span class="go">212 2022-01-01 01:00:00 2022-01-01 23:00:00  ... 0 days 22:00:00                 0.95</span>
+<span class="go">213 2022-01-01 01:00:00 2022-01-02 00:00:00  ... 0 days 23:00:00                 0.29</span>
+<span class="go">214 2022-01-01 02:00:00 2022-01-02 00:00:00  ... 0 days 22:00:00                 4.74</span>
+<span class="go">215 2022-01-01 02:00:00 2022-01-02 01:00:00  ... 0 days 23:00:00                 3.53</span>
+
+<span class="go">[216 rows x 11 columns]</span>
+</pre></div>
+</div>
+</section>
 <section id="example-notebooks">
 <h3>Example notebooks<a class="headerlink" href="#example-notebooks" title="Link to this heading">#</a></h3>
 <p>See the <a class="reference internal" href="../user_guide/notebooks/loading_examples_index.html"><span class="doc">Loading</span></a> and
@@ -562,6 +621,8 @@ is shown here.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api-overview">API Overview</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fetching-nwm-data">Fetching NWM Data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr-database">TEEHR Database</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-notebooks">Example notebooks</a></li>
 </ul>
 </li>

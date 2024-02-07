@@ -18,7 +18,6 @@ teehr.models.queries
    .. autosummary::
 
       BaseModel
-      ChunkByEnum
       FilterOperatorEnum
       JoinedFilter
       JoinedFilterFieldEnum

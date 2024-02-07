@@ -373,7 +373,8 @@ document.write(`
 <li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/nwm_grids/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.nwm_grids</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/nwm_points/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.nwm_points</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/point_utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.point_utils</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/retrospective/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.retrospective</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/retrospective_grids/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.retrospective_grids</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/retrospective_points/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.retrospective_points</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.utils</span></code></a></li>
 </ul>
 </li>
@@ -499,7 +500,7 @@ document.write(`
 <table class="table">
 <tbody>
 <tr class="row-odd"><td><p><strong>__init__(database_filepath: Union[str, Path])</strong></p></td>
-<td><p>Initialize a study area database.</p></td>
+<td><p>Establish a connection to an existing study area database.</p></td>
 </tr>
 <tr class="row-even"><td><p><strong>profile_query(query: str)</strong></p></td>
 <td><p>A helper function to profile query performance (runs EXPLAIN ANALYZE).</p></td>
@@ -536,7 +537,7 @@ which runs EXPLAIN ANALYZE and prints the output to screen.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="teehr.database.teehr_dataset.TEEHRDatasetAPI.query">
-<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_function_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/database/teehr_dataset.html#TEEHRDatasetAPI.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.database.teehr_dataset.TEEHRDatasetAPI.query" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/database/teehr_dataset.html#TEEHRDatasetAPI.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.database.teehr_dataset.TEEHRDatasetAPI.query" title="Link to this definition">#</a></dt>
 <dd><p>Run an SQL query against the class’s database.</p>
 <p>Return formats include:</p>
 <ul class="simple">
@@ -545,23 +546,6 @@ which runs EXPLAIN ANALYZE and prints the output to screen.</p>
 <li><p>A DuckDBPyRelation, a symbolic representation of the SQL query</p></li>
 </ul>
 <p>(format=’relation’).</p>
-<p class="rubric">Examples</p>
-<p>A user-defined function can be registered to the database by
-defining parameters in the create_function_args argument:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="n">create_function_args</span> <span class="o">=</span> <span class="p">{</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="n">your_user_defined_function</span><span class="p">,</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;function_name&quot;</span><span class="p">:</span> <span class="s2">&quot;user_defined_function_name&quot;</span><span class="p">,</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;parameter_types&quot;</span><span class="p">:</span> <span class="n">function_parameter_data_types</span><span class="p">,</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;new_field_type&quot;</span><span class="p">:</span> <span class="n">new_field_data_type</span><span class="p">,</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="p">}</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="teehr.database.teehr_dataset.TEEHRDatasetAPI._initialize_database_tables">
-<span class="sig-name descname"><span class="pre">_initialize_database_tables</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/database/teehr_dataset.html#TEEHRDatasetAPI._initialize_database_tables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.database.teehr_dataset.TEEHRDatasetAPI._initialize_database_tables" title="Link to this definition">#</a></dt>
-<dd><p>Create the persistent study database and empty table(s).</p>
 </dd></dl>
 
 <dl class="py method">
@@ -655,6 +639,34 @@ or the query itself as a string.</p>
 <p class="admonition-title">See also</p>
 <dl class="simple">
 <dt><a class="reference internal" href="../../queries/duckdb_database/index.html#teehr.queries.duckdb_database.create_get_metrics_query" title="teehr.queries.duckdb_database.create_get_metrics_query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">teehr.queries.duckdb_database.create_get_metrics_query</span></code></a></dt><dd><p>Create the get metrics query.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.database.teehr_dataset.TEEHRDatasetAPI.get_joined_timeseries">
+<span class="sig-name descname"><span class="pre">get_joined_timeseries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jtq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.JoinedTimeseriesQuery" title="teehr.models.queries_database.JoinedTimeseriesQuery"><span class="pre">teehr.models.queries_database.JoinedTimeseriesQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">geopandas.GeoDataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/database/teehr_dataset.html#TEEHRDatasetAPI.get_joined_timeseries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.database.teehr_dataset.TEEHRDatasetAPI.get_joined_timeseries" title="Link to this definition">#</a></dt>
+<dd><p>Retrieve joined timeseries using database query.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>jtq</strong><span class="classifier">JoinedTimeseriesQuery</span></dt><dd><p>Pydantic model containing query parameters.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Union[pd.DataFrame, gpd.GeoDataFrame, str]</dt><dd><p>A DataFrame or GeoDataFrame of query results
+or the query itself as a string.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="../../queries/duckdb_database/index.html#teehr.queries.duckdb_database.create_get_joined_timeseries_query" title="teehr.queries.duckdb_database.create_get_joined_timeseries_query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">teehr.queries.duckdb_database.create_get_joined_timeseries_query</span></code></a></dt><dd><p>Create the get joined timeseries query.</p>
 </dd>
 </dl>
 </div>
@@ -799,6 +811,18 @@ or the query itself as a string.</p>
 </tr>
 </tbody>
 </table>
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.database.teehr_dataset.TEEHRDatasetDB.query">
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_only</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_function_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/database/teehr_dataset.html#TEEHRDatasetDB.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.database.teehr_dataset.TEEHRDatasetDB.query" title="Link to this definition">#</a></dt>
+<dd><p>Run query against the class’s database.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.database.teehr_dataset.TEEHRDatasetDB._initialize_database_tables">
+<span class="sig-name descname"><span class="pre">_initialize_database_tables</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/database/teehr_dataset.html#TEEHRDatasetDB._initialize_database_tables"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.database.teehr_dataset.TEEHRDatasetDB._initialize_database_tables" title="Link to this definition">#</a></dt>
+<dd><p>Create the persistent study database and empty table(s).</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="teehr.database.teehr_dataset.TEEHRDatasetDB._drop_joined_timeseries_field">
 <span class="sig-name descname"><span class="pre">_drop_joined_timeseries_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../../_modules/teehr/database/teehr_dataset.html#TEEHRDatasetDB._drop_joined_timeseries_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.database.teehr_dataset.TEEHRDatasetDB._drop_joined_timeseries_field" title="Link to this definition">#</a></dt>
@@ -973,6 +997,44 @@ or the query itself as a string.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="teehr.database.teehr_dataset.TEEHRDatasetDB.get_joined_timeseries">
+<span class="sig-name descname"><span class="pre">get_joined_timeseries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">order_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_geometry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">geopandas.GeoDataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/database/teehr_dataset.html#TEEHRDatasetDB.get_joined_timeseries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.database.teehr_dataset.TEEHRDatasetDB.get_joined_timeseries" title="Link to this definition">#</a></dt>
+<dd><p>Retrieve joined timeseries using database query.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>order_by</strong><span class="classifier">List[str]</span></dt><dd><p>List of column/field names to order results by.
+Must provide at least one.</p>
+</dd>
+<dt><strong>filters</strong><span class="classifier">Union[List[dict], None] = None</span></dt><dd><p>List of dictionaries describing the “where” clause to limit data
+that is included in metrics.</p>
+</dd>
+<dt><strong>include_geometry</strong><span class="classifier">bool</span></dt><dd><p>True joins the geometry to the query results.
+Only works if <cite>primary_location_id</cite>
+is included as a group_by field.</p>
+</dd>
+<dt><strong>return_query</strong><span class="classifier">bool = False</span></dt><dd><p>True returns the query string instead of the data.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>Union[pd.DataFrame, gpd.GeoDataFrame str]</dt><dd><p>A DataFrame or GeoDataFrame of query results
+or the query itself as a string.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="../../queries/duckdb_database/index.html#teehr.queries.duckdb_database.create_get_joined_timeseries_query" title="teehr.queries.duckdb_database.create_get_joined_timeseries_query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">teehr.queries.duckdb_database.create_get_joined_timeseries_query</span></code></a></dt><dd><p>Create the get joined timeseries query.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="teehr.database.teehr_dataset.TEEHRDatasetDB.get_timeseries">
 <span class="sig-name descname"><span class="pre">get_timeseries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">order_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeseries_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.DataFrame</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/database/teehr_dataset.html#TEEHRDatasetDB.get_timeseries"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.database.teehr_dataset.TEEHRDatasetDB.get_timeseries" title="Link to this definition">#</a></dt>
 <dd><p>Retrieve timeseries using database query.</p>
@@ -1138,19 +1200,21 @@ or, the query itself as a string.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetAPI"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetAPI</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetAPI.profile_query"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetAPI.profile_query()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetAPI.query"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetAPI.query()</span></code></a></li>
-<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetAPI._initialize_database_tables"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetAPI._initialize_database_tables()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetAPI.get_joined_timeseries_schema"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetAPI.get_joined_timeseries_schema()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetAPI._sanitize_field_name"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetAPI._sanitize_field_name()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetAPI.describe_inputs"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetAPI.describe_inputs()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetAPI._check_if_geometry_is_inserted"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetAPI._check_if_geometry_is_inserted()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetAPI._validate_query_model"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetAPI._validate_query_model()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetAPI.get_metrics"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetAPI.get_metrics()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetAPI.get_joined_timeseries"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetAPI.get_joined_timeseries()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetAPI.get_timeseries"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetAPI.get_timeseries()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetAPI.get_timeseries_chars"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetAPI.get_timeseries_chars()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetAPI.get_unique_field_values"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetAPI.get_unique_field_values()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetDB"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetDB</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetDB.query"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetDB.query()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetDB._initialize_database_tables"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetDB._initialize_database_tables()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetDB._drop_joined_timeseries_field"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetDB._drop_joined_timeseries_field()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetDB._validate_joined_timeseries_base_fields"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetDB._validate_joined_timeseries_base_fields()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetDB.insert_geometry"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetDB.insert_geometry()</span></code></a></li>
@@ -1161,6 +1225,7 @@ or, the query itself as a string.</p>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetDB.calculate_field"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetDB.calculate_field()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetDB._validate_query_model"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetDB._validate_query_model()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetDB.get_metrics"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetDB.get_metrics()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetDB.get_joined_timeseries"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetDB.get_joined_timeseries()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetDB.get_timeseries"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetDB.get_timeseries()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetDB.get_timeseries_chars"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetDB.get_timeseries_chars()</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.database.teehr_dataset.TEEHRDatasetDB.get_unique_field_values"><code class="docutils literal notranslate"><span class="pre">TEEHRDatasetDB.get_unique_field_values()</span></code></a></li>

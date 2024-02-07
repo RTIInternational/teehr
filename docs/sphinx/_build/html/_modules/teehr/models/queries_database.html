@@ -579,10 +579,11 @@ document.write(`
 
 
 
-<div class="viewcode-block" id="JoinedTimeseriesQuery">
-<a class="viewcode-back" href="../../../autoapi/teehr/models/queries_database/index.html#teehr.models.queries_database.JoinedTimeseriesQuery">[docs]</a>
-<span class="k">class</span> <span class="nc">JoinedTimeseriesQuery</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Joined timeseries query model.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="InsertJoinedTimeseriesQuery">
+<a class="viewcode-back" href="../../../autoapi/teehr/models/queries_database/index.html#teehr.models.queries_database.InsertJoinedTimeseriesQuery">[docs]</a>
+<span class="k">class</span> <span class="nc">InsertJoinedTimeseriesQuery</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;InsertJoinedTimeseriesQuery model.&quot;&quot;&quot;</span>
+
     <span class="n">primary_filepath</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span>
     <span class="n">secondary_filepath</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span>
     <span class="n">crosswalk_filepath</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]</span>
@@ -590,10 +591,67 @@ document.write(`
 
 
 
+<div class="viewcode-block" id="JoinedTimeseriesQuery">
+<a class="viewcode-back" href="../../../autoapi/teehr/models/queries_database/index.html#teehr.models.queries_database.JoinedTimeseriesQuery">[docs]</a>
+<span class="k">class</span> <span class="nc">JoinedTimeseriesQuery</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;JoinedTimeseriesQuery model.&quot;&quot;&quot;</span>
+
+    <span class="n">order_by</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">filters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Filter</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">return_query</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">include_geometry</span><span class="p">:</span> <span class="nb">bool</span>
+
+<div class="viewcode-block" id="JoinedTimeseriesQuery.filter_must_be_list">
+<a class="viewcode-back" href="../../../autoapi/teehr/models/queries_database/index.html#teehr.models.queries_database.JoinedTimeseriesQuery.filter_must_be_list">[docs]</a>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;filters&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">filter_must_be_list</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Filter must be a list.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="n">v</span></div>
+
+
+<div class="viewcode-block" id="JoinedTimeseriesQuery.order_by_must_exist_as_fields">
+<a class="viewcode-back" href="../../../autoapi/teehr/models/queries_database/index.html#teehr.models.queries_database.JoinedTimeseriesQuery.order_by_must_exist_as_fields">[docs]</a>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;order_by&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">order_by_must_exist_as_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">info</span><span class="p">:</span> <span class="n">ValidationInfo</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Order_by fields must currently exist in the database.&quot;&quot;&quot;</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">context</span>
+        <span class="k">if</span> <span class="n">context</span><span class="p">:</span>
+            <span class="n">existing_fields</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;existing_fields&quot;</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span>
+            <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing_fields</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;The order_by field &#39;</span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&#39; does not&quot;</span>
+                        <span class="s2">&quot;exist in the database&quot;</span>
+                    <span class="p">)</span>
+        <span class="k">return</span> <span class="n">v</span></div>
+
+
+<div class="viewcode-block" id="JoinedTimeseriesQuery.filters_must_exist_as_fields">
+<a class="viewcode-back" href="../../../autoapi/teehr/models/queries_database/index.html#teehr.models.queries_database.JoinedTimeseriesQuery.filters_must_exist_as_fields">[docs]</a>
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;filters&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">filters_must_exist_as_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">info</span><span class="p">:</span> <span class="n">ValidationInfo</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Filter fields must currently exist in the database.&quot;&quot;&quot;</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">context</span>
+        <span class="k">if</span> <span class="n">context</span><span class="p">:</span>
+            <span class="n">existing_fields</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;existing_fields&quot;</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span>
+            <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">val</span><span class="o">.</span><span class="n">column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing_fields</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;The filters field </span><span class="si">{</span><span class="n">val</span><span class="o">.</span><span class="n">column</span><span class="si">}</span><span class="s2"> does not&quot;</span>
+                        <span class="s2">&quot;exist in the database&quot;</span>
+                    <span class="p">)</span>
+        <span class="k">return</span> <span class="n">v</span></div>
+</div>
+
+
+
 <div class="viewcode-block" id="TimeseriesQuery">
 <a class="viewcode-back" href="../../../autoapi/teehr/models/queries_database/index.html#teehr.models.queries_database.TimeseriesQuery">[docs]</a>
 <span class="k">class</span> <span class="nc">TimeseriesQuery</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Timeseries query model.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;TimeseriesQuery model.&quot;&quot;&quot;</span>
+
     <span class="n">order_by</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
     <span class="n">filters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Filter</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">return_query</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
@@ -613,16 +671,27 @@ document.write(`
 <a class="viewcode-back" href="../../../autoapi/teehr/models/queries_database/index.html#teehr.models.queries_database.TimeseriesQuery.order_by_must_exist_as_fields">[docs]</a>
     <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;order_by&quot;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">order_by_must_exist_as_fields</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">info</span><span class="p">:</span> <span class="n">ValidationInfo</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Order_by fields must currently exist in the database.&quot;&quot;&quot;</span>
-        <span class="n">context</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="n">context</span>
-        <span class="k">if</span> <span class="n">context</span><span class="p">:</span>
-            <span class="n">existing_fields</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;existing_fields&quot;</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span>
-            <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">existing_fields</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;The order_by field &#39;</span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&#39; does not&quot;</span>
-                        <span class="s2">&quot;exist in the database&quot;</span>
-                    <span class="p">)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Order_by fields must be part one of the selected fields or</span>
+<span class="sd">        its alias.&quot;&quot;&quot;</span>
+        <span class="n">validation_fields</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;location_id&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;reference_time&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;value&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;primary_value&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;secondary_value&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;value_time&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;secondary_location_id&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;configuration&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;measurement_unit&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;variable_name&quot;</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">validation_fields</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;The order_by field &#39;</span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&#39; must be a timeseries&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot; field or its alias: </span><span class="si">{</span><span class="n">validation_fields</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
         <span class="k">return</span> <span class="n">v</span></div>
 
 

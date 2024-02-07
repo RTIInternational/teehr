@@ -373,7 +373,8 @@ document.write(`
 <li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/nwm_grids/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.nwm_grids</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/nwm_points/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.nwm_points</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/point_utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.point_utils</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/retrospective/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.retrospective</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/retrospective_grids/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.retrospective_grids</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/retrospective_points/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.retrospective_points</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.utils</span></code></a></li>
 </ul>
 </li>
@@ -487,18 +488,21 @@ document.write(`
 <td><p>Build the query string to calculate performance metrics</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.duckdb_database.create_join_and_save_timeseries_query" title="teehr.queries.duckdb_database.create_join_and_save_timeseries_query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_join_and_save_timeseries_query</span></code></a>(→ str)</p></td>
-<td><p>Load joined timeseries into a duckdb persistent database using</p></td>
+<td><p>Load joined timeseries into a duckdb persistent database using a</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.duckdb_database.describe_timeseries" title="teehr.queries.duckdb_database.describe_timeseries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">describe_timeseries</span></code></a>(→ Dict)</p></td>
 <td><p>Retrieve descriptive stats for a time series.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.duckdb_database.create_get_timeseries_query" title="teehr.queries.duckdb_database.create_get_timeseries_query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_get_timeseries_query</span></code></a>(→ str)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.duckdb_database.create_get_joined_timeseries_query" title="teehr.queries.duckdb_database.create_get_joined_timeseries_query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_get_joined_timeseries_query</span></code></a>(→ str)</p></td>
 <td><p>Retrieve joined timeseries using database query.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.duckdb_database.create_get_timeseries_char_query" title="teehr.queries.duckdb_database.create_get_timeseries_char_query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_get_timeseries_char_query</span></code></a>(→ str)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.duckdb_database.create_get_timeseries_query" title="teehr.queries.duckdb_database.create_get_timeseries_query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_get_timeseries_query</span></code></a>(→ str)</p></td>
 <td><p>Retrieve joined timeseries using database query.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.duckdb_database.create_unique_field_values_query" title="teehr.queries.duckdb_database.create_unique_field_values_query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_unique_field_values_query</span></code></a>(→ str)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.duckdb_database.create_get_timeseries_char_query" title="teehr.queries.duckdb_database.create_get_timeseries_char_query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_get_timeseries_char_query</span></code></a>(→ str)</p></td>
+<td><p>Retrieve joined timeseries using database query.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.duckdb_database.create_unique_field_values_query" title="teehr.queries.duckdb_database.create_unique_field_values_query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_unique_field_values_query</span></code></a>(→ str)</p></td>
 <td><p>Create a query for identifying unique values in a field.</p></td>
 </tr>
 </tbody>
@@ -620,7 +624,7 @@ using database queries.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="teehr.queries.duckdb_database.create_join_and_save_timeseries_query">
 <span class="sig-prename descclassname"><span class="pre">teehr.queries.duckdb_database.</span></span><span class="sig-name descname"><span class="pre">create_join_and_save_timeseries_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jtq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.JoinedTimeseriesQuery" title="teehr.models.queries_database.JoinedTimeseriesQuery"><span class="pre">teehr.models.queries_database.JoinedTimeseriesQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/duckdb_database.html#create_join_and_save_timeseries_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.duckdb_database.create_join_and_save_timeseries_query" title="Link to this definition">#</a></dt>
-<dd><p>Load joined timeseries into a duckdb persistent database using
+<dd><p>Load joined timeseries into a duckdb persistent database using a
 database query.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -657,6 +661,76 @@ and can include wildcards.  For example, “/path/to/parquet/<a href="#id1"><spa
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.duckdb_database.create_get_joined_timeseries_query">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.duckdb_database.</span></span><span class="sig-name descname"><span class="pre">create_get_joined_timeseries_query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jtq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.JoinedTimeseriesQuery" title="teehr.models.queries_database.JoinedTimeseriesQuery"><span class="pre">teehr.models.queries_database.JoinedTimeseriesQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/duckdb_database.html#create_get_joined_timeseries_query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.duckdb_database.create_get_joined_timeseries_query" title="Link to this definition">#</a></dt>
+<dd><p>Retrieve joined timeseries using database query.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>jtq</strong><span class="classifier">JoinedTimeseriesQuery</span></dt><dd><p>Pydantic model containing query parameters.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>str</dt><dd><p>The query string.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Filter By Fields:</p>
+<ul class="simple">
+<li><p>reference_time</p></li>
+<li><p>primary_location_id</p></li>
+<li><p>secondary_location_id</p></li>
+<li><p>primary_value</p></li>
+<li><p>secondary_value</p></li>
+<li><p>value_time</p></li>
+<li><p>configuration</p></li>
+<li><p>measurement_unit</p></li>
+<li><p>variable_name</p></li>
+<li><p>lead_time</p></li>
+<li><p>absolute_difference</p></li>
+<li><p>[any user-added fields]</p></li>
+</ul>
+<p>Order By Fields:</p>
+<ul class="simple">
+<li><p>reference_time</p></li>
+<li><p>primary_location_id</p></li>
+<li><p>secondary_location_id</p></li>
+<li><p>primary_value</p></li>
+<li><p>secondary_value</p></li>
+<li><p>value_time</p></li>
+<li><p>configuration</p></li>
+<li><p>measurement_unit</p></li>
+<li><p>variable_name</p></li>
+</ul>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">order_by</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;lead_time&quot;</span><span class="p">,</span> <span class="s2">&quot;primary_location_id&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">group_by</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;lead_time&quot;</span><span class="p">,</span> <span class="s2">&quot;primary_location_id&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">filters</span> <span class="o">=</span> <span class="p">[</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;gage-A&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">},</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;reference_time&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;2022-01-01 00:00:00&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">},</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">{</span><span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;lead_time&quot;</span><span class="p">,</span> <span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;=&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;10 hours&quot;</span><span class="p">},</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py function">
@@ -863,6 +937,7 @@ and can include wildcards.  For example, “/path/to/parquet/<a href="#id1"><spa
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.duckdb_database.create_get_metrics_query"><code class="docutils literal notranslate"><span class="pre">create_get_metrics_query()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.duckdb_database.create_join_and_save_timeseries_query"><code class="docutils literal notranslate"><span class="pre">create_join_and_save_timeseries_query()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.duckdb_database.describe_timeseries"><code class="docutils literal notranslate"><span class="pre">describe_timeseries()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.duckdb_database.create_get_joined_timeseries_query"><code class="docutils literal notranslate"><span class="pre">create_get_joined_timeseries_query()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.duckdb_database.create_get_timeseries_query"><code class="docutils literal notranslate"><span class="pre">create_get_timeseries_query()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.duckdb_database.create_get_timeseries_char_query"><code class="docutils literal notranslate"><span class="pre">create_get_timeseries_char_query()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.duckdb_database.create_unique_field_values_query"><code class="docutils literal notranslate"><span class="pre">create_unique_field_values_query()</span></code></a></li>

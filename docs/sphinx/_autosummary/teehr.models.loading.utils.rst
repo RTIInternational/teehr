@@ -21,4 +21,5 @@ teehr.models.loading.utils
       SupportedKerchunkMethod
       SupportedNWMDataSourcesEnum
       SupportedNWMOperationalVersionsEnum
+      SupportedNWMRetroDomainsEnum
       SupportedNWMRetroVersionsEnum

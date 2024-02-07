@@ -373,7 +373,8 @@ document.write(`
 <li class="toctree-l4"><a class="reference internal" href="../../../loading/nwm/nwm_grids/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.nwm_grids</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../loading/nwm/nwm_points/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.nwm_points</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../loading/nwm/point_utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.point_utils</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../../loading/nwm/retrospective/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.retrospective</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../loading/nwm/retrospective_grids/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.retrospective_grids</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../loading/nwm/retrospective_points/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.retrospective_points</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../loading/nwm/utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.utils</span></code></a></li>
 </ul>
 </li>
@@ -498,6 +499,9 @@ document.write(`
 <tr class="row-odd"><td><p><a class="reference internal" href="#teehr.models.loading.utils.SupportedKerchunkMethod" title="teehr.models.loading.utils.SupportedKerchunkMethod"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SupportedKerchunkMethod</span></code></a></p></td>
 <td><p>SupportedKerchunkMethod.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.models.loading.utils.SupportedNWMRetroDomainsEnum" title="teehr.models.loading.utils.SupportedNWMRetroDomainsEnum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SupportedNWMRetroDomainsEnum</span></code></a></p></td>
+<td><p>SupportedNWMRetroDomainsEnum.</p></td>
+</tr>
 </tbody>
 </table>
 <dl class="py class">
@@ -515,6 +519,21 @@ document.write(`
 <span class="sig-name descname"><span class="pre">location_id</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'location_id'</span></em><a class="headerlink" href="#teehr.models.loading.utils.ChunkByEnum.location_id" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.loading.utils.ChunkByEnum.week">
+<span class="sig-name descname"><span class="pre">week</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'week'</span></em><a class="headerlink" href="#teehr.models.loading.utils.ChunkByEnum.week" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.loading.utils.ChunkByEnum.month">
+<span class="sig-name descname"><span class="pre">month</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'month'</span></em><a class="headerlink" href="#teehr.models.loading.utils.ChunkByEnum.month" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.loading.utils.ChunkByEnum.year">
+<span class="sig-name descname"><span class="pre">year</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'year'</span></em><a class="headerlink" href="#teehr.models.loading.utils.ChunkByEnum.year" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -530,6 +549,11 @@ document.write(`
 <dl class="py attribute">
 <dt class="sig sig-object py" id="teehr.models.loading.utils.SupportedNWMRetroVersionsEnum.nwm21">
 <span class="sig-name descname"><span class="pre">nwm21</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'nwm21'</span></em><a class="headerlink" href="#teehr.models.loading.utils.SupportedNWMRetroVersionsEnum.nwm21" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.loading.utils.SupportedNWMRetroVersionsEnum.nwm30">
+<span class="sig-name descname"><span class="pre">nwm30</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'nwm30'</span></em><a class="headerlink" href="#teehr.models.loading.utils.SupportedNWMRetroVersionsEnum.nwm30" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -595,6 +619,33 @@ document.write(`
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.models.loading.utils.SupportedNWMRetroDomainsEnum">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">teehr.models.loading.utils.</span></span><span class="sig-name descname"><span class="pre">SupportedNWMRetroDomainsEnum</span></span><a class="reference internal" href="../../../../../_modules/teehr/models/loading/utils.html#SupportedNWMRetroDomainsEnum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.models.loading.utils.SupportedNWMRetroDomainsEnum" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>SupportedNWMRetroDomainsEnum.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.loading.utils.SupportedNWMRetroDomainsEnum.CONUS">
+<span class="sig-name descname"><span class="pre">CONUS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'CONUS'</span></em><a class="headerlink" href="#teehr.models.loading.utils.SupportedNWMRetroDomainsEnum.CONUS" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.loading.utils.SupportedNWMRetroDomainsEnum.Alaska">
+<span class="sig-name descname"><span class="pre">Alaska</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Alaska'</span></em><a class="headerlink" href="#teehr.models.loading.utils.SupportedNWMRetroDomainsEnum.Alaska" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.loading.utils.SupportedNWMRetroDomainsEnum.PR">
+<span class="sig-name descname"><span class="pre">PR</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'PR'</span></em><a class="headerlink" href="#teehr.models.loading.utils.SupportedNWMRetroDomainsEnum.PR" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.models.loading.utils.SupportedNWMRetroDomainsEnum.Hawaii">
+<span class="sig-name descname"><span class="pre">Hawaii</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Hawaii'</span></em><a class="headerlink" href="#teehr.models.loading.utils.SupportedNWMRetroDomainsEnum.Hawaii" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </section>
 </section>
 </section>
@@ -650,11 +701,15 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.loading.utils.ChunkByEnum"><code class="docutils literal notranslate"><span class="pre">ChunkByEnum</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.loading.utils.ChunkByEnum.day"><code class="docutils literal notranslate"><span class="pre">ChunkByEnum.day</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.loading.utils.ChunkByEnum.location_id"><code class="docutils literal notranslate"><span class="pre">ChunkByEnum.location_id</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.loading.utils.ChunkByEnum.week"><code class="docutils literal notranslate"><span class="pre">ChunkByEnum.week</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.loading.utils.ChunkByEnum.month"><code class="docutils literal notranslate"><span class="pre">ChunkByEnum.month</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.loading.utils.ChunkByEnum.year"><code class="docutils literal notranslate"><span class="pre">ChunkByEnum.year</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.loading.utils.SupportedNWMRetroVersionsEnum"><code class="docutils literal notranslate"><span class="pre">SupportedNWMRetroVersionsEnum</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.loading.utils.SupportedNWMRetroVersionsEnum.nwm20"><code class="docutils literal notranslate"><span class="pre">SupportedNWMRetroVersionsEnum.nwm20</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.loading.utils.SupportedNWMRetroVersionsEnum.nwm21"><code class="docutils literal notranslate"><span class="pre">SupportedNWMRetroVersionsEnum.nwm21</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.loading.utils.SupportedNWMRetroVersionsEnum.nwm30"><code class="docutils literal notranslate"><span class="pre">SupportedNWMRetroVersionsEnum.nwm30</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.loading.utils.SupportedNWMOperationalVersionsEnum"><code class="docutils literal notranslate"><span class="pre">SupportedNWMOperationalVersionsEnum</span></code></a><ul class="nav section-nav flex-column">
@@ -672,6 +727,13 @@ document.write(`
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.loading.utils.SupportedKerchunkMethod.local"><code class="docutils literal notranslate"><span class="pre">SupportedKerchunkMethod.local</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.loading.utils.SupportedKerchunkMethod.remote"><code class="docutils literal notranslate"><span class="pre">SupportedKerchunkMethod.remote</span></code></a></li>
 <li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.loading.utils.SupportedKerchunkMethod.auto"><code class="docutils literal notranslate"><span class="pre">SupportedKerchunkMethod.auto</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.loading.utils.SupportedNWMRetroDomainsEnum"><code class="docutils literal notranslate"><span class="pre">SupportedNWMRetroDomainsEnum</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.loading.utils.SupportedNWMRetroDomainsEnum.CONUS"><code class="docutils literal notranslate"><span class="pre">SupportedNWMRetroDomainsEnum.CONUS</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.loading.utils.SupportedNWMRetroDomainsEnum.Alaska"><code class="docutils literal notranslate"><span class="pre">SupportedNWMRetroDomainsEnum.Alaska</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.loading.utils.SupportedNWMRetroDomainsEnum.PR"><code class="docutils literal notranslate"><span class="pre">SupportedNWMRetroDomainsEnum.PR</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.models.loading.utils.SupportedNWMRetroDomainsEnum.Hawaii"><code class="docutils literal notranslate"><span class="pre">SupportedNWMRetroDomainsEnum.Hawaii</span></code></a></li>
 </ul>
 </li>
 </ul>

@@ -26,6 +26,7 @@ Classes
    teehr.models.queries_database.JoinedTimeseriesFieldName
    teehr.models.queries_database.CalculateField
    teehr.models.queries_database.Filter
+   teehr.models.queries_database.InsertJoinedTimeseriesQuery
    teehr.models.queries_database.JoinedTimeseriesQuery
    teehr.models.queries_database.TimeseriesQuery
    teehr.models.queries_database.TimeseriesCharQuery
@@ -575,13 +576,13 @@ Classes
           !! processed by numpydoc !!
 
 
-.. py:class:: JoinedTimeseriesQuery(**data: Any)
+.. py:class:: InsertJoinedTimeseriesQuery(**data: Any)
 
 
    Bases: :py:obj:`BaseModel`
 
 
-   Joined timeseries query model.
+   InsertJoinedTimeseriesQuery model.
 
 
 
@@ -622,13 +623,130 @@ Classes
 
 
 
+.. py:class:: JoinedTimeseriesQuery(**data: Any)
+
+
+   Bases: :py:obj:`BaseModel`
+
+
+   JoinedTimeseriesQuery model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: order_by
+      :type: List[str]
+
+
+
+   .. py:attribute:: filters
+      :type: Optional[List[Filter]]
+      :value: []
+
+
+
+   .. py:attribute:: return_query
+      :type: Optional[bool]
+      :value: False
+
+
+
+   .. py:attribute:: include_geometry
+      :type: bool
+
+
+
+   .. py:method:: filter_must_be_list(v)
+
+
+      Filter must be a list.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: order_by_must_exist_as_fields(v, info: pydantic.ValidationInfo)
+
+
+      Order_by fields must currently exist in the database.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: filters_must_exist_as_fields(v, info: pydantic.ValidationInfo)
+
+
+      Filter fields must currently exist in the database.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
 .. py:class:: TimeseriesQuery(**data: Any)
 
 
    Bases: :py:obj:`BaseModel`
 
 
-   Timeseries query model.
+   TimeseriesQuery model.
 
 
 
@@ -695,7 +813,8 @@ Classes
    .. py:method:: order_by_must_exist_as_fields(v, info: pydantic.ValidationInfo)
 
 
-      Order_by fields must currently exist in the database.
+      Order_by fields must be part one of the selected fields or
+      its alias.
 
 
 

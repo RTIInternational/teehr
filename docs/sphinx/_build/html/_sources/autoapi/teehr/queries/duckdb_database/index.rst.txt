@@ -23,6 +23,7 @@ Functions
    teehr.queries.duckdb_database.create_get_metrics_query
    teehr.queries.duckdb_database.create_join_and_save_timeseries_query
    teehr.queries.duckdb_database.describe_timeseries
+   teehr.queries.duckdb_database.create_get_joined_timeseries_query
    teehr.queries.duckdb_database.create_get_timeseries_query
    teehr.queries.duckdb_database.create_get_timeseries_char_query
    teehr.queries.duckdb_database.create_unique_field_values_query
@@ -148,7 +149,7 @@ Attributes
 .. py:function:: create_join_and_save_timeseries_query(jtq: teehr.models.queries_database.JoinedTimeseriesQuery) -> str
 
 
-   Load joined timeseries into a duckdb persistent database using
+   Load joined timeseries into a duckdb persistent database using a
    database query.
 
 
@@ -203,6 +204,84 @@ Attributes
 
 
 
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: create_get_joined_timeseries_query(jtq: teehr.models.queries_database.JoinedTimeseriesQuery) -> str
+
+
+   Retrieve joined timeseries using database query.
+
+
+   :Parameters:
+
+       **jtq** : JoinedTimeseriesQuery
+           Pydantic model containing query parameters.
+
+   :Returns:
+
+       str
+           The query string.
+
+
+
+
+
+
+
+
+   .. rubric:: Notes
+
+   Filter By Fields:
+
+   * reference_time
+   * primary_location_id
+   * secondary_location_id
+   * primary_value
+   * secondary_value
+   * value_time
+   * configuration
+   * measurement_unit
+   * variable_name
+   * lead_time
+   * absolute_difference
+   * [any user-added fields]
+
+   Order By Fields:
+
+   * reference_time
+   * primary_location_id
+   * secondary_location_id
+   * primary_value
+   * secondary_value
+   * value_time
+   * configuration
+   * measurement_unit
+   * variable_name
+
+
+   .. rubric:: Examples
+
+   >>> order_by = ["lead_time", "primary_location_id"]
+
+   >>> group_by = ["lead_time", "primary_location_id"]
+
+   >>> filters = [
+   >>>     {
+   >>>         "column": "primary_location_id",
+   >>>         "operator": "=",
+   >>>         "value": "gage-A",
+   >>>     },
+   >>>     {
+   >>>         "column": "reference_time",
+   >>>         "operator": "=",
+   >>>         "value": "2022-01-01 00:00:00",
+   >>>     },
+   >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+   >>> ]
 
 
 

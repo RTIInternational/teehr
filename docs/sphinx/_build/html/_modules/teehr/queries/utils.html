@@ -404,12 +404,8 @@ document.write(`
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
 
-<span class="kn">from</span> <span class="nn">teehr.models.queries</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">JoinedFilter</span><span class="p">,</span>
-    <span class="n">MetricQuery</span><span class="p">,</span>
-    <span class="n">JoinedTimeseriesQuery</span><span class="p">,</span>
-    <span class="n">TimeseriesFilter</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">import</span> <span class="nn">teehr.models.queries</span> <span class="k">as</span> <span class="nn">tmq</span>
+<span class="kn">import</span> <span class="nn">teehr.models.queries_database</span> <span class="k">as</span> <span class="nn">tmqd</span>
 
 <span class="n">SQL_DATETIME_STR_FORMAT</span> <span class="o">=</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span>
 
@@ -459,74 +455,11 @@ document.write(`
 
 
 
-<div class="viewcode-block" id="_format_filter_item_db">
-<a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._format_filter_item_db">[docs]</a>
-<span class="k">def</span> <span class="nf">_format_filter_item_db</span><span class="p">(</span>
-    <span class="nb">filter</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">JoinedFilter</span><span class="p">,</span> <span class="n">TimeseriesFilter</span><span class="p">]</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return an SQL formatted string for single filter object.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    filter : models.*Filter</span>
-<span class="sd">        A single *Filter object.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    str</span>
-<span class="sd">        An SQL formatted string for single filter object.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">column</span> <span class="o">=</span> <span class="nb">filter</span><span class="o">.</span><span class="n">column</span>
-
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">filter</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">filter</span><span class="o">.</span><span class="n">operator</span><span class="si">}</span><span class="s2"> &#39;</span><span class="si">{</span><span class="nb">filter</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&#39;&quot;&quot;&quot;</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">filter</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">filter</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">filter</span><span class="o">.</span><span class="n">operator</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">filter</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;&quot;&quot;</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">filter</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">datetime</span><span class="p">):</span>
-        <span class="n">dt_str</span> <span class="o">=</span> <span class="nb">filter</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">SQL_DATETIME_STR_FORMAT</span><span class="p">)</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">filter</span><span class="o">.</span><span class="n">operator</span><span class="si">}</span><span class="s2"> &#39;</span><span class="si">{</span><span class="n">dt_str</span><span class="si">}</span><span class="s2">&#39;&quot;&quot;&quot;</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">filter</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
-        <span class="nb">filter</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span>
-    <span class="p">):</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="n">_format_iterable_value</span><span class="p">(</span><span class="nb">filter</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">filter</span><span class="o">.</span><span class="n">operator</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;&quot;&quot;</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-            <span class="s2">&quot;treating value as string because didn&#39;t know what else to do.&quot;</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">filter</span><span class="o">.</span><span class="n">operator</span><span class="si">}</span><span class="s2"> &#39;</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="nb">filter</span><span class="o">.</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;&quot;&quot;&quot;</span></div>
-
-
-
-<div class="viewcode-block" id="filters_to_sql_db">
-<a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils.filters_to_sql_db">[docs]</a>
-<span class="k">def</span> <span class="nf">filters_to_sql_db</span><span class="p">(</span><span class="n">filters</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">JoinedFilter</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate SQL where clause string from filters.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    filters : List[MetricFilter]</span>
-<span class="sd">        A list of MetricFilter objects describing the filters.</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    str</span>
-<span class="sd">        A where clause formatted string.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">filters</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">filter_strs</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">filters</span><span class="p">:</span>
-            <span class="n">filter_strs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_format_filter_item_db</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
-        <span class="n">qry</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;WHERE </span><span class="si">{</span><span class="sa">f</span><span class="s2">&quot; AND &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filter_strs</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">qry</span>
-
-    <span class="k">return</span> <span class="s2">&quot;--no where clause&quot;</span></div>
-
-
-
 <div class="viewcode-block" id="_format_filter_item">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._format_filter_item">[docs]</a>
-<span class="k">def</span> <span class="nf">_format_filter_item</span><span class="p">(</span><span class="nb">filter</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">JoinedFilter</span><span class="p">,</span> <span class="n">TimeseriesFilter</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_format_filter_item</span><span class="p">(</span>
+    <span class="nb">filter</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">JoinedFilter</span><span class="p">,</span> <span class="n">tmq</span><span class="o">.</span><span class="n">TimeseriesFilter</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">Filter</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return an SQL formatted string for single filter object.</span>
 
 <span class="sd">    Parameters</span>
@@ -576,13 +509,15 @@ document.write(`
 
 <div class="viewcode-block" id="filters_to_sql">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils.filters_to_sql">[docs]</a>
-<span class="k">def</span> <span class="nf">filters_to_sql</span><span class="p">(</span><span class="n">filters</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">JoinedFilter</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="k">def</span> <span class="nf">filters_to_sql</span><span class="p">(</span>
+    <span class="n">filters</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">JoinedFilter</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">tmqd</span><span class="o">.</span><span class="n">Filter</span><span class="p">]]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate SQL where clause string from filters.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    filters : List[MetricFilter]</span>
-<span class="sd">        A list of MetricFilter objects describing the filters.</span>
+<span class="sd">    filters : Union[List[tmq.JoinedFilter], List[tmqd.Filter]]</span>
+<span class="sd">        A list of Filter objects describing the filters.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -600,24 +535,12 @@ document.write(`
 
 
 
-<div class="viewcode-block" id="geometry_join_clause_db">
-<a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils.geometry_join_clause_db">[docs]</a>
-<span class="k">def</span> <span class="nf">geometry_join_clause_db</span><span class="p">(</span>
-    <span class="n">q</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">JoinedTimeseriesQuery</span><span class="p">]</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the join clause.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">q</span><span class="o">.</span><span class="n">include_geometry</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;&quot;&quot;JOIN geometry gf</span>
-<span class="s2">            on pf.location_id = gf.id</span>
-<span class="s2">        &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="s2">&quot;&quot;</span></div>
-
-
-
 <div class="viewcode-block" id="geometry_join_clause">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils.geometry_join_clause">[docs]</a>
-<span class="k">def</span> <span class="nf">geometry_join_clause</span><span class="p">(</span><span class="n">q</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">JoinedTimeseriesQuery</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the join clause.&quot;&quot;&quot;</span>
+<span class="k">def</span> <span class="nf">geometry_join_clause</span><span class="p">(</span>
+    <span class="n">q</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmq</span><span class="o">.</span><span class="n">JoinedTimeseriesQuery</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the join clause for geometry.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">q</span><span class="o">.</span><span class="n">include_geometry</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;JOIN read_parquet(&#39;</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">q</span><span class="o">.</span><span class="n">geometry_filepath</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;) gf</span>
 <span class="s2">            on pf.location_id = gf.id</span>
@@ -629,7 +552,10 @@ document.write(`
 <div class="viewcode-block" id="geometry_select_clause">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils.geometry_select_clause">[docs]</a>
 <span class="k">def</span> <span class="nf">geometry_select_clause</span><span class="p">(</span>
-    <span class="n">q</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">JoinedTimeseriesQuery</span><span class="p">]</span>
+    <span class="n">q</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span>
+             <span class="n">tmq</span><span class="o">.</span><span class="n">JoinedTimeseriesQuery</span><span class="p">,</span>
+             <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span>
+             <span class="n">tmqd</span><span class="o">.</span><span class="n">JoinedTimeseriesQuery</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;&quot;Generate the geometry select clause.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">q</span><span class="o">.</span><span class="n">include_geometry</span><span class="p">:</span>
@@ -641,19 +567,7 @@ document.write(`
 <div class="viewcode-block" id="geometry_joined_select_clause">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils.geometry_joined_select_clause">[docs]</a>
 <span class="k">def</span> <span class="nf">geometry_joined_select_clause</span><span class="p">(</span>
-        <span class="n">q</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">JoinedTimeseriesQuery</span><span class="p">]</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the geometry joined select clause.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">q</span><span class="o">.</span><span class="n">include_geometry</span><span class="p">:</span>
-        <span class="k">return</span> <span class="s2">&quot;, geometry&quot;</span>
-    <span class="k">return</span> <span class="s2">&quot;&quot;</span></div>
-
-
-
-<div class="viewcode-block" id="geometry_select_clause_db">
-<a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils.geometry_select_clause_db">[docs]</a>
-<span class="k">def</span> <span class="nf">geometry_select_clause_db</span><span class="p">(</span>
-    <span class="n">q</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">JoinedTimeseriesQuery</span><span class="p">]</span>
+        <span class="n">q</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmq</span><span class="o">.</span><span class="n">JoinedTimeseriesQuery</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the geometry select clause for a database.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">q</span><span class="o">.</span><span class="n">include_geometry</span><span class="p">:</span>
@@ -665,7 +579,7 @@ document.write(`
 <div class="viewcode-block" id="metric_geometry_join_clause_db">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils.metric_geometry_join_clause_db">[docs]</a>
 <span class="k">def</span> <span class="nf">metric_geometry_join_clause_db</span><span class="p">(</span>
-    <span class="n">q</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">JoinedTimeseriesQuery</span><span class="p">]</span>
+    <span class="n">q</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">JoinedTimeseriesQuery</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the metric geometry join clause for a database.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">q</span><span class="o">.</span><span class="n">include_geometry</span><span class="p">:</span>
@@ -679,7 +593,7 @@ document.write(`
 <div class="viewcode-block" id="metric_geometry_join_clause">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils.metric_geometry_join_clause">[docs]</a>
 <span class="k">def</span> <span class="nf">metric_geometry_join_clause</span><span class="p">(</span>
-    <span class="n">q</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">JoinedTimeseriesQuery</span><span class="p">]</span>
+    <span class="n">q</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmq</span><span class="o">.</span><span class="n">JoinedTimeseriesQuery</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the metric geometry join clause.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">q</span><span class="o">.</span><span class="n">include_geometry</span><span class="p">:</span>
@@ -693,7 +607,7 @@ document.write(`
 <div class="viewcode-block" id="_remove_duplicates_jtq_cte">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._remove_duplicates_jtq_cte">[docs]</a>
 <span class="k">def</span> <span class="nf">_remove_duplicates_jtq_cte</span><span class="p">(</span>
-    <span class="n">q</span><span class="p">:</span> <span class="n">JoinedTimeseriesQuery</span>
+    <span class="n">q</span><span class="p">:</span> <span class="n">tmq</span><span class="o">.</span><span class="n">JoinedTimeseriesQuery</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the remove duplicates CTE for the JoinedTimeseriesQuery.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">q</span><span class="o">.</span><span class="n">remove_duplicates</span><span class="p">:</span>
@@ -750,7 +664,7 @@ document.write(`
 <div class="viewcode-block" id="_remove_duplicates_mq_cte">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._remove_duplicates_mq_cte">[docs]</a>
 <span class="k">def</span> <span class="nf">_remove_duplicates_mq_cte</span><span class="p">(</span>
-    <span class="n">q</span><span class="p">:</span> <span class="n">MetricQuery</span>
+    <span class="n">q</span><span class="p">:</span> <span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the remove duplicates CTE for the MetricQuery.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">q</span><span class="o">.</span><span class="n">remove_duplicates</span><span class="p">:</span>
@@ -831,7 +745,7 @@ document.write(`
 
 <div class="viewcode-block" id="_nse_cte">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._nse_cte">[docs]</a>
-<span class="k">def</span> <span class="nf">_nse_cte</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_nse_cte</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the nash-sutcliffe-efficiency CTE.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="s2">&quot;nash_sutcliffe_efficiency&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span>
@@ -854,7 +768,7 @@ document.write(`
 
 <div class="viewcode-block" id="_join_nse_cte">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._join_nse_cte">[docs]</a>
-<span class="k">def</span> <span class="nf">_join_nse_cte</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_join_nse_cte</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the join nash-sutcliffe-efficiency CTE.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="s2">&quot;nash_sutcliffe_efficiency&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span>
@@ -869,7 +783,9 @@ document.write(`
 
 <div class="viewcode-block" id="_select_max_value_timedelta">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_max_value_timedelta">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_max_value_timedelta</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_max_value_timedelta</span><span class="p">(</span>
+    <span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select max value timedelta query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="s2">&quot;max_value_timedelta&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span>
@@ -889,7 +805,9 @@ document.write(`
 
 <div class="viewcode-block" id="_select_secondary_max_value_time">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_secondary_max_value_time">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_secondary_max_value_time</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_secondary_max_value_time</span><span class="p">(</span>
+    <span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select secondary max value time query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="s2">&quot;secondary_max_value_time&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span>
@@ -905,7 +823,9 @@ document.write(`
 
 <div class="viewcode-block" id="_select_primary_max_value_time">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_primary_max_value_time">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_primary_max_value_time</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_primary_max_value_time</span><span class="p">(</span>
+    <span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select primary max value time query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="s2">&quot;primary_max_value_time&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span>
@@ -921,7 +841,9 @@ document.write(`
 
 <div class="viewcode-block" id="_select_root_mean_squared_error">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_root_mean_squared_error">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_root_mean_squared_error</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_root_mean_squared_error</span><span class="p">(</span>
+    <span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select root mean squared error query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="s2">&quot;root_mean_squared_error&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span>
@@ -936,7 +858,9 @@ document.write(`
 
 <div class="viewcode-block" id="_select_mean_squared_error">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_mean_squared_error">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_mean_squared_error</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_mean_squared_error</span><span class="p">(</span>
+    <span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select mean squared error query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="s2">&quot;mean_squared_error&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span>
@@ -951,7 +875,7 @@ document.write(`
 
 <div class="viewcode-block" id="_select_mean_error">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_mean_error">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_mean_error</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_mean_error</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select mean error query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="s2">&quot;mean_error&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="ow">or</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;, sum(absolute_difference)/count(*) as mean_error&quot;&quot;&quot;</span>
@@ -961,7 +885,9 @@ document.write(`
 
 <div class="viewcode-block" id="_select_kling_gupta_efficiency">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_kling_gupta_efficiency">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_kling_gupta_efficiency</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_kling_gupta_efficiency</span><span class="p">(</span>
+    <span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select kling gupta efficiency query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="s2">&quot;kling_gupta_efficiency&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span>
@@ -980,7 +906,9 @@ document.write(`
 
 <div class="viewcode-block" id="_select_nash_sutcliffe_efficiency">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_nash_sutcliffe_efficiency">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_nash_sutcliffe_efficiency</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_nash_sutcliffe_efficiency</span><span class="p">(</span>
+    <span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select nash sutcliffe efficiency query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="s2">&quot;nash_sutcliffe_efficiency&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span>
@@ -997,7 +925,7 @@ document.write(`
 
 <div class="viewcode-block" id="_select_bias">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_bias">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_bias</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_bias</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select bias  query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="s2">&quot;bias&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="ow">or</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;, sum(secondary_value - primary_value)/count(*) as bias&quot;&quot;&quot;</span>
@@ -1007,7 +935,9 @@ document.write(`
 
 <div class="viewcode-block" id="_select_max_value_delta">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_max_value_delta">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_max_value_delta</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_max_value_delta</span><span class="p">(</span>
+    <span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select max value delta query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="s2">&quot;max_value_delta&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="ow">or</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;, max(secondary_value) - max(primary_value)</span>
@@ -1019,7 +949,7 @@ document.write(`
 
 <div class="viewcode-block" id="_select_primary_count">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_primary_count">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_primary_count</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_primary_count</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select primary count query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="s2">&quot;primary_count&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="ow">or</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;, count(primary_value) as primary_count&quot;&quot;&quot;</span>
@@ -1029,7 +959,9 @@ document.write(`
 
 <div class="viewcode-block" id="_select_secondary_count">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_secondary_count">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_secondary_count</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_secondary_count</span><span class="p">(</span>
+    <span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select secondary count query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="s2">&quot;secondary_count&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="ow">or</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;, count(secondary_value) as secondary_count&quot;&quot;&quot;</span>
@@ -1039,7 +971,9 @@ document.write(`
 
 <div class="viewcode-block" id="_select_primary_minimum">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_primary_minimum">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_primary_minimum</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_primary_minimum</span><span class="p">(</span>
+    <span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select primary minimum query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="s2">&quot;primary_minimum&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="ow">or</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;, min(primary_value) as primary_minimum&quot;&quot;&quot;</span>
@@ -1049,7 +983,9 @@ document.write(`
 
 <div class="viewcode-block" id="_select_secondary_minimum">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_secondary_minimum">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_secondary_minimum</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_secondary_minimum</span><span class="p">(</span>
+    <span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select secondary minimum query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="s2">&quot;secondary_minimum&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span>
@@ -1062,7 +998,9 @@ document.write(`
 
 <div class="viewcode-block" id="_select_primary_maximum">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_primary_maximum">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_primary_maximum</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_primary_maximum</span><span class="p">(</span>
+    <span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select primary maximum query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="s2">&quot;primary_maximum&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="ow">or</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;, max(primary_value) as primary_maximum&quot;&quot;&quot;</span>
@@ -1072,7 +1010,9 @@ document.write(`
 
 <div class="viewcode-block" id="_select_secondary_maximum">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_secondary_maximum">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_secondary_maximum</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_secondary_maximum</span><span class="p">(</span>
+    <span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select secondary maximum query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="s2">&quot;secondary_maximum&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span>
@@ -1085,7 +1025,9 @@ document.write(`
 
 <div class="viewcode-block" id="_select_primary_average">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_primary_average">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_primary_average</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_primary_average</span><span class="p">(</span>
+    <span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select primary average query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="s2">&quot;primary_average&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="ow">or</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;, avg(primary_value) as primary_average&quot;&quot;&quot;</span>
@@ -1095,7 +1037,9 @@ document.write(`
 
 <div class="viewcode-block" id="_select_secondary_average">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_secondary_average">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_secondary_average</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_secondary_average</span><span class="p">(</span>
+    <span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select secondary average query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="s2">&quot;secondary_average&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span>
@@ -1108,7 +1052,7 @@ document.write(`
 
 <div class="viewcode-block" id="_select_primary_sum">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_primary_sum">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_primary_sum</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_primary_sum</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select primary sum query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="s2">&quot;primary_sum&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="ow">or</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;, sum(primary_value) as primary_sum&quot;&quot;&quot;</span>
@@ -1118,7 +1062,7 @@ document.write(`
 
 <div class="viewcode-block" id="_select_secondary_sum">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_secondary_sum">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_secondary_sum</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_secondary_sum</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select secondary sum query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="s2">&quot;secondary_sum&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="ow">or</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;, sum(secondary_value) as secondary_sum&quot;&quot;&quot;</span>
@@ -1128,7 +1072,9 @@ document.write(`
 
 <div class="viewcode-block" id="_select_primary_variance">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_primary_variance">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_primary_variance</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_primary_variance</span><span class="p">(</span>
+    <span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select primary variance query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="s2">&quot;primary_variance&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="ow">or</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;&quot;&quot;, var_pop(primary_value) as primary_variance&quot;&quot;&quot;</span>
@@ -1138,7 +1084,9 @@ document.write(`
 
 <div class="viewcode-block" id="_select_secondary_variance">
 <a class="viewcode-back" href="../../../autoapi/teehr/queries/utils/index.html#teehr.queries.utils._select_secondary_variance">[docs]</a>
-<span class="k">def</span> <span class="nf">_select_secondary_variance</span><span class="p">(</span><span class="n">mq</span><span class="p">:</span> <span class="n">MetricQuery</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">_select_secondary_variance</span><span class="p">(</span>
+    <span class="n">mq</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">tmq</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">,</span> <span class="n">tmqd</span><span class="o">.</span><span class="n">MetricQuery</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate the select secondary variance query segment.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="p">(</span>
         <span class="s2">&quot;secondary_variance&quot;</span> <span class="ow">in</span> <span class="n">mq</span><span class="o">.</span><span class="n">include_metrics</span>

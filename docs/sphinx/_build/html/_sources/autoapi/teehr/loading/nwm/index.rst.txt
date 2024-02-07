@@ -38,5 +38,6 @@ Submodules
    nwm_grids/index.rst
    nwm_points/index.rst
    point_utils/index.rst
-   retrospective/index.rst
+   retrospective_grids/index.rst
+   retrospective_points/index.rst
    utils/index.rst
