@@ -91,13 +91,7 @@ TEEHR (pronounced "tier") is a python tool set for loading, storing, processing 
             To the development guide
 
 
-.. autosummary:
-   :toctree: _autosummary
-   :recursive:
-
-   teehr
-   api
-
+TODO: Add funding source and CIROH image.
 
 .. toctree::
    :hidden:
@@ -108,14 +102,3 @@ TEEHR (pronounced "tier") is a python tool set for loading, storing, processing 
    user_guide/index
    development/index
    changelog/index
-
-
-..    TEEHR API <api>
-
-
-.. Indices and tables
-.. ==================
-
-.. * :ref:`genindex`
-.. * :ref:`modindex`
-.. * :ref:`search`

@@ -507,13 +507,13 @@ to create a persisent database, allowing for efficient exploration and metric qu
 <span class="gp">In [4]: </span><span class="kn">from</span> <span class="nn">teehr.database.teehr_dataset</span> <span class="kn">import</span> <span class="n">TEEHRDatasetDB</span>
 
 <span class="go"># Define file paths the test data</span>
-<span class="gp">In [5]: </span><span class="n">PRIMARY_FILEPATH</span> <span class="o">=</span> <span class="s2">&quot;../../tests/data/test_study/timeseries/*short_obs.parquet&quot;</span>
+<span class="gp">In [5]: </span><span class="n">PRIMARY_FILEPATH</span> <span class="o">=</span> <span class="s2">&quot;getting_started/test_data/*short_obs.parquet&quot;</span>
 
-<span class="gp">In [6]: </span><span class="n">SECONDARY_FILEPATH</span> <span class="o">=</span> <span class="s2">&quot;../../tests/data/test_study/timeseries/*_fcast.parquet&quot;</span>
+<span class="gp">In [6]: </span><span class="n">SECONDARY_FILEPATH</span> <span class="o">=</span> <span class="s2">&quot;getting_started/test_data/*_fcast.parquet&quot;</span>
 
-<span class="gp">In [7]: </span><span class="n">CROSSWALK_FILEPATH</span> <span class="o">=</span> <span class="s2">&quot;../../tests/data/test_study/geo/crosswalk.parquet&quot;</span>
+<span class="gp">In [7]: </span><span class="n">CROSSWALK_FILEPATH</span> <span class="o">=</span> <span class="s2">&quot;getting_started/test_data/crosswalk.parquet&quot;</span>
 
-<span class="gp">In [8]: </span><span class="n">DATABASE_FILEPATH</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;../../tests/data/temp/temp_test.db&quot;</span><span class="p">)</span>
+<span class="gp">In [8]: </span><span class="n">DATABASE_FILEPATH</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;getting_started/test_data/temp_test.db&quot;</span><span class="p">)</span>
 
 <span class="go"># Delete the test database if it already exists.</span>
 <span class="gp">In [9]: </span><span class="k">if</span> <span class="n">DATABASE_FILEPATH</span><span class="o">.</span><span class="n">is_file</span><span class="p">():</span>
@@ -533,10 +533,29 @@ to create a persisent database, allowing for efficient exploration and metric qu
 <span class="gp">   ....: </span><span class="p">)</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [12]: </span><span class="n">df</span> <span class="o">=</span> <span class="n">tds</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;SELECT * FROM joined_timeseries&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;df&quot;</span><span class="p">)</span>
+<span class="go"># Let&#39;s look at the table schema.</span>
+<span class="gp">In [12]: </span><span class="n">schema_df</span> <span class="o">=</span> <span class="n">tds</span><span class="o">.</span><span class="n">get_joined_timeseries_schema</span><span class="p">()</span>
 
-<span class="gp">In [13]: </span><span class="n">df</span>
+<span class="gp">In [13]: </span><span class="n">schema_df</span>
 <span class="gh">Out[13]: </span>
+<span class="go">              column_name column_type null   key default extra</span>
+<span class="go">0          reference_time   TIMESTAMP  YES  None    None  None</span>
+<span class="go">1              value_time   TIMESTAMP  YES  None    None  None</span>
+<span class="go">2   secondary_location_id     VARCHAR  YES  None    None  None</span>
+<span class="go">3         secondary_value       FLOAT  YES  None    None  None</span>
+<span class="go">4           configuration     VARCHAR  YES  None    None  None</span>
+<span class="go">5        measurement_unit     VARCHAR  YES  None    None  None</span>
+<span class="go">6           variable_name     VARCHAR  YES  None    None  None</span>
+<span class="go">7           primary_value       FLOAT  YES  None    None  None</span>
+<span class="go">8     primary_location_id     VARCHAR  YES  None    None  None</span>
+<span class="go">9               lead_time    INTERVAL  YES  None    None  None</span>
+<span class="go">10    absolute_difference       FLOAT  YES  None    None  None</span>
+
+<span class="go"># Now we can perform queries and calculate metrics.</span>
+<span class="gp">In [14]: </span><span class="n">df</span> <span class="o">=</span> <span class="n">tds</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;SELECT * FROM joined_timeseries&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;df&quot;</span><span class="p">)</span>
+
+<span class="gp">In [15]: </span><span class="n">df</span>
+<span class="gh">Out[15]: </span>
 <span class="go">         reference_time          value_time  ...       lead_time  absolute_difference</span>
 <span class="go">0   2022-01-01 00:00:00 2022-01-01 00:00:00  ... 0 days 00:00:00                 0.10</span>
 <span class="go">1   2022-01-01 00:00:00 2022-01-01 01:00:00  ... 0 days 01:00:00                 1.00</span>
@@ -544,10 +563,10 @@ to create a persisent database, allowing for efficient exploration and metric qu
 <span class="go">3   2022-01-01 01:00:00 2022-01-01 02:00:00  ... 0 days 01:00:00                 0.10</span>
 <span class="go">4   2022-01-01 00:00:00 2022-01-01 02:00:00  ... 0 days 02:00:00                 0.10</span>
 <span class="go">..                  ...                 ...  ...             ...                  ...</span>
-<span class="go">211 2022-01-01 02:00:00 2022-01-01 23:00:00  ... 0 days 21:00:00                 3.70</span>
-<span class="go">212 2022-01-01 01:00:00 2022-01-01 23:00:00  ... 0 days 22:00:00                 0.95</span>
-<span class="go">213 2022-01-01 01:00:00 2022-01-02 00:00:00  ... 0 days 23:00:00                 0.29</span>
-<span class="go">214 2022-01-01 02:00:00 2022-01-02 00:00:00  ... 0 days 22:00:00                 4.74</span>
+<span class="go">211 2022-01-01 01:00:00 2022-01-01 23:00:00  ... 0 days 22:00:00                 0.95</span>
+<span class="go">212 2022-01-01 02:00:00 2022-01-01 23:00:00  ... 0 days 21:00:00                 3.70</span>
+<span class="go">213 2022-01-01 02:00:00 2022-01-02 00:00:00  ... 0 days 22:00:00                 4.74</span>
+<span class="go">214 2022-01-01 01:00:00 2022-01-02 00:00:00  ... 0 days 23:00:00                 0.29</span>
 <span class="go">215 2022-01-01 02:00:00 2022-01-02 01:00:00  ... 0 days 23:00:00                 3.53</span>
 
 <span class="go">[216 rows x 11 columns]</span>

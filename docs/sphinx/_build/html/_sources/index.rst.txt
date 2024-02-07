@@ -91,13 +91,23 @@ TEEHR (pronounced "tier") is a python tool set for loading, storing, processing 
             To the development guide
 
 
-.. autosummary:
-   :toctree: _autosummary
-   :recursive:
+TODO: Add funding source and CIROH image.
 
-   teehr
-   api
+.. grid:: 2
 
+    .. grid-item-card::
+        :img-top: https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png
+        :columns: auto
+        :width: 25%
+
+
+    .. grid-item-card::
+        :width: 75%
+
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
 
 .. toctree::
    :hidden:
@@ -108,14 +118,3 @@ TEEHR (pronounced "tier") is a python tool set for loading, storing, processing 
    user_guide/index
    development/index
    changelog/index
-
-
-..    TEEHR API <api>
-
-
-.. Indices and tables
-.. ==================
-
-.. * :ref:`genindex`
-.. * :ref:`modindex`
-.. * :ref:`search`
