@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.6] - 2024-02-07
+
+### Added
+* Adds an exception to catch an error when a corrupted file is encountered while building
+the Kerchunk reference file using `SingleHdf5ToZarr`.
+* The behavior determining whether to raise an exception is controlled by the
+`ignore_missing_file` flag.
+
+
 ## [0.3.5] - 2023-12-18
 
 ### Added
