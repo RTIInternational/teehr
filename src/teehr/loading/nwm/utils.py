@@ -3,6 +3,7 @@ from typing import Union, Optional, Iterable, List, Dict
 from datetime import datetime
 from datetime import timedelta
 from dateutil.parser import parse
+import logging
 
 import dask
 import fsspec
@@ -26,6 +27,8 @@ from teehr.loading.nwm.const import (
     NWM_S3_JSON_PATH,
     NWM30_START_DATE
 )
+
+logger = logging.getLogger(__name__)
 
 
 def check_dates_against_nwm_version(
@@ -301,6 +304,9 @@ def gen_json(
                     raise Exception(f"Corrupt file: {remote_path}") from err
                 else:
                     # TODO: log missing file?
+                    logger.warning(
+                        f"A potentially corrupt file was encountered: {remote_path}"
+                    )
                     return None
             with open(outf, "wb") as f:
                 f.write(ujson.dumps(h5chunks.translate()).encode())
@@ -309,6 +315,7 @@ def gen_json(
             raise e
         else:
             # TODO: log missing file?
+            logger.warning(f"A missing file was encountered: {remote_path}")
             return None
     return outf
 
