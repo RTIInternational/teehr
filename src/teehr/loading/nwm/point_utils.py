@@ -38,7 +38,7 @@ def file_chunk_loop(
     nwm22_units = ds[variable_name].units
     teehr_units = units_format_dict.get(nwm22_units, nwm22_units)
     ref_time = pd.to_datetime(row.day) \
-        + pd.to_timedelta(int(row.z_hour[1:3]), unit="H")
+        + pd.to_timedelta(int(row.z_hour[1:3]), unit="h")
 
     valid_time = ds.time.values
     feature_ids = ds.feature_id.astype("int32").values

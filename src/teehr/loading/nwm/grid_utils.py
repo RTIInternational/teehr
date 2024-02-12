@@ -57,7 +57,7 @@ def process_single_file(
     yrmoday = row.day
     z_hour = row.z_hour[1:3]
     ref_time = pd.to_datetime(yrmoday) \
-        + pd.to_timedelta(int(z_hour), unit="H")
+        + pd.to_timedelta(int(z_hour), unit="h")
 
     nwm_units = ds[variable_name].attrs["units"]
     teehr_units = units_format_dict.get(nwm_units, nwm_units)
