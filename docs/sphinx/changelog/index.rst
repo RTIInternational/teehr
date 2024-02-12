@@ -6,6 +6,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+[0.3.8] - 2024-02-12
+--------------------
+
+Added
+^^^^^
+* Adds sphinx documentation framework and initial docs.
+* The `documentation-publish.yml` workflow is set to build the docs and push to github pages
+  on every tag.
+* The `pre-commit-config.yml` github hook runs on each commit and checks docstring formatting,
+  trailing whitespaces, and the presence of large files.
+* Added documenation-related dependencies to `[tool.poetry.group.dev.dependencies]`
+
+Changed
+^^^^^^^
+* Example notebooks have been moved to `docs/sphinx/user_guide/notebooks`.
+* The CHANGELOG.md is now the `index.rst` file in `docs/sphinx/changelog`.
+* The CONTRIBUTE.md and release_process.md files now part of the `index.rst`
+  file in `docs/sphinx/development`.
+* The data_models.md and queries.md are now the `data_models.rst` and `queries.rst`
+  files in `docs/sphinx/getting_started`.
+
+
 [0.3.7] - 2024-02-09
 --------------------
 
