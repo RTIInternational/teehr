@@ -498,7 +498,8 @@ document.write(`
 <span class="sd">        * A pandas dataframe (format=&#39;df&#39;)</span>
 <span class="sd">        * Results bprinted to the screen (format=&#39;raw&#39;)</span>
 <span class="sd">        * A DuckDBPyRelation, a symbolic representation of the SQL query</span>
-<span class="sd">        (format=&#39;relation&#39;).</span>
+<span class="sd">          (format=&#39;relation&#39;).</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;df&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">con</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">df</span><span class="p">()</span>
@@ -577,6 +578,7 @@ document.write(`
 <span class="sd">            * Number of duplicate rows</span>
 <span class="sd">            * Number of location IDs with duplicate value times</span>
 <span class="sd">            * Number of location IDs with missing time steps</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">primary_dict</span> <span class="o">=</span> <span class="n">tqu_db</span><span class="o">.</span><span class="n">describe_timeseries</span><span class="p">(</span>
             <span class="n">timeseries_filepath</span><span class="o">=</span><span class="n">primary_filepath</span>
@@ -763,6 +765,7 @@ document.write(`
 <span class="sd">            - average</span>
 <span class="sd">            - sum</span>
 <span class="sd">            - variance</span>
+
 <span class="sd">            or, the query itself as a string.</span>
 
 <span class="sd">        See Also</span>
@@ -1087,11 +1090,11 @@ document.write(`
 <span class="sd">        primary_filepath : Union[str, Path]</span>
 <span class="sd">            File path to the &quot;observed&quot; data.  String must include path to</span>
 <span class="sd">            file(s) and can include wildcards.  For example,</span>
-<span class="sd">            &quot;/path/to/parquet/*.parquet&quot;.</span>
+<span class="sd">            &quot;/path/to/parquet/\\*.parquet&quot;.</span>
 <span class="sd">        secondary_filepath : Union[str, Path]</span>
 <span class="sd">            File path to the &quot;forecast&quot; data.  String must include path to</span>
 <span class="sd">            file(s) and can include wildcards.  For example,</span>
-<span class="sd">            &quot;/path/to/parquet/*.parquet&quot;.</span>
+<span class="sd">            &quot;/path/to/parquet/\\*.parquet&quot;.</span>
 <span class="sd">        crosswalk_filepath : Union[str, Path]</span>
 <span class="sd">            File path to single crosswalk file.</span>
 <span class="sd">        order_by : List[str], optional</span>
@@ -1166,7 +1169,7 @@ document.write(`
 <span class="sd">        attributes_filepath : Union[str, Path]</span>
 <span class="sd">            File path to the &quot;attributes&quot; data.  String must include path to</span>
 <span class="sd">            file(s) and can include wildcards.  For example,</span>
-<span class="sd">            &quot;/path/to/parquet/*.parquet&quot;.</span>
+<span class="sd">            &quot;/path/to/parquet/\\*.parquet&quot;.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">attr_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_unique_attributes</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">attributes_filepath</span><span class="p">))</span>
 
@@ -1526,6 +1529,7 @@ document.write(`
 <span class="sd">            - average</span>
 <span class="sd">            - sum</span>
 <span class="sd">            - variance</span>
+
 <span class="sd">            or, the query itself as a string.</span>
 
 <span class="sd">        See Also</span>

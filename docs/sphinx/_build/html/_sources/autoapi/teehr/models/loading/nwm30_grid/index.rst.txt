@@ -254,7 +254,7 @@ Attributes
       
 
 
-.. py:class:: GridConfigurationModel(**data: Any)
+.. py:class:: GridConfigurationModel(/, **data: Any)
 
 
    Bases: :py:obj:`pydantic.BaseModel`

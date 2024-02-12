@@ -264,7 +264,7 @@ Attributes
       
 
 
-.. py:class:: PointConfigurationModel(**data: Any)
+.. py:class:: PointConfigurationModel(/, **data: Any)
 
 
    Bases: :py:obj:`pydantic.BaseModel`

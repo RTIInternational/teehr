@@ -12,7 +12,7 @@ You can install from PyPI using pip [TODO]:
 
 .. code-block:: python
 
-   pip install teehr
+   [TODO] pip install teehr
 
 You can install from github:
 

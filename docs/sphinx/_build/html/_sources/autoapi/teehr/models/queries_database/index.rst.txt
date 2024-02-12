@@ -35,7 +35,7 @@ Classes
 
 
 
-.. py:class:: BaseModel(**data: Any)
+.. py:class:: BaseModel(/, **data: Any)
 
 
    Bases: :py:obj:`pydantic.BaseModel`
@@ -348,7 +348,7 @@ Classes
       
 
 
-.. py:class:: JoinedTimeseriesFieldName(**data: Any)
+.. py:class:: JoinedTimeseriesFieldName(/, **data: Any)
 
 
    Bases: :py:obj:`BaseModel`
@@ -402,7 +402,7 @@ Classes
           !! processed by numpydoc !!
 
 
-.. py:class:: CalculateField(**data: Any)
+.. py:class:: CalculateField(/, **data: Any)
 
 
    Bases: :py:obj:`BaseModel`
@@ -489,7 +489,7 @@ Classes
           !! processed by numpydoc !!
 
 
-.. py:class:: Filter(**data: Any)
+.. py:class:: Filter(/, **data: Any)
 
 
    Bases: :py:obj:`BaseModel`
@@ -576,7 +576,7 @@ Classes
           !! processed by numpydoc !!
 
 
-.. py:class:: InsertJoinedTimeseriesQuery(**data: Any)
+.. py:class:: InsertJoinedTimeseriesQuery(/, **data: Any)
 
 
    Bases: :py:obj:`BaseModel`
@@ -623,7 +623,7 @@ Classes
       
 
 
-.. py:class:: JoinedTimeseriesQuery(**data: Any)
+.. py:class:: JoinedTimeseriesQuery(/, **data: Any)
 
 
    Bases: :py:obj:`BaseModel`
@@ -740,7 +740,7 @@ Classes
           !! processed by numpydoc !!
 
 
-.. py:class:: TimeseriesQuery(**data: Any)
+.. py:class:: TimeseriesQuery(/, **data: Any)
 
 
    Bases: :py:obj:`BaseModel`
@@ -858,7 +858,7 @@ Classes
           !! processed by numpydoc !!
 
 
-.. py:class:: TimeseriesCharQuery(**data: Any)
+.. py:class:: TimeseriesCharQuery(/, **data: Any)
 
 
    Bases: :py:obj:`BaseModel`
@@ -1027,7 +1027,7 @@ Classes
           !! processed by numpydoc !!
 
 
-.. py:class:: MetricQuery(**data: Any)
+.. py:class:: MetricQuery(/, **data: Any)
 
 
    Bases: :py:obj:`BaseModel`

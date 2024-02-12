@@ -56,14 +56,14 @@ myst-nb = "^1.0.0"
 [tool.numpydoc_validation]
 checks = [
     "all",   # report on all checks, except the below
-    "EX01",
-    "RT01",
-    "SA01",
-    "ES01",
-    "GL01",
-    "SS06",
-    "PR01",
-    "GL02"
+    "EX01",  # No examples section found
+    "RT01",  # No Returns section found
+    "SA01",  # See Also section not found
+    "ES01",  # No extended summary found
+    "GL01",  # Docstring text (summary) should start in the line immediately
+    "SS06",  # Summary should fit in a single line
+    "PR01",  # Parameters {missing_params} not documented
+    "GL02"   # Closing quotes should be placed in the line after the last text in docstring"
 ]
 
 [build-system]

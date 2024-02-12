@@ -13,11 +13,15 @@ assess their skill and performance.
 
 NOTE: THIS PROJECT IS UNDER DEVELOPMENT - EXPECT TO FIND BROKEN AND INCOMPLETE CODE.
 
+## Documentation
+[TEEHR Documentation](https://rtiinternational.github.io/teehr/)
+
 ## How to Install TEEHR
 Install poetry
 ```bash
 $ pipx install poetry
 ```
+
 Install from source
 ```bash
 # Create and activate python environment, requires python >= 3.10

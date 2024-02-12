@@ -407,38 +407,51 @@ document.write(`
                   
   <section id="developer-guide">
 <span id="development"></span><h1>Developer Guide<a class="headerlink" href="#developer-guide" title="Link to this heading">#</a></h1>
-<section id="how-to-contribute">
-<h2>How to Contribute<a class="headerlink" href="#how-to-contribute" title="Link to this heading">#</a></h2>
+<section id="contributing-guidelines">
+<h2>Contributing Guidelines<a class="headerlink" href="#contributing-guidelines" title="Link to this heading">#</a></h2>
+<p>These contributing guidelines will be updated as we progress. They are pretty
+slim to start.</p>
+<p>TEEHR has multiple parts, one is a library of reusable code that can be imported
+as a dependency to another project, another is examples and dashboards which are
+more use case specific (e.g., a dashboard to conduct post event analysis). The
+guidelines for contributing may be a bit different.</p>
+<section id="library-code">
+<h3>Library Code<a class="headerlink" href="#library-code" title="Link to this heading">#</a></h3>
 <ul class="simple">
-<li><p>bug reports</p></li>
-<li><p>issues</p></li>
-<li><p>pull requests</p></li>
-<li><p>documentation</p></li>
+<li><p>Use <a class="reference external" href="https://peps.python.org/pep-0008/">PEP 8</a></p></li>
+<li><p>Use LFS for large files</p></li>
+<li><p>Write tests - you are going to test your code, why not write an actual test
+<a class="reference external" href="https://docs.pytest.org/en/7.3.x/">pytest</a>.</p></li>
+<li><p>Use the Numpy doc string format
+<a class="reference external" href="https://numpydoc.readthedocs.io/en/latest/format.html">numpydoc</a></p></li>
 </ul>
 </section>
-<section id="creating-a-local-development-environment">
-<h2>Creating a Local Development Environment<a class="headerlink" href="#creating-a-local-development-environment" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>use poetry</p></li>
-</ul>
+<section id="git-lfs">
+<h3>Git LFS<a class="headerlink" href="#git-lfs" title="Link to this heading">#</a></h3>
+<p>Use git lfs for large files.  Even better keep large files out of the repo.</p>
 </section>
-<section id="contributing-to-the-documentation">
-<h2>Contributing to the Documentation<a class="headerlink" href="#contributing-to-the-documentation" title="Link to this heading">#</a></h2>
+<section id="notebooks">
+<h3>Notebooks<a class="headerlink" href="#notebooks" title="Link to this heading">#</a></h3>
 <ul class="simple">
-<li><p>description</p></li>
-<li><p>docstring approach (numpy)</p></li>
-<li><p>pre-commit validation</p></li>
-<li><p>building and pushing docs</p></li>
+<li><p>Do not commit notebook output to the repo.  Use can install and use <cite>nbstripout</cite>
+to strip output.  After cloning, you must run <cite>nbstripout –install</cite>.</p></li>
 </ul>
+<p><cite>nbstripoutput</cite> is configured to strip output from notebooks to keep the size down
+and make diffing files easier. See <a class="github reference external" href="https://github.com/kynan/nbstripout">kynan/nbstripout</a>.
+The configuration is stored in the <cite>.gitattributes</cite> file, but the tool must be
+installed per repo. You may need to install the Python package first with
+<cite>conda install nbstripout</cite> or similar depending on your environment.</p>
 </section>
-<section id="contributing-to-the-code">
-<h2>Contributing to the Code<a class="headerlink" href="#contributing-to-the-code" title="Link to this heading">#</a></h2>
-<ul class="simple">
-<li><p>guidelines</p></li>
-<li><p>testing</p></li>
-<li><p>documentation</p></li>
-<li><p>release process</p></li>
-</ul>
+<section id="local-development">
+<h3>Local Development<a class="headerlink" href="#local-development" title="Link to this heading">#</a></h3>
+<p>The most common way to use TEEHR is by installing it in a Python virtual
+environment.  The document covers using a conda virtual environment, but
+there is no hard requirement to do so.  In this case the packages are not
+installed, so you need to make sure you add <cite>src/</cite> to your Python path.
+There are two way to do this below, but depending on your development
+environment, your milage may vary.</p>
+<p><code class="docutils literal notranslate"><span class="pre">TODO:</span> <span class="pre">Poetry</span> <span class="pre">docs</span></code></p>
+</section>
 <section id="release-process">
 <h3>Release Process<a class="headerlink" href="#release-process" title="Link to this heading">#</a></h3>
 <p>This document describes the release process which has some manual steps to complete.</p>
@@ -458,6 +471,30 @@ git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </
 <p>Tagging will trigger a docker container build and push to the AWS registry for deployment to TEEHR-HUB.
 Deployment to TEEHR-HUB is a manual process that requires the correct credentials.</p>
 </section>
+</section>
+<section id="contributing-to-the-documentation">
+<h2>Contributing to the Documentation<a class="headerlink" href="#contributing-to-the-documentation" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>description</p></li>
+<li><p>docstring approach (numpy)</p></li>
+<li><p>pre-commit validation</p></li>
+<li><p>building and pushing docs</p></li>
+</ul>
+<p>The documentation files are in the <code class="docutils literal notranslate"><span class="pre">docs/sphinx</span></code> directory.</p>
+<p>To build the documentation html files, navigate to <code class="docutils literal notranslate"><span class="pre">docs/sphinx</span></code> and run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>clean<span class="w"> </span>html
+</pre></div>
+</div>
+<p>Check your files locally in a browser such as Firefox:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>firefox<span class="w"> </span>_build/html/index.html<span class="w"> </span><span class="p">&amp;</span>
+</pre></div>
+</div>
+<p>Some pre-commit hooks are configured automatically run when you commit some code.
+These check for things like large files, docstring formatting, added whitespace, etc.
+To run these manually and print the results to a text file <cite>pre-commit-output.txt</cite>, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pre-commit<span class="w"> </span>run<span class="w"> </span>--all-files<span class="w"> </span>&gt;<span class="w"> </span>pre-commit-output.txt
+</pre></div>
+</div>
 </section>
 </section>
 
@@ -507,13 +544,15 @@ Deployment to TEEHR-HUB is a manual process that requires the correct credential
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-contribute">How to Contribute</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-a-local-development-environment">Creating a Local Development Environment</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contributing-to-the-documentation">Contributing to the Documentation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contributing-to-the-code">Contributing to the Code</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contributing-guidelines">Contributing Guidelines</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#library-code">Library Code</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#git-lfs">Git LFS</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#notebooks">Notebooks</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#local-development">Local Development</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#release-process">Release Process</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#contributing-to-the-documentation">Contributing to the Documentation</a></li>
 </ul>
   </nav></div>
 

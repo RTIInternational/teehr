@@ -140,8 +140,8 @@ Attributes
 
    :Parameters:
 
-       **filter** : models.*Filter
-           A single *Filter object.
+       **filter** : models.\*Filter
+           A single \*Filter object.
 
    :Returns:
 

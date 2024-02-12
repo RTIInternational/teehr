@@ -543,9 +543,9 @@ which runs EXPLAIN ANALYZE and prints the output to screen.</p>
 <ul class="simple">
 <li><p>A pandas dataframe (format=’df’)</p></li>
 <li><p>Results bprinted to the screen (format=’raw’)</p></li>
-<li><p>A DuckDBPyRelation, a symbolic representation of the SQL query</p></li>
+<li><p>A DuckDBPyRelation, a symbolic representation of the SQL query
+(format=’relation’).</p></li>
 </ul>
-<p>(format=’relation’).</p>
 </dd></dl>
 
 <dl class="py method">
@@ -862,11 +862,11 @@ and inserts into the database as the joined_timeseries table.</p>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>primary_filepath</strong><span class="classifier">Union[str, Path]</span></dt><dd><p>File path to the “observed” data.  String must include path to
 file(s) and can include wildcards.  For example,
-“/path/to/parquet/<a href="#id1"><span class="problematic" id="id2">*</span></a>.parquet”.</p>
+“/path/to/parquet/*.parquet”.</p>
 </dd>
 <dt><strong>secondary_filepath</strong><span class="classifier">Union[str, Path]</span></dt><dd><p>File path to the “forecast” data.  String must include path to
 file(s) and can include wildcards.  For example,
-“/path/to/parquet/<a href="#id3"><span class="problematic" id="id4">*</span></a>.parquet”.</p>
+“/path/to/parquet/*.parquet”.</p>
 </dd>
 <dt><strong>crosswalk_filepath</strong><span class="classifier">Union[str, Path]</span></dt><dd><p>File path to single crosswalk file.</p>
 </dd>
@@ -913,7 +913,7 @@ fields in the joined_timeseries table.</p>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>attributes_filepath</strong><span class="classifier">Union[str, Path]</span></dt><dd><p>File path to the “attributes” data.  String must include path to
 file(s) and can include wildcards.  For example,
-“/path/to/parquet/<a href="#id5"><span class="problematic" id="id6">*</span></a>.parquet”.</p>
+“/path/to/parquet/*.parquet”.</p>
 </dd>
 </dl>
 </dd>
@@ -1074,7 +1074,7 @@ by default False.</p>
 <dt class="sig sig-object py" id="teehr.database.teehr_dataset.TEEHRDatasetDB.get_timeseries_chars">
 <span class="sig-name descname"><span class="pre">get_timeseries_chars</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeseries_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">pandas.DataFrame</span></span></span><a class="reference internal" href="../../../../_modules/teehr/database/teehr_dataset.html#TEEHRDatasetDB.get_timeseries_chars"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.database.teehr_dataset.TEEHRDatasetDB.get_timeseries_chars" title="Link to this definition">#</a></dt>
 <dd><p>Retrieve timeseries characteristics using database query.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>group_by</strong><span class="classifier">List[str]</span></dt><dd><p>List of column/field names to group timeseries data by.
@@ -1094,15 +1094,15 @@ by default False.</p>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
+<dd class="field-even"><dl>
 <dt>Union[str, pd.DataFrame]</dt><dd><p>A DataFrame of time series characteristics including:
 - count
 - min
 - max
 - average
 - sum
-- variance
-or, the query itself as a string.</p>
+- variance</p>
+<p>or, the query itself as a string.</p>
 </dd>
 </dl>
 </dd>

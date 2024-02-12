@@ -33,10 +33,10 @@ def get_metrics(
     ----------
     primary_filepath : str
         File path to the "observed" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/*.parquet".
+        and can include wildcards.  For example, "/path/to/parquet/\\*.parquet".
     secondary_filepath : str
         File path to the "forecast" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/*.parquet".
+        and can include wildcards.  For example, "/path/to/parquet/\\*.parquet".
     crosswalk_filepath : str
         File path to single crosswalk file.
     group_by : List[str]

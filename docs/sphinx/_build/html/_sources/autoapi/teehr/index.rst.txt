@@ -6,7 +6,7 @@
 .. autoapi-nested-parse::
 
    
-   TEEHR source.
+   TEEHR source init.
 
 
 

@@ -59,8 +59,8 @@ def _format_filter_item(
 
     Parameters
     ----------
-    filter : models.*Filter
-        A single *Filter object.
+    filter : models.\\*Filter
+        A single \\*Filter object.
 
     Returns
     -------

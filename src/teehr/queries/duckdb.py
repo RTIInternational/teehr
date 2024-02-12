@@ -38,10 +38,10 @@ def get_metrics(
     ----------
     primary_filepath : str
         File path to the "observed" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/*.parquet".
+        and can include wildcards.  For example, "/path/to/parquet/\\*.parquet".
     secondary_filepath : str
         File path to the "forecast" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/*.parquet".
+        and can include wildcards.  For example, "/path/to/parquet/\\*.parquet".
     crosswalk_filepath : str
         File path to single crosswalk file.
     group_by : List[str]
@@ -263,10 +263,10 @@ def get_joined_timeseries(
     ----------
     primary_filepath : str
         File path to the "observed" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/*.parquet".
+        and can include wildcards.  For example, "/path/to/parquet/\\*.parquet".
     secondary_filepath : str
         File path to the "forecast" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/*.parquet".
+        and can include wildcards.  For example, "/path/to/parquet/\\*.parquet".
     crosswalk_filepath : str
         File path to single crosswalk file.
     order_by : List[str]
@@ -415,7 +415,7 @@ def get_timeseries(
     ----------
     timeseries_filepath : str
         File path to the timeseries data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/*.parquet".
+        and can include wildcards.  For example, "/path/to/parquet/\\*.parquet".
     order_by : List[str]
         List of column/field names to order results by.
         Must provide at least one.
@@ -508,7 +508,7 @@ def get_timeseries_chars(
     ----------
     timeseries_filepath : str
         File path to the "observed" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/*.parquet".
+        and can include wildcards.  For example, "/path/to/parquet/\\*.parquet".
     group_by : List[str]
         List of column/field names to group timeseries data by.
         Must provide at least one.

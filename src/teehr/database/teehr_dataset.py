@@ -94,7 +94,8 @@ class TEEHRDatasetAPI:
         * A pandas dataframe (format='df')
         * Results bprinted to the screen (format='raw')
         * A DuckDBPyRelation, a symbolic representation of the SQL query
-        (format='relation').
+          (format='relation').
+
         """
         if format == "df":
             return self.con.sql(query).df()
@@ -164,6 +165,7 @@ class TEEHRDatasetAPI:
             * Number of duplicate rows
             * Number of location IDs with duplicate value times
             * Number of location IDs with missing time steps
+
         """
         primary_dict = tqu_db.describe_timeseries(
             timeseries_filepath=primary_filepath
@@ -332,6 +334,7 @@ class TEEHRDatasetAPI:
             - average
             - sum
             - variance
+
             or, the query itself as a string.
 
         See Also
@@ -632,11 +635,11 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         primary_filepath : Union[str, Path]
             File path to the "observed" data.  String must include path to
             file(s) and can include wildcards.  For example,
-            "/path/to/parquet/*.parquet".
+            "/path/to/parquet/\\*.parquet".
         secondary_filepath : Union[str, Path]
             File path to the "forecast" data.  String must include path to
             file(s) and can include wildcards.  For example,
-            "/path/to/parquet/*.parquet".
+            "/path/to/parquet/\\*.parquet".
         crosswalk_filepath : Union[str, Path]
             File path to single crosswalk file.
         order_by : List[str], optional
@@ -702,7 +705,7 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         attributes_filepath : Union[str, Path]
             File path to the "attributes" data.  String must include path to
             file(s) and can include wildcards.  For example,
-            "/path/to/parquet/*.parquet".
+            "/path/to/parquet/\\*.parquet".
         """
         attr_list = self._get_unique_attributes(str(attributes_filepath))
 
@@ -1044,6 +1047,7 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
             - average
             - sum
             - variance
+
             or, the query itself as a string.
 
         See Also

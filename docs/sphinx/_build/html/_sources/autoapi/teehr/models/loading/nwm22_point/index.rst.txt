@@ -798,7 +798,7 @@ Attributes
       
 
 
-.. py:class:: ShortAndAnalysis(**data: Any)
+.. py:class:: ShortAndAnalysis(/, **data: Any)
 
 
    Bases: :py:obj:`pydantic.BaseModel`
@@ -844,7 +844,7 @@ Attributes
       
 
 
-.. py:class:: ShortAndAnalysisNoDA(**data: Any)
+.. py:class:: ShortAndAnalysisNoDA(/, **data: Any)
 
 
    Bases: :py:obj:`pydantic.BaseModel`
@@ -890,7 +890,7 @@ Attributes
       
 
 
-.. py:class:: MediumRangeMem1(**data: Any)
+.. py:class:: MediumRangeMem1(/, **data: Any)
 
 
    Bases: :py:obj:`pydantic.BaseModel`
@@ -936,7 +936,7 @@ Attributes
       
 
 
-.. py:class:: MediumRangeMem2(**data: Any)
+.. py:class:: MediumRangeMem2(/, **data: Any)
 
 
    Bases: :py:obj:`pydantic.BaseModel`
@@ -982,7 +982,7 @@ Attributes
       
 
 
-.. py:class:: MediumRangeMem3(**data: Any)
+.. py:class:: MediumRangeMem3(/, **data: Any)
 
 
    Bases: :py:obj:`pydantic.BaseModel`
@@ -1028,7 +1028,7 @@ Attributes
       
 
 
-.. py:class:: MediumRangeMem4(**data: Any)
+.. py:class:: MediumRangeMem4(/, **data: Any)
 
 
    Bases: :py:obj:`pydantic.BaseModel`
@@ -1074,7 +1074,7 @@ Attributes
       
 
 
-.. py:class:: MediumRangeMem5(**data: Any)
+.. py:class:: MediumRangeMem5(/, **data: Any)
 
 
    Bases: :py:obj:`pydantic.BaseModel`
@@ -1120,7 +1120,7 @@ Attributes
       
 
 
-.. py:class:: MediumRangeMem6(**data: Any)
+.. py:class:: MediumRangeMem6(/, **data: Any)
 
 
    Bases: :py:obj:`pydantic.BaseModel`
@@ -1166,7 +1166,7 @@ Attributes
       
 
 
-.. py:class:: MediumRangeMem7(**data: Any)
+.. py:class:: MediumRangeMem7(/, **data: Any)
 
 
    Bases: :py:obj:`pydantic.BaseModel`
@@ -1212,7 +1212,7 @@ Attributes
       
 
 
-.. py:class:: MediumRangeNoDA(**data: Any)
+.. py:class:: MediumRangeNoDA(/, **data: Any)
 
 
    Bases: :py:obj:`pydantic.BaseModel`
@@ -1248,7 +1248,7 @@ Attributes
       
 
 
-.. py:class:: LongRangeMem1(**data: Any)
+.. py:class:: LongRangeMem1(/, **data: Any)
 
 
    Bases: :py:obj:`pydantic.BaseModel`
@@ -1289,7 +1289,7 @@ Attributes
       
 
 
-.. py:class:: LongRangeMem2(**data: Any)
+.. py:class:: LongRangeMem2(/, **data: Any)
 
 
    Bases: :py:obj:`pydantic.BaseModel`
@@ -1330,7 +1330,7 @@ Attributes
       
 
 
-.. py:class:: LongRangeMem3(**data: Any)
+.. py:class:: LongRangeMem3(/, **data: Any)
 
 
    Bases: :py:obj:`pydantic.BaseModel`
@@ -1371,7 +1371,7 @@ Attributes
       
 
 
-.. py:class:: LongRangeMem4(**data: Any)
+.. py:class:: LongRangeMem4(/, **data: Any)
 
 
    Bases: :py:obj:`pydantic.BaseModel`
@@ -1573,7 +1573,7 @@ Attributes
       
 
 
-.. py:class:: PointConfigurationModel(**data: Any)
+.. py:class:: PointConfigurationModel(/, **data: Any)
 
 
    Bases: :py:obj:`pydantic.BaseModel`

@@ -718,9 +718,16 @@ document.write(`
             <span class="n">date</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
             <span class="n">fname</span> <span class="o">=</span> <span class="n">p</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
             <span class="n">outf</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">json_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">date</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">.json&quot;</span><span class="p">))</span>
-            <span class="n">h5chunks</span> <span class="o">=</span> <span class="n">SingleHdf5ToZarr</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span>
-                                        <span class="n">remote_path</span><span class="p">,</span>
-                                        <span class="n">inline_threshold</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">h5chunks</span> <span class="o">=</span> <span class="n">SingleHdf5ToZarr</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span>
+                                            <span class="n">remote_path</span><span class="p">,</span>
+                                            <span class="n">inline_threshold</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">ignore_missing_file</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Corrupt file: </span><span class="si">{</span><span class="n">remote_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># TODO: log missing file?</span>
+                    <span class="k">return</span> <span class="kc">None</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">outf</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ujson</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">h5chunks</span><span class="o">.</span><span class="n">translate</span><span class="p">())</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
     <span class="k">except</span> <span class="ne">FileNotFoundError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -781,8 +788,9 @@ document.write(`
     <span class="n">json_paths</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">existing_jsons</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">json_paths</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;No NWM files for specified input </span><span class="se">\</span>
-<span class="s2">                                configuration were found in GCS!&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+            <span class="s2">&quot;No NWM files for specified input configuration were found in GCS!&quot;</span>
+        <span class="p">)</span>
 
     <span class="n">json_paths</span> <span class="o">=</span> <span class="p">[</span><span class="n">path</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">json_paths</span> <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
 
