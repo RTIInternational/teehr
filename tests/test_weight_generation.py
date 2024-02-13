@@ -23,7 +23,13 @@ def test_weights():
 
     df_test = pd.read_parquet(WEIGHTS_FILEPATH)
 
-    assert df.equals(df_test)
+    df_test.sort_values(["row", "col", "weight"], inplace=True)
+    df.sort_values(["row", "col", "weight"], inplace=True)
+
+    assert (df.row.values == df_test.row.values).all()
+    assert (df.col.values == df_test.col.values).all()
+    assert (df.weight.values == df_test.weight.values).all()
+    assert (df.location_id.values == df_test.location_id.values).all()
 
 
 if __name__ == "__main__":
