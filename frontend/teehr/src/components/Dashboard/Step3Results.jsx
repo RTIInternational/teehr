@@ -23,7 +23,7 @@ const DisplayStep = (props) => {
   const [selectedTab, setSelectedTab] = useState(
     includeSpatialData ? "map" : "table"
   );
-  const [displayMetric, setDisplayMetric] = useState("");
+  const [displayMetric, setDisplayMetric] = useState(selectedMetrics[0] || "");
   const [groupByFilters, setGroupByFilters] = useState(() => {
     return selectedGroupByFields.reduce((acc, field) => {
       if (field !== "primary_location_id") {
