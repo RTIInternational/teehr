@@ -3,8 +3,16 @@ export const defaultFormState = {
   selectedMetrics: [],
   selectedGroupByFields: [],
   selectedFilters: [],
-  includeSpatialData: true,
+  selectedIncludeSpatialData: true,
 };
+
+export const defaultConfig = {
+  datasets: [],
+  metrics: [],
+  groupByFields: [],
+  operatorOptions: [],
+  fieldOptions: {},
+}
 
 export const nonListFields = [
   "reference_time",

@@ -19,13 +19,14 @@ import { defaultFormState } from "./constants";
 function Dashboard() {
   const { loading, errors, fetchDatasets } = useDashboardAPI();
 
-  const [formData, setFormData] = useState(defaultFormState);
+  const [userSelections, setUserSelections] = useState({ ...defaultFormState });
   const [datasets, setDatasets] = useState([]);
   const [metrics, setMetrics] = useState([]);
   const [groupByFields, setGroupByFields] = useState([]);
-  const [operatorOptions, setOperatorOptions] = useState([]);
-  const [fieldOptions, setFieldOptions] = useState({});
-  const [data, setData] = useState({});
+  const [operators, setOperators] = useState([]);
+  const [optionsForGroupByFields, setOptionsForGroupByFields] = useState({});
+
+  const [fetchedData, setFetchedData] = useState({});
 
   const [activeStep, setActiveStep] = React.useState(0);
 
@@ -44,7 +45,7 @@ function Dashboard() {
   };
 
   const handleReset = () => {
-    setFormData(defaultFormState);
+    setUserSelections(defaultFormState);
     setActiveStep(0);
   };
 
@@ -55,20 +56,24 @@ function Dashboard() {
   }, []);
 
   const contextValue = {
-    formData,
-    datasets,
-    metrics,
-    groupByFields,
-    operatorOptions,
-    fieldOptions,
-    data,
-    setFormData,
-    setDatasets,
-    setFieldOptions,
-    setOperatorOptions,
-    setMetrics,
-    setGroupByFields,
-    setData,
+    queryOptions: {
+      datasets,
+      metrics,
+      groupByFields,
+      operators,
+      optionsForGroupByFields,
+    },
+    actions: {
+      setUserSelections,
+      setDatasets,
+      setOptionsForGroupByFields,
+      setOperators,
+      setMetrics,
+      setGroupByFields,
+      setFetchedData,
+    },
+    userSelections,
+    fetchedData,
   };
 
   if (errors) {

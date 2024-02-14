@@ -27,22 +27,16 @@ const FiltersSection = (props) => {
   const { onNext, onBack } = props;
   const { fetchOptionsForField, fetchStations } = useDashboardAPI();
   const {
-    groupByFields,
-    operatorOptions,
-    fieldOptions,
-    setFieldOptions,
-    formData,
-    setFormData,
-    setData,
+    queryOptions: { groupByFields, operators, optionsForGroupByFields },
+    userSelections: {
+      selectedDataset,
+      selectedFilters,
+      selectedGroupByFields,
+      selectedMetrics,
+      selectedIncludeSpatialData,
+    },
+    actions: { setOptionsForGroupByFields, setUserSelections, setFetchedData },
   } = useContext(DashboardContext);
-
-  const {
-    selectedDataset,
-    selectedFilters,
-    selectedGroupByFields,
-    selectedMetrics,
-    includeSpatialData,
-  } = formData;
 
   const getFieldType = (fieldName) => {
     const field = groupByFields.find((field) => field.name === fieldName);
@@ -54,7 +48,7 @@ const FiltersSection = (props) => {
       obj[index] = {
         type: getFieldType(item.column),
         column: item.column,
-        options: fieldOptions[item.column],
+        options: optionsForGroupByFields[item.column],
       };
       return obj;
     }, {});
@@ -77,12 +71,12 @@ const FiltersSection = (props) => {
   };
 
   const getFieldOptions = async (filter) => {
-    if (!(filter in fieldOptions)) {
+    if (!(filter in optionsForGroupByFields)) {
       const options = await fetchOptionsForField(filter, selectedDataset);
-      setFieldOptions((prev) => ({ ...prev, [filter]: options }));
+      setOptionsForGroupByFields((prev) => ({ ...prev, [filter]: options }));
       return options;
     } else {
-      return fieldOptions[filter];
+      return optionsForGroupByFields[filter];
     }
   };
 
@@ -98,7 +92,7 @@ const FiltersSection = (props) => {
   });
 
   const onSubmit = async (data) => {
-    setFormData((prev) => ({ ...prev, selectedFilters: data.filters }));
+    setUserSelections((prev) => ({ ...prev, selectedFilters: data.filters }));
     const modifiedFilters = data.filters.map((filter) => {
       const fieldType = getFieldType(filter.column);
       return {
@@ -112,10 +106,7 @@ const FiltersSection = (props) => {
 
   const handleFetchData = async (filters) => {
     let fields = [...selectedGroupByFields];
-    if (
-      formData.includeSpatialData &&
-      !fields.includes("primary_location_id")
-    ) {
+    if (selectedIncludeSpatialData && !fields.includes("primary_location_id")) {
       fields.push("primary_location_id");
     }
     return fetchStations(
@@ -123,9 +114,9 @@ const FiltersSection = (props) => {
       fields,
       selectedMetrics,
       filters,
-      includeSpatialData
+      selectedIncludeSpatialData
     ).then((res) => {
-      setData(res.data);
+      setFetchedData(res.data);
       return;
     });
   };
@@ -155,7 +146,7 @@ const FiltersSection = (props) => {
                     name={`filters[${index}].operator`}
                     control={control}
                     label={"Operator"}
-                    options={Object.values(operatorOptions) || []}
+                    options={Object.values(operators) || []}
                     rules={{ required: "Required." }}
                   />
                   {filterMetadata[index]?.type === "TIMESTAMP" && (

@@ -13,28 +13,35 @@ import FormInputText from "../Form/FormInputText.jsx";
 const DisplayStep = (props) => {
   const { onBack, onReset } = props;
   const {
-    formData: { selectedGroupByFields, selectedMetrics, includeSpatialData },
-    fieldOptions,
-    data,
+    queryOptions: { optionsForGroupByFields },
+    userSelections: {
+      selectedGroupByFields,
+      selectedMetrics,
+      selectedIncludeSpatialData,
+    },
+    fetchedData,
   } = useContext(DashboardContext);
 
   const [geoJSON, setGeoJSON] = useState({ features: [] });
   const [tabularData, setTabularData] = useState([]);
   const [selectedTab, setSelectedTab] = useState(
-    includeSpatialData ? "map" : "table"
+    selectedIncludeSpatialData ? "map" : "table"
   );
   const [displayMetric, setDisplayMetric] = useState(selectedMetrics[0] || "");
   const [groupByFilters, setGroupByFilters] = useState(() => {
     return selectedGroupByFields.reduce((acc, field) => {
       if (field !== "primary_location_id") {
-        acc[field] = (fieldOptions[field] && fieldOptions[field][0]) || "";
+        acc[field] =
+          (optionsForGroupByFields[field] &&
+            optionsForGroupByFields[field][0]) ||
+          "";
       }
       return acc;
     }, {});
   });
 
   const filterDataByGroupByFilters = (data, groupByFilters) => {
-    if (includeSpatialData) {
+    if (selectedIncludeSpatialData) {
       const filteredFeatures = data.features.filter((feature) => {
         return Object.entries(groupByFilters).every(([key, value]) => {
           if (!value) return true;
@@ -65,7 +72,10 @@ const DisplayStep = (props) => {
 
   const handleGroupFilterChange = (newValue, onChange, field) => {
     setGroupByFilters((prev) => ({ ...prev, [field]: newValue }));
-    filterDataByGroupByFilters(data, { ...groupByFilters, [field]: newValue });
+    filterDataByGroupByFilters(fetchedData, {
+      ...groupByFilters,
+      [field]: newValue,
+    });
     onChange(newValue);
   };
 
@@ -77,12 +87,14 @@ const DisplayStep = (props) => {
   });
 
   useEffect(() => {
-    filterDataByGroupByFilters(data, groupByFilters);
+    filterDataByGroupByFilters(fetchedData, groupByFilters);
   }, []);
 
   return (
     <>
-      {(!data || data.length === 0) && <div>Response returned no data.</div>}
+      {(!fetchedData || fetchedData.length === 0) && (
+        <div>Response returned no data.</div>
+      )}
       <form>
         <Grid container>
           <Grid item xs={12} md={5} sx={{ mt: 9 }}>
@@ -107,22 +119,22 @@ const DisplayStep = (props) => {
                   disabled
                   sx={{ m: 0.5, width: "50%" }}
                 />
-                {field in fieldOptions && (
+                {field in optionsForGroupByFields && (
                   <FormSingleSelect
                     name={`${field}`}
                     control={control}
                     label={"Value"}
-                    options={fieldOptions[field] || []}
+                    options={optionsForGroupByFields[field] || []}
                     rules={{ required: "Required." }}
                     onChange={(e, fn) => handleGroupFilterChange(e, fn, field)}
                   />
                 )}
-                {!(field in fieldOptions) && (
+                {!(field in optionsForGroupByFields) && (
                   <FormInputText
                     name={`${field}`}
                     control={control}
                     label={"Value"}
-                    options={fieldOptions[field] || []}
+                    options={optionsForGroupByFields[field] || []}
                     rules={{ required: "Required." }}
                     onChange={(e, fn) => handleGroupFilterChange(e, fn, field)}
                   />
@@ -131,7 +143,7 @@ const DisplayStep = (props) => {
             ))}
           </Grid>
           <Grid item xs={12} md={7}>
-            {data && Object.keys(data).length > 0 && (
+            {fetchedData && Object.keys(fetchedData).length > 0 && (
               <TabContext value={selectedTab}>
                 <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
                   <TabList
@@ -142,7 +154,7 @@ const DisplayStep = (props) => {
                     <Tab
                       label="Map"
                       value="map"
-                      disabled={!includeSpatialData}
+                      disabled={!selectedIncludeSpatialData}
                     />
                     <Tab label="Table" value="table" />
                   </TabList>

@@ -19,30 +19,27 @@ const QuerySection = (props) => {
     fetchOptionsForMultipleFields,
   } = useDashboardAPI();
   const {
-    datasets,
-    metrics,
-    groupByFields,
-    setMetrics,
-    setGroupByFields,
-    setOperatorOptions,
-    fieldOptions,
-    setFieldOptions,
-    formData,
-    setFormData,
+    queryOptions: { datasets, metrics, groupByFields, optionsForGroupByFields },
+    userSelections: {
+      selectedDataset,
+      selectedMetrics,
+      selectedGroupByFields,
+      selectedIncludeSpatialData,
+    },
+    actions: {
+      setMetrics,
+      setGroupByFields,
+      setOperators,
+      setOptionsForGroupByFields,
+      setUserSelections,
+    },
   } = React.useContext(DashboardContext);
-
-  const {
-    selectedDataset,
-    selectedMetrics,
-    selectedGroupByFields,
-    includeSpatialData,
-  } = formData;
 
   const defaultValues = {
     selectedDataset: selectedDataset || "",
     selectedMetrics: selectedMetrics || [],
     selectedGroupByFields: selectedGroupByFields || [],
-    includeSpatialData: includeSpatialData,
+    selectedIncludeSpatialData: selectedIncludeSpatialData,
   };
 
   const { handleSubmit, control } = useForm({ defaultValues });
@@ -60,19 +57,19 @@ const QuerySection = (props) => {
       setGroupByFields(fields);
     });
     fetchFilterOperators().then((res) => {
-      setOperatorOptions(res);
+      setOperators(res);
     });
-    setFormData((prev) => ({ ...prev, selectedDataset: newDataset }));
+    setUserSelections((prev) => ({ ...prev, selectedDataset: newDataset }));
     onChange(newDataset);
   };
 
   const handleMetricChange = (newMetrics, onChange) => {
-    setFormData((prev) => ({ ...prev, selectedMetrics: newMetrics }));
+    setUserSelections((prev) => ({ ...prev, selectedMetrics: newMetrics }));
     onChange(newMetrics);
   };
 
   const handleGroupByFieldChange = (newGroupByFields, onChange) => {
-    setFormData((prev) => ({
+    setUserSelections((prev) => ({
       ...prev,
       selectedGroupByFields: newGroupByFields,
     }));
@@ -80,7 +77,7 @@ const QuerySection = (props) => {
   };
 
   const handleSpatialDataChange = (newIncludeSpatialData, onChange) => {
-    setFormData((prev) => ({
+    setUserSelections((prev) => ({
       ...prev,
       includeSpatialData: newIncludeSpatialData,
     }));
@@ -89,14 +86,16 @@ const QuerySection = (props) => {
 
   const getFieldOptions = () => {
     const fieldsToFetch = selectedGroupByFields.filter((field) => {
-      return !(field in fieldOptions || nonListFields.includes(field));
+      return !(
+        field in optionsForGroupByFields || nonListFields.includes(field)
+      );
     });
     if (fieldsToFetch.length === 0) {
       return;
     }
     fetchOptionsForMultipleFields(fieldsToFetch, selectedDataset).then(
       (fieldValues) => {
-        setFieldOptions((prev) => {
+        setOptionsForGroupByFields((prev) => {
           return { ...prev, ...fieldValues };
         });
       }
@@ -134,7 +133,7 @@ const QuerySection = (props) => {
                 rules={{ required: "Required." }}
               />
               <FormCheckbox
-                name="includeSpatialData"
+                name="selectedIncludeSpatialData"
                 control={control}
                 label="Include Spatial Data"
                 onChange={handleSpatialDataChange}
