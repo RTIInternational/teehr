@@ -157,13 +157,13 @@ def write_parquet_file(
         else:
             data.to_parquet(filepath)
     elif filepath.is_file() and overwrite_output:
-        print(f"Overwriting {filepath.name}")
+        logger.info(f"Overwriting {filepath.name}")
         if isinstance(data, pa.Table):
             pq.write_table(data, filepath)
         else:
             data.to_parquet(filepath)
     elif filepath.is_file() and not overwrite_output:
-        print(
+        logger.info(
             f"{filepath.name} already exists and overwrite_output=False;"
             " skipping"
         )
@@ -303,9 +303,9 @@ def gen_json(
                 if not ignore_missing_file:
                     raise Exception(f"Corrupt file: {remote_path}") from err
                 else:
-                    # TODO: log missing file?
                     logger.warning(
-                        f"A potentially corrupt file was encountered: {remote_path}"
+                        ("A potentially corrupt file was encountered:")
+                        (f"{remote_path}")
                     )
                     return None
             with open(outf, "wb") as f:
@@ -314,7 +314,6 @@ def gen_json(
         if not ignore_missing_file:
             raise e
         else:
-            # TODO: log missing file?
             logger.warning(f"A missing file was encountered: {remote_path}")
             return None
     return outf

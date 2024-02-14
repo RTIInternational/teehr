@@ -1,6 +1,7 @@
 """Defines the TEEHR dataset class and pre-processing methods"""
 from typing import Union, List, Callable, Dict, Any
 from pathlib import Path
+import logging
 
 import re
 import duckdb
@@ -21,6 +22,8 @@ from teehr.models.queries_database import (
     JoinedTimeseriesFieldName,
 )
 from teehr.models.queries import MetricEnum
+
+logger = logging.getLogger(__name__)
 
 
 class TEEHRDatasetAPI:
@@ -790,7 +793,7 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         for field_name in schema_df.column_name.tolist():
             if field_name not in JoinedFieldNameEnum.__members__:
                 if drop_added_fields:
-                    print(f"Dropping added field {field_name}")
+                    logger.info(f"Dropping added field {field_name}")
                     self._drop_joined_timeseries_field(field_name)
                 else:
                     raise ValueError(
