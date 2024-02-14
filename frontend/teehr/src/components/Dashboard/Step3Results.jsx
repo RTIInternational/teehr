@@ -12,21 +12,24 @@ import FormInputText from "../Form/FormInputText.jsx";
 
 const DisplayStep = (props) => {
   const { onBack, onReset } = props;
-  const { formData, fieldOptions, data } = useContext(DashboardContext);
-
-  const { selectedGroupByFields, selectedMetrics, includeSpatialData } =
-    formData;
+  const {
+    formData: { selectedGroupByFields, selectedMetrics, includeSpatialData },
+    fieldOptions,
+    data,
+  } = useContext(DashboardContext);
 
   const [geoJSON, setGeoJSON] = useState({ features: [] });
   const [tabularData, setTabularData] = useState([]);
   const [selectedTab, setSelectedTab] = useState(
-    includeSpatialData ? "1" : "2"
+    includeSpatialData ? "map" : "table"
   );
   const [displayMetric, setDisplayMetric] = useState("");
   const [groupByFilters, setGroupByFilters] = useState(() => {
-    return selectedGroupByFields.reduce((obj, item) => {
-      obj[item] = (fieldOptions[item] && fieldOptions[item][0]) || "";
-      return obj;
+    return selectedGroupByFields.reduce((acc, field) => {
+      if (field !== "primary_location_id") {
+        acc[field] = (fieldOptions[field] && fieldOptions[field][0]) || "";
+      }
+      return acc;
     }, {});
   });
 
@@ -91,7 +94,7 @@ const DisplayStep = (props) => {
               onChange={handleDisplayMetricChange}
               formStyle={{ m: 0 }}
             />
-            {selectedGroupByFields.map((field, index) => (
+            {Object.keys(groupByFilters).map((field, index) => (
               <Box
                 key={index}
                 sx={{
@@ -136,16 +139,20 @@ const DisplayStep = (props) => {
                     aria-label="Dashboard tabs"
                     variant="fullWidth"
                   >
-                    <Tab label="Map" value="1" disabled={!includeSpatialData} />
-                    <Tab label="Table" value="2" />
+                    <Tab
+                      label="Map"
+                      value="map"
+                      disabled={!includeSpatialData}
+                    />
+                    <Tab label="Table" value="table" />
                   </TabList>
                 </Box>
-                <TabPanel value="1">
+                <TabPanel value="map">
                   {Object.keys(geoJSON.features).length > 0 && (
                     <StationMap stations={geoJSON} metricName={displayMetric} />
                   )}
                 </TabPanel>
-                <TabPanel value="2">
+                <TabPanel value="table">
                   {Object.keys(tabularData).length > 0 && (
                     <DataGridDemo data={tabularData} />
                   )}
