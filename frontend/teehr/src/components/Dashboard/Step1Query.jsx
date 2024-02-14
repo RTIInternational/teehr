@@ -2,11 +2,11 @@ import React from "react";
 import "@src/App.css";
 import { Button, Box, Grid } from "@mui/material";
 import DashboardContext from "../../Context.js";
-import FormCheckbox from "../form-components/FormCheckbox.jsx";
+import FormCheckbox from "../Form/FormCheckbox.jsx";
 import { useForm } from "react-hook-form";
 import useDashboardAPI from "../../hooks/useDashboardAPI.jsx";
-import FormMultipleSelect from "../form-components/FormMultipleSelect.jsx";
-import FormSingleSelect from "../form-components/FormSingleSelect.jsx";
+import FormMultipleSelect from "../Form/FormMultipleSelect.jsx";
+import FormSingleSelect from "../Form/FormSingleSelect.jsx";
 import PropTypes from "prop-types";
 import { nonListFields } from "./constants";
 

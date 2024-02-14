@@ -4,11 +4,11 @@ import DashboardContext from "../../Context.js";
 import { useContext, useEffect, useState } from "react";
 import { TabContext, TabList, TabPanel } from "@mui/lab";
 import PropTypes from "prop-types";
-import FormSingleSelect from "../form-components/FormSingleSelect.jsx";
+import FormSingleSelect from "../Form/FormSingleSelect.jsx";
 import { useForm } from "react-hook-form";
 import StationMap from "../StationMap.jsx";
 import DataGridDemo from "../DataGrid.jsx";
-import FormInputText from "../form-components/FormInputText.jsx";
+import FormInputText from "../Form/FormInputText.jsx";
 
 const DisplayStep = (props) => {
   const { onBack, onReset } = props;
