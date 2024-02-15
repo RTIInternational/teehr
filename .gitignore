@@ -74,7 +74,6 @@ docs/sphinx/_autosummary/
 docs/sphinx/_static/*.html
 docs/sphinx/generated/
 docs/sphinx/savefig/
-docs/sphinx/index.rst
 
 # PyBuilder
 target/
