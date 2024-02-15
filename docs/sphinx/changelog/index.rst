@@ -2,7 +2,7 @@ Release Notes
 =============
 
 
-0.3.9 - 2024-02-XX
+0.3.9 - 2024-02-15
 --------------------
 
 Added
@@ -12,7 +12,7 @@ Added
   on every tag.
 * The `pre-commit-config.yml` github hook runs on each commit and checks docstring formatting,
   trailing whitespaces, and the presence of large files.
-* Added documenation-related dependencies to `[tool.poetry.group.dev.dependencies]`
+* Added documenation-related python dependencies to `[tool.poetry.group.dev.dependencies]`
 
 Changed
 ^^^^^^^

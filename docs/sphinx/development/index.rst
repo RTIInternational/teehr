@@ -61,7 +61,7 @@ Create branch with the following updated to the new version (find and replace ve
 - `README.md`
 - `pyproject.toml`
 
-Update the `CHANGELOG.md` to reflect the changes included in the release.
+Update the changelog at `docs/sphinx/changelog/index.rst` to reflect the changes included in the release.
 
 If also pushing changes to TEEHR-HUB, also update tags in `teehr-hub/helm-chart/config.yaml`.
 
