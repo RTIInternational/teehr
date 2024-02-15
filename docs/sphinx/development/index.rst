@@ -46,7 +46,7 @@ Local Development
 The most common way to use TEEHR is by installing it in a Python virtual
 environment.  The document covers using a conda virtual environment, but
 there is no hard requirement to do so.  In this case the packages are not
-installed, so you need to make sure you add `src/` to your Python path.
+installed, so you need to make sure you add ``src/`` to your Python path.
 There are two way to do this below, but depending on your development
 environment, your milage may vary.
 
@@ -57,15 +57,16 @@ Release Process
 This document describes the release process which has some manual steps to complete.
 
 Create branch with the following updated to the new version (find and replace version number):
-- `version.txt`
-- `README.md`
-- `pyproject.toml`
 
-Update the changelog at `docs/sphinx/changelog/index.rst` to reflect the changes included in the release.
+- ``version.txt``
+- ``README.md``
+- ``pyproject.toml``
 
-If also pushing changes to TEEHR-HUB, also update tags in `teehr-hub/helm-chart/config.yaml`.
+Update the changelog at ``docs/sphinx/changelog/index.rst`` to reflect the changes included in the release.
 
-Make a PR to main.  After PR has been reviewed and merged, checkout `main` pull changes and tag the commit.
+If also pushing changes to TEEHR-HUB, also update tags in ``teehr-hub/helm-chart/config.yaml``.
+
+Make a PR to main.  After PR has been reviewed and merged, checkout ``main`` pull changes and tag the commit.
 
 .. code-block:: bash
 
