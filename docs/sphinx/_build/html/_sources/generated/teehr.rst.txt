@@ -1,4 +1,0 @@
-﻿teehr
-=====
-
-.. automodule:: teehr
