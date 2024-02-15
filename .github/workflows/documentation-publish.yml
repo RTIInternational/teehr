@@ -2,8 +2,8 @@ name: documentation
 
 on:
   push:
-    tags: [ 'v*.*.*' ]
-    # branches: [112-add-documentation]
+    # tags: [ 'v*.*.*' ]
+    branches: [112-add-documentation]
 
 permissions:
   contents: write

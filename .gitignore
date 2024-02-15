@@ -70,10 +70,11 @@ instance/
 
 # Sphinx documentation
 docs/sphinx/_build/
-# docs/sphinx/_autosummary/
-# docs/sphinx/_static/*.html
-# docs/sphinx/generated
-# docs/sphinx/index.rst
+docs/sphinx/_autosummary/
+docs/sphinx/_static/*.html
+docs/sphinx/generated
+docs/sphinx/savefig
+docs/sphinx/index.rst
 
 # PyBuilder
 target/

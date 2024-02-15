@@ -56,3 +56,16 @@
     height: 140px;
     background: none !important;
   }
+
+  /*TODO: These should depend on light vs. dark theme?  */
+  html[data-theme="dark"] {
+    h1 {
+      color: rgb(138, 189, 216);
+    }
+    h2 {
+      color: rgb(138, 189, 216);
+    }
+    h3 {
+      color: rgb(138, 189, 216);
+    }
+}

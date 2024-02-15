@@ -25,6 +25,18 @@ Classes
 
 
 
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.database.teehr_dataset.logger
+
+
+.. py:data:: logger
+
+   
+
 .. py:class:: TEEHRDatasetAPI(database_filepath: Union[str, pathlib.Path])
 
 

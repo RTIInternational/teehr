@@ -32,8 +32,7 @@
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=eafc0fe6" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
-    <link rel="icon" sizes="16x16" type="image/png" href="../../_static/../images/teehr_favicon_16.png" />
-    <link rel="stylesheet" type="text/css" href="../../_static/css/teehr.css?v=ab7696e0" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/teehr.css?v=5a67141b" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
@@ -45,6 +44,7 @@
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/teehr/index';</script>
+    <link rel="icon" href="../../_static/favicon.png"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="teehr.api" href="api/index.html" />
@@ -470,7 +470,7 @@ document.write(`
                   
   <section id="module-teehr">
 <span id="teehr"></span><h1><a class="reference internal" href="../../generated/teehr.html#module-teehr" title="teehr"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr</span></code></a><a class="headerlink" href="#module-teehr" title="Link to this heading">#</a></h1>
-<p>TEEHR source init.</p>
+<p>TEEHR logger implementation.</p>
 <section id="subpackages">
 <h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading">#</a></h2>
 <div class="toctree-wrapper compound">
@@ -532,6 +532,28 @@ document.write(`
 </ul>
 </div>
 </section>
+<section id="package-contents">
+<h2>Package Contents<a class="headerlink" href="#package-contents" title="Link to this heading">#</a></h2>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h3>
+<table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.add_stderr_logger" title="teehr.add_stderr_logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_stderr_logger</span></code></a>(→ logging.StreamHandler)</p></td>
+<td><p>Helper for quickly adding a StreamHandler to the logger. Useful for</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.add_stderr_logger">
+<span class="sig-prename descclassname"><span class="pre">teehr.</span></span><span class="sig-name descname"><span class="pre">add_stderr_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">logging.DEBUG</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">logging.StreamHandler</span></span></span><a class="reference internal" href="../../_modules/teehr.html#add_stderr_logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.add_stderr_logger" title="Link to this definition">#</a></dt>
+<dd><p>Helper for quickly adding a StreamHandler to the logger. Useful for
+debugging.</p>
+<p>Returns the handler after adding it.</p>
+<p>Taken from the urllib3 package.</p>
+</dd></dl>
+
+</section>
+</section>
 </section>
 
 
@@ -581,6 +603,13 @@ document.write(`
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#subpackages">Subpackages</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#package-contents">Package Contents</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.add_stderr_logger"><code class="docutils literal notranslate"><span class="pre">add_stderr_logger()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
   </nav></div>
 

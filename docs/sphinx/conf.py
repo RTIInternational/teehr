@@ -102,21 +102,10 @@ html_css_files = [
     # "css/getting_started.css",
     "css/teehr.css",
 ]
+html_favicon = '_static/favicon.png'
 
-# numpydoc
+# -- Options for numpydoc -------------------------------------------------
+
 # numpydoc_show_class_members = False
 # numpydoc_show_inherited_class_members = False
 # numpydoc_attributes_as_param_list = False
-
-
-# # Napoleon settings
-# napoleon_google_docstring = False
-# napoleon_numpy_docstring = True
-# napoleon_include_private_with_doc = False
-# napoleon_include_special_with_doc = True
-# napoleon_use_admonition_for_examples = False
-# napoleon_use_admonition_for_notes = False
-# napoleon_use_admonition_for_references = False
-# napoleon_use_ivar = False
-# napoleon_use_param = False
-# napoleon_use_rtype = False

@@ -1,12 +1,8 @@
 Release Notes
 =============
 
-All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-[0.3.8] - 2024-02-12
+0.3.9 - 2024-02-XX
 --------------------
 
 Added
@@ -28,7 +24,15 @@ Changed
   files in `docs/sphinx/getting_started`.
 
 
-[0.3.7] - 2024-02-09
+0.3.8 - 2024-02-14
+--------------------
+
+Added
+^^^^^
+* Adds logging with a `NullHandler()` that can be implemented by the parent app using teehr.
+
+
+0.3.7 - 2024-02-09
 --------------------
 
 Changed
@@ -37,7 +41,7 @@ Changed
 * Changed unit="H" in pandas.time_delta to unit="h"
 * Updated assert statements in `test_weight_generation.py`
 
-[0.3.6] - 2024-02-07
+0.3.6 - 2024-02-07
 --------------------
 
 Added
@@ -48,7 +52,7 @@ Added
   `ignore_missing_file` flag.
 
 
-[0.3.5] - 2023-12-18
+0.3.5 - 2023-12-18
 --------------------
 
 Added
@@ -63,7 +67,7 @@ Changed
 * Fixes USGS loading to include last date of range
 * Removes extra fields from v2.1 retro output
 
-[0.3.4] - 2023-12-18
+0.3.4 - 2023-12-18
 --------------------
 
 Added
@@ -76,7 +80,7 @@ Changed
 * Establishes a read-only database connection as a class variable to the TEEHRDatasetAPI class so it can
   be re-used for each class instance.
 
-[0.3.3] - 2023-12-13
+0.3.3 - 2023-12-13
 --------------------
 
 Added
@@ -89,7 +93,7 @@ Changed
   rather than existing database fields.
 * Updated function argument typing in `queries/utils.py` to be more explicit
 
-[0.3.2] - 2023-12-12
+0.3.2 - 2023-12-12
 --------------------
 
 Added
@@ -109,7 +113,7 @@ Changed
 * Changes default list of `order_by` variables in `insert_joined_timeseries` to improve
   query performance
 
-[0.3.1] - 2023-12-08
+0.3.1 - 2023-12-08
 --------------------
 
 Added
@@ -123,7 +127,7 @@ Changed
   CTE is after the intial join CTE for improved performance.
 
 
-[0.3.0] - 2023-12-08
+0.3.0 - 2023-12-08
 --------------------
 
 Added
@@ -139,7 +143,7 @@ Changed
 * Upgrades to Pangeo image `pangeo/pangeo-notebook:2023.09.11`
 
 
-[0.2.9] - 2023-12-08
+0.2.9 - 2023-12-08
 --------------------
 
 Added
@@ -156,7 +160,7 @@ Changed
 * Updates to loading example notebooks
 * Updates to loading tests
 
-[0.2.8] - 2023-11-14
+0.2.8 - 2023-11-14
 --------------------
 
 Added
@@ -173,14 +177,14 @@ Changed
 - Fixed NWM pydantic configurations models for v2.2
 - Refactored `models/loading` directory
 
-[0.2.7] - 2023-09-14
+0.2.7 - 2023-09-14
 --------------------
 
 Added
 ^^^^^
 - More testing to NWM point and grid loading functions
 
-[0.2.6] - 2023-09-14
+0.2.6 - 2023-09-14
 --------------------
 
 Changed
@@ -192,7 +196,7 @@ Added
 ^^^^^
 - `ValueError` handling when encountering a corrupt zarr json file
 
-[0.2.5] - 2023-09-11
+0.2.5 - 2023-09-11
 --------------------
 
 Changed
@@ -206,7 +210,7 @@ Added
     - Installed firefox (and a bunch of dependencies) to the Docker container (using apt)
     - Installed selenium and the geckodriver using conda
 
-[0.2.4] - 2023-08-30
+0.2.4 - 2023-08-30
 --------------------
 
 Changed
@@ -220,7 +224,7 @@ Added
 - The boolean flag `ignore_missing_files` to point and grid loading to determine whether to fail or continue on missing NWM files
 - Added a check to skip locally existing zarr json files when loading NWM data
 
-[0.2.3] - 2023-08-23
+0.2.3 - 2023-08-23
 --------------------
 
 Changed
@@ -229,7 +233,7 @@ Changed
 - Removed pyarrow from time calculations in `nwm_point_data.py` loading due to windows bug
 - Updated output file name in `nwm_point_data.py` to include forecast hour if `process_by_z_hour=False`
 
-[0.2.2] - 2023-08-23
+0.2.2 - 2023-08-23
 --------------------
 
 Added
@@ -243,7 +247,7 @@ Changed
 - Updated TEEHR to v0.2.2, including TEEHR-HUB
 - Updated the TEEHR-HUB baseimage to `pangeo/pangeo-notebook:2023.07.05`
 
-[0.2.1] - 2023-08-21
+0.2.1 - 2023-08-21
 --------------------
 
 Added
@@ -257,7 +261,7 @@ Changed
 - Updated TEEHR version in TEEHR-HUB to v0.2.1
 - Converts nwm feature id's to numpy array in loading
 
-[0.2.0] - 2023-08-17
+0.2.0 - 2023-08-17
 --------------------
 
 Added
@@ -275,7 +279,7 @@ Changed
 - Use of the term `run` updated to `configuration` for NWM
 
 
-[0.1.3] - 2023-06-17
+0.1.3 - 2023-06-17
 --------------------
 
 Added

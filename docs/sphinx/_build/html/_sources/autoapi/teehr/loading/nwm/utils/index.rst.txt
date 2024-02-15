@@ -36,6 +36,18 @@ Functions
 
 
 
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.loading.nwm.utils.logger
+
+
+.. py:data:: logger
+
+   
+
 .. py:function:: check_dates_against_nwm_version(nwm_version: str, start_date: Union[str, datetime.datetime], ingest_days: int)
 
    

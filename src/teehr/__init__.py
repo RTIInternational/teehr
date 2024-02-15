@@ -3,7 +3,7 @@
 import logging
 from logging import NullHandler
 
-__all__ = ("add_stderr_logger")
+__all__ = ["add_stderr_logger"]
 
 # https://docs.python.org/3/howto/logging.html#configuring-logging-for-a-library
 # We don't want the TEEHR logger to interfere with any application using TEEHR.

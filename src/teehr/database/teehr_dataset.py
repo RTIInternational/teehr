@@ -98,7 +98,6 @@ class TEEHRDatasetAPI:
         * Results bprinted to the screen (format='raw')
         * A DuckDBPyRelation, a symbolic representation of the SQL query
           (format='relation').
-
         """
         if format == "df":
             return self.con.sql(query).df()
@@ -168,7 +167,6 @@ class TEEHRDatasetAPI:
             * Number of duplicate rows
             * Number of location IDs with duplicate value times
             * Number of location IDs with missing time steps
-
         """
         primary_dict = tqu_db.describe_timeseries(
             timeseries_filepath=primary_filepath
