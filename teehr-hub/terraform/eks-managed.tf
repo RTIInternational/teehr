@@ -91,7 +91,7 @@ module "eks" {
     # so we need to disable it to use the default template provided by the AWS EKS managed node group service
     # use_custom_launch_template = false
 
-    # Add NFS security group ID to each 
+    # Add NFS security group ID to each
     vpc_security_group_ids = [ aws_security_group.efs-sg.id ]
   }
 
@@ -339,5 +339,3 @@ resource "aws_iam_policy" "cluster_autoscaler_policy" {
   description = "EKS cluster-autoscaler policy for cluster ${local.cluster_name}"
   policy      = data.aws_iam_policy_document.cluster_autoscaler.json
 }
-
-

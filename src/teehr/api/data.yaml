@@ -13,5 +13,3 @@ datasets:
     crosswalk_filepath: /home/matt/temp/huc1802_retro/geo/usgs_nwm22_crosswalk.parquet
     geometry_filepath: /home/matt/temp/huc1802_retro/geo/usgs_geometry.parquet
     database_filepath: /home/matt/temp/huc1802_retro/huc1802_retro.db
-
-

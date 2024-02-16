@@ -1,0 +1,33 @@
+name: documentation
+
+on:
+  push:
+    tags: [ 'v*.*.*' ]
+    # branches: [112-add-documentation]
+
+permissions:
+  contents: write
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install sphinx pydata-sphinx-theme myst-nb sphinx-design sphinx-autoapi numpydoc ghp-import -e .
+
+      - name: Sphinx build
+        run: |
+          cd docs/sphinx
+          make clean html
+
+      - name: Run ghp-import
+        run: |
+          ghp-import -n -p -f docs/sphinx/_build/html

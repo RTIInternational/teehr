@@ -1,7 +1,7 @@
 """
 Library of code to ingest NGEN outputs to the TEEHR parquet data model format.
 
-This code would basically just be a *.csv parser the write to parquet files.
+This code would basically just be a \\*.csv parser the write to parquet files.
 Given how variable the ngen output can be at this point, it is not worth
 writing robust converter code.  A few helper functions below.
 

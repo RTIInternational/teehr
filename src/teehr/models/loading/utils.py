@@ -1,8 +1,10 @@
+"""Module for NWM loading models."""
 from enum import Enum
 # from pydantic import BaseModel
 
 
 class ChunkByEnum(str, Enum):
+    """ChunkByEnum."""
     day = "day"
     location_id = "location_id"
     week = "week"
@@ -11,29 +13,34 @@ class ChunkByEnum(str, Enum):
 
 
 class SupportedNWMRetroVersionsEnum(str, Enum):
+    """SupportedNWMRetroVersionsEnum."""
     nwm20 = "nwm20"
     nwm21 = "nwm21"
     nwm30 = "nwm30"
 
 
 class SupportedNWMOperationalVersionsEnum(str, Enum):
+    """SupportedNWMOperationalVersionsEnum."""
     nwm22 = "nwm22"
     nwm30 = "nwm30"
 
 
 class SupportedNWMDataSourcesEnum(str, Enum):
+    """SupportedNWMDataSourcesEnum."""
     GCS = "GCS"
     NOMADS = "NOMADS"
     DSTOR = "DSTOR"
 
 
 class SupportedKerchunkMethod(str, Enum):
+    """SupportedKerchunkMethod."""
     local = "local"
     remote = "remote"
     auto = "auto"
 
 
 class SupportedNWMRetroDomainsEnum(str, Enum):
+    """SupportedNWMRetroDomainsEnum."""
     CONUS = "CONUS"
     Alaska = "Alaska"
     PR = "PR"

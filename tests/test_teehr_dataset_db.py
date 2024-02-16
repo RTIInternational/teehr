@@ -1,3 +1,4 @@
+"""Tests for the TEEHR dataset DB queries."""
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -17,7 +18,7 @@ DATABASE_FILEPATH = Path("tests", "data", "temp", "temp_test.db")
 
 
 def test_insert_joined_timeseries():
-
+    """Test the insert joined timeseries query."""
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
@@ -41,6 +42,7 @@ def test_insert_joined_timeseries():
 
 
 def test_unique_field_values():
+    """Test the unique field values query."""
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
@@ -63,6 +65,7 @@ def test_unique_field_values():
 
 
 def test_metrics_query():
+    """Test the metrics query."""
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
@@ -115,6 +118,7 @@ def test_metrics_query():
 
 
 def test_metrics_query_config_filter():
+    """Test the metrics query with config filter."""
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
@@ -156,6 +160,7 @@ def test_metrics_query_config_filter():
 
 
 def test_describe_inputs():
+    """Test the describe inputs query."""
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
@@ -206,6 +211,7 @@ def test_describe_inputs():
 
 
 def test_calculate_field():
+    """Test the calculate field query."""
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
@@ -225,7 +231,7 @@ def test_calculate_field():
     def my_user_function(arg1: float, arg2: str) -> float:
         """Function arguments are fields in joined_timeseries, and
         should have the same data type.
-        Note: In the data model, attribute values are always str type"""
+        Note: In the data model, attribute values are always str type."""
         return float(arg1) / float(arg2)
 
     parameter_names = ["primary_value", "drainage_area_sq_km"]
@@ -240,6 +246,7 @@ def test_calculate_field():
 
 
 def test_join_attributes():
+    """Test the join attributes query."""
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
@@ -297,6 +304,7 @@ def test_join_attributes():
 
 
 def test_get_joined_timeseries_schema():
+    """Test the joined timeseries schema query."""
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
@@ -317,6 +325,7 @@ def test_get_joined_timeseries_schema():
 
 
 def test_joined_timeseries_query_gdf():
+    """Test the get joined timeseries as gdf query."""
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
@@ -345,6 +354,7 @@ def test_joined_timeseries_query_gdf():
 
 
 def test_timeseries_query():
+    """Test the get timeseries query."""
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
@@ -378,6 +388,7 @@ def test_timeseries_query():
 
 
 def test_timeseries_char_query():
+    """Test the get timeseries char query."""
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 

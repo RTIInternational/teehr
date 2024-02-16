@@ -1,3 +1,4 @@
+"""Module for fetchning and processing NWM point data."""
 from typing import Union, Optional, List
 from datetime import datetime
 from pathlib import Path
@@ -43,76 +44,126 @@ def nwm_to_parquet(
     ignore_missing_file: Optional[bool] = True,
     overwrite_output: Optional[bool] = False,
 ):
-    """Fetches NWM point data, formats to tabular, and saves to parquet
+    """Fetch NWM point data, format to tabular TEEHR data model,
+    and save to parquet.
 
     Parameters
     ----------
     configuration : str
         NWM forecast category.
-        (e.g., "analysis_assim", "short_range", ...)
+        (e.g., "analysis_assim", "short_range", ...).
     output_type : str
         Output component of the configuration.
-        (e.g., "channel_rt", "reservoir", ...)
+        (e.g., "channel_rt", "reservoir", ...).
     variable_name : str
         Name of the NWM data variable to download.
-        (e.g., "streamflow", "velocity", ...)
+        (e.g., "streamflow", "velocity", ...).
     start_date : str or datetime
         Date to begin data ingest.
-        Str formats can include YYYY-MM-DD or MM/DD/YYYY
+        Str formats can include YYYY-MM-DD or MM/DD/YYYY.
     ingest_days : int
-        Number of days to ingest data after start date
+        Number of days to ingest data after start date.
     location_ids : List[int]
-        Array specifying NWM IDs of interest
+        Array specifying NWM IDs of interest.
     json_dir : str
-        Directory path for saving json reference files
+        Directory path for saving json reference files.
     output_parquet_dir : str
-        Path to the directory for the final parquet files
-    nwm_version: SupportedNWMOperationalVersionsEnum
+        Path to the directory for the final parquet files.
+    nwm_version : SupportedNWMOperationalVersionsEnum
         The NWM operational version
-        "nwm22", or "nwm30"
-    data_source: Optional[SupportedNWMDataSourcesEnum]
+        "nwm22", or "nwm30".
+    data_source : Optional[SupportedNWMDataSourcesEnum]
         Specifies the remote location from which to fetch the data
         "GCS" (default), "NOMADS", or "DSTOR"
-        Currently only "GCS" is implemented
-    kerchunk_method: Optional[SupportedKerchunkMethod]
+        Currently only "GCS" is implemented.
+    kerchunk_method : Optional[SupportedKerchunkMethod]
         When data_source = "GCS", specifies the preference in creating Kerchunk
-        reference json files.
-        "local" - (default) will create new json files from netcdf files in GCS and
-                   save to a local directory if they do not already exist locally,
-                   in which case the creation is skipped.
-        "remote" - read the CIROH pre-generated jsons from s3, ignoring
-                   any that are unavailable
-        "auto" - read the CIROH pre-generated jsons from s3, and create
-                 any that are unavailable, storing locally
-    t_minus_hours: Optional[List[int]]
+        reference json files. "local" (default) will create new json files from
+        netcdf files in GCS and save to a local directory if they do not already
+        exist locally, in which case the creation is skipped. "remote" - read the
+        CIROH pre-generated jsons from s3, ignoring any that are unavailable.
+        "auto" - read the CIROH pre-generated jsons from s3, and create any that
+        are unavailable, storing locally.
+    t_minus_hours : Optional[List[int]]
         Specifies the look-back hours to include if an assimilation
         configuration is specified.
-    process_by_z_hour: Optional[bool]
+    process_by_z_hour : Optional[bool]
         A boolean flag that determines the method of grouping files
         for processing. The default is True, which groups by day and z_hour.
         False groups files sequentially into chunks, whose size is determined
         by stepsize. This allows users to process more data potentially more
         efficiently, but runs to risk of splitting up forecasts into separate
         output files.
-    stepsize: Optional[int]
+    stepsize : Optional[int]
         The number of json files to process at one time. Used if
         process_by_z_hour is set to False. Default value is 100. Larger values
-        can result in greater efficiency but require more memory
-    ignore_missing_file: Optional[bool]
+        can result in greater efficiency but require more memory.
+    ignore_missing_file : Optional[bool]
         Flag specifying whether or not to fail if a missing NWM file is encountered
-        True = skip and continue
-        False = fail
-    overwrite_output: Optional[bool]
+        True = skip and continue.
+        False = fail.
+    overwrite_output : Optional[bool]
         Flag specifying whether or not to overwrite output files if they already
-        exist.  True = overwrite; False = fail
+        exist.  True = overwrite; False = fail.
 
+    Notes
+    -----
     The NWM configuration variables, including configuration, output_type, and
     variable_name are stored as pydantic models in point_config_models.py
 
     Forecast and assimilation data is grouped and saved one file per reference
     time, using the file name convention "YYYYMMDDTHHZ".  The tabular output
-    parquet files follow the timeseries data model described here:
-    https://github.com/RTIInternational/teehr/blob/main/docs/data_models.md#timeseries  # noqa
+    parquet files follow the timeseries data model described in the
+    :ref:`data model <data_model>`.
+
+    Examples
+    --------
+    Here we fetch operational streamflow forecasts for NWM v2.2 from GCS, and
+    save the output in the TEEHR :ref:`data model <data_model>` format.
+
+    Import the necessary module.
+
+    >>> import teehr.loading.nwm.nwm_points as tlp
+
+    Specify the input variables.
+
+    >>> CONFIGURATION = "short_range"
+    >>> OUTPUT_TYPE = "channel_rt"
+    >>> VARIABLE_NAME = "streamflow"
+    >>> START_DATE = "2023-03-18"
+    >>> INGEST_DAYS = 1
+    >>> JSON_DIR = Path(Path.home(), "temp/parquet/jsons/")
+    >>> OUTPUT_DIR = Path(Path.home(), "temp/parquet")
+    >>> NWM_VERSION = "nwm22"
+    >>> DATA_SOURCE = "GCS"
+    >>> KERCHUNK_METHOD = "auto"
+    >>> T_MINUS = [0, 1, 2]
+    >>> IGNORE_MISSING_FILE = True
+    >>> OVERWRITE_OUTPUT = True
+    >>> PROCESS_BY_Z_HOUR = True
+    >>> STEPSIZE = 100
+    >>> LOCATION_IDS = [7086109,  7040481,  7053819]
+
+    Fetch and format the data, writing to the specified directory.
+
+    >>> tlp.nwm_to_parquet(
+    >>>     configuration=CONFIGURATION,
+    >>>     output_type=OUTPUT_TYPE,
+    >>>     variable_name=VARIABLE_NAME,
+    >>>     start_date=START_DATE,
+    >>>     ingest_days=INGEST_DAYS,
+    >>>     location_ids=LOCATION_IDS,
+    >>>     json_dir=JSON_DIR,
+    >>>     output_parquet_dir=OUTPUT_DIR,
+    >>>     nwm_version=NWM_VERSION,
+    >>>     data_source=DATA_SOURCE,
+    >>>     kerchunk_method=KERCHUNK_METHOD,
+    >>>     t_minus_hours=T_MINUS,
+    >>>     process_by_z_hour=PROCESS_BY_Z_HOUR,
+    >>>     stepsize=STEPSIZE,
+    >>>     ignore_missing_file=IGNORE_MISSING_FILE,
+    >>>     overwrite_output=OVERWRITE_OUTPUT,
+    >>> )
     """
 
     # Import appropriate config model and dicts based on NWM version
@@ -188,57 +239,57 @@ def nwm_to_parquet(
         )
 
 
-if __name__ == "__main__":
-    # analysis_assim_extend, short_range, analysis_assim_alaska
-    configuration = (
-        "analysis_assim_extend"
-    )
-    output_type = "channel_rt"
-    variable_name = "streamflow"
-    start_date = "2023-11-28"
-    ingest_days = 1
-    location_ids = [
-        7086109,
-        7040481,
-        7053819,
-        7111205,
-        7110249,
-        14299781,
-        14251875,
-        14267476,
-        7152082,
-        14828145,
-    ]
-    # location_ids = np.load(
-    #     "/mnt/sf_shared/data/ciroh/temp_location_ids.npy"
-    # )  # all 2.7 million
-    json_dir = "/mnt/data/ciroh/jsons"
-    output_parquet_dir = "/mnt/data/ciroh/parquet"
+# if __name__ == "__main__":
+#     # analysis_assim_extend, short_range, analysis_assim_alaska
+#     configuration = (
+#         "analysis_assim_extend"
+#     )
+#     output_type = "channel_rt"
+#     variable_name = "streamflow"
+#     start_date = "2023-11-28"
+#     ingest_days = 1
+#     location_ids = [
+#         7086109,
+#         7040481,
+#         7053819,
+#         7111205,
+#         7110249,
+#         14299781,
+#         14251875,
+#         14267476,
+#         7152082,
+#         14828145,
+#     ]
+#     # location_ids = np.load(
+#     #     "/mnt/sf_shared/data/ciroh/temp_location_ids.npy"
+#     # )  # all 2.7 million
+#     json_dir = "/mnt/data/ciroh/jsons"
+#     output_parquet_dir = "/mnt/data/ciroh/parquet"
 
-    process_by_z_hour = True
-    stepsize = 100
-    ignore_missing_file = False
+#     process_by_z_hour = True
+#     stepsize = 100
+#     ignore_missing_file = False
 
-    import time
-    t1 = time.time()
+#     import time
+#     t1 = time.time()
 
-    nwm_to_parquet(
-        configuration,
-        output_type,
-        variable_name,
-        start_date,
-        ingest_days,
-        location_ids,
-        json_dir,
-        output_parquet_dir,
-        nwm_version="nwm30",
-        data_source="GCS",
-        kerchunk_method="use_available",
-        t_minus_hours=[0],
-        process_by_z_hour=process_by_z_hour,
-        stepsize=stepsize,
-        ignore_missing_file=ignore_missing_file,
-        overwrite_output=False,
-    )
+#     nwm_to_parquet(
+#         configuration,
+#         output_type,
+#         variable_name,
+#         start_date,
+#         ingest_days,
+#         location_ids,
+#         json_dir,
+#         output_parquet_dir,
+#         nwm_version="nwm30",
+#         data_source="GCS",
+#         kerchunk_method="use_available",
+#         t_minus_hours=[0],
+#         process_by_z_hour=process_by_z_hour,
+#         stepsize=stepsize,
+#         ignore_missing_file=ignore_missing_file,
+#         overwrite_output=False,
+#     )
 
-    print(f"elapsed: {time.time() - t1:.2f} s")
+#     print(f"elapsed: {time.time() - t1:.2f} s")
