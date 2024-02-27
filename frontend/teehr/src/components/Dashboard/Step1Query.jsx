@@ -79,7 +79,7 @@ const QuerySection = (props) => {
   const handleSpatialDataChange = (newIncludeSpatialData, onChange) => {
     setUserSelections((prev) => ({
       ...prev,
-      includeSpatialData: newIncludeSpatialData,
+      selectedIncludeSpatialData: newIncludeSpatialData,
     }));
     onChange(newIncludeSpatialData);
   };
