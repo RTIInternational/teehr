@@ -1,3 +1,4 @@
+"""Module for parquet-based query models."""
 from collections.abc import Iterable
 from datetime import datetime
 from enum import Enum  # StrEnum
@@ -9,12 +10,15 @@ from pathlib import Path
 
 
 class BaseModel(PydanticBaseModel):
+    """Basemodel configuration."""
     class ConfigDict:
+        """ConfigDict."""
         arbitrary_types_allowed = True
         # smart_union = True # deprecated in v2
 
 
 class FilterOperatorEnum(str, Enum):
+    """Filter symbols."""
     eq = "="
     gt = ">"
     lt = "<"
@@ -25,6 +29,7 @@ class FilterOperatorEnum(str, Enum):
 
 
 class MetricEnum(str, Enum):
+    """Available metrics."""
     primary_count = "primary_count"
     secondary_count = "secondary_count"
     primary_minimum = "primary_minimum"
@@ -50,6 +55,7 @@ class MetricEnum(str, Enum):
 
 
 class JoinedFilterFieldEnum(str, Enum):
+    """Joined filter fields."""
     value_time = "value_time"
     reference_time = "reference_time"
     secondary_location_id = "secondary_location_id"
@@ -64,6 +70,7 @@ class JoinedFilterFieldEnum(str, Enum):
 
 
 class TimeseriesFilterFieldEnum(str, Enum):
+    """Timeseries filter fields."""
     value_time = "value_time"
     reference_time = "reference_time"
     location_id = "location_id"
@@ -76,6 +83,7 @@ class TimeseriesFilterFieldEnum(str, Enum):
 
 
 class JoinedFilter(BaseModel):
+    """Joined filter model."""
     column: JoinedFilterFieldEnum
     operator: FilterOperatorEnum
     value: Union[
@@ -83,12 +91,14 @@ class JoinedFilter(BaseModel):
     ]
 
     def is_iterable_not_str(obj):
+        """Check if is type Iterable and not str."""
         if isinstance(obj, Iterable) and not isinstance(obj, str):
             return True
         return False
 
     @field_validator("value")
     def in_operator_must_have_iterable(cls, v, info: ValidationInfo):
+        """Ensure that an 'in' operator has an iterable type."""
         if cls.is_iterable_not_str(v) and info.data["operator"] != "in":
             raise ValueError("iterable value must be used with 'in' operator")
 
@@ -101,6 +111,7 @@ class JoinedFilter(BaseModel):
 
 
 class TimeseriesFilter(BaseModel):
+    """Timeseries filter model."""
     column: TimeseriesFilterFieldEnum
     operator: FilterOperatorEnum
     value: Union[
@@ -108,12 +119,14 @@ class TimeseriesFilter(BaseModel):
     ]
 
     def is_iterable_not_str(obj):
+        """Check if is type Iterable and not str."""
         if isinstance(obj, Iterable) and not isinstance(obj, str):
             return True
         return False
 
     @field_validator("value")
     def in_operator_must_have_iterable(cls, v, info: ValidationInfo):
+        """Ensure that an 'in' operator has an iterable type."""
         if cls.is_iterable_not_str(v) and info.data["operator"] != "in":
             raise ValueError("iterable value must be used with 'in' operator")
 
@@ -125,6 +138,7 @@ class TimeseriesFilter(BaseModel):
 
 
 class MetricQuery(BaseModel):
+    """Metric query model."""
     primary_filepath: Union[str, Path]
     secondary_filepath: Union[str, Path]
     crosswalk_filepath: Union[str, Path]
@@ -141,6 +155,7 @@ class MetricQuery(BaseModel):
     def include_geometry_must_group_by_primary_location_id(
         cls, v, info: ValidationInfo
     ):
+        """Include_geometry must groupby primary_location_id."""
         if (
             v is True
             and JoinedFilterFieldEnum.primary_location_id
@@ -170,12 +185,14 @@ class MetricQuery(BaseModel):
 
     @field_validator("filters")
     def filter_must_be_list(cls, v):
+        """Filter must be a list."""
         if v is None:
             return []
         return v
 
 
 class JoinedTimeseriesQuery(BaseModel):
+    """Joined timeseries query model."""
     primary_filepath: Union[str, Path]
     secondary_filepath: Union[str, Path]
     crosswalk_filepath: Union[str, Path]
@@ -190,6 +207,7 @@ class JoinedTimeseriesQuery(BaseModel):
     def include_geometry_must_group_by_primary_location_id(
         cls, v, info: ValidationInfo
     ):
+        """Include_geometry must groupby primary_location_id."""
         if v is True and not info.data["geometry_filepath"]:
             raise ValueError(
                 "`geometry_filepath` must be provided to include geometry "
@@ -200,12 +218,14 @@ class JoinedTimeseriesQuery(BaseModel):
 
     @field_validator("filters")
     def filter_must_be_list(cls, v):
+        """Filter must be a list."""
         if v is None:
             return []
         return v
 
 
 class TimeseriesQuery(BaseModel):
+    """Timeseries query model."""
     timeseries_filepath: Union[str, Path]
     order_by: List[TimeseriesFilterFieldEnum]
     filters: Optional[List[TimeseriesFilter]] = []
@@ -213,12 +233,14 @@ class TimeseriesQuery(BaseModel):
 
     @field_validator("filters")
     def filter_must_be_list(cls, v):
+        """Filter must be a list."""
         if v is None:
             return []
         return v
 
 
 class TimeseriesCharQuery(BaseModel):
+    """Timeseries char query model."""
     timeseries_filepath: Union[str, Path]
     order_by: List[TimeseriesFilterFieldEnum]
     group_by: List[TimeseriesFilterFieldEnum]
@@ -227,6 +249,7 @@ class TimeseriesCharQuery(BaseModel):
 
     @field_validator("filters")
     def filter_must_be_list(cls, v):
+        """Filter must be a list."""
         if v is None:
             return []
         return v

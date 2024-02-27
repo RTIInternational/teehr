@@ -1,0 +1,14 @@
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.5.0
+  hooks:
+  -   id: trailing-whitespace
+  -   id: end-of-file-fixer
+  -   id: check-yaml
+      args: [--allow-multiple-documents]
+  -   id: check-added-large-files
+      args: ['--maxkb=13000', '--enforce-all']
+- repo: https://github.com/numpy/numpydoc
+  rev: v1.6.0
+  hooks:
+    - id: numpydoc-validation

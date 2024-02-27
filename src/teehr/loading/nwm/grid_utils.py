@@ -1,3 +1,4 @@
+"""Module defining shared functions for processing NWM grid data."""
 from pathlib import Path
 from typing import Dict, List, Tuple
 import re
@@ -13,7 +14,8 @@ from teehr.loading.nwm.utils import get_dataset, write_parquet_file
 def compute_zonal_mean(
     da: xr.DataArray, weights_filepath: str
 ) -> pd.DataFrame:
-    """Compute zonal mean for given zones and weights"""
+    """Compute zonal mean of area-weighted pixels for given
+    zones and weights."""
     # Read weights file
     weights_df = pd.read_parquet(
         weights_filepath, columns=["row", "col", "weight", "location_id"]
@@ -42,9 +44,9 @@ def process_single_file(
     weights_filepath: str,
     ignore_missing_file: bool,
     units_format_dict: Dict
-):
-    """Compute zonal mean for a single json reference file and format
-    to a dataframe using the TEEHR data model"""
+) -> pd.DataFrame:
+    """Fetch a single json reference file and format \
+    to a dataframe using the TEEHR data model."""
     ds = get_dataset(
         row.filepath,
         ignore_missing_file,
@@ -55,14 +57,14 @@ def process_single_file(
     yrmoday = row.day
     z_hour = row.z_hour[1:3]
     ref_time = pd.to_datetime(yrmoday) \
-        + pd.to_timedelta(int(z_hour), unit="H")
+        + pd.to_timedelta(int(z_hour), unit="h")
 
     nwm_units = ds[variable_name].attrs["units"]
     teehr_units = units_format_dict.get(nwm_units, nwm_units)
     value_time = ds.time.values[0]
     da = ds[variable_name]
 
-    # Calculate mean areal of selected variable
+    # Calculate mean areal value of selected variable
     df = compute_zonal_mean(da, weights_filepath)
 
     df["value_time"] = value_time
@@ -85,8 +87,8 @@ def fetch_and_format_nwm_grids(
     overwrite_output: bool,
 ):
     """
-    Reads in the single reference jsons, subsets the NWM data based on
-    provided IDs and formats and saves the data as a parquet files
+    Read in the single reference jsons, subset the NWM data based on
+    provided IDs and format and save the data as a parquet files.
     """
     output_parquet_dir = Path(output_parquet_dir)
     if not output_parquet_dir.exists():

@@ -13,11 +13,15 @@ assess their skill and performance.
 
 NOTE: THIS PROJECT IS UNDER DEVELOPMENT - EXPECT TO FIND BROKEN AND INCOMPLETE CODE.
 
+## Documentation
+[TEEHR Documentation](https://rtiinternational.github.io/teehr/)
+
 ## How to Install TEEHR
 Install poetry
 ```bash
 $ pipx install poetry
 ```
+
 Install from source
 ```bash
 # Create and activate python environment, requires python >= 3.10
@@ -38,8 +42,8 @@ $ poetry add git+https://github.com/RTIInternational/teehr.git#[BRANCH TAG]
 
 Use Docker
 ```bash
-$ docker build -t teehr:v0.3.5 .
-$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.3.5 jupyter lab --ip 0.0.0.0 $HOME
+$ docker build -t teehr:v0.3.9 .
+$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.3.9 jupyter lab --ip 0.0.0.0 $HOME
 ```
 
 ## Examples

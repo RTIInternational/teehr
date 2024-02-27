@@ -1,3 +1,4 @@
+"""Module for database query models."""
 from collections.abc import Iterable
 from datetime import datetime
 from enum import Enum  # , StrEnum  if 3.11
@@ -11,7 +12,9 @@ from teehr.models.queries import FilterOperatorEnum, MetricEnum
 
 
 class BaseModel(PydanticBaseModel):
+    """Basemodel configuration."""
     class ConfigDict:
+        """ConfigDict."""
         arbitrary_types_allowed = True
         # smart_union = True # deprecated in v2
 
@@ -61,15 +64,18 @@ class JoinedFieldNameEnum(str, Enum):
 
 
 class TimeseriesNameEnum(str, Enum):
+    """Timeseries Names."""
     primary = "primary"
     secondary = "secondary"
 
 
 class JoinedTimeseriesFieldName(BaseModel):
+    """Joined Timeseries Field Name model."""
     field_name: str
 
     @field_validator("field_name")
     def field_name_must_exist_in_timeseries_table(cls, v, info: ValidationInfo): # noqa
+        """Field name must exist in the database table."""
         context = info.context
         if context:
             existing_fields = context.get("existing_fields", set())
@@ -82,6 +88,7 @@ class JoinedTimeseriesFieldName(BaseModel):
 
 
 class CalculateField(BaseModel):
+    """Calculate field model."""
     parameter_names: List[str]
     new_field_name: str
     new_field_type: FieldTypeEnum
@@ -89,11 +96,12 @@ class CalculateField(BaseModel):
     # TODO: Add field_name validator? (has already been sanitized)
     @field_validator("new_field_name")
     def field_name_must_be_valid(cls, v):
-        # Must not contain special characters
+        """Must not contain special characters."""
         return v
 
     @field_validator("parameter_names")
     def parameter_names_must_exist_as_fields(cls, v, info: ValidationInfo):
+        """Parameter name must exist in the database table."""
         context = info.context
         if context:
             existing_fields = context.get("existing_fields", set())
@@ -106,6 +114,7 @@ class CalculateField(BaseModel):
 
 
 class Filter(BaseModel):
+    """Filter model."""
     column: str
     operator: FilterOperatorEnum
     value: Union[
@@ -113,6 +122,7 @@ class Filter(BaseModel):
     ]
 
     def is_iterable_not_str(obj):
+        """Check if obj is iterable and not str."""
         if isinstance(obj, Iterable) and not isinstance(obj, str):
             return True
         return False
@@ -136,6 +146,8 @@ class Filter(BaseModel):
 
 
 class InsertJoinedTimeseriesQuery(BaseModel):
+    """InsertJoinedTimeseriesQuery model."""
+
     primary_filepath: Union[str, Path]
     secondary_filepath: Union[str, Path]
     crosswalk_filepath: Union[str, Path]
@@ -143,6 +155,8 @@ class InsertJoinedTimeseriesQuery(BaseModel):
 
 
 class JoinedTimeseriesQuery(BaseModel):
+    """JoinedTimeseriesQuery model."""
+
     order_by: List[str]
     filters: Optional[List[Filter]] = []
     return_query: Optional[bool] = False
@@ -150,13 +164,14 @@ class JoinedTimeseriesQuery(BaseModel):
 
     @field_validator("filters")
     def filter_must_be_list(cls, v):
+        """Filter must be a list."""
         if v is None:
             return []
         return v
 
     @field_validator("order_by")
     def order_by_must_exist_as_fields(cls, v, info: ValidationInfo):
-        """order_by fields must currently exist in the database"""
+        """Order_by fields must currently exist in the database."""
         context = info.context
         if context:
             existing_fields = context.get("existing_fields", set())
@@ -170,7 +185,7 @@ class JoinedTimeseriesQuery(BaseModel):
 
     @field_validator("filters")
     def filters_must_exist_as_fields(cls, v, info: ValidationInfo):
-        """filters fields must currently exist in the database"""
+        """Filter fields must currently exist in the database."""
         context = info.context
         if context:
             existing_fields = context.get("existing_fields", set())
@@ -184,6 +199,8 @@ class JoinedTimeseriesQuery(BaseModel):
 
 
 class TimeseriesQuery(BaseModel):
+    """TimeseriesQuery model."""
+
     order_by: List[str]
     filters: Optional[List[Filter]] = []
     return_query: Optional[bool] = False
@@ -191,14 +208,15 @@ class TimeseriesQuery(BaseModel):
 
     @field_validator("filters")
     def filter_must_be_list(cls, v):
+        """Filter must be a list."""
         if v is None:
             return []
         return v
 
     @field_validator("order_by")
     def order_by_must_exist_as_fields(cls, v, info: ValidationInfo):
-        """order_by fields must be part one of the selected fields or
-        its alias"""
+        """Order_by fields must be part one of the selected fields or
+        its alias."""
         validation_fields = [
             "location_id",
             "reference_time",
@@ -222,7 +240,7 @@ class TimeseriesQuery(BaseModel):
 
     @field_validator("filters")
     def filters_must_exist_as_fields(cls, v, info: ValidationInfo):
-        """filters fields must currently exist in the database"""
+        """Filter fields must currently exist in the database."""
         context = info.context
         if context:
             existing_fields = context.get("existing_fields", set())
@@ -236,6 +254,7 @@ class TimeseriesQuery(BaseModel):
 
 
 class TimeseriesCharQuery(BaseModel):
+    """Timeseries char query model."""
     order_by: List[str]
     group_by: List[str]
     filters: Optional[List[Filter]] = []
@@ -244,13 +263,14 @@ class TimeseriesCharQuery(BaseModel):
 
     @field_validator("filters")
     def filter_must_be_list(cls, v):
+        """Filter must be a list."""
         if v is None:
             return []
         return v
 
     @field_validator("order_by")
     def order_by_must_exist_as_fields_or_chars(cls, v, info: ValidationInfo):
-        """order_by fields must currently exist in the database or be one of
+        """Order_by fields must currently exist in the database or be one of
         the calculated stats."""
         context = info.context
         if context:
@@ -271,7 +291,7 @@ class TimeseriesCharQuery(BaseModel):
 
     @field_validator("group_by")
     def group_by_must_exist_as_fields(cls, v, info: ValidationInfo):
-        """group_by fields must currently exist in the database"""
+        """Group_by fields must currently exist in the database."""
         context = info.context
         if context:
             existing_fields = context.get("existing_fields", set())
@@ -285,6 +305,7 @@ class TimeseriesCharQuery(BaseModel):
 
     @field_validator("group_by")
     def group_by_must_contain_primary_or_secondary_id(cls, v):
+        """Group_by must contain primary or secondary id."""
         id_list = ["primary_location_id", "secondary_location_id"]
         if not any([val in id_list for val in v]):
             raise ValueError(
@@ -295,7 +316,7 @@ class TimeseriesCharQuery(BaseModel):
 
     @field_validator("filters")
     def filters_must_exist_as_fields(cls, v, info: ValidationInfo):
-        """filters fields must currently exist in the database"""
+        """Filter fields must currently exist in the database."""
         context = info.context
         if context:
             existing_fields = context.get("existing_fields", set())
@@ -309,6 +330,7 @@ class TimeseriesCharQuery(BaseModel):
 
 
 class MetricQuery(BaseModel):
+    """Metric query model."""
     include_geometry: bool
     group_by: List[str]
     order_by: List[str]
@@ -318,6 +340,7 @@ class MetricQuery(BaseModel):
 
     @field_validator("filters")
     def filter_must_be_list(cls, v):
+        """Filter must be a list."""
         if v is None:
             return []
         return v
@@ -327,6 +350,9 @@ class MetricQuery(BaseModel):
     def validate_include_geometry_and_specified_fields(
         cls, data, info: ValidationInfo
     ):
+        """Validate 'include_geometry' and order_by, group_by
+        and filters fields.
+        """
         if data["include_geometry"]:
             # If geometry is included, group_by must
             # contain 'primary_location_id'

@@ -1,3 +1,4 @@
+"""Module describing NWM v2.2 grid configuration variables."""
 from enum import Enum
 from typing import Optional
 
@@ -6,6 +7,7 @@ from pydantic import BaseModel
 
 # GRID DATA VARIABLES ENUMS
 class LandAssimVariablesEnum(str, Enum):
+    """LandAssimVariablesEnum."""
     ACCET = "ACCET"
     ACSNOM = "ACSNOM"
     EDIR = "EDIR"
@@ -24,6 +26,7 @@ class LandAssimVariablesEnum(str, Enum):
 
 
 class LandShortVariablesEnum(str, Enum):
+    """LandShortVariablesEnum."""
     ACCET = "ACCET"
     SNOWT_AVG = "SNOWT_AVG"
     SOILSAT_TOP = "SOILSAT_TOP"
@@ -33,6 +36,7 @@ class LandShortVariablesEnum(str, Enum):
 
 
 class LandMediumVariablesEnum(str, Enum):
+    """LandMediumVariablesEnum."""
     FSA = "FSA"
     FIRA = "FIRA"
     GRDFLX = "GRDFLX"
@@ -59,6 +63,7 @@ class LandMediumVariablesEnum(str, Enum):
 
 
 class LandLongVariablesEnum(str, Enum):
+    """LandLongVariablesEnum."""
     UGDRNOFF = "UGDRNOFF"
     SFCRNOFF = "SFCRNOFF"
     SNEQV = "SNEQV"
@@ -70,6 +75,7 @@ class LandLongVariablesEnum(str, Enum):
 
 
 class ForcingVariablesEnum(str, Enum):
+    """ForcingVariablesEnum."""
     U2D = "U2D"
     V2D = "V2D"
     T2D = "T2D"
@@ -82,10 +88,12 @@ class ForcingVariablesEnum(str, Enum):
 
 # OUTPUT TYPE ENUMS
 class ShortAndAnalysisOutputEnum(str, Enum):
+    """ShortAndAnalysisOutputEnum."""
     land = "land"
 
 
 class MediumOutputEnum(str, Enum):
+    """MediumOutputEnum."""
     land_1 = "land_1"
     land_2 = "land_2"
     land_3 = "land_3"
@@ -96,6 +104,7 @@ class MediumOutputEnum(str, Enum):
 
 
 class LongOutputEnum(str, Enum):
+    """LongOutputEnum."""
     land_1 = "land_1"
     land_2 = "land_2"
     land_3 = "land_3"
@@ -103,21 +112,25 @@ class LongOutputEnum(str, Enum):
 
 
 class ForcingOutputEnum(str, Enum):
+    """ForcingOutputEnum."""
     forcing = "forcing"
 
 
 # OUTPUT TYPE MODELS
 class Analysis(BaseModel):
+    """Analysis."""
     output_type: ShortAndAnalysisOutputEnum
     land: Optional[LandAssimVariablesEnum] = None
 
 
 class ShortRange(BaseModel):
+    """ShortRange."""
     output_type: ShortAndAnalysisOutputEnum
     land: Optional[LandShortVariablesEnum] = None
 
 
 class MediumRange(BaseModel):
+    """MediumRange."""
     output_type: MediumOutputEnum
     land_1: Optional[LandMediumVariablesEnum] = None
     land_2: Optional[LandMediumVariablesEnum] = None
@@ -129,6 +142,7 @@ class MediumRange(BaseModel):
 
 
 class LongRange(BaseModel):
+    """LongRange."""
     output_type: LongOutputEnum
     land_1: Optional[LandLongVariablesEnum] = None
     land_2: Optional[LandLongVariablesEnum] = None
@@ -137,12 +151,14 @@ class LongRange(BaseModel):
 
 
 class Forcing(BaseModel):
+    """Forcing."""
     output_type: ForcingOutputEnum
     forcing: Optional[ForcingVariablesEnum] = None
 
 
 # CONFIGURATIONS ENUM
 class ConfigurationsEnum(str, Enum):
+    """ConfigurationsEnum."""
     analysis_assim = "analysis_assim"
     analysis_assim_no_da = "analysis_assim_no_da"
     analysis_assim_extend = "analysis_assim_extend"
@@ -181,6 +197,7 @@ class ConfigurationsEnum(str, Enum):
 
 # CONFIGURATION MODEL
 class GridConfigurationModel(BaseModel):
+    """NWM v2.2 GridConfigurationModel."""
     configuration: ConfigurationsEnum
     analysis_assim: Optional[Analysis] = None
     analysis_assim_no_da: Optional[Analysis] = None

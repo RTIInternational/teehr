@@ -1,3 +1,4 @@
+"""Module for defining constants related to loading NWM data."""
 from datetime import datetime
 
 import numpy as np

@@ -1,0 +1,19 @@
+trim trailing whitespace.................................................[41mFailed[m
+[2m- hook id: trailing-whitespace[m
+[2m- files were modified by this hook[m
+fix end of files.........................................................[41mFailed[m
+[2m- hook id: end-of-file-fixer[m
+[2m- exit code: 1[m
+[2m- files were modified by this hook[m
+
+Fixing docs/sphinx/pre-commit-output.txt
+
+check yaml...............................................................[41mFailed[m
+[2m- hook id: check-yaml[m
+[2m- files were modified by this hook[m
+check for added large files..............................................[41mFailed[m
+[2m- hook id: check-added-large-files[m
+[2m- files were modified by this hook[m
+numpydoc-validation......................................................[41mFailed[m
+[2m- hook id: numpydoc-validation[m
+[2m- files were modified by this hook[m

@@ -1,3 +1,4 @@
+"""Module for loading and processing USGS streamflow data."""
 import pandas as pd
 
 from typing import List, Union, Optional
@@ -39,7 +40,7 @@ def _convert_to_si_units(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _datetime_to_date(dt: datetime) -> datetime:
-    """Convert datetime to date only"""
+    """Convert datetime to date only."""
     dt.replace(
         hour=0,
         minute=0,
@@ -107,7 +108,7 @@ def _fetch_usgs(
 
 
 def _format_output_filename(chunk_by: str, start_dt, end_dt) -> str:
-    """Formats the output filename based on min and max
+    """Format the output filename based on min and max
     datetime in the dataset."""
     if chunk_by == "day":
         return f"{start_dt.strftime('%Y-%m-%d')}.parquet"
@@ -146,16 +147,45 @@ def usgs_to_parquet(
         Path of directory where parquet files will be saved.
     chunk_by : Union[str, None], default = None
         How to "chunk" the fetching and storing of the data.
-        Valid options = ["day", "site", None]
-    filter_to_hourly: bool = True
+        Valid options = ["day", "site", None].
+    filter_to_hourly : bool = True
         Return only values that fall on the hour (i.e. drop 15 minute data).
-    filter_no_data: bool = True
-        Filter out -999 values
-    convert_to_si: bool = True
-        Multiplies values by 0.3048**3 and sets `measurement_units` to `m3/s`
-    overwrite_output: bool
+    filter_no_data : bool = True
+        Filter out -999 values.
+    convert_to_si : bool = True
+        Multiplies values by 0.3048**3 and sets `measurement_units` to `m3/s`.
+    overwrite_output : bool
         Flag specifying whether or not to overwrite output files if they
-        already exist.  True = overwrite; False = fail
+        already exist.  True = overwrite; False = fail.
+
+    Examples
+    --------
+    Here we fetch five days worth of USGS hourly streamflow data, to two gages,
+    chunking by day.
+
+    Import the module.
+
+    >>> from teehr.loading.usgs.usgs import usgs_to_parquet
+
+    Set the input variables.
+
+    >>> SITES=["02449838", "02450825"]
+    >>> START_DATE=datetime(2023, 2, 20)
+    >>> END_DATE=datetime(2023, 2, 25)
+    >>> OUTPUT_PARQUET_DIR=Path(Path().home(), "temp", "usgs")
+    >>> CHUNK_BY="day",
+    >>> OVERWRITE_OUTPUT=True
+
+    Fetch the data, writing to the specified output directory.
+
+    >>> usgs_to_parquet(
+    >>>     sites=SITES,
+    >>>     start_date=START_DATE,
+    >>>     end_date=END_DATE,
+    >>>     output_parquet_dir=TEMP_DIR,
+    >>>     chunk_by=CHUNK_BY,
+    >>>     overwrite_output=OVERWRITE_OUTPUT
+    >>> )
     """
 
     start_date = pd.Timestamp(start_date)
@@ -262,40 +292,40 @@ def usgs_to_parquet(
             )
 
 
-if __name__ == "__main__":
-    # Examples
-    usgs_to_parquet(
-        sites=[
-            "02449838",
-            "02450825"
-        ],
-        start_date=datetime(2023, 2, 20),
-        end_date=datetime(2023, 2, 25),
-        output_parquet_dir=Path(Path().home(), "temp", "usgs"),
-        chunk_by="location_id",
-        overwrite_output=True
-    )
+# if __name__ == "__main__":
+#     # Examples
+#     usgs_to_parquet(
+#         sites=[
+#             "02449838",
+#             "02450825"
+#         ],
+#         start_date=datetime(2023, 2, 20),
+#         end_date=datetime(2023, 2, 25),
+#         output_parquet_dir=Path(Path().home(), "temp", "usgs"),
+#         chunk_by="location_id",
+#         overwrite_output=True
+#     )
 
-    usgs_to_parquet(
-        sites=[
-            "02449838",
-            "02450825"
-        ],
-        start_date=datetime(2023, 2, 20),
-        end_date=datetime(2023, 2, 25),
-        output_parquet_dir=Path(Path().home(), "temp", "usgs"),
-        chunk_by="day",
-        overwrite_output=True
-    )
+#     usgs_to_parquet(
+#         sites=[
+#             "02449838",
+#             "02450825"
+#         ],
+#         start_date=datetime(2023, 2, 20),
+#         end_date=datetime(2023, 2, 25),
+#         output_parquet_dir=Path(Path().home(), "temp", "usgs"),
+#         chunk_by="day",
+#         overwrite_output=True
+#     )
 
-    usgs_to_parquet(
-        sites=[
-            "02449838",
-            "02450825"
-        ],
-        start_date=datetime(2023, 2, 20),
-        end_date=datetime(2023, 2, 25),
-        output_parquet_dir=Path(Path().home(), "temp", "usgs"),
-        overwrite_output=True
-    )
-    pass
+#     usgs_to_parquet(
+#         sites=[
+#             "02449838",
+#             "02450825"
+#         ],
+#         start_date=datetime(2023, 2, 20),
+#         end_date=datetime(2023, 2, 25),
+#         output_parquet_dir=Path(Path().home(), "temp", "usgs"),
+#         overwrite_output=True
+#     )
+#     pass

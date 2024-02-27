@@ -1,3 +1,4 @@
+"""A module for loading retrospective NWM gridded data."""
 import time
 from datetime import datetime
 from pathlib import Path
@@ -99,7 +100,7 @@ def construct_nwm21_json_paths(
 def compute_zonal_mean(
     var_da: xr.DataArray, weights_filepath: str, time_dt: pd.Timestamp
 ) -> pd.DataFrame:
-    """Compute zonal mean for given zones and weights"""
+    """Compute the zonal mean for given zones and weights."""
     weights_df = pd.read_parquet(
         weights_filepath, columns=["row", "col", "weight", "location_id"]
     )
@@ -126,8 +127,8 @@ def process_single_file(
     units_format_dict: Dict,
     nwm_version: str
 ):
-    """Compute zonal mean for a single json reference file and format
-    to a dataframe using the TEEHR data model"""
+    """Compute the zonal mean for a single json reference file and format
+    to a dataframe using the TEEHR data model."""
     ds = get_dataset(
         row.filepath,
         ignore_missing_file,
@@ -171,38 +172,34 @@ def nwm_retro_grids_to_parquet(
 
     Parameters
     ----------
-    nwm_version: SupportedNWMRetroVersionsEnum
+    nwm_version : SupportedNWMRetroVersionsEnum
         NWM retrospective version to fetch.
-        Currently `nwm21` and `nwm30` supported
-    variable_name: str
+        Currently `nwm21` and `nwm30` supported.
+    variable_name : str
         Name of the NWM forcing data variable to download.
-        (e.g., "PRECIP", "PSFC", "Q2D", ...)
-    zonal_weights_filepath: str,
+        (e.g., "PRECIP", "PSFC", "Q2D", ...).
+    zonal_weights_filepath : str,
         Path to the array containing fraction of pixel overlap
-        for each zone
-    start_date: Union[str, datetime, pd.Timestamp]
+        for each zone.
+    start_date : Union[str, datetime, pd.Timestamp]
         Date to begin data ingest.
-        Str formats can include YYYY-MM-DD or MM/DD/YYYY
-        Rounds down to beginning of day
-    end_date: Union[str, datetime, pd.Timestamp],
-        Last date to fetch.  Rounds up to end of day
-        Str formats can include YYYY-MM-DD or MM/DD/YYYY
-    output_parquet_dir: Union[str, Path],
+        Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+        Rounds down to beginning of day.
+    end_date : Union[str, datetime, pd.Timestamp],
+        Last date to fetch.  Rounds up to end of day.
+        Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+    output_parquet_dir : Union[str, Path],
         Directory where output will be saved.
-    chunk_by: Union[ChunkByEnum, None] = None,
+    chunk_by : Union[ChunkByEnum, None] = None,
         If None (default) saves all timeseries to a single file, otherwise
         the data is processed using the specified parameter.
-        Can be: 'location_id', 'day', 'week', 'month', or 'year'
-    overwrite_output: bool = False,
+        Can be: 'location_id', 'day', 'week', 'month', or 'year'.
+    overwrite_output : bool = False,
         Whether output should overwrite files if they exist.  Default is False.
-    domain: str = "CONUS"
+    domain : str = "CONUS"
         Geographical domain when NWM version is v3.0.
         Acceptable values are "Alaska", "CONUS" (default), "Hawaii", and "PR".
-        Only used when NWM version equals v3.0
-    Returns
-    -------
-    None - saves file to specified path
-
+        Only used when NWM version equals v3.0.
     """
 
     start_date = pd.Timestamp(start_date)

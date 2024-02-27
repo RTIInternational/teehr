@@ -1,8 +1,4 @@
-"""
-This script provides and example of how to create a TEEHR datyabase
-and insert joined timeseries, append attributes, and add user
-defined fields.
-"""
+"""An example of how to create and manipulate a TEEHR database."""
 from pathlib import Path
 from teehr.database.teehr_dataset import TEEHRDatasetDB
 import time
@@ -28,9 +24,9 @@ DATABASE_FILEPATH = Path(TEST_STUDY_DIR, "huc1802_retro.db")
 
 
 def describe_inputs():
+    """Check the parquet files and report some stats to the user."""
     tds = TEEHRDatasetDB(DATABASE_FILEPATH)
 
-    # Check the parquet files and report some stats to the user (WIP)
     df = tds.describe_inputs(
         primary_filepath=PRIMARY_FILEPATH,
         secondary_filepath=SECONDARY_FILEPATH
@@ -40,10 +36,9 @@ def describe_inputs():
 
 
 def create_db_add_timeseries():
-
+    """Perform the join and insert into duckdb database."""
     tds = TEEHRDatasetDB(DATABASE_FILEPATH)
 
-    # Perform the join and insert into duckdb database
     # NOTE: Right now this will re-join and overwrite
     print("Creating joined table")
     tds.insert_joined_timeseries(
@@ -55,22 +50,33 @@ def create_db_add_timeseries():
 
 
 def add_attributes():
+    """Join (one or more?) table(s) of attributes to the timeseries table."""
     tds = TEEHRDatasetDB(DATABASE_FILEPATH)
 
-    # Join (one or more?) table(s) of attributes to the timeseries table
     print("Adding attributes")
     tds.join_attributes(ATTRIBUTES_FILEPATH)
 
 
 def add_fields():
-
+    """Calculate and add a field based on some user-defined function (UDF)."""
     tds = TEEHRDatasetDB(DATABASE_FILEPATH)
 
-    # Calculate and add a field based on some user-defined function (UDF).
     def test_user_function(arg1: float, arg2: str) -> float:
-        """Function arguments are fields in joined_timeseries, and
-        should have the same data type.
-        Note: In the data model, attribute values are always str type"""
+        """
+        UDF to operate on database fields (function arguements).
+
+        Parameters
+        ----------
+        arg1 : float
+            A database field.
+        arg2 : str
+            A database field.
+
+        Returns
+        -------
+        float
+            New field value.
+        """
         return float(arg1) / float(arg2)
 
     parameter_names = ["primary_value", "upstream_area_km2"]
@@ -83,9 +89,19 @@ def add_fields():
 
     # Calculate and add a field based on some user-defined function (UDF).
     def add_month_field(arg1: datetime.datetime) -> int:
-        """Function arguments are fields in joined_timeseries, and
-        should have the same data type.
-        Note: In the data model, attribute values are always str type"""
+        """
+        UDF to operate on database fields (function arguements).
+
+        Parameters
+        ----------
+        arg1 : datetime.datetime
+            A database field.
+
+        Returns
+        -------
+        int
+            New field value.
+        """
         return arg1.month
 
     parameter_names = ["value_time"]
@@ -98,9 +114,21 @@ def add_fields():
 
     # Calculate and add a field based on some user-defined function (UDF).
     def exceed_2yr_recurrence(arg1: float, arg2: float) -> bool:
-        """Function arguments are fields in joined_timeseries, and
-        should have the same data type.
-        Note: In the data model, attribute values are always str type"""
+        """
+        UDF to operate on database fields (function arguements).
+
+        Parameters
+        ----------
+        arg1 : float
+            A database field.
+        arg2 : float
+            A database field.
+
+        Returns
+        -------
+        int
+            New field value.
+        """
         return float(arg1) > float(arg2)
 
     parameter_names = ["primary_value", "retro_2yr_recurrence_flow_cms"]
@@ -114,7 +142,7 @@ def add_fields():
 
 
 def run_metrics_query():
-
+    """Perform a metrics query against the database."""
     tds = TEEHRDatasetDB(DATABASE_FILEPATH)
     # schema_df = tds.get_joined_timeseries_schema()
     # print(schema_df[["column_name", "column_type"]])
@@ -162,13 +190,14 @@ def run_metrics_query():
 
 
 def describe_database():
+    """Get the database schema."""
     tds = TEEHRDatasetDB(DATABASE_FILEPATH)
     df = tds.get_joined_timeseries_schema()
     print(df)
 
 
 def run_raw_query():
-
+    """Run a raw query against the database."""
     tds = TEEHRDatasetDB(DATABASE_FILEPATH)
     query = """
         WITH joined as (

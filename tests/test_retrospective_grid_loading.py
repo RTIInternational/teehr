@@ -1,3 +1,4 @@
+"""Tests for retrospective NWM grid loading."""
 from pathlib import Path
 import math
 
@@ -11,7 +12,7 @@ ZONAL_WEIGHTS = Path("tests", "data", "nwm22", "onehuc10_weights.parquet")
 
 
 def test_nwm30_grid_loading():
-
+    """Test NWM30 grid loading."""
     TEST_DIR = Path(TEMP_DIR, "nwm30_grid")
 
     nwm_retro_grids_to_parquet(
@@ -36,7 +37,7 @@ def test_nwm30_grid_loading():
 
 
 def test_nwm21_grid_loading():
-
+    """Test NWM21 grid loading."""
     TEST_DIR = Path(TEMP_DIR, "nwm21_grid")
 
     nwm_retro_grids_to_parquet(

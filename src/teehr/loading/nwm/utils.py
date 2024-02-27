@@ -1,8 +1,10 @@
+"""Module defining common utilities for fetching and processing NWM data."""
 from pathlib import Path
 from typing import Union, Optional, Iterable, List, Dict
 from datetime import datetime
 from datetime import timedelta
 from dateutil.parser import parse
+import logging
 
 import dask
 import fsspec
@@ -26,6 +28,8 @@ from teehr.loading.nwm.const import (
     NWM_S3_JSON_PATH,
     NWM30_START_DATE
 )
+
+logger = logging.getLogger(__name__)
 
 
 def check_dates_against_nwm_version(
@@ -63,25 +67,25 @@ def generate_json_paths(
     json_dir: str,
     ignore_missing_file: bool
 ) -> List[str]:
-    """Generates remote and/or local paths to Kerchunk reference json files
-    depending on the specified method
+    """Generate remote and/or local paths to Kerchunk reference json files
+    depending on the specified method.
 
     Parameters
     ----------
     kerchunk_method : str
         Specifies the preference in creating Kerchunk reference json files.
     gcs_component_paths : List[str]
-        Paths to NWM netcdf files in GCS
+        Paths to NWM netcdf files in GCS.
     json_dir : str
-        Local directory for caching created json files
+        Local directory for caching created json files.
     ignore_missing_file : bool
         Flag specifying whether or not to fail if a missing
-        NWM file is encountered
+        NWM file is encountered.
 
     Returns
     -------
     List[str]
-        List of filepaths to json files locally and/or in s3
+        List of filepaths to json files locally and/or in s3.
     """
 
     if kerchunk_method == SupportedKerchunkMethod.local:
@@ -136,17 +140,17 @@ def write_parquet_file(
     overwrite_output: bool,
     data: Union[pa.Table, pd.DataFrame]
 ):
-    """Writes output timeseries parquet file with logic controlling
+    """Write output timeseries parquet file with logic controlling
     whether or not to overwrite an existing file.
 
     Parameters
     ----------
     filepath : Path
-        Path to the output parquet file
-    overwrite : bool
-        Flag controlling overwrite behavior
+        Path to the output parquet file.
+    overwrite_output : bool
+        Flag controlling overwrite behavior.
     data : Union[pa.Table, pd.DataFrame]
-        The output data as either a dataframe or pyarrow table
+        The output data as either a dataframe or pyarrow table.
     """
     if not filepath.is_file():
         if isinstance(data, pa.Table):
@@ -154,13 +158,13 @@ def write_parquet_file(
         else:
             data.to_parquet(filepath)
     elif filepath.is_file() and overwrite_output:
-        print(f"Overwriting {filepath.name}")
+        logger.info(f"Overwriting {filepath.name}")
         if isinstance(data, pa.Table):
             pq.write_table(data, filepath)
         else:
             data.to_parquet(filepath)
     elif filepath.is_file() and not overwrite_output:
-        print(
+        logger.info(
             f"{filepath.name} already exists and overwrite_output=False;"
             " skipping"
         )
@@ -186,11 +190,13 @@ def load_gdf(filepath: Union[str, Path], **kwargs: str) -> gpd.GeoDataFrame:
 
 
 def parquet_to_gdf(parquet_filepath: str) -> gpd.GeoDataFrame:
+    """Read parquet as GeoDataFrame."""
     gdf = gpd.read_parquet(parquet_filepath)
     return gdf
 
 
 def np_to_list(t):
+    """Convert numpy array to list."""
     return [a.tolist() for a in t]
 
 
@@ -201,14 +207,15 @@ def get_dataset(
 
     Parameters
     ----------
-    filepath: str, required
+    filepath : str
         Path to the kerchunk json file. Can be local or remote.
+    ignore_missing_file : bool
+        Flag controlling whether to ignore missing files.
 
     Returns
     -------
-    ds : xarray.Dataset
+    xarray.Dataset
         The data stored in the blob.
-
     """
     try:
         m = fsspec.filesystem(
@@ -225,6 +232,7 @@ def get_dataset(
 
 
 def list_to_np(lst):
+    """Convert list to a tuple."""
     return tuple([np.array(a) for a in lst])
 
 
@@ -233,21 +241,21 @@ def check_for_prebuilt_json_paths(
     fs: fsspec.filesystem, gcs_path: str, return_gcs_path=False
 ) -> str:
     """Check for existence of a pre-built kerchunk json in s3 based
-    on its GCS path
+    on its GCS path.
 
     Parameters
     ----------
     fs : fsspec.filesystem
-        s3-based filesystem
+        S3-based filesystem.
     gcs_path : str
-        Path to the netcdf file in GCS
+        Path to the netcdf file in GCS.
     return_gcs_path : bool, optional
-        Flag to return GCS path of s3 is missing, by default False
+        Flag to return GCS path of s3 is missing, by default False.
 
     Returns
     -------
     str
-        Path to the json in s3 or netcdf file in GCS
+        Path to the json in s3 or netcdf file in GCS.
     """
     s3_path = f"{NWM_S3_JSON_PATH}/{gcs_path.split('://')[1]}.json"
     if fs.exists(s3_path):
@@ -269,16 +277,16 @@ def gen_json(
     Parameters
     ----------
     remote_path : str
-        Path to the file in the remote location (ie, GCS bucket)
+        Path to the file in the remote location (ie, GCS bucket).
     fs : fsspec.filesystem
-        fsspec filesystem mapped to GCS
+        Fsspec filesystem mapped to GCS.
     json_dir : str
-        Directory for saving zarr reference json files
+        Directory for saving zarr reference json files.
 
     Returns
     -------
     str
-        Path to the local zarr reference json file
+        Path to the local zarr reference json file.
     """
     so = dict(
         mode="rb",
@@ -292,16 +300,26 @@ def gen_json(
             date = p[3]
             fname = p[5]
             outf = str(Path(json_dir, f"{date}.{fname}.json"))
-            h5chunks = SingleHdf5ToZarr(infile,
-                                        remote_path,
-                                        inline_threshold=300)
+            try:
+                h5chunks = SingleHdf5ToZarr(infile,
+                                            remote_path,
+                                            inline_threshold=300)
+            except OSError as err:
+                if not ignore_missing_file:
+                    raise Exception(f"Corrupt file: {remote_path}") from err
+                else:
+                    logger.warning(
+                        ("A potentially corrupt file was encountered:")
+                        (f"{remote_path}")
+                    )
+                    return None
             with open(outf, "wb") as f:
                 f.write(ujson.dumps(h5chunks.translate()).encode())
     except FileNotFoundError as e:
         if not ignore_missing_file:
             raise e
         else:
-            # TODO: log missing file?
+            logger.warning(f"A missing file was encountered: {remote_path}")
             return None
     return outf
 
@@ -311,19 +329,19 @@ def build_zarr_references(
     json_dir: Union[str, Path],
     ignore_missing_file: bool,
 ) -> list[str]:
-    """Builds the single file zarr json reference files using kerchunk.
+    """Build the single file zarr json reference files using kerchunk.
 
     Parameters
     ----------
     remote_paths : List[str]
-        List of remote filepaths
+        List of remote filepaths.
     json_dir : str or Path
-        Local directory for caching json files
+        Local directory for caching json files.
 
     Returns
     -------
     list[str]
-        List of paths to the zarr reference json files
+        List of paths to the zarr reference json files.
     """
     json_dir_path = Path(json_dir)
     if not json_dir_path.exists():
@@ -353,8 +371,9 @@ def build_zarr_references(
     json_paths.extend(existing_jsons)
 
     if not any(json_paths):
-        raise FileNotFoundError("No NWM files for specified input \
-                                configuration were found in GCS!")
+        raise FileNotFoundError(
+            "No NWM files for specified input configuration were found in GCS!"
+        )
 
     json_paths = [path for path in json_paths if path is not None]
 
@@ -372,7 +391,7 @@ def construct_assim_paths(
     domain: str,
     file_extension: str = "nc"
 ) -> list[str]:
-    """Constructs paths to NWM point assimilation data based on specified
+    """Construct paths to NWM point assimilation data based on specified
         parameters.
 
     This function prioritizes value time over reference time so that only
@@ -382,31 +401,31 @@ def construct_assim_paths(
     Parameters
     ----------
     gcs_dir : str
-        Path to the NWM data on GCS
+        Path to the NWM data on GCS.
     configuration : str
-        configuration type
+        Configuration type.
     output_type : str
-        Output component of the configuration
+        Output component of the configuration.
     dates : pd.DatetimeIndex
-        Range of days to fetch data
+        Range of days to fetch data.
     t_minus : Iterable[int]
-        Collection of lookback hours to include when fetching assimilation data
+        Collection of lookback hours to include when fetching assimilation data.
     configuration_name_in_filepath : str
         Name of the assimilation configuration as represented in the GCS file.
-        Defined in const_nwm.py
+        Defined in const_nwm.py.
     cycle_z_hours : Iterable[int]
         The z-hour of the assimilation configuration per day.
-        Defined in const_nwm.py
+        Defined in const_nwm.py.
     domain : str
         Geographic region covered by the assimilation configuration.
-        Defined in const_nwm.py
-    file_extension: str
-        File extension ("nc" or "nc.json" for remote kerchunk)
+        Defined in const_nwm.py.
+    file_extension : str
+        File extension ("nc" or "nc.json" for remote kerchunk).
 
     Returns
     -------
     list[str]
-        List of remote filepaths
+        List of remote filepaths.
     """
     component_paths = []
 
@@ -480,32 +499,33 @@ def build_remote_nwm_filelist(
     t_minus_hours: Optional[Iterable[int]],
     ignore_missing_file: Optional[bool],
 ) -> List[str]:
-    """Assembles a list of remote NWM files in GCS based on specified user
+    """Assemble a list of remote NWM files in GCS based on specified user
         parameters.
 
     Parameters
     ----------
     configuration : str
-        configuration type/configuration
+        Configuration type.
     output_type : str
-        Output component of the configuration
+        Output component of the configuration.
     start_dt : str “YYYY-MM-DD” or datetime
-        Date to begin data ingest
+        Date to begin data ingest.
     ingest_days : int
-        Number of days to ingest data after start date
-    t_minus_hours: Iterable[int]
+        Number of days to ingest data after start date.
+    t_minus_hours : Iterable[int]
         Only necessary if assimilation data is requested.
-        Collection of lookback hours to include when fetching assimilation data
-    ignore_missing_file: bool
+        Collection of lookback hours to include when fetching
+        assimilation data.
+    ignore_missing_file : bool
         Flag specifying whether or not to fail if a missing
         NWM file is encountered
         True = skip and continue
-        False = fail
+        False = fail.
 
     Returns
     -------
     list
-        List of remote filepaths (strings)
+        List of remote filepaths (strings).
     """
     gcs_dir = f"gcs://{NWM_BUCKET}"
     fs = fsspec.filesystem("gcs", anon=True)

@@ -1,3 +1,4 @@
+"""Module describing NWM v3.0 point configuration variables."""
 from enum import Enum
 from typing import Optional
 
@@ -23,6 +24,7 @@ from teehr.models.loading.nwm22_point import (
 
 # POINT CONFIGURATION ENUM: Potential configuration names
 class ConfigurationsEnum(str, Enum):
+    """ConfigurationsEnum."""
     analysis_assim = "analysis_assim"
     analysis_assim_no_da = "analysis_assim_no_da"
     analysis_assim_extend = "analysis_assim_extend"
@@ -68,6 +70,7 @@ class ConfigurationsEnum(str, Enum):
 
 # POINT CONFIGURATION MODEL
 class PointConfigurationModel(BaseModel):
+    """NWM v3.0 PointConfigurationModel."""
     configuration: ConfigurationsEnum = None
     analysis_assim: Optional[ShortAndAnalysis] = None
     analysis_assim_no_da: Optional[ShortAndAnalysisNoDA] = None

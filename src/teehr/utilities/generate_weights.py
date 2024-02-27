@@ -1,4 +1,5 @@
-from typing import Union
+"""Module for generating area-based weights for grid layer pixels."""
+from typing import Union, Dict
 from pathlib import Path
 import warnings
 
@@ -12,14 +13,16 @@ import dask
 import shapely
 
 from teehr.loading.nwm.utils import load_gdf
-from teehr.loading.nwm.const import AL_NWM_WKT
+# from teehr.loading.nwm.const import AL_NWM_WKT
 
 
 @dask.delayed
 def vectorize(data_array: xr.DataArray) -> gpd.GeoDataFrame:
     """
-    Convert 2D xarray.DataArray into a geopandas.GeoDataFrame
+    Convert 2D xarray.DataArray into a geopandas.GeoDataFrame.
 
+    Notes
+    -----
     Heavily borrowed from GeoCube, see:
     https://github.com/corteva/geocube/blob/master/geocube/vector.py#L12
     """
@@ -60,6 +63,7 @@ def vectorize(data_array: xr.DataArray) -> gpd.GeoDataFrame:
 def overlay_zones(
     grid: gpd.GeoDataFrame, zones: gpd.GeoDataFrame
 ) -> gpd.GeoDataFrame:
+    """Overlay zone polygons on vectorized grid cells."""
     with pd.option_context(
         "mode.chained_assignment", None
     ):  # to ignore setwithcopywarning
@@ -78,9 +82,11 @@ def vectorize_grid(
     crs_wkt: str,
     vectorize_chunk: float = 40,
 ) -> gpd.GeoDataFrame:
-    """Vectorize pixels in the template array in chunks using dask
+    """Vectorize pixels in the template array in chunks using dask.
 
-    Note: Parameter vectorize_chunk determines how many pixels will
+    Notes
+    -----
+    Parameter vectorize_chunk determines how many pixels will
     be vectorized at one time
     (thousands of pixels)
     """
@@ -115,11 +121,13 @@ def calculate_weights(
     overlay_chunk: float = 250,
 ) -> gpd.GeoDataFrame:
     """Overlay vectorized pixels and zone polygons, and calculate
-    areal weights, returning a geodataframe
+    areal weights, returning a geodataframe.
 
-    Note: Parameter overlay_chunk determines the size of the rectangular
+    Notes
+    -----
+    Parameter overlay_chunk determines the size of the rectangular
     window that spatially subsets datasets for the operation
-    (thousands of pixels)
+    (thousands of pixels).
     """
     # Make sure geometries are valid
     grid_gdf["geometry"] = grid_gdf.geometry.make_valid()
@@ -161,28 +169,61 @@ def generate_weights_file(
     output_weights_filepath: Union[str, Path],
     crs_wkt: str,
     unique_zone_id: str = None,
-    **read_args: str,
+    **read_args: Dict,
 ) -> None:
     """Generate a file of row/col indices and weights for pixels intersecting
-       given zone polyons
+       given zone polyons.
 
     Parameters
     ----------
     zone_polygon_filepath : str
-        Path to the polygons geoparquet file
+        Path to the polygons geoparquet file.
     template_dataset : str
-        Path to the grid dataset to use as a template
+        Path to the grid dataset to use as a template.
     variable_name : str
-        Name of the variable within the dataset
+        Name of the variable within the dataset.
     output_weights_filepath : str
-        Path to the resultant weights file
-    crs_wkt: str
-        Coordinate system for given domain as WKT string
-    unique_zone_id: str
-        Name of the field in the zone polygon file containing unique IDs
-    read_args: dict, optional
-        Keyword arguments to be passed to GeoPandas read_file(),
-        read_parquet(), and read_feather() methods
+        Path to the resultant weights file.
+    crs_wkt : str
+        Coordinate system for given domain as WKT string.
+    unique_zone_id : str
+        Name of the field in the zone polygon file containing unique IDs.
+    **read_args : dict, optional
+        Keyword arguments to be passed to GeoPandas read_file().
+        read_parquet(), and read_feather() methods.
+
+    Examples
+    --------
+    Here we generate weights for grid pixels intersecting a given
+    polygon(s). The algorithm accounts for the fraction of the pixel
+    area that is within the polygon. We'll use the Nextgen divides/
+    catchments as the polygons and a NWM v2.2 forcing file as the
+    template grid.
+
+    Import the necessary modules.
+
+    >>> from teehr.utilities.generate_weights import generate_weights_file
+    >>> from teehr.loading.nwm.const import CONUS_NWM_WKT
+
+    Define the input variables.
+
+    >>> TEST_DIR = Path("tests", "data", "nwm22")
+    >>> TEMP_DIR = Path("tests", "data", "temp")
+    >>> TEMPLATE_FILEPATH = Path(TEST_DIR, "test_template_grid.nc")
+    >>> ZONES_FILEPATH = Path(TEST_DIR, "test_ngen_divides.parquet")
+    >>> WEIGHTS_FILEPATH = Path(TEST_DIR, "test_weights_results.parquet")
+
+    Perform the calculation, writing to the output directory, or optionally
+    returning the dataframe if no output path is specified.
+
+    >>> df = generate_weights_file(
+    >>>     zone_polygon_filepath=ZONES_FILEPATH,
+    >>>     template_dataset=TEMPLATE_FILEPATH,
+    >>>     variable_name="RAINRATE",
+    >>>     crs_wkt=CONUS_NWM_WKT,
+    >>>     output_weights_filepath=None,
+    >>>     unique_zone_id="id",
+    >>> )
     """
 
     zone_gdf = load_gdf(zone_polygon_filepath, **read_args)
@@ -237,21 +278,21 @@ def generate_weights_file(
     return df
 
 
-if __name__ == "__main__":
-    # Local testing
-    zone_polygon_filepath = "/mnt/data/wbd/one_alaska_huc10.parquet"
-    template_dataset = "/mnt/data/ciroh/nwm_temp/nwm.20231101_forcing_analysis_assim_alaska_nwm.t00z.analysis_assim.forcing.tm01.alaska.nc"  # noqa
-    variable_name = "RAINRATE"
-    unique_zone_id = "huc10"
-    output_weights_filepath = (
-        "/mnt/sf_shared/data/ciroh/one_huc10_alaska_weights.parquet"
-    )
+# if __name__ == "__main__":
+#     # Local testing
+#     zone_polygon_filepath = "/mnt/data/wbd/one_alaska_huc10.parquet"
+#     template_dataset = "/mnt/data/ciroh/nwm_temp/nwm.20231101_forcing_analysis_assim_alaska_nwm.t00z.analysis_assim.forcing.tm01.alaska.nc"  # noqa
+#     variable_name = "RAINRATE"
+#     unique_zone_id = "huc10"
+#     output_weights_filepath = (
+#         "/mnt/sf_shared/data/ciroh/one_huc10_alaska_weights.parquet"
+#     )
 
-    generate_weights_file(
-        zone_polygon_filepath=zone_polygon_filepath,
-        template_dataset=template_dataset,
-        variable_name=variable_name,
-        output_weights_filepath=output_weights_filepath,
-        crs_wkt=AL_NWM_WKT,
-        unique_zone_id=unique_zone_id
-    )
+#     generate_weights_file(
+#         zone_polygon_filepath=zone_polygon_filepath,
+#         template_dataset=template_dataset,
+#         variable_name=variable_name,
+#         output_weights_filepath=output_weights_filepath,
+#         crs_wkt=AL_NWM_WKT,
+#         unique_zone_id=unique_zone_id
+#     )
