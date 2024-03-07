@@ -14,7 +14,7 @@ from teehr.loading.nwm.utils import get_dataset, write_parquet_file
 def compute_zonal_mean(
     da: xr.DataArray, weights_filepath: str
 ) -> pd.DataFrame:
-    """Compute zonal mean of area-weighted pixels for given
+    """Compute zonal mean (weighted average) of area-weighted pixels for given
     zones and weights."""
     # Read weights file
     weights_df = pd.read_parquet(
@@ -29,11 +29,13 @@ def compute_zonal_mean(
     # Get the values and apply weights
     var_values = arr_2d[rows, cols]
     weights_df["value"] = var_values * weights_df.weight.values
-    # Compute mean
-    df = weights_df.groupby(by="location_id")["value"].mean().to_frame()
-    df.reset_index(inplace=True)
 
-    return df
+    # Compute weighted average
+    df = weights_df.groupby(
+        by="location_id", as_index=False)[["value", "weight"]].sum()
+    df["value"] = df.value/df.weight
+
+    return df[["location_id", "value"]]
 
 
 @dask.delayed
