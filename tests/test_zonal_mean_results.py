@@ -16,7 +16,26 @@ TEST_ZONAL_MEAN = Path(TEST_DIR, "test_zonal_mean_results.parquet")
 
 
 def test_zonal_mean():
-    """Test zonal mean results."""
+    """Test zonal mean results.
+
+    Notes
+    -----
+
+    The truth data set  ``test_zonal_mean_results.parquet`` was validated
+    against ``exactextract`` results and checked for a single catchment
+    (cat-77566) by calculating the weighted average manually
+    (sum of weights * values divided by the sum of the weights).
+
+    The command used to run ``exactextract``:
+
+    exactextract -r temp:NETCDF:test_template_grid_nwm.nc:RAINRATE
+    -p test_ngen_divides_nwm.shp -o ee_results.csv -s "mean"
+    --include-col "id"
+
+    Since ``exactextract`` cannot read parquet files the
+    test_ngen_divides.parquet file was converted to a shapefile and
+    reprojected to the crs specified in NWM_CONUS_WKT.
+    """
     grid_ds = xr.open_dataset(TEMPLATE_FILEPATH)
 
     df = compute_zonal_mean(
