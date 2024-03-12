@@ -1,6 +1,18 @@
 Release Notes
 =============
 
+0.3.10 - 2024-03-07
+--------------------
+
+Added
+^^^^^
+* Added `test_zonal_mean_results.py`
+
+Changed
+^^^^^^^
+* Fixed the calculation of the zonal mean of pixel values in `compute_zonal_mean()` so it caculates
+  the weighted average (divides by the sum of weight values).
+* Updated grid loading tests and data to reflect the fixed method.
 
 0.3.9 - 2024-02-15
 --------------------

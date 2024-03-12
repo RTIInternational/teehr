@@ -122,7 +122,7 @@ def test_nwm22_grid_fetch_and_format():
 def test_nwm30_grid_fetch_and_format():
     """Test NWM30 grid fetch and format."""
     test_dir = Path("tests", "data", "nwm30")
-    weights_filepat = Path(test_dir, "one_huc10_alaska_weights.parquet")
+    weights_filepath = Path(test_dir, "one_huc10_alaska_weights.parquet")
 
     json_file = Path(test_dir,
                      "nwm.20231101.nwm.t00z.analysis_assim.forcing.tm02.alaska.nc.json") # noqa
@@ -133,7 +133,7 @@ def test_nwm30_grid_fetch_and_format():
         configuration="forcing_analysis_assim_alaska",
         variable_name="RAINRATE",
         output_parquet_dir=TEMP_DIR,
-        zonal_weights_filepath=weights_filepat,
+        zonal_weights_filepath=weights_filepath,
         ignore_missing_file=False,
         units_format_dict=NWM22_UNIT_LOOKUP,
         overwrite_output=True
