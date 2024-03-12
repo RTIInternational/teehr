@@ -28,12 +28,12 @@ def compute_zonal_mean(
     cols = weights_df.col.values
     # Get the values and apply weights
     var_values = arr_2d[rows, cols]
-    weights_df["value"] = var_values * weights_df.weight.values
+    weights_df["weighted_value"] = var_values * weights_df.weight.values
 
     # Compute weighted average
     df = weights_df.groupby(
-        by="location_id", as_index=False)[["value", "weight"]].sum()
-    df["value"] = df.value/df.weight
+        by="location_id", as_index=False)[["weighted_value", "weight"]].sum()
+    df["value"] = df.weighted_value/df.weight
 
     return df[["location_id", "value"]]
 
