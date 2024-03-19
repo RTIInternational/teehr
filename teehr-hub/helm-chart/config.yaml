@@ -26,7 +26,7 @@ jupyterhub:
   singleuser:
     image:
       name: 935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr  # Image to use for singleuser environment. Must include dask-gateway.
-      tag: v0.3.10
+      tag: v0.3.11
     defaultUrl: "/lab"  # Use jupyterlab by defualt.
     profileList:
     - display_name: "TEEHR Evaluation System (4 vCPU/32GB memory)"
@@ -79,7 +79,7 @@ dask-gateway:
     backend:
       image:
         name: 935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr  # Image to use for singleuser environment. Must include dask-gateway.
-        tag: v0.3.10
+        tag: v0.3.11
       scheduler:
         extraPodConfig:
           # serviceAccountName: user-sa

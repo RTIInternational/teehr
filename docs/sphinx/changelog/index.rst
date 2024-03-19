@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+0.3.11 - 2024-03-19
+--------------------
+
+Added
+^^^^^
+* None
+
+Changed
+^^^^^^^
+* Downgraded required Dask version to `dask = "^2023.8.1"` to match `pangeo/pangeo-notebook:2023.09.11`
+
 0.3.10 - 2024-03-07
 --------------------
 
