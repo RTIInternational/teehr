@@ -1,6 +1,21 @@
 Release Notes
 =============
 
+0.3.12 - 2024-03-20
+--------------------
+
+Added
+^^^^^
+* None
+
+Changed
+^^^^^^^
+* Updated from Enum to StrEnum and added a fix for backwards incompatibility described
+  here: https://tomwojcik.com/posts/2023-01-02/python-311-str-enum-breaking-change.  This
+  is required to support both python 3.10 and python 3.11.
+* Updated TEEHR-HUB to Python 3.11 and `pangeo/pangeo-notebook:2024.03.13`
+* Made all packages that use YYYY.MM.DD versioning `>=` instead of `^` in `pyproject.toml`
+
 0.3.11 - 2024-03-19
 --------------------
 
