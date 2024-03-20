@@ -1,12 +1,20 @@
 """Module describing NWM v2.2 grid configuration variables."""
-from enum import Enum
+try:
+    # breaking change introduced in python 3.11
+    from enum import StrEnum
+except ImportError:  # pragma: no cover
+    from enum import Enum  # pragma: no cover
+
+    class StrEnum(str, Enum):  # pragma: no cover
+        pass  # pragma: no cover
+
 from typing import Optional
 
 from pydantic import BaseModel
 
 
 # GRID DATA VARIABLES ENUMS
-class LandAssimVariablesEnum(str, Enum):
+class LandAssimVariablesEnum(StrEnum):
     """LandAssimVariablesEnum."""
     ACCET = "ACCET"
     ACSNOM = "ACSNOM"
@@ -25,7 +33,7 @@ class LandAssimVariablesEnum(str, Enum):
     SOIL_T = "SOIL_T"
 
 
-class LandShortVariablesEnum(str, Enum):
+class LandShortVariablesEnum(StrEnum):
     """LandShortVariablesEnum."""
     ACCET = "ACCET"
     SNOWT_AVG = "SNOWT_AVG"
@@ -35,7 +43,7 @@ class LandShortVariablesEnum(str, Enum):
     SNEQV = "SNEQV"
 
 
-class LandMediumVariablesEnum(str, Enum):
+class LandMediumVariablesEnum(StrEnum):
     """LandMediumVariablesEnum."""
     FSA = "FSA"
     FIRA = "FIRA"
@@ -62,7 +70,7 @@ class LandMediumVariablesEnum(str, Enum):
     SNOWT_AVG = "SNOWT_AVG"
 
 
-class LandLongVariablesEnum(str, Enum):
+class LandLongVariablesEnum(StrEnum):
     """LandLongVariablesEnum."""
     UGDRNOFF = "UGDRNOFF"
     SFCRNOFF = "SFCRNOFF"
@@ -74,7 +82,7 @@ class LandLongVariablesEnum(str, Enum):
     SOILSAT = "SOILSAT"
 
 
-class ForcingVariablesEnum(str, Enum):
+class ForcingVariablesEnum(StrEnum):
     """ForcingVariablesEnum."""
     U2D = "U2D"
     V2D = "V2D"
@@ -87,12 +95,12 @@ class ForcingVariablesEnum(str, Enum):
 
 
 # OUTPUT TYPE ENUMS
-class ShortAndAnalysisOutputEnum(str, Enum):
+class ShortAndAnalysisOutputEnum(StrEnum):
     """ShortAndAnalysisOutputEnum."""
     land = "land"
 
 
-class MediumOutputEnum(str, Enum):
+class MediumOutputEnum(StrEnum):
     """MediumOutputEnum."""
     land_1 = "land_1"
     land_2 = "land_2"
@@ -103,7 +111,7 @@ class MediumOutputEnum(str, Enum):
     land_7 = "land_7"
 
 
-class LongOutputEnum(str, Enum):
+class LongOutputEnum(StrEnum):
     """LongOutputEnum."""
     land_1 = "land_1"
     land_2 = "land_2"
@@ -111,7 +119,7 @@ class LongOutputEnum(str, Enum):
     land_4 = "land_4"
 
 
-class ForcingOutputEnum(str, Enum):
+class ForcingOutputEnum(StrEnum):
     """ForcingOutputEnum."""
     forcing = "forcing"
 
@@ -157,7 +165,7 @@ class Forcing(BaseModel):
 
 
 # CONFIGURATIONS ENUM
-class ConfigurationsEnum(str, Enum):
+class ConfigurationsEnum(StrEnum):
     """ConfigurationsEnum."""
     analysis_assim = "analysis_assim"
     analysis_assim_no_da = "analysis_assim_no_da"

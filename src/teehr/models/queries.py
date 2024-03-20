@@ -1,7 +1,15 @@
 """Module for parquet-based query models."""
 from collections.abc import Iterable
 from datetime import datetime
-from enum import Enum  # StrEnum
+try:
+    # breaking change introduced in python 3.11
+    from enum import StrEnum
+except ImportError:  # pragma: no cover
+    from enum import Enum  # pragma: no cover
+
+    class StrEnum(str, Enum):  # pragma: no cover
+        pass  # pragma: no cover
+
 from typing import List, Optional, Union
 
 from pydantic import BaseModel as PydanticBaseModel
@@ -17,8 +25,9 @@ class BaseModel(PydanticBaseModel):
         # smart_union = True # deprecated in v2
 
 
-class FilterOperatorEnum(str, Enum):
+class FilterOperatorEnum(StrEnum):
     """Filter symbols."""
+
     eq = "="
     gt = ">"
     lt = "<"
@@ -28,8 +37,9 @@ class FilterOperatorEnum(str, Enum):
     isin = "in"
 
 
-class MetricEnum(str, Enum):
+class MetricEnum(StrEnum):
     """Available metrics."""
+
     primary_count = "primary_count"
     secondary_count = "secondary_count"
     primary_minimum = "primary_minimum"
@@ -54,8 +64,9 @@ class MetricEnum(str, Enum):
     max_value_timedelta = "max_value_timedelta"
 
 
-class JoinedFilterFieldEnum(str, Enum):
+class JoinedFilterFieldEnum(StrEnum):
     """Joined filter fields."""
+
     value_time = "value_time"
     reference_time = "reference_time"
     secondary_location_id = "secondary_location_id"
@@ -69,8 +80,9 @@ class JoinedFilterFieldEnum(str, Enum):
     geometry = "geometry"
 
 
-class TimeseriesFilterFieldEnum(str, Enum):
+class TimeseriesFilterFieldEnum(StrEnum):
     """Timeseries filter fields."""
+
     value_time = "value_time"
     reference_time = "reference_time"
     location_id = "location_id"
