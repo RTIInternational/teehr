@@ -573,3 +573,38 @@ def build_remote_nwm_filelist(
         component_paths = sorted([f"gcs://{path}" for path in component_paths])
 
     return component_paths
+
+
+def get_period_start_end_times(
+    period: pd.Period,
+    start_date: datetime,
+    end_date: datetime
+) -> Dict[str, datetime]:
+    """Get the start and end times for a period, adjusting for the
+    start and end dates of the data ingest.
+
+    Parameters
+    ----------
+    period : pd.Period
+        The current period.
+    start_date : datetime
+        The start date of the data ingest.
+    end_date : datetime
+        Then end date of the data ingest.
+
+    Returns
+    -------
+    Dict[str, datetime]
+        The start and end times for the period.
+    """
+
+    start_dt = period.start_time
+    end_dt = period.end_time
+
+    if start_date > period.start_time:
+        start_dt = start_date
+
+    if (end_date < period.end_time) & (period.freq.name != "D"):
+        end_dt = end_date
+
+    return {"start_dt": start_dt, "end_dt": end_dt}

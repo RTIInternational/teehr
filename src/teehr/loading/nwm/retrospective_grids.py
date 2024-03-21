@@ -1,5 +1,4 @@
 """A module for loading retrospective NWM gridded data."""
-import time
 from datetime import datetime
 from pathlib import Path
 from typing import Union, Optional, Tuple, Dict
@@ -18,7 +17,11 @@ from teehr.models.loading.utils import (
     SupportedNWMRetroDomainsEnum
 )
 from teehr.models.loading.nwm22_grid import ForcingVariablesEnum
-from teehr.loading.nwm.utils import write_parquet_file, get_dataset
+from teehr.loading.nwm.utils import (
+    write_parquet_file,
+    get_dataset,
+    get_period_start_end_times
+)
 from teehr.loading.nwm.retrospective_points import (
     format_grouped_filename,
     validate_start_end_date,
@@ -84,7 +87,7 @@ def construct_nwm21_json_paths(
         "s3://ciroh-nwm-zarr-retrospective-data-copy/"
         "noaa-nwm-retrospective-2-1-zarr-pds/forcing"
     )
-    date_rng = pd.date_range(start_date, end_date, freq="H")
+    date_rng = pd.date_range(start_date, end_date, freq="h")
     dates = []
     paths = []
     for dt in date_rng:
@@ -299,20 +302,50 @@ def nwm_retro_grids_to_parquet(
         weight_vals = weights_df.weight.values
 
         if chunk_by is None:
-            gps = [(None, var_da)]
+            chunk_df = process_group(
+                da_i=var_da,
+                rows=rows,
+                cols=cols,
+                weights_df=weights_df,
+                weight_vals=weight_vals,
+                variable_name=variable_name,
+                units_format_dict=NWM22_UNIT_LOOKUP,
+                nwm_version=nwm_version
+            )
+
+            fname = format_grouped_filename(var_da)
+            output_filename = Path(
+                output_parquet_dir,
+                fname
+            )
+
+            write_parquet_file(
+                filepath=output_filename,
+                overwrite_output=overwrite_output,
+                data=chunk_df)
+
+            return
 
         if chunk_by == "week":
-            gps = var_da.groupby(var_da.time.dt.isocalendar().week)
+            periods = pd.period_range(start=start_date, end=end_date, freq="W")
 
         if chunk_by == "month":
-            gps = var_da.groupby("time.month")
+            periods = pd.period_range(start=start_date, end=end_date, freq="M")
 
         if chunk_by == "year":
             raise ValueError(
                 "Chunkby 'year' is not yet implemented for gridded data"
             )
 
-        for _, da_i in gps:
+        for period in periods:
+
+            dts = get_period_start_end_times(
+                period=period,
+                start_date=start_date,
+                end_date=end_date
+            )
+
+            da_i = var_da.sel(time=slice(dts["start_dt"], dts["end_dt"]))
 
             chunk_df = process_group(
                 da_i=da_i,
@@ -330,25 +363,26 @@ def nwm_retro_grids_to_parquet(
                 output_parquet_dir,
                 fname
             )
+
             write_parquet_file(
                 filepath=output_filename,
                 overwrite_output=overwrite_output,
                 data=chunk_df)
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    t0 = time.time()
+#     t0 = time.time()
 
-    nwm_retro_grids_to_parquet(
-        nwm_version="nwm30",
-        variable_name="RAINRATE",
-        zonal_weights_filepath="/mnt/data/ciroh/wbdhuc10_weights.parquet",
-        start_date="2008-05-22 00:00",
-        end_date="2008-05-22 23:00",
-        output_parquet_dir="/mnt/data/ciroh/retro",
-        overwrite_output=True,
-        chunk_by=None
-    )
+#     nwm_retro_grids_to_parquet(
+#         nwm_version="nwm30",
+#         variable_name="RAINRATE",
+#         zonal_weights_filepath="/mnt/data/merit/YalansBasins/cat_pfaf_7_conus_subset_nwm_v30_weights.parquet",
+#         start_date="2007-01-03 00:00",
+#         end_date="2008-10-22 23:00",
+#         output_parquet_dir="/mnt/data/ciroh/retro",
+#         overwrite_output=True,
+#         chunk_by="week"
+#     )
 
-    print(f"Total elapsed: {(time.time() - t0):.2f} secs")
+#     print(f"Total elapsed: {(time.time() - t0):.2f} secs")

@@ -7,9 +7,10 @@ from datetime import datetime, timedelta
 from hydrotools.nwis_client.iv import IVDataService
 from teehr.models.loading.utils import ChunkByEnum
 from pydantic import validate_call, ConfigDict
-from teehr.loading.nwm.utils import write_parquet_file
+from teehr.loading.nwm.utils import write_parquet_file, get_period_start_end_times
 
 DATETIME_STR_FMT = "%Y-%m-%dT%H:%M:00+0000"
+DAYLIGHT_SAVINGS_PAD = timedelta(hours=2)
 
 
 def _filter_to_hourly(df: pd.DataFrame) -> pd.DataFrame:
@@ -200,12 +201,16 @@ def usgs_to_parquet(
     if chunk_by is None:
         usgs_df = _fetch_usgs(
             sites=sites,
-            start_date=start_date,
-            end_date=end_date,
+            start_date=start_date - DAYLIGHT_SAVINGS_PAD,
+            end_date=end_date + DAYLIGHT_SAVINGS_PAD,
             filter_to_hourly=filter_to_hourly,
             filter_no_data=filter_no_data,
             convert_to_si=convert_to_si
         )
+
+        usgs_df = usgs_df[(usgs_df["value_time"] >= start_date) &
+                          (usgs_df["value_time"] < end_date)]
+
         if len(usgs_df) > 0:
             output_filepath = Path(output_parquet_dir, "usgs.parquet")
             write_parquet_file(
@@ -219,12 +224,16 @@ def usgs_to_parquet(
         for site in sites:
             usgs_df = _fetch_usgs(
                 sites=[site],
-                start_date=start_date,
-                end_date=end_date,
+                start_date=start_date - DAYLIGHT_SAVINGS_PAD,
+                end_date=end_date + DAYLIGHT_SAVINGS_PAD,
                 filter_to_hourly=filter_to_hourly,
                 filter_no_data=filter_no_data,
                 convert_to_si=convert_to_si
             )
+
+            usgs_df = usgs_df[(usgs_df["value_time"] >= start_date) &
+                              (usgs_df["value_time"] < end_date)]
+
             if len(usgs_df) > 0:
                 output_filepath = Path(
                     output_parquet_dir,
@@ -239,49 +248,43 @@ def usgs_to_parquet(
 
     # TODO: Print warning if chunk_by is bigger than start and end dates?
 
+    # Chunk data by time
     if chunk_by == "day":
-        date_intervals = pd.date_range(start_date, end_date, freq="D")
+        periods = pd.period_range(start=start_date, end=end_date, freq="D")
 
     if chunk_by == "week":
-        date_intervals = pd.date_range(start_date, end_date, freq="W")
+        periods = pd.period_range(start=start_date, end=end_date, freq="W")
 
     if chunk_by == "month":
-        date_intervals = pd.date_range(start_date, end_date, freq="M")
+        periods = pd.period_range(start=start_date, end=end_date, freq="M")
 
     if chunk_by == "year":
-        date_intervals = pd.date_range(start_date, end_date, freq="Y")
+        periods = pd.period_range(start=start_date, end=end_date, freq="Y")
 
-    # If the start date is not within the specified interval,
-    # it is not included, so add it here if it does not already exist.
-    date_intervals = date_intervals.union(
-        pd.DatetimeIndex([start_date]), sort=True
-    )
+    for period in periods:
 
-    for i, dt_intvl in enumerate(date_intervals):
-        if i == 0:
-            start_dt = start_date
-        else:
-            start_dt = dt_intvl
-
-        if i == len(date_intervals) - 1:
-            # Include data for the last day
-            end_dt = end_date + timedelta(hours=24) - timedelta(minutes=1)
-        else:
-            end_dt = date_intervals[i + 1] - timedelta(minutes=1)
+        dts = get_period_start_end_times(
+            period=period,
+            start_date=start_date,
+            end_date=end_date
+        )
 
         usgs_df = _fetch_usgs(
             sites=sites,
-            start_date=start_dt,
-            end_date=end_dt,
+            start_date=dts["start_dt"] - DAYLIGHT_SAVINGS_PAD,
+            end_date=dts["end_dt"] + DAYLIGHT_SAVINGS_PAD,
             filter_to_hourly=filter_to_hourly,
             filter_no_data=filter_no_data,
             convert_to_si=convert_to_si
         )
 
+        usgs_df = usgs_df[(usgs_df["value_time"] >= dts["start_dt"]) &
+                          (usgs_df["value_time"] <= dts["end_dt"])]
+
         if len(usgs_df) > 0:
 
             output_filename = _format_output_filename(
-                chunk_by, start_dt, end_dt
+                chunk_by, dts["start_dt"], dts["end_dt"]
             )
 
             output_filepath = Path(output_parquet_dir, output_filename)
