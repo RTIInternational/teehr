@@ -1,22 +1,25 @@
+#body {
+  height: 90vh;
+  width: 90vh;
+}
 
 #root {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
   text-align: center;
 }
 
 .leaflet-container {
-  height: calc(100vh - 4rem);
+  height: calc(100vh - 10rem);
   width: 100%;
 }
 
 .map-container {
-  height: calc(100vh - 4rem);
+  height: calc(100vh - 10rem);
   width: 100%;
 }
 
-.clicked-coord-label{
+.clicked-coord-label {
   position: absolute;
   right: 0;
   bottom: 0;
