@@ -1,5 +1,13 @@
 """Module describing NWM v3.0 point configuration variables."""
-from enum import Enum
+try:
+    # breaking change introduced in python 3.11
+    from enum import StrEnum
+except ImportError:  # pragma: no cover
+    from enum import Enum  # pragma: no cover
+
+    class StrEnum(str, Enum):  # pragma: no cover
+        pass  # pragma: no cover
+
 from typing import Optional
 
 from pydantic import BaseModel
@@ -23,7 +31,7 @@ from teehr.models.loading.nwm22_point import (
 
 
 # POINT CONFIGURATION ENUM: Potential configuration names
-class ConfigurationsEnum(str, Enum):
+class ConfigurationsEnum(StrEnum):
     """ConfigurationsEnum."""
     analysis_assim = "analysis_assim"
     analysis_assim_no_da = "analysis_assim_no_da"

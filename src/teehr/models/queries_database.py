@@ -1,7 +1,15 @@
 """Module for database query models."""
 from collections.abc import Iterable
 from datetime import datetime
-from enum import Enum  # , StrEnum  if 3.11
+try:
+    # breaking change introduced in python 3.11
+    from enum import StrEnum
+except ImportError:  # pragma: no cover
+    from enum import Enum  # pragma: no cover
+
+    class StrEnum(str, Enum):  # pragma: no cover
+        pass  # pragma: no cover
+
 from typing import List, Optional, Union
 
 from pydantic import BaseModel as PydanticBaseModel
@@ -19,7 +27,7 @@ class BaseModel(PydanticBaseModel):
         # smart_union = True # deprecated in v2
 
 
-class FieldTypeEnum(str, Enum):
+class FieldTypeEnum(StrEnum):
     """Allowable duckdb data types."""
 
     BIGINT = "BIGINT"
@@ -46,7 +54,7 @@ class FieldTypeEnum(str, Enum):
     VARCHAR = "VARCHAR"
 
 
-class JoinedFieldNameEnum(str, Enum):
+class JoinedFieldNameEnum(StrEnum):
     """Names of fields in base joined_timeseries table."""
 
     reference_time = "reference_time"
@@ -63,8 +71,9 @@ class JoinedFieldNameEnum(str, Enum):
     geometry = "geometry"
 
 
-class TimeseriesNameEnum(str, Enum):
+class TimeseriesNameEnum(StrEnum):
     """Timeseries Names."""
+
     primary = "primary"
     secondary = "secondary"
 
