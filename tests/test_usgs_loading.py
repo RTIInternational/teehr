@@ -72,10 +72,10 @@ def test_chunkby_week():
         chunk_by="week",
         overwrite_output=True
     )
-    df = pd.read_parquet(Path(TEMP_DIR, "2023-02-20_2023-02-25.parquet"))
-    assert len(df) == 287
-    df = pd.read_parquet(Path(TEMP_DIR, "2023-02-26_2023-03-03.parquet"))
-    assert len(df) == 266
+    df = pd.read_parquet(Path(TEMP_DIR, "2023-02-20_2023-02-26.parquet"))
+    assert len(df) == 335
+    df = pd.read_parquet(Path(TEMP_DIR, "2023-02-27_2023-03-03.parquet"))
+    assert len(df) == 186
 
 
 def test_chunkby_month():
@@ -91,10 +91,10 @@ def test_chunkby_month():
         chunk_by="month",
         overwrite_output=True
     )
-    df = pd.read_parquet(Path(TEMP_DIR, "2023-02-20_2023-02-27.parquet"))
-    assert len(df) == 383
-    df = pd.read_parquet(Path(TEMP_DIR, "2023-02-28_2023-03-25.parquet"))
-    assert len(df) == 1188  # missing final hour 23
+    df = pd.read_parquet(Path(TEMP_DIR, "2023-02-20_2023-02-28.parquet"))
+    assert len(df) == 431
+    df = pd.read_parquet(Path(TEMP_DIR, "2023-03-01_2023-03-25.parquet"))
+    assert len(df) == 1111
 
 
 def test_chunkby_all():
