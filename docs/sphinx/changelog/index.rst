@@ -1,7 +1,7 @@
 Release Notes
 =============
 
-0.3.12 - 2024-03-20
+0.3.13 - 2024-03-22
 --------------------
 
 Added
@@ -15,6 +15,19 @@ Changed
   is required to support both python 3.10 and python 3.11.
 * Updated TEEHR-HUB to Python 3.11 and `pangeo/pangeo-notebook:2024.03.13`
 * Made all packages that use YYYY.MM.DD versioning `>=` instead of `^` in `pyproject.toml`
+
+
+0.3.12 - 2024-03-22
+--------------------
+
+Added
+^^^^^
+* None
+
+Changed
+^^^^^^^
+* Changed the chunking method for USGS and NWM retrospective data loading to iterate over pandas ``period_range``
+rather than using ``groupby`` or ``date_range`` to fix a bug when fetching data over multiple years.
 
 0.3.11 - 2024-03-19
 --------------------

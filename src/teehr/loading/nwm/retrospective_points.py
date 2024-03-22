@@ -15,7 +15,11 @@ from teehr.models.loading.utils import (
     SupportedNWMRetroVersionsEnum,
     SupportedNWMRetroDomainsEnum
 )
-from teehr.loading.nwm.utils import write_parquet_file
+from teehr.loading.nwm.utils import (
+    write_parquet_file,
+    get_period_start_end_times,
+    create_periods_based_on_chunksize
+)
 
 NWM20_MIN_DATE = datetime(1993, 1, 1)
 NWM20_MAX_DATE = datetime(2018, 12, 31, 23)
@@ -227,28 +231,17 @@ def nwm_retro_to_parquet(
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
 
-    ds = xr.open_zarr(
+    da = xr.open_zarr(
         fsspec.get_mapper(s3_zarr_url, anon=True), consolidated=True
-    ).sel(feature_id=location_ids, time=slice(start_date, end_date))
-
-    # Fetch all at once
-    if chunk_by is None:
-
-        da = ds[variable_name]
-        df = da_to_df(nwm_version, da)
-        min_time = df.value_time.min().strftime("%Y%m%d%HZ")
-        max_time = df.value_time.max().strftime("%Y%m%d%HZ")
-        output_filepath = Path(
-            output_parquet_dir, f"{min_time}_{max_time}.parquet"
-        )
-        write_parquet_file(output_filepath, overwrite_output, df)
-        return
+    )[variable_name].sel(
+        feature_id=location_ids, time=slice(start_date, end_date)
+    )
 
     # Fetch data by site
     if chunk_by == "location_id":
         for location_id in location_ids:
 
-            da = ds[variable_name].sel(feature_id=location_id)
+            da = da.sel(feature_id=location_id)
             df = da_to_df(nwm_version, da)
             min_time = df.value_time.min().strftime("%Y%m%d%HZ")
             max_time = df.value_time.max().strftime("%Y%m%d%HZ")
@@ -259,26 +252,28 @@ def nwm_retro_to_parquet(
             write_parquet_file(output_filepath, overwrite_output, df)
         return
 
-    # Group dataset by day, week, month, or year
-    if chunk_by == "day":
-        gps = ds.groupby("time.day")
+    # Chunk data by time
+    periods = create_periods_based_on_chunksize(
+        start_date=start_date,
+        end_date=end_date,
+        chunk_by=chunk_by
+    )
 
-    if chunk_by == "week":
-        # Calendar week: Monday to Sunday
-        gps = ds.groupby(ds.time.dt.isocalendar().week)
+    for period in periods:
 
-    if chunk_by == "month":
-        # Calendar month
-        gps = ds.groupby("time.month")
+        if period is not None:
+            dts = get_period_start_end_times(
+                period=period,
+                start_date=start_date,
+                end_date=end_date
+            )
+        else:
+            dts = {"start_dt": start_date, "end_dt": end_date}
 
-    if chunk_by == "year":
-        # Calendar year
-        gps = ds.groupby("time.year")
+        da_i = da.sel(time=slice(dts["start_dt"], dts["end_dt"]))
 
-    # Process the data by selected chunk
-    for _, ds_i in gps:
-        df = da_to_df(nwm_version, ds_i[variable_name])
-        output_filename = format_grouped_filename(ds_i)
+        df = da_to_df(nwm_version, da_i)
+        output_filename = format_grouped_filename(da_i)
         output_filepath = Path(
             output_parquet_dir, output_filename
         )
@@ -303,10 +298,10 @@ def nwm_retro_to_parquet(
 #         nwm_version="nwm20",
 #         variable_name="streamflow",
 #         start_date=datetime(2000, 1, 1),
-#         end_date=datetime(2000, 1, 2),
+#         end_date=datetime(2000, 10, 2),
 #         location_ids=LOCATION_IDS,
 #         output_parquet_dir=Path(Path().home(), "temp", "nwm20_retrospective"),
-#         chunk_by="day",
+#         chunk_by="month",
 #     )
 
 #     nwm_retro_to_parquet(
