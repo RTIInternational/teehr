@@ -1,0 +1,1094 @@
+:py:mod:`teehr.database.teehr_dataset`
+======================================
+
+.. py:module:: teehr.database.teehr_dataset
+
+.. autoapi-nested-parse::
+
+   Defines the TEEHR dataset class and pre-processing methods.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   teehr.database.teehr_dataset.TEEHRDatasetAPI
+   teehr.database.teehr_dataset.TEEHRDatasetDB
+
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.database.teehr_dataset.logger
+
+
+.. py:data:: logger
+
+   
+
+.. py:class:: TEEHRDatasetAPI(database_filepath: Union[str, pathlib.Path])
+
+
+   
+   Create an instance of a TEEHRDataset class for API-based queries and     initialize a study area database.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   .. rubric:: Methods
+
+
+
+   =================================================================================================  ==========
+                                                   **__init__(database_filepath: Union[str, Path])**  Establish a connection to an existing study area database.  
+                                                                       **profile_query(query: str)**  A helper function to profile query performance (runs EXPLAIN ANALYZE).  
+                        **query(query: str, format: str = None, create_function_args: Dict = None)**  Submit an SQL query string against the database.  
+                                                                  **get_joined_timeseries_schema()**  Get field names and field data types from the joined_timeseries, table as a pandas dataframe.  
+   **describe_inputs(primary_filepath: Union[str, Path],     secondary_filepath: Union[str, Path])**  Get descriptive statistics on the primary and secondary timeseries by reading the parquet files as a pandas dataframe.  
+                                                                    **get_metrics(mq: MetricQuery)**  Calculate performance metrics using database queries.  
+                                                             **get_timeseries(tq: TimeseriesQuery)**  Retrieve timeseries using a database query.  
+                                                  **get_timeseries_chars(tcq: TimeseriesCharQuery)**  Retrieve timeseries characteristics using database query.  
+                                          **get_unique_field_values(fn: JoinedTimeseriesFieldName)**  Get unique values for a given field as a pandas dataframe.  
+   =================================================================================================  ==========
+
+   ..
+       !! processed by numpydoc !!
+   .. py:method:: profile_query(query: str)
+
+      
+      A helper function to profile query performance,
+      which runs EXPLAIN ANALYZE and prints the output to screen.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: query(query: str, format: str = None)
+
+      
+      Run an SQL query against the class's database.
+
+      Return formats include:
+
+      * A pandas dataframe (format='df')
+      * Results bprinted to the screen (format='raw')
+      * A DuckDBPyRelation, a symbolic representation of the SQL query
+        (format='relation').
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: get_joined_timeseries_schema() -> pandas.DataFrame
+
+      
+      Get field names and field data types from the joined_timeseries         table.
+
+
+
+      :Returns:
+
+          pd.DataFrame
+              Includes column_name, column_type, null, key, default,
+              and extra columns.
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _sanitize_field_name(field_name: str) -> str
+      :staticmethod:
+
+      
+      Replace unallowed characters from user-defined field names with an
+      underscore.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: describe_inputs(primary_filepath: Union[str, pathlib.Path], secondary_filepath: Union[str, pathlib.Path]) -> pandas.DataFrame
+      :staticmethod:
+
+      
+      Get descriptive statistics on the primary and secondary
+      timeseries by reading the parquet files.
+
+
+      :Parameters:
+
+          **primary_filepath** : Union[str, Path]
+              Path to the primary time series parquet file.
+
+          **secondary_filepath** : Union[str, Path]
+              Path to the primary time series parquet file.
+
+      :Returns:
+
+          pd.DataFrame
+              A dataframe of descriptive statistics for each time series.
+              
+              Output includes:
+              
+              * Number of unique location IDs
+              * Total number of rows
+              * Start date
+              * End date
+              * Number of duplicate rows
+              * Number of location IDs with duplicate value times
+              * Number of location IDs with missing time steps
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _check_if_geometry_is_inserted()
+
+      
+      Make sure the geometry table is not empty.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _validate_query_model(query_model: Any) -> Any
+
+      
+      Validate pydantic query models based on the existing fields
+      in the joined_timeseries table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: get_metrics(mq: teehr.models.queries_database.MetricQuery) -> Union[pandas.DataFrame, geopandas.GeoDataFrame, str]
+
+      
+      Calculate performance metrics using database queries.
+
+
+      :Parameters:
+
+          **mq** : MetricQuery
+              Pydantic model containing query parameters.
+
+      :Returns:
+
+          Union[pd.DataFrame, gpd.GeoDataFrame, str]
+              A DataFrame or optionally a GeoDataFrame containing query results,
+              or the query itself as a string.
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_get_metrics_query`
+              Create the get metrics query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: get_joined_timeseries(jtq: teehr.models.queries_database.JoinedTimeseriesQuery) -> Union[pandas.DataFrame, geopandas.GeoDataFrame, str]
+
+      
+      Retrieve joined timeseries using database query.
+
+
+      :Parameters:
+
+          **jtq** : JoinedTimeseriesQuery
+              Pydantic model containing query parameters.
+
+      :Returns:
+
+          Union[pd.DataFrame, gpd.GeoDataFrame, str]
+              A DataFrame or GeoDataFrame of query results
+              or the query itself as a string.
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_get_joined_timeseries_query`
+              Create the get joined timeseries query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: get_timeseries(tq: teehr.models.queries_database.TimeseriesQuery) -> Union[pandas.DataFrame, str]
+
+      
+      Retrieve timeseries using database query.
+
+
+      :Parameters:
+
+          **tq** : TimeseriesQuery
+              Pydantic model containing query parameters.
+
+      :Returns:
+
+          Union[pd.DataFrame, str]
+              A DataFrame of query results or the query itself as a string.
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_get_timeseries_query`
+              Create the get timeseries query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: get_timeseries_chars(tcq: teehr.models.queries_database.TimeseriesCharQuery) -> Union[str, pandas.DataFrame]
+
+      
+      Retrieve timeseries characteristics using database query.
+
+
+      :Parameters:
+
+          **tcq** : TimeseriesCharQuery
+              Pydantic model containing query parameters.
+
+      :Returns:
+
+          Union[str, pd.DataFrame]
+              A DataFrame of time series characteristics including:
+              
+              - location_id
+              - count
+              - min
+              - max
+              - average
+              - sum
+              - variance
+              
+              or, the query itself as a string.
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_get_timeseries_char_query`
+              Create the get timeseries characteristics query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: get_unique_field_values(fn: teehr.models.queries_database.JoinedTimeseriesFieldName) -> pandas.DataFrame
+
+      
+      Get unique values for a given field.
+
+
+      :Parameters:
+
+          **fn** : JoinedTimeseriesFieldName
+              Pydantic model containing the joined_timeseries table field name.
+
+      :Returns:
+
+          pd.DataFrame
+              A dataframe containing unique values for the given field.
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_unique_field_values_query`
+              Create the get unique field values query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: TEEHRDatasetDB(database_filepath: Union[str, pathlib.Path])
+
+
+   Bases: :py:obj:`TEEHRDatasetAPI`
+
+   
+   Extends TEEHRDatasetAPI class with additional functionality     for local database-based queries.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   .. rubric:: Methods
+
+
+
+   =====================================================================================================================================================================================================================================================================================================================  ==========
+                                                                                                                                                                                                                                                                **insert_geometry(geometry_filepath: Union[str, Path])**  Inserts geometry from a parquet file into a separate database table named 'geometry'.  
+         **insert_joined_timeseries(primary_filepath: Union[str, Path],         secondary_filepath: Union[str, Path],         crosswalk_filepath: Union[str, Path],         order_by: List[str] = [             "reference_time",             "primary_location_id",         ],         drop_added_fields=False,     )**  Joins the primary and secondary timeseries from parquet files and inserts into the database as the joined_timeseries table.  
+                                                                                                                                                                                                                                                              **join_attributes(attributes_filepath: Union[str, Path])**  Joins attributes from the provided attribute table(s) to new fields in the joined_timeseries table  
+                                                                                                                                          **calculate_field(new_field_name: str, new_field_type: str,         parameter_names: List[str],         user_defined_function: Callable,         replace: bool = True,     )**  Calculate a new field in joined_timeseries based on existing fields and a user-defined function.  
+                                                                                                                                                                                                                                                                                           **profile_query(query: str)**  A helper function to profile query performance (runs EXPLAIN ANALYZE). Inherited from TEEHRDatasetAPI.  
+                                                                                                                                                                                                                                            **query(query: str, format: str = None, create_function_args: Dict = None)**  Submit an SQL query string against the database. Inherited from TEEHRDatasetAPI.  
+                                                                                                                                                                                                                                                                      **get_joined_timeseries_schema() -> pd.DataFrame**  Get field names and field data types from the joined_timeseries, table as a pandas dataframe. Inherited from TEEHRDatasetAPI.  
+                                                                                                                                                                                     **describe_inputs(         primary_filepath: Union[str, Path],         secondary_filepath: Union[str, Path]     ) -> pd.DataFrame**  Get descriptive statistics on the primary and secondary timeseries by reading the parquet files as a pandas dataframe. Inherited from TEEHRDatasetAPI.  
+   **get_metrics(         group_by: List[str],         order_by: List[str],         include_metrics: Union[List[MetricEnum], "all"],         filters: Union[List[dict], None] = None,         include_geometry: bool = False,         return_query: bool = False,     ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:**  Calculate performance metrics using database queries Overrides TEEHRDatasetAPI.  
+                                                               **get_timeseries(         order_by: List[str],         timeseries_name: str,         filters: Union[List[dict], None] = None,         return_query: bool = False,     ) -> Union[pd.DataFrame, str]         Retrieve timeseries using a database query.**  Overrides TEEHRDatasetAPI.  
+                                                                                **get_timeseries_chars(         group_by: List[str],         order_by: List[str],         timeseries_name: str,         filters: Union[List[dict], None] = None,         return_query: bool = False,     ) -> Union[str, pd.DataFrame]**  Retrieve timeseries characteristics using database query Overrides TEEHRDatasetAPI.  
+                                                                                                                                                                                                                                              **get_unique_field_values(fn: JoinedTimeseriesFieldName) -> pd.DataFrame**  Get unique values for a given field as a pandas dataframe. Overrides TEEHRDatasetAPI. Use get_joined_timeseries_schema() to see existing table fields.  
+   =====================================================================================================================================================================================================================================================================================================================  ==========
+
+   ..
+       !! processed by numpydoc !!
+   .. py:method:: query(query: str, read_only: bool = False, format: str = None, create_function_args: Dict = None)
+
+      
+      Run query against the class's database.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _initialize_database_tables()
+
+      
+      Create the persistent study database and empty table(s).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _drop_joined_timeseries_field(field_name: str)
+
+      
+      Drop the specified field by name from joined_timeseries table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _validate_joined_timeseries_base_fields(drop_added_fields: bool)
+
+      
+      Ensure that no user-defined fields have been added or base fields
+      have been dropped. This is necessary in order to add multiple
+      configurations into the joined_timeseries table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: insert_geometry(geometry_filepath: Union[str, pathlib.Path])
+
+      
+      Insert geometry from a parquet file into a separate
+      database table named 'geometry'.
+
+
+      :Parameters:
+
+          **geometry_filepath** : Union[str, Path]
+              Path to the geometry file.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: insert_joined_timeseries(primary_filepath: Union[str, pathlib.Path], secondary_filepath: Union[str, pathlib.Path], crosswalk_filepath: Union[str, pathlib.Path], order_by: List[str] = ['primary_location_id', 'configuration', 'variable_name', 'measurement_unit', 'value_time'], drop_added_fields=False)
+
+      
+      Join the primary and secondary timeseries read from parquet files
+      and inserts into the database as the joined_timeseries table.
+
+
+      :Parameters:
+
+          **primary_filepath** : Union[str, Path]
+              File path to the "observed" data.  String must include path to
+              file(s) and can include wildcards.  For example,
+              "/path/to/parquet/\*.parquet".
+
+          **secondary_filepath** : Union[str, Path]
+              File path to the "forecast" data.  String must include path to
+              file(s) and can include wildcards.  For example,
+              "/path/to/parquet/\*.parquet".
+
+          **crosswalk_filepath** : Union[str, Path]
+              File path to single crosswalk file.
+
+          **order_by** : List[str], optional
+              List of column/field names to order results by,
+              by default ["reference_time", "primary_location_id"].
+
+          **drop_added_fields** : bool, optional
+              A flag to determine whether to drop any user-defined fields that
+              have been added to the table (True), or raise an error if added
+              fields exist (False). By default False.
+
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_join_and_save_timeseries_query`
+              Create the join and save timeseries query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _get_unique_attributes(attributes_filepath: str) -> List
+
+      
+      Get a list of unique attributes and attribute units from the
+      provided attribute table(s).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _add_field_name_to_joined_timeseries(field_name: str, field_dtype='VARCHAR')
+
+      
+      Add a field name to joined_timeseries
+      if it does not already exist.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: join_attributes(attributes_filepath: Union[str, pathlib.Path])
+
+      
+      Join attributes from the provided attribute table(s) to new
+      fields in the joined_timeseries table.
+
+
+      :Parameters:
+
+          **attributes_filepath** : Union[str, Path]
+              File path to the "attributes" data.  String must include path to
+              file(s) and can include wildcards.  For example,
+              "/path/to/parquet/\*.parquet".
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: calculate_field(new_field_name: str, new_field_type: str, parameter_names: List[str], user_defined_function: Callable, replace: bool = True)
+
+      
+      Calculate a new field in joined_timeseries based on existing
+      fields and a user-defined function.
+
+
+      :Parameters:
+
+          **new_field_name** : str
+              Name of new field to be added to joined_timeseries.
+
+          **new_field_type** : str
+              Data type of the new field.
+
+          **parameter_names** : List[str]
+              Arguments to your user function,
+              must be exisiting joined_timeseries fields.
+
+          **user_defined_function** : Callable
+              Function to apply.
+
+          **replace** : bool
+              If replace is True and new_field_name already exists, it is
+              dropped before being recalculated and re-added.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _validate_query_model(query_model: Any, data: Dict) -> Any
+
+      
+      Validate the query based on existing table fields.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: get_metrics(group_by: List[str], order_by: List[str], include_metrics: Union[List[teehr.models.queries.MetricEnum], str] = 'all', filters: Union[List[dict], None] = None, include_geometry: bool = False, return_query: bool = False) -> Union[str, pandas.DataFrame, geopandas.GeoDataFrame]
+
+      
+      Calculate performance metrics using database queries.
+
+
+      :Parameters:
+
+          **group_by** : List[str]
+              List of column/field names to group timeseries data by.
+              Must provide at least one.
+
+          **order_by** : List[str]
+              List of column/field names to order results by.
+              Must provide at least one.
+
+          **include_metrics** : Union[List[MetricEnum], str]
+              List of metrics (see below) for allowable list, or "all" to return
+              all. Placeholder, currently ignored -> returns "all".
+
+          **filters** : Union[List[dict], None] = None
+              List of dictionaries describing the "where" clause to limit data
+              that is included in metrics.
+
+          **include_geometry** : bool, optional
+              True joins the geometry to the query results.
+              Only works if `primary_location_id`
+              is included as a group_by field, by default False.
+
+          **return_query** : bool, optional
+              True returns the query string instead of the data,
+              by default False.
+
+      :Returns:
+
+          Union[pd.DataFrame, gpd.GeoDataFrame, str]
+              A DataFrame or optionally a GeoDataFrame containing query results,
+              or the query itself as a string.
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_get_metrics_query`
+              Create the get metrics query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: get_joined_timeseries(order_by: List[str], filters: Union[List[dict], None] = None, include_geometry: bool = False, return_query: bool = False) -> Union[pandas.DataFrame, geopandas.GeoDataFrame, str]
+
+      
+      Retrieve joined timeseries using database query.
+
+
+      :Parameters:
+
+          **order_by** : List[str]
+              List of column/field names to order results by.
+              Must provide at least one.
+
+          **filters** : Union[List[dict], None] = None
+              List of dictionaries describing the "where" clause to limit data
+              that is included in metrics.
+
+          **include_geometry** : bool
+              True joins the geometry to the query results.
+              Only works if `primary_location_id`
+              is included as a group_by field.
+
+          **return_query** : bool = False
+              True returns the query string instead of the data.
+
+      :Returns:
+
+          Union[pd.DataFrame, gpd.GeoDataFrame str]
+              A DataFrame or GeoDataFrame of query results
+              or the query itself as a string.
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_get_joined_timeseries_query`
+              Create the get joined timeseries query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: get_timeseries(order_by: List[str], timeseries_name: str, filters: Union[List[dict], None] = None, return_query: bool = False) -> Union[pandas.DataFrame, str]
+
+      
+      Retrieve timeseries using database query.
+
+
+      :Parameters:
+
+          **order_by** : List[str]
+              List of column/field names to order results by.
+              Must provide at least one.
+
+          **timeseries_name** : str
+              Name of the time series to query ('primary' or 'secondary').
+
+          **filters** : Union[List[dict], None], optional
+              List of dictionaries describing the "where" clause to limit data
+              that is included in metrics, by default None.
+
+          **return_query** : bool, optional
+              True returns the query string instead of the data,
+              by default False.
+
+      :Returns:
+
+          Union[pd.DataFrame, str]
+              A DataFrame of query results or the query itself as a string.
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_get_timeseries_query`
+              Create the get timeseries query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: get_timeseries_chars(group_by: List[str], order_by: List[str], timeseries_name: str, filters: Union[List[dict], None] = None, return_query: bool = False) -> Union[str, pandas.DataFrame]
+
+      
+      Retrieve timeseries characteristics using database query.
+
+
+      :Parameters:
+
+          **group_by** : List[str]
+              List of column/field names to group timeseries data by.
+              Must provide at least one.
+
+          **order_by** : List[str]
+              List of column/field names to order results by.
+              Must provide at least one.
+
+          **timeseries_name** : str
+              Name of the time series to query (primary or secondary).
+
+          **filters** : Union[List[dict], None], optional
+              List of dictionaries describing the "where" clause to limit data
+              that is included in metrics., by default None.
+
+          **return_query** : bool, optional
+              True returns the query string instead of the data,
+              by default False.
+
+      :Returns:
+
+          Union[str, pd.DataFrame]
+              A DataFrame of time series characteristics including:
+              - count
+              - min
+              - max
+              - average
+              - sum
+              - variance
+              
+              or, the query itself as a string.
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_get_timeseries_char_query`
+              Create the get timeseries characteristics query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: get_unique_field_values(field_name: str) -> pandas.DataFrame
+
+      
+      Get unique values for a given field.
+
+
+      :Parameters:
+
+          **field_name** : str
+              Name of the joined_timeseries field.
+
+      :Returns:
+
+          pd.DataFrame
+              A dataframe containing unique values for the given field.
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_unique_field_values_query`
+              Create the get unique field values query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+

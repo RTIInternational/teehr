@@ -1,0 +1,38 @@
+:py:mod:`teehr.database`
+========================
+
+.. py:module:: teehr.database
+
+.. autoapi-nested-parse::
+
+   
+   TEEHR database init.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   teehr_dataset/index.rst
+
+

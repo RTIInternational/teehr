@@ -1,0 +1,41 @@
+:py:mod:`teehr.queries`
+=======================
+
+.. py:module:: teehr.queries
+
+.. autoapi-nested-parse::
+
+   
+   Queries init.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   duckdb/index.rst
+   duckdb_database/index.rst
+   pandas/index.rst
+   utils/index.rst
+
+

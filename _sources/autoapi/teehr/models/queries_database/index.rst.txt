@@ -1,0 +1,1169 @@
+:py:mod:`teehr.models.queries_database`
+=======================================
+
+.. py:module:: teehr.models.queries_database
+
+.. autoapi-nested-parse::
+
+   Module for database query models.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   teehr.models.queries_database.StrEnum
+   teehr.models.queries_database.BaseModel
+   teehr.models.queries_database.FieldTypeEnum
+   teehr.models.queries_database.JoinedFieldNameEnum
+   teehr.models.queries_database.TimeseriesNameEnum
+   teehr.models.queries_database.JoinedTimeseriesFieldName
+   teehr.models.queries_database.CalculateField
+   teehr.models.queries_database.Filter
+   teehr.models.queries_database.InsertJoinedTimeseriesQuery
+   teehr.models.queries_database.JoinedTimeseriesQuery
+   teehr.models.queries_database.TimeseriesQuery
+   teehr.models.queries_database.TimeseriesCharQuery
+   teehr.models.queries_database.MetricQuery
+
+
+
+
+.. py:class:: StrEnum
+
+
+   Bases: :py:obj:`str`, :py:obj:`enum.Enum`
+
+   
+   str(object='') -> str
+   str(bytes_or_buffer[, encoding[, errors]]) -> str
+
+   Create a new string object from the given object. If encoding or
+   errors is specified, then the object must expose a data buffer
+   that will be decoded using the given encoding and error handler.
+   Otherwise, returns the result of object.__str__() (if defined)
+   or repr(object).
+   encoding defaults to sys.getdefaultencoding().
+   errors defaults to 'strict'.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:class:: BaseModel(/, **data: Any)
+
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+   
+   Basemodel configuration.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:class:: ConfigDict
+
+
+      
+      ConfigDict.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+      .. py:attribute:: arbitrary_types_allowed
+         :value: True
+
+         
+
+
+
+.. py:class:: FieldTypeEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   Allowable duckdb data types.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: BIGINT
+      :value: 'BIGINT'
+
+      
+
+   .. py:attribute:: BIT
+      :value: 'BIT'
+
+      
+
+   .. py:attribute:: BOOLEAN
+      :value: 'BOOLEAN'
+
+      
+
+   .. py:attribute:: BLOB
+      :value: 'BLOB'
+
+      
+
+   .. py:attribute:: DATE
+      :value: 'DATE'
+
+      
+
+   .. py:attribute:: DOUBLE
+      :value: 'DOUBLE'
+
+      
+
+   .. py:attribute:: DECIMAL
+      :value: 'DECIMAL'
+
+      
+
+   .. py:attribute:: FLOAT
+      :value: 'FLOAT'
+
+      
+
+   .. py:attribute:: HUGEINT
+      :value: 'HUGEINT'
+
+      
+
+   .. py:attribute:: INTEGER
+      :value: 'INTEGER'
+
+      
+
+   .. py:attribute:: INTERVAL
+      :value: 'INTEGER'
+
+      
+
+   .. py:attribute:: REAL
+      :value: 'REAL'
+
+      
+
+   .. py:attribute:: SMALLINT
+      :value: 'SMALLINT'
+
+      
+
+   .. py:attribute:: TIME
+      :value: 'TIME'
+
+      
+
+   .. py:attribute:: TIMESTAMP
+      :value: 'TIMESTAMP'
+
+      
+
+   .. py:attribute:: TINYINT
+      :value: 'TINYINT'
+
+      
+
+   .. py:attribute:: UBIGINT
+      :value: 'UBIGINT'
+
+      
+
+   .. py:attribute:: UINTEGER
+      :value: 'UINTEGER'
+
+      
+
+   .. py:attribute:: USMALLINT
+      :value: 'USMALLINT'
+
+      
+
+   .. py:attribute:: UTINYINT
+      :value: 'UTINYINT'
+
+      
+
+   .. py:attribute:: UUID
+      :value: 'UUID'
+
+      
+
+   .. py:attribute:: VARCHAR
+      :value: 'VARCHAR'
+
+      
+
+
+.. py:class:: JoinedFieldNameEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   Names of fields in base joined_timeseries table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: reference_time
+      :value: 'reference_time'
+
+      
+
+   .. py:attribute:: value_time
+      :value: 'value_time'
+
+      
+
+   .. py:attribute:: secondary_location_id
+      :value: 'secondary_location_id'
+
+      
+
+   .. py:attribute:: secondary_value
+      :value: 'secondary_value'
+
+      
+
+   .. py:attribute:: configuration
+      :value: 'configuration'
+
+      
+
+   .. py:attribute:: measurement_unit
+      :value: 'measurement_unit'
+
+      
+
+   .. py:attribute:: variable_name
+      :value: 'variable_name'
+
+      
+
+   .. py:attribute:: primary_value
+      :value: 'primary_value'
+
+      
+
+   .. py:attribute:: primary_location_id
+      :value: 'primary_location_id'
+
+      
+
+   .. py:attribute:: lead_time
+      :value: 'lead_time'
+
+      
+
+   .. py:attribute:: absolute_difference
+      :value: 'absolute_difference'
+
+      
+
+   .. py:attribute:: geometry
+      :value: 'geometry'
+
+      
+
+
+.. py:class:: TimeseriesNameEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   Timeseries Names.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: primary
+      :value: 'primary'
+
+      
+
+   .. py:attribute:: secondary
+      :value: 'secondary'
+
+      
+
+
+.. py:class:: JoinedTimeseriesFieldName(/, **data: Any)
+
+
+   Bases: :py:obj:`BaseModel`
+
+   
+   Joined Timeseries Field Name model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: field_name
+      :type: str
+
+      
+
+   .. py:method:: field_name_must_exist_in_timeseries_table(v, info: pydantic.ValidationInfo)
+
+      
+      Field name must exist in the database table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: CalculateField(/, **data: Any)
+
+
+   Bases: :py:obj:`BaseModel`
+
+   
+   Calculate field model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: parameter_names
+      :type: List[str]
+
+      
+
+   .. py:attribute:: new_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: new_field_type
+      :type: FieldTypeEnum
+
+      
+
+   .. py:method:: field_name_must_be_valid(v)
+
+      
+      Must not contain special characters.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: parameter_names_must_exist_as_fields(v, info: pydantic.ValidationInfo)
+
+      
+      Parameter name must exist in the database table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: Filter(/, **data: Any)
+
+
+   Bases: :py:obj:`BaseModel`
+
+   
+   Filter model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: column
+      :type: str
+
+      
+
+   .. py:attribute:: operator
+      :type: teehr.models.queries.FilterOperatorEnum
+
+      
+
+   .. py:attribute:: value
+      :type: Union[str, int, float, datetime.datetime, List[Union[str, int, float, datetime.datetime]]]
+
+      
+
+   .. py:method:: is_iterable_not_str()
+
+      
+      Check if obj is iterable and not str.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: in_operator_must_have_iterable(v: str, info: pydantic.ValidationInfo) -> str
+
+      
+      Ensure the 'in' operator has an iterable.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: InsertJoinedTimeseriesQuery(/, **data: Any)
+
+
+   Bases: :py:obj:`BaseModel`
+
+   
+   InsertJoinedTimeseriesQuery model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: primary_filepath
+      :type: Union[str, pathlib.Path]
+
+      
+
+   .. py:attribute:: secondary_filepath
+      :type: Union[str, pathlib.Path]
+
+      
+
+   .. py:attribute:: crosswalk_filepath
+      :type: Union[str, pathlib.Path]
+
+      
+
+   .. py:attribute:: order_by
+      :type: Optional[List[JoinedFieldNameEnum]]
+      :value: []
+
+      
+
+
+.. py:class:: JoinedTimeseriesQuery(/, **data: Any)
+
+
+   Bases: :py:obj:`BaseModel`
+
+   
+   JoinedTimeseriesQuery model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: order_by
+      :type: List[str]
+
+      
+
+   .. py:attribute:: filters
+      :type: Optional[List[Filter]]
+      :value: []
+
+      
+
+   .. py:attribute:: return_query
+      :type: Optional[bool]
+      :value: False
+
+      
+
+   .. py:attribute:: include_geometry
+      :type: bool
+
+      
+
+   .. py:method:: filter_must_be_list(v)
+
+      
+      Filter must be a list.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: order_by_must_exist_as_fields(v, info: pydantic.ValidationInfo)
+
+      
+      Order_by fields must currently exist in the database.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: filters_must_exist_as_fields(v, info: pydantic.ValidationInfo)
+
+      
+      Filter fields must currently exist in the database.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: TimeseriesQuery(/, **data: Any)
+
+
+   Bases: :py:obj:`BaseModel`
+
+   
+   TimeseriesQuery model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: order_by
+      :type: List[str]
+
+      
+
+   .. py:attribute:: filters
+      :type: Optional[List[Filter]]
+      :value: []
+
+      
+
+   .. py:attribute:: return_query
+      :type: Optional[bool]
+      :value: False
+
+      
+
+   .. py:attribute:: timeseries_name
+      :type: TimeseriesNameEnum
+
+      
+
+   .. py:method:: filter_must_be_list(v)
+
+      
+      Filter must be a list.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: order_by_must_exist_as_fields(v, info: pydantic.ValidationInfo)
+
+      
+      Order_by fields must be part one of the selected fields or
+      its alias.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: filters_must_exist_as_fields(v, info: pydantic.ValidationInfo)
+
+      
+      Filter fields must currently exist in the database.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: TimeseriesCharQuery(/, **data: Any)
+
+
+   Bases: :py:obj:`BaseModel`
+
+   
+   Timeseries char query model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: order_by
+      :type: List[str]
+
+      
+
+   .. py:attribute:: group_by
+      :type: List[str]
+
+      
+
+   .. py:attribute:: filters
+      :type: Optional[List[Filter]]
+      :value: []
+
+      
+
+   .. py:attribute:: return_query
+      :type: Optional[bool]
+      :value: False
+
+      
+
+   .. py:attribute:: timeseries_name
+      :type: TimeseriesNameEnum
+
+      
+
+   .. py:method:: filter_must_be_list(v)
+
+      
+      Filter must be a list.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: order_by_must_exist_as_fields_or_chars(v, info: pydantic.ValidationInfo)
+
+      
+      Order_by fields must currently exist in the database or be one of
+      the calculated stats.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: group_by_must_exist_as_fields(v, info: pydantic.ValidationInfo)
+
+      
+      Group_by fields must currently exist in the database.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: group_by_must_contain_primary_or_secondary_id(v)
+
+      
+      Group_by must contain primary or secondary id.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: filters_must_exist_as_fields(v, info: pydantic.ValidationInfo)
+
+      
+      Filter fields must currently exist in the database.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: MetricQuery(/, **data: Any)
+
+
+   Bases: :py:obj:`BaseModel`
+
+   
+   Metric query model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: include_geometry
+      :type: bool
+
+      
+
+   .. py:attribute:: group_by
+      :type: List[str]
+
+      
+
+   .. py:attribute:: order_by
+      :type: List[str]
+
+      
+
+   .. py:attribute:: include_metrics
+      :type: Union[List[teehr.models.queries.MetricEnum], teehr.models.queries.MetricEnum, str]
+
+      
+
+   .. py:attribute:: filters
+      :type: Optional[List[Filter]]
+
+      
+
+   .. py:attribute:: return_query
+      :type: Optional[bool]
+      :value: False
+
+      
+
+   .. py:method:: filter_must_be_list(v)
+
+      
+      Filter must be a list.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: validate_include_geometry_and_specified_fields(data, info: pydantic.ValidationInfo)
+      :classmethod:
+
+      
+      Validate 'include_geometry' and order_by, group_by
+      and filters fields.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+

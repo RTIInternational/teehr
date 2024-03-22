@@ -1,0 +1,1781 @@
+:py:mod:`teehr.models.loading.nwm22_point`
+==========================================
+
+.. py:module:: teehr.models.loading.nwm22_point
+
+.. autoapi-nested-parse::
+
+   Module describing NWM v2.2 point data configuration variables.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   teehr.models.loading.nwm22_point.StrEnum
+   teehr.models.loading.nwm22_point.ChannelRtVariableEnum
+   teehr.models.loading.nwm22_point.ChannelRtNoDAVariableEnum
+   teehr.models.loading.nwm22_point.ChannelRtLongVariableEnum
+   teehr.models.loading.nwm22_point.TerrainRtVariableEnum
+   teehr.models.loading.nwm22_point.ReservoirVariableEnum
+   teehr.models.loading.nwm22_point.ShortAndAnalysisOutputEnum
+   teehr.models.loading.nwm22_point.Medium1OutputEnum
+   teehr.models.loading.nwm22_point.Medium2OutputEnum
+   teehr.models.loading.nwm22_point.Medium3OutputEnum
+   teehr.models.loading.nwm22_point.Medium4OutputEnum
+   teehr.models.loading.nwm22_point.Medium5OutputEnum
+   teehr.models.loading.nwm22_point.Medium6OutputEnum
+   teehr.models.loading.nwm22_point.Medium7OutputEnum
+   teehr.models.loading.nwm22_point.MediumNoDAEnum
+   teehr.models.loading.nwm22_point.Long1OutputEnum
+   teehr.models.loading.nwm22_point.Long2OutputEnum
+   teehr.models.loading.nwm22_point.Long3OutputEnum
+   teehr.models.loading.nwm22_point.Long4OutputEnum
+   teehr.models.loading.nwm22_point.ShortAndAnalysis
+   teehr.models.loading.nwm22_point.ShortAndAnalysisNoDA
+   teehr.models.loading.nwm22_point.MediumRangeMem1
+   teehr.models.loading.nwm22_point.MediumRangeMem2
+   teehr.models.loading.nwm22_point.MediumRangeMem3
+   teehr.models.loading.nwm22_point.MediumRangeMem4
+   teehr.models.loading.nwm22_point.MediumRangeMem5
+   teehr.models.loading.nwm22_point.MediumRangeMem6
+   teehr.models.loading.nwm22_point.MediumRangeMem7
+   teehr.models.loading.nwm22_point.MediumRangeNoDA
+   teehr.models.loading.nwm22_point.LongRangeMem1
+   teehr.models.loading.nwm22_point.LongRangeMem2
+   teehr.models.loading.nwm22_point.LongRangeMem3
+   teehr.models.loading.nwm22_point.LongRangeMem4
+   teehr.models.loading.nwm22_point.ConfigurationsEnum
+   teehr.models.loading.nwm22_point.PointConfigurationModel
+
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.models.loading.nwm22_point.configuration
+
+
+.. py:class:: StrEnum
+
+
+   Bases: :py:obj:`str`, :py:obj:`enum.Enum`
+
+   
+   str(object='') -> str
+   str(bytes_or_buffer[, encoding[, errors]]) -> str
+
+   Create a new string object from the given object. If encoding or
+   errors is specified, then the object must expose a data buffer
+   that will be decoded using the given encoding and error handler.
+   Otherwise, returns the result of object.__str__() (if defined)
+   or repr(object).
+   encoding defaults to sys.getdefaultencoding().
+   errors defaults to 'strict'.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:class:: ChannelRtVariableEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   ChannelRtVariableEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: nudge
+      :value: 'nudge'
+
+      
+
+   .. py:attribute:: qBtmVertRunoff
+      :value: 'qBtmVertRunoff'
+
+      
+
+   .. py:attribute:: qBucket
+      :value: 'qBucket'
+
+      
+
+   .. py:attribute:: qSfcLatRunoff
+      :value: 'qSfcLatRunoff'
+
+      
+
+   .. py:attribute:: streamflow
+      :value: 'streamflow'
+
+      
+
+   .. py:attribute:: velocity
+      :value: 'velocity'
+
+      
+
+
+.. py:class:: ChannelRtNoDAVariableEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   ChannelRtNoDAVariableEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: nudge
+      :value: 'nudge'
+
+      
+
+   .. py:attribute:: qBucket
+      :value: 'qBucket'
+
+      
+
+   .. py:attribute:: qSfcLatRunoff
+      :value: 'qSfcLatRunoff'
+
+      
+
+   .. py:attribute:: streamflow
+      :value: 'streamflow'
+
+      
+
+   .. py:attribute:: velocity
+      :value: 'velocity'
+
+      
+
+
+.. py:class:: ChannelRtLongVariableEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   ChannelRtLongVariableEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: nudge
+      :value: 'nudge'
+
+      
+
+   .. py:attribute:: streamflow
+      :value: 'streamflow'
+
+      
+
+   .. py:attribute:: velocity
+      :value: 'velocity'
+
+      
+
+
+.. py:class:: TerrainRtVariableEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   TerrainRtVariableEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: sfcheadsubrt
+      :value: 'sfcheadsubrt'
+
+      
+
+   .. py:attribute:: zwattablrt
+      :value: 'zwattablrt'
+
+      
+
+
+.. py:class:: ReservoirVariableEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   ReservoirVariableEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: inflow
+      :value: 'inflow'
+
+      
+
+   .. py:attribute:: outflow
+      :value: 'outflow'
+
+      
+
+   .. py:attribute:: reservoir_assimiated_value
+      :value: 'reservoir_assimiated_value'
+
+      
+
+   .. py:attribute:: water_sfc_elev
+      :value: 'water_sfc_elev'
+
+      
+
+
+.. py:class:: ShortAndAnalysisOutputEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   ShortAndAnalysisOutputEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: channel_rt
+      :value: 'channel_rt'
+
+      
+
+   .. py:attribute:: terrain_rt
+      :value: 'terrain_rt'
+
+      
+
+   .. py:attribute:: reservoir
+      :value: 'reservoir'
+
+      
+
+
+.. py:class:: Medium1OutputEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   Medium1OutputEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: channel_rt_1
+      :value: 'channel_rt_1'
+
+      
+
+   .. py:attribute:: terrain_rt_1
+      :value: 'terrain_rt_1'
+
+      
+
+   .. py:attribute:: reservoir_1
+      :value: 'reservoir_1'
+
+      
+
+
+.. py:class:: Medium2OutputEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   Medium2OutputEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: channel_rt_2
+      :value: 'channel_rt_2'
+
+      
+
+   .. py:attribute:: terrain_rt_2
+      :value: 'terrain_rt_2'
+
+      
+
+   .. py:attribute:: reservoir_2
+      :value: 'reservoir_2'
+
+      
+
+
+.. py:class:: Medium3OutputEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   Medium3OutputEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: channel_rt_3
+      :value: 'channel_rt_3'
+
+      
+
+   .. py:attribute:: terrain_rt_3
+      :value: 'terrain_rt_3'
+
+      
+
+   .. py:attribute:: reservoir_3
+      :value: 'reservoir_3'
+
+      
+
+
+.. py:class:: Medium4OutputEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   Medium4OutputEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: channel_rt_4
+      :value: 'channel_rt_4'
+
+      
+
+   .. py:attribute:: terrain_rt_4
+      :value: 'terrain_rt_4'
+
+      
+
+   .. py:attribute:: reservoir_4
+      :value: 'reservoir_4'
+
+      
+
+
+.. py:class:: Medium5OutputEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   Medium5OutputEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: channel_rt_5
+      :value: 'channel_rt_5'
+
+      
+
+   .. py:attribute:: terrain_rt_5
+      :value: 'terrain_rt_5'
+
+      
+
+   .. py:attribute:: reservoir_5
+      :value: 'reservoir_5'
+
+      
+
+
+.. py:class:: Medium6OutputEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   Medium6OutputEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: channel_rt_6
+      :value: 'channel_rt_6'
+
+      
+
+   .. py:attribute:: terrain_rt_6
+      :value: 'terrain_rt_6'
+
+      
+
+   .. py:attribute:: reservoir_6
+      :value: 'reservoir_6'
+
+      
+
+
+.. py:class:: Medium7OutputEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   Medium7OutputEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: channel_rt_7
+      :value: 'channel_rt_7'
+
+      
+
+   .. py:attribute:: terrain_rt_7
+      :value: 'terrain_rt_7'
+
+      
+
+   .. py:attribute:: reservoir_7
+      :value: 'reservoir_7'
+
+      
+
+
+.. py:class:: MediumNoDAEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   MediumNoDAEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: channel_rt
+      :value: 'channel_rt'
+
+      
+
+
+.. py:class:: Long1OutputEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   Long1OutputEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: channel_rt_1
+      :value: 'channel_rt_1'
+
+      
+
+   .. py:attribute:: reservoir_1
+      :value: 'reservoir_1'
+
+      
+
+
+.. py:class:: Long2OutputEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   Long2OutputEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: channel_rt_2
+      :value: 'channel_rt_2'
+
+      
+
+   .. py:attribute:: reservoir_2
+      :value: 'reservoir_2'
+
+      
+
+
+.. py:class:: Long3OutputEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   Long3OutputEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: channel_rt_3
+      :value: 'channel_rt_3'
+
+      
+
+   .. py:attribute:: reservoir_3
+      :value: 'reservoir_3'
+
+      
+
+
+.. py:class:: Long4OutputEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   Long4OutputEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: channel_rt_4
+      :value: 'channel_rt_4'
+
+      
+
+   .. py:attribute:: reservoir_4
+      :value: 'reservoir_4'
+
+      
+
+
+.. py:class:: ShortAndAnalysis(/, **data: Any)
+
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+   
+   ShortAndAnalysis.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: output_type
+      :type: ShortAndAnalysisOutputEnum
+
+      
+
+   .. py:attribute:: channel_rt
+      :type: Optional[ChannelRtVariableEnum]
+
+      
+
+   .. py:attribute:: terrain_rt
+      :type: Optional[TerrainRtVariableEnum]
+
+      
+
+   .. py:attribute:: reservoir
+      :type: Optional[ReservoirVariableEnum]
+
+      
+
+
+.. py:class:: ShortAndAnalysisNoDA(/, **data: Any)
+
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+   
+   ShortAndAnalysisNoDA.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: output_type
+      :type: ShortAndAnalysisOutputEnum
+
+      
+
+   .. py:attribute:: channel_rt
+      :type: Optional[ChannelRtNoDAVariableEnum]
+
+      
+
+   .. py:attribute:: terrain_rt
+      :type: Optional[TerrainRtVariableEnum]
+
+      
+
+   .. py:attribute:: reservoir
+      :type: Optional[ReservoirVariableEnum]
+
+      
+
+
+.. py:class:: MediumRangeMem1(/, **data: Any)
+
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+   
+   MediumRangeMem1.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: output_type
+      :type: Medium1OutputEnum
+
+      
+
+   .. py:attribute:: channel_rt_1
+      :type: Optional[ChannelRtVariableEnum]
+
+      
+
+   .. py:attribute:: terrain_rt_1
+      :type: Optional[TerrainRtVariableEnum]
+
+      
+
+   .. py:attribute:: reservoir_1
+      :type: Optional[ReservoirVariableEnum]
+
+      
+
+
+.. py:class:: MediumRangeMem2(/, **data: Any)
+
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+   
+   MediumRangeMem2.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: output_type
+      :type: Medium2OutputEnum
+
+      
+
+   .. py:attribute:: channel_rt_2
+      :type: Optional[ChannelRtVariableEnum]
+
+      
+
+   .. py:attribute:: terrain_rt_2
+      :type: Optional[TerrainRtVariableEnum]
+
+      
+
+   .. py:attribute:: reservoir_2
+      :type: Optional[ReservoirVariableEnum]
+
+      
+
+
+.. py:class:: MediumRangeMem3(/, **data: Any)
+
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+   
+   MediumRangeMem3.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: output_type
+      :type: Medium3OutputEnum
+
+      
+
+   .. py:attribute:: channel_rt_3
+      :type: Optional[ChannelRtVariableEnum]
+
+      
+
+   .. py:attribute:: terrain_rt_3
+      :type: Optional[TerrainRtVariableEnum]
+
+      
+
+   .. py:attribute:: reservoir_3
+      :type: Optional[ReservoirVariableEnum]
+
+      
+
+
+.. py:class:: MediumRangeMem4(/, **data: Any)
+
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+   
+   MediumRangeMem4.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: output_type
+      :type: Medium4OutputEnum
+
+      
+
+   .. py:attribute:: channel_rt_4
+      :type: Optional[ChannelRtVariableEnum]
+
+      
+
+   .. py:attribute:: terrain_rt_4
+      :type: Optional[TerrainRtVariableEnum]
+
+      
+
+   .. py:attribute:: reservoir_4
+      :type: Optional[ReservoirVariableEnum]
+
+      
+
+
+.. py:class:: MediumRangeMem5(/, **data: Any)
+
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+   
+   MediumRangeMem5.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: output_type
+      :type: Medium5OutputEnum
+
+      
+
+   .. py:attribute:: channel_rt_5
+      :type: Optional[ChannelRtVariableEnum]
+
+      
+
+   .. py:attribute:: terrain_rt_5
+      :type: Optional[TerrainRtVariableEnum]
+
+      
+
+   .. py:attribute:: reservoir_5
+      :type: Optional[ReservoirVariableEnum]
+
+      
+
+
+.. py:class:: MediumRangeMem6(/, **data: Any)
+
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+   
+   MediumRangeMem6.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: output_type
+      :type: Medium6OutputEnum
+
+      
+
+   .. py:attribute:: channel_rt_6
+      :type: Optional[ChannelRtVariableEnum]
+
+      
+
+   .. py:attribute:: terrain_rt_6
+      :type: Optional[TerrainRtVariableEnum]
+
+      
+
+   .. py:attribute:: reservoir_6
+      :type: Optional[ReservoirVariableEnum]
+
+      
+
+
+.. py:class:: MediumRangeMem7(/, **data: Any)
+
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+   
+   MediumRangeMem7.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: output_type
+      :type: Medium7OutputEnum
+
+      
+
+   .. py:attribute:: channel_rt_7
+      :type: Optional[ChannelRtVariableEnum]
+
+      
+
+   .. py:attribute:: terrain_rt_7
+      :type: Optional[TerrainRtVariableEnum]
+
+      
+
+   .. py:attribute:: reservoir_7
+      :type: Optional[ReservoirVariableEnum]
+
+      
+
+
+.. py:class:: MediumRangeNoDA(/, **data: Any)
+
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+   
+   MediumRangeNoDA.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: output_type
+      :type: MediumNoDAEnum
+
+      
+
+   .. py:attribute:: channel_rt
+      :type: Optional[ChannelRtNoDAVariableEnum]
+
+      
+
+
+.. py:class:: LongRangeMem1(/, **data: Any)
+
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+   
+   LongRangeMem1.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: output_type
+      :type: Long1OutputEnum
+
+      
+
+   .. py:attribute:: channel_rt_1
+      :type: Optional[ChannelRtLongVariableEnum]
+
+      
+
+   .. py:attribute:: reservoir_1
+      :type: Optional[ReservoirVariableEnum]
+
+      
+
+
+.. py:class:: LongRangeMem2(/, **data: Any)
+
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+   
+   LongRangeMem2.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: output_type
+      :type: Long2OutputEnum
+
+      
+
+   .. py:attribute:: channel_rt_2
+      :type: Optional[ChannelRtLongVariableEnum]
+
+      
+
+   .. py:attribute:: reservoir_2
+      :type: Optional[ReservoirVariableEnum]
+
+      
+
+
+.. py:class:: LongRangeMem3(/, **data: Any)
+
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+   
+   LongRangeMem3.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: output_type
+      :type: Long3OutputEnum
+
+      
+
+   .. py:attribute:: channel_rt_3
+      :type: Optional[ChannelRtLongVariableEnum]
+
+      
+
+   .. py:attribute:: reservoir_3
+      :type: Optional[ReservoirVariableEnum]
+
+      
+
+
+.. py:class:: LongRangeMem4(/, **data: Any)
+
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+   
+   LongRangeMem4.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: output_type
+      :type: Long4OutputEnum
+
+      
+
+   .. py:attribute:: channel_rt_4
+      :type: Optional[ChannelRtLongVariableEnum]
+
+      
+
+   .. py:attribute:: reservoir_4
+      :type: Optional[ReservoirVariableEnum]
+
+      
+
+
+.. py:class:: ConfigurationsEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   ConfigurationsEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: analysis_assim
+      :value: 'analysis_assim'
+
+      
+
+   .. py:attribute:: analysis_assim_no_da
+      :value: 'analysis_assim_no_da'
+
+      
+
+   .. py:attribute:: analysis_assim_extend
+      :value: 'analysis_assim_extend'
+
+      
+
+   .. py:attribute:: analysis_assim_extend_no_da
+      :value: 'analysis_assim_extend_no_da'
+
+      
+
+   .. py:attribute:: analysis_assim_long
+      :value: 'analysis_assim_long'
+
+      
+
+   .. py:attribute:: analysis_assim_long_no_da
+      :value: 'analysis_assim_long_no_da'
+
+      
+
+   .. py:attribute:: analysis_assim_hawaii
+      :value: 'analysis_assim_hawaii'
+
+      
+
+   .. py:attribute:: analysis_assim_hawaii_no_da
+      :value: 'analysis_assim_hawaii_no_da'
+
+      
+
+   .. py:attribute:: analysis_assim_puertorico
+      :value: 'analysis_assim_puertorico'
+
+      
+
+   .. py:attribute:: analysis_assim_puertorico_no_da
+      :value: 'analysis_assim_puertorico_no_da'
+
+      
+
+   .. py:attribute:: short_range
+      :value: 'short_range'
+
+      
+
+   .. py:attribute:: short_range_hawaii
+      :value: 'short_range_hawaii'
+
+      
+
+   .. py:attribute:: short_range_puertorico
+      :value: 'short_range_puertorico'
+
+      
+
+   .. py:attribute:: short_range_hawaii_no_da
+      :value: 'short_range_hawaii_no_da'
+
+      
+
+   .. py:attribute:: short_range_puertorico_no_da
+      :value: 'short_range_puertorico_no_da'
+
+      
+
+   .. py:attribute:: medium_range_mem1
+      :value: 'medium_range_mem1'
+
+      
+
+   .. py:attribute:: medium_range_mem2
+      :value: 'medium_range_mem2'
+
+      
+
+   .. py:attribute:: medium_range_mem3
+      :value: 'medium_range_mem3'
+
+      
+
+   .. py:attribute:: medium_range_mem4
+      :value: 'medium_range_mem4'
+
+      
+
+   .. py:attribute:: medium_range_mem5
+      :value: 'medium_range_mem5'
+
+      
+
+   .. py:attribute:: medium_range_mem6
+      :value: 'medium_range_mem6'
+
+      
+
+   .. py:attribute:: medium_range_mem7
+      :value: 'medium_range_mem7'
+
+      
+
+   .. py:attribute:: medium_range_no_da
+      :value: 'medium_range_no_da'
+
+      
+
+   .. py:attribute:: long_range_mem1
+      :value: 'long_range_mem1'
+
+      
+
+   .. py:attribute:: long_range_mem2
+      :value: 'long_range_mem2'
+
+      
+
+   .. py:attribute:: long_range_mem3
+      :value: 'long_range_mem3'
+
+      
+
+   .. py:attribute:: long_range_mem4
+      :value: 'long_range_mem4'
+
+      
+
+
+.. py:class:: PointConfigurationModel(/, **data: Any)
+
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+   
+   NWM v2.2 PointConfigurationModel.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: configuration
+      :type: ConfigurationsEnum
+
+      
+
+   .. py:attribute:: analysis_assim
+      :type: Optional[ShortAndAnalysis]
+
+      
+
+   .. py:attribute:: analysis_assim_no_da
+      :type: Optional[ShortAndAnalysisNoDA]
+
+      
+
+   .. py:attribute:: analysis_assim_extend
+      :type: Optional[ShortAndAnalysis]
+
+      
+
+   .. py:attribute:: analysis_assim_extend_no_da
+      :type: Optional[ShortAndAnalysisNoDA]
+
+      
+
+   .. py:attribute:: analysis_assim_long
+      :type: Optional[ShortAndAnalysis]
+
+      
+
+   .. py:attribute:: analysis_assim_long_no_da
+      :type: Optional[ShortAndAnalysisNoDA]
+
+      
+
+   .. py:attribute:: analysis_assim_hawaii
+      :type: Optional[ShortAndAnalysis]
+
+      
+
+   .. py:attribute:: analysis_assim_hawaii_no_da
+      :type: Optional[ShortAndAnalysisNoDA]
+
+      
+
+   .. py:attribute:: analysis_assim_puertorico
+      :type: Optional[ShortAndAnalysis]
+
+      
+
+   .. py:attribute:: analysis_assim_puertorico_no_da
+      :type: Optional[ShortAndAnalysisNoDA]
+
+      
+
+   .. py:attribute:: short_range
+      :type: Optional[ShortAndAnalysis]
+
+      
+
+   .. py:attribute:: short_range_hawaii
+      :type: Optional[ShortAndAnalysis]
+
+      
+
+   .. py:attribute:: short_range_puertorico
+      :type: Optional[ShortAndAnalysis]
+
+      
+
+   .. py:attribute:: short_range_hawaii_no_da
+      :type: Optional[ShortAndAnalysisNoDA]
+
+      
+
+   .. py:attribute:: short_range_puertorico_no_da
+      :type: Optional[ShortAndAnalysisNoDA]
+
+      
+
+   .. py:attribute:: medium_range_mem1
+      :type: Optional[MediumRangeMem1]
+
+      
+
+   .. py:attribute:: medium_range_mem2
+      :type: Optional[MediumRangeMem2]
+
+      
+
+   .. py:attribute:: medium_range_mem3
+      :type: Optional[MediumRangeMem3]
+
+      
+
+   .. py:attribute:: medium_range_mem4
+      :type: Optional[MediumRangeMem4]
+
+      
+
+   .. py:attribute:: medium_range_mem5
+      :type: Optional[MediumRangeMem5]
+
+      
+
+   .. py:attribute:: medium_range_mem6
+      :type: Optional[MediumRangeMem6]
+
+      
+
+   .. py:attribute:: medium_range_mem7
+      :type: Optional[MediumRangeMem7]
+
+      
+
+   .. py:attribute:: medium_range_no_da
+      :type: Optional[MediumRangeNoDA]
+
+      
+
+   .. py:attribute:: long_range_mem1
+      :type: Optional[LongRangeMem1]
+
+      
+
+   .. py:attribute:: long_range_mem2
+      :type: Optional[LongRangeMem2]
+
+      
+
+   .. py:attribute:: long_range_mem3
+      :type: Optional[LongRangeMem3]
+
+      
+
+   .. py:attribute:: long_range_mem4
+      :type: Optional[LongRangeMem4]
+
+      
+
+
+.. py:data:: configuration
+   :value: 'medium_range_mem1'
+
+   
+

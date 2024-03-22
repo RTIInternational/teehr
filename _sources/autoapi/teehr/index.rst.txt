@@ -1,0 +1,83 @@
+:py:mod:`teehr`
+===============
+
+.. py:module:: teehr
+
+.. autoapi-nested-parse::
+
+   
+   TEEHR logger implementation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+
+Subpackages
+-----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   api/index.rst
+   database/index.rst
+   loading/index.rst
+   models/index.rst
+   queries/index.rst
+   utilities/index.rst
+
+
+Package Contents
+----------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.add_stderr_logger
+
+
+
+.. py:function:: add_stderr_logger(level: int = logging.DEBUG) -> logging.StreamHandler
+
+   
+   Helper for quickly adding a StreamHandler to the logger. Useful for
+   debugging.
+
+   Returns the handler after adding it.
+
+   Taken from the urllib3 package.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
