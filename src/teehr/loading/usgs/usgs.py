@@ -7,7 +7,11 @@ from datetime import datetime, timedelta
 from hydrotools.nwis_client.iv import IVDataService
 from teehr.models.loading.utils import ChunkByEnum
 from pydantic import validate_call, ConfigDict
-from teehr.loading.nwm.utils import write_parquet_file, get_period_start_end_times
+from teehr.loading.nwm.utils import (
+    write_parquet_file,
+    get_period_start_end_times,
+    create_periods_based_on_chunksize
+)
 
 DATETIME_STR_FMT = "%Y-%m-%dT%H:%M:00+0000"
 DAYLIGHT_SAVINGS_PAD = timedelta(hours=2)
@@ -197,29 +201,6 @@ def usgs_to_parquet(
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
 
-    # Fetch all at once
-    if chunk_by is None:
-        usgs_df = _fetch_usgs(
-            sites=sites,
-            start_date=start_date - DAYLIGHT_SAVINGS_PAD,
-            end_date=end_date + DAYLIGHT_SAVINGS_PAD,
-            filter_to_hourly=filter_to_hourly,
-            filter_no_data=filter_no_data,
-            convert_to_si=convert_to_si
-        )
-
-        usgs_df = usgs_df[(usgs_df["value_time"] >= start_date) &
-                          (usgs_df["value_time"] < end_date)]
-
-        if len(usgs_df) > 0:
-            output_filepath = Path(output_parquet_dir, "usgs.parquet")
-            write_parquet_file(
-                filepath=output_filepath,
-                overwrite_output=overwrite_output,
-                data=usgs_df
-            )
-        return
-
     if chunk_by == "location_id":
         for site in sites:
             usgs_df = _fetch_usgs(
@@ -246,28 +227,23 @@ def usgs_to_parquet(
                 )
         return
 
-    # TODO: Print warning if chunk_by is bigger than start and end dates?
-
     # Chunk data by time
-    if chunk_by == "day":
-        periods = pd.period_range(start=start_date, end=end_date, freq="D")
-
-    if chunk_by == "week":
-        periods = pd.period_range(start=start_date, end=end_date, freq="W")
-
-    if chunk_by == "month":
-        periods = pd.period_range(start=start_date, end=end_date, freq="M")
-
-    if chunk_by == "year":
-        periods = pd.period_range(start=start_date, end=end_date, freq="Y")
+    periods = create_periods_based_on_chunksize(
+        start_date=start_date,
+        end_date=end_date,
+        chunk_by=chunk_by
+    )
 
     for period in periods:
 
-        dts = get_period_start_end_times(
-            period=period,
-            start_date=start_date,
-            end_date=end_date
-        )
+        if period is not None:
+            dts = get_period_start_end_times(
+                period=period,
+                start_date=start_date,
+                end_date=end_date
+            )
+        else:
+            dts = {"start_dt": start_date, "end_dt": end_date}
 
         usgs_df = _fetch_usgs(
             sites=sites,

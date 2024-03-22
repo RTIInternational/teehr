@@ -20,7 +20,8 @@ from teehr.models.loading.nwm22_grid import ForcingVariablesEnum
 from teehr.loading.nwm.utils import (
     write_parquet_file,
     get_dataset,
-    get_period_start_end_times
+    get_period_start_end_times,
+    create_periods_based_on_chunksize
 )
 from teehr.loading.nwm.retrospective_points import (
     format_grouped_filename,
@@ -219,25 +220,30 @@ def nwm_retro_grids_to_parquet(
         # Construct Kerchunk-json paths within the selected time
         nwm21_paths = construct_nwm21_json_paths(start_date, end_date)
 
-        if chunk_by is None:
-            gps = [(None, nwm21_paths)]
-
-        if chunk_by == "week":
-            gps = nwm21_paths.groupby(
-                pd.Grouper(key='datetime', axis=0, freq='W', sort=True)
-            )
-
-        if chunk_by == "month":
-            gps = nwm21_paths.groupby(
-                pd.Grouper(key='datetime', axis=0, freq='M', sort=True)
-            )
-
-        if chunk_by == "year":
+        if chunk_by in ["year", "location_id"]:
             raise ValueError(
-                "Chunkby 'year' is not yet implemented for gridded data"
+                f"Chunkby '{chunk_by}' is not implemented for gridded data"
             )
 
-        for _, df in gps:
+        periods = create_periods_based_on_chunksize(
+            start_date=start_date,
+            end_date=end_date,
+            chunk_by=chunk_by
+        )
+
+        for period in periods:
+            if period is not None:
+                dts = get_period_start_end_times(
+                    period=period,
+                    start_date=start_date,
+                    end_date=end_date
+                )
+                df = nwm21_paths[nwm21_paths.datetime.between(
+                    dts["start_dt"], dts["end_dt"]
+                )].copy()
+            else:
+                df = nwm21_paths.copy()
+
             # Process this chunk using dask delayed
             results = []
             for row in df.itertuples():
@@ -259,8 +265,8 @@ def nwm_retro_grids_to_parquet(
                                         "configuration were found in GCS!")
             chunk_df = pd.concat(output)
 
-            start = df.datetime.min().strftime("%Y%m%dZ")
-            end = df.datetime.max().strftime("%Y%m%dZ")
+            start = df.datetime.min().strftime("%Y%m%d%HZ")
+            end = df.datetime.max().strftime("%Y%m%d%HZ")
             if start == end:
                 output_filename = Path(output_parquet_dir, f"{start}.parquet")
             else:
@@ -268,6 +274,7 @@ def nwm_retro_grids_to_parquet(
                     output_parquet_dir,
                     f"{start}_{end}.parquet"
                 )
+
             write_parquet_file(
                 filepath=output_filename,
                 overwrite_output=overwrite_output,
@@ -301,49 +308,27 @@ def nwm_retro_grids_to_parquet(
         cols = weights_df.col.values
         weight_vals = weights_df.weight.values
 
-        if chunk_by is None:
-            chunk_df = process_group(
-                da_i=var_da,
-                rows=rows,
-                cols=cols,
-                weights_df=weights_df,
-                weight_vals=weight_vals,
-                variable_name=variable_name,
-                units_format_dict=NWM22_UNIT_LOOKUP,
-                nwm_version=nwm_version
-            )
-
-            fname = format_grouped_filename(var_da)
-            output_filename = Path(
-                output_parquet_dir,
-                fname
-            )
-
-            write_parquet_file(
-                filepath=output_filename,
-                overwrite_output=overwrite_output,
-                data=chunk_df)
-
-            return
-
-        if chunk_by == "week":
-            periods = pd.period_range(start=start_date, end=end_date, freq="W")
-
-        if chunk_by == "month":
-            periods = pd.period_range(start=start_date, end=end_date, freq="M")
-
-        if chunk_by == "year":
+        if chunk_by in ["year", "location_id"]:
             raise ValueError(
-                "Chunkby 'year' is not yet implemented for gridded data"
+                f"Chunkby '{chunk_by}' is not implemented for gridded data"
             )
+
+        periods = create_periods_based_on_chunksize(
+            start_date=start_date,
+            end_date=end_date,
+            chunk_by=chunk_by
+        )
 
         for period in periods:
 
-            dts = get_period_start_end_times(
-                period=period,
-                start_date=start_date,
-                end_date=end_date
-            )
+            if period is not None:
+                dts = get_period_start_end_times(
+                    period=period,
+                    start_date=start_date,
+                    end_date=end_date
+                )
+            else:
+                dts = {"start_dt": start_date, "end_dt": end_date}
 
             da_i = var_da.sel(time=slice(dts["start_dt"], dts["end_dt"]))
 
@@ -372,17 +357,17 @@ def nwm_retro_grids_to_parquet(
 
 # if __name__ == "__main__":
 
-#     t0 = time.time()
+#     # t0 = time.time()
 
 #     nwm_retro_grids_to_parquet(
-#         nwm_version="nwm30",
+#         nwm_version="nwm21",
 #         variable_name="RAINRATE",
 #         zonal_weights_filepath="/mnt/data/merit/YalansBasins/cat_pfaf_7_conus_subset_nwm_v30_weights.parquet",
-#         start_date="2007-01-03 00:00",
-#         end_date="2008-10-22 23:00",
+#         start_date="2007-09-01 00:00",
+#         end_date="2008-3-22 23:00",
 #         output_parquet_dir="/mnt/data/ciroh/retro",
 #         overwrite_output=True,
 #         chunk_by="week"
 #     )
 
-#     print(f"Total elapsed: {(time.time() - t0):.2f} secs")
+#     # print(f"Total elapsed: {(time.time() - t0):.2f} secs")

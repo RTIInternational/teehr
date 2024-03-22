@@ -21,7 +21,8 @@ from teehr.models.loading.utils import (
     SupportedKerchunkMethod
 )
 from teehr.models.loading.utils import (
-    SupportedNWMOperationalVersionsEnum
+    SupportedNWMOperationalVersionsEnum,
+    ChunkByEnum
 )
 from teehr.loading.nwm.const import (
     NWM_BUCKET,
@@ -309,8 +310,8 @@ def gen_json(
                     raise Exception(f"Corrupt file: {remote_path}") from err
                 else:
                     logger.warning(
-                        ("A potentially corrupt file was encountered:")
-                        (f"{remote_path}")
+                        "A potentially corrupt file was encountered:"
+                        f"{remote_path}"
                     )
                     return None
             with open(outf, "wb") as f:
@@ -608,3 +609,48 @@ def get_period_start_end_times(
         end_dt = end_date
 
     return {"start_dt": start_dt, "end_dt": end_dt}
+
+
+def create_periods_based_on_chunksize(
+    start_date: datetime,
+    end_date: datetime,
+    chunk_by: Union[ChunkByEnum, None]
+) -> List[pd.Period]:
+    """Create a list of periods based on the specified start and end dates
+    and the chunk size.
+
+    Parameters
+    ----------
+    start_date : datetime
+        The start date.
+    end_date : datetime
+        The end date.
+    chunk_by : Union[ChunkByEnum, None]
+        The chunk size frequency.
+
+    Returns
+    -------
+    List[pd.Period]
+        A pandas period range.
+    """
+    if chunk_by is None:
+        periods = [None]
+
+    if chunk_by == "day":
+        periods = pd.period_range(start=start_date, end=end_date, freq="D")
+
+    if chunk_by == "week":
+        periods = pd.period_range(start=start_date, end=end_date, freq="W")
+
+    if chunk_by == "month":
+        periods = pd.period_range(start=start_date, end=end_date, freq="M")
+
+    if chunk_by == "year":
+        periods = pd.period_range(start=start_date, end=end_date, freq="Y")
+
+    if chunk_by == "location_id":
+        raise ValueError(
+            "A period range cannot be created based on location_id."
+        )
+
+    return periods

@@ -17,7 +17,8 @@ from teehr.models.loading.utils import (
 )
 from teehr.loading.nwm.utils import (
     write_parquet_file,
-    get_period_start_end_times
+    get_period_start_end_times,
+    create_periods_based_on_chunksize
 )
 
 NWM20_MIN_DATE = datetime(1993, 1, 1)
@@ -236,18 +237,6 @@ def nwm_retro_to_parquet(
         feature_id=location_ids, time=slice(start_date, end_date)
     )
 
-    # Fetch all at once
-    if chunk_by is None:
-
-        df = da_to_df(nwm_version, da)
-        min_time = df.value_time.min().strftime("%Y%m%d%HZ")
-        max_time = df.value_time.max().strftime("%Y%m%d%HZ")
-        output_filepath = Path(
-            output_parquet_dir, f"{min_time}_{max_time}.parquet"
-        )
-        write_parquet_file(output_filepath, overwrite_output, df)
-        return
-
     # Fetch data by site
     if chunk_by == "location_id":
         for location_id in location_ids:
@@ -264,25 +253,22 @@ def nwm_retro_to_parquet(
         return
 
     # Chunk data by time
-    if chunk_by == "day":
-        periods = pd.period_range(start=start_date, end=end_date, freq="D")
-
-    if chunk_by == "week":
-        periods = pd.period_range(start=start_date, end=end_date, freq="W")
-
-    if chunk_by == "month":
-        periods = pd.period_range(start=start_date, end=end_date, freq="M")
-
-    if chunk_by == "year":
-        periods = pd.period_range(start=start_date, end=end_date, freq="Y")
+    periods = create_periods_based_on_chunksize(
+        start_date=start_date,
+        end_date=end_date,
+        chunk_by=chunk_by
+    )
 
     for period in periods:
 
-        dts = get_period_start_end_times(
-            period=period,
-            start_date=start_date,
-            end_date=end_date
-        )
+        if period is not None:
+            dts = get_period_start_end_times(
+                period=period,
+                start_date=start_date,
+                end_date=end_date
+            )
+        else:
+            dts = {"start_dt": start_date, "end_dt": end_date}
 
         da_i = da.sel(time=slice(dts["start_dt"], dts["end_dt"]))
 
