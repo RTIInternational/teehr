@@ -211,10 +211,10 @@ def get_metrics(
                 {tqu._select_primary_variance(mq)}
                 {tqu._select_secondary_variance(mq)}
                 {tqu._select_max_value_delta(mq)}
-                {tqu._select_bias(mq)}
+                {tqu._select_mean_error(mq)}
                 {tqu._select_nash_sutcliffe_efficiency(mq)}
                 {tqu._select_kling_gupta_efficiency(mq)}
-                {tqu._select_mean_error(mq)}
+                {tqu._select_mean_absolute_error(mq)}
                 {tqu._select_mean_squared_error(mq)}
                 {tqu._select_root_mean_squared_error(mq)}
                 {tqu._select_primary_max_value_time(mq)}

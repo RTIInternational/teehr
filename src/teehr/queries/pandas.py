@@ -202,10 +202,10 @@ def calculate_group_metrics(
     * secondary_variance
     * max_value_delta
 
-      * max(secondary_value) - max(primary_value)
-    * bias
+    * max(secondary_value) - max(primary_value)
+    * mean_error
 
-      * sum(primary_value - secondary_value)/count(*)
+    * sum(primary_value - secondary_value)/count(*)
 
     HydroTools Metrics:
 
@@ -213,7 +213,7 @@ def calculate_group_metrics(
     * kling_gupta_efficiency
     * coefficient_of_extrapolation
     * coefficient_of_persistence
-    * mean_error
+    * mean_absolute_error
     * mean_squared_error
     * root_mean_squared_error
 
@@ -261,9 +261,9 @@ def calculate_group_metrics(
     if include_metrics == "all" or "secondary_variance" in include_metrics:
         data["secondary_variance"] = np.var(group["secondary_value"])
 
-    if include_metrics == "all" or "bias" in include_metrics:
+    if include_metrics == "all" or "mean_error" in include_metrics:
         group["difference"] = group["secondary_value"] - group["primary_value"]
-        data["bias"] = np.sum(group["difference"])/len(group)
+        data["mean_error"] = np.sum(group["difference"])/len(group)
 
     if include_metrics == "all" or "max_value_delta" in include_metrics:
         data["max_value_delta"] = (
@@ -309,12 +309,12 @@ def calculate_group_metrics(
         )
         data["coefficient_of_persistence"] = cop
 
-    if include_metrics == "all" or "mean_error" in include_metrics:
+    if include_metrics == "all" or "mean_absolute_error" in include_metrics:
         me = hm.mean_error(
             group["primary_value"],
             group["secondary_value"]
         )
-        data["mean_error"] = me
+        data["mean_absolute_error"] = me
 
     if include_metrics == "all" or "mean_squared_error" in include_metrics:
         mse = hm.mean_squared_error(

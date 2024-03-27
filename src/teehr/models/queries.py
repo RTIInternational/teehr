@@ -19,8 +19,8 @@ from pathlib import Path
 
 class BaseModel(PydanticBaseModel):
     """Basemodel configuration."""
+
     class ConfigDict:
-        """ConfigDict."""
         arbitrary_types_allowed = True
         # smart_union = True # deprecated in v2
 
@@ -57,6 +57,7 @@ class MetricEnum(StrEnum):
     nash_sutcliffe_efficiency = "nash_sutcliffe_efficiency"
     kling_gupta_efficiency = "kling_gupta_efficiency"
     mean_error = "mean_error"
+    mean_absolute_error = "mean_absolute_error"
     mean_squared_error = "mean_squared_error"
     root_mean_squared_error = "root_mean_squared_error"
     primary_max_value_time = "primary_max_value_time"
@@ -96,6 +97,7 @@ class TimeseriesFilterFieldEnum(StrEnum):
 
 class JoinedFilter(BaseModel):
     """Joined filter model."""
+
     column: JoinedFilterFieldEnum
     operator: FilterOperatorEnum
     value: Union[

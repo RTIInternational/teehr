@@ -46,7 +46,7 @@ def test_metric_compare_1():
         "primary_variance",
         "secondary_variance",
         "max_value_delta",
-        "bias",
+        "mean_absolute_error",
         "nash_sutcliffe_efficiency",
         "kling_gupta_efficiency",
         "mean_error",

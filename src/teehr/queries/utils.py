@@ -416,10 +416,10 @@ def _select_mean_squared_error(
     return ""
 
 
-def _select_mean_error(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
-    """Generate the select mean error query segment."""
-    if "mean_error" in mq.include_metrics or mq.include_metrics == "all":
-        return """, sum(absolute_difference)/count(*) as mean_error"""
+def _select_mean_absolute_error(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
+    """Generate the select mean absolute error query segment."""
+    if "mean_absolute_error" in mq.include_metrics or mq.include_metrics == "all":
+        return """, sum(absolute_difference)/count(*) as mean_absolute_error"""
     return ""
 
 
@@ -457,10 +457,10 @@ def _select_nash_sutcliffe_efficiency(
     return ""
 
 
-def _select_bias(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
-    """Generate the select bias  query segment."""
-    if "bias" in mq.include_metrics or mq.include_metrics == "all":
-        return """, sum(secondary_value - primary_value)/count(*) as bias"""
+def _select_mean_error(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
+    """Generate the select mean_error query segment."""
+    if "mean_error" in mq.include_metrics or mq.include_metrics == "all":
+        return """, sum(secondary_value - primary_value)/count(*) as mean_error"""
     return ""
 
 
