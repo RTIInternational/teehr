@@ -8,6 +8,8 @@ except ImportError:  # pragma: no cover
     from enum import Enum  # pragma: no cover
 
     class StrEnum(str, Enum):  # pragma: no cover
+        """Enum with string values."""
+
         pass  # pragma: no cover
 
 from typing import List, Optional, Union
@@ -21,6 +23,8 @@ class BaseModel(PydanticBaseModel):
     """Basemodel configuration."""
 
     class ConfigDict:
+        """Config dictionary."""
+
         arbitrary_types_allowed = True
         # smart_union = True # deprecated in v2
 
@@ -68,7 +72,6 @@ class MetricEnum(StrEnum):
     mean_absolute_relative_error = "mean_absolute_relative_error"
     pearson_correlation = "pearson_correlation"
     r_squared = "r_squared"
-
 
 
 class JoinedFilterFieldEnum(StrEnum):
