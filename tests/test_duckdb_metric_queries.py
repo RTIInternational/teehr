@@ -140,6 +140,8 @@ def test_metric_query_df_2():
         "mean_error",
         "mean_squared_error",
         "root_mean_squared_error",
+        "relative_bias",
+        "multiplicative_bias",
     ]
     group_by = ["primary_location_id"]
     query_df = tqu.get_metrics(
@@ -202,7 +204,7 @@ def test_metric_query_df_all():
     )
     # print(query_df)
     assert len(query_df) == 9
-    assert len(query_df.columns) == len(group_by) + 22
+    assert len(query_df.columns) == len(group_by) + 24
     assert isinstance(query_df, pd.DataFrame)
 
 

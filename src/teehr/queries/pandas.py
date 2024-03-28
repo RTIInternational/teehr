@@ -265,6 +265,13 @@ def calculate_group_metrics(
         group["difference"] = group["secondary_value"] - group["primary_value"]
         data["mean_error"] = np.sum(group["difference"])/len(group)
 
+    if include_metrics == "all" or "relative_bias" in include_metrics:
+        group["difference"] = group["secondary_value"] - group["primary_value"]
+        data["relative_bias"] = np.sum(group["difference"])/np.sum(group["primary_value"])
+
+    if include_metrics == "all" or "multiplicative_bias" in include_metrics:
+        data["multiplicative_bias"] = np.mean(group["secondary_value"]) / np.mean(group["primary_value"])
+
     if include_metrics == "all" or "max_value_delta" in include_metrics:
         data["max_value_delta"] = (
             np.max(group["secondary_value"])
@@ -359,4 +366,5 @@ def calculate_group_metrics(
         pmvt = time_indexed_df["primary_value"].idxmax()
         smvt = time_indexed_df["secondary_value"].idxmax()
         data["max_value_timedelta"] = smvt - pmvt
+
     return pd.Series(data)

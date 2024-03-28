@@ -464,6 +464,20 @@ def _select_mean_error(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     return ""
 
 
+def _select_relative_bias(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
+    """Generate the select relative bias query segment."""
+    if "relative_bias" in mq.include_metrics or mq.include_metrics == "all":
+        return ", sum(secondary_value - primary_value) / sum(primary_value) AS relative_bias"
+    return ""
+
+
+def _select_multiplicative_bias(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
+    """Generate the select multiplicative bias query segment."""
+    if "multiplicative_bias" in mq.include_metrics or mq.include_metrics == "all":
+        return ", mean(secondary_value) / mean(primary_value) AS multiplicative_bias"
+    return ""
+
+
 def _select_max_value_delta(
     mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
 ) -> str:

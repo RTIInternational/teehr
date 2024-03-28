@@ -137,6 +137,8 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
                 {tqu._select_primary_max_value_time(mq)}
                 {tqu._select_secondary_max_value_time(mq)}
                 {tqu._select_max_value_timedelta(mq)}
+                {tqu._select_relative_bias(mq)}
+                {tqu._select_multiplicative_bias(mq)}
             FROM
                 joined
             {tqu._join_nse_cte(mq)}

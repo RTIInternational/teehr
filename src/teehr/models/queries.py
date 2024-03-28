@@ -63,6 +63,8 @@ class MetricEnum(StrEnum):
     primary_max_value_time = "primary_max_value_time"
     secondary_max_value_time = "secondary_max_value_time"
     max_value_timedelta = "max_value_timedelta"
+    relative_bias = "relative_bias"
+    multiplicative_bias = "multiplicative_bias"
 
 
 class JoinedFilterFieldEnum(StrEnum):
@@ -126,6 +128,7 @@ class JoinedFilter(BaseModel):
 
 class TimeseriesFilter(BaseModel):
     """Timeseries filter model."""
+
     column: TimeseriesFilterFieldEnum
     operator: FilterOperatorEnum
     value: Union[
@@ -153,6 +156,7 @@ class TimeseriesFilter(BaseModel):
 
 class MetricQuery(BaseModel):
     """Metric query model."""
+
     primary_filepath: Union[str, Path]
     secondary_filepath: Union[str, Path]
     crosswalk_filepath: Union[str, Path]
@@ -207,6 +211,7 @@ class MetricQuery(BaseModel):
 
 class JoinedTimeseriesQuery(BaseModel):
     """Joined timeseries query model."""
+
     primary_filepath: Union[str, Path]
     secondary_filepath: Union[str, Path]
     crosswalk_filepath: Union[str, Path]
@@ -240,6 +245,7 @@ class JoinedTimeseriesQuery(BaseModel):
 
 class TimeseriesQuery(BaseModel):
     """Timeseries query model."""
+
     timeseries_filepath: Union[str, Path]
     order_by: List[TimeseriesFilterFieldEnum]
     filters: Optional[List[TimeseriesFilter]] = []
@@ -255,6 +261,7 @@ class TimeseriesQuery(BaseModel):
 
 class TimeseriesCharQuery(BaseModel):
     """Timeseries char query model."""
+
     timeseries_filepath: Union[str, Path]
     order_by: List[TimeseriesFilterFieldEnum]
     group_by: List[TimeseriesFilterFieldEnum]
