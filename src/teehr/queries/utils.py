@@ -55,7 +55,7 @@ def _format_iterable_value(
 def _format_filter_item(
     filter: Union[tmq.JoinedFilter, tmq.TimeseriesFilter, tmqd.Filter]
 ) -> str:
-    """Return an SQL formatted string for single filter object.
+    r"""Return an SQL formatted string for single filter object.
 
     Parameters
     ----------
@@ -143,7 +143,7 @@ def geometry_select_clause(
              tmqd.MetricQuery,
              tmqd.JoinedTimeseriesQuery]
 ) -> str:
-    """"Generate the geometry select clause."""
+    """Generate the geometry select clause."""
     if q.include_geometry:
         return ",gf.geometry as geometry"
     return ""
@@ -416,10 +416,27 @@ def _select_mean_squared_error(
     return ""
 
 
-def _select_mean_absolute_error(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
+def _select_mean_absolute_error(
+        mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
     """Generate the select mean absolute error query segment."""
-    if "mean_absolute_error" in mq.include_metrics or mq.include_metrics == "all":
+    if (
+        "mean_absolute_error" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
         return """, sum(absolute_difference)/count(*) as mean_absolute_error"""
+    return ""
+
+
+def _select_mean_absolute_relative_error(
+        mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
+    """Generate the select mean absolute relative error query segment."""
+    if (
+        "mean_absolute_relative_error" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return """, sum(absolute_difference)/sum(primary_value) as mean_absolute_relative_error""" # noqa E501
     return ""
 
 
@@ -460,21 +477,45 @@ def _select_nash_sutcliffe_efficiency(
 def _select_mean_error(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     """Generate the select mean_error query segment."""
     if "mean_error" in mq.include_metrics or mq.include_metrics == "all":
-        return """, sum(secondary_value - primary_value)/count(*) as mean_error"""
+        return """, sum(secondary_value - primary_value)/count(*) as mean_error""" # noqa E501
     return ""
 
 
 def _select_relative_bias(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     """Generate the select relative bias query segment."""
     if "relative_bias" in mq.include_metrics or mq.include_metrics == "all":
-        return ", sum(secondary_value - primary_value) / sum(primary_value) AS relative_bias"
+        return ", sum(secondary_value - primary_value) / sum(primary_value) AS relative_bias" # noqa E501
     return ""
 
 
-def _select_multiplicative_bias(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
+def _select_multiplicative_bias(
+        mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
     """Generate the select multiplicative bias query segment."""
-    if "multiplicative_bias" in mq.include_metrics or mq.include_metrics == "all":
-        return ", mean(secondary_value) / mean(primary_value) AS multiplicative_bias"
+    if (
+        "multiplicative_bias" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return ", mean(secondary_value) / mean(primary_value) AS multiplicative_bias" # noqa E501
+    return ""
+
+
+def _select_pearson_correlation(
+        mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
+    """Generate the select pearson correlation query segment."""
+    if (
+        "pearson_correlation" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return ", corr(secondary_value, primary_value) AS pearson_correlation"
+    return ""
+
+
+def _select_r_squared(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
+    """Generate the select r squared query segment."""
+    if "r_squared" in mq.include_metrics or mq.include_metrics == "all":
+        return """, pow(corr(secondary_value, primary_value), 2) as r_squared""" # noqa E501
     return ""
 
 

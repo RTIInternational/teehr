@@ -27,16 +27,16 @@ def get_metrics(
     geometry_filepath: Union[str, None] = None,
     include_geometry: bool = False,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
-    """Calculate performance metrics using a Pandas or Dask DataFrame.
+    r"""Calculate performance metrics using a Pandas or Dask DataFrame.
 
     Parameters
     ----------
     primary_filepath : str
         File path to the "observed" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/\\*.parquet".
+        and can include wildcards. For example, "/path/to/parquet/\\*.parquet".
     secondary_filepath : str
         File path to the "forecast" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/\\*.parquet".
+        and can include wildcards. For example, "/path/to/parquet/\\*.parquet".
     crosswalk_filepath : str
         File path to single crosswalk file.
     group_by : List[str]
@@ -201,11 +201,7 @@ def calculate_group_metrics(
     * primary_variance
     * secondary_variance
     * max_value_delta
-
-    * max(secondary_value) - max(primary_value)
     * mean_error
-
-    * sum(primary_value - secondary_value)/count(*)
 
     HydroTools Metrics:
 
@@ -267,10 +263,42 @@ def calculate_group_metrics(
 
     if include_metrics == "all" or "relative_bias" in include_metrics:
         group["difference"] = group["secondary_value"] - group["primary_value"]
-        data["relative_bias"] = np.sum(group["difference"])/np.sum(group["primary_value"])
+        data["relative_bias"] = (
+            np.sum(group["difference"])/np.sum(group["primary_value"])
+        )
+
+    if (
+        include_metrics == "all"
+        or "mean_absolute_relative_error" in include_metrics
+    ):
+        group["absolute_difference"] = (
+            np.abs(group["secondary_value"] - group["primary_value"])
+        )
+        data["mean_absolute_relative_error"] = (
+            (
+                np.sum(group["absolute_difference"])
+                / np.sum(group["primary_value"])
+            )
+        )
 
     if include_metrics == "all" or "multiplicative_bias" in include_metrics:
-        data["multiplicative_bias"] = np.mean(group["secondary_value"]) / np.mean(group["primary_value"])
+        data["multiplicative_bias"] = (
+            np.mean(group["secondary_value"])
+            / np.mean(group["primary_value"])
+        )
+
+    if include_metrics == "all" or "pearson_correlation" in include_metrics:
+        pearson_correlation = (
+            np.corrcoef(group["secondary_value"], group["primary_value"])
+        )[0][1]
+        data["pearson_correlation"] = pearson_correlation
+
+    if include_metrics == "all" or "r_squared" in include_metrics:
+        pearson_correlation = (
+            np.corrcoef(group["secondary_value"], group["primary_value"])
+        )[0][1]
+        r_squared = (np.power(pearson_correlation, 2))
+        data["r_squared"] = r_squared
 
     if include_metrics == "all" or "max_value_delta" in include_metrics:
         data["max_value_delta"] = (

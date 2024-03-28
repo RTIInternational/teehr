@@ -65,6 +65,10 @@ class MetricEnum(StrEnum):
     max_value_timedelta = "max_value_timedelta"
     relative_bias = "relative_bias"
     multiplicative_bias = "multiplicative_bias"
+    mean_absolute_relative_error = "mean_absolute_relative_error"
+    pearson_correlation = "pearson_correlation"
+    r_squared = "r_squared"
+
 
 
 class JoinedFilterFieldEnum(StrEnum):
