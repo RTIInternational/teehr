@@ -317,6 +317,28 @@ def calculate_group_metrics(
         )
         data["nash_sutcliffe_efficiency"] = nse
 
+    if (
+        include_metrics == "all"
+        or "nash_sutcliffe_efficiency_normalized" in include_metrics
+    ):
+        nse = hm.nash_sutcliffe_efficiency(
+            group["primary_value"],
+            group["secondary_value"],
+            normalized=True
+        )
+        data["nash_sutcliffe_efficiency_normalized"] = nse
+
+    # if (
+    #     include_metrics == "all"
+    #     or "nash_sutcliffe_efficiency_log" in include_metrics
+    # ):
+    #     nse = hm.nash_sutcliffe_efficiency(
+    #         group["primary_value"],
+    #         group["secondary_value"],
+    #         log=True
+    #     )
+    #     data["nash_sutcliffe_efficiency_log"] = nse
+
     if include_metrics == "all" or "kling_gupta_efficiency" in include_metrics:
         kge = hm.kling_gupta_efficiency(
             group["primary_value"],

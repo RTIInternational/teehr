@@ -136,6 +136,7 @@ def test_metric_query_df_2():
         "max_value_delta",
         "mean_absolute_error",
         "nash_sutcliffe_efficiency",
+        "nash_sutcliffe_efficiency_normalized",
         "kling_gupta_efficiency",
         "mean_error",
         "mean_squared_error",
@@ -207,7 +208,7 @@ def test_metric_query_df_all():
     )
     # print(query_df)
     assert len(query_df) == 9
-    assert len(query_df.columns) == len(group_by) + 27
+    assert len(query_df.columns) == len(group_by) + 28
     assert isinstance(query_df, pd.DataFrame)
 
 

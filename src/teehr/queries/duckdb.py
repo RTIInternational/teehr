@@ -212,6 +212,7 @@ def get_metrics(
                 {tqu._select_max_value_delta(mq)}
                 {tqu._select_mean_error(mq)}
                 {tqu._select_nash_sutcliffe_efficiency(mq)}
+                {tqu._select_nash_sutcliffe_efficiency_normalized(mq)}
                 {tqu._select_kling_gupta_efficiency(mq)}
                 {tqu._select_mean_absolute_error(mq)}
                 {tqu._select_mean_squared_error(mq)}

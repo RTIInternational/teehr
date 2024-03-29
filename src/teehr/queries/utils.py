@@ -311,13 +311,14 @@ def _nse_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     """Generate the nash-sutcliffe-efficiency CTE."""
     if (
         "nash_sutcliffe_efficiency" in mq.include_metrics
+        or "nash_sutcliffe_efficiency_normalized" in mq.include_metrics
         or mq.include_metrics == "all"
     ):
         return f"""
         ,nse AS (
             SELECT
                 {",".join(mq.group_by)}
-                ,AVG(primary_value) AS avg_primary_value
+                ,avg(primary_value) AS avg_primary_value
             FROM
                 joined
             GROUP BY
@@ -327,16 +328,52 @@ def _nse_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     return ""
 
 
+# def _nse_log_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
+#     """Generate the nash-sutcliffe-efficiency log CTE.
+
+#     ToDo: Need to fix log of zero issue here.
+#     """
+#     if (
+#         "nash_sutcliffe_efficiency_log" in mq.include_metrics
+#         or mq.include_metrics == "all"
+#     ):
+#         return f"""
+#         ,nse_log AS (
+#             SELECT
+#                 {",".join(mq.group_by)}
+#                 ,avg(ln(primary_value)) AS avg_log_primary_value
+#             FROM
+#                 joined
+#             GROUP BY
+#                 {",".join(mq.group_by)}
+#         )
+#         """
+#     return ""
+
+
 def _join_nse_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     """Generate the join nash-sutcliffe-efficiency CTE."""
     if (
         "nash_sutcliffe_efficiency" in mq.include_metrics
+        or "nash_sutcliffe_efficiency_normalized" in mq.include_metrics
         or mq.include_metrics == "all"
     ):
         return f"""
             {_join_on(join="nse", join_to="joined", join_on=mq.group_by)}
         """
     return ""
+
+
+# def _join_nse_log_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
+#     """Generate the join nash-sutcliffe-efficiency log CTE."""
+#     if (
+#         "nash_sutcliffe_efficiency_log" in mq.include_metrics
+#         or mq.include_metrics == "all"
+#     ):
+#         return f"""
+#             {_join_on(join="nse_log", join_to="joined", join_on=mq.group_by)}
+#         """
+#     return ""
 
 
 def _select_max_value_timedelta(
@@ -472,6 +509,43 @@ def _select_nash_sutcliffe_efficiency(
         ) as nash_sutcliffe_efficiency
         """
     return ""
+
+
+def _select_nash_sutcliffe_efficiency_normalized(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
+    """Generate the select nash sutcliffe efficiency query segment."""
+    if (
+        "nash_sutcliffe_efficiency_normalized" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return """, 1/(2-(1 - (
+            sum(pow(joined.primary_value - joined.secondary_value, 2))
+            / sum(pow(joined.primary_value - nse.avg_primary_value, 2))
+        ))) as nash_sutcliffe_efficiency_normalized
+        """
+    return ""
+
+
+# def _select_nash_sutcliffe_efficiency_log(
+#     mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+# ) -> str:
+#     """Generate the select nash sutcliffe efficiency log query segment.
+
+#     ToDo: Need to fix log of zero issue here.
+#     """
+#     if (
+#         "nash_sutcliffe_efficiency_log" in mq.include_metrics
+#         or mq.include_metrics == "all"
+#     ):
+#         return """, 1 - (
+#             sum(pow(ln(joined.primary_value)
+#             - ln(joined.secondary_value), 2))
+#             / sum(pow(ln(joined.primary_value)
+#             - nse_log.avg_log_primary_value, 2))
+#         ) as nash_sutcliffe_efficiency_log
+#         """
+#     return ""
 
 
 def _select_mean_error(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:

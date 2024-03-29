@@ -59,6 +59,8 @@ class MetricEnum(StrEnum):
     max_value_delta = "max_value_delta"
     bias = "bias"
     nash_sutcliffe_efficiency = "nash_sutcliffe_efficiency"
+    nash_sutcliffe_efficiency_normalized = "nash_sutcliffe_efficiency_normalized" # noqa
+    # nash_sutcliffe_efficiency_log = "nash_sutcliffe_efficiency_log" # noqa
     kling_gupta_efficiency = "kling_gupta_efficiency"
     mean_error = "mean_error"
     mean_absolute_error = "mean_absolute_error"

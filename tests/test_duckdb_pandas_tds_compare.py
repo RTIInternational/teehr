@@ -48,6 +48,7 @@ def test_metric_compare_1():
         "max_value_delta",
         "mean_absolute_error",
         "nash_sutcliffe_efficiency",
+        "nash_sutcliffe_efficiency_normalized",
         "kling_gupta_efficiency",
         "mean_error",
         "mean_squared_error",
