@@ -226,7 +226,8 @@ def get_metrics(
                 {",".join([f"joined.{gb}" for gb in mq.group_by])}
         )
         SELECT
-            metrics.*
+            {",".join([f"metrics.{ob}" for ob in mq.group_by])}
+            {tqu.metrics_select_clause(mq)}
             {tqu.geometry_select_clause(mq)}
         FROM metrics
             {tqu.metric_geometry_join_clause(mq)}

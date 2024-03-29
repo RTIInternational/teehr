@@ -300,6 +300,25 @@ def calculate_group_metrics(
             - np.max(group["primary_value"])
         )
 
+    if (
+        include_metrics == "all"
+        or "annual_peak_relative_bias" in include_metrics
+    ):
+        primary_yearly_max_values = (
+            group
+            .groupby(group.value_time.dt.year)
+            .primary_value.max()
+        )
+        secondary_yearly_max_values = (
+            group
+            .groupby(group.value_time.dt.year)
+            .secondary_value.max()
+        )
+        data["annual_peak_relative_bias"] = (
+            np.sum(secondary_yearly_max_values - primary_yearly_max_values)
+            / np.sum(primary_yearly_max_values)
+        )
+
     # HydroTools Forecast Metrics
     if (
         include_metrics == "all"

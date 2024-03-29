@@ -149,6 +149,18 @@ def geometry_select_clause(
     return ""
 
 
+def metrics_select_clause(
+    q: Union[tmq.MetricQuery,
+             tmq.JoinedTimeseriesQuery,
+             tmqd.MetricQuery,
+             tmqd.JoinedTimeseriesQuery]
+) -> str:
+    """Generate the metrics select clause."""
+    if q.include_metrics == "all":
+        return f""", {",".join([item.value for item in tmq.MetricEnum])}"""
+    return f""", {",".join([ob for ob in q.include_metrics])}"""
+
+
 def geometry_joined_select_clause(
         q: Union[tmq.MetricQuery, tmq.JoinedTimeseriesQuery]
 ) -> str:

@@ -57,7 +57,6 @@ class MetricEnum(StrEnum):
     primary_variance = "primary_variance"
     secondary_variance = "secondary_variance"
     max_value_delta = "max_value_delta"
-    bias = "bias"
     nash_sutcliffe_efficiency = "nash_sutcliffe_efficiency"
     nash_sutcliffe_efficiency_normalized = "nash_sutcliffe_efficiency_normalized" # noqa
     # nash_sutcliffe_efficiency_log = "nash_sutcliffe_efficiency_log" # noqa
@@ -74,6 +73,7 @@ class MetricEnum(StrEnum):
     mean_absolute_relative_error = "mean_absolute_relative_error"
     pearson_correlation = "pearson_correlation"
     r_squared = "r_squared"
+    # annual_peak_relative_bias = "annual_peak_relative_bias"
 
 
 class JoinedFilterFieldEnum(StrEnum):

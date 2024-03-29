@@ -157,7 +157,7 @@ def test_metric_query_df_2():
         include_metrics=include_metrics,
         return_query=False,
         include_geometry=False,
-        remove_duplicates=True
+        remove_duplicates=True,
     )
     # print(query_df)
     assert len(query_df) == 3
