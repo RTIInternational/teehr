@@ -1,6 +1,24 @@
 Release Notes
 =============
 
+0.3.14 - 2024-03-29
+--------------------
+
+Added
+^^^^^
+* relative_bias
+* multiplicative_bias
+* mean_squared_error
+* mean_absolute_relative_error
+* pearson_correlation
+* r_squared
+* nash_sutcliffe_efficiency_normalized
+
+Changed
+^^^^^^^
+* mean_error (rename current bias to mean_error)
+* mean_absolute_error (rename current mean_error to mean_absolute_error)
+
 0.3.13 - 2024-03-22
 --------------------
 
