@@ -64,7 +64,7 @@ def get_metrics(
 
     Notes
     -----
-    Basic Metrics:
+    Metrics:
 
     * primary_count
     * secondary_count
@@ -79,27 +79,22 @@ def get_metrics(
     * primary_variance
     * secondary_variance
     * max_value_delta
-
-      * max(secondary_value) - max(primary_value)
-    * bias
-
-      * sum(primary_value - secondary_value)/count(*)
-
-    HydroTools Metrics:
-
-    * nash_sutcliffe_efficiency
-    * kling_gupta_efficiency
-    * coefficient_of_extrapolation
-    * coefficient_of_persistence
     * mean_error
+    * mean_absolute_error
     * mean_squared_error
+    * mean_absolute_relative_error
     * root_mean_squared_error
-
-    Time-based Metrics:
-
+    * relative_bias
+    * multiplicative_bias
+    * pearson_correlation
+    * r_squared
+    * nash_sutcliffe_efficiency
+    * nash_sutcliffe_efficiency_normalized
+    * kling_gupta_efficiency
     * primary_max_value_time
     * secondary_max_value_time
     * max_value_timedelta
+
     """
     mq = tmq.MetricQuery.model_validate(
         {
@@ -186,7 +181,7 @@ def calculate_group_metrics(
     and contains more metrics.  It also serves as the reference
     implementation for the duckdb queries.
 
-    Basic Metrics:
+    Metrics:
 
     * primary_count
     * secondary_count
@@ -202,18 +197,17 @@ def calculate_group_metrics(
     * secondary_variance
     * max_value_delta
     * mean_error
-
-    HydroTools Metrics:
-
-    * nash_sutcliffe_efficiency
-    * kling_gupta_efficiency
-    * coefficient_of_extrapolation
-    * coefficient_of_persistence
     * mean_absolute_error
     * mean_squared_error
+    * mean_absolute_relative_error
     * root_mean_squared_error
-
-    Time-based Metrics:
+    * relative_bias
+    * multiplicative_bias
+    * pearson_correlation
+    * r_squared
+    * nash_sutcliffe_efficiency
+    * nash_sutcliffe_efficiency_normalized
+    * kling_gupta_efficiency
     * primary_max_value_time
     * secondary_max_value_time
     * max_value_timedelta
