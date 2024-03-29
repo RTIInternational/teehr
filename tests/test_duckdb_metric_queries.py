@@ -134,12 +134,18 @@ def test_metric_query_df_2():
         "primary_variance",
         "secondary_variance",
         "max_value_delta",
-        "bias",
+        "mean_absolute_error",
         "nash_sutcliffe_efficiency",
+        "nash_sutcliffe_efficiency_normalized",
         "kling_gupta_efficiency",
         "mean_error",
         "mean_squared_error",
         "root_mean_squared_error",
+        "relative_bias",
+        "multiplicative_bias",
+        "mean_absolute_relative_error",
+        "pearson_correlation",
+        "r_squared"
     ]
     group_by = ["primary_location_id"]
     query_df = tqu.get_metrics(
@@ -202,7 +208,7 @@ def test_metric_query_df_all():
     )
     # print(query_df)
     assert len(query_df) == 9
-    assert len(query_df.columns) == len(group_by) + 22
+    assert len(query_df.columns) == len(group_by) + 28
     assert isinstance(query_df, pd.DataFrame)
 
 

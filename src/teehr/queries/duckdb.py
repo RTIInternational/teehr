@@ -32,16 +32,16 @@ def get_metrics(
     include_geometry: bool = False,
     remove_duplicates: bool = True,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
-    """Calculate performance metrics using a parquet query.
+    r"""Calculate performance metrics using a parquet query.
 
     Parameters
     ----------
     primary_filepath : str
         File path to the "observed" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/\\*.parquet".
+        and can include wildcards. For example, "/path/to/parquet/\\*.parquet".
     secondary_filepath : str
         File path to the "forecast" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/\\*.parquet".
+        and can include wildcards. For example, "/path/to/parquet/\\*.parquet".
     crosswalk_filepath : str
         File path to single crosswalk file.
     group_by : List[str]
@@ -92,7 +92,7 @@ def get_metrics(
     * lead_time
     * [any user-added fields]
 
-    Basic Metrics:
+    Metrics:
 
     * primary_count
     * secondary_count
@@ -107,24 +107,18 @@ def get_metrics(
     * primary_variance
     * secondary_variance
     * max_value_delta
-
-      * max(secondary_value) - max(primary_value)
-    * bias
-
-      * sum(primary_value - secondary_value)/count(*)
-
-    HydroTools Metrics:
-
-    * nash_sutcliffe_efficiency
-    * kling_gupta_efficiency
-    * coefficient_of_extrapolation
-    * coefficient_of_persistence
     * mean_error
+    * mean_absolute_error
     * mean_squared_error
+    * mean_absolute_relative_error
     * root_mean_squared_error
-
-    Time-based Metrics:
-
+    * relative_bias
+    * multiplicative_bias
+    * pearson_correlation
+    * r_squared
+    * nash_sutcliffe_efficiency
+    * nash_sutcliffe_efficiency_normalized
+    * kling_gupta_efficiency
     * primary_max_value_time
     * secondary_max_value_time
     * max_value_timedelta
@@ -149,7 +143,6 @@ def get_metrics(
     >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
     >>> ]
     """
-
     mq = MetricQuery.model_validate(
         {
             "primary_filepath": primary_filepath,
@@ -211,15 +204,21 @@ def get_metrics(
                 {tqu._select_primary_variance(mq)}
                 {tqu._select_secondary_variance(mq)}
                 {tqu._select_max_value_delta(mq)}
-                {tqu._select_bias(mq)}
-                {tqu._select_nash_sutcliffe_efficiency(mq)}
-                {tqu._select_kling_gupta_efficiency(mq)}
                 {tqu._select_mean_error(mq)}
+                {tqu._select_nash_sutcliffe_efficiency(mq)}
+                {tqu._select_nash_sutcliffe_efficiency_normalized(mq)}
+                {tqu._select_kling_gupta_efficiency(mq)}
+                {tqu._select_mean_absolute_error(mq)}
                 {tqu._select_mean_squared_error(mq)}
                 {tqu._select_root_mean_squared_error(mq)}
                 {tqu._select_primary_max_value_time(mq)}
                 {tqu._select_secondary_max_value_time(mq)}
                 {tqu._select_max_value_timedelta(mq)}
+                {tqu._select_relative_bias(mq)}
+                {tqu._select_multiplicative_bias(mq)}
+                {tqu._select_mean_absolute_relative_error(mq)}
+                {tqu._select_pearson_correlation(mq)}
+                {tqu._select_r_squared(mq)}
             FROM
                 joined
             {tqu._join_nse_cte(mq)}
@@ -257,16 +256,16 @@ def get_joined_timeseries(
     include_geometry: bool = False,
     remove_duplicates: bool = True,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
-    """Retrieve joined timeseries using a parquet query.
+    r"""Retrieve joined timeseries using a parquet query.
 
     Parameters
     ----------
     primary_filepath : str
         File path to the "observed" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/\\*.parquet".
+        and can include wildcards. For example, "/path/to/parquet/\\*.parquet".
     secondary_filepath : str
         File path to the "forecast" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/\\*.parquet".
+        and can include wildcards. For example, "/path/to/parquet/\\*.parquet".
     crosswalk_filepath : str
         File path to single crosswalk file.
     order_by : List[str]
@@ -297,7 +296,6 @@ def get_joined_timeseries(
 
     Notes
     -----
-
     Filter and Order By Fields:
 
     * reference_time
@@ -332,7 +330,6 @@ def get_joined_timeseries(
     >>>     }
     >>> ]
     """
-
     jtq = JoinedTimeseriesQuery.model_validate(
         {
             "primary_filepath": primary_filepath,
@@ -409,13 +406,13 @@ def get_timeseries(
     filters: Union[List[dict], None] = None,
     return_query: bool = False,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
-    """Retrieve timeseries using a parquet query.
+    r"""Retrieve timeseries using a parquet query.
 
     Parameters
     ----------
     timeseries_filepath : str
         File path to the timeseries data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/\\*.parquet".
+        and can include wildcards. For example, "/path/to/parquet/\\*.parquet".
     order_by : List[str]
         List of column/field names to order results by.
         Must provide at least one.
@@ -502,13 +499,13 @@ def get_timeseries_chars(
     filters: Union[List[dict], None] = None,
     return_query: bool = False,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
-    """Retrieve timeseries characteristics using a parquet query.
+    r"""Retrieve timeseries characteristics using a parquet query.
 
     Parameters
     ----------
     timeseries_filepath : str
         File path to the "observed" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/\\*.parquet".
+        and can include wildcards. For example, "/path/to/parquet/\\*.parquet".
     group_by : List[str]
         List of column/field names to group timeseries data by.
         Must provide at least one.
@@ -559,7 +556,6 @@ def get_timeseries_chars(
     >>>     }
     >>> ]
     """
-
     tcq = TimeseriesCharQuery.model_validate(
         {
             "timeseries_filepath": timeseries_filepath,

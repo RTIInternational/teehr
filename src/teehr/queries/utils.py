@@ -55,7 +55,7 @@ def _format_iterable_value(
 def _format_filter_item(
     filter: Union[tmq.JoinedFilter, tmq.TimeseriesFilter, tmqd.Filter]
 ) -> str:
-    """Return an SQL formatted string for single filter object.
+    r"""Return an SQL formatted string for single filter object.
 
     Parameters
     ----------
@@ -143,7 +143,7 @@ def geometry_select_clause(
              tmqd.MetricQuery,
              tmqd.JoinedTimeseriesQuery]
 ) -> str:
-    """"Generate the geometry select clause."""
+    """Generate the geometry select clause."""
     if q.include_geometry:
         return ",gf.geometry as geometry"
     return ""
@@ -311,13 +311,14 @@ def _nse_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     """Generate the nash-sutcliffe-efficiency CTE."""
     if (
         "nash_sutcliffe_efficiency" in mq.include_metrics
+        or "nash_sutcliffe_efficiency_normalized" in mq.include_metrics
         or mq.include_metrics == "all"
     ):
         return f"""
         ,nse AS (
             SELECT
                 {",".join(mq.group_by)}
-                ,AVG(primary_value) AS avg_primary_value
+                ,avg(primary_value) AS avg_primary_value
             FROM
                 joined
             GROUP BY
@@ -327,16 +328,52 @@ def _nse_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     return ""
 
 
+# def _nse_log_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
+#     """Generate the nash-sutcliffe-efficiency log CTE.
+
+#     ToDo: Need to fix log of zero issue here.
+#     """
+#     if (
+#         "nash_sutcliffe_efficiency_log" in mq.include_metrics
+#         or mq.include_metrics == "all"
+#     ):
+#         return f"""
+#         ,nse_log AS (
+#             SELECT
+#                 {",".join(mq.group_by)}
+#                 ,avg(ln(primary_value)) AS avg_log_primary_value
+#             FROM
+#                 joined
+#             GROUP BY
+#                 {",".join(mq.group_by)}
+#         )
+#         """
+#     return ""
+
+
 def _join_nse_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     """Generate the join nash-sutcliffe-efficiency CTE."""
     if (
         "nash_sutcliffe_efficiency" in mq.include_metrics
+        or "nash_sutcliffe_efficiency_normalized" in mq.include_metrics
         or mq.include_metrics == "all"
     ):
         return f"""
             {_join_on(join="nse", join_to="joined", join_on=mq.group_by)}
         """
     return ""
+
+
+# def _join_nse_log_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
+#     """Generate the join nash-sutcliffe-efficiency log CTE."""
+#     if (
+#         "nash_sutcliffe_efficiency_log" in mq.include_metrics
+#         or mq.include_metrics == "all"
+#     ):
+#         return f"""
+#             {_join_on(join="nse_log", join_to="joined", join_on=mq.group_by)}
+#         """
+#     return ""
 
 
 def _select_max_value_timedelta(
@@ -416,10 +453,27 @@ def _select_mean_squared_error(
     return ""
 
 
-def _select_mean_error(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
-    """Generate the select mean error query segment."""
-    if "mean_error" in mq.include_metrics or mq.include_metrics == "all":
-        return """, sum(absolute_difference)/count(*) as mean_error"""
+def _select_mean_absolute_error(
+        mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
+    """Generate the select mean absolute error query segment."""
+    if (
+        "mean_absolute_error" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return """, sum(absolute_difference)/count(*) as mean_absolute_error"""
+    return ""
+
+
+def _select_mean_absolute_relative_error(
+        mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
+    """Generate the select mean absolute relative error query segment."""
+    if (
+        "mean_absolute_relative_error" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return """, sum(absolute_difference)/sum(primary_value) as mean_absolute_relative_error""" # noqa E501
     return ""
 
 
@@ -457,10 +511,85 @@ def _select_nash_sutcliffe_efficiency(
     return ""
 
 
-def _select_bias(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
-    """Generate the select bias  query segment."""
-    if "bias" in mq.include_metrics or mq.include_metrics == "all":
-        return """, sum(secondary_value - primary_value)/count(*) as bias"""
+def _select_nash_sutcliffe_efficiency_normalized(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
+    """Generate the select nash sutcliffe efficiency query segment."""
+    if (
+        "nash_sutcliffe_efficiency_normalized" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return """, 1/(2-(1 - (
+            sum(pow(joined.primary_value - joined.secondary_value, 2))
+            / sum(pow(joined.primary_value - nse.avg_primary_value, 2))
+        ))) as nash_sutcliffe_efficiency_normalized
+        """
+    return ""
+
+
+# def _select_nash_sutcliffe_efficiency_log(
+#     mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+# ) -> str:
+#     """Generate the select nash sutcliffe efficiency log query segment.
+
+#     ToDo: Need to fix log of zero issue here.
+#     """
+#     if (
+#         "nash_sutcliffe_efficiency_log" in mq.include_metrics
+#         or mq.include_metrics == "all"
+#     ):
+#         return """, 1 - (
+#             sum(pow(ln(joined.primary_value)
+#             - ln(joined.secondary_value), 2))
+#             / sum(pow(ln(joined.primary_value)
+#             - nse_log.avg_log_primary_value, 2))
+#         ) as nash_sutcliffe_efficiency_log
+#         """
+#     return ""
+
+
+def _select_mean_error(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
+    """Generate the select mean_error query segment."""
+    if "mean_error" in mq.include_metrics or mq.include_metrics == "all":
+        return """, sum(secondary_value - primary_value)/count(*) as mean_error""" # noqa E501
+    return ""
+
+
+def _select_relative_bias(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
+    """Generate the select relative bias query segment."""
+    if "relative_bias" in mq.include_metrics or mq.include_metrics == "all":
+        return ", sum(secondary_value - primary_value) / sum(primary_value) AS relative_bias" # noqa E501
+    return ""
+
+
+def _select_multiplicative_bias(
+        mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
+    """Generate the select multiplicative bias query segment."""
+    if (
+        "multiplicative_bias" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return ", mean(secondary_value) / mean(primary_value) AS multiplicative_bias" # noqa E501
+    return ""
+
+
+def _select_pearson_correlation(
+        mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
+    """Generate the select pearson correlation query segment."""
+    if (
+        "pearson_correlation" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return ", corr(secondary_value, primary_value) AS pearson_correlation"
+    return ""
+
+
+def _select_r_squared(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
+    """Generate the select r squared query segment."""
+    if "r_squared" in mq.include_metrics or mq.include_metrics == "all":
+        return """, pow(corr(secondary_value, primary_value), 2) as r_squared""" # noqa E501
     return ""
 
 

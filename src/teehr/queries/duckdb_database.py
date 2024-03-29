@@ -5,7 +5,7 @@ from typing import Dict
 
 from teehr.models.queries_database import (
     MetricQuery,
-    InsertJoinedTimeseriesQuery,
+    # InsertJoinedTimeseriesQuery,
     JoinedTimeseriesQuery,
     TimeseriesQuery,
     TimeseriesCharQuery,
@@ -18,8 +18,7 @@ SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def create_get_metrics_query(mq: MetricQuery) -> str:
-    """Build the query string to calculate performance metrics
-    using database queries.
+    """Build the query string to calculate performance metrics.
 
     Parameters
     ----------
@@ -47,7 +46,7 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
     * lead_time
     * [any user-added fields]
 
-    Basic Metrics:
+    Metrics:
 
     * primary_count
     * secondary_count
@@ -62,24 +61,18 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
     * primary_variance
     * secondary_variance
     * max_value_delta
-
-      * max(secondary_value) - max(primary_value)
-    * bias
-
-      * sum(primary_value - secondary_value)/count(*)
-
-    HydroTools Metrics:
-
-    * nash_sutcliffe_efficiency
-    * kling_gupta_efficiency
-    * coefficient_of_extrapolation
-    * coefficient_of_persistence
     * mean_error
+    * mean_absolute_error
     * mean_squared_error
+    * mean_absolute_relative_error
     * root_mean_squared_error
-
-    Time-based Metrics:
-
+    * relative_bias
+    * multiplicative_bias
+    * pearson_correlation
+    * r_squared
+    * nash_sutcliffe_efficiency
+    * nash_sutcliffe_efficiency_normalized
+    * kling_gupta_efficiency
     * primary_max_value_time
     * secondary_max_value_time
     * max_value_timedelta
@@ -128,15 +121,21 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
                 {tqu._select_primary_variance(mq)}
                 {tqu._select_secondary_variance(mq)}
                 {tqu._select_max_value_delta(mq)}
-                {tqu._select_bias(mq)}
-                {tqu._select_nash_sutcliffe_efficiency(mq)}
-                {tqu._select_kling_gupta_efficiency(mq)}
                 {tqu._select_mean_error(mq)}
+                {tqu._select_nash_sutcliffe_efficiency(mq)}
+                {tqu._select_nash_sutcliffe_efficiency_normalized(mq)}
+                {tqu._select_kling_gupta_efficiency(mq)}
+                {tqu._select_mean_absolute_error(mq)}
                 {tqu._select_mean_squared_error(mq)}
                 {tqu._select_root_mean_squared_error(mq)}
                 {tqu._select_primary_max_value_time(mq)}
                 {tqu._select_secondary_max_value_time(mq)}
                 {tqu._select_max_value_timedelta(mq)}
+                {tqu._select_relative_bias(mq)}
+                {tqu._select_multiplicative_bias(mq)}
+                {tqu._select_mean_absolute_relative_error(mq)}
+                {tqu._select_pearson_correlation(mq)}
+                {tqu._select_r_squared(mq)}
             FROM
                 joined
             {tqu._join_nse_cte(mq)}
@@ -156,8 +155,7 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
 
 
 def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQuery) -> str:
-    """Load joined timeseries into a duckdb persistent database using a
-    database query.
+    """Load joined timeseries into a duckdb persistent database.
 
     Parameters
     ----------
@@ -235,21 +233,19 @@ def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQuery) -> str:
 
 
 def describe_timeseries(timeseries_filepath: str) -> Dict:
-    """Retrieve descriptive stats for a time series.
+    r"""Retrieve descriptive stats for a time series.
 
     Parameters
     ----------
     timeseries_filepath : str
         File path to the "observed" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/\\*.parquet".
+        and can include wildcards. For example, "/path/to/parquet/\\*.parquet".
 
     Returns
     -------
     Dict
         A dictionary of summary statistics for a timeseries.
     """
-    # TEST QUERIES
-
     # Find number of rows and unique locations
     query = f"""
         SELECT
@@ -434,7 +430,6 @@ def create_get_joined_timeseries_query(
     >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
     >>> ]
     """
-
     query = f"""
         SELECT
             sf.*
@@ -605,7 +600,6 @@ def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
     >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
     >>> ]
     """
-
     join_max_time_on = tqu._join_time_on(
         join="mxt", join_to="chars", join_on=tcq.group_by
     )

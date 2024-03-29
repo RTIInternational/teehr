@@ -27,16 +27,16 @@ def get_metrics(
     geometry_filepath: Union[str, None] = None,
     include_geometry: bool = False,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
-    """Calculate performance metrics using a Pandas or Dask DataFrame.
+    r"""Calculate performance metrics using a Pandas or Dask DataFrame.
 
     Parameters
     ----------
     primary_filepath : str
         File path to the "observed" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/\\*.parquet".
+        and can include wildcards. For example, "/path/to/parquet/\\*.parquet".
     secondary_filepath : str
         File path to the "forecast" data.  String must include path to file(s)
-        and can include wildcards.  For example, "/path/to/parquet/\\*.parquet".
+        and can include wildcards. For example, "/path/to/parquet/\\*.parquet".
     crosswalk_filepath : str
         File path to single crosswalk file.
     group_by : List[str]
@@ -64,7 +64,7 @@ def get_metrics(
 
     Notes
     -----
-    Basic Metrics:
+    Metrics:
 
     * primary_count
     * secondary_count
@@ -79,27 +79,22 @@ def get_metrics(
     * primary_variance
     * secondary_variance
     * max_value_delta
-
-      * max(secondary_value) - max(primary_value)
-    * bias
-
-      * sum(primary_value - secondary_value)/count(*)
-
-    HydroTools Metrics:
-
-    * nash_sutcliffe_efficiency
-    * kling_gupta_efficiency
-    * coefficient_of_extrapolation
-    * coefficient_of_persistence
     * mean_error
+    * mean_absolute_error
     * mean_squared_error
+    * mean_absolute_relative_error
     * root_mean_squared_error
-
-    Time-based Metrics:
-
+    * relative_bias
+    * multiplicative_bias
+    * pearson_correlation
+    * r_squared
+    * nash_sutcliffe_efficiency
+    * nash_sutcliffe_efficiency_normalized
+    * kling_gupta_efficiency
     * primary_max_value_time
     * secondary_max_value_time
     * max_value_timedelta
+
     """
     mq = tmq.MetricQuery.model_validate(
         {
@@ -186,7 +181,7 @@ def calculate_group_metrics(
     and contains more metrics.  It also serves as the reference
     implementation for the duckdb queries.
 
-    Basic Metrics:
+    Metrics:
 
     * primary_count
     * secondary_count
@@ -201,23 +196,18 @@ def calculate_group_metrics(
     * primary_variance
     * secondary_variance
     * max_value_delta
-
-      * max(secondary_value) - max(primary_value)
-    * bias
-
-      * sum(primary_value - secondary_value)/count(*)
-
-    HydroTools Metrics:
-
-    * nash_sutcliffe_efficiency
-    * kling_gupta_efficiency
-    * coefficient_of_extrapolation
-    * coefficient_of_persistence
     * mean_error
+    * mean_absolute_error
     * mean_squared_error
+    * mean_absolute_relative_error
     * root_mean_squared_error
-
-    Time-based Metrics:
+    * relative_bias
+    * multiplicative_bias
+    * pearson_correlation
+    * r_squared
+    * nash_sutcliffe_efficiency
+    * nash_sutcliffe_efficiency_normalized
+    * kling_gupta_efficiency
     * primary_max_value_time
     * secondary_max_value_time
     * max_value_timedelta
@@ -261,9 +251,48 @@ def calculate_group_metrics(
     if include_metrics == "all" or "secondary_variance" in include_metrics:
         data["secondary_variance"] = np.var(group["secondary_value"])
 
-    if include_metrics == "all" or "bias" in include_metrics:
+    if include_metrics == "all" or "mean_error" in include_metrics:
         group["difference"] = group["secondary_value"] - group["primary_value"]
-        data["bias"] = np.sum(group["difference"])/len(group)
+        data["mean_error"] = np.sum(group["difference"])/len(group)
+
+    if include_metrics == "all" or "relative_bias" in include_metrics:
+        group["difference"] = group["secondary_value"] - group["primary_value"]
+        data["relative_bias"] = (
+            np.sum(group["difference"])/np.sum(group["primary_value"])
+        )
+
+    if (
+        include_metrics == "all"
+        or "mean_absolute_relative_error" in include_metrics
+    ):
+        group["absolute_difference"] = (
+            np.abs(group["secondary_value"] - group["primary_value"])
+        )
+        data["mean_absolute_relative_error"] = (
+            (
+                np.sum(group["absolute_difference"])
+                / np.sum(group["primary_value"])
+            )
+        )
+
+    if include_metrics == "all" or "multiplicative_bias" in include_metrics:
+        data["multiplicative_bias"] = (
+            np.mean(group["secondary_value"])
+            / np.mean(group["primary_value"])
+        )
+
+    if include_metrics == "all" or "pearson_correlation" in include_metrics:
+        pearson_correlation = (
+            np.corrcoef(group["secondary_value"], group["primary_value"])
+        )[0][1]
+        data["pearson_correlation"] = pearson_correlation
+
+    if include_metrics == "all" or "r_squared" in include_metrics:
+        pearson_correlation = (
+            np.corrcoef(group["secondary_value"], group["primary_value"])
+        )[0][1]
+        r_squared = (np.power(pearson_correlation, 2))
+        data["r_squared"] = r_squared
 
     if include_metrics == "all" or "max_value_delta" in include_metrics:
         data["max_value_delta"] = (
@@ -281,6 +310,28 @@ def calculate_group_metrics(
             group["secondary_value"]
         )
         data["nash_sutcliffe_efficiency"] = nse
+
+    if (
+        include_metrics == "all"
+        or "nash_sutcliffe_efficiency_normalized" in include_metrics
+    ):
+        nse = hm.nash_sutcliffe_efficiency(
+            group["primary_value"],
+            group["secondary_value"],
+            normalized=True
+        )
+        data["nash_sutcliffe_efficiency_normalized"] = nse
+
+    # if (
+    #     include_metrics == "all"
+    #     or "nash_sutcliffe_efficiency_log" in include_metrics
+    # ):
+    #     nse = hm.nash_sutcliffe_efficiency(
+    #         group["primary_value"],
+    #         group["secondary_value"],
+    #         log=True
+    #     )
+    #     data["nash_sutcliffe_efficiency_log"] = nse
 
     if include_metrics == "all" or "kling_gupta_efficiency" in include_metrics:
         kge = hm.kling_gupta_efficiency(
@@ -309,12 +360,12 @@ def calculate_group_metrics(
         )
         data["coefficient_of_persistence"] = cop
 
-    if include_metrics == "all" or "mean_error" in include_metrics:
+    if include_metrics == "all" or "mean_absolute_error" in include_metrics:
         me = hm.mean_error(
             group["primary_value"],
             group["secondary_value"]
         )
-        data["mean_error"] = me
+        data["mean_absolute_error"] = me
 
     if include_metrics == "all" or "mean_squared_error" in include_metrics:
         mse = hm.mean_squared_error(
@@ -359,4 +410,5 @@ def calculate_group_metrics(
         pmvt = time_indexed_df["primary_value"].idxmax()
         smvt = time_indexed_df["secondary_value"].idxmax()
         data["max_value_timedelta"] = smvt - pmvt
+
     return pd.Series(data)

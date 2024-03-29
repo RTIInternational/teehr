@@ -114,7 +114,7 @@ def test_metrics_query():
 
     # print(df)
     assert df.index.size == 1
-    assert df.columns.size == 24
+    assert df.columns.size == 30
 
 
 def test_metrics_query_config_filter():

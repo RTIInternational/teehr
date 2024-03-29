@@ -8,6 +8,8 @@ except ImportError:  # pragma: no cover
     from enum import Enum  # pragma: no cover
 
     class StrEnum(str, Enum):  # pragma: no cover
+        """Enum with string values."""
+
         pass  # pragma: no cover
 
 from typing import List, Optional, Union
@@ -19,8 +21,10 @@ from pathlib import Path
 
 class BaseModel(PydanticBaseModel):
     """Basemodel configuration."""
+
     class ConfigDict:
-        """ConfigDict."""
+        """Config dictionary."""
+
         arbitrary_types_allowed = True
         # smart_union = True # deprecated in v2
 
@@ -55,13 +59,21 @@ class MetricEnum(StrEnum):
     max_value_delta = "max_value_delta"
     bias = "bias"
     nash_sutcliffe_efficiency = "nash_sutcliffe_efficiency"
+    nash_sutcliffe_efficiency_normalized = "nash_sutcliffe_efficiency_normalized" # noqa
+    # nash_sutcliffe_efficiency_log = "nash_sutcliffe_efficiency_log" # noqa
     kling_gupta_efficiency = "kling_gupta_efficiency"
     mean_error = "mean_error"
+    mean_absolute_error = "mean_absolute_error"
     mean_squared_error = "mean_squared_error"
     root_mean_squared_error = "root_mean_squared_error"
     primary_max_value_time = "primary_max_value_time"
     secondary_max_value_time = "secondary_max_value_time"
     max_value_timedelta = "max_value_timedelta"
+    relative_bias = "relative_bias"
+    multiplicative_bias = "multiplicative_bias"
+    mean_absolute_relative_error = "mean_absolute_relative_error"
+    pearson_correlation = "pearson_correlation"
+    r_squared = "r_squared"
 
 
 class JoinedFilterFieldEnum(StrEnum):
@@ -96,6 +108,7 @@ class TimeseriesFilterFieldEnum(StrEnum):
 
 class JoinedFilter(BaseModel):
     """Joined filter model."""
+
     column: JoinedFilterFieldEnum
     operator: FilterOperatorEnum
     value: Union[
@@ -124,6 +137,7 @@ class JoinedFilter(BaseModel):
 
 class TimeseriesFilter(BaseModel):
     """Timeseries filter model."""
+
     column: TimeseriesFilterFieldEnum
     operator: FilterOperatorEnum
     value: Union[
@@ -151,6 +165,7 @@ class TimeseriesFilter(BaseModel):
 
 class MetricQuery(BaseModel):
     """Metric query model."""
+
     primary_filepath: Union[str, Path]
     secondary_filepath: Union[str, Path]
     crosswalk_filepath: Union[str, Path]
@@ -205,6 +220,7 @@ class MetricQuery(BaseModel):
 
 class JoinedTimeseriesQuery(BaseModel):
     """Joined timeseries query model."""
+
     primary_filepath: Union[str, Path]
     secondary_filepath: Union[str, Path]
     crosswalk_filepath: Union[str, Path]
@@ -238,6 +254,7 @@ class JoinedTimeseriesQuery(BaseModel):
 
 class TimeseriesQuery(BaseModel):
     """Timeseries query model."""
+
     timeseries_filepath: Union[str, Path]
     order_by: List[TimeseriesFilterFieldEnum]
     filters: Optional[List[TimeseriesFilter]] = []
@@ -253,6 +270,7 @@ class TimeseriesQuery(BaseModel):
 
 class TimeseriesCharQuery(BaseModel):
     """Timeseries char query model."""
+
     timeseries_filepath: Union[str, Path]
     order_by: List[TimeseriesFilterFieldEnum]
     group_by: List[TimeseriesFilterFieldEnum]

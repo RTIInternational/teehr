@@ -21,6 +21,7 @@ from teehr.models.queries import FilterOperatorEnum, MetricEnum
 
 class BaseModel(PydanticBaseModel):
     """Basemodel configuration."""
+
     class ConfigDict:
         """ConfigDict."""
         arbitrary_types_allowed = True
@@ -80,6 +81,7 @@ class TimeseriesNameEnum(StrEnum):
 
 class JoinedTimeseriesFieldName(BaseModel):
     """Joined Timeseries Field Name model."""
+
     field_name: str
 
     @field_validator("field_name")
@@ -98,6 +100,7 @@ class JoinedTimeseriesFieldName(BaseModel):
 
 class CalculateField(BaseModel):
     """Calculate field model."""
+
     parameter_names: List[str]
     new_field_name: str
     new_field_type: FieldTypeEnum
@@ -124,6 +127,7 @@ class CalculateField(BaseModel):
 
 class Filter(BaseModel):
     """Filter model."""
+
     column: str
     operator: FilterOperatorEnum
     value: Union[
@@ -262,6 +266,7 @@ class TimeseriesQuery(BaseModel):
 
 class TimeseriesCharQuery(BaseModel):
     """Timeseries char query model."""
+
     order_by: List[str]
     group_by: List[str]
     filters: Optional[List[Filter]] = []
@@ -338,6 +343,7 @@ class TimeseriesCharQuery(BaseModel):
 
 class MetricQuery(BaseModel):
     """Metric query model."""
+
     include_geometry: bool
     group_by: List[str]
     order_by: List[str]

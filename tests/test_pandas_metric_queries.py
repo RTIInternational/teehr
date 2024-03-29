@@ -89,7 +89,7 @@ def test_metric_query_gdf():
 def test_metric_query_df_limit_metrics():
     """Test metric query df limit metrics."""
     include_metrics = [
-        "bias",
+        "mean_absolute_error",
         "root_mean_squared_error",
         "nash_sutcliffe_efficiency",
         "kling_gupta_efficiency",
