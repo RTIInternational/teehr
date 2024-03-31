@@ -188,6 +188,7 @@ def get_metrics(
             {tqu._remove_duplicates_mq_cte(mq)}
         )
         {tqu._nse_cte(mq)}
+        {tqu._annual_metrics_cte(mq)}
         , metrics AS (
             SELECT
                 {",".join([f"joined.{gb}" for gb in mq.group_by])}
@@ -231,6 +232,7 @@ def get_metrics(
             {tqu.geometry_select_clause(mq)}
         FROM metrics
             {tqu.metric_geometry_join_clause(mq)}
+        {tqu._join_annual_metrics_cte(mq)}
         ORDER BY
             {",".join([f"metrics.{ob}" for ob in mq.order_by])}
     ;"""

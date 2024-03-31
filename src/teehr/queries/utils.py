@@ -362,6 +362,41 @@ def _nse_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
 #         """
 #     return ""
 
+def _annual_metrics_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
+    """Generate the annual signature metrics CTE."""
+    if (
+        "annual_peak_relative_bias" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return f"""
+        , annual_aggs AS (
+            SELECT
+                {",".join(mq.group_by)}
+                , date_trunc('year', joined.value_time) as year
+                , max(joined.primary_value) as primary_max_value
+                , max(joined.secondary_value) as secondary_max_value
+            FROM
+                joined
+            GROUP BY
+                {",".join(mq.group_by)}
+                , year
+        )
+        , annual_metrics AS (
+            SELECT
+                {",".join(mq.group_by)}
+                , sum(
+                    annual_aggs.secondary_max_value
+                    - annual_aggs.primary_max_value
+                ) / sum(annual_aggs.primary_max_value)
+                AS annual_peak_relative_bias
+            FROM
+                annual_aggs
+            GROUP BY
+                {",".join(mq.group_by)}
+        )
+        """
+    return ""
+
 
 def _join_nse_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     """Generate the join nash-sutcliffe-efficiency CTE."""
@@ -372,6 +407,20 @@ def _join_nse_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     ):
         return f"""
             {_join_on(join="nse", join_to="joined", join_on=mq.group_by)}
+        """
+    return ""
+
+
+def _join_annual_metrics_cte(
+        mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
+    """Generate the annual signature metrics CTE."""
+    if (
+        "annual_peak_relative_bias" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return f"""
+            {_join_on(join="annual_metrics", join_to="metrics", join_on=mq.group_by)}
         """
     return ""
 

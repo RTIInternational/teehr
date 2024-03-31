@@ -57,7 +57,8 @@ def test_metric_compare_1():
         "multiplicative_bias",
         "mean_absolute_relative_error",
         "pearson_correlation",
-        "r_squared"
+        "r_squared",
+        "annual_peak_relative_bias",
     ]
     group_by = [
         "primary_location_id",

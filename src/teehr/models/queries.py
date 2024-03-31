@@ -73,7 +73,7 @@ class MetricEnum(StrEnum):
     mean_absolute_relative_error = "mean_absolute_relative_error"
     pearson_correlation = "pearson_correlation"
     r_squared = "r_squared"
-    # annual_peak_relative_bias = "annual_peak_relative_bias"
+    annual_peak_relative_bias = "annual_peak_relative_bias"
 
 
 class JoinedFilterFieldEnum(StrEnum):

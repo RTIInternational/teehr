@@ -105,6 +105,7 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
             {tqu.filters_to_sql(mq.filters)}
         )
         {tqu._nse_cte(mq)}
+        {tqu._annual_metrics_cte(mq)}
         , metrics AS (
             SELECT
                 {",".join([f"joined.{gb}" for gb in mq.group_by])}
@@ -143,10 +144,12 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
                 {",".join([f"joined.{gb}" for gb in mq.group_by])}
         )
         SELECT
-            metrics.*
+            {",".join([f"metrics.{ob}" for ob in mq.group_by])}
+            {tqu.metrics_select_clause(mq)}
             {tqu.geometry_select_clause(mq)}
         FROM metrics
             {tqu.metric_geometry_join_clause_db(mq)}
+        {tqu._join_annual_metrics_cte(mq)}
         ORDER BY
             {",".join([f"metrics.{ob}" for ob in mq.order_by])}
     ;"""
