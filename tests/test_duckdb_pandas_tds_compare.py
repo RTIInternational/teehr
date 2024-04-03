@@ -19,10 +19,10 @@ DATABASE_FILEPATH = Path("tests", "data", "temp", "temp_test.db")
 if DATABASE_FILEPATH.is_file():
     DATABASE_FILEPATH.unlink()
 
-TDS = TEEHRDatasetDB(DATABASE_FILEPATH)
+tds = TEEHRDatasetDB(DATABASE_FILEPATH)
 
 # Perform the join and insert into duckdb database
-TDS.insert_joined_timeseries(
+tds.insert_joined_timeseries(
     primary_filepath=PRIMARY_FILEPATH,
     secondary_filepath=SECONDARY_FILEPATH,
     crosswalk_filepath=CROSSWALK_FILEPATH,
@@ -59,6 +59,7 @@ def test_metric_compare_1():
         "pearson_correlation",
         "r_squared",
         "annual_peak_relative_bias",
+        "spearman_correlation",
     ]
     group_by = [
         "primary_location_id",
@@ -76,9 +77,11 @@ def test_metric_compare_1():
     }
 
     order_by = ["primary_location_id", "reference_time"]
-    tds_df = TDS.get_metrics(group_by=group_by,
-                             order_by=order_by,
-                             include_metrics=include_metrics)
+    tds_df = tds.get_metrics(
+        group_by=group_by,
+        order_by=order_by,
+        include_metrics=include_metrics,
+    )
 
     pandas_df = tqk.get_metrics(**args)
 
@@ -122,7 +125,7 @@ def test_metric_compare_time_metrics():
     }
 
     order_by = ["primary_location_id", "reference_time"]
-    tds_df = TDS.get_metrics(group_by=group_by,
+    tds_df = tds.get_metrics(group_by=group_by,
                              order_by=order_by,
                              include_metrics=include_metrics)
 
@@ -143,7 +146,7 @@ def test_primary_timeseries_compare():
         return_query=False,
     )
 
-    tds_df = TDS.get_timeseries(
+    tds_df = tds.get_timeseries(
         order_by=["primary_location_id"],
         timeseries_name="primary",
     )
@@ -160,7 +163,7 @@ def test_secondary_timeseries_compare():
         order_by=["location_id"],
         return_query=False,
     )
-    tds_df = TDS.get_timeseries(
+    tds_df = tds.get_timeseries(
         order_by=["secondary_location_id"],
         timeseries_name="secondary"
     )
@@ -177,7 +180,7 @@ def test_primary_timeseries_char_compare():
         return_query=False,
     )
 
-    tds_df = TDS.get_timeseries_chars(
+    tds_df = tds.get_timeseries_chars(
         order_by=["primary_location_id"],
         group_by=["primary_location_id"],
         timeseries_name="primary",
@@ -230,7 +233,7 @@ def test_secondary_timeseries_char_compare():
         return_query=False,
     )
 
-    tds_df = TDS.get_timeseries_chars(
+    tds_df = tds.get_timeseries_chars(
         order_by=["secondary_location_id"],
         group_by=["secondary_location_id"],
         timeseries_name="secondary"

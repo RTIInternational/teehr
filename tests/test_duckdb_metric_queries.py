@@ -208,7 +208,7 @@ def test_metric_query_df_all():
     )
     # print(query_df)
     assert len(query_df) == 9
-    assert len(query_df.columns) == len(group_by) + 28
+    assert len(query_df.columns) == len(group_by) + 30
     assert isinstance(query_df, pd.DataFrame)
 
 

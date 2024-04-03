@@ -189,6 +189,7 @@ def get_metrics(
         )
         {tqu._nse_cte(mq)}
         {tqu._annual_metrics_cte(mq)}
+        {tqu._spearman_ranks_cte(mq)}
         , metrics AS (
             SELECT
                 {",".join([f"joined.{gb}" for gb in mq.group_by])}
@@ -220,9 +221,11 @@ def get_metrics(
                 {tqu._select_mean_absolute_relative_error(mq)}
                 {tqu._select_pearson_correlation(mq)}
                 {tqu._select_r_squared(mq)}
+                {tqu._select_spearman_correlation(mq)}
             FROM
                 joined
-            {tqu._join_nse_cte(mq)}
+                {tqu._join_nse_cte(mq)}
+                {tqu._join_spearman_ranks_cte(mq)}
             GROUP BY
                 {",".join([f"joined.{gb}" for gb in mq.group_by])}
         )
@@ -232,7 +235,7 @@ def get_metrics(
             {tqu.geometry_select_clause(mq)}
         FROM metrics
             {tqu.metric_geometry_join_clause(mq)}
-        {tqu._join_annual_metrics_cte(mq)}
+            {tqu._join_annual_metrics_cte(mq)}
         ORDER BY
             {",".join([f"metrics.{ob}" for ob in mq.order_by])}
     ;"""

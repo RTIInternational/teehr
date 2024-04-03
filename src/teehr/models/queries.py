@@ -74,6 +74,7 @@ class MetricEnum(StrEnum):
     pearson_correlation = "pearson_correlation"
     r_squared = "r_squared"
     annual_peak_relative_bias = "annual_peak_relative_bias"
+    spearman_correlation = "spearman_correlation"
 
 
 class JoinedFilterFieldEnum(StrEnum):

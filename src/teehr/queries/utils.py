@@ -362,6 +362,67 @@ def _nse_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
 #         """
 #     return ""
 
+def _spearman_ranks_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
+    """Generate the spearman ranks CTE."""
+    if (
+        "spearman_correlation" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return f""", spearman_ranked AS (
+            SELECT
+                primary_location_id
+                , secondary_location_id
+                , configuration
+                , measurement_unit
+                , variable_name
+                , reference_time
+                , value_time
+                , AVG(primary_row_number) OVER (PARTITION BY {",".join(mq.group_by)}, primary_value) as primary_rank
+                , AVG(secondary_row_number) OVER (PARTITION BY {",".join(mq.group_by)}, secondary_value) as secondary_rank
+            FROM (
+                SELECT
+                    *
+                    , ROW_NUMBER() OVER (PARTITION BY {",".join(mq.group_by)} ORDER BY primary_value) as primary_row_number
+                    , ROW_NUMBER() OVER (PARTITION BY {",".join(mq.group_by)} ORDER BY secondary_value) as secondary_row_number
+                FROM joined
+            )
+        )
+        """
+    return ""
+
+
+def _join_spearman_ranks_cte(
+        mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
+    """Generate the annual signature metrics CTE."""
+    if (
+        "spearman_correlation" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return f"""
+            INNER JOIN spearman_ranked
+                ON joined.primary_location_id = spearman_ranked.primary_location_id
+                AND joined.secondary_location_id = spearman_ranked.secondary_location_id
+                AND joined.configuration = spearman_ranked.configuration
+                AND joined.measurement_unit = spearman_ranked.measurement_unit
+                AND joined.variable_name = spearman_ranked.variable_name
+                AND joined.reference_time = spearman_ranked.reference_time
+                AND joined.value_time = spearman_ranked.value_time
+        """
+    return ""
+
+
+def _select_spearman_correlation(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
+    """Generate the select spearman correlation query segment."""
+    if (
+        "spearman_correlation" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return """
+        , 1 - (6 * SUM(POWER(ABS(primary_rank - secondary_rank), 2))) / (POWER(COUNT(*), 3) - COUNT(*)) AS spearman_correlation"""
+    return ""
+
+
 def _annual_metrics_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     """Generate the annual signature metrics CTE."""
     if (

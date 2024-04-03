@@ -319,6 +319,25 @@ def calculate_group_metrics(
             / np.sum(primary_yearly_max_values)
         )
 
+    if (
+        include_metrics == "all"
+        or "spearman_correlation" in include_metrics
+    ):
+        group["primary_rank"] = group["primary_value"].rank()
+        group["secondary_rank"] = group["secondary_value"].rank()
+        count = len(group)
+
+        data["spearman_correlation"] = (
+            1 - (
+                6 * np.sum(
+                    np.abs(
+                        group["primary_rank"]
+                        - group["secondary_rank"]
+                    )**2)
+                / (count * (count**2 - 1))
+            )
+        )
+
     # HydroTools Forecast Metrics
     if (
         include_metrics == "all"
