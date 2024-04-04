@@ -29,6 +29,8 @@ tds.insert_joined_timeseries(
     drop_added_fields=True,
 )
 
+# Join the attributes
+tds.join_attributes("/home/matt/repos/teehr/tests/data/test_study/geo/test_attr.parquet")
 
 def test_metric_compare_1():
     """Test metric compare v1."""
