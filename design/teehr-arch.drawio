@@ -1,0 +1,91 @@
+<mxfile host="Electron" modified="2024-03-25T17:11:12.841Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" etag="CN68Jgasyvg0tCEUyiiT" version="21.6.8" type="device">
+  <diagram name="Page-1" id="PAo6Ij_tCuTmvNRfYNgh">
+    <mxGraphModel dx="1364" dy="843" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Ph8d_l6lGZGC6wGAzcvS-29" value="&lt;h1&gt;TEEHR&lt;/h1&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" parent="1" vertex="1">
+          <mxGeometry x="260" y="410" width="350" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="Ph8d_l6lGZGC6wGAzcvS-1" value="&lt;b style=&quot;font-size: 14px;&quot;&gt;Tool vs. System&lt;br&gt;&lt;/b&gt;The tool does the number crunching, the system coordinates and manages the data" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" parent="1" vertex="1">
+          <mxGeometry x="530" y="40" width="270" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="Ph8d_l6lGZGC6wGAzcvS-5" value="&lt;h1&gt;Storage&lt;/h1&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" parent="1" vertex="1">
+          <mxGeometry x="290" y="740" width="440" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="Ph8d_l6lGZGC6wGAzcvS-13" value="&lt;h1&gt;Apps&lt;/h1&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" parent="1" vertex="1">
+          <mxGeometry x="640" y="430" width="190" height="210" as="geometry" />
+        </mxCell>
+        <mxCell id="Ph8d_l6lGZGC6wGAzcvS-18" value="Users" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" parent="1" vertex="1">
+          <mxGeometry x="720" y="240" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Ph8d_l6lGZGC6wGAzcvS-19" value="&lt;span style=&quot;text-align: left;&quot;&gt;NFS (i.e. /data)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="320" y="810" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Ph8d_l6lGZGC6wGAzcvS-20" value="&lt;span style=&quot;text-align: left;&quot;&gt;S3 (public)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="462.5" y="810" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Ph8d_l6lGZGC6wGAzcvS-21" value="&lt;span style=&quot;text-align: left;&quot;&gt;S3 (user)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="462.5" y="880" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Ph8d_l6lGZGC6wGAzcvS-22" value="&lt;span style=&quot;text-align: left;&quot;&gt;S3 (TEEHR Internal)&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="320" y="880" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Ph8d_l6lGZGC6wGAzcvS-24" value="CHPT" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="685" y="500" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="Ph8d_l6lGZGC6wGAzcvS-25" value="TEEHR" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="685" y="570" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="vvUMwqBdqJZNJWwxOL-Y-1" value="Data Catalog" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;" vertex="1" parent="1">
+          <mxGeometry x="620" y="830" width="70" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="Ph8d_l6lGZGC6wGAzcvS-16" value="&lt;h1&gt;Data Sources&lt;/h1&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" parent="1" vertex="1">
+          <mxGeometry x="40" y="280" width="180" height="730" as="geometry" />
+        </mxCell>
+        <mxCell id="Ph8d_l6lGZGC6wGAzcvS-9" value="USGS Gage Data&lt;br&gt;(available via NWIS)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="70" y="360" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Ph8d_l6lGZGC6wGAzcvS-10" value="NWM Operational&lt;br&gt;(available via GCP)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="70" y="440" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Ph8d_l6lGZGC6wGAzcvS-11" value="NWM Restrospective&lt;br&gt;(available via AWS)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="70" y="520" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Ph8d_l6lGZGC6wGAzcvS-12" value="NextGen&lt;br&gt;(will output TEEHR datamodel)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="70" y="600" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Ph8d_l6lGZGC6wGAzcvS-15" value="Research&lt;br&gt;(NetCDF, CSV or parquet)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="70" y="680" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vvUMwqBdqJZNJWwxOL-Y-3" value="Data Catalog" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="580" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="vvUMwqBdqJZNJWwxOL-Y-4" value="Evaluation Builder" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="530" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="vvUMwqBdqJZNJWwxOL-Y-5" value="&lt;h1&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;TEEHR Architecture&lt;/font&gt;&lt;/h1&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="270" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="vvUMwqBdqJZNJWwxOL-Y-6" value="Geomerty" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="70" y="850" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="vvUMwqBdqJZNJWwxOL-Y-7" value="Attributes" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="70" y="900" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="vvUMwqBdqJZNJWwxOL-Y-8" value="Crosswalks" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="70" y="950" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="vvUMwqBdqJZNJWwxOL-Y-9" value="TEEHR Web API" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="470" y="530" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="vvUMwqBdqJZNJWwxOL-Y-10" value="TEEHR Workflows" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="470" y="480" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="vvUMwqBdqJZNJWwxOL-Y-11" value="TEEHR-HUB" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="280" y="480" width="120" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
