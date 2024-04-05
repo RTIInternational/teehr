@@ -6,6 +6,7 @@ import warnings
 from collections.abc import Iterable
 from datetime import datetime
 from typing import List, Union
+from fastapi.encoders import jsonable_encoder
 
 import teehr.models.queries as tmq
 import teehr.models.queries_database as tmqd
@@ -68,6 +69,7 @@ def _format_filter_item(
         An SQL formatted string for single filter object.
     """
     column = filter.column
+    operator = jsonable_encoder(filter.operator)
     prepend_sf_list = [
         "value_time",
         "reference_time",
@@ -79,26 +81,26 @@ def _format_filter_item(
         column = f"sf.{column}"
 
     if isinstance(filter.value, str):
-        return f"""{column} {filter.operator} '{filter.value}'"""
+        return f"""{column} {operator} '{filter.value}'"""
     elif (
         isinstance(filter.value, int)
         or isinstance(filter.value, float)
     ):
-        return f"""{column} {filter.operator} {filter.value}"""
+        return f"""{column} {operator} {filter.value}"""
     elif isinstance(filter.value, datetime):
         dt_str = filter.value.strftime(SQL_DATETIME_STR_FORMAT)
-        return f"""{column} {filter.operator} '{dt_str}'"""
+        return f"""{column} {operator} '{dt_str}'"""
     elif (
         isinstance(filter.value, Iterable)
         and not isinstance(filter.value, str)
     ):
         value = _format_iterable_value(filter.value)
-        return f"""{column} {filter.operator} {value}"""
+        return f"""{column} {operator} {value}"""
     else:
         warnings.warn(
             "treating value as string because didn't know what else to do."
         )
-        return f"""{column} {filter.operator} '{str(filter.value)}'"""
+        return f"""{column} {operator} '{str(filter.value)}'"""
 
 
 def filters_to_sql(
