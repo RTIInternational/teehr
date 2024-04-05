@@ -1,6 +1,8 @@
 """Test weight generation."""
 import pandas as pd
 from pathlib import Path
+import numpy as np
+
 from teehr.utilities.generate_weights import generate_weights_file
 from teehr.loading.nwm.const import CONUS_NWM_WKT
 
@@ -20,6 +22,7 @@ def test_weights():
         variable_name="RAINRATE",
         crs_wkt=CONUS_NWM_WKT,
         output_weights_filepath=None,
+        location_id_prefix="ngen",
         unique_zone_id="id",
     )
 
@@ -31,7 +34,12 @@ def test_weights():
     assert (df.row.values == df_test.row.values).all()
     assert (df.col.values == df_test.col.values).all()
     assert (df.weight.values == df_test.weight.values).all()
-    assert (df.location_id.values == df_test.location_id.values).all()
+
+    location_id_arr = df_test.location_id.values
+    pre_arr = np.full(location_id_arr.shape, "ngen-", dtype=object)
+    prepended_location_id_arr = pre_arr + location_id_arr
+
+    assert (df.location_id.values == prepended_location_id_arr).all()
 
 
 if __name__ == "__main__":

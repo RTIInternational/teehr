@@ -97,12 +97,15 @@ def nwm_grids_to_parquet(
     Notes
     -----
     The NWM configuration variables, including configuration, output_type, and
-    variable_name are stored as a pydantic model in grid_config_models.py
+    variable_name are stored as a pydantic model in grid_config_models.py.
 
     Forecast and assimilation data is grouped and saved one file per reference
     time, using the file name convention "YYYYMMDDTHHZ".  The tabular output
     parquet files follow the timeseries data model described in the
     :ref:`data model <data_model>`.
+
+    Additionally, the location_id values in the zonal weights file are used as
+    location ids in the output of this function.
 
     Examples
     --------

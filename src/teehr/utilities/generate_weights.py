@@ -169,6 +169,7 @@ def generate_weights_file(
     output_weights_filepath: Union[str, Path],
     crs_wkt: str,
     unique_zone_id: str = None,
+    location_id_prefix: str = None,
     **read_args: Dict,
 ) -> None:
     """Generate a file of row/col indices and weights for pixels intersecting
@@ -188,6 +189,8 @@ def generate_weights_file(
         Coordinate system for given domain as WKT string.
     unique_zone_id : str
         Name of the field in the zone polygon file containing unique IDs.
+    location_id_prefix : str
+        Prefix to add to the location_id field.
     **read_args : dict, optional
         Keyword arguments to be passed to GeoPandas read_file().
         read_parquet(), and read_feather() methods.
@@ -222,6 +225,7 @@ def generate_weights_file(
     >>>     variable_name="RAINRATE",
     >>>     crs_wkt=CONUS_NWM_WKT,
     >>>     output_weights_filepath=None,
+    >>>     location_id_prefix="ngen",
     >>>     unique_zone_id="id",
     >>> )
     """
@@ -270,6 +274,9 @@ def generate_weights_file(
     else:
         df = weights_gdf[["row", "col", "weight"]]
         df["location_id"] = weights_gdf.index.values
+
+    if location_id_prefix:
+        df.loc[:, "location_id"] = location_id_prefix + "-" + df["location_id"]
 
     if output_weights_filepath:
         df.to_parquet(output_weights_filepath)

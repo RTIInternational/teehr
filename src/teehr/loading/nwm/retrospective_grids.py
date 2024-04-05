@@ -72,9 +72,6 @@ def process_group(
     chunk_df["measurement_unit"] = teehr_units
     chunk_df["configuration"] = f"{nwm_version}_retrospective"
     chunk_df["variable_name"] = variable_name
-    chunk_df["location_id"] = (
-        f"{nwm_version}-" + chunk_df["location_id"].astype(str)
-    )
     return chunk_df
 
 
@@ -131,8 +128,8 @@ def process_single_file(
     units_format_dict: Dict,
     nwm_version: str
 ):
-    """Compute the zonal mean for a single json reference file and format
-    to a dataframe using the TEEHR data model."""
+    """Compute the zonal mean for a single json reference file
+    and format to a dataframe using the TEEHR data model."""
     ds = get_dataset(
         row.filepath,
         ignore_missing_file,
@@ -154,7 +151,6 @@ def process_single_file(
     df["measurement_unit"] = teehr_units
     df["configuration"] = f"{nwm_version}_retrospective"
     df["variable_name"] = variable_name
-    df["location_id"] = f"{nwm_version}-" + df["location_id"].astype(str)
 
     return df
 
@@ -184,7 +180,8 @@ def nwm_retro_grids_to_parquet(
         (e.g., "PRECIP", "PSFC", "Q2D", ...).
     zonal_weights_filepath : str,
         Path to the array containing fraction of pixel overlap
-        for each zone.
+        for each zone. The values in the location_id field from
+        the zonal weights file are used in the output of this function.
     start_date : Union[str, datetime, pd.Timestamp]
         Date to begin data ingest.
         Str formats can include YYYY-MM-DD or MM/DD/YYYY.
@@ -204,6 +201,11 @@ def nwm_retro_grids_to_parquet(
         Geographical domain when NWM version is v3.0.
         Acceptable values are "Alaska", "CONUS" (default), "Hawaii", and "PR".
         Only used when NWM version equals v3.0.
+
+    Notes
+    -----
+    The location_id values in the zonal weights file are used as location ids
+    in the output of this function.
     """
 
     start_date = pd.Timestamp(start_date)
@@ -265,8 +267,8 @@ def nwm_retro_grids_to_parquet(
                                         "configuration were found in GCS!")
             chunk_df = pd.concat(output)
 
-            start = df.datetime.min().strftime("%Y%m%d%HZ")
-            end = df.datetime.max().strftime("%Y%m%d%HZ")
+            start = df.datetime.min().strftime("%Y%m%dZ")
+            end = df.datetime.max().strftime("%Y%m%dZ")
             if start == end:
                 output_filename = Path(output_parquet_dir, f"{start}.parquet")
             else:

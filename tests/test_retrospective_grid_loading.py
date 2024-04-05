@@ -32,7 +32,7 @@ def test_nwm30_grid_loading():
     assert len(df) == 2
     assert df["value_time"].min() == pd.Timestamp("2008-05-23 09:00")
     assert df["value_time"].max() == pd.Timestamp("2008-05-23 10:00")
-    assert df["location_id"].unique()[0] == "nwm30-1016000606"
+    assert df["location_id"].unique()[0] == "wbd10-1016000606"
     assert df["configuration"].unique()[0] == "nwm30_retrospective"
     test_val = df[df.value_time == "2008-05-23 09:00:00"].value.values[0]
     assert math.isclose(test_val, 0.00025471, rel_tol=1e-4)
@@ -57,7 +57,7 @@ def test_nwm21_grid_loading():
     assert len(df) == 2
     assert df["value_time"].min() == pd.Timestamp("2008-05-23 09:00")
     assert df["value_time"].max() == pd.Timestamp("2008-05-23 10:00")
-    assert df["location_id"].unique()[0] == "nwm21-1016000606"
+    assert df["location_id"].unique()[0] == "wbd10-1016000606"
     assert df["configuration"].unique()[0] == "nwm21_retrospective"
     test_val = df[df.value_time == "2008-05-23 09:00:00"].value.values[0]
     assert math.isclose(test_val, 0.00025555, rel_tol=1e-4)
