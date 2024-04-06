@@ -1,4 +1,4 @@
-<mxfile host="Electron" modified="2024-03-25T16:09:11.395Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" etag="a811qg9cWrPBpgy3Azea" version="21.6.8" type="device">
+<mxfile host="Electron" modified="2024-03-25T17:11:12.841Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" etag="CN68Jgasyvg0tCEUyiiT" version="21.6.8" type="device">
   <diagram name="Page-1" id="PAo6Ij_tCuTmvNRfYNgh">
     <mxGraphModel dx="1364" dy="843" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
@@ -64,8 +64,8 @@
         <mxCell id="vvUMwqBdqJZNJWwxOL-Y-4" value="Evaluation Builder" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="280" y="530" width="120" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="vvUMwqBdqJZNJWwxOL-Y-5" value="&lt;h1&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;TEEHR Architecture&lt;/font&gt;&lt;/h1&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
-          <mxGeometry x="40" y="40" width="190" height="30" as="geometry" />
+        <mxCell id="vvUMwqBdqJZNJWwxOL-Y-5" value="&lt;h1&gt;&lt;font style=&quot;font-size: 24px;&quot;&gt;TEEHR Architecture&lt;/font&gt;&lt;/h1&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="270" height="30" as="geometry" />
         </mxCell>
         <mxCell id="vvUMwqBdqJZNJWwxOL-Y-6" value="Geomerty" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="70" y="850" width="120" height="30" as="geometry" />

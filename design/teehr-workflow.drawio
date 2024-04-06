@@ -1,35 +1,59 @@
-<mxfile host="Electron" modified="2024-04-04T00:53:57.013Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" etag="bQiIaGSa31LrYv7iMtuQ" version="21.6.8" type="device">
+<mxfile host="Electron" modified="2024-04-05T14:46:18.629Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" etag="Pj9cgJkot9vZX6x3bdZY" version="21.6.8" type="device">
   <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
     <mxGraphModel dx="1364" dy="843" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-0" />
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-1" parent="WIyWlLk6GJQsqaUBKTNV-0" />
+        <mxCell id="eJkN4Wi-3pa6HgG3NWUs-20" value="Protocol Data" style="shape=dataStorage;whiteSpace=wrap;html=1;fixedSize=1;verticalAlign=top;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="26.75" y="320" width="236.5" height="340" as="geometry" />
+        </mxCell>
+        <mxCell id="eJkN4Wi-3pa6HgG3NWUs-15" value="Study Data" style="shape=dataStorage;whiteSpace=wrap;html=1;fixedSize=1;verticalAlign=top;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="23.5" y="40" width="236.5" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="eJkN4Wi-3pa6HgG3NWUs-26" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="eJkN4Wi-3pa6HgG3NWUs-5" target="eJkN4Wi-3pa6HgG3NWUs-25">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="eJkN4Wi-3pa6HgG3NWUs-5" value="Convert to TEEHR Format" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
-          <mxGeometry x="320" y="120" width="120" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="eJkN4Wi-3pa6HgG3NWUs-9" value="" style="group" vertex="1" connectable="0" parent="WIyWlLk6GJQsqaUBKTNV-1">
-          <mxGeometry x="60" y="60" width="210" height="220" as="geometry" />
-        </mxCell>
-        <mxCell id="eJkN4Wi-3pa6HgG3NWUs-15" value="" style="shape=dataStorage;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="eJkN4Wi-3pa6HgG3NWUs-9">
-          <mxGeometry x="-36.5" y="-20" width="232.5" height="240" as="geometry" />
-        </mxCell>
-        <mxCell id="eJkN4Wi-3pa6HgG3NWUs-6" value="Timeseries&lt;br&gt;(CSV, NetCDF, Parquet)" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;" vertex="1" parent="eJkN4Wi-3pa6HgG3NWUs-9">
-          <mxGeometry width="150" height="80" as="geometry" />
-        </mxCell>
-        <mxCell id="eJkN4Wi-3pa6HgG3NWUs-8" value="Timeseries&lt;br&gt;(CSV, NetCDF, Parquet)" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;" vertex="1" parent="eJkN4Wi-3pa6HgG3NWUs-9">
-          <mxGeometry x="10" y="10" width="150" height="80" as="geometry" />
+          <mxGeometry x="320" y="130" width="120" height="60" as="geometry" />
         </mxCell>
         <mxCell id="eJkN4Wi-3pa6HgG3NWUs-13" value="Crosswalk" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
           <mxGeometry x="60" y="180" width="150" height="80" as="geometry" />
         </mxCell>
         <mxCell id="eJkN4Wi-3pa6HgG3NWUs-14" value="" style="shape=card;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
-          <mxGeometry x="640" y="50" width="80" height="100" as="geometry" />
+          <mxGeometry x="230" y="720" width="80" height="100" as="geometry" />
         </mxCell>
         <mxCell id="eJkN4Wi-3pa6HgG3NWUs-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=-0.05;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="eJkN4Wi-3pa6HgG3NWUs-15" target="eJkN4Wi-3pa6HgG3NWUs-5">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="eJkN4Wi-3pa6HgG3NWUs-17" value="" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
-          <mxGeometry x="20" y="320" width="240" height="250" as="geometry" />
+        <mxCell id="eJkN4Wi-3pa6HgG3NWUs-17" value="Protocol&lt;br&gt;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;verticalAlign=top;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="530" y="600" width="240" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="eJkN4Wi-3pa6HgG3NWUs-6" value="Timeseries&lt;br&gt;(CSV, NetCDF, Parquet)" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="60" y="80" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="eJkN4Wi-3pa6HgG3NWUs-8" value="Study Timeseries&lt;br&gt;(CSV, NetCDF, Parquet)" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="70" y="90" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="eJkN4Wi-3pa6HgG3NWUs-18" value="Location&lt;br&gt;(i.e., geometry)" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="60" y="355" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="eJkN4Wi-3pa6HgG3NWUs-19" value="Observation Timeseries&lt;br&gt;(e.g., USGS gage data)" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="60" y="445" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="eJkN4Wi-3pa6HgG3NWUs-21" value="Baseline Timeseries&lt;br&gt;(e.g., current NWM)" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="60" y="545" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="eJkN4Wi-3pa6HgG3NWUs-22" value="Baseline Timeseries&lt;br&gt;(e.g., current NWM)" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="70" y="555" width="150" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="eJkN4Wi-3pa6HgG3NWUs-23" value="Log in Metadata Database" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="640" y="130" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="eJkN4Wi-3pa6HgG3NWUs-27" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="eJkN4Wi-3pa6HgG3NWUs-25" target="eJkN4Wi-3pa6HgG3NWUs-23">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="eJkN4Wi-3pa6HgG3NWUs-25" value="Store in S3" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="480" y="130" width="120" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
