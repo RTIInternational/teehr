@@ -30,8 +30,7 @@ from teehr.loading.nwm.retrospective_points import (
 
 
 def get_data_array(var_da: xr.DataArray, rows: np.array, cols: np.array):
-    """Read the forcing variable into memory for the grouped
-    timesteps and zone rows and cols."""
+    """Read a subset of the data array into memory."""
     var_arr = var_da.values[:, rows, cols]
     return var_arr
 
@@ -46,8 +45,11 @@ def process_group(
     units_format_dict: Dict,
     nwm_version: str
 ):
-    """Fetch a chunk of NWM v3.0 gridded data, compute weighted
-    values for each zone, and format to dataframe."""
+    """Compute the weighted average for a chunk of NWM v3.0 data.
+
+    Pixel weights for each zone are defined in weights_df,
+    and the output is saved to parquet files.
+    """
     var_arr = get_data_array(da_i, rows, cols)
 
     # Get the subset data array of start and end times just for the time values
@@ -79,8 +81,7 @@ def construct_nwm21_json_paths(
     start_date: Union[str, datetime],
     end_date: Union[str, datetime]
 ):
-    """Construct the remote paths for the NWM v2.1 zarr json files
-    within the specified start and end dates."""
+    """Construct the remote paths for NWM v2.1 json files as a dataframe."""
     base_path = (
         "s3://ciroh-nwm-zarr-retrospective-data-copy/"
         "noaa-nwm-retrospective-2-1-zarr-pds/forcing"
@@ -128,8 +129,10 @@ def process_single_file(
     units_format_dict: Dict,
     nwm_version: str
 ):
-    """Compute the zonal mean for a single json reference file
-    and format to a dataframe using the TEEHR data model."""
+    """Compute the zonal mean for a single json reference file.
+
+    Results are formatted to a dataframe using the TEEHR data model.
+    """
     ds = get_dataset(
         row.filepath,
         ignore_missing_file,
@@ -167,8 +170,10 @@ def nwm_retro_grids_to_parquet(
     overwrite_output: Optional[bool] = False,
     domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS"
 ):
-    """Fetch NWM v2.1 or v3.0 gridded data, summarize to zones using
-    a pre-computed weight file, and save as a Parquet file.
+    """Compute the weighted average for NWM v2.1 or v3.0 gridded data.
+
+    Pixel values are summarized to zones based on a pre-computed
+    zonal weights file, and the output is saved to parquet files.
 
     Parameters
     ----------
@@ -207,7 +212,6 @@ def nwm_retro_grids_to_parquet(
     The location_id values in the zonal weights file are used as location ids
     in the output of this function.
     """
-
     start_date = pd.Timestamp(start_date)
     end_date = pd.Timestamp(end_date)
 

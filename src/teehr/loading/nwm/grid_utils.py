@@ -14,8 +14,7 @@ from teehr.loading.nwm.utils import get_dataset, write_parquet_file
 def compute_zonal_mean(
     da: xr.DataArray, weights_filepath: str
 ) -> pd.DataFrame:
-    """Compute zonal mean (weighted average) of area-weighted pixels for given
-    zones and weights."""
+    """Compute weighted average of pixels for given zones and weights."""
     # Read weights file
     weights_df = pd.read_parquet(
         weights_filepath, columns=["row", "col", "weight", "location_id"]
@@ -47,8 +46,7 @@ def process_single_file(
     ignore_missing_file: bool,
     units_format_dict: Dict
 ) -> pd.DataFrame:
-    """Fetch a single json reference file and format \
-    to a dataframe using the TEEHR data model."""
+    """Fetch data for a single reference file and compute weighted average."""
     ds = get_dataset(
         row.filepath,
         ignore_missing_file,
@@ -88,9 +86,11 @@ def fetch_and_format_nwm_grids(
     units_format_dict: Dict,
     overwrite_output: bool,
 ):
-    """
-    Read in the single reference jsons, subset the NWM data based on
-    provided IDs and format and save the data as a parquet files.
+    """Compute weighted average, grouping by reference time.
+
+    Group a list of json files by reference time and compute the weighted
+    average of the variable values for each zone. The results are saved to
+    parquet files using TEEHR data model.
     """
     output_parquet_dir = Path(output_parquet_dir)
     if not output_parquet_dir.exists():
