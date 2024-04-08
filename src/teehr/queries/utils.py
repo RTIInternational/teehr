@@ -158,6 +158,8 @@ def metrics_select_clause(
     """Generate the metrics select clause."""
     if q.include_metrics == "all":
         return f""", {",".join([item.value for item in tmq.MetricEnum])}"""
+    if isinstance(q.include_metrics, str):
+        return f""", {tmq.MetricEnum[q.include_metrics].value}"""
     return f""", {",".join([ob for ob in q.include_metrics])}"""
 
 
