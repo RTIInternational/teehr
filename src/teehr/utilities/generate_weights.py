@@ -120,8 +120,7 @@ def calculate_weights(
     zone_gdf: gpd.GeoDataFrame,
     overlay_chunk: float = 250,
 ) -> gpd.GeoDataFrame:
-    """Overlay vectorized pixels and zone polygons, and calculate
-    areal weights, returning a geodataframe.
+    """Overlay vectorized pixels and zone polygons, and calculate weights.
 
     Notes
     -----
@@ -172,8 +171,7 @@ def generate_weights_file(
     location_id_prefix: str = None,
     **read_args: Dict,
 ) -> None:
-    """Generate a file of row/col indices and weights for pixels intersecting
-       given zone polyons.
+    """Generate a file of area weights for pixels intersecting zone polyons.
 
     Parameters
     ----------
@@ -229,7 +227,6 @@ def generate_weights_file(
     >>>     unique_zone_id="id",
     >>> )
     """
-
     zone_gdf = load_gdf(zone_polygon_filepath, **read_args)
     zone_gdf = zone_gdf.to_crs(crs_wkt)
 
