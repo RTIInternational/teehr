@@ -1,0 +1,56 @@
+protocol:
+  - name: streamflow
+    description: A protocol to study 10-year streamflow simulations
+    owners: andy
+    baseline_datasets:
+      - name: usgs_observations
+        type: primary_timeseries
+        source_data_type: netcdf
+        source_path: s3://bucket-name/path/simulation.nc
+        options:
+          - field_mapping:
+            - location_id: id
+              configuration: psu_ml_20240501
+        processed_path: /path/to/simulation.parquet
+      - name: nwm_30_restrospective
+        type: secondary_timeseries
+        source_data_type: zarr
+        source_path: s3://bucket-name/path/to/nwm30
+      - name: gage_geometry
+        type: geometry
+        source_data_type: shapefile
+        source_path: s3://bucket-name/path/geometry.shp
+        options:
+          - field_mapping:
+            - location_id: id
+              name: gage_id
+        processed_path: /path/to/location.parquet
+      - name: psu_crosswalk
+        type: crosswalk
+        source_data_type: csv
+        source_path: s3://bucket-name/path/psu_xwalk.csv
+        options:
+          - field_mapping:
+            - primary_location_id: usgs_gage_id
+              secondary_location_id: id
+  - calculated_fields:
+    - field_name
+     ! def add_a field():
+  - metrics:
+    - name: relative_bias
+    - name: annual_peak_relative_bias
+    - name: nash_sutcliffe_efficiency
+    - name: kling_gupta_efficiency
+    - name: mean_error
+    - name: metric_with_threshold
+      threshold: 9
+    - name: metric_with_field_reference
+      reference_attribute: basin_area
+  - preprocessing:
+    - storage: database
+      path: /path/to/database.db
+
+
+
+
+
