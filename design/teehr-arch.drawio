@@ -1,4 +1,4 @@
-<mxfile host="Electron" modified="2024-04-05T14:22:33.929Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" etag="XuQELmAB-zYq3Fk-n4wM" version="21.6.8" type="device">
+<mxfile host="Electron" modified="2024-04-09T12:40:22.512Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" etag="TIrZbfy4iCJ8M2JyXibB" version="21.6.8" type="device">
   <diagram name="Page-1" id="PAo6Ij_tCuTmvNRfYNgh">
     <mxGraphModel dx="1364" dy="843" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
@@ -8,7 +8,7 @@
           <mxGeometry x="555" y="220" width="200" height="90" as="geometry" />
         </mxCell>
         <mxCell id="Ph8d_l6lGZGC6wGAzcvS-29" value="&lt;h1&gt;TEEHR&lt;/h1&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" parent="1" vertex="1">
-          <mxGeometry x="260" y="410" width="350" height="250" as="geometry" />
+          <mxGeometry x="260" y="395" width="350" height="250" as="geometry" />
         </mxCell>
         <mxCell id="Ph8d_l6lGZGC6wGAzcvS-1" value="&lt;b style=&quot;font-size: 14px;&quot;&gt;Tool vs. System&lt;br&gt;&lt;/b&gt;The tool does the number crunching, the system coordinates and manages the data" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" parent="1" vertex="1">
           <mxGeometry x="530" y="40" width="270" height="80" as="geometry" />

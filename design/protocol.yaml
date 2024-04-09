@@ -6,7 +6,7 @@ protocol:
       - name: usgs_observations
         type: primary_timeseries
         source_data_type: netcdf
-        source_path: s3://bucket-name/path/simulation.nc
+        source_paths: s3://bucket-name/path/simulation.nc
         options:
           - field_mapping:
             - location_id: id
@@ -34,8 +34,10 @@ protocol:
             - primary_location_id: usgs_gage_id
               secondary_location_id: id
   - calculated_fields:
-    - field_name
-     ! def add_a field():
+    - field_name: new_field
+      function: |
+        def normalize_flows(flow: float, area: float) -> float:
+          return float(flow) / float(area)
   - metrics:
     - name: relative_bias
     - name: annual_peak_relative_bias
@@ -45,7 +47,7 @@ protocol:
     - name: metric_with_threshold
       threshold: 9
     - name: metric_with_field_reference
-      reference_attribute: basin_area
+      reference_attribute: drainage_area
   - preprocessing:
     - storage: database
       path: /path/to/database.db
