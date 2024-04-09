@@ -94,7 +94,7 @@ def nwm_grids_to_parquet(
         Flag specifying whether or not to overwrite output files if they already
         exist.  True = overwrite; False = fail.
     location_id_prefix : Union[str, None]
-        Optional prefix to add to or replace in the output location_id values.
+        Optional location ID prefix to add (prepend) or replace.
 
     See Also
     --------
@@ -111,7 +111,10 @@ def nwm_grids_to_parquet(
     :ref:`data model <data_model>`.
 
     Additionally, the location_id values in the zonal weights file are used as
-    location ids in the output of this function, unless a prefix is specified.
+    location ids in the output of this function, unless a prefix is specified which
+    will be prepended to the location_id values if none exists, or will it replace
+    the existing prefix. It is assumed that the location_id follows the pattern
+    '[prefix]-[unique id]'.
 
     Examples
     --------

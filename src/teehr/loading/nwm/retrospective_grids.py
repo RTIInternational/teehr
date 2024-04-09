@@ -218,12 +218,15 @@ def nwm_retro_grids_to_parquet(
         Acceptable values are "Alaska", "CONUS" (default), "Hawaii", and "PR".
         Only used when NWM version equals v3.0.
     location_id_prefix : Union[str, None]
-        Optional prefix to add to or replace in the output location_id values.
+        Optional location ID prefix to add (prepend) or replace.
 
     Notes
     -----
-    The location_id values in the zonal weights file are used as location ids
-    in the output of this function, unless a prefix is specified.
+    The location_id values in the zonal weights file are used as
+    location ids in the output of this function, unless a prefix is specified
+    which will be prepended to the location_id values if none exists, or it
+    will replace the existing prefix. It is assumed that the location_id
+    follows the pattern '[prefix]-[unique id]'.
     """
     start_date = pd.Timestamp(start_date)
     end_date = pd.Timestamp(end_date)
