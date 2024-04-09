@@ -17,6 +17,7 @@ from teehr.models.loading.utils import (
     SupportedNWMRetroDomainsEnum
 )
 from teehr.models.loading.nwm22_grid import ForcingVariablesEnum
+from teehr.loading.nwm.grid_utils import update_location_id_prefix
 from teehr.loading.nwm.utils import (
     write_parquet_file,
     get_dataset,
@@ -43,7 +44,8 @@ def process_group(
     weight_vals: np.array,
     variable_name: str,
     units_format_dict: Dict,
-    nwm_version: str
+    nwm_version: str,
+    location_id_prefix: Union[str, None]
 ):
     """Compute the weighted average for a chunk of NWM v3.0 data.
 
@@ -74,6 +76,10 @@ def process_group(
     chunk_df["measurement_unit"] = teehr_units
     chunk_df["configuration"] = f"{nwm_version}_retrospective"
     chunk_df["variable_name"] = variable_name
+
+    if location_id_prefix:
+        chunk_df = update_location_id_prefix(chunk_df, location_id_prefix)
+
     return chunk_df
 
 
@@ -127,7 +133,8 @@ def process_single_file(
     weights_filepath: str,
     ignore_missing_file: bool,
     units_format_dict: Dict,
-    nwm_version: str
+    nwm_version: str,
+    location_id_prefix: Union[str, None]
 ):
     """Compute the zonal mean for a single json reference file.
 
@@ -155,6 +162,9 @@ def process_single_file(
     df["configuration"] = f"{nwm_version}_retrospective"
     df["variable_name"] = variable_name
 
+    if location_id_prefix:
+        df = update_location_id_prefix(df, location_id_prefix)
+
     return df
 
 
@@ -168,7 +178,8 @@ def nwm_retro_grids_to_parquet(
     output_parquet_dir: Union[str, Path],
     chunk_by: Union[ChunkByEnum, None] = None,
     overwrite_output: Optional[bool] = False,
-    domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS"
+    domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
+    location_id_prefix: Optional[Union[str, None]] = None
 ):
     """Compute the weighted average for NWM v2.1 or v3.0 gridded data.
 
@@ -206,11 +217,13 @@ def nwm_retro_grids_to_parquet(
         Geographical domain when NWM version is v3.0.
         Acceptable values are "Alaska", "CONUS" (default), "Hawaii", and "PR".
         Only used when NWM version equals v3.0.
+    location_id_prefix : Union[str, None]
+        Optional prefix to add to or replace in the output location_id values.
 
     Notes
     -----
     The location_id values in the zonal weights file are used as location ids
-    in the output of this function.
+    in the output of this function, unless a prefix is specified.
     """
     start_date = pd.Timestamp(start_date)
     end_date = pd.Timestamp(end_date)
@@ -260,7 +273,8 @@ def nwm_retro_grids_to_parquet(
                         weights_filepath=zonal_weights_filepath,
                         ignore_missing_file=False,
                         units_format_dict=NWM22_UNIT_LOOKUP,
-                        nwm_version=nwm_version
+                        nwm_version=nwm_version,
+                        location_id_prefix=location_id_prefix
                     )
                 )
             output = dask.compute(*results)
@@ -346,7 +360,8 @@ def nwm_retro_grids_to_parquet(
                 weight_vals=weight_vals,
                 variable_name=variable_name,
                 units_format_dict=NWM22_UNIT_LOOKUP,
-                nwm_version=nwm_version
+                nwm_version=nwm_version,
+                location_id_prefix=location_id_prefix
             )
 
             fname = format_grouped_filename(da_i)

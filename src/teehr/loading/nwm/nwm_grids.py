@@ -1,7 +1,9 @@
 """Module for loading and processing NWM gridded data."""
-from typing import Union, Iterable, Optional
+from typing import Union, List, Optional
 from datetime import datetime
 from pathlib import Path
+
+from pydantic import validate_call
 
 from teehr.loading.nwm.grid_utils import fetch_and_format_nwm_grids
 from teehr.loading.nwm.utils import (
@@ -21,6 +23,7 @@ from teehr.loading.nwm.const import (
 )
 
 
+@validate_call()
 def nwm_grids_to_parquet(
     configuration: str,
     output_type: str,
@@ -33,9 +36,10 @@ def nwm_grids_to_parquet(
     nwm_version: SupportedNWMOperationalVersionsEnum,
     data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
     kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
-    t_minus_hours: Optional[Iterable[int]] = None,
+    t_minus_hours: Optional[List[int]] = None,
     ignore_missing_file: Optional[bool] = True,
     overwrite_output: Optional[bool] = False,
+    location_id_prefix: Optional[Union[str, None]] = None
 ):
     """
     Fetch NWM gridded data, calculate zonal statistics (currently only
@@ -89,6 +93,8 @@ def nwm_grids_to_parquet(
     overwrite_output : bool
         Flag specifying whether or not to overwrite output files if they already
         exist.  True = overwrite; False = fail.
+    location_id_prefix : Union[str, None]
+        Optional prefix to add to or replace in the output location_id values.
 
     See Also
     --------
@@ -105,7 +111,7 @@ def nwm_grids_to_parquet(
     :ref:`data model <data_model>`.
 
     Additionally, the location_id values in the zonal weights file are used as
-    location ids in the output of this function.
+    location ids in the output of this function, unless a prefix is specified.
 
     Examples
     --------
@@ -222,12 +228,13 @@ def nwm_grids_to_parquet(
             ignore_missing_file,
             unit_lookup_dict,
             overwrite_output,
+            location_id_prefix
         )
 
 
 # if __name__ == "__main__":
 #     # Local testing
-#     weights_parquet = "/mnt/data/ciroh/wbdhuc10_weights.parquet"
+#     weights_parquet = "/mnt/data/ciroh/onehuc10_weights.parquet"
 
 #     import time
 #     t1 = time.time()
@@ -243,10 +250,11 @@ def nwm_grids_to_parquet(
 #         output_parquet_dir="/mnt/data/ciroh/parquet",
 #         nwm_version="nwm30",
 #         data_source="GCS",
-#         kerchunk_method="use_available",
+#         kerchunk_method="auto",
 #         t_minus_hours=[0],
 #         ignore_missing_file=False,
-#         overwrite_output=True
+#         overwrite_output=True,
+#         location_id_prefix="wbd10"
 #     )
 
 #     print(f"elapsed: {time.time() - t1:.2f} s")

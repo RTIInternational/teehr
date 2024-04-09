@@ -58,7 +58,7 @@ Added
 Changed
 ^^^^^^^
 * Changed the chunking method for USGS and NWM retrospective data loading to iterate over pandas ``period_range``
-rather than using ``groupby`` or ``date_range`` to fix a bug when fetching data over multiple years.
+  rather than using ``groupby`` or ``date_range`` to fix a bug when fetching data over multiple years.
 
 0.3.11 - 2024-03-19
 --------------------

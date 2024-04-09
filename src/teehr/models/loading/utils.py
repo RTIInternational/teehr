@@ -6,11 +6,14 @@ except ImportError:  # pragma: no cover
     from enum import Enum  # pragma: no cover
 
     class StrEnum(str, Enum):  # pragma: no cover
+        """Instantiate StrEnum."""
+
         pass  # pragma: no cover
 
 
 class ChunkByEnum(StrEnum):
     """ChunkByEnum."""
+
     day = "day"
     location_id = "location_id"
     week = "week"
@@ -20,6 +23,7 @@ class ChunkByEnum(StrEnum):
 
 class SupportedNWMRetroVersionsEnum(StrEnum):
     """SupportedNWMRetroVersionsEnum."""
+
     nwm20 = "nwm20"
     nwm21 = "nwm21"
     nwm30 = "nwm30"
@@ -27,12 +31,14 @@ class SupportedNWMRetroVersionsEnum(StrEnum):
 
 class SupportedNWMOperationalVersionsEnum(StrEnum):
     """SupportedNWMOperationalVersionsEnum."""
+
     nwm22 = "nwm22"
     nwm30 = "nwm30"
 
 
 class SupportedNWMDataSourcesEnum(StrEnum):
     """SupportedNWMDataSourcesEnum."""
+
     GCS = "GCS"
     NOMADS = "NOMADS"
     DSTOR = "DSTOR"
@@ -40,6 +46,7 @@ class SupportedNWMDataSourcesEnum(StrEnum):
 
 class SupportedKerchunkMethod(StrEnum):
     """SupportedKerchunkMethod."""
+
     local = "local"
     remote = "remote"
     auto = "auto"
@@ -47,6 +54,7 @@ class SupportedKerchunkMethod(StrEnum):
 
 class SupportedNWMRetroDomainsEnum(StrEnum):
     """SupportedNWMRetroDomainsEnum."""
+
     CONUS = "CONUS"
     Alaska = "Alaska"
     PR = "PR"

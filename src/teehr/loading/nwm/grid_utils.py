@@ -1,6 +1,6 @@
 """Module defining shared functions for processing NWM grid data."""
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 import re
 
 import dask
@@ -9,6 +9,24 @@ import pandas as pd
 import xarray as xr
 
 from teehr.loading.nwm.utils import get_dataset, write_parquet_file
+
+
+def update_location_id_prefix(
+    df: pd.DataFrame,
+    new_prefix: str
+) -> pd.DataFrame:
+    """Replace or add the location_id prefix in a dataframe."""
+    df = df.copy()
+    tmp_df = df.location_id.str.split("-", expand=True)
+
+    if tmp_df.columns.size == 1:
+        df['location_id'] = new_prefix + "-" + df['location_id']
+    elif tmp_df.columns.size == 2:
+        df['location_id'] = new_prefix + "-" + tmp_df[1]
+    else:
+        raise ValueError("Location ID has more than two parts!")
+
+    return df
 
 
 def compute_zonal_mean(
@@ -44,7 +62,8 @@ def process_single_file(
     variable_name: str,
     weights_filepath: str,
     ignore_missing_file: bool,
-    units_format_dict: Dict
+    units_format_dict: Dict,
+    location_id_prefix: Union[str, None]
 ) -> pd.DataFrame:
     """Fetch data for a single reference file and compute weighted average."""
     ds = get_dataset(
@@ -73,6 +92,9 @@ def process_single_file(
     df["configuration"] = configuration
     df["variable_name"] = variable_name
 
+    if location_id_prefix:
+        df = update_location_id_prefix(df, location_id_prefix)
+
     return df
 
 
@@ -85,6 +107,7 @@ def fetch_and_format_nwm_grids(
     ignore_missing_file: bool,
     units_format_dict: Dict,
     overwrite_output: bool,
+    location_id_prefix: Union[str, None]
 ):
     """Compute weighted average, grouping by reference time.
 
@@ -128,6 +151,7 @@ def fetch_and_format_nwm_grids(
                     zonal_weights_filepath,
                     ignore_missing_file,
                     units_format_dict,
+                    location_id_prefix
                 )
             )
 
