@@ -33,16 +33,14 @@
 - Data management
   - We do not currently have a mechanism to keep track of a users data (Data Catalog)
   - We do not currently have much data validation - could use a transactional database for this as noted above?
-- Database size
-  - Probably not feasible to use the duckdb persistent database for larger datasets (NWM retro)
 
-### Components
+### Workflow Components
 
 - Fetching External data
 - Preprocessing
   - Ensure consistency and validate the data
   - Loading into TEEHR data model and data storage format
-  - parquet files
+    - parquet files
     - duckdb persistent database
     - zarr
     - local and/or s3
@@ -50,9 +48,13 @@
     - Long-term (bigger data): Pre-processed data ready for people to use like NWM retro data joined to USGS gage data or summarized to some catchments, etc. Can we pre-calculate anything here? (annual peak flow, flow duration curve slope, etc?)
     - Short-term (smaller): Related to a users specific analysis
     - Do we need two different approaches for each?  Seems like duckdb persistent database is excellent for "smaller" datasets.
-  - Join primary and secondary
+  - Joining primary and secondary
   - Summarizing gridded data to polygons
-- User-defined fields
+- Adding User-defined fields
+  - Adding attributes or additional fields based on existing fields
 - Metric Calculations
   - Comparing primary to secondary timeseries
   - Helps answer the question, "which model (secondary timeseries) performs best?"
+- Some data management component(s)
+  - Keeping track of user workflows as they relate to specific protocols or analyses
+  - Exposing data and results so that others can discover and make use of them
