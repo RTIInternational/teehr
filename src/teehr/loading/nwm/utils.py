@@ -141,8 +141,9 @@ def write_parquet_file(
     overwrite_output: bool,
     data: Union[pa.Table, pd.DataFrame]
 ):
-    """Write output timeseries parquet file with logic controlling
-    whether or not to overwrite an existing file.
+    """Write the output timeseries parquet file.
+
+    Includes logic controlling whether or not to overwrite an existing file.
 
     Parameters
     ----------
@@ -392,8 +393,7 @@ def construct_assim_paths(
     domain: str,
     file_extension: str = "nc"
 ) -> list[str]:
-    """Construct paths to NWM point assimilation data based on specified
-        parameters.
+    """Construct paths to NWM point assimilation data.
 
     This function prioritizes value time over reference time so that only
     files with value times falling within the specified date range are included

@@ -17,6 +17,7 @@ from teehr.models.loading.utils import (
     SupportedNWMRetroDomainsEnum
 )
 from teehr.models.loading.nwm22_grid import ForcingVariablesEnum
+from teehr.loading.nwm.grid_utils import update_location_id_prefix
 from teehr.loading.nwm.utils import (
     write_parquet_file,
     get_dataset,
@@ -30,8 +31,7 @@ from teehr.loading.nwm.retrospective_points import (
 
 
 def get_data_array(var_da: xr.DataArray, rows: np.array, cols: np.array):
-    """Read the forcing variable into memory for the grouped
-    timesteps and zone rows and cols."""
+    """Read a subset of the data array into memory."""
     var_arr = var_da.values[:, rows, cols]
     return var_arr
 
@@ -44,10 +44,14 @@ def process_group(
     weight_vals: np.array,
     variable_name: str,
     units_format_dict: Dict,
-    nwm_version: str
+    nwm_version: str,
+    location_id_prefix: Union[str, None]
 ):
-    """Fetch a chunk of NWM v3.0 gridded data, compute weighted
-    values for each zone, and format to dataframe."""
+    """Compute the weighted average for a chunk of NWM v3.0 data.
+
+    Pixel weights for each zone are defined in weights_df,
+    and the output is saved to parquet files.
+    """
     var_arr = get_data_array(da_i, rows, cols)
 
     # Get the subset data array of start and end times just for the time values
@@ -72,9 +76,10 @@ def process_group(
     chunk_df["measurement_unit"] = teehr_units
     chunk_df["configuration"] = f"{nwm_version}_retrospective"
     chunk_df["variable_name"] = variable_name
-    chunk_df["location_id"] = (
-        f"{nwm_version}-" + chunk_df["location_id"].astype(str)
-    )
+
+    if location_id_prefix:
+        chunk_df = update_location_id_prefix(chunk_df, location_id_prefix)
+
     return chunk_df
 
 
@@ -82,8 +87,7 @@ def construct_nwm21_json_paths(
     start_date: Union[str, datetime],
     end_date: Union[str, datetime]
 ):
-    """Construct the remote paths for the NWM v2.1 zarr json files
-    within the specified start and end dates."""
+    """Construct the remote paths for NWM v2.1 json files as a dataframe."""
     base_path = (
         "s3://ciroh-nwm-zarr-retrospective-data-copy/"
         "noaa-nwm-retrospective-2-1-zarr-pds/forcing"
@@ -129,10 +133,13 @@ def process_single_file(
     weights_filepath: str,
     ignore_missing_file: bool,
     units_format_dict: Dict,
-    nwm_version: str
+    nwm_version: str,
+    location_id_prefix: Union[str, None]
 ):
-    """Compute the zonal mean for a single json reference file and format
-    to a dataframe using the TEEHR data model."""
+    """Compute the zonal mean for a single json reference file.
+
+    Results are formatted to a dataframe using the TEEHR data model.
+    """
     ds = get_dataset(
         row.filepath,
         ignore_missing_file,
@@ -154,7 +161,9 @@ def process_single_file(
     df["measurement_unit"] = teehr_units
     df["configuration"] = f"{nwm_version}_retrospective"
     df["variable_name"] = variable_name
-    df["location_id"] = f"{nwm_version}-" + df["location_id"].astype(str)
+
+    if location_id_prefix:
+        df = update_location_id_prefix(df, location_id_prefix)
 
     return df
 
@@ -169,10 +178,13 @@ def nwm_retro_grids_to_parquet(
     output_parquet_dir: Union[str, Path],
     chunk_by: Union[ChunkByEnum, None] = None,
     overwrite_output: Optional[bool] = False,
-    domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS"
+    domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
+    location_id_prefix: Optional[Union[str, None]] = None
 ):
-    """Fetch NWM v2.1 or v3.0 gridded data, summarize to zones using
-    a pre-computed weight file, and save as a Parquet file.
+    """Compute the weighted average for NWM v2.1 or v3.0 gridded data.
+
+    Pixel values are summarized to zones based on a pre-computed
+    zonal weights file, and the output is saved to parquet files.
 
     Parameters
     ----------
@@ -184,7 +196,8 @@ def nwm_retro_grids_to_parquet(
         (e.g., "PRECIP", "PSFC", "Q2D", ...).
     zonal_weights_filepath : str,
         Path to the array containing fraction of pixel overlap
-        for each zone.
+        for each zone. The values in the location_id field from
+        the zonal weights file are used in the output of this function.
     start_date : Union[str, datetime, pd.Timestamp]
         Date to begin data ingest.
         Str formats can include YYYY-MM-DD or MM/DD/YYYY.
@@ -204,8 +217,17 @@ def nwm_retro_grids_to_parquet(
         Geographical domain when NWM version is v3.0.
         Acceptable values are "Alaska", "CONUS" (default), "Hawaii", and "PR".
         Only used when NWM version equals v3.0.
-    """
+    location_id_prefix : Union[str, None]
+        Optional location ID prefix to add (prepend) or replace.
 
+    Notes
+    -----
+    The location_id values in the zonal weights file are used as
+    location ids in the output of this function, unless a prefix is specified
+    which will be prepended to the location_id values if none exists, or it
+    will replace the existing prefix. It is assumed that the location_id
+    follows the pattern '[prefix]-[unique id]'.
+    """
     start_date = pd.Timestamp(start_date)
     end_date = pd.Timestamp(end_date)
 
@@ -254,7 +276,8 @@ def nwm_retro_grids_to_parquet(
                         weights_filepath=zonal_weights_filepath,
                         ignore_missing_file=False,
                         units_format_dict=NWM22_UNIT_LOOKUP,
-                        nwm_version=nwm_version
+                        nwm_version=nwm_version,
+                        location_id_prefix=location_id_prefix
                     )
                 )
             output = dask.compute(*results)
@@ -265,8 +288,8 @@ def nwm_retro_grids_to_parquet(
                                         "configuration were found in GCS!")
             chunk_df = pd.concat(output)
 
-            start = df.datetime.min().strftime("%Y%m%d%HZ")
-            end = df.datetime.max().strftime("%Y%m%d%HZ")
+            start = df.datetime.min().strftime("%Y%m%dZ")
+            end = df.datetime.max().strftime("%Y%m%dZ")
             if start == end:
                 output_filename = Path(output_parquet_dir, f"{start}.parquet")
             else:
@@ -340,7 +363,8 @@ def nwm_retro_grids_to_parquet(
                 weight_vals=weight_vals,
                 variable_name=variable_name,
                 units_format_dict=NWM22_UNIT_LOOKUP,
-                nwm_version=nwm_version
+                nwm_version=nwm_version,
+                location_id_prefix=location_id_prefix
             )
 
             fname = format_grouped_filename(da_i)

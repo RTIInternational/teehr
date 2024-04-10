@@ -1,6 +1,6 @@
 """Module defining shared functions for processing NWM grid data."""
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 import re
 
 import dask
@@ -11,11 +11,28 @@ import xarray as xr
 from teehr.loading.nwm.utils import get_dataset, write_parquet_file
 
 
+def update_location_id_prefix(
+    df: pd.DataFrame,
+    new_prefix: str
+) -> pd.DataFrame:
+    """Replace or add the location_id prefix in a dataframe."""
+    df = df.copy()
+    tmp_df = df.location_id.str.split("-", expand=True)
+
+    if tmp_df.columns.size == 1:
+        df['location_id'] = new_prefix + "-" + df['location_id']
+    elif tmp_df.columns.size == 2:
+        df['location_id'] = new_prefix + "-" + tmp_df[1]
+    else:
+        raise ValueError("Location ID has more than two parts!")
+
+    return df
+
+
 def compute_zonal_mean(
     da: xr.DataArray, weights_filepath: str
 ) -> pd.DataFrame:
-    """Compute zonal mean (weighted average) of area-weighted pixels for given
-    zones and weights."""
+    """Compute weighted average of pixels for given zones and weights."""
     # Read weights file
     weights_df = pd.read_parquet(
         weights_filepath, columns=["row", "col", "weight", "location_id"]
@@ -45,10 +62,10 @@ def process_single_file(
     variable_name: str,
     weights_filepath: str,
     ignore_missing_file: bool,
-    units_format_dict: Dict
+    units_format_dict: Dict,
+    location_id_prefix: Union[str, None]
 ) -> pd.DataFrame:
-    """Fetch a single json reference file and format \
-    to a dataframe using the TEEHR data model."""
+    """Fetch data for a single reference file and compute weighted average."""
     ds = get_dataset(
         row.filepath,
         ignore_missing_file,
@@ -75,6 +92,9 @@ def process_single_file(
     df["configuration"] = configuration
     df["variable_name"] = variable_name
 
+    if location_id_prefix:
+        df = update_location_id_prefix(df, location_id_prefix)
+
     return df
 
 
@@ -87,10 +107,13 @@ def fetch_and_format_nwm_grids(
     ignore_missing_file: bool,
     units_format_dict: Dict,
     overwrite_output: bool,
+    location_id_prefix: Union[str, None]
 ):
-    """
-    Read in the single reference jsons, subset the NWM data based on
-    provided IDs and format and save the data as a parquet files.
+    """Compute weighted average, grouping by reference time.
+
+    Group a list of json files by reference time and compute the weighted
+    average of the variable values for each zone. The results are saved to
+    parquet files using TEEHR data model.
     """
     output_parquet_dir = Path(output_parquet_dir)
     if not output_parquet_dir.exists():
@@ -128,6 +151,7 @@ def fetch_and_format_nwm_grids(
                     zonal_weights_filepath,
                     ignore_missing_file,
                     units_format_dict,
+                    location_id_prefix
                 )
             )
 
