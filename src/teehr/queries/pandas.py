@@ -386,12 +386,12 @@ def calculate_group_metrics(
         or "kling_gupta_efficiency_mod1" in include_metrics
     ):
 
-        # Pearson correlation coefficient
+        # Pearson correlation coefficient (same as kge)
         linear_correlation = np.corrcoef(
             group["secondary_value"], group["primary_value"]
         )[0, 1]
 
-        # Relative variability
+        # Relative variability (what is this called?, normalized_relative_variability? )
         relative_variability = (
             (
                 np.std(group["secondary_value"])
@@ -403,7 +403,7 @@ def calculate_group_metrics(
             )
         )
 
-        # Relative mean
+        # Relative mean (same as kge)
         relative_mean = (
             np.mean(group["secondary_value"])
             / np.mean(group["primary_value"])
@@ -422,18 +422,18 @@ def calculate_group_metrics(
         include_metrics == "all"
         or "kling_gupta_efficiency_mod2" in include_metrics
     ):
-        # Pearson correlation coefficient
+        # Pearson correlation coefficient (same as kge)
         linear_correlation = np.corrcoef(
             group["secondary_value"], group["primary_value"]
         )[0, 1]
 
-        # Relative variability
+        # Relative variability (same as kge)
         relative_variability = (
             np.std(group["secondary_value"])
             / np.std(group["primary_value"])
         )
 
-        # Relative mean
+        # Relative mean (what is this called?)
         relative_mean = (
             (
                 (
