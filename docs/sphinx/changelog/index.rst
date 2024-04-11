@@ -1,6 +1,21 @@
 Release Notes
 =============
 
+0.3.16 - 2024-04-11
+--------------------
+
+Added
+^^^^^
+* Adds a few new metrics to the queries:
+  * annual_peak_relative_bias
+  * spearman_correlation
+  * kling_gupta_efficiency_mod1
+  * kling_gupta_efficiency_mod2
+
+Changed
+^^^^^^^
+* None
+
 0.3.15 - 2024-04-08
 --------------------
 
