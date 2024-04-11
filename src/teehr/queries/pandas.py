@@ -391,8 +391,8 @@ def calculate_group_metrics(
             group["secondary_value"], group["primary_value"]
         )[0, 1]
 
-        # Relative variability (what is this called?, normalized_relative_variability? )
-        relative_variability = (
+        # Variability_ratio
+        variability_ratio = (
             (
                 np.std(group["secondary_value"])
                 / np.mean(group["secondary_value"])
@@ -412,7 +412,7 @@ def calculate_group_metrics(
         # Scaled Euclidean distance
         euclidean_distance = np.sqrt(
             ((linear_correlation - 1.0)) ** 2.0 +
-            ((relative_variability - 1.0)) ** 2.0 +
+            ((variability_ratio - 1.0)) ** 2.0 +
             ((relative_mean - 1.0)) ** 2.0
             )
 
@@ -433,8 +433,8 @@ def calculate_group_metrics(
             / np.std(group["primary_value"])
         )
 
-        # Relative mean (what is this called?)
-        relative_mean = (
+        # bias component
+        bias_component = (
             (
                 (
                     np.mean(group["secondary_value"])
@@ -451,7 +451,7 @@ def calculate_group_metrics(
         euclidean_distance = np.sqrt(
             ((linear_correlation - 1.0)) ** 2.0 +
             ((relative_variability - 1.0)) ** 2.0 +
-            relative_mean
+            bias_component
             )
 
         data["kling_gupta_efficiency_mod2"] = 1.0 - euclidean_distance
