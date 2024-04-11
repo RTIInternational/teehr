@@ -611,10 +611,45 @@ def _select_kling_gupta_efficiency(
     ):
         return """, 1 - sqrt(
             pow(corr(secondary_value, primary_value) - 1, 2)
-            + pow(stddev(secondary_value)
-                / stddev(primary_value) - 1, 2)
+            + pow(stddev(secondary_value) / stddev(primary_value) - 1, 2)
             + pow(avg(secondary_value) / avg(primary_value) - 1, 2)
         ) as kling_gupta_efficiency
+        """
+    return ""
+
+
+def _select_kling_gupta_efficiency_mod1(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
+    """Generate the select kling gupta efficiency mod1 query segment."""
+    if (
+        "kling_gupta_efficiency_mod1" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return """, 1 - sqrt(
+            pow(corr(secondary_value, primary_value) - 1, 2)
+            + pow((stddev_pop(secondary_value) / avg(secondary_value)) / (stddev_pop(primary_value) / avg(primary_value)) - 1, 2)
+            + pow(avg(secondary_value) / avg(primary_value) - 1, 2)
+        ) as kling_gupta_efficiency_mod1
+        """
+    return ""
+
+
+def _select_kling_gupta_efficiency_mod2(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
+    """Generate the select kling gupta efficiency mod2 query segment."""
+    if (
+        "kling_gupta_efficiency_mod2" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return """, 1 - sqrt(
+            pow(corr(secondary_value, primary_value) - 1, 2)
+            + pow(stddev_pop(secondary_value)
+                / stddev_pop(primary_value) - 1, 2)
+            + pow(avg(secondary_value) - avg(primary_value), 2)
+                / pow(stddev_pop(primary_value), 2)
+        ) as kling_gupta_efficiency_mod2
         """
     return ""
 

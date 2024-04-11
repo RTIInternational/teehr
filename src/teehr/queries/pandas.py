@@ -371,12 +371,90 @@ def calculate_group_metrics(
     #     )
     #     data["nash_sutcliffe_efficiency_log"] = nse
 
-    if include_metrics == "all" or "kling_gupta_efficiency" in include_metrics:
+    if (
+            include_metrics == "all"
+            or "kling_gupta_efficiency" in include_metrics
+    ):
         kge = hm.kling_gupta_efficiency(
             group["primary_value"],
             group["secondary_value"]
         )
         data["kling_gupta_efficiency"] = kge
+
+    if (
+        include_metrics == "all"
+        or "kling_gupta_efficiency_mod1" in include_metrics
+    ):
+
+        # Pearson correlation coefficient
+        linear_correlation = np.corrcoef(
+            group["secondary_value"], group["primary_value"]
+        )[0, 1]
+
+        # Relative variability
+        relative_variability = (
+            (
+                np.std(group["secondary_value"])
+                / np.mean(group["secondary_value"])
+            )
+            / (
+                np.std(group["primary_value"])
+                / np.mean(group["primary_value"])
+            )
+        )
+
+        # Relative mean
+        relative_mean = (
+            np.mean(group["secondary_value"])
+            / np.mean(group["primary_value"])
+        )
+
+        # Scaled Euclidean distance
+        euclidean_distance = np.sqrt(
+            ((linear_correlation - 1.0)) ** 2.0 +
+            ((relative_variability - 1.0)) ** 2.0 +
+            ((relative_mean - 1.0)) ** 2.0
+            )
+
+        data["kling_gupta_efficiency_mod1"] = 1.0 - euclidean_distance
+
+    if (
+        include_metrics == "all"
+        or "kling_gupta_efficiency_mod2" in include_metrics
+    ):
+        # Pearson correlation coefficient
+        linear_correlation = np.corrcoef(
+            group["secondary_value"], group["primary_value"]
+        )[0, 1]
+
+        # Relative variability
+        relative_variability = (
+            np.std(group["secondary_value"])
+            / np.std(group["primary_value"])
+        )
+
+        # Relative mean
+        relative_mean = (
+            (
+                (
+                    np.mean(group["secondary_value"])
+                    - np.mean(group["primary_value"])
+                ) ** 2
+            )
+            /
+            (
+                np.std(group["primary_value"]) ** 2
+            )
+        )
+
+        # Scaled Euclidean distance
+        euclidean_distance = np.sqrt(
+            ((linear_correlation - 1.0)) ** 2.0 +
+            ((relative_variability - 1.0)) ** 2.0 +
+            relative_mean
+            )
+
+        data["kling_gupta_efficiency_mod2"] = 1.0 - euclidean_distance
 
     if (
         include_metrics == "all"

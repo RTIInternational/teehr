@@ -52,6 +52,8 @@ def test_metric_compare_1():
         "nash_sutcliffe_efficiency",
         "nash_sutcliffe_efficiency_normalized",
         "kling_gupta_efficiency",
+        "kling_gupta_efficiency_mod1",
+        "kling_gupta_efficiency_mod2",
         "mean_error",
         "mean_squared_error",
         "root_mean_squared_error",

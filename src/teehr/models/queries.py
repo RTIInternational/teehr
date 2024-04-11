@@ -61,6 +61,8 @@ class MetricEnum(StrEnum):
     nash_sutcliffe_efficiency_normalized = "nash_sutcliffe_efficiency_normalized" # noqa
     # nash_sutcliffe_efficiency_log = "nash_sutcliffe_efficiency_log" # noqa
     kling_gupta_efficiency = "kling_gupta_efficiency"
+    kling_gupta_efficiency_mod1 = "kling_gupta_efficiency_mod1"
+    kling_gupta_efficiency_mod2 = "kling_gupta_efficiency_mod2"
     mean_error = "mean_error"
     mean_absolute_error = "mean_absolute_error"
     mean_squared_error = "mean_squared_error"

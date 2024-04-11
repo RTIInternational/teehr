@@ -210,6 +210,8 @@ def get_metrics(
                 {tqu._select_nash_sutcliffe_efficiency(mq)}
                 {tqu._select_nash_sutcliffe_efficiency_normalized(mq)}
                 {tqu._select_kling_gupta_efficiency(mq)}
+                {tqu._select_kling_gupta_efficiency_mod1(mq)}
+                {tqu._select_kling_gupta_efficiency_mod2(mq)}
                 {tqu._select_mean_absolute_error(mq)}
                 {tqu._select_mean_squared_error(mq)}
                 {tqu._select_root_mean_squared_error(mq)}
