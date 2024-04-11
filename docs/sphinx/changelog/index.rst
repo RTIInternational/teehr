@@ -1,6 +1,19 @@
 Release Notes
 =============
 
+0.3.15 - 2024-04-08
+--------------------
+
+Added
+^^^^^
+* ``location_id_prefix`` as an optional argument to ``generate_weights_file()`` to allow for
+  the prefixing of the location ID with a string.
+
+Changed
+^^^^^^^
+* Updated the NWM operational and retrospective grid loading functions so that the location ID
+  as defined in the zonal weights file is used as the location ID in the output parquet files.
+
 0.3.14 - 2024-03-29
 --------------------
 
@@ -45,7 +58,7 @@ Added
 Changed
 ^^^^^^^
 * Changed the chunking method for USGS and NWM retrospective data loading to iterate over pandas ``period_range``
-rather than using ``groupby`` or ``date_range`` to fix a bug when fetching data over multiple years.
+  rather than using ``groupby`` or ``date_range`` to fix a bug when fetching data over multiple years.
 
 0.3.11 - 2024-03-19
 --------------------
