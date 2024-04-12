@@ -15,6 +15,7 @@ SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
 GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
 DATABASE_FILEPATH = Path("tests", "data", "temp", "temp_test.db")
+ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr.parquet")
 
 if DATABASE_FILEPATH.is_file():
     DATABASE_FILEPATH.unlink()
@@ -30,7 +31,8 @@ tds.insert_joined_timeseries(
 )
 
 # Join the attributes
-tds.join_attributes("/home/matt/repos/teehr/tests/data/test_study/geo/test_attr.parquet")
+tds.join_attributes(ATTRIBUTES_FILEPATH)
+
 
 def test_metric_compare_1():
     """Test metric compare v1."""
