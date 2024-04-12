@@ -112,7 +112,7 @@ TEEHR Database
 Once the data adheres to the TEEHR data model, we can use the `TEEHRDatasetDB` class
 to create a persisent database, allowing for efficient exploration and metric queries.
 
-.. ipython:: python
+.. code-block:: python
 
    from pathlib import Path
 
