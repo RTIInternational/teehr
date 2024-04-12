@@ -149,6 +149,20 @@ def geometry_select_clause(
     return ""
 
 
+def metrics_select_clause(
+    q: Union[tmq.MetricQuery,
+             tmq.JoinedTimeseriesQuery,
+             tmqd.MetricQuery,
+             tmqd.JoinedTimeseriesQuery]
+) -> str:
+    """Generate the metrics select clause."""
+    if q.include_metrics == "all":
+        return f""", {",".join([item.value for item in tmq.MetricEnum])}"""
+    if isinstance(q.include_metrics, str):
+        return f""", {tmq.MetricEnum[q.include_metrics].value}"""
+    return f""", {",".join([ob for ob in q.include_metrics])}"""
+
+
 def geometry_joined_select_clause(
         q: Union[tmq.MetricQuery, tmq.JoinedTimeseriesQuery]
 ) -> str:
@@ -350,6 +364,102 @@ def _nse_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
 #         """
 #     return ""
 
+def _spearman_ranks_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
+    """Generate the spearman ranks CTE."""
+    if (
+        "spearman_correlation" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return f""", spearman_ranked AS (
+            SELECT
+                primary_location_id
+                , secondary_location_id
+                , configuration
+                , measurement_unit
+                , variable_name
+                , reference_time
+                , value_time
+                , AVG(primary_row_number) OVER (PARTITION BY {",".join(mq.group_by)}, primary_value) as primary_rank
+                , AVG(secondary_row_number) OVER (PARTITION BY {",".join(mq.group_by)}, secondary_value) as secondary_rank
+            FROM (
+                SELECT
+                    *
+                    , ROW_NUMBER() OVER (PARTITION BY {",".join(mq.group_by)} ORDER BY primary_value) as primary_row_number
+                    , ROW_NUMBER() OVER (PARTITION BY {",".join(mq.group_by)} ORDER BY secondary_value) as secondary_row_number
+                FROM joined
+            )
+        )
+        """
+    return ""
+
+
+def _join_spearman_ranks_cte(
+        mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
+    """Generate the annual signature metrics CTE."""
+    if (
+        "spearman_correlation" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return f"""
+            INNER JOIN spearman_ranked
+                ON joined.primary_location_id = spearman_ranked.primary_location_id
+                AND joined.secondary_location_id = spearman_ranked.secondary_location_id
+                AND joined.configuration = spearman_ranked.configuration
+                AND joined.measurement_unit = spearman_ranked.measurement_unit
+                AND joined.variable_name = spearman_ranked.variable_name
+                AND joined.reference_time = spearman_ranked.reference_time
+                AND joined.value_time = spearman_ranked.value_time
+        """
+    return ""
+
+
+def _select_spearman_correlation(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
+    """Generate the select spearman correlation query segment."""
+    if (
+        "spearman_correlation" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return """
+        , 1 - (6 * SUM(POWER(ABS(primary_rank - secondary_rank), 2))) / (POWER(COUNT(*), 3) - COUNT(*)) AS spearman_correlation"""
+    return ""
+
+
+def _annual_metrics_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
+    """Generate the annual signature metrics CTE."""
+    if (
+        "annual_peak_relative_bias" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return f"""
+        , annual_aggs AS (
+            SELECT
+                {",".join(mq.group_by)}
+                , date_trunc('year', joined.value_time) as year
+                , max(joined.primary_value) as primary_max_value
+                , max(joined.secondary_value) as secondary_max_value
+            FROM
+                joined
+            GROUP BY
+                {",".join(mq.group_by)}
+                , year
+        )
+        , annual_metrics AS (
+            SELECT
+                {",".join(mq.group_by)}
+                , sum(
+                    annual_aggs.secondary_max_value
+                    - annual_aggs.primary_max_value
+                ) / sum(annual_aggs.primary_max_value)
+                AS annual_peak_relative_bias
+            FROM
+                annual_aggs
+            GROUP BY
+                {",".join(mq.group_by)}
+        )
+        """
+    return ""
+
 
 def _join_nse_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     """Generate the join nash-sutcliffe-efficiency CTE."""
@@ -360,6 +470,20 @@ def _join_nse_cte(mq: Union[tmq.MetricQuery, tmqd.MetricQuery]) -> str:
     ):
         return f"""
             {_join_on(join="nse", join_to="joined", join_on=mq.group_by)}
+        """
+    return ""
+
+
+def _join_annual_metrics_cte(
+        mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
+    """Generate the annual signature metrics CTE."""
+    if (
+        "annual_peak_relative_bias" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return f"""
+            {_join_on(join="annual_metrics", join_to="metrics", join_on=mq.group_by)}
         """
     return ""
 
@@ -487,10 +611,45 @@ def _select_kling_gupta_efficiency(
     ):
         return """, 1 - sqrt(
             pow(corr(secondary_value, primary_value) - 1, 2)
-            + pow(stddev(secondary_value)
-                / stddev(primary_value) - 1, 2)
+            + pow(stddev(secondary_value) / stddev(primary_value) - 1, 2)
             + pow(avg(secondary_value) / avg(primary_value) - 1, 2)
         ) as kling_gupta_efficiency
+        """
+    return ""
+
+
+def _select_kling_gupta_efficiency_mod1(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
+    """Generate the select kling gupta efficiency mod1 query segment."""
+    if (
+        "kling_gupta_efficiency_mod1" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return """, 1 - sqrt(
+            pow(corr(secondary_value, primary_value) - 1, 2)
+            + pow((stddev_pop(secondary_value) / avg(secondary_value)) / (stddev_pop(primary_value) / avg(primary_value)) - 1, 2)
+            + pow(avg(secondary_value) / avg(primary_value) - 1, 2)
+        ) as kling_gupta_efficiency_mod1
+        """
+    return ""
+
+
+def _select_kling_gupta_efficiency_mod2(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
+    """Generate the select kling gupta efficiency mod2 query segment."""
+    if (
+        "kling_gupta_efficiency_mod2" in mq.include_metrics
+        or mq.include_metrics == "all"
+    ):
+        return """, 1 - sqrt(
+            pow(corr(secondary_value, primary_value) - 1, 2)
+            + pow(stddev_pop(secondary_value)
+                / stddev_pop(primary_value) - 1, 2)
+            + pow(avg(secondary_value) - avg(primary_value), 2)
+                / pow(stddev_pop(primary_value), 2)
+        ) as kling_gupta_efficiency_mod2
         """
     return ""
 

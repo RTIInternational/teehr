@@ -105,6 +105,8 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
             {tqu.filters_to_sql(mq.filters)}
         )
         {tqu._nse_cte(mq)}
+        {tqu._annual_metrics_cte(mq)}
+        {tqu._spearman_ranks_cte(mq)}
         , metrics AS (
             SELECT
                 {",".join([f"joined.{gb}" for gb in mq.group_by])}
@@ -125,6 +127,8 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
                 {tqu._select_nash_sutcliffe_efficiency(mq)}
                 {tqu._select_nash_sutcliffe_efficiency_normalized(mq)}
                 {tqu._select_kling_gupta_efficiency(mq)}
+                {tqu._select_kling_gupta_efficiency_mod1(mq)}
+                {tqu._select_kling_gupta_efficiency_mod2(mq)}
                 {tqu._select_mean_absolute_error(mq)}
                 {tqu._select_mean_squared_error(mq)}
                 {tqu._select_root_mean_squared_error(mq)}
@@ -136,17 +140,21 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
                 {tqu._select_mean_absolute_relative_error(mq)}
                 {tqu._select_pearson_correlation(mq)}
                 {tqu._select_r_squared(mq)}
+                {tqu._select_spearman_correlation(mq)}
             FROM
                 joined
-            {tqu._join_nse_cte(mq)}
+                {tqu._join_nse_cte(mq)}
+                {tqu._join_spearman_ranks_cte(mq)}
             GROUP BY
                 {",".join([f"joined.{gb}" for gb in mq.group_by])}
         )
         SELECT
-            metrics.*
+            {",".join([f"metrics.{ob}" for ob in mq.group_by])}
+            {tqu.metrics_select_clause(mq)}
             {tqu.geometry_select_clause(mq)}
         FROM metrics
             {tqu.metric_geometry_join_clause_db(mq)}
+            {tqu._join_annual_metrics_cte(mq)}
         ORDER BY
             {",".join([f"metrics.{ob}" for ob in mq.order_by])}
     ;"""

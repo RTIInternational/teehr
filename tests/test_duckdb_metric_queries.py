@@ -157,7 +157,7 @@ def test_metric_query_df_2():
         include_metrics=include_metrics,
         return_query=False,
         include_geometry=False,
-        remove_duplicates=True
+        remove_duplicates=True,
     )
     # print(query_df)
     assert len(query_df) == 3
@@ -208,7 +208,7 @@ def test_metric_query_df_all():
     )
     # print(query_df)
     assert len(query_df) == 9
-    assert len(query_df.columns) == len(group_by) + 28
+    assert len(query_df.columns) == len(group_by) + 32
     assert isinstance(query_df, pd.DataFrame)
 
 
