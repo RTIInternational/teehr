@@ -1,6 +1,22 @@
 Release Notes
 =============
 
+0.3.17 - 2024-04-22
+--------------------
+
+Added
+^^^^^
+* None
+
+Changed
+^^^^^^^
+* Dropped "Z" from the file name in the NWM loading functions, adding a note in the docstrings that all times are in UTC.
+* Changed data type of ``zonal_weights_filepath`` to ``Union[str, Path]`` in ``nwm_grids.py``.
+* Fixed ``SettingWithCopyWarning`` in NWM grid loading.
+* Fixed the ``end_date`` in NWM retrospective loading to include the entirety of the last day and not fail when
+  last available day is specfified.
+
+
 0.3.16 - 2024-04-11
 --------------------
 

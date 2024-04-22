@@ -186,6 +186,8 @@ def nwm_retro_grids_to_parquet(
     Pixel values are summarized to zones based on a pre-computed
     zonal weights file, and the output is saved to parquet files.
 
+    All dates and times within the files and in the file names are in UTC.
+
     Parameters
     ----------
     nwm_version : SupportedNWMRetroVersionsEnum

@@ -137,6 +137,8 @@ def usgs_to_parquet(
 ):
     """Fetch USGS gage data and save as a Parquet file.
 
+    All dates and times within the files and in the file names are in UTC.
+
     Parameters
     ----------
     sites : List[str]

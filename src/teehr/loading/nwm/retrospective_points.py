@@ -145,6 +145,8 @@ def nwm_retro_to_parquet(
 ):
     """Fetch NWM retrospective at NWM COMIDs and store as Parquet file.
 
+    All dates and times within the files and in the file names are in UTC.
+
     Parameters
     ----------
     nwm_version : SupportedNWMRetroVersionsEnum

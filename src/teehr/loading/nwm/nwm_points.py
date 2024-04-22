@@ -99,12 +99,11 @@ def nwm_to_parquet(
         process_by_z_hour is set to False. Default value is 100. Larger values
         can result in greater efficiency but require more memory.
     ignore_missing_file : Optional[bool]
-        Flag specifying whether or not to fail if a missing NWM file is encountered
-        True = skip and continue.
-        False = fail.
+        Flag specifying whether or not to fail if a missing NWM file is
+        encountered. True = skip and continue; False = fail.
     overwrite_output : Optional[bool]
-        Flag specifying whether or not to overwrite output files if they already
-        exist.  True = overwrite; False = fail.
+        Flag specifying whether or not to overwrite output files if they
+        already exist.  True = overwrite; False = fail.
 
     Notes
     -----
@@ -112,9 +111,11 @@ def nwm_to_parquet(
     variable_name are stored as pydantic models in point_config_models.py
 
     Forecast and assimilation data is grouped and saved one file per reference
-    time, using the file name convention "YYYYMMDDTHHZ".  The tabular output
+    time, using the file name convention "YYYYMMDDTHH".  The tabular output
     parquet files follow the timeseries data model described in the
     :ref:`data model <data_model>`.
+
+    All dates and times within the files and in the file names are in UTC.
 
     Examples
     --------
