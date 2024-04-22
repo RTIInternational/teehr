@@ -117,7 +117,7 @@ def process_chunk_of_files(
         filename = f"{row.day}T{row.z_hour[1:3]}.parquet"
     else:
         # Use start and end dates including forecast hour
-        #  for the output file name. TODO: WHY??
+        #  for the output file name.
         filepath_list = df.filepath.sort_values().tolist()
         start_json = filepath_list[0].split("/")[-1].split(".")
         start = f"{start_json[1]}T{start_json[3][1:3]}F{start_json[6][1:]}"
