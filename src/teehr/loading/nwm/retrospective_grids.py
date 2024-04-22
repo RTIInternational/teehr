@@ -233,6 +233,9 @@ def nwm_retro_grids_to_parquet(
 
     validate_start_end_date(nwm_version, start_date, end_date)
 
+    # Include the entirety of the specified end day
+    end_date = end_date.to_period(freq="D").end_time
+
     output_dir = Path(output_parquet_dir)
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
@@ -387,11 +390,11 @@ def nwm_retro_grids_to_parquet(
 #         nwm_version="nwm21",
 #         variable_name="RAINRATE",
 #         zonal_weights_filepath="/mnt/data/merit/YalansBasins/cat_pfaf_7_conus_subset_nwm_v30_weights.parquet",
-#         start_date="2007-09-01 00:00",
-#         end_date="2008-3-22 23:00",
+#         start_date="2020-12-10",
+#         end_date="2020-12-31 12:00",
 #         output_parquet_dir="/mnt/data/ciroh/retro",
 #         overwrite_output=True,
 #         chunk_by="week"
 #     )
 
-#     # print(f"Total elapsed: {(time.time() - t0):.2f} secs")
+    # print(f"Total elapsed: {(time.time() - t0):.2f} secs")

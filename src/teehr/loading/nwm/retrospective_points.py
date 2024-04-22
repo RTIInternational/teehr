@@ -217,14 +217,13 @@ def nwm_retro_to_parquet(
     else:
         raise ValueError(f"unsupported NWM version {nwm_version}")
 
-    start_date = datetime_to_date(pd.Timestamp(start_date))
-    end_date = (
-        datetime_to_date(pd.Timestamp(end_date)) +
-        timedelta(days=1) -
-        timedelta(minutes=1)
-    )
+    start_date = pd.Timestamp(start_date)
+    end_date = pd.Timestamp(end_date)
 
     validate_start_end_date(nwm_version, start_date, end_date)
+
+    # Include the entirety of the specified end day
+    end_date = end_date.to_period(freq="D").end_time
 
     output_dir = Path(output_parquet_dir)
     if not output_dir.exists():
@@ -284,13 +283,17 @@ def nwm_retro_to_parquet(
 
 #     LOCATION_IDS = [7086109, 7040481]
 
+#     # NWM21_MAX_DATE = pd.Timestamp(2020, 12, 31, 23)
+#     # NWM30_MAX_DATE = pd.Timestamp(2023, 1, 31, 23)
+
 #     nwm_retro_to_parquet(
-#         nwm_version="nwm20",
+#         nwm_version="nwm30",
 #         variable_name="streamflow",
-#         start_date="2000-01-01",
-#         end_date="2000-01-02",
+#         start_date="2020-12-10",
+#         end_date="2023-01-31 23:00",
 #         location_ids=LOCATION_IDS,
 #         output_parquet_dir=Path(Path().home(), "temp", "nwm20_retrospective"),
+#         chunk_by="day"
 #     )
 
 #     nwm_retro_to_parquet(

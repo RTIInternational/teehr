@@ -228,13 +228,13 @@ def test_nwm30_retro_day():
 
 
 if __name__ == "__main__":
-    # test_nwm20_retro_one_file()
-    # test_nwm20_retro_day()
-    # test_nwm20_retro_week()
-    # test_nwm20_retro_month()
-    # test_nwm20_retro_year()
-    # test_nwm20_retro_location()
+    test_nwm20_retro_one_file()
+    test_nwm20_retro_day()
+    test_nwm20_retro_week()
+    test_nwm20_retro_month()
+    test_nwm20_retro_year()
+    test_nwm20_retro_location()
     test_nwm21_retro_one_file()
-    # test_nwm21_retro_day()
-    # test_nwm21_retro_location()
-    # test_nwm30_retro_day()
+    test_nwm21_retro_day()
+    test_nwm21_retro_location()
+    test_nwm30_retro_day()
