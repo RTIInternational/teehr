@@ -30,7 +30,7 @@ def nwm_grids_to_parquet(
     variable_name: str,
     start_date: Union[str, datetime],
     ingest_days: int,
-    zonal_weights_filepath: str,
+    zonal_weights_filepath: Union[Path, str],
     json_dir: Union[str, Path],
     output_parquet_dir: Union[str, Path],
     nwm_version: SupportedNWMOperationalVersionsEnum,
