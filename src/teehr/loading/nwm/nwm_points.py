@@ -44,8 +44,7 @@ def nwm_to_parquet(
     ignore_missing_file: Optional[bool] = True,
     overwrite_output: Optional[bool] = False,
 ):
-    """Fetch NWM point data, format to tabular TEEHR data model,
-    and save to parquet.
+    """Fetch NWM point data and save as a Parquet file in TEEHR format.
 
     Parameters
     ----------
@@ -165,8 +164,7 @@ def nwm_to_parquet(
     >>>     ignore_missing_file=IGNORE_MISSING_FILE,
     >>>     overwrite_output=OVERWRITE_OUTPUT,
     >>> )
-    """
-
+    """ # noqa
     # Import appropriate config model and dicts based on NWM version
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
         from teehr.models.loading.nwm22_point import PointConfigurationModel

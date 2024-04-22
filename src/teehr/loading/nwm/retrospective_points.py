@@ -4,7 +4,7 @@ import xarray as xr
 import fsspec
 from pydantic import validate_call
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from pathlib import Path
 from typing import Union, List, Optional
@@ -207,7 +207,6 @@ def nwm_retro_to_parquet(
     >>>     output_parquet_dir=OUTPUT_DIR
     >>> )
     """
-
     if nwm_version == SupportedNWMRetroVersionsEnum.nwm20:
         s3_zarr_url = "s3://noaa-nwm-retro-v2-zarr-pds"
     elif nwm_version == SupportedNWMRetroVersionsEnum.nwm21:
@@ -288,62 +287,86 @@ def nwm_retro_to_parquet(
 #     # NWM21_MAX_DATE = pd.Timestamp(2020, 12, 31, 23)
 #     # NWM30_MAX_DATE = pd.Timestamp(2023, 1, 31, 23)
 
-#     nwm_retro_to_parquet(
-#         nwm_version="nwm30",
-#         variable_name="streamflow",
-#         start_date="2020-12-10",
-#         end_date="2023-01-31 23:00",
-#         location_ids=LOCATION_IDS,
-#         output_parquet_dir=Path(Path().home(), "temp", "nwm20_retrospective"),
-#         chunk_by="day"
-#     )
+    # nwm_retro_to_parquet(
+    #     nwm_version="nwm30",
+    #     variable_name="streamflow",
+    #     start_date="2020-12-10",
+    #     end_date="2023-01-31 23:00",
+    #     location_ids=LOCATION_IDS,
+    #     output_parquet_dir=Path(
+    #         Path().home(),
+    #         "temp",
+    #         "nwm20_retrospective"
+    #     ),
+    #     chunk_by="day"
+    # )
 
-#     nwm_retro_to_parquet(
-#         nwm_version="nwm20",
-#         variable_name="streamflow",
-#         start_date=datetime(2000, 1, 1),
-#         end_date=datetime(2000, 10, 2),
-#         location_ids=LOCATION_IDS,
-#         output_parquet_dir=Path(Path().home(), "temp", "nwm20_retrospective"),
-#         chunk_by="month",
-#     )
+    # nwm_retro_to_parquet(
+    #     nwm_version="nwm20",
+    #     variable_name="streamflow",
+    #     start_date=datetime(2000, 1, 1),
+    #     end_date=datetime(2000, 10, 2),
+    #     location_ids=LOCATION_IDS,
+    #     output_parquet_dir=Path(
+    #         Path().home(),
+    #         "temp",
+    #         "nwm20_retrospective"
+    #     ),
+    #     chunk_by="month",
+    # )
 
-#     nwm_retro_to_parquet(
-#         nwm_version="nwm20",
-#         variable_name="streamflow",
-#         start_date=datetime(2000, 1, 1),
-#         end_date=datetime(2000, 1, 2),
-#         location_ids=LOCATION_IDS,
-#         output_parquet_dir=Path(Path().home(), "temp", "nwm20_retrospective"),
-#         chunk_by="location_id",
-#     )
+    # nwm_retro_to_parquet(
+    #     nwm_version="nwm20",
+    #     variable_name="streamflow",
+    #     start_date=datetime(2000, 1, 1),
+    #     end_date=datetime(2000, 1, 2),
+    #     location_ids=LOCATION_IDS,
+    #     output_parquet_dir=Path(
+    #         Path().home(),
+    #         "temp",
+    #         "nwm20_retrospective"
+    #     ),
+    #     chunk_by="location_id",
+    # )
 
-#     nwm_retro_to_parquet(
-#         nwm_version="nwm21",
-#         variable_name="streamflow",
-#         start_date="2000-01-01",
-#         end_date="2000-01-02",
-#         location_ids=LOCATION_IDS,
-#         output_parquet_dir=Path(Path().home(), "temp", "nwm21_retrospective"),
-#     )
+    # nwm_retro_to_parquet(
+    #     nwm_version="nwm21",
+    #     variable_name="streamflow",
+    #     start_date="2000-01-01",
+    #     end_date="2000-01-02",
+    #     location_ids=LOCATION_IDS,
+    #     output_parquet_dir=Path(
+    #         Path().home(),
+    #         "temp",
+    #         "nwm21_retrospective"
+    #     ),
+    # )
 
-#     nwm_retro_to_parquet(
-#         nwm_version="nwm21",
-#         variable_name="streamflow",
-#         start_date=datetime(2000, 1, 1),
-#         end_date=datetime(2000, 1, 2),
-#         location_ids=LOCATION_IDS,
-#         output_parquet_dir=Path(Path().home(), "temp", "nwm21_retrospective"),
-#         chunk_by="day",
-#     )
+    # nwm_retro_to_parquet(
+    #     nwm_version="nwm21",
+    #     variable_name="streamflow",
+    #     start_date=datetime(2000, 1, 1),
+    #     end_date=datetime(2000, 1, 2),
+    #     location_ids=LOCATION_IDS,
+    #     output_parquet_dir=Path(
+    #         Path().home(),
+    #         "temp",
+    #         "nwm21_retrospective"
+    #     ),
+    #     chunk_by="day",
+    # )
 
-#     nwm_retro_to_parquet(
-#         nwm_version="nwm21",
-#         variable_name="streamflow",
-#         start_date=datetime(2000, 1, 1),
-#         end_date=datetime(2000, 1, 2),
-#         location_ids=LOCATION_IDS,
-#         output_parquet_dir=Path(Path().home(), "temp", "nwm21_retrospective"),
-#         chunk_by="location_id",
-#     )
-#     pass
+    # nwm_retro_to_parquet(
+    #     nwm_version="nwm21",
+    #     variable_name="streamflow",
+    #     start_date=datetime(2000, 1, 1),
+    #     end_date=datetime(2000, 1, 2),
+    #     location_ids=LOCATION_IDS,
+    #     output_parquet_dir=Path(
+    #         Path().home(),
+    #         "temp",
+    #         "nwm21_retrospective"
+    #     ),
+    #     chunk_by="location_id",
+    # )
+    # pass
