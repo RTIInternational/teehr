@@ -113,8 +113,7 @@ def datetime_to_date(dt: datetime) -> datetime:
 
 
 def format_grouped_filename(ds_i: xr.Dataset) -> str:
-    """Format the output filename based on min and max
-    datetime in the dataset."""
+    """Format the output filename based on min and max datetime."""
     min_year = ds_i.time.min().dt.year
     min_month = ds_i.time.min().dt.month
     min_day = ds_i.time.min().dt.day
@@ -123,8 +122,8 @@ def format_grouped_filename(ds_i: xr.Dataset) -> str:
     max_month = ds_i.time.max().dt.month
     max_day = ds_i.time.max().dt.day
 
-    min_time = f"{min_year.values}{min_month.values:02d}{min_day.values:02d}Z"
-    max_time = f"{max_year.values}{max_month.values:02d}{max_day.values:02d}Z"
+    min_time = f"{min_year.values}{min_month.values:02d}{min_day.values:02d}"
+    max_time = f"{max_year.values}{max_month.values:02d}{max_day.values:02d}"
 
     if min_time == max_time:
         return f"{min_time}.parquet"
@@ -243,8 +242,8 @@ def nwm_retro_to_parquet(
 
             da = da.sel(feature_id=location_id)
             df = da_to_df(nwm_version, da)
-            min_time = df.value_time.min().strftime("%Y%m%d%HZ")
-            max_time = df.value_time.max().strftime("%Y%m%d%HZ")
+            min_time = df.value_time.min().strftime("%Y%m%d%H")
+            max_time = df.value_time.max().strftime("%Y%m%d%H")
             output_filepath = Path(
                 output_parquet_dir,
                 f"{location_id}_{min_time}_{max_time}.parquet"

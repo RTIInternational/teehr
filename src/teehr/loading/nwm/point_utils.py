@@ -114,15 +114,15 @@ def process_chunk_of_files(
 
     if process_by_z_hour:
         row = df.iloc[0]
-        filename = f"{row.day}T{row.z_hour[1:3]}Z.parquet"
+        filename = f"{row.day}T{row.z_hour[1:3]}.parquet"
     else:
         # Use start and end dates including forecast hour
-        #  for the output file name
+        #  for the output file name. TODO: WHY??
         filepath_list = df.filepath.sort_values().tolist()
         start_json = filepath_list[0].split("/")[-1].split(".")
-        start = f"{start_json[1]}T{start_json[3][1:3]}Z{start_json[6][1:]}F"
+        start = f"{start_json[1]}T{start_json[3][1:3]}F{start_json[6][1:]}"
         end_json = filepath_list[-1].split("/")[-1].split(".")
-        end = f"{end_json[1]}T{end_json[3][1:3]}Z{end_json[6][1:]}F"
+        end = f"{end_json[1]}T{end_json[3][1:3]}F{end_json[6][1:]}"
         filename = f"{start}_{end}.parquet"
 
     write_parquet_file(

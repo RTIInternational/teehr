@@ -166,7 +166,7 @@ def fetch_and_format_nwm_grids(
         # Save to parquet
         yrmoday = df.day.iloc[0]
         z_hour = df.z_hour.iloc[0][1:3]
-        ref_time_str = f"{yrmoday}T{z_hour}Z"
+        ref_time_str = f"{yrmoday}T{z_hour}"
         parquet_filepath = Path(
             Path(output_parquet_dir), f"{ref_time_str}.parquet"
         )

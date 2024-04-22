@@ -288,8 +288,8 @@ def nwm_retro_grids_to_parquet(
                                         "configuration were found in GCS!")
             chunk_df = pd.concat(output)
 
-            start = df.datetime.min().strftime("%Y%m%dZ")
-            end = df.datetime.max().strftime("%Y%m%dZ")
+            start = df.datetime.min().strftime("%Y%m%d")
+            end = df.datetime.max().strftime("%Y%m%d")
             if start == end:
                 output_filename = Path(output_parquet_dir, f"{start}.parquet")
             else:
