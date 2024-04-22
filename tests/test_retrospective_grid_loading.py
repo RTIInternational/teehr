@@ -29,10 +29,10 @@ def test_nwm30_grid_loading():
         location_id_prefix="ngen"
     )
 
-    df = pd.read_parquet(Path(TEST_DIR, "20080523Z.parquet"))
-    assert len(df) == 2
+    df = pd.read_parquet(Path(TEST_DIR, "20080523.parquet"))
+    assert len(df) == 15
     assert df["value_time"].min() == pd.Timestamp("2008-05-23 09:00")
-    assert df["value_time"].max() == pd.Timestamp("2008-05-23 10:00")
+    assert df["value_time"].max() == pd.Timestamp("2008-05-23 23:00")
     assert df["location_id"].unique()[0] == "ngen-1016000606"
     assert df["configuration"].unique()[0] == "nwm30_retrospective"
     test_val = df[df.value_time == "2008-05-23 09:00:00"].value.values[0]
@@ -55,10 +55,10 @@ def test_nwm21_grid_loading():
         location_id_prefix="xyz"
     )
 
-    df = pd.read_parquet(Path(TEST_DIR, "20080523Z.parquet"))
-    assert len(df) == 2
+    df = pd.read_parquet(Path(TEST_DIR, "20080523.parquet"))
+    assert len(df) == 15
     assert df["value_time"].min() == pd.Timestamp("2008-05-23 09:00")
-    assert df["value_time"].max() == pd.Timestamp("2008-05-23 10:00")
+    assert df["value_time"].max() == pd.Timestamp("2008-05-23 23:00")
     assert df["location_id"].unique()[0] == "xyz-1016000606"
     assert df["configuration"].unique()[0] == "nwm21_retrospective"
     test_val = df[df.value_time == "2008-05-23 09:00:00"].value.values[0]

@@ -160,7 +160,7 @@ def nwm_retro_to_parquet(
         Str formats can include YYYY-MM-DD or MM/DD/YYYY
         Rounds down to beginning of day.
     end_date : Union[str, datetime, pd.Timestamp],
-        Last date to fetch.  Rounds up to end of day
+        Last date to fetch.  Rounds up to end of day.
         Str formats can include YYYY-MM-DD or MM/DD/YYYY.
     output_parquet_dir : Union[str, Path],
         Directory where output will be saved.

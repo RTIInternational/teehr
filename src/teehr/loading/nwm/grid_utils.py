@@ -19,10 +19,12 @@ def update_location_id_prefix(
     df = df.copy()
     tmp_df = df.location_id.str.split("-", expand=True)
 
+    df["location_id"] = df["location_id"].astype(str)
+
     if tmp_df.columns.size == 1:
-        df['location_id'] = new_prefix + "-" + df['location_id']
+        df.loc[:, 'location_id'] = new_prefix + "-" + df['location_id']
     elif tmp_df.columns.size == 2:
-        df['location_id'] = new_prefix + "-" + tmp_df[1]
+        df.loc[:, 'location_id'] = new_prefix + "-" + tmp_df[1]
     else:
         raise ValueError("Location ID has more than two parts!")
 
@@ -45,14 +47,14 @@ def compute_zonal_mean(
     cols = weights_df.col.values
     # Get the values and apply weights
     var_values = arr_2d[rows, cols]
-    weights_df["weighted_value"] = var_values * weights_df.weight.values
+    weights_df.loc[:, "weighted_value"] = var_values * weights_df.weight.values
 
     # Compute weighted average
     df = weights_df.groupby(
         by="location_id", as_index=False)[["weighted_value", "weight"]].sum()
-    df["value"] = df.weighted_value/df.weight
+    df.loc[:, "value"] = df.weighted_value/df.weight
 
-    return df[["location_id", "value"]]
+    return df[["location_id", "value"]].copy()
 
 
 @dask.delayed
@@ -86,11 +88,11 @@ def process_single_file(
     # Calculate mean areal value of selected variable
     df = compute_zonal_mean(da, weights_filepath)
 
-    df["value_time"] = value_time
-    df["reference_time"] = ref_time
-    df["measurement_unit"] = teehr_units
-    df["configuration"] = configuration
-    df["variable_name"] = variable_name
+    df.loc[:, "value_time"] = value_time
+    df.loc[:, "reference_time"] = ref_time
+    df.loc[:, "measurement_unit"] = teehr_units
+    df.loc[:, "configuration"] = configuration
+    df.loc[:, "variable_name"] = variable_name
 
     if location_id_prefix:
         df = update_location_id_prefix(df, location_id_prefix)
