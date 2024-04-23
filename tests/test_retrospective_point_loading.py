@@ -22,12 +22,21 @@ def test_nwm20_retro_one_file():
         output_parquet_dir=TEST_DIR,
         overwrite_output=True,
     )
-    df = pd.read_parquet(Path(TEST_DIR, "2000010100Z_2000010223Z.parquet"))
+    df = pd.read_parquet(Path(TEST_DIR, "20000101_20000102.parquet"))
     assert len(df) == 48
     assert df["value_time"].min() == pd.Timestamp("2000-01-01 00:00:00")
     assert df["value_time"].max() == pd.Timestamp("2000-01-02 23:00:00")
     assert df["location_id"].unique()[0] == "nwm20-7086109"
     assert df["configuration"].unique()[0] == "nwm20_retrospective"
+    assert df.columns.to_list() == [
+        "value_time",
+        "location_id",
+        "value",
+        "measurement_unit",
+        "variable_name",
+        "configuration",
+        "reference_time",
+    ]
 
 
 def test_nwm20_retro_day():
@@ -43,14 +52,23 @@ def test_nwm20_retro_day():
         chunk_by="day",
         overwrite_output=True,
     )
-    df = pd.read_parquet(Path(TEST_DIR, "20000101Z.parquet"))
+    df = pd.read_parquet(Path(TEST_DIR, "20000101.parquet"))
     assert len(df) == 24
     assert df["value_time"].min() == pd.Timestamp("2000-01-01 00:00:00")
     assert df["value_time"].max() == pd.Timestamp("2000-01-01 23:00:00")
-    df = pd.read_parquet(Path(TEST_DIR, "20000102Z.parquet"))
+    df = pd.read_parquet(Path(TEST_DIR, "20000102.parquet"))
     assert len(df) == 24
     assert df["value_time"].min() == pd.Timestamp("2000-01-02 00:00:00")
     assert df["value_time"].max() == pd.Timestamp("2000-01-02 23:00:00")
+    assert df.columns.to_list() == [
+        "value_time",
+        "location_id",
+        "value",
+        "measurement_unit",
+        "variable_name",
+        "configuration",
+        "reference_time",
+    ]
 
 
 def test_nwm20_retro_week():
@@ -66,11 +84,19 @@ def test_nwm20_retro_week():
         chunk_by="week",
         overwrite_output=True,
     )
-    df = pd.read_parquet(Path(TEST_DIR, "20000110Z_20000116Z.parquet"))
+    df = pd.read_parquet(Path(TEST_DIR, "20000110_20000116.parquet"))
     assert len(df) == 168
     assert df["value_time"].min() == pd.Timestamp("2000-01-10 00:00:00")
     assert df["value_time"].max() == pd.Timestamp("2000-01-16 23:00:00")
-    pass
+    assert df.columns.to_list() == [
+        "value_time",
+        "location_id",
+        "value",
+        "measurement_unit",
+        "variable_name",
+        "configuration",
+        "reference_time",
+    ]
 
 
 def test_nwm20_retro_month():
@@ -86,11 +112,19 @@ def test_nwm20_retro_month():
         chunk_by="month",
         overwrite_output=True,
     )
-    df = pd.read_parquet(Path(TEST_DIR, "20000101Z_20000131Z.parquet"))
+    df = pd.read_parquet(Path(TEST_DIR, "20000101_20000131.parquet"))
     assert len(df) == 744
     assert df["value_time"].min() == pd.Timestamp("2000-01-01 00:00:00")
     assert df["value_time"].max() == pd.Timestamp("2000-01-31 23:00:00")
-    pass
+    assert df.columns.to_list() == [
+        "value_time",
+        "location_id",
+        "value",
+        "measurement_unit",
+        "variable_name",
+        "configuration",
+        "reference_time",
+    ]
 
 
 def test_nwm20_retro_year():
@@ -107,12 +141,20 @@ def test_nwm20_retro_year():
         overwrite_output=True,
     )
     df = pd.read_parquet(
-        Path(TEST_DIR, "20000101Z_20001231Z.parquet")
+        Path(TEST_DIR, "20000101_20001231.parquet")
     )
     assert len(df) == 8784
     assert df["value_time"].min() == pd.Timestamp("2000-01-01 00:00:00")
     assert df["value_time"].max() == pd.Timestamp("2000-12-31 23:00:00")
-    pass
+    assert df.columns.to_list() == [
+        "value_time",
+        "location_id",
+        "value",
+        "measurement_unit",
+        "variable_name",
+        "configuration",
+        "reference_time",
+    ]
 
 
 def test_nwm20_retro_location():
@@ -129,13 +171,22 @@ def test_nwm20_retro_location():
         overwrite_output=True,
     )
     df = pd.read_parquet(
-        Path(TEST_DIR, "7086109_2000010100Z_2000010223Z.parquet")
+        Path(TEST_DIR, "7086109_2000010100_2000010223.parquet")
     )
     assert len(df) == 48
     assert df["value_time"].min() == pd.Timestamp("2000-01-01 00:00:00")
     assert df["value_time"].max() == pd.Timestamp("2000-01-02 23:00:00")
     assert df["location_id"].unique()[0] == "nwm20-7086109"
     assert df["configuration"].unique()[0] == "nwm20_retrospective"
+    assert df.columns.to_list() == [
+        "value_time",
+        "location_id",
+        "value",
+        "measurement_unit",
+        "variable_name",
+        "configuration",
+        "reference_time",
+    ]
 
 
 def test_nwm21_retro_one_file():
@@ -150,12 +201,21 @@ def test_nwm21_retro_one_file():
         output_parquet_dir=TEST_DIR,
         overwrite_output=True,
     )
-    df = pd.read_parquet(Path(TEST_DIR, "2000010100Z_2000010223Z.parquet"))
+    df = pd.read_parquet(Path(TEST_DIR, "20000101_20000102.parquet"))
     assert len(df) == 48
     assert df["value_time"].min() == pd.Timestamp("2000-01-01 00:00:00")
     assert df["value_time"].max() == pd.Timestamp("2000-01-02 23:00:00")
     assert df["location_id"].unique()[0] == "nwm21-7086109"
     assert df["configuration"].unique()[0] == "nwm21_retrospective"
+    assert df.columns.to_list() == [
+        "value_time",
+        "location_id",
+        "value",
+        "measurement_unit",
+        "variable_name",
+        "configuration",
+        "reference_time",
+    ]
 
 
 def test_nwm21_retro_day():
@@ -171,14 +231,23 @@ def test_nwm21_retro_day():
         chunk_by="day",
         overwrite_output=True,
     )
-    df = pd.read_parquet(Path(TEST_DIR, "20000101Z.parquet"))
+    df = pd.read_parquet(Path(TEST_DIR, "20000101.parquet"))
     assert len(df) == 24
     assert df["value_time"].min() == pd.Timestamp("2000-01-01 00:00:00")
     assert df["value_time"].max() == pd.Timestamp("2000-01-01 23:00:00")
-    df = pd.read_parquet(Path(TEST_DIR, "20000102Z.parquet"))
+    df = pd.read_parquet(Path(TEST_DIR, "20000102.parquet"))
     assert len(df) == 24
     assert df["value_time"].min() == pd.Timestamp("2000-01-02 00:00:00")
     assert df["value_time"].max() == pd.Timestamp("2000-01-02 23:00:00")
+    assert df.columns.to_list() == [
+        "value_time",
+        "location_id",
+        "value",
+        "measurement_unit",
+        "variable_name",
+        "configuration",
+        "reference_time",
+    ]
 
 
 def test_nwm21_retro_location():
@@ -195,13 +264,22 @@ def test_nwm21_retro_location():
         overwrite_output=True,
     )
     df = pd.read_parquet(
-        Path(TEST_DIR, "7086109_2000010100Z_2000010223Z.parquet")
+        Path(TEST_DIR, "7086109_2000010100_2000010223.parquet")
     )
     assert len(df) == 48
     assert df["value_time"].min() == pd.Timestamp("2000-01-01 00:00:00")
     assert df["value_time"].max() == pd.Timestamp("2000-01-02 23:00:00")
     assert df["location_id"].unique()[0] == "nwm21-7086109"
     assert df["configuration"].unique()[0] == "nwm21_retrospective"
+    assert df.columns.to_list() == [
+        "value_time",
+        "location_id",
+        "value",
+        "measurement_unit",
+        "variable_name",
+        "configuration",
+        "reference_time",
+    ]
 
 
 def test_nwm30_retro_day():
@@ -217,14 +295,23 @@ def test_nwm30_retro_day():
         chunk_by="day",
         overwrite_output=True,
     )
-    df = pd.read_parquet(Path(TEST_DIR, "20000101Z.parquet"))
+    df = pd.read_parquet(Path(TEST_DIR, "20000101.parquet"))
     assert len(df) == 24
     assert df["value_time"].min() == pd.Timestamp("2000-01-01 00:00:00")
     assert df["value_time"].max() == pd.Timestamp("2000-01-01 23:00:00")
-    df = pd.read_parquet(Path(TEST_DIR, "20000102Z.parquet"))
+    df = pd.read_parquet(Path(TEST_DIR, "20000102.parquet"))
     assert len(df) == 24
     assert df["value_time"].min() == pd.Timestamp("2000-01-02 00:00:00")
     assert df["value_time"].max() == pd.Timestamp("2000-01-02 23:00:00")
+    assert df.columns.to_list() == [
+        "value_time",
+        "location_id",
+        "value",
+        "measurement_unit",
+        "variable_name",
+        "configuration",
+        "reference_time",
+    ]
 
 
 if __name__ == "__main__":

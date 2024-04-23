@@ -15,6 +15,7 @@ Changed
 * Fixed ``SettingWithCopyWarning`` in NWM grid loading.
 * Fixed the ``end_date`` in NWM retrospective loading to include the entirety of the last day and not fail when
   last available day is specfified.
+* Removed "elevation", "gage_id", "order" from NWM v3.0 retrospective point loading.
 
 
 0.3.16 - 2024-04-11

@@ -37,6 +37,15 @@ def test_nwm30_grid_loading():
     assert df["configuration"].unique()[0] == "nwm30_retrospective"
     test_val = df[df.value_time == "2008-05-23 09:00:00"].value.values[0]
     assert math.isclose(test_val, 0.00025471, rel_tol=1e-4)
+    assert df.columns.to_list() == [
+        "location_id",
+        "value",
+        "value_time",
+        "reference_time",
+        "measurement_unit",
+        "configuration",
+        "variable_name",
+    ]
 
 
 def test_nwm21_grid_loading():
@@ -63,6 +72,15 @@ def test_nwm21_grid_loading():
     assert df["configuration"].unique()[0] == "nwm21_retrospective"
     test_val = df[df.value_time == "2008-05-23 09:00:00"].value.values[0]
     assert math.isclose(test_val, 0.00025555, rel_tol=1e-4)
+    assert df.columns.to_list() == [
+        "location_id",
+        "value",
+        "value_time",
+        "reference_time",
+        "measurement_unit",
+        "configuration",
+        "variable_name",
+    ]
 
 
 if __name__ == "__main__":

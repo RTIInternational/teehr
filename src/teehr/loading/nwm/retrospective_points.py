@@ -100,7 +100,7 @@ def da_to_df(
     df["variable_name"] = df["variable_name"].astype("category")
     df["configuration"] = df["configuration"].astype("category")
 
-    if nwm_version == "nwm21":
+    if (nwm_version == "nwm21") or (nwm_version == "nwm30"):
         df.drop(columns=["elevation", "gage_id", "order"], inplace=True)
 
     return df
