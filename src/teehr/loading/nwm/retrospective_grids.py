@@ -1,4 +1,25 @@
-"""A module for loading retrospective NWM gridded data."""
+"""A module for loading retrospective NWM gridded data.
+
+The function ``nwm_retro_grids_to_parquet()`` can be used to fetch and format
+two different versions of retrospective NWM data (v2.1 and v3.0) for
+specified variables and date ranges, and summarize the grid pixels
+intersecting polygons provided in the weights file using an area-weighted mean
+approach.
+
+Each version of the NWM data is hosted on `AWS S3
+<https://registry.opendata.aws/nwm-archive/>`__ and is stored in Zarr format
+(v3.0) or as Kerchunk reference files (v2.1). Several options are included
+for fetching the data in chunks, including by week or month which can be
+specified using the ``chunk_by`` argument.
+
+Care must be taken when choosing a ``chunk_by`` value to minimize the amount
+of data transferred over the network.
+
+.. note::
+   It is recommended to set the ``chunk_by`` parameter to the largest time
+   period ('week' or 'month') that will fit into your systems memory
+   given the number of polygons being processed.
+"""
 from datetime import datetime
 from pathlib import Path
 from typing import Union, Optional, Tuple, Dict
@@ -12,7 +33,7 @@ import dask
 
 from teehr.loading.nwm.const import NWM22_UNIT_LOOKUP
 from teehr.models.loading.utils import (
-    ChunkByEnum,
+    NWMChunkByEnum,
     SupportedNWMRetroVersionsEnum,
     SupportedNWMRetroDomainsEnum
 )
@@ -31,8 +52,10 @@ from teehr.loading.nwm.retrospective_points import (
 
 
 def get_data_array(var_da: xr.DataArray, rows: np.array, cols: np.array):
-    """Read a subset of the data array into memory."""
-    var_arr = var_da.values[:, rows, cols]
+    """Read a subset of the data array into memory vectorized indexing."""
+    row_pts = xr.DataArray(rows, dims="points")
+    col_pts = xr.DataArray(cols, dims="points")
+    var_arr = var_da.isel(y=row_pts, x=col_pts).values
     return var_arr
 
 
@@ -176,7 +199,7 @@ def nwm_retro_grids_to_parquet(
     start_date: Union[str, datetime, pd.Timestamp],
     end_date: Union[str, datetime, pd.Timestamp],
     output_parquet_dir: Union[str, Path],
-    chunk_by: Union[ChunkByEnum, None] = None,
+    chunk_by: Union[NWMChunkByEnum, None] = None,
     overwrite_output: Optional[bool] = False,
     domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
     location_id_prefix: Optional[Union[str, None]] = None
@@ -209,10 +232,10 @@ def nwm_retro_grids_to_parquet(
         Str formats can include YYYY-MM-DD or MM/DD/YYYY.
     output_parquet_dir : Union[str, Path],
         Directory where output will be saved.
-    chunk_by : Union[ChunkByEnum, None] = None,
+    chunk_by : Union[NWMChunkByEnum, None] = None,
         If None (default) saves all timeseries to a single file, otherwise
         the data is processed using the specified parameter.
-        Can be: 'location_id', 'day', 'week', 'month', or 'year'.
+        Can be: 'week' or 'month' for gridded data.
     overwrite_output : bool = False,
         Whether output should overwrite files if they exist.  Default is False.
     domain : str = "CONUS"
@@ -247,7 +270,7 @@ def nwm_retro_grids_to_parquet(
         # Construct Kerchunk-json paths within the selected time
         nwm21_paths = construct_nwm21_json_paths(start_date, end_date)
 
-        if chunk_by in ["year", "location_id"]:
+        if chunk_by in ["year"]:
             raise ValueError(
                 f"Chunkby '{chunk_by}' is not implemented for gridded data"
             )

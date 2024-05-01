@@ -1,4 +1,29 @@
-"""A module for loading retrospective NWM point data."""
+"""A module for loading retrospective NWM point data (i.e., streamflow).
+
+The function ``nwm_retro_to_parquet()`` can be used to fetch and format three
+different versions of retrospective NWM data (v2.0, v2.1, and v3.0) for
+specified variables, locations, and date ranges.
+
+Each version of the NWM data is hosted on `AWS S3
+<https://registry.opendata.aws/nwm-archive/>`__ and is stored in Zarr format.
+Several options are included for fetching the data in chunks, including by
+week, month, or year, which can be specified using the ``chunk_by`` argument.
+
+Care must be taken when choosing a ``chunk_by`` value to minimize the amount
+of data transferred over the network.
+
+The Zarr stores for each version of the NWM data have the same internal
+chunking scheme: {"time": 672, "feature_id": 30000}, which defines the minimum
+amount of data that can be accessed at once (a single chunk). This means that
+if you specify ``chunk_by='week'``, the entire chunk
+(672 hours x 30000 locations) will be fetched for each week (128 hours)
+falling within that chunk, resulting in redundant data transfer.
+
+.. note::
+   It is recommended to set the ``chunk_by`` parameter to the largest time
+   period ('week', 'month', or 'year') that will fit into your systems memory
+   given the number of locations being fetched.
+"""
 import pandas as pd
 import xarray as xr
 import fsspec
@@ -11,7 +36,7 @@ from typing import Union, List, Optional
 
 from teehr.loading.nwm.const import NWM22_UNIT_LOOKUP
 from teehr.models.loading.utils import (
-    ChunkByEnum,
+    NWMChunkByEnum,
     SupportedNWMRetroVersionsEnum,
     SupportedNWMRetroDomainsEnum
 )
@@ -139,7 +164,7 @@ def nwm_retro_to_parquet(
     start_date: Union[str, datetime, pd.Timestamp],
     end_date: Union[str, datetime, pd.Timestamp],
     output_parquet_dir: Union[str, Path],
-    chunk_by: Union[ChunkByEnum, None] = None,
+    chunk_by: Union[NWMChunkByEnum, None] = None,
     overwrite_output: Optional[bool] = False,
     domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS"
 ):
@@ -166,10 +191,10 @@ def nwm_retro_to_parquet(
         Str formats can include YYYY-MM-DD or MM/DD/YYYY.
     output_parquet_dir : Union[str, Path],
         Directory where output will be saved.
-    chunk_by : Union[ChunkByEnum, None] = None,
+    chunk_by : Union[NWMChunkByEnum, None] = None,
         If None (default) saves all timeseries to a single file, otherwise
         the data is processed using the specified parameter.
-        Can be: 'location_id', 'day', 'week', 'month', or 'year'.
+        Can be: 'week', 'month', or 'year'.
     overwrite_output : bool = False,
         Whether output should overwrite files if they exist.  Default is False.
     domain : str = "CONUS"
@@ -235,21 +260,6 @@ def nwm_retro_to_parquet(
     )[variable_name].sel(
         feature_id=location_ids, time=slice(start_date, end_date)
     )
-
-    # Fetch data by site
-    if chunk_by == "location_id":
-        for location_id in location_ids:
-
-            da = da.sel(feature_id=location_id)
-            df = da_to_df(nwm_version, da)
-            min_time = df.value_time.min().strftime("%Y%m%d%H")
-            max_time = df.value_time.max().strftime("%Y%m%d%H")
-            output_filepath = Path(
-                output_parquet_dir,
-                f"{location_id}_{min_time}_{max_time}.parquet"
-            )
-            write_parquet_file(output_filepath, overwrite_output, df)
-        return
 
     # Chunk data by time
     periods = create_periods_based_on_chunksize(

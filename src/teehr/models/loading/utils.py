@@ -11,11 +11,19 @@ except ImportError:  # pragma: no cover
         pass  # pragma: no cover
 
 
-class ChunkByEnum(StrEnum):
-    """ChunkByEnum."""
+class USGSChunkByEnum(StrEnum):
+    """USGSChunkByEnum for loading USGS data."""
 
     day = "day"
     location_id = "location_id"
+    week = "week"
+    month = "month"
+    year = "year"
+
+
+class NWMChunkByEnum(StrEnum):
+    """NWMChunkByEnum for loading NWM data."""
+
     week = "week"
     month = "month"
     year = "year"

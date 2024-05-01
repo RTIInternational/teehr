@@ -1,11 +1,27 @@
-"""Module for loading and processing USGS streamflow data."""
+"""Module for loading and processing USGS streamflow data.
+
+The function ``usgs_to_parquet`` fetches USGS streamflow data and saves it to
+parquet files following the TEEHR data model.  The OWP tool ``HydroTools`` is
+used to fetch the data from the USGS API.  Several ``chunk_by`` options are
+included to allow for the data to be fetched by location_id, day, week, month,
+and year (or None).
+
+Note that the USGS API is called for each unique value in the specified
+chunk_by option.  For example, if chunk_by is set to "location_id", the USGS
+API will be called for each unique location_id in the provided list.
+
+.. note::
+   Care should be taken to select the appropriate chunk_by option to based on
+   the number of locations and the time period of interest, to avoid excessive
+   API calls and produce more efficient queries.
+"""
 import pandas as pd
 
 from typing import List, Union, Optional
 from pathlib import Path
 from datetime import datetime, timedelta
 from hydrotools.nwis_client.iv import IVDataService
-from teehr.models.loading.utils import ChunkByEnum
+from teehr.models.loading.utils import USGSChunkByEnum
 from pydantic import validate_call, ConfigDict
 from teehr.loading.nwm.utils import (
     write_parquet_file,
@@ -124,7 +140,7 @@ def usgs_to_parquet(
     start_date: Union[str, datetime, pd.Timestamp],
     end_date: Union[str, datetime, pd.Timestamp],
     output_parquet_dir: Union[str, Path],
-    chunk_by: Union[ChunkByEnum, None] = None,
+    chunk_by: Union[USGSChunkByEnum, None] = None,
     filter_to_hourly: bool = True,
     filter_no_data: bool = True,
     convert_to_si: bool = True,
@@ -149,7 +165,7 @@ def usgs_to_parquet(
         Path of directory where parquet files will be saved.
     chunk_by : Union[str, None], default = None
         How to "chunk" the fetching and storing of the data.
-        Valid options = ["day", "site", None].
+        Valid options = ["location_id", "day", "week", "month", "year", None].
     filter_to_hourly : bool = True
         Return only values that fall on the hour (i.e. drop 15 minute data).
     filter_no_data : bool = True
