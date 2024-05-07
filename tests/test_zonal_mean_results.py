@@ -4,7 +4,10 @@ from pathlib import Path
 import pandas as pd
 import xarray as xr
 
-from teehr.loading.nwm.grid_utils import compute_zonal_mean
+from teehr.loading.nwm.grid_utils import (
+    compute_weighted_average,
+    get_nwm_grid_data
+)
 
 
 TEST_DIR = Path("tests", "data", "nwm22")
@@ -17,9 +20,6 @@ TEST_ZONAL_MEAN = Path(TEST_DIR, "test_zonal_mean_results.parquet")
 
 def test_zonal_mean():
     """Test zonal mean results.
-
-    Notes
-    -----
 
     The truth data set  ``test_zonal_mean_results.parquet`` was validated
     against ``exactextract`` results and checked for a single catchment
@@ -38,9 +38,19 @@ def test_zonal_mean():
     """
     grid_ds = xr.open_dataset(TEMPLATE_FILEPATH)
 
-    df = compute_zonal_mean(
-        da=grid_ds.RAINRATE,
-        weights_filepath=WEIGHTS_FILEPATH
+    weights_df = pd.read_parquet(
+        WEIGHTS_FILEPATH, columns=["row", "col", "weight", "location_id"]
+    )
+
+    grid_values = get_nwm_grid_data(
+        grid_ds.RAINRATE[0],
+        weights_df.row.values,
+        weights_df.col.values
+    )
+
+    df = compute_weighted_average(
+        grid_values=grid_values,
+        weights_df=weights_df
     )
 
     df_test = pd.read_parquet(TEST_ZONAL_MEAN)

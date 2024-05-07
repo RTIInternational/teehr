@@ -38,7 +38,11 @@ from teehr.models.loading.utils import (
     SupportedNWMRetroDomainsEnum
 )
 from teehr.models.loading.nwm22_grid import ForcingVariablesEnum
-from teehr.loading.nwm.grid_utils import update_location_id_prefix
+from teehr.loading.nwm.grid_utils import (
+    update_location_id_prefix,
+    compute_weighted_average,
+    get_nwm_grid_data
+)
 from teehr.loading.nwm.utils import (
     write_parquet_file,
     get_dataset,
@@ -51,20 +55,21 @@ from teehr.loading.nwm.retrospective_points import (
 )
 
 
-def get_data_array(var_da: xr.DataArray, rows: np.array, cols: np.array):
-    """Read a subset of the data array into memory vectorized indexing."""
+def get_nwm21_retro_grid_data(
+    var_da: xr.DataArray,
+    rows: np.array,
+    cols: np.array
+) -> np.array:
+    """Read a subset nwm30 data into memory using vectorized indexing."""
     row_pts = xr.DataArray(rows, dims="points")
     col_pts = xr.DataArray(cols, dims="points")
-    var_arr = var_da.isel(y=row_pts, x=col_pts).values
+    var_arr = var_da.isel(south_north=row_pts, west_east=col_pts).values
     return var_arr
 
 
-def process_group(
+def process_nwm30_retro_group(
     da_i: xr.DataArray,
-    rows: np.array,
-    cols: np.array,
-    weights_df: pd.DataFrame,
-    weight_vals: np.array,
+    weights_filepath: str,
     variable_name: str,
     units_format_dict: Dict,
     nwm_version: str,
@@ -75,21 +80,22 @@ def process_group(
     Pixel weights for each zone are defined in weights_df,
     and the output is saved to parquet files.
     """
-    var_arr = get_data_array(da_i, rows, cols)
-
-    # Get the subset data array of start and end times just for the time values
-    time_subset_vals = da_i.time.values
+    weights_df = pd.read_parquet(
+        weights_filepath, columns=["row", "col", "weight", "location_id"]
+    )
 
     hourly_dfs = []
-    for i, dt in enumerate(time_subset_vals):
-        # Calculate weighted pixel values
-        weights_df["value"] = var_arr[i, :] * weight_vals
-        # Compute mean per group/location
-        df = weights_df.groupby(
-            by="location_id", observed=True
-        )["value"].mean().to_frame()
-        df["value_time"] = pd.to_datetime(dt)
-        df.reset_index(inplace=True)
+    for time in da_i.time.values:
+
+        grid_values = get_nwm_grid_data(
+            da_i.sel(time=time),
+            weights_df.row.values,
+            weights_df.col.values
+        )
+
+        df = compute_weighted_average(grid_values, weights_df)
+
+        df.loc[:, "value_time"] = pd.to_datetime(time)
         hourly_dfs.append(df)
 
     chunk_df = pd.concat(hourly_dfs)
@@ -128,29 +134,8 @@ def construct_nwm21_json_paths(
     return paths_df
 
 
-def compute_zonal_mean(
-    var_da: xr.DataArray, weights_filepath: str, time_dt: pd.Timestamp
-) -> pd.DataFrame:
-    """Compute the zonal mean for given zones and weights."""
-    weights_df = pd.read_parquet(
-        weights_filepath, columns=["row", "col", "weight", "location_id"]
-    )
-    # Get row/col indices
-    rows = weights_df.row.values
-    cols = weights_df.col.values
-    arr_2d = var_da.compute().values
-    var_values = arr_2d[rows, cols]
-    # Get the values and apply weights
-    weights_df["value"] = var_values * weights_df.weight.values
-    # Compute mean
-    df = weights_df.groupby(by="location_id")["value"].mean().to_frame()
-    df["value_time"] = time_dt
-    df.reset_index(inplace=True)
-    return df
-
-
 @dask.delayed
-def process_single_file(
+def process_single_nwm21_retro_grid_file(
     row: Tuple,
     variable_name: str,
     weights_filepath: str,
@@ -176,8 +161,18 @@ def process_single_file(
     value_time = row.datetime
     da = ds[variable_name].isel(Time=0)
 
+    weights_df = pd.read_parquet(
+        weights_filepath, columns=["row", "col", "weight", "location_id"]
+    )
+
+    grid_values = get_nwm21_retro_grid_data(
+        da,
+        weights_df.row.values,
+        weights_df.col.values
+    )
+
     # Calculate mean areal of selected variable
-    df = compute_zonal_mean(da, weights_filepath, value_time)
+    df = compute_weighted_average(grid_values, weights_df)
 
     df["value_time"] = value_time
     df["reference_time"] = value_time
@@ -298,7 +293,7 @@ def nwm_retro_grids_to_parquet(
             results = []
             for row in df.itertuples():
                 results.append(
-                    process_single_file(
+                    process_single_nwm21_retro_grid_file(
                         row=row,
                         variable_name=variable_name,
                         weights_filepath=zonal_weights_filepath,
@@ -348,17 +343,6 @@ def nwm_retro_grids_to_parquet(
             chunks={}, consolidated=True
         )[variable_name].sel(time=slice(start_date, end_date))
 
-        # Get weights and their row/col indices
-        weights_df = pd.read_parquet(
-            zonal_weights_filepath,
-            columns=["row", "col", "weight", "location_id"]
-        )
-        weights_df["location_id"] = weights_df.location_id.astype("category")
-
-        rows = weights_df.row.values
-        cols = weights_df.col.values
-        weight_vals = weights_df.weight.values
-
         if chunk_by in ["year", "location_id"]:
             raise ValueError(
                 f"Chunkby '{chunk_by}' is not implemented for gridded data"
@@ -383,12 +367,9 @@ def nwm_retro_grids_to_parquet(
 
             da_i = var_da.sel(time=slice(dts["start_dt"], dts["end_dt"]))
 
-            chunk_df = process_group(
+            chunk_df = process_nwm30_retro_group(
                 da_i=da_i,
-                rows=rows,
-                cols=cols,
-                weights_df=weights_df,
-                weight_vals=weight_vals,
+                weights_filepath=zonal_weights_filepath,
                 variable_name=variable_name,
                 units_format_dict=NWM22_UNIT_LOOKUP,
                 nwm_version=nwm_version,
