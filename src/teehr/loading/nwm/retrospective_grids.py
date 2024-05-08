@@ -99,12 +99,12 @@ def process_nwm30_retro_group(
         hourly_dfs.append(df)
 
     chunk_df = pd.concat(hourly_dfs)
-    chunk_df["reference_time"] = chunk_df.value_time
+    chunk_df.loc[:, "reference_time"] = chunk_df.value_time
     nwm_units = da_i.attrs["units"]
     teehr_units = units_format_dict.get(nwm_units, nwm_units)
-    chunk_df["measurement_unit"] = teehr_units
-    chunk_df["configuration"] = f"{nwm_version}_retrospective"
-    chunk_df["variable_name"] = variable_name
+    chunk_df.loc[:, "measurement_unit"] = teehr_units
+    chunk_df.loc[:, "configuration"] = f"{nwm_version}_retrospective"
+    chunk_df.loc[:, "variable_name"] = variable_name
 
     if location_id_prefix:
         chunk_df = update_location_id_prefix(chunk_df, location_id_prefix)
@@ -174,11 +174,11 @@ def process_single_nwm21_retro_grid_file(
     # Calculate mean areal of selected variable
     df = compute_weighted_average(grid_values, weights_df)
 
-    df["value_time"] = value_time
-    df["reference_time"] = value_time
-    df["measurement_unit"] = teehr_units
-    df["configuration"] = f"{nwm_version}_retrospective"
-    df["variable_name"] = variable_name
+    df.loc[:, "value_time"] = value_time
+    df.loc[:, "reference_time"] = value_time
+    df.loc[:, "measurement_unit"] = teehr_units
+    df.loc[:, "configuration"] = f"{nwm_version}_retrospective"
+    df.loc[:, "variable_name"] = variable_name
 
     if location_id_prefix:
         df = update_location_id_prefix(df, location_id_prefix)
