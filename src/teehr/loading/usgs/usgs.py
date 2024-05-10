@@ -31,14 +31,12 @@ def _filter_to_hourly(df: pd.DataFrame) -> pd.DataFrame:
 
 def _filter_no_data(df: pd.DataFrame, no_data_value=-999) -> pd.DataFrame:
     """Filter out no data values."""
-
     df2 = df[df["value"] != no_data_value]
     return df2
 
 
 def _convert_to_si_units(df: pd.DataFrame) -> pd.DataFrame:
     """Convert streamflow values from english to metric."""
-
     df["value"] = df["value"] * 0.3048**3
     df["measurement_unit"] = "m3/s"
     return df
@@ -57,7 +55,6 @@ def _datetime_to_date(dt: datetime) -> datetime:
 
 def _format_df(df: pd.DataFrame) -> pd.DataFrame:
     """Format HydroTools dataframe columns to TEEHR data model."""
-
     df.rename(columns={"usgs_site_code": "location_id"}, inplace=True)
     df["location_id"] = "usgs-" + df["location_id"].astype(str)
     df["configuration"] = "usgs_gage_data"
@@ -82,7 +79,6 @@ def _fetch_usgs(
     convert_to_si: bool = True
 ) -> pd.DataFrame:
     """Fetch USGS gage data and format to TEEHR format."""
-
     start_dt_str = start_date.strftime(DATETIME_STR_FMT)
     end_dt_str = (
         end_date
@@ -113,8 +109,7 @@ def _fetch_usgs(
 
 
 def _format_output_filename(chunk_by: str, start_dt, end_dt) -> str:
-    """Format the output filename based on min and max
-    datetime in the dataset."""
+    """Format the output filename based on min and max datetime."""
     if chunk_by == "day":
         return f"{start_dt.strftime('%Y-%m-%d')}.parquet"
     else:
@@ -136,6 +131,8 @@ def usgs_to_parquet(
     overwrite_output: Optional[bool] = False,
 ):
     """Fetch USGS gage data and save as a Parquet file.
+
+    All dates and times within the files and in the file names are in UTC.
 
     Parameters
     ----------
@@ -192,7 +189,6 @@ def usgs_to_parquet(
     >>>     overwrite_output=OVERWRITE_OUTPUT
     >>> )
     """
-
     start_date = pd.Timestamp(start_date)
     end_date = pd.Timestamp(end_date)
 

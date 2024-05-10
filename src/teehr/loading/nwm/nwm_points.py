@@ -44,8 +44,7 @@ def nwm_to_parquet(
     ignore_missing_file: Optional[bool] = True,
     overwrite_output: Optional[bool] = False,
 ):
-    """Fetch NWM point data, format to tabular TEEHR data model,
-    and save to parquet.
+    """Fetch NWM point data and save as a Parquet file in TEEHR format.
 
     Parameters
     ----------
@@ -99,12 +98,11 @@ def nwm_to_parquet(
         process_by_z_hour is set to False. Default value is 100. Larger values
         can result in greater efficiency but require more memory.
     ignore_missing_file : Optional[bool]
-        Flag specifying whether or not to fail if a missing NWM file is encountered
-        True = skip and continue.
-        False = fail.
+        Flag specifying whether or not to fail if a missing NWM file is
+        encountered. True = skip and continue; False = fail.
     overwrite_output : Optional[bool]
-        Flag specifying whether or not to overwrite output files if they already
-        exist.  True = overwrite; False = fail.
+        Flag specifying whether or not to overwrite output files if they
+        already exist.  True = overwrite; False = fail.
 
     Notes
     -----
@@ -112,9 +110,11 @@ def nwm_to_parquet(
     variable_name are stored as pydantic models in point_config_models.py
 
     Forecast and assimilation data is grouped and saved one file per reference
-    time, using the file name convention "YYYYMMDDTHHZ".  The tabular output
+    time, using the file name convention "YYYYMMDDTHH".  The tabular output
     parquet files follow the timeseries data model described in the
     :ref:`data model <data_model>`.
+
+    All dates and times within the files and in the file names are in UTC.
 
     Examples
     --------
@@ -164,8 +164,7 @@ def nwm_to_parquet(
     >>>     ignore_missing_file=IGNORE_MISSING_FILE,
     >>>     overwrite_output=OVERWRITE_OUTPUT,
     >>> )
-    """
-
+    """ # noqa
     # Import appropriate config model and dicts based on NWM version
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
         from teehr.models.loading.nwm22_point import PointConfigurationModel

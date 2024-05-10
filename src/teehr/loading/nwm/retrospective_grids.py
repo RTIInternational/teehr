@@ -186,6 +186,8 @@ def nwm_retro_grids_to_parquet(
     Pixel values are summarized to zones based on a pre-computed
     zonal weights file, and the output is saved to parquet files.
 
+    All dates and times within the files and in the file names are in UTC.
+
     Parameters
     ----------
     nwm_version : SupportedNWMRetroVersionsEnum
@@ -232,6 +234,9 @@ def nwm_retro_grids_to_parquet(
     end_date = pd.Timestamp(end_date)
 
     validate_start_end_date(nwm_version, start_date, end_date)
+
+    # Include the entirety of the specified end day
+    end_date = end_date.to_period(freq="D").end_time
 
     output_dir = Path(output_parquet_dir)
     if not output_dir.exists():
@@ -288,8 +293,8 @@ def nwm_retro_grids_to_parquet(
                                         "configuration were found in GCS!")
             chunk_df = pd.concat(output)
 
-            start = df.datetime.min().strftime("%Y%m%dZ")
-            end = df.datetime.max().strftime("%Y%m%dZ")
+            start = df.datetime.min().strftime("%Y%m%d")
+            end = df.datetime.max().strftime("%Y%m%d")
             if start == end:
                 output_filename = Path(output_parquet_dir, f"{start}.parquet")
             else:
@@ -387,11 +392,11 @@ def nwm_retro_grids_to_parquet(
 #         nwm_version="nwm21",
 #         variable_name="RAINRATE",
 #         zonal_weights_filepath="/mnt/data/merit/YalansBasins/cat_pfaf_7_conus_subset_nwm_v30_weights.parquet",
-#         start_date="2007-09-01 00:00",
-#         end_date="2008-3-22 23:00",
+#         start_date="2020-12-10",
+#         end_date="2020-12-31 12:00",
 #         output_parquet_dir="/mnt/data/ciroh/retro",
 #         overwrite_output=True,
 #         chunk_by="week"
 #     )
 
-#     # print(f"Total elapsed: {(time.time() - t0):.2f} secs")
+    # print(f"Total elapsed: {(time.time() - t0):.2f} secs")
