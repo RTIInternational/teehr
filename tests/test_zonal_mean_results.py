@@ -6,7 +6,8 @@ import xarray as xr
 
 from teehr.loading.nwm.grid_utils import (
     compute_weighted_average,
-    get_nwm_grid_data
+    get_nwm_grid_data,
+    get_weights_row_col_stats
 )
 
 
@@ -42,11 +43,19 @@ def test_zonal_mean():
         WEIGHTS_FILEPATH, columns=["row", "col", "weight", "location_id"]
     )
 
-    grid_values = get_nwm_grid_data(
+    weights_bounds = get_weights_row_col_stats(weights_df)
+
+    grid_arr = get_nwm_grid_data(
         grid_ds.RAINRATE[0],
-        weights_df.row.values,
-        weights_df.col.values
+        weights_bounds["row_min"],
+        weights_bounds["col_min"],
+        weights_bounds["row_max"],
+        weights_bounds["col_max"]
     )
+    grid_values = grid_arr[
+        weights_bounds["rows_norm"],
+        weights_bounds["cols_norm"]
+    ]
 
     df = compute_weighted_average(
         grid_values=grid_values,

@@ -28,7 +28,6 @@ import pandas as pd
 import xarray as xr
 import fsspec
 from pydantic import validate_call
-import numpy as np
 import dask
 
 from teehr.loading.nwm.const import NWM22_UNIT_LOOKUP
@@ -41,7 +40,8 @@ from teehr.models.loading.nwm22_grid import ForcingVariablesEnum
 from teehr.loading.nwm.grid_utils import (
     update_location_id_prefix,
     compute_weighted_average,
-    get_nwm_grid_data
+    get_nwm_grid_data,
+    get_weights_row_col_stats
 )
 from teehr.loading.nwm.utils import (
     write_parquet_file,
@@ -57,14 +57,17 @@ from teehr.loading.nwm.retrospective_points import (
 
 def get_nwm21_retro_grid_data(
     var_da: xr.DataArray,
-    rows: np.array,
-    cols: np.array
-) -> np.array:
-    """Read a subset nwm30 data into memory using vectorized indexing."""
-    row_pts = xr.DataArray(rows, dims="points")
-    col_pts = xr.DataArray(cols, dims="points")
-    var_arr = var_da.isel(south_north=row_pts, west_east=col_pts).values
-    return var_arr
+    row_min: int,
+    col_min: int,
+    row_max: int,
+    col_max: int
+):
+    """Read a subset nwm21 retro grid data into memory from row/col bounds."""
+    grid_values = var_da.isel(
+        west_east=slice(col_min, col_max+1),
+        south_north=slice(row_min, row_max+1)
+    ).values
+    return grid_values
 
 
 def process_nwm30_retro_group(
@@ -84,17 +87,24 @@ def process_nwm30_retro_group(
         weights_filepath, columns=["row", "col", "weight", "location_id"]
     )
 
+    weights_bounds = get_weights_row_col_stats(weights_df)
+
+    grid_arr = get_nwm_grid_data(
+        da_i,
+        weights_bounds["row_min"],
+        weights_bounds["col_min"],
+        weights_bounds["row_max"],
+        weights_bounds["col_max"]
+    )
+
     hourly_dfs = []
-    for time in da_i.time.values:
-
-        grid_values = get_nwm_grid_data(
-            da_i.sel(time=time),
-            weights_df.row.values,
-            weights_df.col.values
-        )
-
+    for i, time in enumerate(da_i.time.values):
+        grid_values = grid_arr[
+            i,
+            weights_bounds["rows_norm"],
+            weights_bounds["cols_norm"]
+        ]
         df = compute_weighted_average(grid_values, weights_df)
-
         df.loc[:, "value_time"] = pd.to_datetime(time)
         hourly_dfs.append(df)
 
@@ -165,11 +175,19 @@ def process_single_nwm21_retro_grid_file(
         weights_filepath, columns=["row", "col", "weight", "location_id"]
     )
 
-    grid_values = get_nwm21_retro_grid_data(
+    weights_bounds = get_weights_row_col_stats(weights_df)
+
+    grid_arr = get_nwm21_retro_grid_data(
         da,
-        weights_df.row.values,
-        weights_df.col.values
+        weights_bounds["row_min"],
+        weights_bounds["col_min"],
+        weights_bounds["row_max"],
+        weights_bounds["col_max"]
     )
+    grid_values = grid_arr[
+        weights_bounds["rows_norm"],
+        weights_bounds["cols_norm"]
+    ]
 
     # Calculate mean areal of selected variable
     df = compute_weighted_average(grid_values, weights_df)

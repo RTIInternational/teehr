@@ -11,12 +11,37 @@ import xarray as xr
 from teehr.loading.nwm.utils import get_dataset, write_parquet_file
 
 
-def get_nwm_grid_data(var_da: xr.DataArray, rows: np.array, cols: np.array):
-    """Read a subset nwm grid data into memory using vectorized indexing."""
-    row_pts = xr.DataArray(rows, dims="points")
-    col_pts = xr.DataArray(cols, dims="points")
-    var_arr = var_da.isel(y=row_pts, x=col_pts).values
-    return var_arr
+def get_weights_row_col_stats(weights_df: pd.DataFrame) -> Dict:
+    """Get row and column statistics for weights dataframe."""
+    row_min = weights_df.row.values.min()
+    col_min = weights_df.col.values.min()
+    row_max = weights_df.row.values.max()
+    col_max = weights_df.col.values.max()
+
+    rows_norm = weights_df.row.values - row_min
+    cols_norm = weights_df.col.values - col_min
+    return {
+        "row_min": row_min,
+        "row_max": row_max,
+        "col_min": col_min,
+        "col_max": col_max,
+        "rows_norm": rows_norm,
+        "cols_norm": cols_norm
+    }
+
+
+def get_nwm_grid_data(
+    var_da: xr.DataArray,
+    row_min: int,
+    col_min: int,
+    row_max: int,
+    col_max: int
+):
+    """Read a subset nwm grid data into memory using row/col bounds."""
+    grid_values = var_da.isel(
+        x=slice(col_min, col_max+1), y=slice(row_min, row_max+1)
+    ).values
+    return grid_values
 
 
 def update_location_id_prefix(
@@ -87,11 +112,20 @@ def process_single_nwm_grid_file(
         weights_filepath, columns=["row", "col", "weight", "location_id"]
     )
 
-    grid_values = get_nwm_grid_data(
+    weights_bounds = get_weights_row_col_stats(weights_df)
+
+    grid_arr = get_nwm_grid_data(
         da,
-        weights_df.row.values,
-        weights_df.col.values
+        weights_bounds["row_min"],
+        weights_bounds["col_min"],
+        weights_bounds["row_max"],
+        weights_bounds["col_max"]
     )
+
+    grid_values = grid_arr[
+        weights_bounds["rows_norm"],
+        weights_bounds["cols_norm"]
+    ]
 
     # Calculate mean areal value of selected variable
     df = compute_weighted_average(grid_values, weights_df)
