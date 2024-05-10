@@ -14,3 +14,6 @@ For reference, opening with pandas (not setting column type to categorical) uses
 | Study 1    | 1 GB/yr      | 1.5 - 16 GB/yr  | 40 GB               | 60 - 640 GB            |
 | Study 2    | 1 GB/yr      | 1.5 - 16 GB/yr  | 40 GB               | 60 - 640 GB            |
 
+
+Total number of rows for a 40-yr retrospective with observations, a baseline simulation and 2 studies.
+(4 studies) x (7500 locations) x (40-yrs x 365 days/yr x 24 hrs/day) = 10.5 Bn rows

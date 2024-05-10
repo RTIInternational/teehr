@@ -5,13 +5,6 @@ protocol:
     baseline_datasets:
       - name: usgs_observations
         type: primary_timeseries
-        source_data_type: netcdf
-        source_paths: s3://bucket-name/path/simulation.nc
-        options:
-          - field_mapping:
-            - location_id: id
-              configuration: psu_ml_20240501
-        processed_path: /path/to/simulation.parquet
       - name: nwm_30_restrospective
         type: secondary_timeseries
         source_data_type: zarr
@@ -25,14 +18,14 @@ protocol:
             - location_id: id
               name: gage_id
         processed_path: /path/to/location.parquet
-      - name: psu_crosswalk
+      - name: nwm30_crosswalk
         type: crosswalk
         source_data_type: csv
-        source_path: s3://bucket-name/path/psu_xwalk.csv
+        source_path: s3://bucket-name/path/nwm30_xwalk.csv
         options:
           - field_mapping:
             - primary_location_id: usgs_gage_id
-              secondary_location_id: id
+              secondary_location_id: feature_id
   - calculated_fields:
     - field_name: new_field
       function: |
