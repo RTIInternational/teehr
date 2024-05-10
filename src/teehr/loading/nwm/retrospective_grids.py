@@ -1,4 +1,35 @@
-"""A module for loading retrospective NWM gridded data."""
+"""A module for loading retrospective NWM gridded data.
+
+The function ``nwm_retro_grids_to_parquet()`` can be used to fetch and format
+two different versions of retrospective NWM data (v2.1 and v3.0) for
+specified variables and date ranges, and summarize the grid pixels
+intersecting polygons provided in the weights file using an area-weighted mean
+approach.
+
+Each version of the NWM data is hosted on `AWS S3
+<https://registry.opendata.aws/nwm-archive/>`__ and is stored in Zarr format
+(v3.0) or as Kerchunk reference files (v2.1). Several options are included
+for fetching the data in chunks, including by week or month which can be
+specified using the ``chunk_by`` argument.
+
+The NWM v3.0 retrospective forcing Zarr store has dimensions {time: 385704,
+x: 3840, and y: 4608}, with a chunking scheme of {time: 672, x: 350, y: 350}.
+Only the data variable chunks that intersect the polygons are read into memory.
+
+The NWM v2.1 retrospective forcing data has the same x-y dimensions but is
+fetched using Kerchunk reference files, which point to the original hourly
+netcdf files, therefore the data is not chunked in the x-y dimensions. This
+means that an entire data variable is read into memory regardless of the
+spatial bounds of the polygons being processed.
+
+Care must be taken when choosing a ``chunk_by`` value to minimize the amount
+of data transferred over the network.
+
+.. note::
+   It is recommended to set the ``chunk_by`` parameter to the largest time
+   period ('week' or 'month') that will fit into your systems memory
+   given the number of polygons being processed.
+"""
 from datetime import datetime
 from pathlib import Path
 from typing import Union, Optional, Tuple, Dict
@@ -7,17 +38,21 @@ import pandas as pd
 import xarray as xr
 import fsspec
 from pydantic import validate_call
-import numpy as np
 import dask
 
 from teehr.loading.nwm.const import NWM22_UNIT_LOOKUP
 from teehr.models.loading.utils import (
-    ChunkByEnum,
+    NWMChunkByEnum,
     SupportedNWMRetroVersionsEnum,
     SupportedNWMRetroDomainsEnum
 )
 from teehr.models.loading.nwm22_grid import ForcingVariablesEnum
-from teehr.loading.nwm.grid_utils import update_location_id_prefix
+from teehr.loading.nwm.grid_utils import (
+    update_location_id_prefix,
+    compute_weighted_average,
+    get_nwm_grid_data,
+    get_weights_row_col_stats
+)
 from teehr.loading.nwm.utils import (
     write_parquet_file,
     get_dataset,
@@ -30,18 +65,24 @@ from teehr.loading.nwm.retrospective_points import (
 )
 
 
-def get_data_array(var_da: xr.DataArray, rows: np.array, cols: np.array):
-    """Read a subset of the data array into memory."""
-    var_arr = var_da.values[:, rows, cols]
-    return var_arr
+def get_nwm21_retro_grid_data(
+    var_da: xr.DataArray,
+    row_min: int,
+    col_min: int,
+    row_max: int,
+    col_max: int
+):
+    """Read a subset nwm21 retro grid data into memory from row/col bounds."""
+    grid_values = var_da.isel(
+        west_east=slice(col_min, col_max+1),
+        south_north=slice(row_min, row_max+1)
+    ).values
+    return grid_values
 
 
-def process_group(
+def process_nwm30_retro_group(
     da_i: xr.DataArray,
-    rows: np.array,
-    cols: np.array,
-    weights_df: pd.DataFrame,
-    weight_vals: np.array,
+    weights_filepath: str,
     variable_name: str,
     units_format_dict: Dict,
     nwm_version: str,
@@ -52,30 +93,38 @@ def process_group(
     Pixel weights for each zone are defined in weights_df,
     and the output is saved to parquet files.
     """
-    var_arr = get_data_array(da_i, rows, cols)
+    weights_df = pd.read_parquet(
+        weights_filepath, columns=["row", "col", "weight", "location_id"]
+    )
 
-    # Get the subset data array of start and end times just for the time values
-    time_subset_vals = da_i.time.values
+    weights_bounds = get_weights_row_col_stats(weights_df)
+
+    grid_arr = get_nwm_grid_data(
+        da_i,
+        weights_bounds["row_min"],
+        weights_bounds["col_min"],
+        weights_bounds["row_max"],
+        weights_bounds["col_max"]
+    )
 
     hourly_dfs = []
-    for i, dt in enumerate(time_subset_vals):
-        # Calculate weighted pixel values
-        weights_df["value"] = var_arr[i, :] * weight_vals
-        # Compute mean per group/location
-        df = weights_df.groupby(
-            by="location_id", observed=True
-        )["value"].mean().to_frame()
-        df["value_time"] = pd.to_datetime(dt)
-        df.reset_index(inplace=True)
+    for i, time in enumerate(da_i.time.values):
+        grid_values = grid_arr[
+            i,
+            weights_bounds["rows_norm"],
+            weights_bounds["cols_norm"]
+        ]
+        df = compute_weighted_average(grid_values, weights_df)
+        df.loc[:, "value_time"] = pd.to_datetime(time)
         hourly_dfs.append(df)
 
     chunk_df = pd.concat(hourly_dfs)
-    chunk_df["reference_time"] = chunk_df.value_time
+    chunk_df.loc[:, "reference_time"] = chunk_df.value_time
     nwm_units = da_i.attrs["units"]
     teehr_units = units_format_dict.get(nwm_units, nwm_units)
-    chunk_df["measurement_unit"] = teehr_units
-    chunk_df["configuration"] = f"{nwm_version}_retrospective"
-    chunk_df["variable_name"] = variable_name
+    chunk_df.loc[:, "measurement_unit"] = teehr_units
+    chunk_df.loc[:, "configuration"] = f"{nwm_version}_retrospective"
+    chunk_df.loc[:, "variable_name"] = variable_name
 
     if location_id_prefix:
         chunk_df = update_location_id_prefix(chunk_df, location_id_prefix)
@@ -105,29 +154,8 @@ def construct_nwm21_json_paths(
     return paths_df
 
 
-def compute_zonal_mean(
-    var_da: xr.DataArray, weights_filepath: str, time_dt: pd.Timestamp
-) -> pd.DataFrame:
-    """Compute the zonal mean for given zones and weights."""
-    weights_df = pd.read_parquet(
-        weights_filepath, columns=["row", "col", "weight", "location_id"]
-    )
-    # Get row/col indices
-    rows = weights_df.row.values
-    cols = weights_df.col.values
-    arr_2d = var_da.compute().values
-    var_values = arr_2d[rows, cols]
-    # Get the values and apply weights
-    weights_df["value"] = var_values * weights_df.weight.values
-    # Compute mean
-    df = weights_df.groupby(by="location_id")["value"].mean().to_frame()
-    df["value_time"] = time_dt
-    df.reset_index(inplace=True)
-    return df
-
-
 @dask.delayed
-def process_single_file(
+def process_single_nwm21_retro_grid_file(
     row: Tuple,
     variable_name: str,
     weights_filepath: str,
@@ -153,14 +181,32 @@ def process_single_file(
     value_time = row.datetime
     da = ds[variable_name].isel(Time=0)
 
-    # Calculate mean areal of selected variable
-    df = compute_zonal_mean(da, weights_filepath, value_time)
+    weights_df = pd.read_parquet(
+        weights_filepath, columns=["row", "col", "weight", "location_id"]
+    )
 
-    df["value_time"] = value_time
-    df["reference_time"] = value_time
-    df["measurement_unit"] = teehr_units
-    df["configuration"] = f"{nwm_version}_retrospective"
-    df["variable_name"] = variable_name
+    weights_bounds = get_weights_row_col_stats(weights_df)
+
+    grid_arr = get_nwm21_retro_grid_data(
+        da,
+        weights_bounds["row_min"],
+        weights_bounds["col_min"],
+        weights_bounds["row_max"],
+        weights_bounds["col_max"]
+    )
+    grid_values = grid_arr[
+        weights_bounds["rows_norm"],
+        weights_bounds["cols_norm"]
+    ]
+
+    # Calculate mean areal of selected variable
+    df = compute_weighted_average(grid_values, weights_df)
+
+    df.loc[:, "value_time"] = value_time
+    df.loc[:, "reference_time"] = value_time
+    df.loc[:, "measurement_unit"] = teehr_units
+    df.loc[:, "configuration"] = f"{nwm_version}_retrospective"
+    df.loc[:, "variable_name"] = variable_name
 
     if location_id_prefix:
         df = update_location_id_prefix(df, location_id_prefix)
@@ -176,7 +222,7 @@ def nwm_retro_grids_to_parquet(
     start_date: Union[str, datetime, pd.Timestamp],
     end_date: Union[str, datetime, pd.Timestamp],
     output_parquet_dir: Union[str, Path],
-    chunk_by: Union[ChunkByEnum, None] = None,
+    chunk_by: Union[NWMChunkByEnum, None] = None,
     overwrite_output: Optional[bool] = False,
     domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
     location_id_prefix: Optional[Union[str, None]] = None
@@ -209,10 +255,10 @@ def nwm_retro_grids_to_parquet(
         Str formats can include YYYY-MM-DD or MM/DD/YYYY.
     output_parquet_dir : Union[str, Path],
         Directory where output will be saved.
-    chunk_by : Union[ChunkByEnum, None] = None,
+    chunk_by : Union[NWMChunkByEnum, None] = None,
         If None (default) saves all timeseries to a single file, otherwise
         the data is processed using the specified parameter.
-        Can be: 'location_id', 'day', 'week', 'month', or 'year'.
+        Can be: 'week' or 'month' for gridded data.
     overwrite_output : bool = False,
         Whether output should overwrite files if they exist.  Default is False.
     domain : str = "CONUS"
@@ -247,7 +293,7 @@ def nwm_retro_grids_to_parquet(
         # Construct Kerchunk-json paths within the selected time
         nwm21_paths = construct_nwm21_json_paths(start_date, end_date)
 
-        if chunk_by in ["year", "location_id"]:
+        if chunk_by in ["year"]:
             raise ValueError(
                 f"Chunkby '{chunk_by}' is not implemented for gridded data"
             )
@@ -275,7 +321,7 @@ def nwm_retro_grids_to_parquet(
             results = []
             for row in df.itertuples():
                 results.append(
-                    process_single_file(
+                    process_single_nwm21_retro_grid_file(
                         row=row,
                         variable_name=variable_name,
                         weights_filepath=zonal_weights_filepath,
@@ -325,17 +371,6 @@ def nwm_retro_grids_to_parquet(
             chunks={}, consolidated=True
         )[variable_name].sel(time=slice(start_date, end_date))
 
-        # Get weights and their row/col indices
-        weights_df = pd.read_parquet(
-            zonal_weights_filepath,
-            columns=["row", "col", "weight", "location_id"]
-        )
-        weights_df["location_id"] = weights_df.location_id.astype("category")
-
-        rows = weights_df.row.values
-        cols = weights_df.col.values
-        weight_vals = weights_df.weight.values
-
         if chunk_by in ["year", "location_id"]:
             raise ValueError(
                 f"Chunkby '{chunk_by}' is not implemented for gridded data"
@@ -360,12 +395,9 @@ def nwm_retro_grids_to_parquet(
 
             da_i = var_da.sel(time=slice(dts["start_dt"], dts["end_dt"]))
 
-            chunk_df = process_group(
+            chunk_df = process_nwm30_retro_group(
                 da_i=da_i,
-                rows=rows,
-                cols=cols,
-                weights_df=weights_df,
-                weight_vals=weight_vals,
+                weights_filepath=zonal_weights_filepath,
                 variable_name=variable_name,
                 units_format_dict=NWM22_UNIT_LOOKUP,
                 nwm_version=nwm_version,

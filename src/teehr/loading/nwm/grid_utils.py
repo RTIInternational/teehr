@@ -11,6 +11,39 @@ import xarray as xr
 from teehr.loading.nwm.utils import get_dataset, write_parquet_file
 
 
+def get_weights_row_col_stats(weights_df: pd.DataFrame) -> Dict:
+    """Get row and column statistics for weights dataframe."""
+    row_min = weights_df.row.values.min()
+    col_min = weights_df.col.values.min()
+    row_max = weights_df.row.values.max()
+    col_max = weights_df.col.values.max()
+
+    rows_norm = weights_df.row.values - row_min
+    cols_norm = weights_df.col.values - col_min
+    return {
+        "row_min": row_min,
+        "row_max": row_max,
+        "col_min": col_min,
+        "col_max": col_max,
+        "rows_norm": rows_norm,
+        "cols_norm": cols_norm
+    }
+
+
+def get_nwm_grid_data(
+    var_da: xr.DataArray,
+    row_min: int,
+    col_min: int,
+    row_max: int,
+    col_max: int
+):
+    """Read a subset nwm grid data into memory using row/col bounds."""
+    grid_values = var_da.isel(
+        x=slice(col_min, col_max+1), y=slice(row_min, row_max+1)
+    ).values
+    return grid_values
+
+
 def update_location_id_prefix(
     df: pd.DataFrame,
     new_prefix: str
@@ -31,23 +64,13 @@ def update_location_id_prefix(
     return df
 
 
-def compute_zonal_mean(
-    da: xr.DataArray, weights_filepath: str
+def compute_weighted_average(
+    grid_values: np.ndarray,
+    weights_df: pd.DataFrame
 ) -> pd.DataFrame:
     """Compute weighted average of pixels for given zones and weights."""
-    # Read weights file
-    weights_df = pd.read_parquet(
-        weights_filepath, columns=["row", "col", "weight", "location_id"]
-    )
-    # Get variable data
-    arr_2d = da.values[0]
-    arr_2d[arr_2d == da.rio.nodata] = np.nan
-    # Get row/col indices
-    rows = weights_df.row.values
-    cols = weights_df.col.values
-    # Get the values and apply weights
-    var_values = arr_2d[rows, cols]
-    weights_df.loc[:, "weighted_value"] = var_values * weights_df.weight.values
+    weights_df.loc[:, "weighted_value"] = grid_values * \
+        weights_df.weight.values
 
     # Compute weighted average
     df = weights_df.groupby(
@@ -58,7 +81,7 @@ def compute_zonal_mean(
 
 
 @dask.delayed
-def process_single_file(
+def process_single_nwm_grid_file(
     row: Tuple,
     configuration: str,
     variable_name: str,
@@ -83,10 +106,29 @@ def process_single_file(
     nwm_units = ds[variable_name].attrs["units"]
     teehr_units = units_format_dict.get(nwm_units, nwm_units)
     value_time = ds.time.values[0]
-    da = ds[variable_name]
+    da = ds[variable_name][0]
+
+    weights_df = pd.read_parquet(
+        weights_filepath, columns=["row", "col", "weight", "location_id"]
+    )
+
+    weights_bounds = get_weights_row_col_stats(weights_df)
+
+    grid_arr = get_nwm_grid_data(
+        da,
+        weights_bounds["row_min"],
+        weights_bounds["col_min"],
+        weights_bounds["row_max"],
+        weights_bounds["col_max"]
+    )
+
+    grid_values = grid_arr[
+        weights_bounds["rows_norm"],
+        weights_bounds["cols_norm"]
+    ]
 
     # Calculate mean areal value of selected variable
-    df = compute_zonal_mean(da, weights_filepath)
+    df = compute_weighted_average(grid_values, weights_df)
 
     df.loc[:, "value_time"] = value_time
     df.loc[:, "reference_time"] = ref_time
@@ -146,7 +188,7 @@ def fetch_and_format_nwm_grids(
         results = []
         for row in df.itertuples():
             results.append(
-                process_single_file(
+                process_single_nwm_grid_file(
                     row,
                     configuration,
                     variable_name,
