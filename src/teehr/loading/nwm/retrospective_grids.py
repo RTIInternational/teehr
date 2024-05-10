@@ -12,6 +12,16 @@ Each version of the NWM data is hosted on `AWS S3
 for fetching the data in chunks, including by week or month which can be
 specified using the ``chunk_by`` argument.
 
+The NWM v3.0 retrospective forcing Zarr store has dimensions {time: 385704,
+x: 3840, and y: 4608}, with a chunking scheme of {time: 672, x: 350, y: 350}.
+Only the data variable chunks that intersect the polygons are read into memory.
+
+The NWM v2.1 retrospective forcing data has the same x-y dimensions but is
+fetched using Kerchunk reference files, which point to the original hourly
+netcdf files, therefore the data is not chunked in the x-y dimensions. This
+means that an entire data variable is read into memory regardless of the
+spatial bounds of the polygons being processed.
+
 Care must be taken when choosing a ``chunk_by`` value to minimize the amount
 of data transferred over the network.
 

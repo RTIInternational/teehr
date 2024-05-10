@@ -19,6 +19,10 @@ if you specify ``chunk_by='week'``, the entire chunk
 (672 hours x 30000 locations) will be fetched for each week (128 hours)
 falling within that chunk, resulting in redundant data transfer.
 
+While it is currently not possible to avoid all redundant data transfer,
+it can be minimized by selecting the largest chunk_by size that can fit into
+your computer's memory.
+
 .. note::
    It is recommended to set the ``chunk_by`` parameter to the largest time
    period ('week', 'month', or 'year') that will fit into your systems memory
