@@ -5,7 +5,7 @@ import warnings
 
 from collections.abc import Iterable
 from datetime import datetime
-from typing import List, Union
+from typing import List, Union, Any
 
 import teehr.models.queries as tmq
 import teehr.models.queries_database as tmqd
@@ -905,3 +905,131 @@ def df_to_gdf(df: pd.DataFrame) -> gpd.GeoDataFrame:
 def remove_empty_lines(text: str) -> str:
     """Remove empty lines from string."""
     return "".join([s for s in text.splitlines(True) if s.strip()])
+
+
+# ====================== EXPERIMENTAL FUNCTIONS BELOW ========================
+def metrics_calculation_clause(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+) -> str:
+    """Generate the metrics calculation clause."""
+    return f"""
+        {_nse_cte(mq)}
+        {_annual_metrics_cte(mq)}
+        {_spearman_ranks_cte(mq)}
+        , metrics AS (
+            SELECT
+                {",".join([f"joined.{gb}" for gb in mq.group_by])}
+                {_select_primary_count(mq)}
+                {_select_secondary_count(mq)}
+                {_select_primary_minimum(mq)}
+                {_select_secondary_minimum(mq)}
+                {_select_primary_maximum(mq)}
+                {_select_secondary_maximum(mq)}
+                {_select_primary_average(mq)}
+                {_select_secondary_average(mq)}
+                {_select_primary_sum(mq)}
+                {_select_secondary_sum(mq)}
+                {_select_primary_variance(mq)}
+                {_select_secondary_variance(mq)}
+                {_select_max_value_delta(mq)}
+                {_select_mean_error(mq)}
+                {_select_nash_sutcliffe_efficiency(mq)}
+                {_select_nash_sutcliffe_efficiency_normalized(mq)}
+                {_select_kling_gupta_efficiency(mq)}
+                {_select_kling_gupta_efficiency_mod1(mq)}
+                {_select_kling_gupta_efficiency_mod2(mq)}
+                {_select_mean_absolute_error(mq)}
+                {_select_mean_squared_error(mq)}
+                {_select_root_mean_squared_error(mq)}
+                {_select_primary_max_value_time(mq)}
+                {_select_secondary_max_value_time(mq)}
+                {_select_max_value_timedelta(mq)}
+                {_select_relative_bias(mq)}
+                {_select_multiplicative_bias(mq)}
+                {_select_mean_absolute_relative_error(mq)}
+                {_select_pearson_correlation(mq)}
+                {_select_r_squared(mq)}
+                {_select_spearman_correlation(mq)}
+            FROM
+                joined
+                {_join_nse_cte(mq)}
+                {_join_spearman_ranks_cte(mq)}
+            GROUP BY
+                {",".join([f"joined.{gb}" for gb in mq.group_by])}
+        )
+        SELECT
+            {",".join([f"metrics.{ob}" for ob in mq.group_by])}
+            {metrics_select_clause(mq)}
+            {geometry_select_clause(mq)}
+        FROM metrics
+            {metric_geometry_join_clause_db(mq)}
+            {_join_annual_metrics_cte(mq)}
+        ORDER BY
+            {",".join([f"metrics.{ob}" for ob in mq.order_by])}
+    ;"""
+
+
+def metrics_joined_cte_database(
+    mq: tmqd.MetricQuery
+) -> str:
+    """Generate the metrics joined CTE for a database."""
+    return f"""
+        WITH joined as (
+            SELECT
+                *
+            FROM joined_timeseries sf
+            {filters_to_sql(mq.filters)}
+        )
+    """
+
+
+def metrics_joined_cte_parquet(
+    mq: tmq.MetricQuery
+) -> str:
+    """Generate the metrics joined CTE for un-joined parquet files."""
+    return f"""
+        WITH initial_joined AS (
+            SELECT
+                sf.reference_time
+                , sf.value_time as value_time
+                , sf.location_id as secondary_location_id
+                , pf.reference_time as primary_reference_time
+                , sf.value as secondary_value
+                , sf.configuration
+                , sf.measurement_unit
+                , sf.variable_name
+                , pf.value as primary_value
+                , pf.location_id as primary_location_id
+                , sf.value_time - sf.reference_time as lead_time
+                , abs(pf.value - sf.value) as absolute_difference
+            FROM read_parquet('{str(mq.secondary_filepath)}') sf
+            JOIN read_parquet('{str(mq.crosswalk_filepath)}') cf
+                on cf.secondary_location_id = sf.location_id
+            JOIN read_parquet("{str(mq.primary_filepath)}") pf
+                on cf.primary_location_id = pf.location_id
+                and sf.value_time = pf.value_time
+                and sf.measurement_unit = pf.measurement_unit
+                and sf.variable_name = pf.variable_name
+            {filters_to_sql(mq.filters)}
+        ),
+        joined AS (
+            {_remove_duplicates_mq_cte(mq)}
+        )
+    """
+
+
+def metrics_joined_cte_joined_parquet(
+    joined_parquet_filepath: str,
+    mq: tmqd.MetricQuery
+) -> str:
+    """Generate the metrics joined CTE for a database."""
+    # TODO: Add joined_parquet_filepath as optional to tmqd.MetricQuery?
+
+    return f"""
+        WITH joined as (
+            SELECT
+                *
+            FROM read_parquet('{str(joined_parquet_filepath)}') sf
+            {filters_to_sql(mq.filters)}
+        )
+    """
