@@ -1,6 +1,23 @@
 Release Notes
 =============
 
+
+0.3.18 - 2024-05-10
+--------------------
+
+Added
+^^^^^
+* Added documentation regarding best practices for specifying the ``chunk_by`` parameter when fetching NWM
+  retrospective and USGS data.
+
+Changed
+^^^^^^^
+* Fixed a bug in the NWM retrospective grid loading weighted average calculation.
+* Changed the method of fetching NWM gridded data to read only a subset of the grid (given by the row/col
+  bounds from the weights file) into memory rather than the entire grid.
+* Removed 'day' and 'location_id' ``chunk_by`` options to reduce redundant data transfer costs.
+
+
 0.3.17 - 2024-04-22
 --------------------
 
