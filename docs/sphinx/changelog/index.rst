@@ -1,6 +1,40 @@
 Release Notes
 =============
 
+
+0.3.18 - 2024-05-10
+--------------------
+
+Added
+^^^^^
+* Added documentation regarding best practices for specifying the ``chunk_by`` parameter when fetching NWM
+  retrospective and USGS data.
+
+Changed
+^^^^^^^
+* Fixed a bug in the NWM retrospective grid loading weighted average calculation.
+* Changed the method of fetching NWM gridded data to read only a subset of the grid (given by the row/col
+  bounds from the weights file) into memory rather than the entire grid.
+* Removed 'day' and 'location_id' ``chunk_by`` options to reduce redundant data transfer costs.
+
+
+0.3.17 - 2024-04-22
+--------------------
+
+Added
+^^^^^
+* None
+
+Changed
+^^^^^^^
+* Dropped "Z" from the file name in the NWM loading functions, adding a note in the docstrings that all times are in UTC.
+* Changed data type of ``zonal_weights_filepath`` to ``Union[str, Path]`` in ``nwm_grids.py``.
+* Fixed ``SettingWithCopyWarning`` in NWM grid loading.
+* Fixed the ``end_date`` in NWM retrospective loading to include the entirety of the last day and not fail when
+  last available day is specfified.
+* Removed "elevation", "gage_id", "order" from NWM v3.0 retrospective point loading.
+
+
 0.3.16 - 2024-04-11
 --------------------
 

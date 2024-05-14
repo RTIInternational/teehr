@@ -45,7 +45,7 @@ def test_nwm22_point_fetch_and_format():
         nwm_version="nwm22"
     )
 
-    parquet_file = Path(TEMP_DIR, "20230318T14Z.parquet")
+    parquet_file = Path(TEMP_DIR, "20230318T14.parquet")
     test_file = Path(test_dir, "point_benchmark.parquet")
 
     bench_df = pd.read_parquet(test_file)
@@ -84,7 +84,7 @@ def test_nwm30_point_fetch_and_format():
         overwrite_output=True
     )
 
-    parquet_file = Path(TEMP_DIR, "20231101T00Z.parquet")
+    parquet_file = Path(TEMP_DIR, "20231101T00.parquet")
     test_file = Path(test_dir, "point_benchmark.parquet")
 
     bench_df = pd.read_parquet(test_file)
@@ -114,7 +114,7 @@ def test_nwm22_grid_fetch_and_format():
         location_id_prefix=None
     )
 
-    parquet_file = Path(TEMP_DIR, "20201218T00Z.parquet")
+    parquet_file = Path(TEMP_DIR, "20201218T00.parquet")
     test_file = Path(test_dir, "grid_benchmark.parquet")
 
     bench_df = pd.read_parquet(test_file)
@@ -144,7 +144,7 @@ def test_nwm30_grid_fetch_and_format():
         location_id_prefix=None
     )
 
-    parquet_file = Path(TEMP_DIR, "20231101T00Z.parquet")
+    parquet_file = Path(TEMP_DIR, "20231101T00.parquet")
     test_file = Path(test_dir, "grid_benchmark.parquet")
 
     bench_df = pd.read_parquet(test_file)

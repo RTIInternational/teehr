@@ -30,7 +30,7 @@ def nwm_grids_to_parquet(
     variable_name: str,
     start_date: Union[str, datetime],
     ingest_days: int,
-    zonal_weights_filepath: str,
+    zonal_weights_filepath: Union[Path, str],
     json_dir: Union[str, Path],
     output_parquet_dir: Union[str, Path],
     nwm_version: SupportedNWMOperationalVersionsEnum,
@@ -106,7 +106,7 @@ def nwm_grids_to_parquet(
     variable_name are stored as a pydantic model in grid_config_models.py.
 
     Forecast and assimilation data is grouped and saved one file per reference
-    time, using the file name convention "YYYYMMDDTHHZ".  The tabular output
+    time, using the file name convention "YYYYMMDDTHH".  The tabular output
     parquet files follow the timeseries data model described in the
     :ref:`data model <data_model>`.
 
@@ -115,6 +115,8 @@ def nwm_grids_to_parquet(
     will be prepended to the location_id values if none exists, or will it replace
     the existing prefix. It is assumed that the location_id follows the pattern
     '[prefix]-[unique id]'.
+
+    All dates and times within the files and in the file names are in UTC.
 
     Examples
     --------

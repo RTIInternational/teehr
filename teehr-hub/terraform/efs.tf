@@ -5,7 +5,7 @@ resource "aws_efs_file_system" "datadir" {
   lifecycle {
     # Additional safeguard against deleting the EFS
     # as this causes irreversible data loss!
-    prevent_destroy = false
+    prevent_destroy = true
   }
 }
 
