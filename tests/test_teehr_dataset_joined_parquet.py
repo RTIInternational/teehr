@@ -69,8 +69,61 @@ def test_get_joined_timeseries():
         include_geometry=False,
     )
 
+    pass
+
+
+def test_timeseries_query():
+    """Test the get timeseries query."""
+    tds = TEEHRDatasetJoinedParquet(JOINED_PARQUET_FILEPATH)
+
+    filters = [
+        {
+            "column": "configuration",
+            "operator": "=",
+            "value": "test_short",
+        },
+    ]
+
+    order_by = ["primary_location_id"]
+
+    df = tds.get_timeseries(
+        order_by=order_by,
+        timeseries_name="primary",
+        filters=filters,
+        return_query=False
+    )
+
+    assert df.index.size == 26 * 3
+
+
+def test_timeseries_char_query():
+    """Test the get timeseries char query."""
+    tds = TEEHRDatasetJoinedParquet(JOINED_PARQUET_FILEPATH)
+
+    filters = [
+        {
+            "column": "configuration",
+            "operator": "=",
+            "value": "test_short",
+        },
+    ]
+    group_by = ["primary_location_id"]
+    order_by = ["primary_location_id"]
+    timeseries_name = "primary"  # "primary, secondary"
+
+    df = tds.get_timeseries_chars(
+        order_by=order_by,
+        group_by=group_by,
+        timeseries_name=timeseries_name,
+        filters=filters
+    )
+
+    assert df.index.size == 3
+    pass
+
 
 if __name__ == "__main__":
-    # test_metrics_query()
+    test_metrics_query()
     test_get_joined_timeseries()
-
+    test_timeseries_query()
+    test_timeseries_char_query()

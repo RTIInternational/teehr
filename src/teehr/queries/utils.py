@@ -969,20 +969,6 @@ def metrics_calculation_clause(
     ;"""
 
 
-def metrics_joined_cte_database(
-    mq: tmqd.MetricQuery
-) -> str:
-    """Generate the metrics joined CTE for a database."""
-    return f"""
-        WITH joined as (
-            SELECT
-                *
-            FROM joined_timeseries sf
-            {filters_to_sql(mq.filters)}
-        )
-    """
-
-
 def metrics_joined_cte_parquet(
     mq: tmq.MetricQuery
 ) -> str:
@@ -1018,18 +1004,16 @@ def metrics_joined_cte_parquet(
     """
 
 
-def metrics_joined_cte_joined_parquet(
-    joined_parquet_filepath: str,
-    mq: tmqd.MetricQuery
+def metrics_joined_cte(
+    mq: tmqd.MetricQuery,
+    from_joined_timeseries_clause: str
 ) -> str:
     """Generate the metrics joined CTE for a database."""
-    # TODO: Add joined_parquet_filepath as optional to tmqd.MetricQuery?
-
     return f"""
         WITH joined as (
             SELECT
                 *
-            FROM read_parquet('{str(joined_parquet_filepath)}') sf
+            {from_joined_timeseries_clause}
             {filters_to_sql(mq.filters)}
         )
     """

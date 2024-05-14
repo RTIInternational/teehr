@@ -169,6 +169,166 @@ class TEEHRDatasetBaseClass(ABC):
 
         return df
 
+    def _get_metrics(
+        self,
+        mq: Any
+    ) -> Union[pd.DataFrame, gpd.GeoDataFrame, str]:
+        """Calculate performance metrics using database queries.
+
+        Parameters
+        ----------
+        mq : Any
+            Pydantic model containing query parameters.
+
+        Returns
+        -------
+        Union[pd.DataFrame, gpd.GeoDataFrame, str]
+            A DataFrame or optionally a GeoDataFrame containing query results,
+            or the query itself as a string.
+
+        See Also
+        --------
+        teehr.queries.duckdb_database.create_get_metrics_query : \
+            Create the get metrics query.
+        """
+        query = tqu_db.create_get_metrics_query(
+            mq,
+            self.from_joined_timeseries_clause
+        )
+
+        return self._execute_query(
+            query,
+            mq.return_query,
+            mq.include_geometry
+        )
+
+    def _get_joined_timeseries(
+        self,
+        jtq: Any
+    ) -> Union[pd.DataFrame, gpd.GeoDataFrame, str]:
+        """Retrieve joined timeseries using database query.
+
+        Parameters
+        ----------
+        jtq : Any
+            Pydantic model containing query parameters.
+
+        Returns
+        -------
+        Union[pd.DataFrame, gpd.GeoDataFrame, str]
+            A DataFrame or GeoDataFrame of query results
+            or the query itself as a string.
+
+        See Also
+        --------
+        teehr.queries.duckdb_database.create_get_joined_timeseries_query : \
+            Create the get joined timeseries query.
+        """
+        query = tqu_db.create_get_joined_timeseries_query(
+            jtq,
+            self.from_joined_timeseries_clause
+        )
+
+        return self._execute_query(
+            query,
+            jtq.return_query,
+            jtq.include_geometry
+        )
+
+    def _get_timeseries_chars(
+        self,
+        tcq: Any
+    ) -> Union[str, pd.DataFrame]:
+        """Retrieve timeseries characteristics using database query.
+
+        Parameters
+        ----------
+        tcq : Any
+            Pydantic model containing query parameters.
+
+        Returns
+        -------
+        Union[str, pd.DataFrame]
+            A DataFrame of time series characteristics including:
+
+            - location_id
+            - count
+            - min
+            - max
+            - average
+            - sum
+            - variance
+
+            or, the query itself as a string.
+
+        See Also
+        --------
+        teehr.queries.duckdb_database.create_get_timeseries_char_query : \
+            Create the get timeseries characteristics query.
+        """
+        query = tqu_db.create_get_timeseries_char_query(
+            tcq,
+            self.from_joined_timeseries_clause
+        )
+
+        return self._execute_query(query, tcq.return_query)
+
+    def _get_timeseries(
+        self,
+        tq: Any
+    ) -> Union[pd.DataFrame, str]:
+        """Retrieve timeseries using database query.
+
+        Parameters
+        ----------
+        tq : Any
+            Pydantic model containing query parameters.
+
+        Returns
+        -------
+        Union[pd.DataFrame, str]
+            A DataFrame of query results or the query itself as a string.
+
+        See Also
+        --------
+        teehr.queries.duckdb_database.create_get_timeseries_query : \
+            Create the get timeseries query.
+        """
+        query = tqu_db.create_get_timeseries_query(
+            tq,
+            self.from_joined_timeseries_clause
+        )
+
+        return self._execute_query(query, tq.return_query)
+
+    def _get_unique_field_values(
+        self,
+        fn: Any
+    ) -> pd.DataFrame:
+        """Get unique values for a given field.
+
+        Parameters
+        ----------
+        fn : Any
+            Pydantic model containing the joined_timeseries table field name.
+
+        Returns
+        -------
+        pd.DataFrame
+            A dataframe containing unique values for the given field.
+
+        See Also
+        --------
+        teehr.queries.duckdb_database.create_unique_field_values_query : \
+            Create the get unique field values query.
+        """
+        query = tqu_db.create_unique_field_values_query(
+            fn,
+            self.from_joined_timeseries_clause
+        )
+        df = self.query(query, format="df")
+        return df
+
 
 class TEEHRDatasetAPI(TEEHRDatasetBaseClass):
     """Create an instance of a TEEHRDataset class for API-based queries and \
@@ -220,6 +380,7 @@ class TEEHRDatasetAPI(TEEHRDatasetBaseClass):
             Filepath to the database.
         """
         self.database_filepath = str(database_filepath)
+        self.from_joined_timeseries_clause = "FROM joined_timeseries sf"
         self.con = duckdb.connect(self.database_filepath, read_only=True)
 
     def _check_if_geometry_is_inserted(self):
@@ -280,15 +441,7 @@ class TEEHRDatasetAPI(TEEHRDatasetBaseClass):
         """
         mq = self._validate_query_model(mq)
 
-        # Assemble the query
-        query = tqu.metrics_joined_cte_database(mq) + \
-            tqu.metrics_calculation_clause(mq)
-
-        return self._execute_query(
-            query,
-            mq.return_query,
-            mq.include_geometry
-        )
+        return self._get_metrics(mq)
 
     def get_joined_timeseries(
         self,
@@ -314,14 +467,7 @@ class TEEHRDatasetAPI(TEEHRDatasetBaseClass):
         """
         jtq = self._validate_query_model(jtq)
 
-        # TODO: Assemble in parts?
-        query = tqu_db.create_get_joined_timeseries_query(jtq)
-
-        return self._execute_query(
-            query,
-            jtq.return_query,
-            jtq.include_geometry
-        )
+        return self._get_joined_timeseries(jtq)
 
     def get_timeseries(
         self,
@@ -346,9 +492,7 @@ class TEEHRDatasetAPI(TEEHRDatasetBaseClass):
         """
         tq = self._validate_query_model(tq)
 
-        query = tqu_db.create_get_timeseries_query(tq)
-
-        return self._execute_query(query, tq.return_query)
+        return self._get_timeseries(tq)
 
     def get_timeseries_chars(
         self, tcq: tmqd.TimeseriesCharQuery
@@ -382,9 +526,7 @@ class TEEHRDatasetAPI(TEEHRDatasetBaseClass):
         """
         tcq = self._validate_query_model(tcq)
 
-        query = tqu_db.create_get_timeseries_char_query(tcq)
-
-        return self._execute_query(query, tcq.return_query)
+        return self._get_timeseries_chars(tcq)
 
     def get_unique_field_values(
         self,
@@ -408,9 +550,8 @@ class TEEHRDatasetAPI(TEEHRDatasetBaseClass):
             Create the get unique field values query.
         """
         fn = self._validate_query_model(fn)
-        query = tqu_db.create_unique_field_values_query(fn)
-        df = self.query(query, format="df")
-        return df
+
+        return self._get_unique_field_values(fn)
 
 
 class TEEHRDatasetDB(TEEHRDatasetAPI):
@@ -520,6 +661,7 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
             Filepath to the database.
         """
         self.database_filepath = str(database_filepath)
+        self.from_joined_timeseries_clause = "FROM joined_timeseries sf"
         self._initialize_database_tables()
 
     def query(
@@ -945,9 +1087,13 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         }
         mq = self._validate_query_model(tmqd.MetricQuery, data)
 
-        # Assemble the query
-        query = tqu.metrics_joined_cte_database(mq) + \
-            tqu.metrics_calculation_clause(mq)
+        # TODO: Override these for the DB class?
+        # return self._get_metrics(mq)
+
+        query = tqu_db.create_get_metrics_query(
+            mq,
+            self.from_joined_timeseries_clause
+        )
 
         return self._execute_query(
             query=query,
@@ -999,7 +1145,10 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         }
         jtq = self._validate_query_model(tmqd.JoinedTimeseriesQuery, data)
 
-        query = tqu_db.create_get_joined_timeseries_query(jtq)
+        query = tqu_db.create_get_joined_timeseries_query(
+            jtq,
+            self.from_joined_timeseries_clause
+        )
 
         return self._execute_query(
             query=query,
@@ -1049,7 +1198,10 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         }
         tq = self._validate_query_model(tmqd.TimeseriesQuery, data)
 
-        query = tqu_db.create_get_timeseries_query(tq)
+        query = tqu_db.create_get_timeseries_query(
+            tq,
+            self.from_joined_timeseries_clause
+        )
 
         return self._execute_query(
             query=query,
@@ -1111,7 +1263,10 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         }
         tcq = self._validate_query_model(tmqd.TimeseriesCharQuery, data)
 
-        query = tqu_db.create_get_timeseries_char_query(tcq)
+        query = tqu_db.create_get_timeseries_char_query(
+            tcq,
+            self.from_joined_timeseries_clause
+        )
 
         return self._execute_query(
             query=query,
@@ -1139,7 +1294,10 @@ class TEEHRDatasetDB(TEEHRDatasetAPI):
         """
         data = {"field_name": field_name}
         fn = self._validate_query_model(tmqd.JoinedTimeseriesFieldName, data)
-        query = tqu_db.create_unique_field_values_query(fn)
+        query = tqu_db.create_unique_field_values_query(
+            fn,
+            self.from_joined_timeseries_clause
+        )
         df = self.query(query, read_only=True, format="df")
         return df
 
@@ -1165,6 +1323,9 @@ class TEEHRDatasetJoinedParquet(TEEHRDatasetBaseClass):
         self.joined_parquet_filepath = str(joined_parquet_filepath)
         # NOTE: Cannot launch a read-only in-memory connection
         self.con = duckdb.connect()
+        self.from_joined_timeseries_clause = (
+            f"FROM read_parquet('{str(joined_parquet_filepath)}') sf"
+        )
 
     def get_joined_timeseries_schema(self) -> pd.DataFrame:
         """Get field names and field data types from the joined \
@@ -1250,16 +1411,7 @@ class TEEHRDatasetJoinedParquet(TEEHRDatasetBaseClass):
         }
         mq = self._validate_query_model(tmqd.MetricQuery, data)
 
-        # Assemble the query
-        query = tqu.metrics_joined_cte_joined_parquet(
-            self.joined_parquet_filepath, mq
-        ) + tqu.metrics_calculation_clause(mq)
-
-        return self._execute_query(
-            query=query,
-            return_query=mq.return_query,
-            include_geometry=mq.include_geometry
-        )
+        return self._get_metrics(mq)
 
     def get_joined_timeseries(
         self,
@@ -1304,14 +1456,7 @@ class TEEHRDatasetJoinedParquet(TEEHRDatasetBaseClass):
         }
         jtq = self._validate_query_model(tmqd.JoinedTimeseriesQuery, data)
 
-        # TODO: Assemble in parts?
-        query = tqu_db.create_get_joined_timeseries_query(jtq)
-
-        return self._execute_query(
-            query=query,
-            return_query=jtq.return_query,
-            include_geometry=jtq.include_geometry
-        )
+        return self._get_joined_timeseries(jtq)
 
     def get_timeseries(
         self,
@@ -1354,12 +1499,7 @@ class TEEHRDatasetJoinedParquet(TEEHRDatasetBaseClass):
         }
         tq = self._validate_query_model(tmqd.TimeseriesQuery, data)
 
-        query = tqu_db.create_get_timeseries_query(tq)
-
-        return self._execute_query(
-            query=query,
-            return_query=tq.return_query
-        )
+        return self._get_timeseries(tq)
 
     def get_timeseries_chars(
         self,
@@ -1415,12 +1555,7 @@ class TEEHRDatasetJoinedParquet(TEEHRDatasetBaseClass):
         }
         tcq = self._validate_query_model(tmqd.TimeseriesCharQuery, data)
 
-        query = tqu_db.create_get_timeseries_char_query(tcq)
-
-        return self._execute_query(
-            query=query,
-            return_query=tcq.return_query
-        )
+        return self._get_timeseries_chars(tcq)
 
     def get_unique_field_values(
         self,
@@ -1444,6 +1579,4 @@ class TEEHRDatasetJoinedParquet(TEEHRDatasetBaseClass):
             Create the get unique field values query.
         """
         fn = self._validate_query_model(fn)
-        query = tqu_db.create_unique_field_values_query(fn)
-        df = self.query(query, format="df")
-        return df
+        return self._get_unique_field_values(fn)
