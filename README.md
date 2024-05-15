@@ -1,4 +1,4 @@
-![alt text](docs/images/teehr.png)
+![alt text](https://github.com/RTIInternational/teehr/blob/main/docs/images/teehr.png)
 
 | | |
 | --- | --- |
