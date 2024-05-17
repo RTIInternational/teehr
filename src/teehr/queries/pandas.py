@@ -7,24 +7,25 @@ import geopandas as gpd
 from hydrotools.metrics import metrics as hm
 
 from typing import List, Union
+from pathlib import Path
 
 import teehr.models.queries as tmq
-import teehr.queries.duckdb as tqu
+import teehr.queries.duckdb as tqd
 
 
 SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def get_metrics(
-    primary_filepath: str,
-    secondary_filepath: str,
-    crosswalk_filepath: str,
+    primary_filepath: Union[str, Path, List[Union[str, Path]]],
+    secondary_filepath: Union[str, Path, List[Union[str, Path]]],
+    crosswalk_filepath: Union[str, Path, List[Union[str, Path]]],
     group_by: List[str],
     order_by: List[str],
     include_metrics: Union[List[tmq.MetricEnum], "all"],
     filters: Union[List[dict], None] = None,
     return_query: bool = False,
-    geometry_filepath: Union[str, None] = None,
+    geometry_filepath: Union[str, Path, List[Union[str, Path]], None] = None,
     include_geometry: bool = False,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
     r"""Calculate performance metrics using a Pandas or Dask DataFrame.
@@ -118,7 +119,7 @@ def get_metrics(
         )
 
     # This loads all the timeseries in memory
-    df = tqu.get_joined_timeseries(
+    df = tqd.get_joined_timeseries(
         primary_filepath=mq.primary_filepath,
         secondary_filepath=mq.secondary_filepath,
         crosswalk_filepath=mq.crosswalk_filepath,
