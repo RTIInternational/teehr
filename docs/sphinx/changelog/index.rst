@@ -1,6 +1,19 @@
 Release Notes
 =============
 
+0.3.20 - 2024-05-18
+--------------------
+
+Added
+^^^^^
+* None
+
+Changed
+^^^^^^^
+* Update queries to accept a list of paths for example, `primary_filepath` and `secondary_filepath`
+  Includes `get_metrics()`, `get_joined_timeseries()`, `get_timeseries()`, and `get_timeseries_chars()`
+
+
 0.3.19 - 2024-05-18
 --------------------
 
