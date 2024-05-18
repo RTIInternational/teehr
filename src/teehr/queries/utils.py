@@ -420,7 +420,7 @@ def _join_spearman_ranks_cte(
                 AND joined.configuration = spearman_ranked.configuration
                 AND joined.measurement_unit = spearman_ranked.measurement_unit
                 AND joined.variable_name = spearman_ranked.variable_name
-                AND joined.reference_time = spearman_ranked.reference_time
+                AND ifnull(joined.reference_time, '1') = ifnull(spearman_ranked.reference_time, '1')
                 AND joined.value_time = spearman_ranked.value_time
         """
     return ""
