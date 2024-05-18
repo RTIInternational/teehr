@@ -335,7 +335,7 @@ def test_metric_query_config_filter():
         remove_duplicates=True
     )
     # print(query_df)
-    assert len(query_df) == 9
+    assert len(query_df) == 18
     assert isinstance(query_df, pd.DataFrame)
 
 
@@ -405,6 +405,7 @@ if __name__ == "__main__":
     test_metric_query_df_time_metrics()
     test_metric_query_df_all()
     test_metric_query_value_time_filter()
+    test_metric_query_config_filter()
     test_get_joined_timeseries()
     test_get_timeseries_chars()
     test_describe_timeseries()
