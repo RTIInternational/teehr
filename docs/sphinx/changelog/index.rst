@@ -1,6 +1,18 @@
 Release Notes
 =============
 
+0.3.19 - 2024-05-18
+--------------------
+
+Added
+^^^^^
+* None
+
+Changed
+^^^^^^^
+* Update SQL queries to allow `reference_time` to be NULL.
+* Updated tests for NULL `reference_time`
+
 
 0.3.18 - 2024-05-10
 --------------------
