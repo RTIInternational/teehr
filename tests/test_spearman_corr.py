@@ -1,6 +1,6 @@
 """Test duckdb metric queries."""
 import numpy as np
-import teehr.queries.duckdb as tqu
+import teehr.queries.duckdb as tqd
 import teehr.queries.pandas as tqp
 from pathlib import Path
 import pandas as pd
@@ -31,7 +31,7 @@ def test_spearmans_corr_1():
     )
     # print(pandas_df)
 
-    duckdb_df = tqu.get_metrics(
+    duckdb_df = tqd.get_metrics(
         primary_filepath=PRIMARY_FILEPATH,
         secondary_filepath=SECONDARY_FILEPATH,
         crosswalk_filepath=CROSSWALK_FILEPATH,
@@ -70,7 +70,7 @@ def test_spearmans_corr_2():
     )
     # print(pandas_df)
 
-    duckdb_df = tqu.get_metrics(
+    duckdb_df = tqd.get_metrics(
         primary_filepath=PRIMARY_FILEPATH,
         secondary_filepath=SECONDARY_FILEPATH,
         crosswalk_filepath=CROSSWALK_FILEPATH,

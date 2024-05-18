@@ -1,7 +1,7 @@
 """Tests for duckdb timeseries queries."""
 import pandas as pd
 import geopandas as gpd
-import teehr.queries.duckdb as tqu
+import teehr.queries.duckdb as tqd
 from pathlib import Path
 from datetime import datetime
 
@@ -15,7 +15,7 @@ GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
 
 def test_joined_timeseries_query_df():
     """Test joined timeseries query as a dataframe."""
-    query_df = tqu.get_joined_timeseries(
+    query_df = tqd.get_joined_timeseries(
         primary_filepath=PRIMARY_FILEPATH_DUPS,
         secondary_filepath=SECONDARY_FILEPATH,
         crosswalk_filepath=CROSSWALK_FILEPATH,
@@ -32,7 +32,7 @@ def test_joined_timeseries_query_df():
 
 def test_joined_timeseries_with_dups_query_df():
     """Test joined timeseries query with duplicates as a dataframe."""
-    query_df = tqu.get_joined_timeseries(
+    query_df = tqd.get_joined_timeseries(
         primary_filepath=PRIMARY_FILEPATH_DUPS,
         secondary_filepath=SECONDARY_FILEPATH,
         crosswalk_filepath=CROSSWALK_FILEPATH,
@@ -49,7 +49,7 @@ def test_joined_timeseries_with_dups_query_df():
 
 def test_joined_timeseries_query_gdf():
     """Test joined timeseries query as a geodataframe."""
-    query_df = tqu.get_joined_timeseries(
+    query_df = tqd.get_joined_timeseries(
         primary_filepath=PRIMARY_FILEPATH_DUPS,
         secondary_filepath=SECONDARY_FILEPATH,
         crosswalk_filepath=CROSSWALK_FILEPATH,
@@ -66,7 +66,7 @@ def test_joined_timeseries_query_gdf():
 
 def test_joined_timeseries_query_df_filter():
     """Test joined timeseries with a filter query as a dataframe."""
-    query_df = tqu.get_joined_timeseries(
+    query_df = tqd.get_joined_timeseries(
         primary_filepath=PRIMARY_FILEPATH_DUPS,
         secondary_filepath=SECONDARY_FILEPATH,
         crosswalk_filepath=CROSSWALK_FILEPATH,
@@ -97,7 +97,7 @@ def test_joined_timeseries_query_df_filter():
 
 def test_timeseries_query_df():
     """Test get timeseries query as a dataframe."""
-    query_df = tqu.get_timeseries(
+    query_df = tqd.get_timeseries(
         timeseries_filepath=PRIMARY_FILEPATH,
         order_by=["location_id"],
         return_query=False,
@@ -108,7 +108,7 @@ def test_timeseries_query_df():
 
 def test_timeseries_query_df2():
     """Test get secondary timeseries query as a dataframe."""
-    query_df = tqu.get_timeseries(
+    query_df = tqd.get_timeseries(
         timeseries_filepath=SECONDARY_FILEPATH,
         order_by=["location_id"],
         return_query=False,
@@ -118,7 +118,7 @@ def test_timeseries_query_df2():
 
 def test_timeseries_query_one_site_df():
     """Test get timeseries query as a dataframe one site."""
-    query_df = tqu.get_timeseries(
+    query_df = tqd.get_timeseries(
         timeseries_filepath=PRIMARY_FILEPATH,
         order_by=["location_id"],
         filters=[
@@ -131,7 +131,7 @@ def test_timeseries_query_one_site_df():
 
 def test_timeseries_query_one_site_one_ref_df():
     """Test get timeseries query as a dataframe one site and ref time."""
-    query_df = tqu.get_timeseries(
+    query_df = tqd.get_timeseries(
         timeseries_filepath=SECONDARY_FILEPATH,
         order_by=["value_time"],
         filters=[
@@ -149,7 +149,7 @@ def test_timeseries_query_one_site_one_ref_df():
 
 def test_timeseries_char_query_df():
     """Test timeseries char query as a dataframe."""
-    query_df = tqu.get_timeseries_chars(
+    query_df = tqd.get_timeseries_chars(
         timeseries_filepath=PRIMARY_FILEPATH,
         group_by=["location_id"],
         order_by=["location_id"],
@@ -187,7 +187,7 @@ def test_timeseries_char_query_df():
 
 def test_timeseries_char_query_df2():
     """Test timeseries char query as a dataframe v2."""
-    query_df = tqu.get_timeseries_chars(
+    query_df = tqd.get_timeseries_chars(
         timeseries_filepath=SECONDARY_FILEPATH,
         group_by=["location_id", "reference_time"],
         order_by=["location_id"],
@@ -199,7 +199,7 @@ def test_timeseries_char_query_df2():
 
 def test_timeseries_char_query_filter_df():
     """Test timeseries char query as a dataframe with filter."""
-    query_df = tqu.get_timeseries_chars(
+    query_df = tqd.get_timeseries_chars(
         timeseries_filepath=SECONDARY_FILEPATH,
         group_by=["location_id"],
         order_by=["location_id"],

@@ -169,15 +169,15 @@ class TimeseriesFilter(BaseModel):
 class MetricQuery(BaseModel):
     """Metric query model."""
 
-    primary_filepath: Union[str, Path]
-    secondary_filepath: Union[str, Path]
-    crosswalk_filepath: Union[str, Path]
+    primary_filepath: Union[str, Path, List[Union[str, Path]]]
+    secondary_filepath: Union[str, Path, List[Union[str, Path]]]
+    crosswalk_filepath: Union[str, Path, List[Union[str, Path]]]
     group_by: List[JoinedFilterFieldEnum]
     order_by: List[JoinedFilterFieldEnum]
     include_metrics: Union[List[MetricEnum], MetricEnum, str]
     filters: Optional[List[JoinedFilter]] = []
     return_query: bool
-    geometry_filepath: Optional[Union[str, Path]]
+    geometry_filepath: Optional[Union[str, Path, List[Union[str, Path]]]]
     include_geometry: bool
     remove_duplicates: Optional[bool] = True
 
@@ -224,13 +224,13 @@ class MetricQuery(BaseModel):
 class JoinedTimeseriesQuery(BaseModel):
     """Joined timeseries query model."""
 
-    primary_filepath: Union[str, Path]
-    secondary_filepath: Union[str, Path]
-    crosswalk_filepath: Union[str, Path]
+    primary_filepath: Union[str, Path, List[Union[str, Path]]]
+    secondary_filepath: Union[str, Path, List[Union[str, Path]]]
+    crosswalk_filepath: Union[str, Path, List[Union[str, Path]]]
     order_by: List[JoinedFilterFieldEnum]
     filters: Optional[List[JoinedFilter]] = []
     return_query: bool
-    geometry_filepath: Optional[Union[str, Path]]
+    geometry_filepath: Optional[Union[str, Path, List[Union[str, Path]]]]
     include_geometry: bool
     remove_duplicates: Optional[bool] = True
 
@@ -258,7 +258,7 @@ class JoinedTimeseriesQuery(BaseModel):
 class TimeseriesQuery(BaseModel):
     """Timeseries query model."""
 
-    timeseries_filepath: Union[str, Path]
+    timeseries_filepath: Union[str, Path, List[Union[str, Path]]]
     order_by: List[TimeseriesFilterFieldEnum]
     filters: Optional[List[TimeseriesFilter]] = []
     return_query: bool
@@ -274,7 +274,7 @@ class TimeseriesQuery(BaseModel):
 class TimeseriesCharQuery(BaseModel):
     """Timeseries char query model."""
 
-    timeseries_filepath: Union[str, Path]
+    timeseries_filepath: Union[str, Path, List[Union[str, Path]]]
     order_by: List[TimeseriesFilterFieldEnum]
     group_by: List[TimeseriesFilterFieldEnum]
     filters: Optional[List[TimeseriesFilter]] = []

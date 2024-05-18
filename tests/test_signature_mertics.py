@@ -1,6 +1,6 @@
 """Test duckdb metric queries."""
 import numpy as np
-import teehr.queries.duckdb as tqu
+import teehr.queries.duckdb as tqd
 import teehr.queries.pandas as tqp
 from pathlib import Path
 
@@ -28,7 +28,7 @@ def test_annual_peak_flow_bias():
         order_by=group_by,
     )
 
-    duckdb_df = tqu.get_metrics(
+    duckdb_df = tqd.get_metrics(
         primary_filepath=PRIMARY_FILEPATH,
         secondary_filepath=SECONDARY_FILEPATH,
         crosswalk_filepath=CROSSWALK_FILEPATH,

@@ -6,6 +6,7 @@ import warnings
 from collections.abc import Iterable
 from datetime import datetime
 from typing import List, Union
+from pathlib import Path
 
 import teehr.models.queries as tmq
 import teehr.models.queries_database as tmqd
@@ -50,6 +51,17 @@ def _format_iterable_value(
             "treating value as string because didn't know what else to do."
         )
         return f"""({",".join([f"'{str(v)}'" for v in values])})"""
+
+
+def _format_filepath(
+        filepath: Union[str, Path, List[Union[str, Path]]]
+) -> str:
+    if isinstance(filepath, str):
+        return f"'{filepath}'"
+    elif isinstance(filepath, Path):
+        return f"'{str(filepath)}'"
+    elif isinstance(filepath, list):
+        return f"""[{",".join([f"'{str(fp)}'" for fp in filepath])}]"""
 
 
 def _format_filter_item(
@@ -131,7 +143,7 @@ def geometry_join_clause(
 ) -> str:
     """Generate the join clause for geometry."""
     if q.include_geometry:
-        return f"""JOIN read_parquet('{str(q.geometry_filepath)}') gf
+        return f"""JOIN read_parquet({_format_filepath(q.geometry_filepath)}) gf
             on pf.location_id = gf.id
         """
     return ""
@@ -188,7 +200,7 @@ def metric_geometry_join_clause(
 ) -> str:
     """Generate the metric geometry join clause."""
     if q.include_geometry:
-        return f"""JOIN read_parquet('{str(q.geometry_filepath)}') gf
+        return f"""JOIN read_parquet({_format_filepath(q.geometry_filepath)}) gf
             on primary_location_id = gf.id
         """
     return ""
