@@ -1,7 +1,8 @@
 """A module defining duckdb sql queries for a persistent database."""
 import duckdb
 
-from typing import Dict
+from typing import Dict, List, Union
+from pathlib import Path
 
 from teehr.models.queries_database import (
     MetricQuery,
@@ -134,10 +135,10 @@ def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQuery) -> str:
             pf.location_id as primary_location_id,
             sf.value_time - sf.reference_time as lead_time,
             abs(primary_value - secondary_value) as absolute_difference
-        FROM read_parquet('{str(jtq.secondary_filepath)}') sf
-        JOIN read_parquet('{str(jtq.crosswalk_filepath)}') cf
+        FROM read_parquet({tqu._format_filepath(jtq.secondary_filepath)}) sf
+        JOIN read_parquet({tqu._format_filepath(jtq.crosswalk_filepath)}) cf
             on cf.secondary_location_id = sf.location_id
-        JOIN read_parquet("{str(jtq.primary_filepath)}") pf
+        JOIN read_parquet({tqu._format_filepath(jtq.primary_filepath)}) pf
             on cf.primary_location_id = pf.location_id
             and sf.value_time = pf.value_time
             and sf.measurement_unit = pf.measurement_unit
@@ -184,7 +185,9 @@ def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQuery) -> str:
     return query
 
 
-def describe_timeseries(timeseries_filepath: str) -> Dict:
+def describe_timeseries(
+        timeseries_filepath: Union[str, Path, List[Union[str, Path]]]
+) -> Dict:
     r"""Retrieve descriptive stats for a time series.
 
     Parameters
@@ -208,7 +211,7 @@ def describe_timeseries(timeseries_filepath: str) -> Dict:
         COUNT(*) AS num_rows,
         MAX(value_time) as end_date,
         MIN(value_time) as start_date
-        FROM read_parquet("{timeseries_filepath}")
+        FROM read_parquet({tqu._format_filepath(timeseries_filepath)})
         """
     df = duckdb.sql(query).to_df()
     num_location_ids = df["num_location_ids"][0]
@@ -227,7 +230,7 @@ def describe_timeseries(timeseries_filepath: str) -> Dict:
             configuration,
             variable_name,
         COUNT(*)
-        FROM read_parquet("{timeseries_filepath}")
+        FROM read_parquet({tqu._format_filepath(timeseries_filepath)})
         GROUP BY
             value_time,
             location_id,
@@ -251,7 +254,7 @@ def describe_timeseries(timeseries_filepath: str) -> Dict:
                 configuration,
                 variable_name,
             COUNT(*) AS num_duplicates
-            FROM read_parquet("{timeseries_filepath}")
+            FROM read_parquet({tqu._format_filepath(timeseries_filepath)})
             GROUP BY
                 value_time,
                 location_id,
@@ -281,7 +284,7 @@ def describe_timeseries(timeseries_filepath: str) -> Dict:
                 reference_time
             ORDER BY value_time)
             AS value_time_step
-            FROM read_parquet("{timeseries_filepath}")
+            FROM read_parquet({tqu._format_filepath(timeseries_filepath)})
         ),
         missing_timesteps AS (
             SELECT

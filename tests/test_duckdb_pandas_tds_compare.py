@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 
 import teehr.queries.pandas as tqk
-import teehr.queries.duckdb as tqu
-from teehr.classes.teehr_duckdb import TEEHRDatasetDB
+import teehr.queries.duckdb as tqd
+from teehr.database.teehr_duckdb import TEEHRDatasetDB
 
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
 PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*short_obs.parquet")
@@ -93,7 +93,7 @@ def test_metric_compare_1():
 
     args["primary_filepath"] = PRIMARY_FILEPATH_DUPS
     args["remove_duplicates"] = True
-    duckdb_df = tqu.get_metrics(**args)
+    duckdb_df = tqd.get_metrics(**args)
 
     pandas_df["primary_count"] = pandas_df.primary_count.astype(int)
     pandas_df["secondary_count"] = pandas_df.secondary_count.astype(int)
@@ -136,7 +136,7 @@ def test_metric_compare_time_metrics():
                              include_metrics=include_metrics)
 
     pandas_df = tqk.get_metrics(**args)
-    duckdb_df = tqu.get_metrics(**args)
+    duckdb_df = tqd.get_metrics(**args)
 
     diff_df1 = pandas_df[include_metrics].compare(duckdb_df[include_metrics])
     assert diff_df1.index.size == 0
@@ -146,7 +146,7 @@ def test_metric_compare_time_metrics():
 
 def test_primary_timeseries_compare():
     """Test primary timeseries compare."""
-    query_df = tqu.get_timeseries(
+    query_df = tqd.get_timeseries(
         timeseries_filepath=PRIMARY_FILEPATH,
         order_by=["location_id"],
         return_query=False,
@@ -164,7 +164,7 @@ def test_primary_timeseries_compare():
 
 def test_secondary_timeseries_compare():
     """Test secondary timeseries compare."""
-    query_df = tqu.get_timeseries(
+    query_df = tqd.get_timeseries(
         timeseries_filepath=SECONDARY_FILEPATH,
         order_by=["location_id"],
         return_query=False,
@@ -179,7 +179,7 @@ def test_secondary_timeseries_compare():
 
 def test_primary_timeseries_char_compare():
     """Test primary timeseries char compare."""
-    query_df = tqu.get_timeseries_chars(
+    query_df = tqd.get_timeseries_chars(
         timeseries_filepath=PRIMARY_FILEPATH,
         group_by=["location_id"],
         order_by=["location_id"],
@@ -232,7 +232,7 @@ def test_primary_timeseries_char_compare():
 
 def test_secondary_timeseries_char_compare():
     """Test secondary timeseries char compare."""
-    query_df = tqu.get_timeseries_chars(
+    query_df = tqd.get_timeseries_chars(
         timeseries_filepath=SECONDARY_FILEPATH,
         group_by=["location_id"],
         order_by=["location_id"],

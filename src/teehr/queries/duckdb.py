@@ -5,6 +5,7 @@ import pandas as pd
 import geopandas as gpd
 
 from typing import List, Union
+from pathlib import Path
 
 from teehr.models.queries import (
     MetricQuery,
@@ -20,15 +21,15 @@ SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def get_metrics(
-    primary_filepath: str,
-    secondary_filepath: str,
-    crosswalk_filepath: str,
+    primary_filepath: Union[str, Path, List[Union[str, Path]]],
+    secondary_filepath: Union[str, Path, List[Union[str, Path]]],
+    crosswalk_filepath: Union[str, Path, List[Union[str, Path]]],
     group_by: List[str],
     order_by: List[str],
     include_metrics: Union[List[tmq.MetricEnum], "all"],
     filters: Union[List[dict], None] = None,
     return_query: bool = False,
-    geometry_filepath: Union[str, None] = None,
+    geometry_filepath: Union[str, Path, List[Union[str, Path]], None] = None,
     include_geometry: bool = False,
     remove_duplicates: bool = True,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
@@ -174,10 +175,10 @@ def get_metrics(
                 , pf.location_id as primary_location_id
                 , sf.value_time - sf.reference_time as lead_time
                 , abs(pf.value - sf.value) as absolute_difference
-            FROM read_parquet('{str(mq.secondary_filepath)}') sf
-            JOIN read_parquet('{str(mq.crosswalk_filepath)}') cf
+            FROM read_parquet({tqu._format_filepath(mq.secondary_filepath)}) sf
+            JOIN read_parquet({tqu._format_filepath(mq.crosswalk_filepath)}) cf
                 on cf.secondary_location_id = sf.location_id
-            JOIN read_parquet("{str(mq.primary_filepath)}") pf
+            JOIN read_parquet({tqu._format_filepath(mq.primary_filepath)}) pf
                 on cf.primary_location_id = pf.location_id
                 and sf.value_time = pf.value_time
                 and sf.measurement_unit = pf.measurement_unit
@@ -254,13 +255,13 @@ def get_metrics(
 
 
 def get_joined_timeseries(
-    primary_filepath: str,
-    secondary_filepath: str,
-    crosswalk_filepath: str,
+    primary_filepath: Union[str, Path, List[Union[str, Path]]],
+    secondary_filepath: Union[str, Path, List[Union[str, Path]]],
+    crosswalk_filepath: Union[str, Path, List[Union[str, Path]]],
     order_by: List[str],
     filters: Union[List[dict], None] = None,
     return_query: bool = False,
-    geometry_filepath: Union[str, None] = None,
+    geometry_filepath: Union[str, Path, List[Union[str, Path]], None] = None,
     include_geometry: bool = False,
     remove_duplicates: bool = True,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
@@ -367,10 +368,10 @@ def get_joined_timeseries(
                 pf.location_id as primary_location_id,
                 sf.value_time - sf.reference_time as lead_time
                 {tqu.geometry_select_clause(jtq)}
-            FROM read_parquet('{str(jtq.secondary_filepath)}') sf
-            JOIN read_parquet('{str(jtq.crosswalk_filepath)}') cf
+            FROM read_parquet({tqu._format_filepath(jtq.secondary_filepath)}) sf
+            JOIN read_parquet({tqu._format_filepath(jtq.crosswalk_filepath)}) cf
                 on cf.secondary_location_id = sf.location_id
-            JOIN read_parquet("{str(jtq.primary_filepath)}") pf
+            JOIN read_parquet({tqu._format_filepath(jtq.primary_filepath)}) pf
                 on cf.primary_location_id = pf.location_id
                 and sf.value_time = pf.value_time
                 and sf.measurement_unit = pf.measurement_unit
@@ -409,7 +410,7 @@ def get_joined_timeseries(
 
 
 def get_timeseries(
-    timeseries_filepath: str,
+    timeseries_filepath: Union[str, Path, List[Union[str, Path]]],
     order_by: List[str],
     filters: Union[List[dict], None] = None,
     return_query: bool = False,
@@ -478,7 +479,7 @@ def get_timeseries(
                 sf.measurement_unit,
                 sf.variable_name
             FROM
-                read_parquet("{str(tq.timeseries_filepath)}") sf
+                read_parquet({tqu._format_filepath(tq.timeseries_filepath)}) sf
             {tqu.filters_to_sql(tq.filters)}
         )
         SELECT * FROM
@@ -501,7 +502,7 @@ def get_timeseries(
 
 
 def get_timeseries_chars(
-    timeseries_filepath: str,
+    timeseries_filepath: Union[str, Path, List[Union[str, Path]]],
     group_by: list[str],
     order_by: List[str],
     filters: Union[List[dict], None] = None,
@@ -583,7 +584,7 @@ def get_timeseries_chars(
     query = f"""
         WITH fts AS (
             SELECT sf.* FROM
-            read_parquet('{str(tcq.timeseries_filepath)}') sf
+            read_parquet({tqu._format_filepath(tcq.timeseries_filepath)}) sf
             {tqu.filters_to_sql(tcq.filters)}
         ),
         mxt AS (
