@@ -6,7 +6,7 @@ import pandas as pd
 
 import teehr.queries.pandas as tqk
 import teehr.queries.duckdb as tqu
-from teehr.database.teehr_dataset import TEEHRDatasetDB
+from teehr.classes.teehr_duckdb import TEEHRDatasetDB
 
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
 PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*short_obs.parquet")

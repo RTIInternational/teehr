@@ -248,6 +248,61 @@ def _remove_duplicates_jtq_cte(
     return qry
 
 
+def _remove_duplicates_cte(
+    remove_duplicates: bool
+) -> str:
+    """Generate the remove duplicates CTE for the various queries."""
+    # TODO: This could replace _remove_duplicates_mq_cte?
+    if remove_duplicates:
+        qry = """
+            SELECT
+                reference_time
+                , value_time
+                , secondary_location_id
+                , secondary_value
+                , configuration
+                , measurement_unit
+                , variable_name
+                , primary_value
+                , primary_location_id
+                , lead_time
+                , absolute_difference
+            FROM(
+                SELECT *,
+                    row_number()
+                OVER(
+                    PARTITION BY value_time,
+                                 primary_location_id,
+                                 configuration,
+                                 variable_name,
+                                 measurement_unit,
+                                 reference_time
+                    ORDER BY primary_reference_time desc
+                    ) AS rn
+                FROM initial_joined
+                )
+            WHERE rn = 1
+        """
+    else:
+        qry = """
+            SELECT
+                reference_time
+                , value_time
+                , secondary_location_id
+                , secondary_value
+                , configuration
+                , measurement_unit
+                , variable_name
+                , primary_value
+                , primary_location_id
+                , lead_time
+                , absolute_difference
+            FROM
+                initial_joined
+        """
+    return qry
+
+
 def _remove_duplicates_mq_cte(
     q: tmq.MetricQuery
 ) -> str:
@@ -908,7 +963,7 @@ def remove_empty_lines(text: str) -> str:
 
 
 # ====================== EXPERIMENTAL FUNCTIONS BELOW ========================
-def metrics_calculation_clause(
+def get_the_metrics_calculation_clause(
     mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
 ) -> str:
     """Generate the metrics calculation clause."""
@@ -969,42 +1024,10 @@ def metrics_calculation_clause(
     ;"""
 
 
-def metrics_joined_cte_parquet(
-    mq: tmq.MetricQuery
-) -> str:
-    """Generate the metrics joined CTE for un-joined parquet files."""
-    return f"""
-        WITH initial_joined AS (
-            SELECT
-                sf.reference_time
-                , sf.value_time as value_time
-                , sf.location_id as secondary_location_id
-                , pf.reference_time as primary_reference_time
-                , sf.value as secondary_value
-                , sf.configuration
-                , sf.measurement_unit
-                , sf.variable_name
-                , pf.value as primary_value
-                , pf.location_id as primary_location_id
-                , sf.value_time - sf.reference_time as lead_time
-                , abs(pf.value - sf.value) as absolute_difference
-            FROM read_parquet('{str(mq.secondary_filepath)}') sf
-            JOIN read_parquet('{str(mq.crosswalk_filepath)}') cf
-                on cf.secondary_location_id = sf.location_id
-            JOIN read_parquet("{str(mq.primary_filepath)}") pf
-                on cf.primary_location_id = pf.location_id
-                and sf.value_time = pf.value_time
-                and sf.measurement_unit = pf.measurement_unit
-                and sf.variable_name = pf.variable_name
-            {filters_to_sql(mq.filters)}
-        ),
-        joined AS (
-            {_remove_duplicates_mq_cte(mq)}
-        )
-    """
 
 
-def metrics_joined_cte(
+
+def get_the_joined_timeseries_clause(
     mq: tmqd.MetricQuery,
     from_joined_timeseries_clause: str
 ) -> str:

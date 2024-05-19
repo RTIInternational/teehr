@@ -15,7 +15,7 @@ from typing import Union, Dict, List
 from pathlib import Path
 
 # from teehr.queries.duckdb import get_metrics
-from teehr.database.teehr_dataset import TEEHRDatasetAPI
+from teehr.classes.teehr_duckdb import TEEHRDatasetAPI
 from teehr.models.queries import (
     # JoinedFilterFieldEnum,
     # JoinedFilter,

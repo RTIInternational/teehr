@@ -4,7 +4,7 @@ from pathlib import Path
 # import pandas as pd
 # import geopandas as gpd
 
-from teehr.database.teehr_dataset import TEEHRDatasetJoinedParquet
+from teehr.classes.teehr_duckdb import DuckDBJoinedParquet
 
 
 # Test data
@@ -16,7 +16,7 @@ JOINED_PARQUET_FILEPATH = Path(
 
 def test_metrics_query():
     """Test the get_metrics method."""
-    tds = TEEHRDatasetJoinedParquet(JOINED_PARQUET_FILEPATH)
+    tds = DuckDBJoinedParquet(JOINED_PARQUET_FILEPATH)
 
     # Get metrics
     filters = [
@@ -58,7 +58,7 @@ def test_metrics_query():
 
 def test_get_joined_timeseries():
     """Test the get_joined_timeseries method."""
-    tds = TEEHRDatasetJoinedParquet(JOINED_PARQUET_FILEPATH)
+    tds = DuckDBJoinedParquet(JOINED_PARQUET_FILEPATH)
 
     # Get joined timeseries
     order_by = ["primary_location_id"]
@@ -74,7 +74,7 @@ def test_get_joined_timeseries():
 
 def test_timeseries_query():
     """Test the get timeseries query."""
-    tds = TEEHRDatasetJoinedParquet(JOINED_PARQUET_FILEPATH)
+    tds = DuckDBJoinedParquet(JOINED_PARQUET_FILEPATH)
 
     filters = [
         {
@@ -98,7 +98,7 @@ def test_timeseries_query():
 
 def test_timeseries_char_query():
     """Test the get timeseries char query."""
-    tds = TEEHRDatasetJoinedParquet(JOINED_PARQUET_FILEPATH)
+    tds = DuckDBJoinedParquet(JOINED_PARQUET_FILEPATH)
 
     filters = [
         {
@@ -124,6 +124,6 @@ def test_timeseries_char_query():
 
 if __name__ == "__main__":
     test_metrics_query()
-    test_get_joined_timeseries()
-    test_timeseries_query()
-    test_timeseries_char_query()
+    # test_get_joined_timeseries()
+    # test_timeseries_query()
+    # test_timeseries_char_query()
