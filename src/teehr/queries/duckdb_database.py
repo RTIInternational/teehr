@@ -101,8 +101,8 @@ def create_get_metrics_query(
     >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
     >>> ]
     """
-    query = tqu.joined_timeseries_clause(mq, from_joined_timeseries_clause) + \
-        tqu.metrics_calculation_clause(mq)
+    query = tqu.get_the_joined_timeseries_clause(mq, from_joined_timeseries_clause) + \
+        tqu.get_the_metrics_calculation_clause(mq)
 
     return query
 

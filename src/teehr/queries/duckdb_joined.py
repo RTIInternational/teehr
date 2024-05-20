@@ -1,3 +1,4 @@
+"""A module defining queries for pre-joined timeseries data."""
 import teehr.queries.utils as tqu
 import teehr.models.queries_database as tmqd
 

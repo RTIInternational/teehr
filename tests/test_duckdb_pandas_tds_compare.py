@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 
 import teehr.queries.pandas as tqk
-import teehr.queries.duckdb as tqd
-from teehr.database.teehr_duckdb import TEEHRDatasetDB
+import teehr.queries.duckdb as tqu
+from teehr.classes.teehr_duckdb import DuckDBDatabase
 
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
 PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*short_obs.parquet")
@@ -20,7 +20,7 @@ ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr.parquet")
 if DATABASE_FILEPATH.is_file():
     DATABASE_FILEPATH.unlink()
 
-tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+tds = DuckDBDatabase(DATABASE_FILEPATH)
 
 # Perform the join and insert into duckdb database
 tds.insert_joined_timeseries(

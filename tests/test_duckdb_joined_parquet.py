@@ -95,6 +95,8 @@ def test_timeseries_query():
 
     assert df.index.size == 26 * 3
 
+    pass
+
 
 def test_timeseries_char_query():
     """Test the get timeseries char query."""
@@ -122,8 +124,24 @@ def test_timeseries_char_query():
     pass
 
 
+def test_unique_field_values():
+    """Test the unique field values query."""
+    tds = DuckDBJoinedParquet(JOINED_PARQUET_FILEPATH)
+
+    df = tds.get_unique_field_values(
+        field_name="primary_location_id"
+    )
+    assert sorted(df["unique_primary_location_id_values"].tolist()) == [
+        "gage-A",
+        "gage-B",
+        "gage-C",
+    ]
+    pass
+
+
 if __name__ == "__main__":
-    test_metrics_query()
+    # test_metrics_query()
     # test_get_joined_timeseries()
     # test_timeseries_query()
     # test_timeseries_char_query()
+    test_unique_field_values()

@@ -1036,9 +1036,6 @@ def get_the_metrics_calculation_clause(
     ;"""
 
 
-
-
-
 def get_the_joined_timeseries_clause(
     mq: tmqd.MetricQuery,
     from_joined_timeseries_clause: str

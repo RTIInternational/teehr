@@ -1,3 +1,4 @@
+"""A module defining queries for un-joined timeseries data."""
 import duckdb
 
 import teehr.queries.utils as tqu

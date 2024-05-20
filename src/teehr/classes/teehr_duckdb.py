@@ -1725,16 +1725,13 @@ class DuckDBJoinedParquet(DuckDBBase):
 
         return self._get_timeseries_chars(tcq)
 
-    def get_unique_field_values(
-        self,
-        fn: tmqd.JoinedTimeseriesFieldName
-    ) -> pd.DataFrame:
+    def get_unique_field_values(self, field_name: str) -> pd.DataFrame:
         """Get unique values for a given field.
 
         Parameters
         ----------
-        fn : JoinedTimeseriesFieldName
-            Pydantic model containing the joined_timeseries table field name.
+        field_name : str
+            Name of the joined_timeseries field.
 
         Returns
         -------
@@ -1746,7 +1743,9 @@ class DuckDBJoinedParquet(DuckDBBase):
         teehr.queries.duckdb_database.create_unique_field_values_query : \
             Create the get unique field values query.
         """
-        fn = self._validate_query_model(fn)
+        data = {"field_name": field_name}
+        fn = self._validate_query_model(tmqd.JoinedTimeseriesFieldName, data)
+
         return self._get_unique_field_values(fn)
 
 
