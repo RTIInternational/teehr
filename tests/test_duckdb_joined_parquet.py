@@ -12,11 +12,15 @@ TEST_STUDY_DIR = Path("tests", "data", "test_study")
 JOINED_PARQUET_FILEPATH = Path(
     TEST_STUDY_DIR, "timeseries", "test_joined_timeseries_*.parquet"
 )
+GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
 
 
 def test_metrics_query():
     """Test the get_metrics method."""
-    tds = DuckDBJoinedParquet(JOINED_PARQUET_FILEPATH)
+    tds = DuckDBJoinedParquet(
+        JOINED_PARQUET_FILEPATH,
+        GEOMETRY_FILEPATH
+    )
 
     # Get metrics
     filters = [
@@ -29,15 +33,8 @@ def test_metrics_query():
             "column": "reference_time",
             "operator": "=",
             "value": "2022-01-01 00:00:00",
-        },
-        # {
-        #     "column": "lead_time",
-        #     "operator": "<=",
-        #     "value": "10 hours"
-        # },
+        }
     ]
-
-    # TODO: Why doesn't lead_time filter work?
 
     group_by = ["primary_location_id"]
     order_by = ["primary_location_id"]
@@ -48,17 +45,22 @@ def test_metrics_query():
         order_by=order_by,
         include_metrics=include_metrics,
         filters=filters,
-        include_geometry=False,
+        include_geometry=True,
     )
 
     # print(df)
+    assert df.index.size == 1
+    assert df.columns.size == 34
 
     pass
 
 
 def test_get_joined_timeseries():
     """Test the get_joined_timeseries method."""
-    tds = DuckDBJoinedParquet(JOINED_PARQUET_FILEPATH)
+    tds = DuckDBJoinedParquet(
+        JOINED_PARQUET_FILEPATH,
+        GEOMETRY_FILEPATH
+    )
 
     # Get joined timeseries
     order_by = ["primary_location_id"]
@@ -66,9 +68,11 @@ def test_get_joined_timeseries():
     df = tds.get_joined_timeseries(
         order_by=order_by,
         return_query=False,
-        include_geometry=False,
+        include_geometry=True,
     )
 
+    assert df.index.size == 216
+    assert df.columns.size == 12
     pass
 
 
@@ -94,7 +98,6 @@ def test_timeseries_query():
     )
 
     assert df.index.size == 26 * 3
-
     pass
 
 
@@ -140,8 +143,8 @@ def test_unique_field_values():
 
 
 if __name__ == "__main__":
-    # test_metrics_query()
-    # test_get_joined_timeseries()
-    # test_timeseries_query()
-    # test_timeseries_char_query()
+    test_metrics_query()
+    test_get_joined_timeseries()
+    test_timeseries_query()
+    test_timeseries_char_query()
     test_unique_field_values()

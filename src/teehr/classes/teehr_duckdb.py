@@ -19,19 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class DuckDBBase(ABC):
-    """Test base class.
-
-    This could contain:
-
-    - __init__(): @abstractmethod
-    - query(): Use the API method, assuming the connection is a class attribute
-    - profile_query()
-    - get_joined_timeseries_schema() --> not for un-joined parquet files
-    - _sanitize_field_name()
-    - describe_inputs()
-    - _check_if_geometry_is_inserted() --> not for un-joined parquet files
-
-    """
+    """The TEEHR-DuckDB base class."""
 
     @abstractmethod
     def __init__(self) -> None:
@@ -179,7 +167,8 @@ class DuckDBBase(ABC):
 
     def _get_metrics(
         self,
-        mq: Any
+        mq: Any,
+        geometry_select_clause: str = ""
     ) -> Union[pd.DataFrame, gpd.GeoDataFrame, str]:
         """Calculate performance metrics using database queries.
 
@@ -203,7 +192,8 @@ class DuckDBBase(ABC):
         #     self._get_metrics_calculation_clause(mq)
         query = tqu_db.create_get_metrics_query(
             mq,
-            self.from_joined_timeseries_clause
+            self.from_joined_timeseries_clause,
+            geometry_select_clause
         )
 
         return self._execute_query(
@@ -214,7 +204,8 @@ class DuckDBBase(ABC):
 
     def _get_joined_timeseries(
         self,
-        jtq: Any
+        jtq: Any,
+        geometry_select_clause: str = ""
     ) -> Union[pd.DataFrame, gpd.GeoDataFrame, str]:
         """Retrieve joined timeseries using database query.
 
@@ -236,7 +227,8 @@ class DuckDBBase(ABC):
         """
         query = tqu_db.create_get_joined_timeseries_query(
             jtq,
-            self.from_joined_timeseries_clause
+            self.from_joined_timeseries_clause,
+            geometry_select_clause
         )
 
         return self._execute_query(
@@ -391,6 +383,9 @@ class DuckDBAPI(DuckDBBase):
         """
         self.database_filepath = str(database_filepath)
         self.from_joined_timeseries_clause = "FROM joined_timeseries sf"
+        self.join_geometry_clause = """
+            JOIN geometry gf on primary_location_id = gf.id
+        """
         self.con = duckdb.connect(self.database_filepath, read_only=True)
 
     def _get_intial_joined_timeseries_clause(self, qm: Any) -> str:
@@ -462,6 +457,9 @@ class DuckDBAPI(DuckDBBase):
         """
         mq = self._validate_query_model(mq)
 
+        if mq.include_geometry:
+            return self._get_metrics(mq, self.join_geometry_clause)
+
         return self._get_metrics(mq)
 
     def get_joined_timeseries(
@@ -487,6 +485,9 @@ class DuckDBAPI(DuckDBBase):
             Create the get joined timeseries query.
         """
         jtq = self._validate_query_model(jtq)
+
+        if jtq.include_geometry:
+            return self._get_joined_timeseries(jtq, self.join_geometry_clause)
 
         return self._get_joined_timeseries(jtq)
 
@@ -683,6 +684,9 @@ class DuckDBDatabase(DuckDBAPI):
         """
         self.database_filepath = str(database_filepath)
         self.from_joined_timeseries_clause = "FROM joined_timeseries sf"
+        self.join_geometry_clause = """
+            JOIN geometry gf on primary_location_id = gf.id
+        """
         self._initialize_database_tables()
 
     # def _get_intial_joined_timeseries_clause(self, qm: Any) -> str:
@@ -754,7 +758,8 @@ class DuckDBDatabase(DuckDBAPI):
 
     def _get_metrics(
         self,
-        mq: Any
+        mq: Any,
+        join_geometry_clause: str = ""
     ) -> Union[pd.DataFrame, gpd.GeoDataFrame, str]:
         """Calculate performance metrics using database queries.
 
@@ -776,7 +781,8 @@ class DuckDBDatabase(DuckDBAPI):
         """
         query = tqu_db.create_get_metrics_query(
             mq,
-            self.from_joined_timeseries_clause
+            self.from_joined_timeseries_clause,
+            join_geometry_clause
         )
 
         return self._execute_query(
@@ -788,7 +794,8 @@ class DuckDBDatabase(DuckDBAPI):
 
     def _get_joined_timeseries(
         self,
-        jtq: Any
+        jtq: Any,
+        join_geometry_clause: str = ""
     ) -> Union[pd.DataFrame, gpd.GeoDataFrame, str]:
         """Retrieve joined timeseries using database query.
 
@@ -810,7 +817,8 @@ class DuckDBDatabase(DuckDBAPI):
         """
         query = tqu_db.create_get_joined_timeseries_query(
             jtq,
-            self.from_joined_timeseries_clause
+            self.from_joined_timeseries_clause,
+            join_geometry_clause
         )
 
         return self._execute_query(
@@ -1289,6 +1297,9 @@ class DuckDBDatabase(DuckDBAPI):
         }
         mq = self._validate_query_model(tmqd.MetricQuery, data)
 
+        if mq.include_geometry:
+            return self._get_metrics(mq, self.join_geometry_clause)
+
         return self._get_metrics(mq)
 
     def get_joined_timeseries(
@@ -1333,6 +1344,9 @@ class DuckDBDatabase(DuckDBAPI):
             "include_geometry": include_geometry,
         }
         jtq = self._validate_query_model(tmqd.JoinedTimeseriesQuery, data)
+
+        if jtq.include_geometry:
+            return self._get_joined_timeseries(jtq, self.join_geometry_clause)
 
         return self._get_joined_timeseries(jtq)
 
@@ -1465,6 +1479,7 @@ class DuckDBJoinedParquet(DuckDBBase):
     def __init__(
         self,
         joined_parquet_filepath: Union[str, Path],
+        geometry_filepath: Union[str, Path, None] = "",
     ):
         r"""Set the path to the pre-existing study area database.
 
@@ -1478,11 +1493,17 @@ class DuckDBJoinedParquet(DuckDBBase):
             For example, "/path/to/parquet/\\*.parquet".
         """
         self.joined_parquet_filepath = str(joined_parquet_filepath)
+        self.geometry_filepath = str(geometry_filepath)
         # NOTE: Cannot launch a read-only in-memory connection
         self.con = duckdb.connect()
         self.from_joined_timeseries_clause = (
             f"FROM read_parquet('{str(joined_parquet_filepath)}') sf"
         )
+        self.join_geometry_clause = f"""
+            JOIN read_parquet(
+                {tqu._format_filepath(self.geometry_filepath)}
+            ) gf on primary_location_id = gf.id
+        """
 
     # def _get_joined_timeseries_clause(self, qm: Any) -> str:
     #     """Get the joined_timeseries clause."""
@@ -1494,6 +1515,21 @@ class DuckDBJoinedParquet(DuckDBBase):
     #             {tqu.filters_to_sql(qm.filters)}
     #         )
     #     """
+
+    # f"FROM read_parquet('{str(joined_parquet_filepath)}') sf"
+
+    def _check_if_geometry_is_inserted(self):
+        """Make sure the geometry filepath has been specified."""
+        if self.geometry_filepath == "":
+            raise ValueError("Please specify a geometry file path.")
+        df = self.query(
+            f"SELECT COUNT(geometry) FROM read_parquet('{str(self.geometry_filepath)}');",
+            format="df"
+        )
+        if df["count(geometry)"].values == 0:
+            raise ValueError(
+                "The geometry file is empty! Please specify a valid file."
+            )
 
     def get_joined_timeseries_schema(self) -> pd.DataFrame:
         """Get field names and field data types from the joined \
@@ -1579,6 +1615,9 @@ class DuckDBJoinedParquet(DuckDBBase):
         }
         mq = self._validate_query_model(tmqd.MetricQuery, data)
 
+        if mq.include_geometry:
+            return self._get_metrics(mq, self.join_geometry_clause)
+
         return self._get_metrics(mq)
 
     def get_joined_timeseries(
@@ -1623,6 +1662,9 @@ class DuckDBJoinedParquet(DuckDBBase):
             "include_geometry": include_geometry,
         }
         jtq = self._validate_query_model(tmqd.JoinedTimeseriesQuery, data)
+
+        if jtq.include_geometry:
+            return self._get_joined_timeseries(jtq, self.join_geometry_clause)
 
         return self._get_joined_timeseries(jtq)
 
@@ -1747,96 +1789,3 @@ class DuckDBJoinedParquet(DuckDBBase):
         fn = self._validate_query_model(tmqd.JoinedTimeseriesFieldName, data)
 
         return self._get_unique_field_values(fn)
-
-
-class DuckDBParquet(DuckDBBase):
-    """For querying joined parquet files."""
-
-    def __init__(
-        self,
-        primary_filepath: Union[str, Path],
-        secondary_filepath: Union[str, Path],
-        crosswalk_filepath: Union[str, Path],
-        geometry_filepath: Union[str, Path, None],
-    ):
-        r"""Set the path to the pre-existing study area database.
-
-        Establish a read-only in-memory connection.
-
-        Parameters
-        ----------
-        joined_parquet_filepath : Union[str, Path]
-            File path to the "observed" data.  String must include path
-            to file(s) and can include wildcards.
-            For example, "/path/to/parquet/\\*.parquet".
-        """
-
-        self.primary_filepath = str(primary_filepath)
-        self.secondary_filepath = str(secondary_filepath)
-        self.crosswalk_filepath = str(crosswalk_filepath)
-        if geometry_filepath:
-            self.geometry_filepath = str(geometry_filepath)
-
-        # NOTE: Cannot launch a read-only in-memory connection
-        self.con = duckdb.connect()
-
-        # self.from_joined_timeseries_clause = (
-        #     f"FROM read_parquet('{str(joined_parquet_filepath)}') sf"
-        # )
-
-    def get_metrics(
-        self,
-        group_by: List[str],
-        order_by: List[str],
-        include_metrics: Union[List[MetricEnum], str] = "all",
-        filters: Union[List[dict], None] = None,
-        include_geometry: bool = False,
-        return_query: bool = False,
-    ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
-        """Calculate performance metrics using database queries.
-
-        Parameters
-        ----------
-        group_by : List[str]
-            List of column/field names to group timeseries data by.
-            Must provide at least one.
-        order_by : List[str]
-            List of column/field names to order results by.
-            Must provide at least one.
-        include_metrics : Union[List[MetricEnum], str]
-            List of metrics (see below) for allowable list, or "all" to return
-            all. Placeholder, currently ignored -> returns "all".
-        filters : Union[List[dict], None] = None
-            List of dictionaries describing the "where" clause to limit data
-            that is included in metrics.
-        include_geometry : bool, optional
-            True joins the geometry to the query results.
-            Only works if `primary_location_id`
-            is included as a group_by field, by default False.
-        return_query : bool, optional
-            True returns the query string instead of the data,
-            by default False.
-
-        Returns
-        -------
-        Union[pd.DataFrame, gpd.GeoDataFrame, str]
-            A DataFrame or optionally a GeoDataFrame containing query results,
-            or the query itself as a string.
-
-        See Also
-        --------
-        teehr.queries.duckdb_database.create_get_metrics_query : \
-            Create the get metrics query.
-        """
-        data = {
-            "group_by": group_by,
-            "order_by": order_by,
-            "include_metrics": include_metrics,
-            "filters": filters,
-            "include_geometry": include_geometry,
-            "return_query": return_query,
-        }
-        # mq = self._validate_query_model(tmqd.MetricQuery, data)
-        mq = tmqd.MetricQuery.model_validate(data)
-
-        return self._get_metrics(mq)

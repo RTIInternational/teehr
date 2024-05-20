@@ -976,7 +976,8 @@ def remove_empty_lines(text: str) -> str:
 
 # ====================== EXPERIMENTAL FUNCTIONS BELOW ========================
 def get_the_metrics_calculation_clause(
-    mq: Union[tmq.MetricQuery, tmqd.MetricQuery]
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery],
+    join_geometry_clause: str
 ) -> str:
     """Generate the metrics calculation clause."""
     return f"""
@@ -1029,7 +1030,7 @@ def get_the_metrics_calculation_clause(
             {metrics_select_clause(mq)}
             {geometry_select_clause(mq)}
         FROM metrics
-            {metric_geometry_join_clause_db(mq)}
+            {join_geometry_clause}
             {_join_annual_metrics_cte(mq)}
         ORDER BY
             {",".join([f"metrics.{ob}" for ob in mq.order_by])}

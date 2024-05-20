@@ -20,7 +20,8 @@ SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 def create_get_metrics_query(
     mq: MetricQuery,
-    from_joined_timeseries_clause: str
+    from_joined_timeseries_clause: str,
+    join_geometry_clause: str
 ) -> str:
     """Build the query string to calculate performance metrics.
 
@@ -101,8 +102,10 @@ def create_get_metrics_query(
     >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
     >>> ]
     """
-    query = tqu.get_the_joined_timeseries_clause(mq, from_joined_timeseries_clause) + \
-        tqu.get_the_metrics_calculation_clause(mq)
+    query = tqu.get_the_joined_timeseries_clause(
+        mq,
+        from_joined_timeseries_clause
+    ) + tqu.get_the_metrics_calculation_clause(mq, join_geometry_clause)
 
     return query
 
@@ -323,7 +326,8 @@ def describe_timeseries(
 
 def create_get_joined_timeseries_query(
     jtq: JoinedTimeseriesQuery,
-    from_joined_timeseries_clause: str
+    from_joined_timeseries_clause: str,
+    join_geometry_clause: str
 ) -> str:
     """Retrieve joined timeseries using database query.
 
@@ -391,7 +395,7 @@ def create_get_joined_timeseries_query(
             sf.*
         {tqu.geometry_select_clause(jtq)}
         {from_joined_timeseries_clause}
-        {tqu.metric_geometry_join_clause_db(jtq)}
+        {join_geometry_clause}
         {tqu.filters_to_sql(jtq.filters)}
         ORDER BY
             {",".join(jtq.order_by)}

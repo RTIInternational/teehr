@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 import teehr.queries.pandas as tqk
-import teehr.queries.duckdb as tqu
+import teehr.queries.duckdb as tqd
 from teehr.classes.teehr_duckdb import DuckDBDatabase
 
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
