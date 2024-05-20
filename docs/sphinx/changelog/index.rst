@@ -1,6 +1,23 @@
 Release Notes
 =============
 
+0.3.21 - 2024-05-20
+--------------------
+
+Added
+^^^^^
+* Added the ``DuckDBJoinedParquet`` class for metric queries on pre-joined parquet files.
+* Added the ``DuckDBBase`` class for common methods between the ``DuckDBDatabase``, ``DuckDBAPI``,
+  and ``DuckDBJoinedParquet`` classes.
+
+Changed
+^^^^^^^
+* Renamed the ``database`` directory to ``classes``.
+* Renamed the ``teehr_dataset.py`` to ``teehr_duckdb.py``.
+* Renamed the ``TEEHRDatasetDB`` and ``TEEHRDatasetAPI`` classes to
+  ``DuckDBDatabase`` and ``DuckDBAPI`` respectively.
+
+
 0.3.20 - 2024-05-18
 --------------------
 

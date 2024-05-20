@@ -156,15 +156,6 @@ class DuckDBBase(ABC):
 
         return df
 
-    # @abstractmethod
-    # def _get_joined_timeseries_clause(self, qm: Any) -> str:
-    #     """Get the initial joined_timeseries clause."""
-    #     pass
-
-    # def _get_metrics_calculation_clause(self, qm: Any) -> str:
-    #     """Get the metrics calculation clause."""
-    #     return tqu.metrics_calculation_clause(qm)
-
     def _get_metrics(
         self,
         mq: Any,
@@ -188,8 +179,6 @@ class DuckDBBase(ABC):
         teehr.queries.duckdb_database.create_get_metrics_query : \
             Create the get metrics query.
         """
-        # query = self._get_joined_timeseries_clause(mq) + \
-        #     self._get_metrics_calculation_clause(mq)
         query = tqu_db.create_get_metrics_query(
             mq,
             self.from_joined_timeseries_clause,
@@ -688,17 +677,6 @@ class DuckDBDatabase(DuckDBAPI):
             JOIN geometry gf on primary_location_id = gf.id
         """
         self._initialize_database_tables()
-
-    # def _get_intial_joined_timeseries_clause(self, qm: Any) -> str:
-    #     """Get the initial joined_timeseries clause."""
-    #     return f"""
-    #         WITH joined as (
-    #             SELECT
-    #                 *
-    #             FROM joined_timeseries sf
-    #             {tqu.filters_to_sql(qm.filters)}
-    #         )
-    #     """
 
     def query(
         self,
@@ -1504,19 +1482,6 @@ class DuckDBJoinedParquet(DuckDBBase):
                 {tqu._format_filepath(self.geometry_filepath)}
             ) gf on primary_location_id = gf.id
         """
-
-    # def _get_joined_timeseries_clause(self, qm: Any) -> str:
-    #     """Get the joined_timeseries clause."""
-    #     return f"""
-    #         WITH joined as (
-    #             SELECT
-    #                 *
-    #             FROM read_parquet('{str(self.joined_parquet_filepath)}') sf
-    #             {tqu.filters_to_sql(qm.filters)}
-    #         )
-    #     """
-
-    # f"FROM read_parquet('{str(joined_parquet_filepath)}') sf"
 
     def _check_if_geometry_is_inserted(self):
         """Make sure the geometry filepath has been specified."""
