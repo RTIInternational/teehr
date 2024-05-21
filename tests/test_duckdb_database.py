@@ -35,10 +35,7 @@ def test_insert_joined_timeseries():
     tds.insert_geometry(GEOMETRY_FILEPATH)
 
     df = tds.query("SELECT * FROM joined_timeseries", format="df")
-    np.testing.assert_approx_equal(
-        df.absolute_difference.sum(), 283.7, significant=4
-    )
-    pass
+    assert len(df) > 0
 
 
 def test_unique_field_values():
@@ -93,12 +90,7 @@ def test_metrics_query():
             "column": "reference_time",
             "operator": "=",
             "value": "2022-01-01 00:00:00",
-        },
-        {
-            "column": "lead_time",
-            "operator": "<=",
-            "value": "10 hours"
-        },
+        }
     ]
     group_by = ["primary_location_id"]
     order_by = ["primary_location_id"]
@@ -275,8 +267,6 @@ def test_join_attributes():
         "variable_name",
         "primary_value",
         "primary_location_id",
-        "lead_time",
-        "absolute_difference",
         "drainage_area_sq_km",
         "drainage_area_sq_mi",
         "year_2_discharge_ft_3_s",
@@ -320,8 +310,7 @@ def test_get_joined_timeseries_schema():
 
     df = tds.get_joined_timeseries_schema()
 
-    assert df.index.size == 11
-    pass
+    assert df.index.size == 9
 
 
 def test_joined_timeseries_query_gdf():

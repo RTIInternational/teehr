@@ -39,8 +39,8 @@ def test_metrics_query():
     tds = DuckDBAPI(DATABASE_FILEPATH)
 
     # Get metrics
-    order_by = ["lead_time", "primary_location_id"]
-    group_by = ["lead_time", "primary_location_id"]
+    order_by = ["primary_location_id"]
+    group_by = ["primary_location_id"]
     filters = [
         {
             "column": "primary_location_id",
@@ -51,8 +51,7 @@ def test_metrics_query():
             "column": "reference_time",
             "operator": "=",
             "value": "2022-01-01 00:00:00",
-        },
-        {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+        }
     ]
 
     mq = MetricQuery.model_validate(
@@ -65,7 +64,7 @@ def test_metrics_query():
         },
     )
     df = tds.get_metrics(mq)
-    assert df.index.size == 11
+    assert df.index.size == 1
 
 
 def test_describe_inputs():
@@ -89,8 +88,7 @@ def test_get_joined_timeseries():
             "column": "reference_time",
             "operator": "=",
             "value": "2022-01-01 00:00:00",
-        },
-        {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+        }
     ]
 
     jtq = JoinedTimeseriesQuery.model_validate(
@@ -103,7 +101,7 @@ def test_get_joined_timeseries():
 
     df = tds.get_joined_timeseries(jtq)
 
-    assert df.index.size == 11
+    assert df.index.size == 24
 
 
 if __name__ == "__main__":

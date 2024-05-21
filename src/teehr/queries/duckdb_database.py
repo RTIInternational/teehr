@@ -48,7 +48,6 @@ def create_get_metrics_query(
     * configuration
     * measurement_unit
     * variable_name
-    * lead_time
     * [any user-added fields]
 
     Metrics:
@@ -84,9 +83,9 @@ def create_get_metrics_query(
 
     Examples
     --------
-    >>> order_by = ["lead_time", "primary_location_id"]
+    >>> order_by = ["primary_location_id"]
 
-    >>> group_by = ["lead_time", "primary_location_id"]
+    >>> group_by = ["primary_location_id"]
 
     >>> filters = [
     >>>     {
@@ -98,8 +97,7 @@ def create_get_metrics_query(
     >>>         "column": "reference_time",
     >>>         "operator": "=",
     >>>         "value": "2022-01-01 00:00:00",
-    >>>     },
-    >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+    >>>     }
     >>> ]
     """
     query = tqu.get_the_joined_timeseries_clause(
@@ -135,9 +133,7 @@ def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQuery) -> str:
             pf.reference_time as primary_reference_time,
             sf.variable_name,
             pf.value as primary_value,
-            pf.location_id as primary_location_id,
-            sf.value_time - sf.reference_time as lead_time,
-            abs(primary_value - secondary_value) as absolute_difference
+            pf.location_id as primary_location_id
         FROM read_parquet({tqu._format_filepath(jtq.secondary_filepath)}) sf
         JOIN read_parquet({tqu._format_filepath(jtq.crosswalk_filepath)}) cf
             on cf.secondary_location_id = sf.location_id
@@ -158,8 +154,6 @@ def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQuery) -> str:
             , variable_name
             , primary_value
             , primary_location_id
-            , lead_time
-            , absolute_difference
         FROM(
             SELECT *,
                 row_number()
@@ -354,8 +348,6 @@ def create_get_joined_timeseries_query(
     * configuration
     * measurement_unit
     * variable_name
-    * lead_time
-    * absolute_difference
     * [any user-added fields]
 
     Order By Fields:
@@ -372,9 +364,9 @@ def create_get_joined_timeseries_query(
 
     Examples
     --------
-    >>> order_by = ["lead_time", "primary_location_id"]
+    >>> order_by = ["primary_location_id"]
 
-    >>> group_by = ["lead_time", "primary_location_id"]
+    >>> group_by = ["primary_location_id"]
 
     >>> filters = [
     >>>     {
@@ -386,8 +378,7 @@ def create_get_joined_timeseries_query(
     >>>         "column": "reference_time",
     >>>         "operator": "=",
     >>>         "value": "2022-01-01 00:00:00",
-    >>>     },
-    >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+    >>>     }
     >>> ]
     """
     query = f"""
@@ -433,8 +424,6 @@ def create_get_timeseries_query(
     * configuration
     * measurement_unit
     * variable_name
-    * lead_time
-    * absolute_difference
     * [any user-added fields]
 
     Order By Fields:
@@ -451,9 +440,9 @@ def create_get_timeseries_query(
 
     Examples
     --------
-    >>> order_by = ["lead_time", "primary_location_id"]
+    >>> order_by = ["primary_location_id"]
 
-    >>> group_by = ["lead_time", "primary_location_id"]
+    >>> group_by = ["primary_location_id"]
 
     >>> filters = [
     >>>     {
@@ -465,8 +454,7 @@ def create_get_timeseries_query(
     >>>         "column": "reference_time",
     >>>         "operator": "=",
     >>>         "value": "2022-01-01 00:00:00",
-    >>>     },
-    >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+    >>>     }
     >>> ]
     """
     if tq.timeseries_name == "primary":
@@ -538,14 +526,13 @@ def create_get_timeseries_char_query(
     * configuration
     * measurement_unit
     * variable_name
-    * lead_time
     * [any user-added fields]
 
     Examples
     --------
-    >>> order_by = ["lead_time", "primary_location_id"]
+    >>> order_by = ["primary_location_id"]
 
-    >>> group_by = ["lead_time", "primary_location_id"]
+    >>> group_by = ["primary_location_id"]
 
     >>> filters = [
     >>>     {
@@ -557,8 +544,7 @@ def create_get_timeseries_char_query(
     >>>         "column": "reference_time",
     >>>         "operator": "=",
     >>>         "value": "2022-01-01 00:00:00",
-    >>>     },
-    >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+    >>>     }
     >>> ]
     """
     join_max_time_on = tqu._join_time_on(

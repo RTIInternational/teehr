@@ -912,9 +912,7 @@ class DuckDBDatabase(DuckDBAPI):
                 measurement_unit VARCHAR,
                 variable_name VARCHAR,
                 primary_value FLOAT,
-                primary_location_id VARCHAR,
-                lead_time INTERVAL,
-                absolute_difference FLOAT
+                primary_location_id VARCHAR
                 );"""
 
         self.query(create_timeseries_table)

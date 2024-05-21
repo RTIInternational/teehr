@@ -67,8 +67,6 @@ class JoinedFieldNameEnum(StrEnum):
     variable_name = "variable_name"
     primary_value = "primary_value"
     primary_location_id = "primary_location_id"
-    lead_time = "lead_time"
-    absolute_difference = "absolute_difference"
     geometry = "geometry"
 
 
