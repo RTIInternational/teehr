@@ -1,7 +1,7 @@
 Release Notes
 =============
 
-0.3.21 - 2024-05-20
+0.3.21 - 2024-05-21
 --------------------
 
 Added
@@ -16,6 +16,7 @@ Changed
 * Renamed the ``teehr_dataset.py`` to ``teehr_duckdb.py``.
 * Renamed the ``TEEHRDatasetDB`` and ``TEEHRDatasetAPI`` classes to
   ``DuckDBDatabase`` and ``DuckDBAPI`` respectively.
+* Removed `lead_time` and `absolute_value` from joined table
 
 
 0.3.20 - 2024-05-18
