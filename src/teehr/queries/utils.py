@@ -56,6 +56,7 @@ def _format_iterable_value(
 def _format_filepath(
         filepath: Union[str, Path, List[Union[str, Path]]]
 ) -> str:
+    """Format str, Path of list of the same for SQL."""
     if isinstance(filepath, str):
         return f"'{filepath}'"
     elif isinstance(filepath, Path):
