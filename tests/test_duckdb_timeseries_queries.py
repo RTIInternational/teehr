@@ -20,7 +20,7 @@ def test_joined_timeseries_query_df():
         secondary_filepath=SECONDARY_FILEPATH,
         crosswalk_filepath=CROSSWALK_FILEPATH,
         geometry_filepath=GEOMETRY_FILEPATH,
-        order_by=["primary_location_id", "lead_time"],
+        order_by=["primary_location_id"],
         return_query=False,
         remove_duplicates=True
     )
@@ -37,7 +37,7 @@ def test_joined_timeseries_with_dups_query_df():
         secondary_filepath=SECONDARY_FILEPATH,
         crosswalk_filepath=CROSSWALK_FILEPATH,
         geometry_filepath=GEOMETRY_FILEPATH,
-        order_by=["primary_location_id", "lead_time"],
+        order_by=["primary_location_id"],
         return_query=False,
         remove_duplicates=False
     )
@@ -54,7 +54,7 @@ def test_joined_timeseries_query_gdf():
         secondary_filepath=SECONDARY_FILEPATH,
         crosswalk_filepath=CROSSWALK_FILEPATH,
         geometry_filepath=GEOMETRY_FILEPATH,
-        order_by=["primary_location_id", "lead_time"],
+        order_by=["primary_location_id"],
         return_query=False,
         include_geometry=True,
     )
@@ -71,7 +71,7 @@ def test_joined_timeseries_query_df_filter():
         secondary_filepath=SECONDARY_FILEPATH,
         crosswalk_filepath=CROSSWALK_FILEPATH,
         geometry_filepath=GEOMETRY_FILEPATH,
-        order_by=["primary_location_id", "lead_time"],
+        order_by=["primary_location_id"],
         return_query=False,
         filters=[
             {

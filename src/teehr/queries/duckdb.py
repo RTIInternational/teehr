@@ -90,7 +90,6 @@ def get_metrics(
     * configuration
     * measurement_unit
     * variable_name
-    * lead_time
     * [any user-added fields]
 
     Metrics:
@@ -126,9 +125,9 @@ def get_metrics(
 
     Examples
     --------
-    >>> order_by = ["lead_time", "primary_location_id"]
+    >>> order_by = ["primary_location_id"]
 
-    >>> group_by = ["lead_time", "primary_location_id"]
+    >>> group_by = ["primary_location_id"]
 
     >>> filters = [
     >>>     {
@@ -140,8 +139,7 @@ def get_metrics(
     >>>         "column": "reference_time",
     >>>         "operator": "=",
     >>>         "value": "2022-01-01 00:00:00",
-    >>>     },
-    >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+    >>>     }
     >>> ]
     """
     mq = MetricQuery.model_validate(
@@ -173,8 +171,6 @@ def get_metrics(
                 , sf.variable_name
                 , pf.value as primary_value
                 , pf.location_id as primary_location_id
-                , sf.value_time - sf.reference_time as lead_time
-                , abs(pf.value - sf.value) as absolute_difference
             FROM read_parquet({tqu._format_filepath(mq.secondary_filepath)}) sf
             JOIN read_parquet({tqu._format_filepath(mq.crosswalk_filepath)}) cf
                 on cf.secondary_location_id = sf.location_id
@@ -316,11 +312,10 @@ def get_joined_timeseries(
     * configuration
     * measurement_unit
     * variable_name
-    * lead_time
 
     Examples
     --------
-    >>> order_by = ["lead_time", "primary_location_id"]
+    >>> order_by = ["primary_location_id"]
     >>> filters = [
     >>>     {
     >>>         "column": "primary_location_id",
@@ -331,11 +326,6 @@ def get_joined_timeseries(
     >>>         "column": "reference_time",
     >>>         "operator": "=",
     >>>         "value": "'2022-01-01 00:00'"
-    >>>     },
-    >>>     {
-    >>>         "column": "lead_time",
-    >>>         "operator": "<=",
-    >>>         "value": "'10 days'"
     >>>     }
     >>> ]
     """
@@ -365,8 +355,7 @@ def get_joined_timeseries(
                 sf.variable_name,
                 pf.reference_time as primary_reference_time,
                 pf.value as primary_value,
-                pf.location_id as primary_location_id,
-                sf.value_time - sf.reference_time as lead_time
+                pf.location_id as primary_location_id
                 {tqu.geometry_select_clause(jtq)}
             FROM read_parquet({tqu._format_filepath(jtq.secondary_filepath)}) sf
             JOIN read_parquet({tqu._format_filepath(jtq.crosswalk_filepath)}) cf
@@ -450,7 +439,7 @@ def get_timeseries(
 
     Examples
     --------
-    >>> order_by = ["lead_time", "primary_location_id"]
+    >>> order_by = ["primary_location_id"]
     >>> filters = [
     >>>     {
     >>>         "column": "location_id",
@@ -546,7 +535,7 @@ def get_timeseries_chars(
 
     Examples
     --------
-    >>> order_by = ["lead_time", "primary_location_id"]
+    >>> order_by = ["primary_location_id"]
     >>> filters = [
     >>>     {
     >>>         "column": "primary_location_id",
@@ -557,11 +546,6 @@ def get_timeseries_chars(
     >>>         "column": "reference_time",
     >>>         "operator": "=",
     >>>         "value": "'2022-01-01 00:00'"
-    >>>     },
-    >>>     {
-    >>>         "column": "lead_time",
-    >>>         "operator": "<=",
-    >>>         "value": "'10 days'"
     >>>     }
     >>> ]
     """

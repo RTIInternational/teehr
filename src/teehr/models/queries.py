@@ -91,7 +91,6 @@ class JoinedFilterFieldEnum(StrEnum):
     variable_name = "variable_name"
     primary_value = "primary_value"
     primary_location_id = "primary_location_id"
-    lead_time = "lead_time"
     geometry = "geometry"
 
 
@@ -105,7 +104,6 @@ class TimeseriesFilterFieldEnum(StrEnum):
     configuration = "configuration"
     measurement_unit = "measurement_unit"
     variable_name = "variable_name"
-    lead_time = "lead_time"
     geometry = "geometry"
 
 

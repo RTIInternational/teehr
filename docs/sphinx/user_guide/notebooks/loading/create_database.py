@@ -209,7 +209,7 @@ def run_raw_query():
             SELECT
                 joined.primary_location_id,joined.configuration
                 , sum(primary_value - secondary_value)/count(*) as bias
-                , sum(absolute_difference)/count(*) as mean_error
+                , sum(abs(primary_value - secondary_value))/count(*) as mean_error
             FROM
                 joined
             GROUP BY

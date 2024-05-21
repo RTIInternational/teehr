@@ -223,7 +223,6 @@ def _remove_duplicates_jtq_cte(
                 , variable_name
                 , primary_value
                 , primary_location_id
-                , lead_time
                 {geometry_joined_select_clause(q)}
             FROM(
                 SELECT *,
@@ -253,7 +252,6 @@ def _remove_duplicates_jtq_cte(
                 , variable_name
                 , primary_value
                 , primary_location_id
-                , lead_time
                 {geometry_joined_select_clause(q)}
             FROM
                 initial_joined
@@ -321,7 +319,7 @@ def _remove_duplicates_mq_cte(
 ) -> str:
     """Generate the remove duplicates CTE for the MetricQuery."""
     if q.remove_duplicates:
-        qry = """
+        return """
             SELECT
                 reference_time
                 , value_time
@@ -332,8 +330,6 @@ def _remove_duplicates_mq_cte(
                 , variable_name
                 , primary_value
                 , primary_location_id
-                , lead_time
-                , absolute_difference
             FROM(
                 SELECT *,
                     row_number()
@@ -351,7 +347,7 @@ def _remove_duplicates_mq_cte(
             WHERE rn = 1
         """
     else:
-        qry = """
+        return """
             SELECT
                 reference_time
                 , value_time
@@ -362,12 +358,9 @@ def _remove_duplicates_mq_cte(
                 , variable_name
                 , primary_value
                 , primary_location_id
-                , lead_time
-                , absolute_difference
             FROM
                 initial_joined
         """
-    return qry
 
 
 def _join_time_on(join: str, join_to: str, join_on: List[str]):
@@ -625,7 +618,7 @@ def _select_root_mean_squared_error(
         "root_mean_squared_error" in mq.include_metrics
         or mq.include_metrics == "all"
     ):
-        return """, sqrt(sum(power(absolute_difference, 2))/count(*))
+        return """, sqrt(sum(power(abs(primary_value - secondary_value), 2))/count(*))
             as root_mean_squared_error
         """
     return ""
@@ -639,7 +632,7 @@ def _select_mean_squared_error(
         "mean_squared_error" in mq.include_metrics
         or mq.include_metrics == "all"
     ):
-        return """, sum(power(absolute_difference, 2))/count(*)
+        return """, sum(power(abs(primary_value - secondary_value), 2))/count(*)
             as mean_squared_error
         """
     return ""
@@ -653,7 +646,7 @@ def _select_mean_absolute_error(
         "mean_absolute_error" in mq.include_metrics
         or mq.include_metrics == "all"
     ):
-        return """, sum(absolute_difference)/count(*) as mean_absolute_error"""
+        return """, sum(abs(primary_value - secondary_value))/count(*) as mean_absolute_error"""
     return ""
 
 
@@ -665,7 +658,7 @@ def _select_mean_absolute_relative_error(
         "mean_absolute_relative_error" in mq.include_metrics
         or mq.include_metrics == "all"
     ):
-        return """, sum(absolute_difference)/sum(primary_value) as mean_absolute_relative_error""" # noqa E501
+        return """, sum(abs(primary_value - secondary_value))/sum(primary_value) as mean_absolute_relative_error""" # noqa E501
     return ""
 
 
