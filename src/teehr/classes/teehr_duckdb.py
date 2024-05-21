@@ -1,5 +1,5 @@
 """Defines the TEEHR dataset class and pre-processing methods."""
-from typing import Union, List, Callable, Dict, Any
+from typing import Union, List, Callable, Dict, Any, Optional
 from pathlib import Path
 import logging
 from abc import ABC, abstractmethod
@@ -37,9 +37,10 @@ class DuckDBBase(ABC):
 
     def load_https_extension(self):
         """Load the HTTPFS extension for DuckDB."""
-        query = "INSTALL https;"
-        self.query(query)
-        query = "LOAD https;"
+        query = """
+            INSTALL https;
+            LOAD https;
+        """
         self.query(query)
 
     def profile_query(self, query: str):
@@ -108,17 +109,17 @@ class DuckDBBase(ABC):
 
     @staticmethod
     def describe_inputs(
-        primary_filepath: Union[str, Path],
-        secondary_filepath: Union[str, Path],
+        primary_filepath: Union[str, Path, List[Union[str, Path]]],
+        secondary_filepath: Union[str, Path, List[Union[str, Path]]]
     ) -> pd.DataFrame:
         """Get descriptive statistics on the primary and secondary
         timeseries by reading the parquet files.
 
         Parameters
         ----------
-        primary_filepath : Union[str, Path]
+        primary_filepath : Union[str, Path, List[Union[str, Path]]]
             Path to the primary time series parquet file.
-        secondary_filepath : Union[str, Path]
+        secondary_filepath : Union[str, Path, List[Union[str, Path]]]
             Path to the primary time series parquet file.
 
         Returns
@@ -371,7 +372,9 @@ class DuckDBAPI(DuckDBBase):
             Filepath to the database.
         """
         self.database_filepath = str(database_filepath)
-        self.from_joined_timeseries_clause = "FROM joined_timeseries sf"
+        self.from_joined_timeseries_clause = """
+            FROM joined_timeseries sf
+        """
         self.join_geometry_clause = """
             JOIN geometry gf on primary_location_id = gf.id
         """
@@ -406,10 +409,10 @@ class DuckDBAPI(DuckDBBase):
             Includes column_name, column_type, null, key, default,
             and extra columns.
         """
-        desc = """DESCRIBE SELECT * FROM joined_timeseries;"""
-        joined_df = self.query(desc, format="df")
+        qry = """DESCRIBE SELECT * FROM joined_timeseries;"""
+        schema = self.query(qry, format="df")
 
-        return joined_df
+        return schema
 
     def _validate_query_model(self, query_model: Any) -> Any:
         """Validate pydantic query models based on the existing fields
@@ -965,13 +968,16 @@ class DuckDBDatabase(DuckDBAPI):
                         "please drop it before joining timeseries"
                     )
 
-    def insert_geometry(self, geometry_filepath: Union[str, Path]):
+    def insert_geometry(
+        self,
+        geometry_filepath: Union[str, Path, List[Union[str, Path]]]
+    ):
         """Insert geometry from a parquet file into a table named 'geometry'.
 
         Parameters
         ----------
-        geometry_filepath : Union[str, Path]
-            Path to the geometry file.
+        geometry_filepath : Union[str, Path, List[Union[str, Path]]]
+            Path to the geometry file(s).
         """
         # Load the geometry data into a separate table
         if geometry_filepath:
@@ -981,7 +987,7 @@ class DuckDBDatabase(DuckDBAPI):
                 SELECT
                     pq.id, pq.name, pq.geometry
                 FROM
-                    read_parquet('{str(geometry_filepath)}') pq
+                    read_parquet({tqu._format_filepath(geometry_filepath)}) pq
                 WHERE NOT EXISTS (
                     SELECT
                         id, name, geometry
@@ -996,9 +1002,9 @@ class DuckDBDatabase(DuckDBAPI):
 
     def insert_joined_timeseries(
         self,
-        primary_filepath: Union[str, Path],
-        secondary_filepath: Union[str, Path],
-        crosswalk_filepath: Union[str, Path],
+        primary_filepath: Union[str, Path, List[Union[str, Path]]],
+        secondary_filepath: Union[str, Path, List[Union[str, Path]]],
+        crosswalk_filepath: Union[str, Path, List[Union[str, Path]]],
         order_by: List[str] = [
             "primary_location_id",
             "configuration",
@@ -1052,7 +1058,10 @@ class DuckDBDatabase(DuckDBAPI):
         query = tqu_db.create_join_and_save_timeseries_query(jtq)
         self.query(query)
 
-    def _get_unique_attributes(self, attributes_filepath: str) -> List:
+    def _get_unique_attributes(
+            self,
+            attributes_filepath: Union[str, Path, List[Union[str, Path]]]
+    ) -> List:
         """Get a list of unique attributes and attribute units from the
         provided attribute table(s).
         """
@@ -1060,7 +1069,7 @@ class DuckDBDatabase(DuckDBAPI):
             SELECT
                 DISTINCT attribute_name, attribute_unit
             FROM
-                read_parquet('{attributes_filepath}')
+                read_parquet({tqu._format_filepath(attributes_filepath)})
         ;"""
         attr_list = self.query(query, format="df").to_dict(orient="records")
         return attr_list
@@ -1079,18 +1088,21 @@ class DuckDBDatabase(DuckDBAPI):
         ;"""
         self.query(query)
 
-    def join_attributes(self, attributes_filepath: Union[str, Path]):
+    def join_attributes(
+            self,
+            attributes_filepath: Union[str, Path, List[Union[str, Path]]]
+        ):
         """Join attributes from the provided attribute table(s) to new
         fields in the joined_timeseries table.
 
         Parameters
         ----------
-        attributes_filepath : Union[str, Path]
+        attributes_filepath : Union[str, Path, List[Union[str, Path]]]
             File path to the "attributes" data.  String must include path to
             file(s) and can include wildcards.  For example,
             "/path/to/parquet/\\*.parquet".
         """
-        attr_list = self._get_unique_attributes(str(attributes_filepath))
+        attr_list = self._get_unique_attributes(attributes_filepath)
 
         for attr in attr_list:
 
@@ -1114,7 +1126,7 @@ class DuckDBDatabase(DuckDBAPI):
                     SELECT
                         *
                     FROM
-                        read_parquet('{attributes_filepath}')
+                        read_parquet({tqu._format_filepath(attributes_filepath)})
                     WHERE
                         attribute_name = '{attr['attribute_name']}'
                     {unit_clause}
@@ -1456,27 +1468,26 @@ class DuckDBJoinedParquet(DuckDBBase):
 
     def __init__(
         self,
-        joined_parquet_filepath: Union[str, Path],
-        geometry_filepath: Union[str, Path, None] = "",
+        joined_parquet_filepath: Union[str, Path, List[Union[str, Path]]],
+        geometry_filepath: Optional[Union[str, Path, List[Union[str, Path]]]] = None,
     ):
-        r"""Set the path to the pre-existing study area database.
-
-        Establish a read-only in-memory connection.
+        r"""Initialize the joined parquet database class.
 
         Parameters
         ----------
-        joined_parquet_filepath : Union[str, Path]
-            File path to the "observed" data.  String must include path
+        joined_parquet_filepath : Union[str, Path, List[Union[str, Path]]]
+            File path to the "joined parquet" data.  String must include path
             to file(s) and can include wildcards.
             For example, "/path/to/parquet/\\*.parquet".
         """
-        self.joined_parquet_filepath = str(joined_parquet_filepath)
-        self.geometry_filepath = str(geometry_filepath)
-        # NOTE: Cannot launch a read-only in-memory connection
+        self.joined_parquet_filepath = joined_parquet_filepath
+        self.geometry_filepath = geometry_filepath
         self.con = duckdb.connect()
-        self.from_joined_timeseries_clause = (
-            f"FROM read_parquet('{str(joined_parquet_filepath)}') sf"
-        )
+        self.from_joined_timeseries_clause = f"""
+            FROM read_parquet(
+                {tqu._format_filepath(self.joined_parquet_filepath)}
+            ) sf
+        """
         self.join_geometry_clause = f"""
             JOIN read_parquet(
                 {tqu._format_filepath(self.geometry_filepath)}
@@ -1485,10 +1496,16 @@ class DuckDBJoinedParquet(DuckDBBase):
 
     def _check_if_geometry_is_inserted(self):
         """Make sure the geometry filepath has been specified."""
-        if self.geometry_filepath == "":
+        if not self.geometry_filepath:
             raise ValueError("Please specify a geometry file path.")
         df = self.query(
-            f"SELECT COUNT(geometry) FROM read_parquet('{str(self.geometry_filepath)}');",
+            f"""
+                SELECT
+                    COUNT(geometry)
+                FROM read_parquet(
+                    {tqu._format_filepath(self.geometry_filepath)}
+                );
+                """,
             format="df"
         )
         if df["count(geometry)"].values == 0:
@@ -1506,16 +1523,16 @@ class DuckDBJoinedParquet(DuckDBBase):
             Includes column_name, column_type, null, key, default,
             and extra columns.
         """
-        desc = f"""
+        qry = f"""
         DESCRIBE
         SELECT
             *
         FROM
-            read_parquet('{str(self.joined_parquet_filepath)}')
+            read_parquet({tqu._format_filepath(self.joined_parquet_filepath)})
         ;"""
-        joined_df = self.query(desc, format="df")
+        schema = self.query(qry, format="df")
 
-        return joined_df
+        return schema
 
     def _validate_query_model(self, query_model: Any, data: Dict) -> Any:
         """Validate the query based on existing fields."""
