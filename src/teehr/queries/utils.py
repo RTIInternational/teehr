@@ -259,6 +259,61 @@ def _remove_duplicates_jtq_cte(
     return qry
 
 
+def _remove_duplicates_cte(
+    remove_duplicates: bool
+) -> str:
+    """Generate the remove duplicates CTE for the various queries."""
+    # TODO: This could replace _remove_duplicates_mq_cte?
+    if remove_duplicates:
+        qry = """
+            SELECT
+                reference_time
+                , value_time
+                , secondary_location_id
+                , secondary_value
+                , configuration
+                , measurement_unit
+                , variable_name
+                , primary_value
+                , primary_location_id
+                , lead_time
+                , absolute_difference
+            FROM(
+                SELECT *,
+                    row_number()
+                OVER(
+                    PARTITION BY value_time,
+                                 primary_location_id,
+                                 configuration,
+                                 variable_name,
+                                 measurement_unit,
+                                 reference_time
+                    ORDER BY primary_reference_time desc
+                    ) AS rn
+                FROM initial_joined
+                )
+            WHERE rn = 1
+        """
+    else:
+        qry = """
+            SELECT
+                reference_time
+                , value_time
+                , secondary_location_id
+                , secondary_value
+                , configuration
+                , measurement_unit
+                , variable_name
+                , primary_value
+                , primary_location_id
+                , lead_time
+                , absolute_difference
+            FROM
+                initial_joined
+        """
+    return qry
+
+
 def _remove_duplicates_mq_cte(
     q: tmq.MetricQuery
 ) -> str:
