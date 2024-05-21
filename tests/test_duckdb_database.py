@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 
-from teehr.database.teehr_dataset import TEEHRDatasetDB
+from teehr.classes.teehr_duckdb import DuckDBDatabase
 
 # Test data
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
@@ -22,7 +22,7 @@ def test_insert_joined_timeseries():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -46,7 +46,7 @@ def test_unique_field_values():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -69,7 +69,7 @@ def test_metrics_query():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -122,7 +122,7 @@ def test_metrics_query_config_filter():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -164,7 +164,7 @@ def test_describe_inputs():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -215,7 +215,7 @@ def test_calculate_field():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -250,7 +250,7 @@ def test_join_attributes():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -308,7 +308,7 @@ def test_get_joined_timeseries_schema():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -329,7 +329,7 @@ def test_joined_timeseries_query_gdf():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -358,7 +358,7 @@ def test_timeseries_query():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -392,7 +392,7 @@ def test_timeseries_char_query():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(

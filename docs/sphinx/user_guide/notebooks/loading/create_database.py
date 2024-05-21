@@ -1,6 +1,6 @@
 """An example of how to create and manipulate a TEEHR database."""
 from pathlib import Path
-from teehr.database.teehr_dataset import TEEHRDatasetDB
+from teehr.classes.teehr_duckdb import DuckDBDatabase
 import time
 import datetime
 
@@ -25,7 +25,7 @@ DATABASE_FILEPATH = Path(TEST_STUDY_DIR, "huc1802_retro.db")
 
 def describe_inputs():
     """Check the parquet files and report some stats to the user."""
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     df = tds.describe_inputs(
         primary_filepath=PRIMARY_FILEPATH,
@@ -37,7 +37,7 @@ def describe_inputs():
 
 def create_db_add_timeseries():
     """Perform the join and insert into duckdb database."""
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # NOTE: Right now this will re-join and overwrite
     print("Creating joined table")
@@ -51,7 +51,7 @@ def create_db_add_timeseries():
 
 def add_attributes():
     """Join (one or more?) table(s) of attributes to the timeseries table."""
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     print("Adding attributes")
     tds.join_attributes(ATTRIBUTES_FILEPATH)
@@ -59,7 +59,7 @@ def add_attributes():
 
 def add_fields():
     """Calculate and add a field based on some user-defined function (UDF)."""
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     def test_user_function(arg1: float, arg2: str) -> float:
         """
@@ -143,7 +143,7 @@ def add_fields():
 
 def run_metrics_query():
     """Perform a metrics query against the database."""
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
     # schema_df = tds.get_joined_timeseries_schema()
     # print(schema_df[["column_name", "column_type"]])
 
@@ -191,14 +191,14 @@ def run_metrics_query():
 
 def describe_database():
     """Get the database schema."""
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
     df = tds.get_joined_timeseries_schema()
     print(df)
 
 
 def run_raw_query():
     """Run a raw query against the database."""
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
     query = """
         WITH joined as (
             SELECT

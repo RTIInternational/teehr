@@ -5,7 +5,7 @@ import warnings
 
 from collections.abc import Iterable
 from datetime import datetime
-from typing import List, Union
+from typing import List, Union, Any
 from pathlib import Path
 
 import teehr.models.queries as tmq
@@ -56,6 +56,7 @@ def _format_iterable_value(
 def _format_filepath(
         filepath: Union[str, Path, List[Union[str, Path]]]
 ) -> str:
+    """Format str, Path of list of the same for SQL."""
     if isinstance(filepath, str):
         return f"'{filepath}'"
     elif isinstance(filepath, Path):
@@ -254,6 +255,61 @@ def _remove_duplicates_jtq_cte(
                 , primary_location_id
                 , lead_time
                 {geometry_joined_select_clause(q)}
+            FROM
+                initial_joined
+        """
+    return qry
+
+
+def _remove_duplicates_cte(
+    remove_duplicates: bool
+) -> str:
+    """Generate the remove duplicates CTE for the various queries."""
+    # TODO: This could replace _remove_duplicates_mq_cte?
+    if remove_duplicates:
+        qry = """
+            SELECT
+                reference_time
+                , value_time
+                , secondary_location_id
+                , secondary_value
+                , configuration
+                , measurement_unit
+                , variable_name
+                , primary_value
+                , primary_location_id
+                , lead_time
+                , absolute_difference
+            FROM(
+                SELECT *,
+                    row_number()
+                OVER(
+                    PARTITION BY value_time,
+                                 primary_location_id,
+                                 configuration,
+                                 variable_name,
+                                 measurement_unit,
+                                 reference_time
+                    ORDER BY primary_reference_time desc
+                    ) AS rn
+                FROM initial_joined
+                )
+            WHERE rn = 1
+        """
+    else:
+        qry = """
+            SELECT
+                reference_time
+                , value_time
+                , secondary_location_id
+                , secondary_value
+                , configuration
+                , measurement_unit
+                , variable_name
+                , primary_value
+                , primary_location_id
+                , lead_time
+                , absolute_difference
             FROM
                 initial_joined
         """
@@ -917,3 +973,80 @@ def df_to_gdf(df: pd.DataFrame) -> gpd.GeoDataFrame:
 def remove_empty_lines(text: str) -> str:
     """Remove empty lines from string."""
     return "".join([s for s in text.splitlines(True) if s.strip()])
+
+
+def get_the_metrics_calculation_clause(
+    mq: Union[tmq.MetricQuery, tmqd.MetricQuery],
+    join_geometry_clause: str
+) -> str:
+    """Generate the metrics calculation clause."""
+    return f"""
+        {_nse_cte(mq)}
+        {_annual_metrics_cte(mq)}
+        {_spearman_ranks_cte(mq)}
+        , metrics AS (
+            SELECT
+                {",".join([f"joined.{gb}" for gb in mq.group_by])}
+                {_select_primary_count(mq)}
+                {_select_secondary_count(mq)}
+                {_select_primary_minimum(mq)}
+                {_select_secondary_minimum(mq)}
+                {_select_primary_maximum(mq)}
+                {_select_secondary_maximum(mq)}
+                {_select_primary_average(mq)}
+                {_select_secondary_average(mq)}
+                {_select_primary_sum(mq)}
+                {_select_secondary_sum(mq)}
+                {_select_primary_variance(mq)}
+                {_select_secondary_variance(mq)}
+                {_select_max_value_delta(mq)}
+                {_select_mean_error(mq)}
+                {_select_nash_sutcliffe_efficiency(mq)}
+                {_select_nash_sutcliffe_efficiency_normalized(mq)}
+                {_select_kling_gupta_efficiency(mq)}
+                {_select_kling_gupta_efficiency_mod1(mq)}
+                {_select_kling_gupta_efficiency_mod2(mq)}
+                {_select_mean_absolute_error(mq)}
+                {_select_mean_squared_error(mq)}
+                {_select_root_mean_squared_error(mq)}
+                {_select_primary_max_value_time(mq)}
+                {_select_secondary_max_value_time(mq)}
+                {_select_max_value_timedelta(mq)}
+                {_select_relative_bias(mq)}
+                {_select_multiplicative_bias(mq)}
+                {_select_mean_absolute_relative_error(mq)}
+                {_select_pearson_correlation(mq)}
+                {_select_r_squared(mq)}
+                {_select_spearman_correlation(mq)}
+            FROM
+                joined
+                {_join_nse_cte(mq)}
+                {_join_spearman_ranks_cte(mq)}
+            GROUP BY
+                {",".join([f"joined.{gb}" for gb in mq.group_by])}
+        )
+        SELECT
+            {",".join([f"metrics.{ob}" for ob in mq.group_by])}
+            {metrics_select_clause(mq)}
+            {geometry_select_clause(mq)}
+        FROM metrics
+            {join_geometry_clause}
+            {_join_annual_metrics_cte(mq)}
+        ORDER BY
+            {",".join([f"metrics.{ob}" for ob in mq.order_by])}
+    ;"""
+
+
+def get_the_joined_timeseries_clause(
+    mq: tmqd.MetricQuery,
+    from_joined_timeseries_clause: str
+) -> str:
+    """Generate the metrics joined CTE for a database."""
+    return f"""
+        WITH joined as (
+            SELECT
+                *
+            {from_joined_timeseries_clause}
+            {filters_to_sql(mq.filters)}
+        )
+    """

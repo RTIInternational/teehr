@@ -469,7 +469,7 @@ def get_timeseries(
     )
 
     query = f"""
-        WITH joined as (
+        WITH timeseries as (
             SELECT
                 sf.reference_time,
                 sf.value_time,
@@ -483,7 +483,7 @@ def get_timeseries(
             {tqu.filters_to_sql(tq.filters)}
         )
         SELECT * FROM
-            joined
+            timeseries
         ORDER BY
             {",".join(tq.order_by)}
     ;"""

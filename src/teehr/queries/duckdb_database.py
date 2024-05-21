@@ -18,7 +18,11 @@ import teehr.queries.utils as tqu
 SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-def create_get_metrics_query(mq: MetricQuery) -> str:
+def create_get_metrics_query(
+    mq: MetricQuery,
+    from_joined_timeseries_clause: str,
+    join_geometry_clause: str
+) -> str:
     """Build the query string to calculate performance metrics.
 
     Parameters
@@ -98,67 +102,10 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
     >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
     >>> ]
     """
-    query = f"""
-        WITH joined as (
-            SELECT
-                *
-            FROM joined_timeseries sf
-            {tqu.filters_to_sql(mq.filters)}
-        )
-        {tqu._nse_cte(mq)}
-        {tqu._annual_metrics_cte(mq)}
-        {tqu._spearman_ranks_cte(mq)}
-        , metrics AS (
-            SELECT
-                {",".join([f"joined.{gb}" for gb in mq.group_by])}
-                {tqu._select_primary_count(mq)}
-                {tqu._select_secondary_count(mq)}
-                {tqu._select_primary_minimum(mq)}
-                {tqu._select_secondary_minimum(mq)}
-                {tqu._select_primary_maximum(mq)}
-                {tqu._select_secondary_maximum(mq)}
-                {tqu._select_primary_average(mq)}
-                {tqu._select_secondary_average(mq)}
-                {tqu._select_primary_sum(mq)}
-                {tqu._select_secondary_sum(mq)}
-                {tqu._select_primary_variance(mq)}
-                {tqu._select_secondary_variance(mq)}
-                {tqu._select_max_value_delta(mq)}
-                {tqu._select_mean_error(mq)}
-                {tqu._select_nash_sutcliffe_efficiency(mq)}
-                {tqu._select_nash_sutcliffe_efficiency_normalized(mq)}
-                {tqu._select_kling_gupta_efficiency(mq)}
-                {tqu._select_kling_gupta_efficiency_mod1(mq)}
-                {tqu._select_kling_gupta_efficiency_mod2(mq)}
-                {tqu._select_mean_absolute_error(mq)}
-                {tqu._select_mean_squared_error(mq)}
-                {tqu._select_root_mean_squared_error(mq)}
-                {tqu._select_primary_max_value_time(mq)}
-                {tqu._select_secondary_max_value_time(mq)}
-                {tqu._select_max_value_timedelta(mq)}
-                {tqu._select_relative_bias(mq)}
-                {tqu._select_multiplicative_bias(mq)}
-                {tqu._select_mean_absolute_relative_error(mq)}
-                {tqu._select_pearson_correlation(mq)}
-                {tqu._select_r_squared(mq)}
-                {tqu._select_spearman_correlation(mq)}
-            FROM
-                joined
-                {tqu._join_nse_cte(mq)}
-                {tqu._join_spearman_ranks_cte(mq)}
-            GROUP BY
-                {",".join([f"joined.{gb}" for gb in mq.group_by])}
-        )
-        SELECT
-            {",".join([f"metrics.{ob}" for ob in mq.group_by])}
-            {tqu.metrics_select_clause(mq)}
-            {tqu.geometry_select_clause(mq)}
-        FROM metrics
-            {tqu.metric_geometry_join_clause_db(mq)}
-            {tqu._join_annual_metrics_cte(mq)}
-        ORDER BY
-            {",".join([f"metrics.{ob}" for ob in mq.order_by])}
-    ;"""
+    query = tqu.get_the_joined_timeseries_clause(
+        mq,
+        from_joined_timeseries_clause
+    ) + tqu.get_the_metrics_calculation_clause(mq, join_geometry_clause)
 
     return query
 
@@ -378,7 +325,9 @@ def describe_timeseries(
 
 
 def create_get_joined_timeseries_query(
-    jtq: JoinedTimeseriesQuery
+    jtq: JoinedTimeseriesQuery,
+    from_joined_timeseries_clause: str,
+    join_geometry_clause: str
 ) -> str:
     """Retrieve joined timeseries using database query.
 
@@ -445,9 +394,8 @@ def create_get_joined_timeseries_query(
         SELECT
             sf.*
         {tqu.geometry_select_clause(jtq)}
-        FROM
-            joined_timeseries sf
-        {tqu.metric_geometry_join_clause_db(jtq)}
+        {from_joined_timeseries_clause}
+        {join_geometry_clause}
         {tqu.filters_to_sql(jtq.filters)}
         ORDER BY
             {",".join(jtq.order_by)}
@@ -457,7 +405,8 @@ def create_get_joined_timeseries_query(
 
 
 def create_get_timeseries_query(
-    tq: TimeseriesQuery
+    tq: TimeseriesQuery,
+    from_joined_timeseries_clause: str
 ) -> str:
     """Retrieve joined timeseries using database query.
 
@@ -530,8 +479,7 @@ def create_get_timeseries_query(
                 'primary' as configuration,
                 measurement_unit,
                 variable_name,
-            FROM
-                joined_timeseries sf
+            {from_joined_timeseries_clause}
             {tqu.filters_to_sql(tq.filters)}
             GROUP BY
                 value_time,
@@ -552,8 +500,7 @@ def create_get_timeseries_query(
                 configuration,
                 measurement_unit,
                 variable_name,
-            FROM
-                joined_timeseries sf
+            {from_joined_timeseries_clause}
             {tqu.filters_to_sql(tq.filters)}
             ORDER BY
                 {",".join(tq.order_by)}
@@ -562,7 +509,10 @@ def create_get_timeseries_query(
     return query
 
 
-def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
+def create_get_timeseries_char_query(
+    tcq: TimeseriesCharQuery,
+    from_joined_timeseries_clause: str
+) -> str:
     """Retrieve joined timeseries using database query.
 
     Parameters
@@ -645,8 +595,7 @@ def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
                         measurement_unit,
                         variable_name,
                         {gb_fields}
-                     FROM
-                         joined_timeseries sf
+                     {from_joined_timeseries_clause}
                      {tqu.filters_to_sql(tcq.filters)}
                      GROUP BY
                         value_time,
@@ -659,8 +608,7 @@ def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
         fts_clause = f"""
                       SELECT
                         *
-                      FROM
-                          joined_timeseries sf
+                      {from_joined_timeseries_clause}
                       {tqu.filters_to_sql(tcq.filters)}
                       """
 
@@ -711,7 +659,10 @@ def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
     return query
 
 
-def create_unique_field_values_query(fn: JoinedTimeseriesFieldName) -> str:
+def create_unique_field_values_query(
+    fn: JoinedTimeseriesFieldName,
+    from_joined_timeseries_clause: str
+) -> str:
     """Create a query for identifying unique values in a field.
 
     Parameters
@@ -729,8 +680,7 @@ def create_unique_field_values_query(fn: JoinedTimeseriesFieldName) -> str:
         DISTINCT
             {fn.field_name}
         AS unique_{fn.field_name}_values,
-        FROM
-            joined_timeseries
+        {from_joined_timeseries_clause}
         ORDER BY
             {fn.field_name}
         """

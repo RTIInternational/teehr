@@ -159,9 +159,9 @@ class Filter(BaseModel):
 class InsertJoinedTimeseriesQuery(BaseModel):
     """InsertJoinedTimeseriesQuery model."""
 
-    primary_filepath: Union[str, Path]
-    secondary_filepath: Union[str, Path]
-    crosswalk_filepath: Union[str, Path]
+    primary_filepath: Union[str, Path, List[Union[str, Path]]]
+    secondary_filepath: Union[str, Path, List[Union[str, Path]]]
+    crosswalk_filepath: Union[str, Path, List[Union[str, Path]]]
     order_by: Optional[List[JoinedFieldNameEnum]] = []
 
 
