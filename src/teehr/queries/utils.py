@@ -975,7 +975,6 @@ def remove_empty_lines(text: str) -> str:
     return "".join([s for s in text.splitlines(True) if s.strip()])
 
 
-# ====================== EXPERIMENTAL FUNCTIONS BELOW ========================
 def get_the_metrics_calculation_clause(
     mq: Union[tmq.MetricQuery, tmqd.MetricQuery],
     join_geometry_clause: str

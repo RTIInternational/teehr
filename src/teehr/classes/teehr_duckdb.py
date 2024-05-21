@@ -380,17 +380,6 @@ class DuckDBAPI(DuckDBBase):
         """
         self.con = duckdb.connect(self.database_filepath, read_only=True)
 
-    def _get_intial_joined_timeseries_clause(self, qm: Any) -> str:
-        """Get the initial joined_timeseries clause."""
-        return f"""
-            WITH joined as (
-                SELECT
-                    *
-                FROM joined_timeseries sf
-                {tqu.filters_to_sql(qm.filters)}
-            )
-        """
-
     def _check_if_geometry_is_inserted(self):
         """Make sure the geometry table is not empty."""
         df = self.query("SELECT COUNT(geometry) FROM geometry;", format="df")
