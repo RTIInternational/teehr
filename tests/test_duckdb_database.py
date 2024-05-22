@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 
-from teehr.classes.teehr_duckdb import DuckDBDatabase
+from teehr.classes.duckdb_database import DuckDBDatabase
 
 # Test data
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
@@ -291,6 +291,7 @@ def test_join_attributes():
     assert (
         df.ecoregion.unique() == ["coastal_plain", "piedmont", "blue_ridge"]
     ).all()
+
 
 
 def test_get_joined_timeseries_schema():

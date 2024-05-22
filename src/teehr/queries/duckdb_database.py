@@ -13,6 +13,8 @@ from teehr.models.queries_database import (
     JoinedTimeseriesFieldName
 )
 
+import teehr.queries.joined as tqj
+import teehr.queries.metrics as tqm
 import teehr.queries.utils as tqu
 
 SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -100,10 +102,16 @@ def create_get_metrics_query(
     >>>     }
     >>> ]
     """
-    query = tqu.get_the_joined_timeseries_clause(
+    joined = tqj.get_joined_timeseries_cte(
         mq,
         from_joined_timeseries_clause
-    ) + tqu.get_the_metrics_calculation_clause(mq, join_geometry_clause)
+    )
+    metrics = tqm.get_metrics_clause(
+        mq,
+        join_geometry_clause
+    )
+
+    query = joined + metrics
 
     return query
 
@@ -121,55 +129,11 @@ def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQuery) -> str:
     str
         The query string.
     """
-    query = f"""
-    WITH initial_joined as (
-        SELECT
-            sf.reference_time,
-            sf.value_time,
-            sf.location_id as secondary_location_id,
-            sf.value as secondary_value,
-            sf.configuration,
-            sf.measurement_unit,
-            pf.reference_time as primary_reference_time,
-            sf.variable_name,
-            pf.value as primary_value,
-            pf.location_id as primary_location_id
-        FROM read_parquet({tqu._format_filepath(jtq.secondary_filepath)}) sf
-        JOIN read_parquet({tqu._format_filepath(jtq.crosswalk_filepath)}) cf
-            on cf.secondary_location_id = sf.location_id
-        JOIN read_parquet({tqu._format_filepath(jtq.primary_filepath)}) pf
-            on cf.primary_location_id = pf.location_id
-            and sf.value_time = pf.value_time
-            and sf.measurement_unit = pf.measurement_unit
-            and sf.variable_name = pf.variable_name
-    ),
-    joined AS (
-        SELECT
-            reference_time
-            , value_time
-            , secondary_location_id
-            , secondary_value
-            , configuration
-            , measurement_unit
-            , variable_name
-            , primary_value
-            , primary_location_id
-        FROM(
-            SELECT *,
-                row_number()
-            OVER(
-                PARTITION BY value_time,
-                             primary_location_id,
-                             configuration,
-                             variable_name,
-                             measurement_unit,
-                             reference_time
-                ORDER BY primary_reference_time desc
-                ) AS rn
-            FROM initial_joined
-            )
-        WHERE rn = 1
-    )
+
+    select_joined_clause = tqj.select_joined_clause(True)
+    joined = tqj.get_ind_parq_joined_timeseries_cte(jtq, select_joined_clause)
+
+    insert = f"""
     INSERT INTO joined_timeseries
     SELECT
         *
@@ -178,6 +142,8 @@ def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQuery) -> str:
     ORDER BY
         {",".join(jtq.order_by)}
     ;"""
+
+    query = joined + insert
 
     return query
 
@@ -381,16 +347,20 @@ def create_get_joined_timeseries_query(
     >>>     }
     >>> ]
     """
-    query = f"""
+    joined = tqj.get_joined_timeseries_cte(jtq, from_joined_timeseries_clause)
+
+    select = f"""
         SELECT
-            sf.*
-        {tqu.geometry_select_clause(jtq)}
-        {from_joined_timeseries_clause}
-        {join_geometry_clause}
-        {tqu.filters_to_sql(jtq.filters)}
+            joined.*
+            {tqu.geometry_select_clause(jtq)}
+        FROM
+            joined
+            {join_geometry_clause}
         ORDER BY
             {",".join(jtq.order_by)}
     ;"""
+
+    query = joined + select
 
     return query
 
@@ -547,7 +517,7 @@ def create_get_timeseries_char_query(
     >>>     }
     >>> ]
     """
-    join_max_time_on = tqu._join_time_on(
+    join_max_time_on = tqu.join_time_on(
         join="mxt", join_to="chars", join_on=tcq.group_by
     )
 

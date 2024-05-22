@@ -4,7 +4,7 @@ from pathlib import Path
 # import pandas as pd
 # import geopandas as gpd
 
-from teehr.classes.teehr_duckdb import DuckDBJoinedParquet
+from teehr.classes.duckdb_joined_parquet import DuckDBJoinedParquet
 
 
 # Test data

@@ -1,6 +1,6 @@
 """An example of how to create and manipulate a TEEHR database."""
 from pathlib import Path
-from teehr.classes.teehr_duckdb import DuckDBDatabase
+from teehr.classes.duckdb_database import DuckDBDatabase
 import time
 import datetime
 
