@@ -6,6 +6,7 @@ import geopandas as gpd
 import pandas as pd
 
 import re
+import duckdb
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, List, Union
@@ -53,20 +54,16 @@ class DuckDBBase(ABC):
         """Run an SQL query against the class's database.
 
         Return formats include:
-
         * A pandas dataframe (format='df')
         * Results printed to the screen (format='raw')
-        * A DuckDBPyRelation, a symbolic representation of the SQL query
-          (format='relation').
         """
-        if format == "df":
-            return self.con.sql(query).df()
-        elif format == "raw":
-            return self.con.sql(query).show()
-        # elif format == "relation":
-        #     return self.con.sql(query)
-        self.con.sql(query)
-        return None
+        with duckdb.connect() as con:
+            resp = con.cursor().sql(query)
+            if format == "df":
+                return resp.df()
+            elif format == "raw":
+                return resp.show()
+            return None
 
     def _execute_query(
         self,
@@ -78,7 +75,7 @@ class DuckDBBase(ABC):
         if return_query:
             return tqu.remove_empty_lines(query)
         elif include_geometry:
-            self._check_if_geometry_is_inserted()
+            self._check_geometry_available()
             df = self.query(query, format="df")
             return tqu.df_to_gdf(df)
         else:

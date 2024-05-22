@@ -58,7 +58,6 @@ def test_unique_field_values():
         "gage-B",
         "gage-C",
     ]
-    pass
 
 
 def test_metrics_query():
@@ -217,7 +216,7 @@ def test_calculate_field():
         drop_added_fields=True,
     )
     # Add attributes
-    tds.join_attributes(ATTRIBUTES_FILEPATH)
+    tds.insert_attributes(ATTRIBUTES_FILEPATH)
 
     # Calculate and add a field based on some user-defined function (UDF).
     def my_user_function(arg1: float, arg2: str) -> float:
@@ -229,7 +228,7 @@ def test_calculate_field():
     parameter_names = ["primary_value", "drainage_area_sq_km"]
     new_field_name = "primary_normalized_discharge"
     new_field_type = "FLOAT"
-    tds.calculate_field(
+    tds.insert_calculated_field(
         new_field_name=new_field_name,
         new_field_type=new_field_type,
         parameter_names=parameter_names,
@@ -242,6 +241,9 @@ def test_join_attributes():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
+    # if Path(f"{str(DATABASE_FILEPATH)}.wal").is_file():
+    #     Path(f"{str(DATABASE_FILEPATH)}.wal").unlink()
+
     tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
@@ -253,7 +255,7 @@ def test_join_attributes():
     )
 
     # Add attributes
-    tds.join_attributes(ATTRIBUTES_FILEPATH)
+    tds.insert_attributes(ATTRIBUTES_FILEPATH)
 
     df = tds.query("SELECT * FROM joined_timeseries;", format="df")
 
@@ -291,7 +293,6 @@ def test_join_attributes():
     assert (
         df.ecoregion.unique() == ["coastal_plain", "piedmont", "blue_ridge"]
     ).all()
-
 
 
 def test_get_joined_timeseries_schema():
@@ -411,7 +412,6 @@ def test_timeseries_char_query():
     )
 
     assert df.index.size == 3
-    pass
 
 
 if __name__ == "__main__":

@@ -32,10 +32,13 @@ class DuckDBJoinedParquet(DuckDBBase):
             File path to the "joined parquet" data.  String must include path
             to file(s) and can include wildcards.
             For example, "/path/to/parquet/\\*.parquet".
+        geometry_filepath : Union[str, Path, List[Union[str, Path]]]
+            File path to the "joined parquet" data.  String must include path
+            to file(s) and can include wildcards.
+            For example, "/path/to/parquet/\\*.parquet".
         """
         self.joined_parquet_filepath = joined_parquet_filepath
         self.geometry_filepath = geometry_filepath
-        self.con = duckdb.connect()
         self.from_joined_timeseries_clause = f"""
             FROM read_parquet(
                 {tqu._format_filepath(self.joined_parquet_filepath)}
@@ -46,55 +49,6 @@ class DuckDBJoinedParquet(DuckDBBase):
                 {tqu._format_filepath(self.geometry_filepath)}
             ) gf on primary_location_id = gf.id
         """
-
-    def _check_if_geometry_is_inserted(self):
-        """Make sure the geometry filepath has been specified."""
-        if not self.geometry_filepath:
-            raise ValueError("Please specify a geometry file path.")
-        df = self.query(
-            f"""
-                SELECT
-                    COUNT(geometry)
-                FROM read_parquet(
-                    {tqu._format_filepath(self.geometry_filepath)}
-                );
-                """,
-            format="df"
-        )
-        if df["count(geometry)"].values == 0:
-            raise ValueError(
-                "The geometry file is empty! Please specify a valid file."
-            )
-
-    def get_joined_timeseries_schema(self) -> pd.DataFrame:
-        """Get field names and field data types from the joined \
-        parquet files.
-
-        Returns
-        -------
-        pd.DataFrame
-            Includes column_name, column_type, null, key, default,
-            and extra columns.
-        """
-        qry = f"""
-        DESCRIBE
-        SELECT
-            *
-        FROM
-            read_parquet({tqu._format_filepath(self.joined_parquet_filepath)})
-        ;"""
-        schema = self.query(qry, format="df")
-
-        return schema
-
-    def _validate_query_model(self, query_model: Any, data: Dict) -> Any:
-        """Validate the query based on existing fields."""
-        schema_df = self.get_joined_timeseries_schema()
-        validated_model = query_model.model_validate(
-            data,
-            context={"existing_fields": schema_df.column_name.tolist()},
-        )
-        return validated_model
 
     def get_metrics(
         self,
@@ -122,12 +76,13 @@ class DuckDBJoinedParquet(DuckDBBase):
             List of dictionaries describing the "where" clause to limit data
             that is included in metrics.
         include_geometry : bool, optional
-            True joins the geometry to the query results.
-            Only works if `primary_location_id`
-            is included as a group_by field, by default False.
+            True joins the geometry to the query results. Only works if
+            `primary_location_id` is included as a group_by field, and
+            'geometry_filepath' was included in instantiation.
+            Default is False.
         return_query : bool, optional
-            True returns the query string instead of the data,
-            by default False.
+            When True, returns the query string instead of the data.
+            Default is False.
 
         Returns
         -------
@@ -150,9 +105,6 @@ class DuckDBJoinedParquet(DuckDBBase):
         }
         mq = self._validate_query_model(tmqd.MetricQuery, data)
 
-        # if mq.include_geometry:
-        #     return self._get_metrics(mq, self.join_geometry_clause)
-
         return self._get_metrics(mq)
 
     def get_joined_timeseries(
@@ -172,12 +124,14 @@ class DuckDBJoinedParquet(DuckDBBase):
         filters : Union[List[dict], None] = None
             List of dictionaries describing the "where" clause to limit data
             that is included in metrics.
-        include_geometry : bool
-            True joins the geometry to the query results.
-            Only works if `primary_location_id`
-            is included as a group_by field.
-        return_query : bool = False
+        include_geometry : bool, optional
+            True joins the geometry to the query results. Only works if
+            `primary_location_id` is included as a group_by field, and
+            'geometry_filepath' was included in instantiation.
+            Default is False.
+        return_query : bool, optional
             True returns the query string instead of the data.
+            Default is False.
 
         Returns
         -------
@@ -197,9 +151,6 @@ class DuckDBJoinedParquet(DuckDBBase):
             "include_geometry": include_geometry,
         }
         jtq = self._validate_query_model(tmqd.JoinedTimeseriesQuery, data)
-
-        # if jtq.include_geometry:
-        #     return self._get_joined_timeseries(jtq, self.join_geometry_clause)
 
         return self._get_joined_timeseries(jtq)
 
@@ -223,8 +174,8 @@ class DuckDBJoinedParquet(DuckDBBase):
             List of dictionaries describing the "where" clause to limit data
             that is included in metrics, by default None.
         return_query : bool, optional
-            True returns the query string instead of the data,
-            by default False.
+            True returns the query string instead of the data.
+            Default is False.
 
         Returns
         -------
@@ -270,8 +221,8 @@ class DuckDBJoinedParquet(DuckDBBase):
             List of dictionaries describing the "where" clause to limit data
             that is included in metrics., by default None.
         return_query : bool, optional
-            True returns the query string instead of the data,
-            by default False.
+            True returns the query string instead of the data.
+            Default is False.
 
         Returns
         -------
@@ -303,7 +254,7 @@ class DuckDBJoinedParquet(DuckDBBase):
         return self._get_timeseries_chars(tcq)
 
     def get_unique_field_values(self, field_name: str) -> pd.DataFrame:
-        """Get unique values for a given field.
+        """Get unique values in data for a given field.
 
         Parameters
         ----------
@@ -324,3 +275,53 @@ class DuckDBJoinedParquet(DuckDBBase):
         fn = self._validate_query_model(tmqd.JoinedTimeseriesFieldName, data)
 
         return self._get_unique_field_values(fn)
+
+    def get_joined_timeseries_schema(self) -> pd.DataFrame:
+        """Get field names and field data types from the joined \
+        parquet files.
+
+        Returns
+        -------
+        pd.DataFrame
+            Includes column_name, column_type, null, key, default,
+            and extra columns.
+        """
+        qry = f"""
+        DESCRIBE
+        SELECT
+            *
+        FROM
+            read_parquet({tqu._format_filepath(self.joined_parquet_filepath)})
+        ;"""
+        schema = self.query(qry, format="df")
+
+        return schema
+
+    # Private methods
+    def _check_geometry_available(self):
+        """Make sure the geometry filepath has been specified."""
+        if not self.geometry_filepath:
+            raise ValueError("Please specify a geometry file path.")
+        df = self.query(
+            f"""
+                SELECT
+                    COUNT(geometry)
+                FROM read_parquet(
+                    {tqu._format_filepath(self.geometry_filepath)}
+                );
+                """,
+            format="df"
+        )
+        if df["count(geometry)"].values == 0:
+            raise ValueError(
+                "The geometry file is empty! Please specify a valid file."
+            )
+
+    def _validate_query_model(self, query_model: Any, data: Dict) -> Any:
+        """Validate the query based on existing fields."""
+        schema_df = self.get_joined_timeseries_schema()
+        validated_model = query_model.model_validate(
+            data,
+            context={"existing_fields": schema_df.column_name.tolist()},
+        )
+        return validated_model

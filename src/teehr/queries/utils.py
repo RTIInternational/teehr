@@ -142,9 +142,10 @@ def filters_to_sql(
 def geometry_joined_join_clause(
     q: Union[tmq.MetricQuery, tmq.JoinedTimeseriesQuery]
 ) -> str:
-    """Generate the join clause for joined table or metrics."""
+    """Generate the join clause for joined timeseries or metrics."""
     if q.include_geometry:
-        return f"""JOIN read_parquet({_format_filepath(q.geometry_filepath)}) gf
+        return f"""
+        JOIN read_parquet({_format_filepath(q.geometry_filepath)}) gf
             on primary_location_id = gf.id
         """
     return ""

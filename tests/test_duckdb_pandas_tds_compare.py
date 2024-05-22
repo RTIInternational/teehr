@@ -31,7 +31,7 @@ tds.insert_joined_timeseries(
 )
 
 # Join the attributes
-tds.join_attributes(ATTRIBUTES_FILEPATH)
+tds.insert_attributes(ATTRIBUTES_FILEPATH)
 
 
 def test_metric_compare_1():

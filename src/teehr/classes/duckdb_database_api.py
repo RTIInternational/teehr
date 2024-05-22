@@ -68,41 +68,29 @@ class DuckDBDatabaseAPI(DuckDBBase):
         self.join_geometry_clause = """
             JOIN geometry gf on primary_location_id = gf.id
         """
-        self.con = duckdb.connect(self.database_filepath, read_only=True)
+        self.read_only = True
 
-    def _check_if_geometry_is_inserted(self):
-        """Make sure the geometry table is not empty."""
-        df = self.query("SELECT COUNT(geometry) FROM geometry;", format="df")
-        if df["count(geometry)"].values == 0:
-            raise ValueError(
-                "The geometry table is empty! Please insert geometry first"
-            )
+    def query(
+        self,
+        query: str,
+        format: str = None,
+    ):
+        """Run an SQL query against the class's database.
 
-    def get_joined_timeseries_schema(self) -> pd.DataFrame:
-        """Get field names and field data types from the joined_timeseries \
-        table.
-
-        Returns
-        -------
-        pd.DataFrame
-            Includes column_name, column_type, null, key, default,
-            and extra columns.
+        Return formats include:
+        * A pandas dataframe (format='df')
+        * Results printed to the screen (format='raw')
         """
-        qry = """DESCRIBE SELECT * FROM joined_timeseries;"""
-        schema = self.query(qry, format="df")
-
-        return schema
-
-    def _validate_query_model(self, query_model: Any) -> Any:
-        """Validate pydantic query models based on the existing fields
-        in the joined_timeseries table.
-        """
-        schema_df = self.get_joined_timeseries_schema()
-        validated_model = query_model.model_validate(
-            query_model.model_dump(),
-            context={"existing_fields": schema_df.column_name.tolist()},
-        )
-        return validated_model
+        with duckdb.connect(
+            database=self.database_filepath,
+            read_only=self.read_only
+        ) as con:
+            resp = con.cursor().sql(query)
+            if format == "df":
+                return resp.df()
+            elif format == "raw":
+                return resp.show()
+            return None
 
     def get_metrics(
         self,
@@ -127,9 +115,6 @@ class DuckDBDatabaseAPI(DuckDBBase):
             Create the get metrics query.
         """
         mq = self._validate_query_model(mq)
-
-        # if mq.include_geometry:
-        #     return self._get_metrics(mq, self.join_geometry_clause)
 
         return self._get_metrics(mq)
 
@@ -156,9 +141,6 @@ class DuckDBDatabaseAPI(DuckDBBase):
             Create the get joined timeseries query.
         """
         jtq = self._validate_query_model(jtq)
-
-        # if jtq.include_geometry:
-        #     return self._get_joined_timeseries(jtq, self.join_geometry_clause)
 
         return self._get_joined_timeseries(jtq)
 
@@ -245,3 +227,38 @@ class DuckDBDatabaseAPI(DuckDBBase):
         fn = self._validate_query_model(fn)
 
         return self._get_unique_field_values(fn)
+
+    def get_joined_timeseries_schema(self) -> pd.DataFrame:
+        """Get field names and field data types from the joined_timeseries \
+        table.
+
+        Returns
+        -------
+        pd.DataFrame
+            Includes column_name, column_type, null, key, default,
+            and extra columns.
+        """
+        qry = """DESCRIBE SELECT * FROM joined_timeseries;"""
+        schema = self.query(qry, format="df")
+
+        return schema
+
+    # Private methods
+    def _check_geometry_available(self):
+        """Make sure the geometry table is not empty."""
+        df = self.query("SELECT COUNT(geometry) FROM geometry;", format="df")
+        if df["count(geometry)"].values == 0:
+            raise ValueError(
+                "The geometry table is empty! Please insert geometry first"
+            )
+
+    def _validate_query_model(self, query_model: Any) -> Any:
+        """Validate pydantic query models based on the existing fields
+        in the joined_timeseries table.
+        """
+        schema_df = self.get_joined_timeseries_schema()
+        validated_model = query_model.model_validate(
+            query_model.model_dump(),
+            context={"existing_fields": schema_df.column_name.tolist()},
+        )
+        return validated_model

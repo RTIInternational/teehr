@@ -21,7 +21,7 @@ class DuckDBDatabase(DuckDBDatabaseAPI):
     for local database-based queries.
 
     NOTE: Inheriting from TEEHRDatasetAPI provides access to
-    _check_if_geometry_is_inserted() and get_joined_timeseries_schema().
+    _check_geometry_available() and get_joined_timeseries_schema().
 
     Methods
     -------
@@ -128,308 +128,10 @@ class DuckDBDatabase(DuckDBDatabaseAPI):
         self.join_geometry_clause = """
             JOIN geometry gf on primary_location_id = gf.id
         """
-        self.con = duckdb.connect(self.database_filepath, read_only=False)
+        self.read_only = False
         self._initialize_database_tables()
 
-    # def query(
-    #     self,
-    #     query: str,
-    #     read_only: bool = False,
-    #     format: str = None,
-    #     # create_function_args: Dict = None
-    # ):
-    #     """Run query against the class's database."""
-    #     # if not create_function_args:
-    #     with duckdb.connect(
-    #         self.database_filepath,
-    #         read_only=read_only
-    #     ) as con:
-    #         if format == "df":
-    #             return con.sql(query).df()
-    #         elif format == "raw":
-    #             return con.sql(query).show()
-    #         # elif format == "relation":
-    #         #     return con.sql(query)
-    #         con.sql(query)
-    #         con.close()
-    #         return None
-    #     # else:
-    #     #     user_defined_function = create_function_args["function"]
-    #     #     function_name = create_function_args["function_name"]
-    #     #     parameter_types = create_function_args["parameter_types"]
-    #     #     new_field_type = create_function_args["new_field_type"]
-    #     #     with duckdb.connect(self.database_filepath) as con:
-    #     #         # Register the function
-    #     #         con.create_function(
-    #     #             function_name,
-    #     #             user_defined_function,
-    #     #             parameter_types,
-    #     #             new_field_type,
-    #     #         )
-    #     #         # Call the function and add the results to joined_timeseries
-    #     #         con.sql(query)
-    #     #         con.close()
-
-    def create_function(
-        self,
-        user_defined_function: Callable,
-        function_name: str,
-        parameter_types: List[str],
-        new_field_type: str,
-    ):
-        """Create a user-defined function in the database."""
-        self.con.create_function(
-            function_name,
-            user_defined_function,
-            parameter_types,
-            new_field_type,
-        )
-
-    # def _execute_query(
-    #     self,
-    #     query: str,
-    #     read_only: bool = False,
-    #     return_query: bool = False,
-    #     include_geometry: bool = False
-    # ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
-    #     """Execute a query and return the results or the query itself."""
-    #     if return_query:
-    #         return tqu.remove_empty_lines(query)
-    #     elif include_geometry:
-    #         self._check_if_geometry_is_inserted()
-    #         df = self.query(query, read_only=read_only, format="df")
-    #         return tqu.df_to_gdf(df)
-    #     else:
-    #         df = self.query(query, read_only=read_only, format="df")
-    #     return df
-
-    # def _get_metrics(
-    #     self,
-    #     mq: Any,
-    # ) -> Union[pd.DataFrame, gpd.GeoDataFrame, str]:
-    #     """Calculate performance metrics using database queries.
-
-    #     Parameters
-    #     ----------
-    #     mq : Any
-    #         Pydantic model containing query parameters.
-
-    #     Returns
-    #     -------
-    #     Union[pd.DataFrame, gpd.GeoDataFrame, str]
-    #         A DataFrame or optionally a GeoDataFrame containing query results,
-    #         or the query itself as a string.
-
-    #     See Also
-    #     --------
-    #     teehr.queries.duckdb_database.create_get_metrics_query : \
-    #         Create the get metrics query.
-    #     """
-    #     query = tqu_db.create_get_metrics_query(
-    #         mq,
-    #         self.from_joined_timeseries_clause,
-    #         self.join_geometry_clause
-    #     )
-
-    #     return self._execute_query(
-    #         query=query,
-    #         read_only=True,
-    #         return_query=mq.return_query,
-    #         include_geometry=mq.include_geometry
-    #     )
-
-    # def _get_joined_timeseries(
-    #     self,
-    #     jtq: Any,
-    # ) -> Union[pd.DataFrame, gpd.GeoDataFrame, str]:
-    #     """Retrieve joined timeseries using database query.
-
-    #     Parameters
-    #     ----------
-    #     jtq : Any
-    #         Pydantic model containing query parameters.
-
-    #     Returns
-    #     -------
-    #     Union[pd.DataFrame, gpd.GeoDataFrame, str]
-    #         A DataFrame or GeoDataFrame of query results
-    #         or the query itself as a string.
-
-    #     See Also
-    #     --------
-    #     teehr.queries.duckdb_database.create_get_joined_timeseries_query : \
-    #         Create the get joined timeseries query.
-    #     """
-    #     query = tqu_db.create_get_joined_timeseries_query(
-    #         jtq,
-    #         self.from_joined_timeseries_clause,
-    #         self.join_geometry_clause
-    #     )
-
-    #     return self._execute_query(
-    #         query=query,
-    #         read_only=True,
-    #         return_query=jtq.return_query,
-    #         include_geometry=jtq.include_geometry
-    #     )
-
-    # def _get_timeseries_chars(
-    #     self,
-    #     tcq: Any
-    # ) -> Union[str, pd.DataFrame]:
-    #     """Retrieve timeseries characteristics using database query.
-
-    #     Parameters
-    #     ----------
-    #     tcq : Any
-    #         Pydantic model containing query parameters.
-
-    #     Returns
-    #     -------
-    #     Union[str, pd.DataFrame]
-    #         A DataFrame of time series characteristics including:
-
-    #         - location_id
-    #         - count
-    #         - min
-    #         - max
-    #         - average
-    #         - sum
-    #         - variance
-
-    #         or, the query itself as a string.
-
-    #     See Also
-    #     --------
-    #     teehr.queries.duckdb_database.create_get_timeseries_char_query : \
-    #         Create the get timeseries characteristics query.
-    #     """
-    #     query = tqu_db.create_get_timeseries_char_query(
-    #         tcq,
-    #         self.from_joined_timeseries_clause
-    #     )
-
-    #     return self._execute_query(
-    #         query=query,
-    #         read_only=True,
-    #         return_query=tcq.return_query,
-    #     )
-
-    # def _get_timeseries(
-    #     self,
-    #     tq: Any
-    # ) -> Union[pd.DataFrame, str]:
-    #     """Retrieve timeseries using database query.
-
-    #     Parameters
-    #     ----------
-    #     tq : Any
-    #         Pydantic model containing query parameters.
-
-    #     Returns
-    #     -------
-    #     Union[pd.DataFrame, str]
-    #         A DataFrame of query results or the query itself as a string.
-
-    #     See Also
-    #     --------
-    #     teehr.queries.duckdb_database.create_get_timeseries_query : \
-    #         Create the get timeseries query.
-    #     """
-    #     query = tqu_db.create_get_timeseries_query(
-    #         tq,
-    #         self.from_joined_timeseries_clause
-    #     )
-
-    #     return self._execute_query(
-    #         query=query,
-    #         read_only=True,
-    #         return_query=tq.return_query,
-    #     )
-
-    # def _get_unique_field_values(
-    #     self,
-    #     fn: Any
-    # ) -> pd.DataFrame:
-    #     """Get unique values for a given field.
-
-    #     Parameters
-    #     ----------
-    #     fn : Any
-    #         Pydantic model containing the joined_timeseries table field name.
-
-    #     Returns
-    #     -------
-    #     pd.DataFrame
-    #         A dataframe containing unique values for the given field.
-
-    #     See Also
-    #     --------
-    #     teehr.queries.duckdb_database.create_unique_field_values_query : \
-    #         Create the get unique field values query.
-    #     """
-    #     query = tqu_db.create_unique_field_values_query(
-    #         fn,
-    #         self.from_joined_timeseries_clause
-    #     )
-    #     df = self.query(query, read_only=True, format="df")
-    #     return df
-
-    def _initialize_database_tables(self):
-        """Create the persistent study database and empty table(s)."""
-        create_timeseries_table = """
-            CREATE TABLE IF NOT EXISTS joined_timeseries(
-                reference_time DATETIME,
-                value_time DATETIME,
-                secondary_location_id VARCHAR,
-                secondary_value FLOAT,
-                configuration VARCHAR,
-                measurement_unit VARCHAR,
-                variable_name VARCHAR,
-                primary_value FLOAT,
-                primary_location_id VARCHAR
-                );"""
-
-        self.query(create_timeseries_table)
-
-        # Also initialize the geometry table (what if multiple geometry types?)
-        create_geometry_table = """
-            CREATE TABLE IF NOT EXISTS geometry(
-                id VARCHAR,
-                name VARCHAR,
-                geometry BLOB
-                );"""
-        self.query(create_geometry_table)
-
-    def _drop_joined_timeseries_field(self, field_name: str):
-        """Drop the specified field by name from joined_timeseries table."""
-        query = f"""
-            ALTER TABLE joined_timeseries
-            DROP COLUMN {field_name}
-        ;"""
-        self.query(query)
-
-    def _validate_joined_timeseries_base_fields(self, drop_added_fields: bool):
-        """Ensure that no user-defined fields have been added or base fields
-        have been dropped. This is necessary in order to add multiple
-        configurations into the joined_timeseries table.
-        """
-        schema_df = self.get_joined_timeseries_schema()
-        if schema_df.index.size < len(tmqd.JoinedFieldNameEnum) - 1:
-            raise ValueError(
-                "There are missing fields in the joined_timeseries schema"
-            )
-        for field_name in schema_df.column_name.tolist():
-            if field_name not in tmqd.JoinedFieldNameEnum.__members__:
-                if drop_added_fields:
-                    logger.info(f"Dropping added field {field_name}")
-                    self._drop_joined_timeseries_field(field_name)
-                else:
-                    raise ValueError(
-                        f"An added field '{field_name}' exists,"
-                        "please drop it before joining timeseries"
-                    )
-
+    # PUBLIC WRITE METHODS
     def insert_geometry(
         self,
         geometry_filepath: Union[str, Path, List[Union[str, Path]]]
@@ -520,37 +222,7 @@ class DuckDBDatabase(DuckDBDatabaseAPI):
         query = tqu_db.create_join_and_save_timeseries_query(jtq)
         self.query(query)
 
-    def _get_unique_attributes(
-            self,
-            attributes_filepath: Union[str, Path, List[Union[str, Path]]]
-    ) -> List:
-        """Get a list of unique attributes and attribute units from the
-        provided attribute table(s).
-        """
-        query = f"""
-            SELECT
-                DISTINCT attribute_name, attribute_unit
-            FROM
-                read_parquet({tqu._format_filepath(attributes_filepath)})
-        ;"""
-        attr_list = self.query(query, format="df").to_dict(orient="records")
-        return attr_list
-
-    def _add_field_name_to_joined_timeseries(
-        self, field_name: str, field_dtype="VARCHAR"
-    ):
-        """Add a field name to joined_timeseries
-        if it does not already exist.
-        """
-        query = f"""
-            ALTER TABLE
-                joined_timeseries
-            ADD IF NOT EXISTS
-                {field_name} {field_dtype}
-        ;"""
-        self.query(query)
-
-    def join_attributes(
+    def insert_attributes(
             self,
             attributes_filepath: Union[str, Path, List[Union[str, Path]]]
         ):
@@ -609,7 +281,7 @@ class DuckDBDatabase(DuckDBDatabaseAPI):
 
             self.query(query)
 
-    def calculate_field(
+    def insert_calculated_field(
         self,
         new_field_name: str,
         new_field_type: str,
@@ -677,24 +349,19 @@ class DuckDBDatabase(DuckDBDatabaseAPI):
             );
             """
 
-        create_function_args = {
-            "user_defined_function": user_defined_function,
-            "function_name": f"{cf.new_field_name}_udf",
-            "parameter_types": parameter_types,
-            "new_field_type": cf.new_field_type,
-        }
-        self.create_function(**create_function_args)
-        self.query(query=query)
+        with duckdb.connect(
+            database=self.database_filepath,
+            read_only=self.read_only
+        ) as con:
+            con.create_function(
+                f"{cf.new_field_name}_udf",
+                user_defined_function,
+                parameter_types,
+                cf.new_field_type.value
+            )
+            con.sql(query)
 
-    def _validate_query_model(self, query_model: Any, data: Dict) -> Any:
-        """Validate the query based on existing table fields."""
-        schema_df = self.get_joined_timeseries_schema()
-        validated_model = query_model.model_validate(
-            data,
-            context={"existing_fields": schema_df.column_name.tolist()},
-        )
-        return validated_model
-
+    # PUBLIC READ METHODS
     def get_metrics(
         self,
         group_by: List[str],
@@ -923,3 +590,98 @@ class DuckDBDatabase(DuckDBDatabaseAPI):
         fn = self._validate_query_model(tmqd.JoinedTimeseriesFieldName, data)
 
         return self._get_unique_field_values(fn)
+
+    # PRIVATE METHODS
+    def _initialize_database_tables(self):
+        """Create the persistent study database and empty table(s)."""
+        create_timeseries_table = """
+            CREATE TABLE IF NOT EXISTS joined_timeseries(
+                reference_time DATETIME,
+                value_time DATETIME,
+                secondary_location_id VARCHAR,
+                secondary_value FLOAT,
+                configuration VARCHAR,
+                measurement_unit VARCHAR,
+                variable_name VARCHAR,
+                primary_value FLOAT,
+                primary_location_id VARCHAR
+                );"""
+
+        self.query(create_timeseries_table)
+
+        # Also initialize the geometry table (what if multiple geometry types?)
+        create_geometry_table = """
+            CREATE TABLE IF NOT EXISTS geometry(
+                id VARCHAR,
+                name VARCHAR,
+                geometry BLOB
+                );"""
+        self.query(create_geometry_table)
+
+    def _drop_joined_timeseries_field(self, field_name: str):
+        """Drop the specified field by name from joined_timeseries table."""
+        query = f"""
+            ALTER TABLE joined_timeseries
+            DROP COLUMN {field_name}
+        ;"""
+        self.query(query)
+
+    def _validate_joined_timeseries_base_fields(self, drop_added_fields: bool):
+        """Ensure that no user-defined fields have been added or base fields
+        have been dropped. This is necessary in order to add multiple
+        configurations into the joined_timeseries table.
+        """
+        schema_df = self.get_joined_timeseries_schema()
+        if schema_df.index.size < len(tmqd.JoinedFieldNameEnum) - 1:
+            raise ValueError(
+                "There are missing fields in the joined_timeseries schema"
+            )
+        for field_name in schema_df.column_name.tolist():
+            if field_name not in tmqd.JoinedFieldNameEnum.__members__:
+                if drop_added_fields:
+                    logger.info(f"Dropping added field {field_name}")
+                    self._drop_joined_timeseries_field(field_name)
+                else:
+                    raise ValueError(
+                        f"An added field '{field_name}' exists,"
+                        "please drop it before joining timeseries"
+                    )
+
+    def _get_unique_attributes(
+            self,
+            attributes_filepath: Union[str, Path, List[Union[str, Path]]]
+    ) -> List:
+        """Get a list of unique attributes and attribute units from the
+        provided attribute table(s).
+        """
+        query = f"""
+            SELECT
+                DISTINCT attribute_name, attribute_unit
+            FROM
+                read_parquet({tqu._format_filepath(attributes_filepath)})
+        ;"""
+        attr_list = self.query(query, format="df").to_dict(orient="records")
+        return attr_list
+
+    def _add_field_name_to_joined_timeseries(
+        self, field_name: str, field_dtype="VARCHAR"
+    ):
+        """Add a field name to joined_timeseries
+        if it does not already exist.
+        """
+        query = f"""
+            ALTER TABLE
+                joined_timeseries
+            ADD IF NOT EXISTS
+                {field_name} {field_dtype}
+        ;"""
+        self.query(query)
+
+    def _validate_query_model(self, query_model: Any, data: Dict) -> Any:
+        """Validate the query based on existing table fields."""
+        schema_df = self.get_joined_timeseries_schema()
+        validated_model = query_model.model_validate(
+            data,
+            context={"existing_fields": schema_df.column_name.tolist()},
+        )
+        return validated_model

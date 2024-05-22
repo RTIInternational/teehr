@@ -54,7 +54,7 @@ def add_attributes():
     tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     print("Adding attributes")
-    tds.join_attributes(ATTRIBUTES_FILEPATH)
+    tds.insert_attributes(ATTRIBUTES_FILEPATH)
 
 
 def add_fields():
@@ -82,7 +82,7 @@ def add_fields():
     parameter_names = ["primary_value", "upstream_area_km2"]
     new_field_name = "primary_normalized_discharge"
     new_field_type = "FLOAT"
-    tds.calculate_field(new_field_name=new_field_name,
+    tds.insert_calculated_field(new_field_name=new_field_name,
                         new_field_type=new_field_type,
                         parameter_names=parameter_names,
                         user_defined_function=test_user_function)
@@ -107,7 +107,7 @@ def add_fields():
     parameter_names = ["value_time"]
     new_field_name = "month"
     new_field_type = "INTEGER"
-    tds.calculate_field(new_field_name=new_field_name,
+    tds.insert_calculated_field(new_field_name=new_field_name,
                         new_field_type=new_field_type,
                         parameter_names=parameter_names,
                         user_defined_function=add_month_field)
@@ -134,7 +134,7 @@ def add_fields():
     parameter_names = ["primary_value", "retro_2yr_recurrence_flow_cms"]
     new_field_name = "exceed_2yr_recurrence"
     new_field_type = "BOOLEAN"
-    tds.calculate_field(new_field_name=new_field_name,
+    tds.insert_calculated_field(new_field_name=new_field_name,
                         new_field_type=new_field_type,
                         parameter_names=parameter_names,
                         user_defined_function=exceed_2yr_recurrence)
