@@ -85,7 +85,7 @@ class DuckDBDatabaseAPI(DuckDBBase):
             database=self.database_filepath,
             read_only=self.read_only
         ) as con:
-            resp = con.cursor().sql(query)
+            resp = con.sql(query)
             if format == "df":
                 return resp.df()
             elif format == "raw":

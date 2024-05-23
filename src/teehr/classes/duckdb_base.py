@@ -58,7 +58,7 @@ class DuckDBBase(ABC):
         * Results printed to the screen (format='raw')
         """
         with duckdb.connect() as con:
-            resp = con.cursor().sql(query)
+            resp = con.sql(query)
             if format == "df":
                 return resp.df()
             elif format == "raw":
