@@ -1,6 +1,18 @@
 Release Notes
 =============
 
+0.3.22 - 2024-05-22
+--------------------
+
+Added
+^^^^^
+* None
+
+Changed
+^^^^^^^
+* Cleaned up the `DuckDB*` classes.  Don't think any public interfaces changed.
+
+
 0.3.21 - 2024-05-21
 --------------------
 
