@@ -6,7 +6,7 @@ import pandas as pd
 
 import teehr.queries.pandas as tqk
 import teehr.queries.duckdb as tqd
-from teehr.classes.teehr_duckdb import DuckDBDatabase
+from teehr.classes.duckdb_database import DuckDBDatabase
 
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
 PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*short_obs.parquet")
@@ -31,7 +31,7 @@ tds.insert_joined_timeseries(
 )
 
 # Join the attributes
-tds.join_attributes(ATTRIBUTES_FILEPATH)
+tds.insert_attributes(ATTRIBUTES_FILEPATH)
 
 
 def test_metric_compare_1():

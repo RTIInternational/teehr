@@ -161,6 +161,7 @@ class InsertJoinedTimeseriesQuery(BaseModel):
     secondary_filepath: Union[str, Path, List[Union[str, Path]]]
     crosswalk_filepath: Union[str, Path, List[Union[str, Path]]]
     order_by: Optional[List[JoinedFieldNameEnum]] = []
+    filters: Optional[List[Filter]] = []
 
 
 class JoinedTimeseriesQuery(BaseModel):

@@ -48,6 +48,7 @@ def get_metrics(
         Must provide at least one.
     include_metrics : List[str]
         List of metrics (see below) for allowable list, or "all" to return all.
+        Must provide at least one.
     filters : Union[List[dict], None] = None
         List of dictionaries describing the "where" clause to limit data that
         is included in metrics.

@@ -1,7 +1,7 @@
 """Tests for the TEEHR dataset API."""
 from pathlib import Path
 
-from teehr.classes.teehr_duckdb import DuckDBAPI
+from teehr.classes.duckdb_database_api import DuckDBDatabaseAPI
 from teehr.models.queries_database import (
     MetricQuery,
     JoinedTimeseriesFieldName,
@@ -20,7 +20,7 @@ DATABASE_FILEPATH = Path("tests", "data", "test_study", "temp_test_api.db")
 
 def test_unique_field_values():
     """Test the unique field values query."""
-    tds = DuckDBAPI(DATABASE_FILEPATH)
+    tds = DuckDBDatabaseAPI(DATABASE_FILEPATH)
 
     jtn = JoinedTimeseriesFieldName.model_validate(
         {"field_name": "primary_location_id"}
@@ -36,7 +36,7 @@ def test_unique_field_values():
 
 def test_metrics_query():
     """Test the metrics query."""
-    tds = DuckDBAPI(DATABASE_FILEPATH)
+    tds = DuckDBDatabaseAPI(DATABASE_FILEPATH)
 
     # Get metrics
     order_by = ["primary_location_id"]
@@ -69,14 +69,14 @@ def test_metrics_query():
 
 def test_describe_inputs():
     """Test the describe inputs query."""
-    tds = DuckDBAPI(DATABASE_FILEPATH)
+    tds = DuckDBDatabaseAPI(DATABASE_FILEPATH)
     df = tds.describe_inputs(PRIMARY_FILEPATH, SECONDARY_FILEPATH)
     assert df.index.size == 7
 
 
 def test_get_joined_timeseries():
     """Test the get joined timeseries query."""
-    tds = DuckDBAPI(DATABASE_FILEPATH)
+    tds = DuckDBDatabaseAPI(DATABASE_FILEPATH)
     order_by = ["primary_location_id"]
     filters = [
         {
