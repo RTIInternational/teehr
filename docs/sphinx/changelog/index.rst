@@ -11,6 +11,9 @@ Added
 Changed
 ^^^^^^^
 * Cleaned up the `DuckDB*` classes.  Don't think any public interfaces changed.
+* Import of `DuckDBDatabase`, `DuckDBDatabaseAPI`, and `DuckDBJoinedParquet`
+  now use `from teehr.classes import DuckDBDatabase, DuckDBDatabaseAPI, DuckDBJoinedParquet`
+* the `calculate_field`` method was renamed to `insert_calculated_field``
 
 
 0.3.21 - 2024-05-21
