@@ -260,7 +260,7 @@ class DuckDBDatabase(DuckDBDatabaseAPI):
                     SELECT
                         *
                     FROM
-                        read_parquet({tqu._format_filepath(attributes_filepath)})
+                        read_parquet({tqu._format_filepath(attributes_filepath)}, union_by_name=true)
                     WHERE
                         attribute_name = '{attr['attribute_name']}'
                     {unit_clause}
@@ -655,10 +655,20 @@ class DuckDBDatabase(DuckDBDatabaseAPI):
         provided attribute table(s).
         """
         query = f"""
+            WITH attributes AS (
+                SELECT
+                    attribute_name::varchar as attribute_name
+                    , attribute_unit::varchar as attribute_unit
+                FROM
+                    read_parquet(
+                        {tqu._format_filepath(attributes_filepath)}
+                        , union_by_name=true
+                    )
+            )
             SELECT
                 DISTINCT attribute_name, attribute_unit
             FROM
-                read_parquet({tqu._format_filepath(attributes_filepath)})
+                attributes
         ;"""
         attr_list = self.query(query, format="df").to_dict(orient="records")
         return attr_list
