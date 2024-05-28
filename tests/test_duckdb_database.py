@@ -13,7 +13,8 @@ PRIMARY_FILEPATH_DUPS = Path(TEST_STUDY_DIR, "timeseries", "*dup_obs.parquet")
 SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
 GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
-ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr.parquet")
+ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr_*.parquet")
+NO_UNITS_ATTRIBUTE_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr_ecoregion.parquet")
 DATABASE_FILEPATH = Path("tests", "data", "temp", "temp_test.db")
 
 
@@ -236,13 +237,50 @@ def test_calculate_field():
     )
 
 
-def test_join_attributes():
+def test_join_attribute_no_units():
     """Test the join attributes query."""
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    # if Path(f"{str(DATABASE_FILEPATH)}.wal").is_file():
-    #     Path(f"{str(DATABASE_FILEPATH)}.wal").unlink()
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
+
+    # Perform the join and insert into duckdb database
+    tds.insert_joined_timeseries(
+        primary_filepath=PRIMARY_FILEPATH,
+        secondary_filepath=SECONDARY_FILEPATH,
+        crosswalk_filepath=CROSSWALK_FILEPATH,
+        drop_added_fields=True,
+    )
+
+    # Add attributes
+    tds.insert_attributes(NO_UNITS_ATTRIBUTE_FILEPATH)
+
+    df = tds.query("SELECT * FROM joined_timeseries;", format="df")
+
+    cols = [
+        "reference_time",
+        "value_time",
+        "secondary_location_id",
+        "secondary_value",
+        "configuration",
+        "measurement_unit",
+        "variable_name",
+        "primary_value",
+        "primary_location_id",
+        "ecoregion"
+    ]
+    # Make sure attribute fields have been added
+    assert sorted(df.columns.tolist()) == sorted(cols)
+
+    assert (
+        df.ecoregion.unique() == ["coastal_plain", "piedmont", "blue_ridge"]
+    ).all()
+
+
+def test_join_attributes():
+    """Test the join attributes query."""
+    if DATABASE_FILEPATH.is_file():
+        DATABASE_FILEPATH.unlink()
 
     tds = DuckDBDatabase(DATABASE_FILEPATH)
 
@@ -423,6 +461,7 @@ if __name__ == "__main__":
     test_describe_inputs()
     test_calculate_field()
     test_join_attributes()
+    test_join_attribute_no_units()
     test_get_joined_timeseries_schema()
     test_joined_timeseries_query_gdf()
     test_timeseries_query()

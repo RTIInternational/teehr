@@ -1,6 +1,21 @@
 Release Notes
 =============
 
+0.3.23 - 2024-05-28
+--------------------
+
+Added
+^^^^^
+* None
+
+Changed
+^^^^^^^
+* Docstring updates in duckdb_database.py.
+* Changelog update for 0.3.22.
+* Updates ``insert_attributes()`` in ``duckdb_database.py`` to better handle None/Null attribute units.
+* Test updates in ``convert.py``.
+
+
 0.3.22 - 2024-05-22
 --------------------
 
@@ -11,6 +26,9 @@ Added
 Changed
 ^^^^^^^
 * Cleaned up the `DuckDB*` classes.  Don't think any public interfaces changed.
+* Import of `DuckDBDatabase`, `DuckDBDatabaseAPI`, and `DuckDBJoinedParquet`
+  now use `from teehr.classes import DuckDBDatabase, DuckDBDatabaseAPI, DuckDBJoinedParquet`
+* the `calculate_field`` method was renamed to `insert_calculated_field``
 
 
 0.3.21 - 2024-05-21

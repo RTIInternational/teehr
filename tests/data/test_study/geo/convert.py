@@ -20,6 +20,18 @@ print(f"gages.geojson")
 gdf = gpd.read_file("gages.geojson")
 gdf.to_parquet("gages.parquet")
 
-print("test_attr.csv")
-df = pd.read_csv("test_attr.csv")
-df.to_parquet("test_attr.parquet")
+print("test_attr_ecoregion.csv")
+df = pd.read_csv("test_attr_ecoregion.csv")
+df.to_parquet("test_attr_ecoregion.parquet")
+
+print("test_attr_2yr_discharge.csv")
+df = pd.read_csv("test_attr_2yr_discharge.csv")
+df.to_parquet("test_attr_2yr_discharge.parquet")
+
+print("test_attr_drainage_area_km2.csv")
+df = pd.read_csv("test_attr_drainage_area_km2.csv")
+df.to_parquet("test_attr_drainage_area_km2.parquet")
+
+print("test_attr_drainage_area_mi2.csv")
+df = pd.read_csv("test_attr_drainage_area_mi2.csv")
+df.to_parquet("test_attr_drainage_area_mi2.parquet")
