@@ -1,6 +1,21 @@
 Release Notes
 =============
 
+0.3.23 - 2024-05-28
+--------------------
+
+Added
+^^^^^
+* None
+
+Changed
+^^^^^^^
+* Docstring updates in duckdb_database.py.
+* Changelog update for 0.3.22.
+* Updates ``insert_attributes()`` in ``duckdb_database.py`` to better handle None/Null attribute units.
+* Test updates in ``convert.py``.
+
+
 0.3.22 - 2024-05-22
 --------------------
 
