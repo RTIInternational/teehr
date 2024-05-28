@@ -41,11 +41,11 @@ class DuckDBDatabase(DuckDBDatabaseAPI):
         Joins the primary and secondary timeseries from parquet files
         and inserts into the database as the joined_timeseries table.
 
-    join_attributes(attributes_filepath: Union[str, Path])
+    insert_attributes(attributes_filepath: Union[str, Path])
         Joins attributes from the provided attribute table(s) to new
         fields in the joined_timeseries table
 
-    calculate_field(new_field_name: str, new_field_type: str, \
+    insert_calculated_field(new_field_name: str, new_field_type: str, \
         parameter_names: List[str], \
         user_defined_function: Callable, \
         replace: bool = True, \
