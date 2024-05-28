@@ -27,7 +27,7 @@ jupyterhub:
   singleuser:
     image:
       name: 935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr  # Image to use for singleuser environment. Must include dask-gateway.
-      tag: v0.3.21
+      tag: v0.3.22
     defaultUrl: "/lab"  # Use jupyterlab by defualt.
     profileList:
     - display_name: "TEEHR Evaluation System (4 vCPU/32GB memory)"
@@ -37,15 +37,15 @@ jupyterhub:
         image:
           display_name: Image
           choices:
-            v0-3-22:
-              display_name: Version 0.3.22
+            v0-3-23:
+              display_name: Version 0.3.23
               default: true
               kubespawner_override:
-                image: "935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr:v0.3.22"
-            v0-3-21:
-              display_name: Version 0.3.21
+                image: "935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr:v0.3.23"
+            v0-3-22:
+              display_name: Version 0.3.22
               kubespawner_override:
-                image: "935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr:v0.3.21"
+                image: "935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr:v0.3.22"
       kubespawner_override:
         mem_limit: 32G
         mem_guarantee: 19G
@@ -95,7 +95,7 @@ dask-gateway:
     backend:
       image:
         name: 935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr  # Image to use for singleuser environment. Must include dask-gateway.
-        tag: v0.3.21
+        tag: v0.3.22
       scheduler:
         extraPodConfig:
           # serviceAccountName: user-sa
