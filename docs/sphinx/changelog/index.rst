@@ -1,6 +1,19 @@
 Release Notes
 =============
 
+
+0.3.24 - 2024-05-29
+--------------------
+
+Added
+^^^^^
+* Added metrics documentation to the Sphinx documentation.
+
+Changed
+^^^^^^^
+* None
+
+
 0.3.23 - 2024-05-28
 --------------------
 

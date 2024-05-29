@@ -42,8 +42,8 @@ $ poetry add git+https://github.com/RTIInternational/teehr.git#[BRANCH TAG]
 
 Use Docker
 ```bash
-$ docker build -t teehr:v0.3.23 .
-$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.3.23 jupyter lab --ip 0.0.0.0 $HOME
+$ docker build -t teehr:v0.3.24 .
+$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.3.24 jupyter lab --ip 0.0.0.0 $HOME
 ```
 
 ## Examples
