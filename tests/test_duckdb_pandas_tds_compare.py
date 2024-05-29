@@ -6,7 +6,7 @@ import pandas as pd
 
 import teehr.queries.pandas as tqk
 import teehr.queries.duckdb as tqd
-from teehr.database.teehr_dataset import TEEHRDatasetDB
+from teehr.classes.duckdb_database import DuckDBDatabase
 
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
 PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*short_obs.parquet")
@@ -15,12 +15,12 @@ SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
 GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
 DATABASE_FILEPATH = Path("tests", "data", "temp", "temp_test.db")
-ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr.parquet")
+ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr_*.parquet")
 
 if DATABASE_FILEPATH.is_file():
     DATABASE_FILEPATH.unlink()
 
-tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+tds = DuckDBDatabase(DATABASE_FILEPATH)
 
 # Perform the join and insert into duckdb database
 tds.insert_joined_timeseries(
@@ -31,7 +31,7 @@ tds.insert_joined_timeseries(
 )
 
 # Join the attributes
-tds.join_attributes(ATTRIBUTES_FILEPATH)
+tds.insert_attributes(ATTRIBUTES_FILEPATH)
 
 
 def test_metric_compare_1():

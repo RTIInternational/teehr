@@ -3,13 +3,10 @@ import numpy as np
 import teehr.queries.duckdb as tqd
 import teehr.queries.pandas as tqp
 from pathlib import Path
-import pandas as pd
-import duckdb
 
 
 def test_spearmans_corr_1():
     """Tests the newly added spearmans_corr."""
-
     PRIMARY_FILEPATH = Path("tests/data/test_study/timeseries/test_short_obs.parquet")
     SECONDARY_FILEPATH = Path("tests/data/test_study/timeseries/test_short_fcast.parquet")
     CROSSWALK_FILEPATH = Path("tests/data/test_study/geo/crosswalk.parquet")
@@ -49,7 +46,6 @@ def test_spearmans_corr_1():
 
 def test_spearmans_corr_2():
     """Tests the newly added spearmans_corr."""
-
     PRIMARY_FILEPATH = Path("tests/data/retro/primary_obs.parquet")
     SECONDARY_FILEPATH = Path("tests/data/retro/secondary_sim.parquet")
     CROSSWALK_FILEPATH = Path("tests/data/retro/xwalk.parquet")

@@ -1,6 +1,54 @@
 Release Notes
 =============
 
+0.3.23 - 2024-05-28
+--------------------
+
+Added
+^^^^^
+* None
+
+Changed
+^^^^^^^
+* Docstring updates in duckdb_database.py.
+* Changelog update for 0.3.22.
+* Updates ``insert_attributes()`` in ``duckdb_database.py`` to better handle None/Null attribute units.
+* Test updates in ``convert.py``.
+
+
+0.3.22 - 2024-05-22
+--------------------
+
+Added
+^^^^^
+* None
+
+Changed
+^^^^^^^
+* Cleaned up the `DuckDB*` classes.  Don't think any public interfaces changed.
+* Import of `DuckDBDatabase`, `DuckDBDatabaseAPI`, and `DuckDBJoinedParquet`
+  now use `from teehr.classes import DuckDBDatabase, DuckDBDatabaseAPI, DuckDBJoinedParquet`
+* the `calculate_field`` method was renamed to `insert_calculated_field``
+
+
+0.3.21 - 2024-05-21
+--------------------
+
+Added
+^^^^^
+* Added the ``DuckDBJoinedParquet`` class for metric queries on pre-joined parquet files.
+* Added the ``DuckDBBase`` class for common methods between the ``DuckDBDatabase``, ``DuckDBAPI``,
+  and ``DuckDBJoinedParquet`` classes.
+
+Changed
+^^^^^^^
+* Renamed the ``database`` directory to ``classes``.
+* Renamed the ``teehr_dataset.py`` to ``teehr_duckdb.py``.
+* Renamed the ``TEEHRDatasetDB`` and ``TEEHRDatasetAPI`` classes to
+  ``DuckDBDatabase`` and ``DuckDBAPI`` respectively.
+* Removed `lead_time` and `absolute_value` from joined table
+
+
 0.3.20 - 2024-05-18
 --------------------
 

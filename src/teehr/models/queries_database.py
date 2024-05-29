@@ -67,8 +67,6 @@ class JoinedFieldNameEnum(StrEnum):
     variable_name = "variable_name"
     primary_value = "primary_value"
     primary_location_id = "primary_location_id"
-    lead_time = "lead_time"
-    absolute_difference = "absolute_difference"
     geometry = "geometry"
 
 
@@ -159,10 +157,11 @@ class Filter(BaseModel):
 class InsertJoinedTimeseriesQuery(BaseModel):
     """InsertJoinedTimeseriesQuery model."""
 
-    primary_filepath: Union[str, Path]
-    secondary_filepath: Union[str, Path]
-    crosswalk_filepath: Union[str, Path]
+    primary_filepath: Union[str, Path, List[Union[str, Path]]]
+    secondary_filepath: Union[str, Path, List[Union[str, Path]]]
+    crosswalk_filepath: Union[str, Path, List[Union[str, Path]]]
     order_by: Optional[List[JoinedFieldNameEnum]] = []
+    filters: Optional[List[Filter]] = []
 
 
 class JoinedTimeseriesQuery(BaseModel):
