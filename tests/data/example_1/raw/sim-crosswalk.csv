@@ -1,0 +1,4 @@
+primary_location_id,secondary_location_id
+gage-A,sim_loc_id-1
+gage-B,sim_loc_id-2
+gage-C,sim_loc_id-3
