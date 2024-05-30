@@ -1,3 +1,10 @@
+"""
+This file contains an example of how to build a simple TEEHR dataset.
+
+The input data is all CSV and GeoJSON files.  This is intended to be
+the simplest example of how TEEHR can be used.
+"""
+
 import pandas as pd
 import geopandas as gpd
 
@@ -79,7 +86,9 @@ baseline_ts['variable_name'] = 'streamflow_daily_mean'
 baseline_ts['measurement_unit'] = 'cms'
 baseline_ts['reference_time'] = None
 # Reference_time column must be cast as type datetime64[ns] if set to None
-baseline_ts['reference_time'] = baseline_ts['reference_time'].astype('datetime64[ns]')
+baseline_ts['reference_time'] = (
+    baseline_ts['reference_time'].astype('datetime64[ns]')
+)
 print(baseline_ts)
 baseline_ts.to_parquet(Path(SECONDARY_FILEPATH, "baseline.parquet"))
 
@@ -91,7 +100,9 @@ sim_ts['variable_name'] = 'streamflow_daily_mean'
 sim_ts['measurement_unit'] = 'cms'
 sim_ts['reference_time'] = None
 # Reference_time column must be cast as type datetime64[ns] if set to None
-sim_ts['reference_time'] = baseline_ts['reference_time'].astype('datetime64[ns]')
+sim_ts['reference_time'] = (
+    baseline_ts['reference_time'].astype('datetime64[ns]')
+)
 print(sim_ts)
 sim_ts.to_parquet(Path(SECONDARY_FILEPATH, "sim.parquet"))
 
