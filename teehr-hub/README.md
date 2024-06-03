@@ -46,7 +46,7 @@ helm upgrade \
   --install teehr-hub dask/daskhub \
   --namespace teehr-hub \
   --create-namespace \
-  --version 2023.1.0 \
+  --version 2024.1.0 \
   --values secret-config.yaml
 rm secret-config.yaml
 helm upgrade \
@@ -112,5 +112,14 @@ Cluster
 ```bash
 cd terraform
 terraform destroy -var-file=teehr-hub.tfvars
+cd ..
+```
+
+
+Update helm
+```
+cd helm-chart
+helm repo update dask
+helm repo update autoscaler
 cd ..
 ```

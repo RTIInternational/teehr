@@ -29,8 +29,6 @@ RUN apt-get update \
 # RUN conda install -y -c conda-forge nodejs
 RUN mamba install -n ${CONDA_ENV} -y -c conda-forge nodejs selenium geckodriver
 
-USER ${NB_USER}
-
 WORKDIR /teehr
 
 RUN pip install duckdb spatialpandas easydev colormap colorcet hydrotools
@@ -38,5 +36,7 @@ RUN pip install duckdb spatialpandas easydev colormap colorcet hydrotools
 COPY --from=builder /teehr/dist/teehr-build.tar.gz /teehr/dist/teehr-build.tar.gz
 
 RUN python -m pip install dist/teehr-build.tar.gz
+
+USER ${NB_USER}
 
 WORKDIR /home/jovyan

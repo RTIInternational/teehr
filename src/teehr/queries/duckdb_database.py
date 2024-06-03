@@ -1,7 +1,8 @@
 """A module defining duckdb sql queries for a persistent database."""
 import duckdb
 
-from typing import Dict
+from typing import Dict, List, Union
+from pathlib import Path
 
 from teehr.models.queries_database import (
     MetricQuery,
@@ -12,12 +13,18 @@ from teehr.models.queries_database import (
     JoinedTimeseriesFieldName
 )
 
+import teehr.queries.joined as tqj
+import teehr.queries.metrics as tqm
 import teehr.queries.utils as tqu
 
 SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-def create_get_metrics_query(mq: MetricQuery) -> str:
+def create_get_metrics_query(
+    mq: MetricQuery,
+    from_joined_timeseries_clause: str,
+    join_geometry_clause: str
+) -> str:
     """Build the query string to calculate performance metrics.
 
     Parameters
@@ -43,7 +50,6 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
     * configuration
     * measurement_unit
     * variable_name
-    * lead_time
     * [any user-added fields]
 
     Metrics:
@@ -79,9 +85,9 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
 
     Examples
     --------
-    >>> order_by = ["lead_time", "primary_location_id"]
+    >>> order_by = ["primary_location_id"]
 
-    >>> group_by = ["lead_time", "primary_location_id"]
+    >>> group_by = ["primary_location_id"]
 
     >>> filters = [
     >>>     {
@@ -93,63 +99,19 @@ def create_get_metrics_query(mq: MetricQuery) -> str:
     >>>         "column": "reference_time",
     >>>         "operator": "=",
     >>>         "value": "2022-01-01 00:00:00",
-    >>>     },
-    >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+    >>>     }
     >>> ]
     """
-    query = f"""
-        WITH joined as (
-            SELECT
-                *
-            FROM joined_timeseries sf
-            {tqu.filters_to_sql(mq.filters)}
-        )
-        {tqu._nse_cte(mq)}
-        , metrics AS (
-            SELECT
-                {",".join([f"joined.{gb}" for gb in mq.group_by])}
-                {tqu._select_primary_count(mq)}
-                {tqu._select_secondary_count(mq)}
-                {tqu._select_primary_minimum(mq)}
-                {tqu._select_secondary_minimum(mq)}
-                {tqu._select_primary_maximum(mq)}
-                {tqu._select_secondary_maximum(mq)}
-                {tqu._select_primary_average(mq)}
-                {tqu._select_secondary_average(mq)}
-                {tqu._select_primary_sum(mq)}
-                {tqu._select_secondary_sum(mq)}
-                {tqu._select_primary_variance(mq)}
-                {tqu._select_secondary_variance(mq)}
-                {tqu._select_max_value_delta(mq)}
-                {tqu._select_mean_error(mq)}
-                {tqu._select_nash_sutcliffe_efficiency(mq)}
-                {tqu._select_nash_sutcliffe_efficiency_normalized(mq)}
-                {tqu._select_kling_gupta_efficiency(mq)}
-                {tqu._select_mean_absolute_error(mq)}
-                {tqu._select_mean_squared_error(mq)}
-                {tqu._select_root_mean_squared_error(mq)}
-                {tqu._select_primary_max_value_time(mq)}
-                {tqu._select_secondary_max_value_time(mq)}
-                {tqu._select_max_value_timedelta(mq)}
-                {tqu._select_relative_bias(mq)}
-                {tqu._select_multiplicative_bias(mq)}
-                {tqu._select_mean_absolute_relative_error(mq)}
-                {tqu._select_pearson_correlation(mq)}
-                {tqu._select_r_squared(mq)}
-            FROM
-                joined
-            {tqu._join_nse_cte(mq)}
-            GROUP BY
-                {",".join([f"joined.{gb}" for gb in mq.group_by])}
-        )
-        SELECT
-            metrics.*
-            {tqu.geometry_select_clause(mq)}
-        FROM metrics
-            {tqu.metric_geometry_join_clause_db(mq)}
-        ORDER BY
-            {",".join([f"metrics.{ob}" for ob in mq.order_by])}
-    ;"""
+    joined = tqj.get_joined_timeseries_cte(
+        mq,
+        from_joined_timeseries_clause
+    )
+    metrics = tqm.get_metrics_clause(
+        mq,
+        join_geometry_clause
+    )
+
+    query = joined + metrics
 
     return query
 
@@ -167,59 +129,11 @@ def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQuery) -> str:
     str
         The query string.
     """
-    query = f"""
-    WITH initial_joined as (
-        SELECT
-            sf.reference_time,
-            sf.value_time,
-            sf.location_id as secondary_location_id,
-            sf.value as secondary_value,
-            sf.configuration,
-            sf.measurement_unit,
-            pf.reference_time as primary_reference_time,
-            sf.variable_name,
-            pf.value as primary_value,
-            pf.location_id as primary_location_id,
-            sf.value_time - sf.reference_time as lead_time,
-            abs(primary_value - secondary_value) as absolute_difference
-        FROM read_parquet('{str(jtq.secondary_filepath)}') sf
-        JOIN read_parquet('{str(jtq.crosswalk_filepath)}') cf
-            on cf.secondary_location_id = sf.location_id
-        JOIN read_parquet("{str(jtq.primary_filepath)}") pf
-            on cf.primary_location_id = pf.location_id
-            and sf.value_time = pf.value_time
-            and sf.measurement_unit = pf.measurement_unit
-            and sf.variable_name = pf.variable_name
-    ),
-    joined AS (
-        SELECT
-            reference_time
-            , value_time
-            , secondary_location_id
-            , secondary_value
-            , configuration
-            , measurement_unit
-            , variable_name
-            , primary_value
-            , primary_location_id
-            , lead_time
-            , absolute_difference
-        FROM(
-            SELECT *,
-                row_number()
-            OVER(
-                PARTITION BY value_time,
-                             primary_location_id,
-                             configuration,
-                             variable_name,
-                             measurement_unit,
-                             reference_time
-                ORDER BY primary_reference_time desc
-                ) AS rn
-            FROM initial_joined
-            )
-        WHERE rn = 1
-    )
+
+    select_joined_clause = tqj.select_joined_clause(True)
+    joined = tqj.get_ind_parq_joined_timeseries_cte(jtq, select_joined_clause)
+
+    insert = f"""
     INSERT INTO joined_timeseries
     SELECT
         *
@@ -229,10 +143,14 @@ def create_join_and_save_timeseries_query(jtq: JoinedTimeseriesQuery) -> str:
         {",".join(jtq.order_by)}
     ;"""
 
+    query = joined + insert
+
     return query
 
 
-def describe_timeseries(timeseries_filepath: str) -> Dict:
+def describe_timeseries(
+        timeseries_filepath: Union[str, Path, List[Union[str, Path]]]
+) -> Dict:
     r"""Retrieve descriptive stats for a time series.
 
     Parameters
@@ -256,7 +174,7 @@ def describe_timeseries(timeseries_filepath: str) -> Dict:
         COUNT(*) AS num_rows,
         MAX(value_time) as end_date,
         MIN(value_time) as start_date
-        FROM read_parquet("{timeseries_filepath}")
+        FROM read_parquet({tqu._format_filepath(timeseries_filepath)})
         """
     df = duckdb.sql(query).to_df()
     num_location_ids = df["num_location_ids"][0]
@@ -275,7 +193,7 @@ def describe_timeseries(timeseries_filepath: str) -> Dict:
             configuration,
             variable_name,
         COUNT(*)
-        FROM read_parquet("{timeseries_filepath}")
+        FROM read_parquet({tqu._format_filepath(timeseries_filepath)})
         GROUP BY
             value_time,
             location_id,
@@ -299,7 +217,7 @@ def describe_timeseries(timeseries_filepath: str) -> Dict:
                 configuration,
                 variable_name,
             COUNT(*) AS num_duplicates
-            FROM read_parquet("{timeseries_filepath}")
+            FROM read_parquet({tqu._format_filepath(timeseries_filepath)})
             GROUP BY
                 value_time,
                 location_id,
@@ -329,7 +247,7 @@ def describe_timeseries(timeseries_filepath: str) -> Dict:
                 reference_time
             ORDER BY value_time)
             AS value_time_step
-            FROM read_parquet("{timeseries_filepath}")
+            FROM read_parquet({tqu._format_filepath(timeseries_filepath)})
         ),
         missing_timesteps AS (
             SELECT
@@ -367,7 +285,9 @@ def describe_timeseries(timeseries_filepath: str) -> Dict:
 
 
 def create_get_joined_timeseries_query(
-    jtq: JoinedTimeseriesQuery
+    jtq: JoinedTimeseriesQuery,
+    from_joined_timeseries_clause: str,
+    join_geometry_clause: str
 ) -> str:
     """Retrieve joined timeseries using database query.
 
@@ -394,8 +314,6 @@ def create_get_joined_timeseries_query(
     * configuration
     * measurement_unit
     * variable_name
-    * lead_time
-    * absolute_difference
     * [any user-added fields]
 
     Order By Fields:
@@ -412,9 +330,9 @@ def create_get_joined_timeseries_query(
 
     Examples
     --------
-    >>> order_by = ["lead_time", "primary_location_id"]
+    >>> order_by = ["primary_location_id"]
 
-    >>> group_by = ["lead_time", "primary_location_id"]
+    >>> group_by = ["primary_location_id"]
 
     >>> filters = [
     >>>     {
@@ -426,27 +344,30 @@ def create_get_joined_timeseries_query(
     >>>         "column": "reference_time",
     >>>         "operator": "=",
     >>>         "value": "2022-01-01 00:00:00",
-    >>>     },
-    >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+    >>>     }
     >>> ]
     """
-    query = f"""
+    joined = tqj.get_joined_timeseries_cte(jtq, from_joined_timeseries_clause)
+
+    select = f"""
         SELECT
-            sf.*
-        {tqu.geometry_select_clause(jtq)}
+            joined.*
+            {tqu.geometry_select_clause(jtq)}
         FROM
-            joined_timeseries sf
-        {tqu.metric_geometry_join_clause_db(jtq)}
-        {tqu.filters_to_sql(jtq.filters)}
+            joined
+            {join_geometry_clause}
         ORDER BY
             {",".join(jtq.order_by)}
     ;"""
+
+    query = joined + select
 
     return query
 
 
 def create_get_timeseries_query(
-    tq: TimeseriesQuery
+    tq: TimeseriesQuery,
+    from_joined_timeseries_clause: str
 ) -> str:
     """Retrieve joined timeseries using database query.
 
@@ -473,8 +394,6 @@ def create_get_timeseries_query(
     * configuration
     * measurement_unit
     * variable_name
-    * lead_time
-    * absolute_difference
     * [any user-added fields]
 
     Order By Fields:
@@ -491,9 +410,9 @@ def create_get_timeseries_query(
 
     Examples
     --------
-    >>> order_by = ["lead_time", "primary_location_id"]
+    >>> order_by = ["primary_location_id"]
 
-    >>> group_by = ["lead_time", "primary_location_id"]
+    >>> group_by = ["primary_location_id"]
 
     >>> filters = [
     >>>     {
@@ -505,8 +424,7 @@ def create_get_timeseries_query(
     >>>         "column": "reference_time",
     >>>         "operator": "=",
     >>>         "value": "2022-01-01 00:00:00",
-    >>>     },
-    >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+    >>>     }
     >>> ]
     """
     if tq.timeseries_name == "primary":
@@ -519,8 +437,7 @@ def create_get_timeseries_query(
                 'primary' as configuration,
                 measurement_unit,
                 variable_name,
-            FROM
-                joined_timeseries sf
+            {from_joined_timeseries_clause}
             {tqu.filters_to_sql(tq.filters)}
             GROUP BY
                 value_time,
@@ -541,8 +458,7 @@ def create_get_timeseries_query(
                 configuration,
                 measurement_unit,
                 variable_name,
-            FROM
-                joined_timeseries sf
+            {from_joined_timeseries_clause}
             {tqu.filters_to_sql(tq.filters)}
             ORDER BY
                 {",".join(tq.order_by)}
@@ -551,7 +467,10 @@ def create_get_timeseries_query(
     return query
 
 
-def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
+def create_get_timeseries_char_query(
+    tcq: TimeseriesCharQuery,
+    from_joined_timeseries_clause: str
+) -> str:
     """Retrieve joined timeseries using database query.
 
     Parameters
@@ -577,14 +496,13 @@ def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
     * configuration
     * measurement_unit
     * variable_name
-    * lead_time
     * [any user-added fields]
 
     Examples
     --------
-    >>> order_by = ["lead_time", "primary_location_id"]
+    >>> order_by = ["primary_location_id"]
 
-    >>> group_by = ["lead_time", "primary_location_id"]
+    >>> group_by = ["primary_location_id"]
 
     >>> filters = [
     >>>     {
@@ -596,11 +514,10 @@ def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
     >>>         "column": "reference_time",
     >>>         "operator": "=",
     >>>         "value": "2022-01-01 00:00:00",
-    >>>     },
-    >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+    >>>     }
     >>> ]
     """
-    join_max_time_on = tqu._join_time_on(
+    join_max_time_on = tqu.join_time_on(
         join="mxt", join_to="chars", join_on=tcq.group_by
     )
 
@@ -634,8 +551,7 @@ def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
                         measurement_unit,
                         variable_name,
                         {gb_fields}
-                     FROM
-                         joined_timeseries sf
+                     {from_joined_timeseries_clause}
                      {tqu.filters_to_sql(tcq.filters)}
                      GROUP BY
                         value_time,
@@ -648,8 +564,7 @@ def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
         fts_clause = f"""
                       SELECT
                         *
-                      FROM
-                          joined_timeseries sf
+                      {from_joined_timeseries_clause}
                       {tqu.filters_to_sql(tcq.filters)}
                       """
 
@@ -700,7 +615,10 @@ def create_get_timeseries_char_query(tcq: TimeseriesCharQuery) -> str:
     return query
 
 
-def create_unique_field_values_query(fn: JoinedTimeseriesFieldName) -> str:
+def create_unique_field_values_query(
+    fn: JoinedTimeseriesFieldName,
+    from_joined_timeseries_clause: str
+) -> str:
     """Create a query for identifying unique values in a field.
 
     Parameters
@@ -718,8 +636,7 @@ def create_unique_field_values_query(fn: JoinedTimeseriesFieldName) -> str:
         DISTINCT
             {fn.field_name}
         AS unique_{fn.field_name}_values,
-        FROM
-            joined_timeseries
+        {from_joined_timeseries_clause}
         ORDER BY
             {fn.field_name}
         """

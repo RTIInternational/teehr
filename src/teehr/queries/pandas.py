@@ -7,24 +7,25 @@ import geopandas as gpd
 from hydrotools.metrics import metrics as hm
 
 from typing import List, Union
+from pathlib import Path
 
 import teehr.models.queries as tmq
-import teehr.queries.duckdb as tqu
+import teehr.queries.duckdb as tqd
 
 
 SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def get_metrics(
-    primary_filepath: str,
-    secondary_filepath: str,
-    crosswalk_filepath: str,
+    primary_filepath: Union[str, Path, List[Union[str, Path]]],
+    secondary_filepath: Union[str, Path, List[Union[str, Path]]],
+    crosswalk_filepath: Union[str, Path, List[Union[str, Path]]],
     group_by: List[str],
     order_by: List[str],
     include_metrics: Union[List[tmq.MetricEnum], "all"],
     filters: Union[List[dict], None] = None,
     return_query: bool = False,
-    geometry_filepath: Union[str, None] = None,
+    geometry_filepath: Union[str, Path, List[Union[str, Path]], None] = None,
     include_geometry: bool = False,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
     r"""Calculate performance metrics using a Pandas or Dask DataFrame.
@@ -47,6 +48,7 @@ def get_metrics(
         Must provide at least one.
     include_metrics : List[str]
         List of metrics (see below) for allowable list, or "all" to return all.
+        Must provide at least one.
     filters : Union[List[dict], None] = None
         List of dictionaries describing the "where" clause to limit data that
         is included in metrics.
@@ -118,7 +120,7 @@ def get_metrics(
         )
 
     # This loads all the timeseries in memory
-    df = tqu.get_joined_timeseries(
+    df = tqd.get_joined_timeseries(
         primary_filepath=mq.primary_filepath,
         secondary_filepath=mq.secondary_filepath,
         crosswalk_filepath=mq.crosswalk_filepath,
@@ -300,6 +302,44 @@ def calculate_group_metrics(
             - np.max(group["primary_value"])
         )
 
+    if (
+        include_metrics == "all"
+        or "annual_peak_relative_bias" in include_metrics
+    ):
+        primary_yearly_max_values = (
+            group
+            .groupby(group.value_time.dt.year)
+            .primary_value.max()
+        )
+        secondary_yearly_max_values = (
+            group
+            .groupby(group.value_time.dt.year)
+            .secondary_value.max()
+        )
+        data["annual_peak_relative_bias"] = (
+            np.sum(secondary_yearly_max_values - primary_yearly_max_values)
+            / np.sum(primary_yearly_max_values)
+        )
+
+    if (
+        include_metrics == "all"
+        or "spearman_correlation" in include_metrics
+    ):
+        group["primary_rank"] = group["primary_value"].rank()
+        group["secondary_rank"] = group["secondary_value"].rank()
+        count = len(group)
+
+        data["spearman_correlation"] = (
+            1 - (
+                6 * np.sum(
+                    np.abs(
+                        group["primary_rank"]
+                        - group["secondary_rank"]
+                    )**2)
+                / (count * (count**2 - 1))
+            )
+        )
+
     # HydroTools Forecast Metrics
     if (
         include_metrics == "all"
@@ -333,12 +373,90 @@ def calculate_group_metrics(
     #     )
     #     data["nash_sutcliffe_efficiency_log"] = nse
 
-    if include_metrics == "all" or "kling_gupta_efficiency" in include_metrics:
+    if (
+            include_metrics == "all"
+            or "kling_gupta_efficiency" in include_metrics
+    ):
         kge = hm.kling_gupta_efficiency(
             group["primary_value"],
             group["secondary_value"]
         )
         data["kling_gupta_efficiency"] = kge
+
+    if (
+        include_metrics == "all"
+        or "kling_gupta_efficiency_mod1" in include_metrics
+    ):
+
+        # Pearson correlation coefficient (same as kge)
+        linear_correlation = np.corrcoef(
+            group["secondary_value"], group["primary_value"]
+        )[0, 1]
+
+        # Variability_ratio
+        variability_ratio = (
+            (
+                np.std(group["secondary_value"])
+                / np.mean(group["secondary_value"])
+            )
+            / (
+                np.std(group["primary_value"])
+                / np.mean(group["primary_value"])
+            )
+        )
+
+        # Relative mean (same as kge)
+        relative_mean = (
+            np.mean(group["secondary_value"])
+            / np.mean(group["primary_value"])
+        )
+
+        # Scaled Euclidean distance
+        euclidean_distance = np.sqrt(
+            ((linear_correlation - 1.0)) ** 2.0 +
+            ((variability_ratio - 1.0)) ** 2.0 +
+            ((relative_mean - 1.0)) ** 2.0
+            )
+
+        data["kling_gupta_efficiency_mod1"] = 1.0 - euclidean_distance
+
+    if (
+        include_metrics == "all"
+        or "kling_gupta_efficiency_mod2" in include_metrics
+    ):
+        # Pearson correlation coefficient (same as kge)
+        linear_correlation = np.corrcoef(
+            group["secondary_value"], group["primary_value"]
+        )[0, 1]
+
+        # Relative variability (same as kge)
+        relative_variability = (
+            np.std(group["secondary_value"])
+            / np.std(group["primary_value"])
+        )
+
+        # bias component
+        bias_component = (
+            (
+                (
+                    np.mean(group["secondary_value"])
+                    - np.mean(group["primary_value"])
+                ) ** 2
+            )
+            /
+            (
+                np.std(group["primary_value"]) ** 2
+            )
+        )
+
+        # Scaled Euclidean distance
+        euclidean_distance = np.sqrt(
+            ((linear_correlation - 1.0)) ** 2.0 +
+            ((relative_variability - 1.0)) ** 2.0 +
+            bias_component
+            )
+
+        data["kling_gupta_efficiency_mod2"] = 1.0 - euclidean_distance
 
     if (
         include_metrics == "all"

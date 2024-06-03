@@ -2,7 +2,10 @@
 from pathlib import Path
 
 import pandas as pd
+import numpy as np
+import pytest
 
+from teehr.loading.nwm.grid_utils import update_location_id_prefix
 from teehr.loading.nwm.nwm_points import fetch_and_format_nwm_points
 from teehr.loading.nwm.nwm_grids import fetch_and_format_nwm_grids
 from teehr.loading.nwm.const import (
@@ -42,7 +45,7 @@ def test_nwm22_point_fetch_and_format():
         nwm_version="nwm22"
     )
 
-    parquet_file = Path(TEMP_DIR, "20230318T14Z.parquet")
+    parquet_file = Path(TEMP_DIR, "20230318T14.parquet")
     test_file = Path(test_dir, "point_benchmark.parquet")
 
     bench_df = pd.read_parquet(test_file)
@@ -81,7 +84,7 @@ def test_nwm30_point_fetch_and_format():
         overwrite_output=True
     )
 
-    parquet_file = Path(TEMP_DIR, "20231101T00Z.parquet")
+    parquet_file = Path(TEMP_DIR, "20231101T00.parquet")
     test_file = Path(test_dir, "point_benchmark.parquet")
 
     bench_df = pd.read_parquet(test_file)
@@ -107,10 +110,11 @@ def test_nwm22_grid_fetch_and_format():
         zonal_weights_filepath=weights_filepath,
         ignore_missing_file=False,
         units_format_dict=NWM22_UNIT_LOOKUP,
-        overwrite_output=True
+        overwrite_output=True,
+        location_id_prefix=None
     )
 
-    parquet_file = Path(TEMP_DIR, "20201218T00Z.parquet")
+    parquet_file = Path(TEMP_DIR, "20201218T00.parquet")
     test_file = Path(test_dir, "grid_benchmark.parquet")
 
     bench_df = pd.read_parquet(test_file)
@@ -136,10 +140,11 @@ def test_nwm30_grid_fetch_and_format():
         zonal_weights_filepath=weights_filepath,
         ignore_missing_file=False,
         units_format_dict=NWM22_UNIT_LOOKUP,
-        overwrite_output=True
+        overwrite_output=True,
+        location_id_prefix=None
     )
 
-    parquet_file = Path(TEMP_DIR, "20231101T00Z.parquet")
+    parquet_file = Path(TEMP_DIR, "20231101T00.parquet")
     test_file = Path(test_dir, "grid_benchmark.parquet")
 
     bench_df = pd.read_parquet(test_file)
@@ -148,8 +153,61 @@ def test_nwm30_grid_fetch_and_format():
     assert test_df.compare(bench_df).index.size == 0
 
 
+def test_replace_location_id_prefix():
+    """Test replacing location_id prefix."""
+    df = pd.DataFrame({
+        "location_id": [
+            "wbd10-1902020125",
+            "wbd10-1902022256",
+            "wbd10-1901234567"
+        ],
+        "value": [1, 2, 3]
+    })
+    df_new = update_location_id_prefix(df, new_prefix="ngen")
+    assert (df_new.location_id.values == np.array(
+                ["ngen-1902020125",
+                 "ngen-1902022256",
+                 "ngen-1901234567"])
+            ).all()
+
+
+def test_prepend_location_id_prefix():
+    """Test prepend location_id prefix."""
+    df = pd.DataFrame({
+        "location_id": [
+            "1902020125",
+            "1902022256",
+            "1901234567"
+        ],
+        "value": [1, 2, 3]
+    })
+    df_new = update_location_id_prefix(df, new_prefix="ngen")
+    assert (df_new.location_id.values == np.array(
+                ["ngen-1902020125",
+                 "ngen-1902022256",
+                 "ngen-1901234567"])
+            ).all()
+
+
+def test_raise_location_id_prefix_error():
+    """Test raising location_id prefix error."""
+    df = pd.DataFrame({
+        "location_id": [
+            "ngen-wbd10-1902020125",
+            "ngen-wbd10-1902022256",
+            "ngen-wbd10-1901234567"
+        ],
+        "value": [1, 2, 3]
+    })
+    with pytest.raises(ValueError):
+        update_location_id_prefix(df, new_prefix="ngen2")
+
+
 if __name__ == "__main__":
     test_nwm22_point_fetch_and_format()
     test_nwm30_point_fetch_and_format()
     test_nwm22_grid_fetch_and_format()
     test_nwm30_grid_fetch_and_format()
+    test_replace_location_id_prefix()
+    test_prepend_location_id_prefix()
+    test_raise_location_id_prefix_error()

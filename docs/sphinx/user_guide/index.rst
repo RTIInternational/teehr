@@ -58,6 +58,7 @@ ipython example:
 
    notebooks/loading_examples_index
    notebooks/queries_examples_index
+   metrics/metrics
 
 
 .. include: grid_loading_example.ipynb

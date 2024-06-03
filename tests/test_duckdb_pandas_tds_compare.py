@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 
 import teehr.queries.pandas as tqk
-import teehr.queries.duckdb as tqu
-from teehr.database.teehr_dataset import TEEHRDatasetDB
+import teehr.queries.duckdb as tqd
+from teehr.classes.duckdb_database import DuckDBDatabase
 
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
 PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*short_obs.parquet")
@@ -15,19 +15,23 @@ SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
 GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
 DATABASE_FILEPATH = Path("tests", "data", "temp", "temp_test.db")
+ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr_*.parquet")
 
 if DATABASE_FILEPATH.is_file():
     DATABASE_FILEPATH.unlink()
 
-TDS = TEEHRDatasetDB(DATABASE_FILEPATH)
+tds = DuckDBDatabase(DATABASE_FILEPATH)
 
 # Perform the join and insert into duckdb database
-TDS.insert_joined_timeseries(
+tds.insert_joined_timeseries(
     primary_filepath=PRIMARY_FILEPATH,
     secondary_filepath=SECONDARY_FILEPATH,
     crosswalk_filepath=CROSSWALK_FILEPATH,
     drop_added_fields=True,
 )
+
+# Join the attributes
+tds.insert_attributes(ATTRIBUTES_FILEPATH)
 
 
 def test_metric_compare_1():
@@ -50,6 +54,8 @@ def test_metric_compare_1():
         "nash_sutcliffe_efficiency",
         "nash_sutcliffe_efficiency_normalized",
         "kling_gupta_efficiency",
+        "kling_gupta_efficiency_mod1",
+        "kling_gupta_efficiency_mod2",
         "mean_error",
         "mean_squared_error",
         "root_mean_squared_error",
@@ -57,7 +63,9 @@ def test_metric_compare_1():
         "multiplicative_bias",
         "mean_absolute_relative_error",
         "pearson_correlation",
-        "r_squared"
+        "r_squared",
+        "annual_peak_relative_bias",
+        "spearman_correlation",
     ]
     group_by = [
         "primary_location_id",
@@ -75,15 +83,17 @@ def test_metric_compare_1():
     }
 
     order_by = ["primary_location_id", "reference_time"]
-    tds_df = TDS.get_metrics(group_by=group_by,
-                             order_by=order_by,
-                             include_metrics=include_metrics)
+    tds_df = tds.get_metrics(
+        group_by=group_by,
+        order_by=order_by,
+        include_metrics=include_metrics,
+    )
 
     pandas_df = tqk.get_metrics(**args)
 
     args["primary_filepath"] = PRIMARY_FILEPATH_DUPS
     args["remove_duplicates"] = True
-    duckdb_df = tqu.get_metrics(**args)
+    duckdb_df = tqd.get_metrics(**args)
 
     pandas_df["primary_count"] = pandas_df.primary_count.astype(int)
     pandas_df["secondary_count"] = pandas_df.secondary_count.astype(int)
@@ -121,12 +131,12 @@ def test_metric_compare_time_metrics():
     }
 
     order_by = ["primary_location_id", "reference_time"]
-    tds_df = TDS.get_metrics(group_by=group_by,
+    tds_df = tds.get_metrics(group_by=group_by,
                              order_by=order_by,
                              include_metrics=include_metrics)
 
     pandas_df = tqk.get_metrics(**args)
-    duckdb_df = tqu.get_metrics(**args)
+    duckdb_df = tqd.get_metrics(**args)
 
     diff_df1 = pandas_df[include_metrics].compare(duckdb_df[include_metrics])
     assert diff_df1.index.size == 0
@@ -136,13 +146,13 @@ def test_metric_compare_time_metrics():
 
 def test_primary_timeseries_compare():
     """Test primary timeseries compare."""
-    query_df = tqu.get_timeseries(
+    query_df = tqd.get_timeseries(
         timeseries_filepath=PRIMARY_FILEPATH,
         order_by=["location_id"],
         return_query=False,
     )
 
-    tds_df = TDS.get_timeseries(
+    tds_df = tds.get_timeseries(
         order_by=["primary_location_id"],
         timeseries_name="primary",
     )
@@ -154,12 +164,12 @@ def test_primary_timeseries_compare():
 
 def test_secondary_timeseries_compare():
     """Test secondary timeseries compare."""
-    query_df = tqu.get_timeseries(
+    query_df = tqd.get_timeseries(
         timeseries_filepath=SECONDARY_FILEPATH,
         order_by=["location_id"],
         return_query=False,
     )
-    tds_df = TDS.get_timeseries(
+    tds_df = tds.get_timeseries(
         order_by=["secondary_location_id"],
         timeseries_name="secondary"
     )
@@ -169,14 +179,14 @@ def test_secondary_timeseries_compare():
 
 def test_primary_timeseries_char_compare():
     """Test primary timeseries char compare."""
-    query_df = tqu.get_timeseries_chars(
+    query_df = tqd.get_timeseries_chars(
         timeseries_filepath=PRIMARY_FILEPATH,
         group_by=["location_id"],
         order_by=["location_id"],
         return_query=False,
     )
 
-    tds_df = TDS.get_timeseries_chars(
+    tds_df = tds.get_timeseries_chars(
         order_by=["primary_location_id"],
         group_by=["primary_location_id"],
         timeseries_name="primary",
@@ -222,14 +232,14 @@ def test_primary_timeseries_char_compare():
 
 def test_secondary_timeseries_char_compare():
     """Test secondary timeseries char compare."""
-    query_df = tqu.get_timeseries_chars(
+    query_df = tqd.get_timeseries_chars(
         timeseries_filepath=SECONDARY_FILEPATH,
         group_by=["location_id"],
         order_by=["location_id"],
         return_query=False,
     )
 
-    tds_df = TDS.get_timeseries_chars(
+    tds_df = tds.get_timeseries_chars(
         order_by=["secondary_location_id"],
         group_by=["secondary_location_id"],
         timeseries_name="secondary"

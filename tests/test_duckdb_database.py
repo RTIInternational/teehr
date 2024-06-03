@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 
-from teehr.database.teehr_dataset import TEEHRDatasetDB
+from teehr.classes.duckdb_database import DuckDBDatabase
 
 # Test data
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
@@ -13,7 +13,8 @@ PRIMARY_FILEPATH_DUPS = Path(TEST_STUDY_DIR, "timeseries", "*dup_obs.parquet")
 SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
 GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
-ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr.parquet")
+ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr_*.parquet")
+NO_UNITS_ATTRIBUTE_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr_ecoregion.parquet")
 DATABASE_FILEPATH = Path("tests", "data", "temp", "temp_test.db")
 
 
@@ -22,7 +23,7 @@ def test_insert_joined_timeseries():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -35,10 +36,7 @@ def test_insert_joined_timeseries():
     tds.insert_geometry(GEOMETRY_FILEPATH)
 
     df = tds.query("SELECT * FROM joined_timeseries", format="df")
-    np.testing.assert_approx_equal(
-        df.absolute_difference.sum(), 283.7, significant=4
-    )
-    pass
+    assert len(df) > 0
 
 
 def test_unique_field_values():
@@ -46,7 +44,7 @@ def test_unique_field_values():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -61,7 +59,6 @@ def test_unique_field_values():
         "gage-B",
         "gage-C",
     ]
-    pass
 
 
 def test_metrics_query():
@@ -69,7 +66,7 @@ def test_metrics_query():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -93,12 +90,7 @@ def test_metrics_query():
             "column": "reference_time",
             "operator": "=",
             "value": "2022-01-01 00:00:00",
-        },
-        {
-            "column": "lead_time",
-            "operator": "<=",
-            "value": "10 hours"
-        },
+        }
     ]
     group_by = ["primary_location_id"]
     order_by = ["primary_location_id"]
@@ -114,7 +106,7 @@ def test_metrics_query():
 
     # print(df)
     assert df.index.size == 1
-    assert df.columns.size == 30
+    assert df.columns.size == 34
 
 
 def test_metrics_query_config_filter():
@@ -122,7 +114,7 @@ def test_metrics_query_config_filter():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -164,7 +156,7 @@ def test_describe_inputs():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -215,7 +207,7 @@ def test_calculate_field():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -225,7 +217,7 @@ def test_calculate_field():
         drop_added_fields=True,
     )
     # Add attributes
-    tds.join_attributes(ATTRIBUTES_FILEPATH)
+    tds.insert_attributes(ATTRIBUTES_FILEPATH)
 
     # Calculate and add a field based on some user-defined function (UDF).
     def my_user_function(arg1: float, arg2: str) -> float:
@@ -237,7 +229,7 @@ def test_calculate_field():
     parameter_names = ["primary_value", "drainage_area_sq_km"]
     new_field_name = "primary_normalized_discharge"
     new_field_type = "FLOAT"
-    tds.calculate_field(
+    tds.insert_calculated_field(
         new_field_name=new_field_name,
         new_field_type=new_field_type,
         parameter_names=parameter_names,
@@ -245,12 +237,12 @@ def test_calculate_field():
     )
 
 
-def test_join_attributes():
+def test_join_attribute_no_units():
     """Test the join attributes query."""
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -261,7 +253,7 @@ def test_join_attributes():
     )
 
     # Add attributes
-    tds.join_attributes(ATTRIBUTES_FILEPATH)
+    tds.insert_attributes(NO_UNITS_ATTRIBUTE_FILEPATH)
 
     df = tds.query("SELECT * FROM joined_timeseries;", format="df")
 
@@ -275,8 +267,46 @@ def test_join_attributes():
         "variable_name",
         "primary_value",
         "primary_location_id",
-        "lead_time",
-        "absolute_difference",
+        "ecoregion"
+    ]
+    # Make sure attribute fields have been added
+    assert sorted(df.columns.tolist()) == sorted(cols)
+
+    assert (
+        df.ecoregion.unique() == ["coastal_plain", "piedmont", "blue_ridge"]
+    ).all()
+
+
+def test_join_attributes():
+    """Test the join attributes query."""
+    if DATABASE_FILEPATH.is_file():
+        DATABASE_FILEPATH.unlink()
+
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
+
+    # Perform the join and insert into duckdb database
+    tds.insert_joined_timeseries(
+        primary_filepath=PRIMARY_FILEPATH,
+        secondary_filepath=SECONDARY_FILEPATH,
+        crosswalk_filepath=CROSSWALK_FILEPATH,
+        drop_added_fields=True,
+    )
+
+    # Add attributes
+    tds.insert_attributes(ATTRIBUTES_FILEPATH)
+
+    df = tds.query("SELECT * FROM joined_timeseries;", format="df")
+
+    cols = [
+        "reference_time",
+        "value_time",
+        "secondary_location_id",
+        "secondary_value",
+        "configuration",
+        "measurement_unit",
+        "variable_name",
+        "primary_value",
+        "primary_location_id",
         "drainage_area_sq_km",
         "drainage_area_sq_mi",
         "year_2_discharge_ft_3_s",
@@ -308,7 +338,7 @@ def test_get_joined_timeseries_schema():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -320,8 +350,7 @@ def test_get_joined_timeseries_schema():
 
     df = tds.get_joined_timeseries_schema()
 
-    assert df.index.size == 11
-    pass
+    assert df.index.size == 9
 
 
 def test_joined_timeseries_query_gdf():
@@ -329,7 +358,7 @@ def test_joined_timeseries_query_gdf():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -358,7 +387,7 @@ def test_timeseries_query():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -392,7 +421,7 @@ def test_timeseries_char_query():
     if DATABASE_FILEPATH.is_file():
         DATABASE_FILEPATH.unlink()
 
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # Perform the join and insert into duckdb database
     tds.insert_joined_timeseries(
@@ -421,7 +450,6 @@ def test_timeseries_char_query():
     )
 
     assert df.index.size == 3
-    pass
 
 
 if __name__ == "__main__":
@@ -433,6 +461,7 @@ if __name__ == "__main__":
     test_describe_inputs()
     test_calculate_field()
     test_join_attributes()
+    test_join_attribute_no_units()
     test_get_joined_timeseries_schema()
     test_joined_timeseries_query_gdf()
     test_timeseries_query()

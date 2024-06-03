@@ -1,4 +1,4 @@
-![alt text](docs/images/teehr.png)
+![alt text](https://github.com/RTIInternational/teehr/blob/main/docs/images/teehr.png)
 
 | | |
 | --- | --- |
@@ -42,8 +42,8 @@ $ poetry add git+https://github.com/RTIInternational/teehr.git#[BRANCH TAG]
 
 Use Docker
 ```bash
-$ docker build -t teehr:v0.3.14 .
-$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.3.14 jupyter lab --ip 0.0.0.0 $HOME
+$ docker build -t teehr:v0.3.24 .
+$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.3.24 jupyter lab --ip 0.0.0.0 $HOME
 ```
 
 ## Examples

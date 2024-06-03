@@ -1,6 +1,6 @@
 """An example of how to create and manipulate a TEEHR database."""
 from pathlib import Path
-from teehr.database.teehr_dataset import TEEHRDatasetDB
+from teehr.classes.duckdb_database import DuckDBDatabase
 import time
 import datetime
 
@@ -25,7 +25,7 @@ DATABASE_FILEPATH = Path(TEST_STUDY_DIR, "huc1802_retro.db")
 
 def describe_inputs():
     """Check the parquet files and report some stats to the user."""
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     df = tds.describe_inputs(
         primary_filepath=PRIMARY_FILEPATH,
@@ -37,7 +37,7 @@ def describe_inputs():
 
 def create_db_add_timeseries():
     """Perform the join and insert into duckdb database."""
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     # NOTE: Right now this will re-join and overwrite
     print("Creating joined table")
@@ -51,15 +51,15 @@ def create_db_add_timeseries():
 
 def add_attributes():
     """Join (one or more?) table(s) of attributes to the timeseries table."""
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     print("Adding attributes")
-    tds.join_attributes(ATTRIBUTES_FILEPATH)
+    tds.insert_attributes(ATTRIBUTES_FILEPATH)
 
 
 def add_fields():
     """Calculate and add a field based on some user-defined function (UDF)."""
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
 
     def test_user_function(arg1: float, arg2: str) -> float:
         """
@@ -82,7 +82,7 @@ def add_fields():
     parameter_names = ["primary_value", "upstream_area_km2"]
     new_field_name = "primary_normalized_discharge"
     new_field_type = "FLOAT"
-    tds.calculate_field(new_field_name=new_field_name,
+    tds.insert_calculated_field(new_field_name=new_field_name,
                         new_field_type=new_field_type,
                         parameter_names=parameter_names,
                         user_defined_function=test_user_function)
@@ -107,7 +107,7 @@ def add_fields():
     parameter_names = ["value_time"]
     new_field_name = "month"
     new_field_type = "INTEGER"
-    tds.calculate_field(new_field_name=new_field_name,
+    tds.insert_calculated_field(new_field_name=new_field_name,
                         new_field_type=new_field_type,
                         parameter_names=parameter_names,
                         user_defined_function=add_month_field)
@@ -134,7 +134,7 @@ def add_fields():
     parameter_names = ["primary_value", "retro_2yr_recurrence_flow_cms"]
     new_field_name = "exceed_2yr_recurrence"
     new_field_type = "BOOLEAN"
-    tds.calculate_field(new_field_name=new_field_name,
+    tds.insert_calculated_field(new_field_name=new_field_name,
                         new_field_type=new_field_type,
                         parameter_names=parameter_names,
                         user_defined_function=exceed_2yr_recurrence)
@@ -143,7 +143,7 @@ def add_fields():
 
 def run_metrics_query():
     """Perform a metrics query against the database."""
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
     # schema_df = tds.get_joined_timeseries_schema()
     # print(schema_df[["column_name", "column_type"]])
 
@@ -191,14 +191,14 @@ def run_metrics_query():
 
 def describe_database():
     """Get the database schema."""
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
     df = tds.get_joined_timeseries_schema()
     print(df)
 
 
 def run_raw_query():
     """Run a raw query against the database."""
-    tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+    tds = DuckDBDatabase(DATABASE_FILEPATH)
     query = """
         WITH joined as (
             SELECT
@@ -209,7 +209,7 @@ def run_raw_query():
             SELECT
                 joined.primary_location_id,joined.configuration
                 , sum(primary_value - secondary_value)/count(*) as bias
-                , sum(absolute_difference)/count(*) as mean_error
+                , sum(abs(primary_value - secondary_value))/count(*) as mean_error
             FROM
                 joined
             GROUP BY

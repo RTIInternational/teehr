@@ -5,6 +5,7 @@ import pandas as pd
 import geopandas as gpd
 
 from typing import List, Union
+from pathlib import Path
 
 from teehr.models.queries import (
     MetricQuery,
@@ -13,6 +14,8 @@ from teehr.models.queries import (
     TimeseriesCharQuery,
 )
 
+import teehr.queries.joined as tqj
+import teehr.queries.metrics as tqm
 import teehr.queries.utils as tqu
 import teehr.models.queries as tmq
 
@@ -20,15 +23,15 @@ SQL_DATETIME_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def get_metrics(
-    primary_filepath: str,
-    secondary_filepath: str,
-    crosswalk_filepath: str,
+    primary_filepath: Union[str, Path, List[Union[str, Path]]],
+    secondary_filepath: Union[str, Path, List[Union[str, Path]]],
+    crosswalk_filepath: Union[str, Path, List[Union[str, Path]]],
     group_by: List[str],
     order_by: List[str],
     include_metrics: Union[List[tmq.MetricEnum], "all"],
     filters: Union[List[dict], None] = None,
     return_query: bool = False,
-    geometry_filepath: Union[str, None] = None,
+    geometry_filepath: Union[str, Path, List[Union[str, Path]], None] = None,
     include_geometry: bool = False,
     remove_duplicates: bool = True,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
@@ -52,7 +55,7 @@ def get_metrics(
         Must provide at least one.
     include_metrics : List[str]
         List of metrics (see below) for allowable list, or "all" to return all
-        Placeholder, currently ignored -> returns "all".
+        Must provide at least one.
     filters : Union[List[dict], None] = None
         List of dictionaries describing the "where" clause to limit data that
         is included in metrics.
@@ -89,7 +92,6 @@ def get_metrics(
     * configuration
     * measurement_unit
     * variable_name
-    * lead_time
     * [any user-added fields]
 
     Metrics:
@@ -125,9 +127,9 @@ def get_metrics(
 
     Examples
     --------
-    >>> order_by = ["lead_time", "primary_location_id"]
+    >>> order_by = ["primary_location_id"]
 
-    >>> group_by = ["lead_time", "primary_location_id"]
+    >>> group_by = ["primary_location_id"]
 
     >>> filters = [
     >>>     {
@@ -139,8 +141,7 @@ def get_metrics(
     >>>         "column": "reference_time",
     >>>         "operator": "=",
     >>>         "value": "2022-01-01 00:00:00",
-    >>>     },
-    >>>     {"column": "lead_time", "operator": "<=", "value": "10 hours"},
+    >>>     }
     >>> ]
     """
     mq = MetricQuery.model_validate(
@@ -159,80 +160,11 @@ def get_metrics(
         }
     )
 
-    query = f"""
-        WITH initial_joined AS (
-            SELECT
-                sf.reference_time
-                , sf.value_time as value_time
-                , sf.location_id as secondary_location_id
-                , pf.reference_time as primary_reference_time
-                , sf.value as secondary_value
-                , sf.configuration
-                , sf.measurement_unit
-                , sf.variable_name
-                , pf.value as primary_value
-                , pf.location_id as primary_location_id
-                , sf.value_time - sf.reference_time as lead_time
-                , abs(pf.value - sf.value) as absolute_difference
-            FROM read_parquet('{str(mq.secondary_filepath)}') sf
-            JOIN read_parquet('{str(mq.crosswalk_filepath)}') cf
-                on cf.secondary_location_id = sf.location_id
-            JOIN read_parquet("{str(mq.primary_filepath)}") pf
-                on cf.primary_location_id = pf.location_id
-                and sf.value_time = pf.value_time
-                and sf.measurement_unit = pf.measurement_unit
-                and sf.variable_name = pf.variable_name
-            {tqu.filters_to_sql(mq.filters)}
-        ),
-        joined AS (
-            {tqu._remove_duplicates_mq_cte(mq)}
-        )
-        {tqu._nse_cte(mq)}
-        , metrics AS (
-            SELECT
-                {",".join([f"joined.{gb}" for gb in mq.group_by])}
-                {tqu._select_primary_count(mq)}
-                {tqu._select_secondary_count(mq)}
-                {tqu._select_primary_minimum(mq)}
-                {tqu._select_secondary_minimum(mq)}
-                {tqu._select_primary_maximum(mq)}
-                {tqu._select_secondary_maximum(mq)}
-                {tqu._select_primary_average(mq)}
-                {tqu._select_secondary_average(mq)}
-                {tqu._select_primary_sum(mq)}
-                {tqu._select_secondary_sum(mq)}
-                {tqu._select_primary_variance(mq)}
-                {tqu._select_secondary_variance(mq)}
-                {tqu._select_max_value_delta(mq)}
-                {tqu._select_mean_error(mq)}
-                {tqu._select_nash_sutcliffe_efficiency(mq)}
-                {tqu._select_nash_sutcliffe_efficiency_normalized(mq)}
-                {tqu._select_kling_gupta_efficiency(mq)}
-                {tqu._select_mean_absolute_error(mq)}
-                {tqu._select_mean_squared_error(mq)}
-                {tqu._select_root_mean_squared_error(mq)}
-                {tqu._select_primary_max_value_time(mq)}
-                {tqu._select_secondary_max_value_time(mq)}
-                {tqu._select_max_value_timedelta(mq)}
-                {tqu._select_relative_bias(mq)}
-                {tqu._select_multiplicative_bias(mq)}
-                {tqu._select_mean_absolute_relative_error(mq)}
-                {tqu._select_pearson_correlation(mq)}
-                {tqu._select_r_squared(mq)}
-            FROM
-                joined
-            {tqu._join_nse_cte(mq)}
-            GROUP BY
-                {",".join([f"joined.{gb}" for gb in mq.group_by])}
-        )
-        SELECT
-            metrics.*
-            {tqu.geometry_select_clause(mq)}
-        FROM metrics
-            {tqu.metric_geometry_join_clause(mq)}
-        ORDER BY
-            {",".join([f"metrics.{ob}" for ob in mq.order_by])}
-    ;"""
+    select_joined_clause = tqj.select_joined_clause(mq.remove_duplicates)
+    joined = tqj.get_ind_parq_joined_timeseries_cte(mq, select_joined_clause)
+    metrics = tqm.get_metrics_clause(mq, tqu.geometry_joined_join_clause(mq))
+
+    query = joined + metrics
 
     if mq.return_query:
         return tqu.remove_empty_lines(query)
@@ -246,13 +178,13 @@ def get_metrics(
 
 
 def get_joined_timeseries(
-    primary_filepath: str,
-    secondary_filepath: str,
-    crosswalk_filepath: str,
+    primary_filepath: Union[str, Path, List[Union[str, Path]]],
+    secondary_filepath: Union[str, Path, List[Union[str, Path]]],
+    crosswalk_filepath: Union[str, Path, List[Union[str, Path]]],
     order_by: List[str],
     filters: Union[List[dict], None] = None,
     return_query: bool = False,
-    geometry_filepath: Union[str, None] = None,
+    geometry_filepath: Union[str, Path, List[Union[str, Path]], None] = None,
     include_geometry: bool = False,
     remove_duplicates: bool = True,
 ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
@@ -307,11 +239,10 @@ def get_joined_timeseries(
     * configuration
     * measurement_unit
     * variable_name
-    * lead_time
 
     Examples
     --------
-    >>> order_by = ["lead_time", "primary_location_id"]
+    >>> order_by = ["primary_location_id"]
     >>> filters = [
     >>>     {
     >>>         "column": "primary_location_id",
@@ -322,11 +253,6 @@ def get_joined_timeseries(
     >>>         "column": "reference_time",
     >>>         "operator": "=",
     >>>         "value": "'2022-01-01 00:00'"
-    >>>     },
-    >>>     {
-    >>>         "column": "lead_time",
-    >>>         "operator": "<=",
-    >>>         "value": "'10 days'"
     >>>     }
     >>> ]
     """
@@ -344,42 +270,21 @@ def get_joined_timeseries(
         }
     )
 
-    query = f"""
-        WITH initial_joined as (
-            SELECT
-                sf.reference_time,
-                sf.value_time,
-                sf.location_id as secondary_location_id,
-                sf.value as secondary_value,
-                sf.configuration,
-                sf.measurement_unit,
-                sf.variable_name,
-                pf.reference_time as primary_reference_time,
-                pf.value as primary_value,
-                pf.location_id as primary_location_id,
-                sf.value_time - sf.reference_time as lead_time
-                {tqu.geometry_select_clause(jtq)}
-            FROM read_parquet('{str(jtq.secondary_filepath)}') sf
-            JOIN read_parquet('{str(jtq.crosswalk_filepath)}') cf
-                on cf.secondary_location_id = sf.location_id
-            JOIN read_parquet("{str(jtq.primary_filepath)}") pf
-                on cf.primary_location_id = pf.location_id
-                and sf.value_time = pf.value_time
-                and sf.measurement_unit = pf.measurement_unit
-                and sf.variable_name = pf.variable_name
-            {tqu.geometry_join_clause(jtq)}
-            {tqu.filters_to_sql(jtq.filters)}
-        ),
-        joined AS (
-            {tqu._remove_duplicates_jtq_cte(jtq)}
-        )
+    select_joined_clause = tqj.select_joined_clause(jtq.remove_duplicates)
+    joined = tqj.get_ind_parq_joined_timeseries_cte(jtq, select_joined_clause)
+
+    select = f"""
         SELECT
-            *
+            joined.*
+            {tqu.geometry_select_clause(jtq)}
         FROM
             joined
+            {tqu.geometry_joined_join_clause(jtq)}
         ORDER BY
             {",".join(jtq.order_by)}
     ;"""
+
+    query = joined + select
 
     if jtq.return_query:
         return tqu.remove_empty_lines(query)
@@ -401,7 +306,7 @@ def get_joined_timeseries(
 
 
 def get_timeseries(
-    timeseries_filepath: str,
+    timeseries_filepath: Union[str, Path, List[Union[str, Path]]],
     order_by: List[str],
     filters: Union[List[dict], None] = None,
     return_query: bool = False,
@@ -441,7 +346,7 @@ def get_timeseries(
 
     Examples
     --------
-    >>> order_by = ["lead_time", "primary_location_id"]
+    >>> order_by = ["primary_location_id"]
     >>> filters = [
     >>>     {
     >>>         "column": "location_id",
@@ -460,7 +365,7 @@ def get_timeseries(
     )
 
     query = f"""
-        WITH joined as (
+        WITH timeseries as (
             SELECT
                 sf.reference_time,
                 sf.value_time,
@@ -470,11 +375,11 @@ def get_timeseries(
                 sf.measurement_unit,
                 sf.variable_name
             FROM
-                read_parquet("{str(tq.timeseries_filepath)}") sf
+                read_parquet({tqu._format_filepath(tq.timeseries_filepath)}) sf
             {tqu.filters_to_sql(tq.filters)}
         )
         SELECT * FROM
-            joined
+            timeseries
         ORDER BY
             {",".join(tq.order_by)}
     ;"""
@@ -493,7 +398,7 @@ def get_timeseries(
 
 
 def get_timeseries_chars(
-    timeseries_filepath: str,
+    timeseries_filepath: Union[str, Path, List[Union[str, Path]]],
     group_by: list[str],
     order_by: List[str],
     filters: Union[List[dict], None] = None,
@@ -537,7 +442,7 @@ def get_timeseries_chars(
 
     Examples
     --------
-    >>> order_by = ["lead_time", "primary_location_id"]
+    >>> order_by = ["primary_location_id"]
     >>> filters = [
     >>>     {
     >>>         "column": "primary_location_id",
@@ -548,11 +453,6 @@ def get_timeseries_chars(
     >>>         "column": "reference_time",
     >>>         "operator": "=",
     >>>         "value": "'2022-01-01 00:00'"
-    >>>     },
-    >>>     {
-    >>>         "column": "lead_time",
-    >>>         "operator": "<=",
-    >>>         "value": "'10 days'"
     >>>     }
     >>> ]
     """
@@ -566,7 +466,7 @@ def get_timeseries_chars(
         }
     )
 
-    join_max_time_on = tqu._join_time_on(
+    join_max_time_on = tqu.join_time_on(
         join="mxt", join_to="chars", join_on=tcq.group_by
     )
 
@@ -575,7 +475,7 @@ def get_timeseries_chars(
     query = f"""
         WITH fts AS (
             SELECT sf.* FROM
-            read_parquet('{str(tcq.timeseries_filepath)}') sf
+            read_parquet({tqu._format_filepath(tcq.timeseries_filepath)}) sf
             {tqu.filters_to_sql(tcq.filters)}
         ),
         mxt AS (

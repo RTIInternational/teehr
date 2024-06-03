@@ -1,6 +1,154 @@
 Release Notes
 =============
 
+
+0.3.24 - 2024-05-29
+--------------------
+
+Added
+^^^^^
+* Added metrics documentation to the Sphinx documentation.
+
+Changed
+^^^^^^^
+* None
+
+
+0.3.23 - 2024-05-28
+--------------------
+
+Added
+^^^^^
+* None
+
+Changed
+^^^^^^^
+* Docstring updates in duckdb_database.py.
+* Changelog update for 0.3.22.
+* Updates ``insert_attributes()`` in ``duckdb_database.py`` to better handle None/Null attribute units.
+* Test updates in ``convert.py``.
+
+
+0.3.22 - 2024-05-22
+--------------------
+
+Added
+^^^^^
+* None
+
+Changed
+^^^^^^^
+* Cleaned up the `DuckDB*` classes.  Don't think any public interfaces changed.
+* Import of `DuckDBDatabase`, `DuckDBDatabaseAPI`, and `DuckDBJoinedParquet`
+  now use `from teehr.classes import DuckDBDatabase, DuckDBDatabaseAPI, DuckDBJoinedParquet`
+* the `calculate_field`` method was renamed to `insert_calculated_field``
+
+
+0.3.21 - 2024-05-21
+--------------------
+
+Added
+^^^^^
+* Added the ``DuckDBJoinedParquet`` class for metric queries on pre-joined parquet files.
+* Added the ``DuckDBBase`` class for common methods between the ``DuckDBDatabase``, ``DuckDBAPI``,
+  and ``DuckDBJoinedParquet`` classes.
+
+Changed
+^^^^^^^
+* Renamed the ``database`` directory to ``classes``.
+* Renamed the ``teehr_dataset.py`` to ``teehr_duckdb.py``.
+* Renamed the ``TEEHRDatasetDB`` and ``TEEHRDatasetAPI`` classes to
+  ``DuckDBDatabase`` and ``DuckDBAPI`` respectively.
+* Removed `lead_time` and `absolute_value` from joined table
+
+
+0.3.20 - 2024-05-18
+--------------------
+
+Added
+^^^^^
+* None
+
+Changed
+^^^^^^^
+* Update queries to accept a list of paths for example, `primary_filepath` and `secondary_filepath`
+  Includes `get_metrics()`, `get_joined_timeseries()`, `get_timeseries()`, and `get_timeseries_chars()`
+
+
+0.3.19 - 2024-05-18
+--------------------
+
+Added
+^^^^^
+* None
+
+Changed
+^^^^^^^
+* Update SQL queries to allow `reference_time` to be NULL.
+* Updated tests for NULL `reference_time`
+
+
+0.3.18 - 2024-05-10
+--------------------
+
+Added
+^^^^^
+* Added documentation regarding best practices for specifying the ``chunk_by`` parameter when fetching NWM
+  retrospective and USGS data.
+
+Changed
+^^^^^^^
+* Fixed a bug in the NWM retrospective grid loading weighted average calculation.
+* Changed the method of fetching NWM gridded data to read only a subset of the grid (given by the row/col
+  bounds from the weights file) into memory rather than the entire grid.
+* Removed 'day' and 'location_id' ``chunk_by`` options to reduce redundant data transfer costs.
+
+
+0.3.17 - 2024-04-22
+--------------------
+
+Added
+^^^^^
+* None
+
+Changed
+^^^^^^^
+* Dropped "Z" from the file name in the NWM loading functions, adding a note in the docstrings that all times are in UTC.
+* Changed data type of ``zonal_weights_filepath`` to ``Union[str, Path]`` in ``nwm_grids.py``.
+* Fixed ``SettingWithCopyWarning`` in NWM grid loading.
+* Fixed the ``end_date`` in NWM retrospective loading to include the entirety of the last day and not fail when
+  last available day is specfified.
+* Removed "elevation", "gage_id", "order" from NWM v3.0 retrospective point loading.
+
+
+0.3.16 - 2024-04-11
+--------------------
+
+Added
+^^^^^
+* Adds a few new metrics to the queries:
+  * annual_peak_relative_bias
+  * spearman_correlation
+  * kling_gupta_efficiency_mod1
+  * kling_gupta_efficiency_mod2
+
+Changed
+^^^^^^^
+* None
+
+0.3.15 - 2024-04-08
+--------------------
+
+Added
+^^^^^
+* ``location_id_prefix`` as an optional argument to ``generate_weights_file()`` to allow for
+  the prefixing of the location ID with a string.
+
+Changed
+^^^^^^^
+* Updated the NWM operational and retrospective grid loading functions so that the location ID
+  as defined in the zonal weights file is used as the location ID in the output parquet files.
+
 0.3.14 - 2024-03-29
 --------------------
 
@@ -45,7 +193,7 @@ Added
 Changed
 ^^^^^^^
 * Changed the chunking method for USGS and NWM retrospective data loading to iterate over pandas ``period_range``
-rather than using ``groupby`` or ``date_range`` to fix a bug when fetching data over multiple years.
+  rather than using ``groupby`` or ``date_range`` to fix a bug when fetching data over multiple years.
 
 0.3.11 - 2024-03-19
 --------------------
