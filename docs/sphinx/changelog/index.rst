@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+0.3.25 - 2024-06-06
+--------------------
+
+Added
+^^^^^
+* Added PySpark to TEEHR-HUB (including openjdk-17-jdk and jar files)
+
+Changed
+^^^^^^^
+* None
+
 
 0.3.24 - 2024-05-29
 --------------------

@@ -24,10 +24,15 @@ RUN apt-get update -qq --yes > /dev/null && \
     rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update \
- && apt-get install -y wget bzip2 libxtst6 libgtk-3-0 libx11-xcb-dev libdbus-glib-1-2 libxt6 libpci-dev libasound2 firefox
+ && apt-get install -y wget curl bzip2 libxtst6 libgtk-3-0 libx11-xcb-dev libdbus-glib-1-2 libxt6 libpci-dev libasound2 firefox openjdk-17-jdk
 
 # RUN conda install -y -c conda-forge nodejs
-RUN mamba install -n ${CONDA_ENV} -y -c conda-forge nodejs selenium geckodriver
+RUN mamba install -n ${CONDA_ENV} -y -c conda-forge nodejs selenium geckodriver pyspark
+
+# Set up the environment for pyspark
+ENV SPARK_HOME ${NB_PYTHON_PREFIX}/lib/python3.11/site-packages/pyspark
+RUN curl -s https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.262/aws-java-sdk-bundle-1.12.262.jar -Lo ${SPARK_HOME}/jars/aws-java-sdk-bundle-1.12.262.jar
+RUN curl -s https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar -Lo ${SPARK_HOME}/jars/hadoop-aws-3.3.4.jar
 
 WORKDIR /teehr
 
