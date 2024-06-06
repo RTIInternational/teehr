@@ -34,6 +34,9 @@ ENV SPARK_HOME ${NB_PYTHON_PREFIX}/lib/python3.11/site-packages/pyspark
 RUN curl -s https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.262/aws-java-sdk-bundle-1.12.262.jar -Lo ${SPARK_HOME}/jars/aws-java-sdk-bundle-1.12.262.jar
 RUN curl -s https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar -Lo ${SPARK_HOME}/jars/hadoop-aws-3.3.4.jar
 
+RUN mkdir -p ${SPARK_HOME}/conf
+COPY spark-defaults.conf ${SPARK_HOME}/conf/spark-defaults.conf
+
 WORKDIR /teehr
 
 RUN pip install duckdb spatialpandas easydev colormap colorcet hydrotools
