@@ -2,8 +2,8 @@ name: documentation
 
 on:
   push:
-    tags: [ 'v*.*.*' ]
-    # branches: [112-add-documentation]
+    # tags: [ 'v*.*.*' ]
+    branches: [189-api-docs-are-broken]
 
 permissions:
   contents: write
