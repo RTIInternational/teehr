@@ -40,7 +40,6 @@ extensions = [
     # "myst_parser",
     "sphinx.ext.viewcode",  # links to source code
     "sphinx.ext.githubpages",
-    # "nbsphinx"  # for rendering jupyter notebooks  ?? or myst-nb ??
     "myst_nb",
     'IPython.sphinxext.ipython_console_highlighting',
     'IPython.sphinxext.ipython_directive'
