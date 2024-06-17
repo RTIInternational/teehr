@@ -2,8 +2,8 @@ name: documentation
 
 on:
   push:
-    tags: [ 'v*.*.*' ]
-    # branches: [189-api-docs-are-broken]
+    # tags: [ 'v*.*.*' ]
+    branches: [189-api-docs-are-broken]
 
 permissions:
   contents: write
@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install sphinx pydata-sphinx-theme myst-nb sphinx-design sphinx-autoapi==3.0.0 numpydoc ghp-import pickleshare -e .
+          pip install sphinx pydata-sphinx-theme myst-nb sphinx-design sphinx-autoapi<3.1,>=3.0 numpydoc ghp-import pickleshare -e .
 
       - name: Sphinx build
         run: |
