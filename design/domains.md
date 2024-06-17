@@ -1,16 +1,18 @@
 attributes:
     - name (pk)
     - type
-    - units
+    - units (fk)
 
-units:
+measurement_units:
     - name (pk)
     - dimension
 
 configurations:
-    - name
+    - name (pk)
     - owner
     - description
 
 variables:
+    - name
+    - description
 
