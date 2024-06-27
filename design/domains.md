@@ -13,6 +13,6 @@ configurations:
     - description
 
 variables:
-    - name
+    - name (pk)
     - description
 
