@@ -3,7 +3,7 @@ name: documentation
 on:
   push:
     tags: [ 'v*.*.*' ]
-    # branches: [112-add-documentation]
+    # branches: [189-api-docs-are-broken]
 
 permissions:
   contents: write
@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install sphinx pydata-sphinx-theme myst-nb sphinx-design sphinx-autoapi numpydoc ghp-import -e .
+          pip install sphinx==7.2.6 pydata-sphinx-theme myst-nb sphinx-design sphinx-autoapi==3.0.0 numpy==1.26.4 numpydoc ghp-import pickleshare -e .
 
       - name: Sphinx build
         run: |
@@ -30,4 +30,4 @@ jobs:
 
       - name: Run ghp-import
         run: |
-          ghp-import -n -p -f docs/sphinx/_build/html
+          ghp-import -n -p -f -o docs/sphinx/_build/html

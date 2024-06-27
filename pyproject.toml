@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "teehr"
-version = "0.3.25"
+version = "0.3.26"
 description = "Tools for Exploratory Evaluation in Hydrologic Research"
 authors = [
     "RTI International",
@@ -41,7 +41,6 @@ flake8 = "^6.1.0"
 
 [tool.poetry.group.dev.dependencies]
 sphinx = "^7.2.6"
-sphinx-rtd-theme = "^2.0.0"
 pydata-sphinx-theme = "^0.15.2"
 sphinx-autoapi = "^3.0.0"
 sphinx-design = "^0.5.0"
@@ -49,10 +48,9 @@ numpydoc = "^1.6.0"
 pre-commit = "^3.6.0"
 pre-commit-hooks = "^4.5.0"
 flake8-docstrings = "^1.7.0"
-nbsphinx = "^0.9.3"
-pandoc = "^2.3"
 myst-nb = "^1.0.0"
 nbstripout = "^0.7.1"
+pickleshare = "^0.7.5"
 
 [tool.numpydoc_validation]
 checks = [

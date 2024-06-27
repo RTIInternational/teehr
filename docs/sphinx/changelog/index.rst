@@ -1,6 +1,21 @@
 Release Notes
 =============
 
+
+0.3.26 - 2024-06-27
+--------------------
+
+Added
+^^^^^
+* Dark theme logo for sphinx documentation.
+* Added the `pickleshare` package to dev dependency group to fix `ipython` directive in sphinx documentation.
+
+Changed
+^^^^^^^
+* Pinned `sphinx-autodoc` to v3.0.0 and `numpy` to v1.26.4 in `documentation-publish.yml` to fix the API documentation build.
+* Removed unused documentation dependencies from dev group.
+
+
 0.3.25 - 2024-06-06
 --------------------
 
