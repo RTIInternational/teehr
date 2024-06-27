@@ -1,0 +1,231 @@
+:py:mod:`teehr.loading.nwm.retrospective_grids`
+===============================================
+
+.. py:module:: teehr.loading.nwm.retrospective_grids
+
+.. autoapi-nested-parse::
+
+   A module for loading retrospective NWM gridded data.
+
+   The function ``nwm_retro_grids_to_parquet()`` can be used to fetch and format
+   two different versions of retrospective NWM data (v2.1 and v3.0) for
+   specified variables and date ranges, and summarize the grid pixels
+   intersecting polygons provided in the weights file using an area-weighted mean
+   approach.
+
+   Each version of the NWM data is hosted on `AWS S3
+   <https://registry.opendata.aws/nwm-archive/>`__ and is stored in Zarr format
+   (v3.0) or as Kerchunk reference files (v2.1). Several options are included
+   for fetching the data in chunks, including by week or month which can be
+   specified using the ``chunk_by`` argument.
+
+   The NWM v3.0 retrospective forcing Zarr store has dimensions {time: 385704,
+   x: 3840, and y: 4608}, with a chunking scheme of {time: 672, x: 350, y: 350}.
+   Only the data variable chunks that intersect the polygons are read into memory.
+
+   The NWM v2.1 retrospective forcing data has the same x-y dimensions but is
+   fetched using Kerchunk reference files, which point to the original hourly
+   netcdf files, therefore the data is not chunked in the x-y dimensions. This
+   means that an entire data variable is read into memory regardless of the
+   spatial bounds of the polygons being processed.
+
+   Care must be taken when choosing a ``chunk_by`` value to minimize the amount
+   of data transferred over the network.
+
+   .. note::
+      It is recommended to set the ``chunk_by`` parameter to the largest time
+      period ('week' or 'month') that will fit into your systems memory
+      given the number of polygons being processed.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.loading.nwm.retrospective_grids.get_nwm21_retro_grid_data
+   teehr.loading.nwm.retrospective_grids.process_nwm30_retro_group
+   teehr.loading.nwm.retrospective_grids.construct_nwm21_json_paths
+   teehr.loading.nwm.retrospective_grids.process_single_nwm21_retro_grid_file
+   teehr.loading.nwm.retrospective_grids.nwm_retro_grids_to_parquet
+
+
+
+.. py:function:: get_nwm21_retro_grid_data(var_da: xarray.DataArray, row_min: int, col_min: int, row_max: int, col_max: int)
+
+   
+   Read a subset nwm21 retro grid data into memory from row/col bounds.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: process_nwm30_retro_group(da_i: xarray.DataArray, weights_filepath: str, variable_name: str, units_format_dict: Dict, nwm_version: str, location_id_prefix: Union[str, None])
+
+   
+   Compute the weighted average for a chunk of NWM v3.0 data.
+
+   Pixel weights for each zone are defined in weights_df,
+   and the output is saved to parquet files.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: construct_nwm21_json_paths(start_date: Union[str, datetime.datetime], end_date: Union[str, datetime.datetime])
+
+   
+   Construct the remote paths for NWM v2.1 json files as a dataframe.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: process_single_nwm21_retro_grid_file(row: Tuple, variable_name: str, weights_filepath: str, ignore_missing_file: bool, units_format_dict: Dict, nwm_version: str, location_id_prefix: Union[str, None])
+
+   
+   Compute the zonal mean for a single json reference file.
+
+   Results are formatted to a dataframe using the TEEHR data model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: nwm_retro_grids_to_parquet(nwm_version: teehr.models.loading.utils.SupportedNWMRetroVersionsEnum, variable_name: teehr.models.loading.nwm22_grid.ForcingVariablesEnum, zonal_weights_filepath: Union[str, pathlib.Path], start_date: Union[str, datetime.datetime, pandas.Timestamp], end_date: Union[str, datetime.datetime, pandas.Timestamp], output_parquet_dir: Union[str, pathlib.Path], chunk_by: Union[teehr.models.loading.utils.NWMChunkByEnum, None] = None, overwrite_output: Optional[bool] = False, domain: Optional[teehr.models.loading.utils.SupportedNWMRetroDomainsEnum] = 'CONUS', location_id_prefix: Optional[Union[str, None]] = None)
+
+   
+   Compute the weighted average for NWM v2.1 or v3.0 gridded data.
+
+   Pixel values are summarized to zones based on a pre-computed
+   zonal weights file, and the output is saved to parquet files.
+
+   All dates and times within the files and in the file names are in UTC.
+
+   :Parameters:
+
+       **nwm_version** : SupportedNWMRetroVersionsEnum
+           NWM retrospective version to fetch.
+           Currently `nwm21` and `nwm30` supported.
+
+       **variable_name** : str
+           Name of the NWM forcing data variable to download.
+           (e.g., "PRECIP", "PSFC", "Q2D", ...).
+
+       **zonal_weights_filepath** : str,
+           Path to the array containing fraction of pixel overlap
+           for each zone. The values in the location_id field from
+           the zonal weights file are used in the output of this function.
+
+       **start_date** : Union[str, datetime, pd.Timestamp]
+           Date to begin data ingest.
+           Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+           Rounds down to beginning of day.
+
+       **end_date** : Union[str, datetime, pd.Timestamp],
+           Last date to fetch.  Rounds up to end of day.
+           Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+
+       **output_parquet_dir** : Union[str, Path],
+           Directory where output will be saved.
+
+       **chunk_by** : Union[NWMChunkByEnum, None] = None,
+           If None (default) saves all timeseries to a single file, otherwise
+           the data is processed using the specified parameter.
+           Can be: 'week' or 'month' for gridded data.
+
+       **overwrite_output** : bool = False,
+           Whether output should overwrite files if they exist.  Default is False.
+
+       **domain** : str = "CONUS"
+           Geographical domain when NWM version is v3.0.
+           Acceptable values are "Alaska", "CONUS" (default), "Hawaii", and "PR".
+           Only used when NWM version equals v3.0.
+
+       **location_id_prefix** : Union[str, None]
+           Optional location ID prefix to add (prepend) or replace.
+
+
+
+
+
+
+
+
+
+   .. rubric:: Notes
+
+   The location_id values in the zonal weights file are used as
+   location ids in the output of this function, unless a prefix is specified
+   which will be prepended to the location_id values if none exists, or it
+   will replace the existing prefix. It is assumed that the location_id
+   follows the pattern '[prefix]-[unique id]'.
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

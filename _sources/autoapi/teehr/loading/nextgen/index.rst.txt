@@ -1,0 +1,38 @@
+:py:mod:`teehr.loading.nextgen`
+===============================
+
+.. py:module:: teehr.loading.nextgen
+
+.. autoapi-nested-parse::
+
+   
+   Loading for Nextgen data -- Work In Progress.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   ngen/index.rst
+
+

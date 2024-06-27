@@ -1,0 +1,38 @@
+:py:mod:`teehr.api`
+===================
+
+.. py:module:: teehr.api
+
+.. autoapi-nested-parse::
+
+   
+   TEEHR API init.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   main/index.rst
+
+

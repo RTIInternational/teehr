@@ -1,0 +1,356 @@
+:py:mod:`teehr.models.loading.utils`
+====================================
+
+.. py:module:: teehr.models.loading.utils
+
+.. autoapi-nested-parse::
+
+   Module for NWM loading models.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   teehr.models.loading.utils.StrEnum
+   teehr.models.loading.utils.USGSChunkByEnum
+   teehr.models.loading.utils.NWMChunkByEnum
+   teehr.models.loading.utils.SupportedNWMRetroVersionsEnum
+   teehr.models.loading.utils.SupportedNWMOperationalVersionsEnum
+   teehr.models.loading.utils.SupportedNWMDataSourcesEnum
+   teehr.models.loading.utils.SupportedKerchunkMethod
+   teehr.models.loading.utils.SupportedNWMRetroDomainsEnum
+
+
+
+
+.. py:class:: StrEnum
+
+
+   Bases: :py:obj:`str`, :py:obj:`enum.Enum`
+
+   
+   Instantiate StrEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:class:: USGSChunkByEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   USGSChunkByEnum for loading USGS data.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: day
+      :value: 'day'
+
+      
+
+   .. py:attribute:: location_id
+      :value: 'location_id'
+
+      
+
+   .. py:attribute:: week
+      :value: 'week'
+
+      
+
+   .. py:attribute:: month
+      :value: 'month'
+
+      
+
+   .. py:attribute:: year
+      :value: 'year'
+
+      
+
+
+.. py:class:: NWMChunkByEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   NWMChunkByEnum for loading NWM data.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: week
+      :value: 'week'
+
+      
+
+   .. py:attribute:: month
+      :value: 'month'
+
+      
+
+   .. py:attribute:: year
+      :value: 'year'
+
+      
+
+
+.. py:class:: SupportedNWMRetroVersionsEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   SupportedNWMRetroVersionsEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: nwm20
+      :value: 'nwm20'
+
+      
+
+   .. py:attribute:: nwm21
+      :value: 'nwm21'
+
+      
+
+   .. py:attribute:: nwm30
+      :value: 'nwm30'
+
+      
+
+
+.. py:class:: SupportedNWMOperationalVersionsEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   SupportedNWMOperationalVersionsEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: nwm22
+      :value: 'nwm22'
+
+      
+
+   .. py:attribute:: nwm30
+      :value: 'nwm30'
+
+      
+
+
+.. py:class:: SupportedNWMDataSourcesEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   SupportedNWMDataSourcesEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: GCS
+      :value: 'GCS'
+
+      
+
+   .. py:attribute:: NOMADS
+      :value: 'NOMADS'
+
+      
+
+   .. py:attribute:: DSTOR
+      :value: 'DSTOR'
+
+      
+
+
+.. py:class:: SupportedKerchunkMethod
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   SupportedKerchunkMethod.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: local
+      :value: 'local'
+
+      
+
+   .. py:attribute:: remote
+      :value: 'remote'
+
+      
+
+   .. py:attribute:: auto
+      :value: 'auto'
+
+      
+
+
+.. py:class:: SupportedNWMRetroDomainsEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   SupportedNWMRetroDomainsEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: CONUS
+      :value: 'CONUS'
+
+      
+
+   .. py:attribute:: Alaska
+      :value: 'Alaska'
+
+      
+
+   .. py:attribute:: PR
+      :value: 'PR'
+
+      
+
+   .. py:attribute:: Hawaii
+      :value: 'Hawaii'
+
+      
+
+

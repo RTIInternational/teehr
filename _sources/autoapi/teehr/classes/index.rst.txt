@@ -1,0 +1,41 @@
+:py:mod:`teehr.classes`
+=======================
+
+.. py:module:: teehr.classes
+
+.. autoapi-nested-parse::
+
+   
+   TEEHR classes init.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   duckdb_base/index.rst
+   duckdb_database/index.rst
+   duckdb_database_api/index.rst
+   duckdb_joined_parquet/index.rst
+
+

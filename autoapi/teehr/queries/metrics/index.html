@@ -1,0 +1,1059 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>teehr.queries.metrics &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=87e54e7c" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/teehr.css?v=d1e9bf4d" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../../_static/documentation_options.js?v=71d9d8e6"></script>
+    <script src="../../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/teehr/queries/metrics/index';</script>
+    <link rel="icon" href="../../../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link rel="next" title="teehr.queries.pandas" href="../pandas/index.html" />
+    <link rel="prev" title="teehr.queries.joined" href="../joined/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.2 documentation - Home"/>
+    <script>document.write(`<img src="../../../../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.2 documentation - Home"/>`);</script>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../../index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../../index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr</span></code></a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.api</span></code></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/main/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.api.main</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../classes/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.classes</span></code></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../classes/duckdb_base/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.classes.duckdb_base</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../classes/duckdb_database/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.classes.duckdb_database</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../classes/duckdb_database_api/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.classes.duckdb_database_api</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../classes/duckdb_joined_parquet/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.classes.duckdb_joined_parquet</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../loading/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading</span></code></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../loading/nextgen/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nextgen</span></code></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nextgen/ngen/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nextgen.ngen</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../loading/nwm/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm</span></code></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/const/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.const</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/grid_utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.grid_utils</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/nwm_grids/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.nwm_grids</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/nwm_points/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.nwm_points</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/point_utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.point_utils</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/retrospective_grids/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.retrospective_grids</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/retrospective_points/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.retrospective_points</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/nwm/utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.nwm.utils</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../loading/usgs/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.usgs</span></code></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../loading/usgs/usgs/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.loading.usgs.usgs</span></code></a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../models/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models</span></code></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../models/loading/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models.loading</span></code></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../models/loading/nwm22_grid/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models.loading.nwm22_grid</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../models/loading/nwm22_point/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models.loading.nwm22_point</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../models/loading/nwm30_grid/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models.loading.nwm30_grid</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../models/loading/nwm30_point/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models.loading.nwm30_point</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../models/loading/utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models.loading.utils</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../../models/queries/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models.queries</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../models/queries_database/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.models.queries_database</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="../index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.queries</span></code></a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../duckdb/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.queries.duckdb</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../duckdb_database/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.queries.duckdb_database</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../joined/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.queries.joined</span></code></a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.queries.metrics</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../pandas/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.queries.pandas</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="../utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.queries.utils</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../utilities/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.utilities</span></code></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../utilities/generate_weights/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.utilities.generate_weights</span></code></a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">API Reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><i class="fa-solid fa-ellipsis"></i></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.queries</span></code></a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><code...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-teehr.queries.metrics">
+<span id="teehr-queries-metrics"></span><h1><a class="reference internal" href="#module-teehr.queries.metrics" title="teehr.queries.metrics"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.queries.metrics</span></code></a><a class="headerlink" href="#module-teehr.queries.metrics" title="Link to this heading">#</a></h1>
+<p>Contains functions for metric queries.</p>
+<p>The functions herein are use to support:</p>
+<dl class="simple">
+<dt>def get_metrics_clause(</dt><dd><p>mq: Union[tmq.MetricQuery, tmqd.MetricQuery],
+join_geometry_clause: str</p>
+</dd>
+</dl>
+<p>) -&gt; str:</p>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">#</a></h2>
+<section id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.metrics.nse_cte" title="teehr.queries.metrics.nse_cte"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nse_cte</span></code></a>(→ str)</p></td>
+<td><p>Generate the nash-sutcliffe-efficiency CTE.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.metrics.spearman_ranks_cte" title="teehr.queries.metrics.spearman_ranks_cte"><code class="xref py py-obj docutils literal notranslate"><span class="pre">spearman_ranks_cte</span></code></a>(→ str)</p></td>
+<td><p>Generate the spearman ranks CTE.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.metrics.join_spearman_ranks_cte" title="teehr.queries.metrics.join_spearman_ranks_cte"><code class="xref py py-obj docutils literal notranslate"><span class="pre">join_spearman_ranks_cte</span></code></a>(→ str)</p></td>
+<td><p>Generate the annual signature metrics CTE.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_spearman_correlation" title="teehr.queries.metrics.select_spearman_correlation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_spearman_correlation</span></code></a>(→ str)</p></td>
+<td><p>Generate the select spearman correlation query segment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.metrics.annual_metrics_cte" title="teehr.queries.metrics.annual_metrics_cte"><code class="xref py py-obj docutils literal notranslate"><span class="pre">annual_metrics_cte</span></code></a>(→ str)</p></td>
+<td><p>Generate the annual signature metrics CTE.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.metrics.join_nse_cte" title="teehr.queries.metrics.join_nse_cte"><code class="xref py py-obj docutils literal notranslate"><span class="pre">join_nse_cte</span></code></a>(→ str)</p></td>
+<td><p>Generate the join nash-sutcliffe-efficiency CTE.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.metrics.join_annual_metrics_cte" title="teehr.queries.metrics.join_annual_metrics_cte"><code class="xref py py-obj docutils literal notranslate"><span class="pre">join_annual_metrics_cte</span></code></a>(→ str)</p></td>
+<td><p>Generate the annual signature metrics CTE.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_max_value_timedelta" title="teehr.queries.metrics.select_max_value_timedelta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_max_value_timedelta</span></code></a>(→ str)</p></td>
+<td><p>Generate the select max value timedelta query segment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_secondary_max_value_time" title="teehr.queries.metrics.select_secondary_max_value_time"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_secondary_max_value_time</span></code></a>(→ str)</p></td>
+<td><p>Generate the select secondary max value time query segment.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_primary_max_value_time" title="teehr.queries.metrics.select_primary_max_value_time"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_primary_max_value_time</span></code></a>(→ str)</p></td>
+<td><p>Generate the select primary max value time query segment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_root_mean_squared_error" title="teehr.queries.metrics.select_root_mean_squared_error"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_root_mean_squared_error</span></code></a>(→ str)</p></td>
+<td><p>Generate the select root mean squared error query segment.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_mean_squared_error" title="teehr.queries.metrics.select_mean_squared_error"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_mean_squared_error</span></code></a>(→ str)</p></td>
+<td><p>Generate the select mean squared error query segment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_mean_absolute_error" title="teehr.queries.metrics.select_mean_absolute_error"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_mean_absolute_error</span></code></a>(→ str)</p></td>
+<td><p>Generate the select mean absolute error query segment.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_mean_absolute_relative_error" title="teehr.queries.metrics.select_mean_absolute_relative_error"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_mean_absolute_relative_error</span></code></a>(→ str)</p></td>
+<td><p>Generate the select mean absolute relative error query segment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_kling_gupta_efficiency" title="teehr.queries.metrics.select_kling_gupta_efficiency"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_kling_gupta_efficiency</span></code></a>(→ str)</p></td>
+<td><p>Generate the select kling gupta efficiency query segment.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_kling_gupta_efficiency_mod1" title="teehr.queries.metrics.select_kling_gupta_efficiency_mod1"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_kling_gupta_efficiency_mod1</span></code></a>(→ str)</p></td>
+<td><p>Generate the select kling gupta efficiency mod1 query segment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_kling_gupta_efficiency_mod2" title="teehr.queries.metrics.select_kling_gupta_efficiency_mod2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_kling_gupta_efficiency_mod2</span></code></a>(→ str)</p></td>
+<td><p>Generate the select kling gupta efficiency mod2 query segment.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_nash_sutcliffe_efficiency" title="teehr.queries.metrics.select_nash_sutcliffe_efficiency"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_nash_sutcliffe_efficiency</span></code></a>(→ str)</p></td>
+<td><p>Generate the select nash sutcliffe efficiency query segment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_nash_sutcliffe_efficiency_normalized" title="teehr.queries.metrics.select_nash_sutcliffe_efficiency_normalized"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_nash_sutcliffe_efficiency_normalized</span></code></a>(→ str)</p></td>
+<td><p>Generate the select nash sutcliffe efficiency query segment.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_mean_error" title="teehr.queries.metrics.select_mean_error"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_mean_error</span></code></a>(→ str)</p></td>
+<td><p>Generate the select mean_error query segment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_relative_bias" title="teehr.queries.metrics.select_relative_bias"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_relative_bias</span></code></a>(→ str)</p></td>
+<td><p>Generate the select relative bias query segment.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_multiplicative_bias" title="teehr.queries.metrics.select_multiplicative_bias"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_multiplicative_bias</span></code></a>(→ str)</p></td>
+<td><p>Generate the select multiplicative bias query segment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_pearson_correlation" title="teehr.queries.metrics.select_pearson_correlation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_pearson_correlation</span></code></a>(→ str)</p></td>
+<td><p>Generate the select pearson correlation query segment.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_r_squared" title="teehr.queries.metrics.select_r_squared"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_r_squared</span></code></a>(→ str)</p></td>
+<td><p>Generate the select r squared query segment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_max_value_delta" title="teehr.queries.metrics.select_max_value_delta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_max_value_delta</span></code></a>(→ str)</p></td>
+<td><p>Generate the select max value delta query segment.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_primary_count" title="teehr.queries.metrics.select_primary_count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_primary_count</span></code></a>(→ str)</p></td>
+<td><p>Generate the select primary count query segment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_secondary_count" title="teehr.queries.metrics.select_secondary_count"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_secondary_count</span></code></a>(→ str)</p></td>
+<td><p>Generate the select secondary count query segment.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_primary_minimum" title="teehr.queries.metrics.select_primary_minimum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_primary_minimum</span></code></a>(→ str)</p></td>
+<td><p>Generate the select primary minimum query segment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_secondary_minimum" title="teehr.queries.metrics.select_secondary_minimum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_secondary_minimum</span></code></a>(→ str)</p></td>
+<td><p>Generate the select secondary minimum query segment.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_primary_maximum" title="teehr.queries.metrics.select_primary_maximum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_primary_maximum</span></code></a>(→ str)</p></td>
+<td><p>Generate the select primary maximum query segment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_secondary_maximum" title="teehr.queries.metrics.select_secondary_maximum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_secondary_maximum</span></code></a>(→ str)</p></td>
+<td><p>Generate the select secondary maximum query segment.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_primary_average" title="teehr.queries.metrics.select_primary_average"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_primary_average</span></code></a>(→ str)</p></td>
+<td><p>Generate the select primary average query segment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_secondary_average" title="teehr.queries.metrics.select_secondary_average"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_secondary_average</span></code></a>(→ str)</p></td>
+<td><p>Generate the select secondary average query segment.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_primary_sum" title="teehr.queries.metrics.select_primary_sum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_primary_sum</span></code></a>(→ str)</p></td>
+<td><p>Generate the select primary sum query segment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_secondary_sum" title="teehr.queries.metrics.select_secondary_sum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_secondary_sum</span></code></a>(→ str)</p></td>
+<td><p>Generate the select secondary sum query segment.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_primary_variance" title="teehr.queries.metrics.select_primary_variance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_primary_variance</span></code></a>(→ str)</p></td>
+<td><p>Generate the select primary variance query segment.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.metrics.select_secondary_variance" title="teehr.queries.metrics.select_secondary_variance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">select_secondary_variance</span></code></a>(→ str)</p></td>
+<td><p>Generate the select secondary variance query segment.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.queries.metrics.metrics_select_clause" title="teehr.queries.metrics.metrics_select_clause"><code class="xref py py-obj docutils literal notranslate"><span class="pre">metrics_select_clause</span></code></a>(→ str)</p></td>
+<td><p>Generate the metrics select clause.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.queries.metrics.get_metrics_clause" title="teehr.queries.metrics.get_metrics_clause"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_metrics_clause</span></code></a>(→ str)</p></td>
+<td><p>Generate the metrics calculation clause.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.nse_cte">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">nse_cte</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#nse_cte"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.nse_cte" title="Link to this definition">#</a></dt>
+<dd><p>Generate the nash-sutcliffe-efficiency CTE.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.spearman_ranks_cte">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">spearman_ranks_cte</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#spearman_ranks_cte"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.spearman_ranks_cte" title="Link to this definition">#</a></dt>
+<dd><p>Generate the spearman ranks CTE.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.join_spearman_ranks_cte">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">join_spearman_ranks_cte</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#join_spearman_ranks_cte"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.join_spearman_ranks_cte" title="Link to this definition">#</a></dt>
+<dd><p>Generate the annual signature metrics CTE.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_spearman_correlation">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_spearman_correlation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_spearman_correlation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_spearman_correlation" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select spearman correlation query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.annual_metrics_cte">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">annual_metrics_cte</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#annual_metrics_cte"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.annual_metrics_cte" title="Link to this definition">#</a></dt>
+<dd><p>Generate the annual signature metrics CTE.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.join_nse_cte">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">join_nse_cte</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#join_nse_cte"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.join_nse_cte" title="Link to this definition">#</a></dt>
+<dd><p>Generate the join nash-sutcliffe-efficiency CTE.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.join_annual_metrics_cte">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">join_annual_metrics_cte</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#join_annual_metrics_cte"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.join_annual_metrics_cte" title="Link to this definition">#</a></dt>
+<dd><p>Generate the annual signature metrics CTE.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_max_value_timedelta">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_max_value_timedelta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_max_value_timedelta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_max_value_timedelta" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select max value timedelta query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_secondary_max_value_time">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_secondary_max_value_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_secondary_max_value_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_secondary_max_value_time" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select secondary max value time query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_primary_max_value_time">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_primary_max_value_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_primary_max_value_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_primary_max_value_time" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select primary max value time query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_root_mean_squared_error">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_root_mean_squared_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_root_mean_squared_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_root_mean_squared_error" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select root mean squared error query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_mean_squared_error">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_mean_squared_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_mean_squared_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_mean_squared_error" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select mean squared error query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_mean_absolute_error">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_mean_absolute_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_mean_absolute_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_mean_absolute_error" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select mean absolute error query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_mean_absolute_relative_error">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_mean_absolute_relative_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_mean_absolute_relative_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_mean_absolute_relative_error" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select mean absolute relative error query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_kling_gupta_efficiency">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_kling_gupta_efficiency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_kling_gupta_efficiency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_kling_gupta_efficiency" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select kling gupta efficiency query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_kling_gupta_efficiency_mod1">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_kling_gupta_efficiency_mod1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_kling_gupta_efficiency_mod1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_kling_gupta_efficiency_mod1" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select kling gupta efficiency mod1 query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_kling_gupta_efficiency_mod2">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_kling_gupta_efficiency_mod2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_kling_gupta_efficiency_mod2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_kling_gupta_efficiency_mod2" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select kling gupta efficiency mod2 query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_nash_sutcliffe_efficiency">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_nash_sutcliffe_efficiency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_nash_sutcliffe_efficiency"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_nash_sutcliffe_efficiency" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select nash sutcliffe efficiency query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_nash_sutcliffe_efficiency_normalized">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_nash_sutcliffe_efficiency_normalized</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_nash_sutcliffe_efficiency_normalized"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_nash_sutcliffe_efficiency_normalized" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select nash sutcliffe efficiency query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_mean_error">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_mean_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_mean_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_mean_error" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select mean_error query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_relative_bias">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_relative_bias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_relative_bias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_relative_bias" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select relative bias query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_multiplicative_bias">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_multiplicative_bias</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_multiplicative_bias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_multiplicative_bias" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select multiplicative bias query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_pearson_correlation">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_pearson_correlation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_pearson_correlation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_pearson_correlation" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select pearson correlation query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_r_squared">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_r_squared</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_r_squared"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_r_squared" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select r squared query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_max_value_delta">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_max_value_delta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_max_value_delta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_max_value_delta" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select max value delta query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_primary_count">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_primary_count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_primary_count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_primary_count" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select primary count query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_secondary_count">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_secondary_count</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_secondary_count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_secondary_count" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select secondary count query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_primary_minimum">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_primary_minimum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_primary_minimum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_primary_minimum" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select primary minimum query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_secondary_minimum">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_secondary_minimum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_secondary_minimum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_secondary_minimum" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select secondary minimum query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_primary_maximum">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_primary_maximum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_primary_maximum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_primary_maximum" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select primary maximum query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_secondary_maximum">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_secondary_maximum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_secondary_maximum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_secondary_maximum" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select secondary maximum query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_primary_average">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_primary_average</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_primary_average"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_primary_average" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select primary average query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_secondary_average">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_secondary_average</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_secondary_average"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_secondary_average" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select secondary average query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_primary_sum">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_primary_sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_primary_sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_primary_sum" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select primary sum query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_secondary_sum">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_secondary_sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_secondary_sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_secondary_sum" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select secondary sum query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_primary_variance">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_primary_variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_primary_variance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_primary_variance" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select primary variance query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.select_secondary_variance">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">select_secondary_variance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#select_secondary_variance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.select_secondary_variance" title="Link to this definition">#</a></dt>
+<dd><p>Generate the select secondary variance query segment.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.metrics_select_clause">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">metrics_select_clause</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.JoinedTimeseriesQuery" title="teehr.models.queries.JoinedTimeseriesQuery"><span class="pre">teehr.models.queries.JoinedTimeseriesQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.JoinedTimeseriesQuery" title="teehr.models.queries_database.JoinedTimeseriesQuery"><span class="pre">teehr.models.queries_database.JoinedTimeseriesQuery</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#metrics_select_clause"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.metrics_select_clause" title="Link to this definition">#</a></dt>
+<dd><p>Generate the metrics select clause.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="teehr.queries.metrics.get_metrics_clause">
+<span class="sig-prename descclassname"><span class="pre">teehr.queries.metrics.</span></span><span class="sig-name descname"><span class="pre">get_metrics_clause</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mq</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../../models/queries/index.html#teehr.models.queries.MetricQuery" title="teehr.models.queries.MetricQuery"><span class="pre">teehr.models.queries.MetricQuery</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="../../models/queries_database/index.html#teehr.models.queries_database.MetricQuery" title="teehr.models.queries_database.MetricQuery"><span class="pre">teehr.models.queries_database.MetricQuery</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">join_geometry_clause</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../../../../_modules/teehr/queries/metrics.html#get_metrics_clause"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.queries.metrics.get_metrics_clause" title="Link to this definition">#</a></dt>
+<dd><p>Generate the metrics calculation clause.</p>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../joined/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.queries.joined</span></code></p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../pandas/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.queries.pandas</span></code></p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.nse_cte"><code class="docutils literal notranslate"><span class="pre">nse_cte()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.spearman_ranks_cte"><code class="docutils literal notranslate"><span class="pre">spearman_ranks_cte()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.join_spearman_ranks_cte"><code class="docutils literal notranslate"><span class="pre">join_spearman_ranks_cte()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_spearman_correlation"><code class="docutils literal notranslate"><span class="pre">select_spearman_correlation()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.annual_metrics_cte"><code class="docutils literal notranslate"><span class="pre">annual_metrics_cte()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.join_nse_cte"><code class="docutils literal notranslate"><span class="pre">join_nse_cte()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.join_annual_metrics_cte"><code class="docutils literal notranslate"><span class="pre">join_annual_metrics_cte()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_max_value_timedelta"><code class="docutils literal notranslate"><span class="pre">select_max_value_timedelta()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_secondary_max_value_time"><code class="docutils literal notranslate"><span class="pre">select_secondary_max_value_time()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_primary_max_value_time"><code class="docutils literal notranslate"><span class="pre">select_primary_max_value_time()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_root_mean_squared_error"><code class="docutils literal notranslate"><span class="pre">select_root_mean_squared_error()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_mean_squared_error"><code class="docutils literal notranslate"><span class="pre">select_mean_squared_error()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_mean_absolute_error"><code class="docutils literal notranslate"><span class="pre">select_mean_absolute_error()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_mean_absolute_relative_error"><code class="docutils literal notranslate"><span class="pre">select_mean_absolute_relative_error()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_kling_gupta_efficiency"><code class="docutils literal notranslate"><span class="pre">select_kling_gupta_efficiency()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_kling_gupta_efficiency_mod1"><code class="docutils literal notranslate"><span class="pre">select_kling_gupta_efficiency_mod1()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_kling_gupta_efficiency_mod2"><code class="docutils literal notranslate"><span class="pre">select_kling_gupta_efficiency_mod2()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_nash_sutcliffe_efficiency"><code class="docutils literal notranslate"><span class="pre">select_nash_sutcliffe_efficiency()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_nash_sutcliffe_efficiency_normalized"><code class="docutils literal notranslate"><span class="pre">select_nash_sutcliffe_efficiency_normalized()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_mean_error"><code class="docutils literal notranslate"><span class="pre">select_mean_error()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_relative_bias"><code class="docutils literal notranslate"><span class="pre">select_relative_bias()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_multiplicative_bias"><code class="docutils literal notranslate"><span class="pre">select_multiplicative_bias()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_pearson_correlation"><code class="docutils literal notranslate"><span class="pre">select_pearson_correlation()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_r_squared"><code class="docutils literal notranslate"><span class="pre">select_r_squared()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_max_value_delta"><code class="docutils literal notranslate"><span class="pre">select_max_value_delta()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_primary_count"><code class="docutils literal notranslate"><span class="pre">select_primary_count()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_secondary_count"><code class="docutils literal notranslate"><span class="pre">select_secondary_count()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_primary_minimum"><code class="docutils literal notranslate"><span class="pre">select_primary_minimum()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_secondary_minimum"><code class="docutils literal notranslate"><span class="pre">select_secondary_minimum()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_primary_maximum"><code class="docutils literal notranslate"><span class="pre">select_primary_maximum()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_secondary_maximum"><code class="docutils literal notranslate"><span class="pre">select_secondary_maximum()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_primary_average"><code class="docutils literal notranslate"><span class="pre">select_primary_average()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_secondary_average"><code class="docutils literal notranslate"><span class="pre">select_secondary_average()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_primary_sum"><code class="docutils literal notranslate"><span class="pre">select_primary_sum()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_secondary_sum"><code class="docutils literal notranslate"><span class="pre">select_secondary_sum()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_primary_variance"><code class="docutils literal notranslate"><span class="pre">select_primary_variance()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.select_secondary_variance"><code class="docutils literal notranslate"><span class="pre">select_secondary_variance()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.metrics_select_clause"><code class="docutils literal notranslate"><span class="pre">metrics_select_clause()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.queries.metrics.get_metrics_clause"><code class="docutils literal notranslate"><span class="pre">get_metrics_clause()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../../../_sources/autoapi/teehr/queries/metrics/index.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

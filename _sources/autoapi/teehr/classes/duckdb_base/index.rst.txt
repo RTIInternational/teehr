@@ -1,0 +1,463 @@
+:py:mod:`teehr.classes.duckdb_base`
+===================================
+
+.. py:module:: teehr.classes.duckdb_base
+
+.. autoapi-nested-parse::
+
+   Base class for DuckBD queries.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   teehr.classes.duckdb_base.DuckDBBase
+
+
+
+
+.. py:class:: DuckDBBase
+
+
+   Bases: :py:obj:`abc.ABC`
+
+   
+   The TEEHR-DuckDB base class.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:method:: _validate_query_model() -> Any
+
+      
+      Validate the query model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: get_joined_timeseries_schema() -> pandas.DataFrame
+
+      
+      Get the schema from the joined_timeseries table or file(s).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: load_https_extension()
+
+      
+      Load the HTTPFS extension for DuckDB.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: profile_query(query: str)
+
+      
+      Profile query performance.
+
+      EXPLAIN ANALYZE is pre-pended to the query and
+      results are printed to the screen.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: query(query: str, format: str = None)
+
+      
+      Run an SQL query against the class's database.
+
+      Return formats include:
+      * A pandas dataframe (format='df')
+      * Results printed to the screen (format='raw')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _execute_query(query: str, return_query: bool = False, include_geometry: bool = False) -> Union[str, pandas.DataFrame, geopandas.GeoDataFrame]
+
+      
+      Execute a query and return the results or the query itself.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _sanitize_field_name(field_name: str) -> str
+      :staticmethod:
+
+      
+      Replace unallowed characters from user-defined field names with an
+      underscore.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: describe_inputs(primary_filepath: Union[str, pathlib.Path, List[Union[str, pathlib.Path]]], secondary_filepath: Union[str, pathlib.Path, List[Union[str, pathlib.Path]]]) -> pandas.DataFrame
+      :staticmethod:
+
+      
+      Get descriptive statistics on the primary and secondary
+      timeseries by reading the parquet files.
+
+
+      :Parameters:
+
+          **primary_filepath** : Union[str, Path, List[Union[str, Path]]]
+              Path to the primary time series parquet file.
+
+          **secondary_filepath** : Union[str, Path, List[Union[str, Path]]]
+              Path to the primary time series parquet file.
+
+      :Returns:
+
+          pd.DataFrame
+              A dataframe of descriptive statistics for each time series.
+              
+              Output includes:
+              
+              * Number of unique location IDs
+              * Total number of rows
+              * Start date
+              * End date
+              * Number of duplicate rows
+              * Number of location IDs with duplicate value times
+              * Number of location IDs with missing time steps
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _get_metrics(mq: Any) -> Union[pandas.DataFrame, geopandas.GeoDataFrame, str]
+
+      
+      Calculate performance metrics using database queries.
+
+
+      :Parameters:
+
+          **mq** : Any
+              Pydantic model containing query parameters.
+
+      :Returns:
+
+          Union[pd.DataFrame, gpd.GeoDataFrame, str]
+              A DataFrame or optionally a GeoDataFrame containing query results,
+              or the query itself as a string.
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_get_metrics_query`
+              Create the get metrics query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _get_joined_timeseries(jtq: Any) -> Union[pandas.DataFrame, geopandas.GeoDataFrame, str]
+
+      
+      Retrieve joined timeseries using database query.
+
+
+      :Parameters:
+
+          **jtq** : Any
+              Pydantic model containing query parameters.
+
+      :Returns:
+
+          Union[pd.DataFrame, gpd.GeoDataFrame, str]
+              A DataFrame or GeoDataFrame of query results
+              or the query itself as a string.
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_get_joined_timeseries_query`
+              Create the get joined timeseries query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _get_timeseries_chars(tcq: Any) -> Union[str, pandas.DataFrame]
+
+      
+      Retrieve timeseries characteristics using database query.
+
+
+      :Parameters:
+
+          **tcq** : Any
+              Pydantic model containing query parameters.
+
+      :Returns:
+
+          Union[str, pd.DataFrame]
+              A DataFrame of time series characteristics including:
+              
+              - location_id
+              - count
+              - min
+              - max
+              - average
+              - sum
+              - variance
+              
+              or, the query itself as a string.
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_get_timeseries_char_query`
+              Create the get timeseries characteristics query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _get_timeseries(tq: Any) -> Union[pandas.DataFrame, str]
+
+      
+      Retrieve timeseries using database query.
+
+
+      :Parameters:
+
+          **tq** : Any
+              Pydantic model containing query parameters.
+
+      :Returns:
+
+          Union[pd.DataFrame, str]
+              A DataFrame of query results or the query itself as a string.
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_get_timeseries_query`
+              Create the get timeseries query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _get_unique_field_values(fn: Any) -> pandas.DataFrame
+
+      
+      Get unique values for a given field.
+
+
+      :Parameters:
+
+          **fn** : Any
+              Pydantic model containing the joined_timeseries table field name.
+
+      :Returns:
+
+          pd.DataFrame
+              A dataframe containing unique values for the given field.
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_unique_field_values_query`
+              Create the get unique field values query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+

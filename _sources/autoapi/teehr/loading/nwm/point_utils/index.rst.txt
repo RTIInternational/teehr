@@ -1,0 +1,139 @@
+:py:mod:`teehr.loading.nwm.point_utils`
+=======================================
+
+.. py:module:: teehr.loading.nwm.point_utils
+
+.. autoapi-nested-parse::
+
+   Module defining shared functions for processing NWM point data.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.loading.nwm.point_utils.file_chunk_loop
+   teehr.loading.nwm.point_utils.process_chunk_of_files
+   teehr.loading.nwm.point_utils.fetch_and_format_nwm_points
+
+
+
+.. py:function:: file_chunk_loop(row: Tuple, location_ids: numpy.array, variable_name: str, configuration: str, schema: pyarrow.Schema, ignore_missing_file: bool, units_format_dict: Dict, nwm_version: str)
+
+   
+   Fetch NWM values and convert to tabular format for a single json.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: process_chunk_of_files(df: pandas.DataFrame, location_ids: Iterable[int], configuration: str, variable_name: str, output_parquet_dir: str, process_by_z_hour: bool, ignore_missing_file: bool, units_format_dict: Dict, overwrite_output: bool, nwm_version: str)
+
+   
+   Assemble a table for a chunk of NWM files.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: fetch_and_format_nwm_points(json_paths: List[str], location_ids: Iterable[int], configuration: str, variable_name: str, output_parquet_dir: str, process_by_z_hour: bool, stepsize: int, ignore_missing_file: bool, units_format_dict: Dict, overwrite_output: bool, nwm_version: str)
+
+   
+   Fetch NWM point data and save as parquet files.
+
+   Read in previously generated Kerchunk reference jsons,
+   subset the NWM data based on provided location IDs, and format
+   and save to parquet files in the TEEHR data model using Dask.
+
+   :Parameters:
+
+       **json_paths** : list
+           List of the single json reference filepaths.
+
+       **location_ids** : Iterable[int]
+           Array specifying NWM IDs of interest.
+
+       **configuration** : str
+           NWM forecast category.
+
+       **variable_name** : str
+           Name of the NWM data variable to download.
+
+       **output_parquet_dir** : str
+           Path to the directory for the final parquet files.
+
+       **process_by_z_hour** : bool
+           A boolean flag that determines the method of grouping files
+           for processing.
+
+       **stepsize** : int
+           The number of json files to process at one time.
+
+       **ignore_missing_file** : bool
+           Flag specifying whether or not to fail if a missing NWM
+           file is encountered
+           True = skip and continue
+           False = fail.
+
+       **units_format_dict** : Dict,
+           Dictionary of unit formats.
+
+       **overwrite_output** : bool
+           Flag specifying whether or not to overwrite output files if
+           they already exist.  True = overwrite; False = fail.
+
+       **nwm_version** : str
+           Specified NWM version.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

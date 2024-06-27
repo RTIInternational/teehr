@@ -1,0 +1,93 @@
+:py:mod:`teehr.queries.joined`
+==============================
+
+.. py:module:: teehr.queries.joined
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.queries.joined.get_ind_parq_joined_timeseries_cte
+   teehr.queries.joined.get_joined_timeseries_cte
+   teehr.queries.joined.select_joined_clause
+
+
+
+.. py:function:: get_ind_parq_joined_timeseries_cte(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries.JoinedTimeseriesQuery], joined_select_clause: str) -> str
+
+   
+   Generate the joined CTE for individual parquet files.
+
+   This is used to create the joined timeseries clause for querying
+   individual parquet files as well as joining parquet files to
+   insert in database.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_joined_timeseries_cte(mq: teehr.models.queries_database.MetricQuery, from_joined_timeseries_clause: str) -> str
+
+   
+   Generate the metrics joined CTE for a database or joined parquet.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_joined_clause(remove_duplicates: bool) -> str
+
+   
+   Generate the remove duplicates CTE for the MetricQuery.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

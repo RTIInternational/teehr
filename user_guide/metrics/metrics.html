@@ -1,0 +1,759 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Metrics &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=87e54e7c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/teehr.css?v=d1e9bf4d" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=71d9d8e6"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/metrics/metrics';</script>
+    <link rel="icon" href="../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Developer Guide" href="../../development/index.html" />
+    <link rel="prev" title="Test Queries" href="../notebooks/queries/test_queries.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.2 documentation - Home"/>
+    <script>document.write(`<img src="../../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.2 documentation - Home"/>`);</script>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../autoapi/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../autoapi/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/loading_examples_index.html">Loading Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/loading/grid_loading_example.html">NWM Gridded Data Loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/loading/load_retrospective.html">Download NWM v2.1 Retrospective Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/loading/ngen_to_parquet.html">Example NGEN to Parquet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/loading/point_loading_example.html">NWM Point Data Loading</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../notebooks/queries_examples_index.html">Query Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/queries/ngen_simulation_data_queries.html">NGEN Simulation Data Query Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/queries/post_event_data_queries.html">Run Queries Against Post-Event Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/queries/test_queries.html">Test Queries</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Metrics</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">User Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">Metrics</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="metrics">
+<h1>Metrics<a class="headerlink" href="#metrics" title="Link to this heading">#</a></h1>
+<p>The metrics currently built into TEEHR are listed in the table below.
+Please note that some are still in development and planned for inclusion in future versions.
+For the equations corresponding to the metrics listed in the table, see:
+<a class="reference download internal" download="" href="../../_downloads/ef83f4eaa1ccf40bdfa4fa66ecb062c4/TEEHR%20Metrics_27May2024.pdf"><code class="xref download docutils literal notranslate"><span class="pre">pdf</span></code></a></p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 25.0%" />
+<col style="width: 25.0%" />
+<col style="width: 30.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>TEEHR Version</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Short Name</p></th>
+<th class="head"><p>Metric/Function Name</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>v0.1.0</p></td>
+<td><p>Mean Error</p></td>
+<td><p>Mean Error</p></td>
+<td><p>mean_error</p></td>
+</tr>
+<tr class="row-odd"><td><p>v0.3.13</p></td>
+<td><p>Relative Bias</p></td>
+<td><p>Relative Bias</p></td>
+<td><p>relative_bias</p></td>
+</tr>
+<tr class="row-even"><td><p>v0.3.13</p></td>
+<td><p>Multiplicative Bias</p></td>
+<td><p>Mult. Bias</p></td>
+<td><p>multiplicative_bias</p></td>
+</tr>
+<tr class="row-odd"><td><p>v0.1.0</p></td>
+<td><p>Mean Square Error</p></td>
+<td><p>MSE</p></td>
+<td><p>mean_square_error</p></td>
+</tr>
+<tr class="row-even"><td><p>v0.1.0</p></td>
+<td><p>Root Mean Square Error</p></td>
+<td><p>RMSE</p></td>
+<td><p>root_mean_square_error</p></td>
+</tr>
+<tr class="row-odd"><td><p>v0.1.0</p></td>
+<td><p>Mean Absolute Error</p></td>
+<td><p>MAE</p></td>
+<td><p>mean_absolute_error</p></td>
+</tr>
+<tr class="row-even"><td><p>v0.3.13</p></td>
+<td><p>Relative Mean Absolute Error</p></td>
+<td><p>Relative MAE</p></td>
+<td><p>mean_absolute_relative_error</p></td>
+</tr>
+<tr class="row-odd"><td><p>v0.3.13</p></td>
+<td><p>Pearson Correlation Coefficient</p></td>
+<td><p>r</p></td>
+<td><p>pearson_correlation</p></td>
+</tr>
+<tr class="row-even"><td><p>v0.3.13</p></td>
+<td><p>Coefficient of Determination</p></td>
+<td><p>r<sup>2</sup></p></td>
+<td><p>r_squared</p></td>
+</tr>
+<tr class="row-odd"><td><p>v0.1.0</p></td>
+<td><p>Nash-Sutcliffe Efficiency</p></td>
+<td><p>NSE</p></td>
+<td><p>nash_sutcliffe_efficiency</p></td>
+</tr>
+<tr class="row-even"><td><p>v0.3.13</p></td>
+<td><p>Normalized Nash-Sutcliffe Efficiency</p></td>
+<td><p>NNSE</p></td>
+<td><p>nash_sutcliffe_efficiency_normalized</p></td>
+</tr>
+<tr class="row-odd"><td><p>v0.3.13</p></td>
+<td><p>Kling Gupta Efficiency - original</p></td>
+<td><p>KGE</p></td>
+<td><p>kling_gupta_efficiency</p></td>
+</tr>
+<tr class="row-even"><td><p>v0.3.13</p></td>
+<td><p>Kling Gupta Efficiency - modified 1 (2012)</p></td>
+<td><p>KGE’</p></td>
+<td><p>kling_gupta_efficiency_mod1</p></td>
+</tr>
+<tr class="row-odd"><td><p>v0.3.13</p></td>
+<td><p>Kling Gupta Efficiency - modified 2 (2021)</p></td>
+<td><p>KGE”</p></td>
+<td><p>kling_gupta_efficiency_mod2</p></td>
+</tr>
+<tr class="row-even"><td><p>Coming Soon</p></td>
+<td><p>Nash-Sutcliffe Efficienty of Log Flows</p></td>
+<td><p>NSE(log)</p></td>
+<td><p>nash-sutcliffe_efficiency_log</p></td>
+</tr>
+<tr class="row-odd"><td><p>Coming Soon</p></td>
+<td><p>Annual Peak Flow Relative Bias</p></td>
+<td><p>Ann PF Bias</p></td>
+<td><p>annual_peak_flow_bias</p></td>
+</tr>
+<tr class="row-even"><td><p>Coming Soon</p></td>
+<td><p>Spearman Rank Correlation Coefficient</p></td>
+<td><p>r<sub>s</sub></p></td>
+<td><p>annual_peak_flow_bias</p></td>
+</tr>
+<tr class="row-odd"><td><p>Coming Soon</p></td>
+<td><p>Flow Duration Curve Slope Error</p></td>
+<td><p>Slope FDC Error</p></td>
+<td><p>fdc_slope_error</p></td>
+</tr>
+<tr class="row-even"><td><p>Coming Soon</p></td>
+<td><p>Event Peak Flow Relative Bias</p></td>
+<td><p>Peak Bias</p></td>
+<td><p>event_peak_flow_relative_bias</p></td>
+</tr>
+<tr class="row-odd"><td><p>Coming Soon</p></td>
+<td><p>Event Peak Flow Timing Error</p></td>
+<td><p>Peak Time Error</p></td>
+<td><p>peak_flow_timing_error</p></td>
+</tr>
+<tr class="row-even"><td><p>Coming Soon</p></td>
+<td><p>Baseflow Index Error</p></td>
+<td><p>BFI Error</p></td>
+<td><p>baseflow_index_error</p></td>
+</tr>
+<tr class="row-odd"><td><p>Coming Soon</p></td>
+<td><p>Rising Limb Density Error</p></td>
+<td><p>RLD Error</p></td>
+<td><p>rising_limb_density_error</p></td>
+</tr>
+<tr class="row-even"><td><p>Coming Soon</p></td>
+<td><p>Mean Square Error Skill Score (generalized reference)</p></td>
+<td><p>MSESS</p></td>
+<td><p>mse_skill_score_ref</p></td>
+</tr>
+<tr class="row-odd"><td><p>Coming Soon</p></td>
+<td><p>Runoff Ratio Error</p></td>
+<td><p>RR Error</p></td>
+<td><p>runoff_ratio_error</p></td>
+</tr>
+<tr class="row-even"><td><p>Coming Soon</p></td>
+<td><p>False Alarm Ratio</p></td>
+<td><p>FAR</p></td>
+<td><p>false_alarm_ratio</p></td>
+</tr>
+<tr class="row-odd"><td><p>Coming Soon</p></td>
+<td><p>Probability of Detection</p></td>
+<td><p>POD</p></td>
+<td><p>probability_of_detection</p></td>
+</tr>
+<tr class="row-even"><td><p>Coming Soon</p></td>
+<td><p>Probability of False Detection</p></td>
+<td><p>POFD</p></td>
+<td><p>probability_of_false_detection</p></td>
+</tr>
+<tr class="row-odd"><td><p>Coming Soon</p></td>
+<td><p>Critical Success Index (Threat Score)</p></td>
+<td><p>CSI</p></td>
+<td><p>critical_success_index</p></td>
+</tr>
+<tr class="row-even"><td><p>Coming Soon</p></td>
+<td><p>Brier Score</p></td>
+<td><p>BS</p></td>
+<td><p>brier_score</p></td>
+</tr>
+<tr class="row-odd"><td><p>Coming Soon</p></td>
+<td><p>Brier Skill Score</p></td>
+<td><p>BSS</p></td>
+<td><p>brier_skill_score</p></td>
+</tr>
+<tr class="row-even"><td><p>Coming Soon</p></td>
+<td><p>Continuous Ranked Probability Score</p></td>
+<td><p>CRPS</p></td>
+<td><p>cont_ranked_probability_score</p></td>
+</tr>
+<tr class="row-odd"><td><p>Coming Soon</p></td>
+<td><p>Continuous Ranked Probability Skill Score</p></td>
+<td><p>CRPSS</p></td>
+<td><p>cont_ranked_probability_skill_score</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../notebooks/queries/test_queries.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Test Queries</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../../development/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Developer Guide</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/user_guide/metrics/metrics.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

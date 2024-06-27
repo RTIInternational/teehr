@@ -1,0 +1,312 @@
+:py:mod:`teehr.loading.usgs.usgs`
+=================================
+
+.. py:module:: teehr.loading.usgs.usgs
+
+.. autoapi-nested-parse::
+
+   Module for loading and processing USGS streamflow data.
+
+   The function ``usgs_to_parquet`` fetches USGS streamflow data and saves it to
+   parquet files following the TEEHR data model.  The OWP tool ``HydroTools`` is
+   used to fetch the data from the USGS API.  Several ``chunk_by`` options are
+   included to allow for the data to be fetched by location_id, day, week, month,
+   and year (or None).
+
+   Note that the USGS API is called for each unique value in the specified
+   chunk_by option.  For example, if chunk_by is set to "location_id", the USGS
+   API will be called for each unique location_id in the provided list.
+
+   .. note::
+      Care should be taken to select the appropriate chunk_by option to based on
+      the number of locations and the time period of interest, to avoid excessive
+      API calls and produce more efficient queries.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.loading.usgs.usgs._filter_to_hourly
+   teehr.loading.usgs.usgs._filter_no_data
+   teehr.loading.usgs.usgs._convert_to_si_units
+   teehr.loading.usgs.usgs._datetime_to_date
+   teehr.loading.usgs.usgs._format_df
+   teehr.loading.usgs.usgs._fetch_usgs
+   teehr.loading.usgs.usgs._format_output_filename
+   teehr.loading.usgs.usgs.usgs_to_parquet
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.loading.usgs.usgs.DATETIME_STR_FMT
+   teehr.loading.usgs.usgs.DAYLIGHT_SAVINGS_PAD
+
+
+.. py:data:: DATETIME_STR_FMT
+   :value: '%Y-%m-%dT%H:%M:00+0000'
+
+   
+
+.. py:data:: DAYLIGHT_SAVINGS_PAD
+
+   
+
+.. py:function:: _filter_to_hourly(df: pandas.DataFrame) -> pandas.DataFrame
+
+   
+   Filter out data not reported on the hour.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: _filter_no_data(df: pandas.DataFrame, no_data_value=-999) -> pandas.DataFrame
+
+   
+   Filter out no data values.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: _convert_to_si_units(df: pandas.DataFrame) -> pandas.DataFrame
+
+   
+   Convert streamflow values from english to metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: _datetime_to_date(dt: datetime.datetime) -> datetime.datetime
+
+   
+   Convert datetime to date only.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: _format_df(df: pandas.DataFrame) -> pandas.DataFrame
+
+   
+   Format HydroTools dataframe columns to TEEHR data model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: _fetch_usgs(sites: List[str], start_date: datetime.datetime, end_date: datetime.datetime, filter_to_hourly: bool = True, filter_no_data: bool = True, convert_to_si: bool = True) -> pandas.DataFrame
+
+   
+   Fetch USGS gage data and format to TEEHR format.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: _format_output_filename(chunk_by: str, start_dt, end_dt) -> str
+
+   
+   Format the output filename based on min and max datetime.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: usgs_to_parquet(sites: List[str], start_date: Union[str, datetime.datetime, pandas.Timestamp], end_date: Union[str, datetime.datetime, pandas.Timestamp], output_parquet_dir: Union[str, pathlib.Path], chunk_by: Union[teehr.models.loading.utils.USGSChunkByEnum, None] = None, filter_to_hourly: bool = True, filter_no_data: bool = True, convert_to_si: bool = True, overwrite_output: Optional[bool] = False)
+
+   
+   Fetch USGS gage data and save as a Parquet file.
+
+   All dates and times within the files and in the file names are in UTC.
+
+   :Parameters:
+
+       **sites** : List[str]
+           List of USGS gages sites to fetch.
+           Must be string to preserve the leading 0.
+
+       **start_date** : datetime
+           Start time of data to fetch.
+
+       **end_date** : datetime
+           End time of data to fetch. Note, since startDt is inclusive for the
+           USGS service, we subtract 1 minute from this time so we don't get
+           overlap between consecutive calls.
+
+       **output_parquet_dir** : Union[str, Path]
+           Path of directory where parquet files will be saved.
+
+       **chunk_by** : Union[str, None], default = None
+           How to "chunk" the fetching and storing of the data.
+           Valid options = ["location_id", "day", "week", "month", "year", None].
+
+       **filter_to_hourly** : bool = True
+           Return only values that fall on the hour (i.e. drop 15 minute data).
+
+       **filter_no_data** : bool = True
+           Filter out -999 values.
+
+       **convert_to_si** : bool = True
+           Multiplies values by 0.3048**3 and sets `measurement_units` to `m3/s`.
+
+       **overwrite_output** : bool
+           Flag specifying whether or not to overwrite output files if they
+           already exist.  True = overwrite; False = fail.
+
+
+
+
+
+
+
+
+
+
+
+   .. rubric:: Examples
+
+   Here we fetch five days worth of USGS hourly streamflow data, to two gages,
+   chunking by day.
+
+   Import the module.
+
+   >>> from teehr.loading.usgs.usgs import usgs_to_parquet
+
+   Set the input variables.
+
+   >>> SITES=["02449838", "02450825"]
+   >>> START_DATE=datetime(2023, 2, 20)
+   >>> END_DATE=datetime(2023, 2, 25)
+   >>> OUTPUT_PARQUET_DIR=Path(Path().home(), "temp", "usgs")
+   >>> CHUNK_BY="day",
+   >>> OVERWRITE_OUTPUT=True
+
+   Fetch the data, writing to the specified output directory.
+
+   >>> usgs_to_parquet(
+   >>>     sites=SITES,
+   >>>     start_date=START_DATE,
+   >>>     end_date=END_DATE,
+   >>>     output_parquet_dir=TEMP_DIR,
+   >>>     chunk_by=CHUNK_BY,
+   >>>     overwrite_output=OVERWRITE_OUTPUT
+   >>> )
+
+
+
+   ..
+       !! processed by numpydoc !!
+

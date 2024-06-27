@@ -1,0 +1,386 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Example NGEN to Parquet\n",
+    "This is an example notebook to convert ngen catchments, nexus, forcings, and outputs to parquet files for use in TEEHR.  It also loads USGS gage locations and grabs USGS gage data.\n",
+    "\n",
+    "This code is not at all DRY at the moment.  There is probably room for tools to handle this process in a standardized yet configurable way.  The NextGen output can vary a lot depending on the model, configuration, etc., so careful planning and understanding of the output would be required. Ideally, code could just be pointed at the `realization`, `catchment` and `nexus` files and everything would be determined programatically from there.  This would require a deeper understanding of the NextGen and BMI, etc. to implement, than we currently have.\n",
+    "\n",
+    "Before using any of the code below, you should examine the `*.csv` files carefully as the formats could be different."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%capture\n",
+    "!pip install hydrotools"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Need to install TEEHR to avoid this\n",
+    "import sys\n",
+    "sys.path.insert(0, \"../../src\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import pandas as pd\n",
+    "import geopandas as gpd\n",
+    "import geoviews as gv\n",
+    "from pathlib import Path\n",
+    "from datetime import datetime\n",
+    "import hvplot.pandas\n",
+    "import cartopy.crs as ccrs\n",
+    "from holoviews import opts\n",
+    "\n",
+    "import teehr.loading.usgs as tlu"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Set some configurations\n",
+    "NGEN_DIR = \"/home/jovyan/shared-readwrite/rti-eval/awi_16_680661_001/ngen/\"\n",
+    "NGEN_CONFIG_DIR = Path(NGEN_DIR, \"config\")\n",
+    "NGEN_FORCINGS_DIR = Path(NGEN_DIR, \"forcings\")\n",
+    "NGEN_OUTPUT_DIR = Path(NGEN_DIR, \"output\")\n",
+    "\n",
+    "STUDY_DIR = \"/home/jovyan/shared-readwrite/rti-eval/awi_16_680661_001/\"\n",
+    "STUDY_TS_DIR = Path(STUDY_DIR, \"timeseries\")\n",
+    "STUDY_GEO_DIR = Path(STUDY_DIR, \"geo\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Catchment GeoJSON"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "catchment_file_gdf = gpd.read_file(Path(NGEN_CONFIG_DIR, \"catchments.geojson\"))\n",
+    "catchment_file_gdf[\"name\"] = catchment_file_gdf[\"id\"]\n",
+    "catchment_file_gdf = catchment_file_gdf[[\"id\", \"name\", \"geometry\"]]\n",
+    "catchment_file_gdf.to_parquet(Path(STUDY_GEO_DIR, \"cat_geometry.parquet\"))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "catchment_crosswalk = pd.DataFrame({\"primary_location_id\": catchment_file_gdf[\"id\"], \"secondary_location_id\": catchment_file_gdf[\"id\"]})\n",
+    "catchment_crosswalk.to_parquet(Path(STUDY_GEO_DIR, \"cat_cat_crosswalk.parquet\"))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Nexus GeoJSON"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "nexus_file_gdf = gpd.read_file(Path(NGEN_CONFIG_DIR, \"nexus.geojson\"))\n",
+    "nexus_file_gdf[\"name\"] = nexus_file_gdf[\"id\"]\n",
+    "nexus_file_gdf = nexus_file_gdf[[\"id\", \"name\", \"geometry\"]]\n",
+    "nexus_file_gdf.to_parquet(Path(STUDY_GEO_DIR, \"nex_geometry.parquet\"))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "nexus_crosswalk = pd.DataFrame({\"primary_location_id\": nexus_file_gdf[\"id\"], \"secondary_location_id\": nexus_file_gdf[\"id\"]})\n",
+    "nexus_crosswalk.to_parquet(Path(STUDY_GEO_DIR, \"nex_nex_crosswalk.parquet\"))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Catchment Forcings"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "cat_forcing_files = NGEN_FORCINGS_DIR.glob(pattern=\"cat16_cat-*.csv\")\n",
+    "\n",
+    "cat_dfs = []\n",
+    "for file in cat_forcing_files:\n",
+    "    cat_df = pd.read_csv(file, parse_dates=[\"time\"])\n",
+    "    cat_df[\"configuration\"] = \"awi_16_680661_001\"\n",
+    "    cat_df[\"variable_name\"] = \"precipitation_rate\"\n",
+    "    cat_df[\"reference_time\"] = \"\"\n",
+    "    cat_df[\"measurement_unit\"] = \"mm/hr\"\n",
+    "    cat_df[\"location_id\"] = file.stem.split(\"_\")[-1]\n",
+    "    cat_df.rename(columns={\"time\":\"value_time\", \"precip_rate\":\"value\"}, inplace=True, errors=\"raise\")\n",
+    "    cat_df[\"value\"] = cat_df[\"value\"] * 3600\n",
+    "    cat_df = cat_df[[\"reference_time\", \"location_id\", \"value_time\", \"value\", \"variable_name\", \"measurement_unit\", \"configuration\"]]\n",
+    "    # Depending on size may want to write inididual parquet files.\n",
+    "    # cat_df.to_parquet(Path(STUDY_FORCINGS_DIR, f\"{file.stem.split('_')[-1]}.parquet\"))\n",
+    "    cat_dfs.append(cat_df)\n",
+    "    \n",
+    "pd.concat(cat_dfs).to_parquet(Path(STUDY_TS_DIR, \"catchment_forcings.parquet\"))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Catchment Output"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "cat_output_files = NGEN_OUTPUT_DIR.glob(pattern=\"cat-*.csv\")\n",
+    "\n",
+    "cat_out_dfs = []\n",
+    "for file in cat_output_files:\n",
+    "    cat_out_df = pd.read_csv(file)\n",
+    "    cat_out_df.rename(columns={\"Time Step\":\"lead_time\",\"Time\":\"value_time\", \"Q_OUT\": \"value\"}, inplace=True, errors=\"raise\")\n",
+    "    cat_out_df[\"configuration\"] = \"awi_16_680661_00\"\n",
+    "    cat_out_df[\"location_id\"] = file.stem.split(\"_\")[-1]\n",
+    "    cat_out_df[\"variable_name\"] = \"runoff\"\n",
+    "    cat_out_df[\"reference_time\"] = cat_out_df[\"value_time\"].iloc[0]\n",
+    "    cat_out_df[\"measurement_unit\"] = \"m3/s\"\n",
+    "    cat_out_df = cat_out_df[[\"reference_time\", \"location_id\", \"value_time\", \"value\", \"variable_name\", \"measurement_unit\", \"configuration\"]]\n",
+    "     # Depending on size may want to write inididual parquet files.\n",
+    "    # cat_out_df.to_parquet(Path(STUDY_OUTPUT_DIR, f\"{file.stem.split('_')[-1]}.parquet\"))\n",
+    "    cat_out_dfs.append(cat_out_df)\n",
+    "    \n",
+    "pd.concat(cat_out_dfs).to_parquet(Path(STUDY_TS_DIR, \"catchment_simulation.parquet\"))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Nexus Output"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "nexus_output_files = NGEN_OUTPUT_DIR.glob(pattern=\"nex-*.csv\")\n",
+    "\n",
+    "nex_out_dfs = []\n",
+    "for file in nexus_output_files:\n",
+    "    nex_out_df = pd.read_csv(file, header=1, names=[\"lead_time\",\"value_time\", \"value\"], parse_dates=[\"value_time\"])\n",
+    "    nex_out_df[\"configuration\"] = \"awi_16_680661_00\"\n",
+    "    nex_out_df[\"location_id\"] = file.stem.split(\"_\")[0]\n",
+    "    nex_out_df[\"variable_name\"] = \"streamflow\"\n",
+    "    nex_out_df[\"reference_time\"] = nex_out_df[\"value_time\"].iloc[0]\n",
+    "    nex_out_df[\"measurement_unit\"] = \"m3/s\"\n",
+    "    nex_out_df = nex_out_df[[\"reference_time\", \"location_id\", \"value_time\", \"value\", \"variable_name\", \"measurement_unit\", \"configuration\"]]\n",
+    "    # Depending on size may want to write inididual parquet files.\n",
+    "    # nex_out_df.to_parquet(Path(STUDY_OUTPUT_DIR, f\"{file.stem.split('_')[-1]}.parquet\"))\n",
+    "    nex_out_dfs.append(nex_out_df)\n",
+    "    \n",
+    "pd.concat(nex_out_dfs).to_parquet(Path(STUDY_TS_DIR, \"nexus_simulation.parquet\"))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## USGS Gages and Crosswalk\n",
+    "The gage data GeoJSON file `usgs_awi_16_680661_001_gages.geojson` was created manually using QGIS and the nexus and catchment GeoJSON files from the study for this example project, but could be automated in the future.\n",
+    "\n",
+    "First the `usgs_awi_16_680661_001_gages.geojson` is converted to parquet and then a crosswalk table is created and also saved as a parquet file."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Convert USGS Gages to Parquet\n",
+    "usgs_gdf = gpd.read_file(Path(STUDY_GEO_DIR, \"usgs_awi_16_680661_001_gages.geojson\"))\n",
+    "usgs_gdf.rename(columns={\"STAID\":\"id\",\"STANAME\":\"name\"}, inplace=True, errors=\"raise\")\n",
+    "usgs_gdf[\"id\"] = \"usgs-\" + usgs_gdf[\"id\"].astype(str)\n",
+    "usgs_gdf = usgs_gdf[[\"id\", \"name\", \"geometry\"]]\n",
+    "usgs_gdf.to_parquet(Path(STUDY_GEO_DIR, \"usgs_awi_16_680661_001_geometry.parquet\"))\n",
+    "# usgs_gdf"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# This crosswalk list was generated by hand because the hydrofabric for this example \n",
+    "# does not match the published hydrofabric. In the future, this could be automated \n",
+    "# based on the hydrofabric data.\n",
+    "nex_location_ids = [\n",
+    "    \"nex-680635\",\n",
+    "    \"nex-680639\",\n",
+    "    \"nex-680646\",\n",
+    "    \"nex-680649\",\n",
+    "    \"nex-680892\",\n",
+    "    \"nex-680741\",\n",
+    "    \"nex-680662\"\n",
+    "]\n",
+    "usgs_gage_ids = [\n",
+    "    \"usgs-10154200\",\n",
+    "    \"usgs-10155000\",\n",
+    "    \"usgs-10155200\",\n",
+    "    \"usgs-10155500\",\n",
+    "    \"usgs-10156000\",\n",
+    "    \"usgs-10157500\",\n",
+    "    \"usgs-10163000\"\n",
+    "]\n",
+    "usgs_nex_crosswalk = pd.DataFrame(\n",
+    "    {\n",
+    "        \"primary_location_id\": usgs_gage_ids,\n",
+    "        \"secondary_location_id\": nex_location_ids\n",
+    "    }\n",
+    ")\n",
+    "usgs_nex_crosswalk.to_parquet(Path(STUDY_GEO_DIR, \"usgs_nex_crosswalk.parquet\"))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Load USGS Gage Data"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Use the TEEHR library to load USGS gage data\n",
+    "usgs_site_codes = [v.replace(\"usgs-\", \"\") for v in usgs_nex_crosswalk[\"primary_location_id\"].to_list()]\n",
+    "tlu.usgs_to_parquet(\n",
+    "    sites=usgs_site_codes,\n",
+    "    start_date=datetime(1980, 1, 1),\n",
+    "    end_date=datetime(1980, 2, 1),\n",
+    "    output_parquet_dir=Path(STUDY_TS_DIR),\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Lets look at the data"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "tiles = gv.tile_sources.OSM"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "cat_gdf = gpd.read_parquet(Path(STUDY_GEO_DIR, \"cat_geometry.parquet\")).to_crs(\"EPSG:3857\")\n",
+    "catchments = cat_gdf.hvplot(crs=ccrs.GOOGLE_MERCATOR)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "nex_gdf = gpd.read_parquet(Path(STUDY_GEO_DIR, \"nex_geometry.parquet\")).to_crs(\"EPSG:3857\")\n",
+    "nexus = nex_gdf.hvplot(color=[\"red\"], crs=ccrs.GOOGLE_MERCATOR)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "usgs_gdf = gpd.read_parquet(Path(STUDY_GEO_DIR, \"usgs_awi_16_680661_001_geometry.parquet\")).to_crs(\"EPSG:3857\")\n",
+    "usgs = usgs_gdf.hvplot(color=[\"green\"], crs=ccrs.GOOGLE_MERCATOR)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "(tiles * catchments * nexus * usgs).opts(width=800, height=600)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.10"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
