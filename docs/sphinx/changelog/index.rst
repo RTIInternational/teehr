@@ -2,7 +2,7 @@ Release Notes
 =============
 
 
-0.3.26 - 2024-06-17
+0.3.26 - 2024-06-27
 --------------------
 
 Added
@@ -12,7 +12,7 @@ Added
 
 Changed
 ^^^^^^^
-* Pinned `sphinx-autodoc` to v3.0.0 in `documentation-publish.yml` to fix the API documentation build.
+* Pinned `sphinx-autodoc` to v3.0.0 and `numpy` to v1.26.4 in `documentation-publish.yml` to fix the API documentation build.
 * Removed unused documentation dependencies from dev group.
 
 
