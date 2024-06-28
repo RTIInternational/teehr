@@ -33,6 +33,7 @@ fastapi = "^0.103.0"
 uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
 httpx = "^0.25.1"
 pandas = "^2.2.0"
+pydata-sphinx-theme = "^0.15.4"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"

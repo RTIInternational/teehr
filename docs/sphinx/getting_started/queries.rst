@@ -24,13 +24,16 @@ Get Joined Timeseries
 ---------------------
 This feature joined two different tables of timeseries together based on location and time, applies filters and returns the paired timeseries
 
-.. image:: ../../images/joined_timeseries.png
-  :width: 1000
+.. figure:: ../../images/joined_timeseries.png
+   :scale: 75%
 
+   Getting joined timeseries schematic.
 
 Metrics
 -------
 This feature starts by joining the timeseries as described above, then the timeseries are grouped to create populations, then the requested metrics are calculated.
 
-.. image:: ../../images/metrics.png
-  :width: 1000
+.. figure:: ../../images/metrics.png
+   :scale: 70%
+
+   Calculating metrics schematic.

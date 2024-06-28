@@ -4,147 +4,142 @@ Metrics
 
 The metrics currently built into TEEHR are listed in the table below.
 Please note that some are still in development and planned for inclusion in future versions.
-For the equations corresponding to the metrics listed in the table, see:
+To download a pdf of the equations corresponding to the metrics listed in the table, see:
 :download:`pdf <TEEHR Metrics_27May2024.pdf>`
 
-.. list-table::
-   :widths: 20 25 25 30
-   :header-rows: 1
 
-   * - TEEHR Version
+.. list-table::
+   :header-rows: 1
+   :class: metrics-table
+
+   * - Available
      - Description
      - Short Name
-     - Metric/Function Name
-   * - v0.1.0
+     - Equation
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Mean Error
-     - Mean Error
-     - mean_error
-   * - v0.3.13
+     - :math:`Mean\ Error`
+     - :math:`\frac{\sum(sec-prim)}{count}`
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Relative Bias
-     - Relative Bias
-     - relative_bias
-   * - v0.3.13
+     - :math:`Relative\ Bias`
+     - :math:`\frac{\sum(sec-prim)}{\sum(prim)}`
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Multiplicative Bias
-     - Mult. Bias
-     - multiplicative_bias
-   * - v0.1.0
+     - :math:`Mult.\ Bias`
+     - :math:`\frac{\mu_{sec}}{\mu_{prim}}`
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Mean Square Error
-     - MSE
-     - mean_square_error
-   * - v0.1.0
+     - :math:`MSE`
+     - :math:`\frac{\sum(sec-prim)^2}{count}`
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Root Mean Square Error
-     - RMSE
-     - root_mean_square_error
-   * - v0.1.0
+     - :math:`RMSE`
+     - :math:`\sqrt{\frac{\sum(sec-prim)^2}{count}}`
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Mean Absolute Error
-     - MAE
-     - mean_absolute_error
-   * - v0.3.13
-     - Relative Mean Absolute Error
-     - Relative MAE
-     - mean_absolute_relative_error
-   * - v0.3.13
+     - :math:`MAE`
+     - :math:`\frac{\sum|sec-prim|}{count}`
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Mean Absolute Relative Error
+     - :math:`Relative\ MAE`
+     - :math:`\frac{\sum|sec-prim|}{\sum(prim)}`
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Pearson Correlation Coefficient
-     - r
-     - pearson_correlation
-   * - v0.3.13
+     - :math:`r`
+     - :math:`r(sec, prim)`
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Coefficient of Determination
-     - r\ :sup:`2`\
-     - r_squared
-   * - v0.1.0
+     - :math:`r^2`
+     - :math:`r(sec, prim)^2`
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Nash-Sutcliffe Efficiency
-     - NSE
-     - nash_sutcliffe_efficiency
-   * - v0.3.13
+     - :math:`NSE`
+     - :math:`1-\frac{\sum(prim-sec)^2}{\sum(prim-\mu_{prim}^2)}`
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Normalized Nash-Sutcliffe Efficiency
-     - NNSE
-     - nash_sutcliffe_efficiency_normalized
-   * - v0.3.13
+     - :math:`NNSE`
+     - :math:`\frac{1}{(2-NSE)}`
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Kling Gupta Efficiency - original
-     - KGE
-     - kling_gupta_efficiency
-   * - v0.3.13
+     - :math:`KGE`
+     - :math:`1-\sqrt{(r(sec, prim)-1)^2+(\frac{\sigma_{sec}}{\sigma_{prim}}-1)^2+(\frac{\mu_{sec}}{\mu_{sec}/\mu_{prim}}-1)^2}`
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Kling Gupta Efficiency - modified 1 (2012)
-     - KGE'
-     - kling_gupta_efficiency_mod1
-   * - v0.3.13
+     - :math:`KGE'`
+     - :math:`1-\sqrt{(r(sec, prim)-1)^2+(\frac{\sigma_{sec}/\mu_{sec}}{\sigma_{prim}/\mu_{prim}}-1)^2+(\frac{\mu_{sec}}{\mu_{sec}/\mu_{prim}}-1)^2}`
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Kling Gupta Efficiency - modified 2 (2021)
-     - KGE"
-     - kling_gupta_efficiency_mod2
-   * - Coming Soon
-     - Nash-Sutcliffe Efficienty of Log Flows
-     - NSE(log)
-     - nash-sutcliffe_efficiency_log
-   * - Coming Soon
+     - :math:`KGE''`
+     - :math:`1-\sqrt{(r(sec, prim)-1)^2+(\frac{\sigma_{sec}}{\sigma_{prim}}-1)^2+\frac{(\mu_{sec}-\mu_{prim})^2}{\sigma_{prim}^2}}`
+   * - `Coming Soon`
+     - Nash-Sutcliffe Efficiency of Log Flows
+     - :math:`NSE(log)`
+     - :math:`1-\frac{\sum(log(prim)-log(sec))^2}{\sum(log(prim)-\mu(log(prim)))^2}`
+   * - `Coming Soon`
      - Annual Peak Flow Relative Bias
-     - Ann PF Bias
-     - annual_peak_flow_bias
-   * - Coming Soon
+     - :math:`Ann\ PF\ Bias`
+     - :math:`\frac{\sum(ann.\ peak_{sec}-ann.\ peak_{prim})}{\sum(ann.\ peak_{prim})}`
+   * - `Coming Soon`
      - Spearman Rank Correlation Coefficient
-     - r\ :sub:`s`\
-     - annual_peak_flow_bias
-   * - Coming Soon
+     - :math:`r_s`
+     - :math:`1-\frac{6*\sum|rank_{prim}-rank_{sec}|^2}{count(count^2-1)}`
+   * - `Coming Soon`
      - Flow Duration Curve Slope Error
-     - Slope FDC Error
-     - fdc_slope_error
-   * - Coming Soon
+     - :math:`Slope\ FDC\ Error`
+     - :math:`\frac{q66_{sec}-q33_{sec}}{33}-\frac{q66_{prim}-q33_{prim}}{33}`
+   * - `Coming Soon`
      - Event Peak Flow Relative Bias
-     - Peak Bias
-     - event_peak_flow_relative_bias
-   * - Coming Soon
+     - :math:`Peak\ Bias`
+     - :math:`\frac{\sum(peak_{sec}-peak_{prim})}{\sum(peak_{prim})}`
+   * - `Coming Soon`
      - Event Peak Flow Timing Error
-     - Peak Time Error
-     - peak_flow_timing_error
-   * - Coming Soon
+     - :math:`Peak\ Time\ Error`
+     - :math:`\frac{\sum(peak\ time_{sec}-peak\ time_{prim})}{count}`
+   * - `Coming Soon`
      - Baseflow Index Error
-     - BFI Error
-     - baseflow_index_error
-   * - Coming Soon
+     - :math:`BFI\ Error`
+     - :math:`\frac{\frac{\mu(baseflow_{sec})}{\mu(sec)}-\frac{\mu(baseflow_{prim})}{\mu(prim)}}{\frac{\mu(baseflow_{prim})}{\mu(prim)}}`
+   * - `Coming Soon`
      - Rising Limb Density Error
-     - RLD Error
-     - rising_limb_density_error
-   * - Coming Soon
+     - :math:`RLD\ Error`
+     - :math:`\frac{count(rising\ limb\ events_{sec})}{count(rising\ limb\ timesteps_{sec})}-\frac{count(rising\ limb\ events_{prim})}{count(rising\ limb\ timesteps_{prim})}`
+   * - `Coming Soon`
      - Mean Square Error Skill Score (generalized reference)
-     - MSESS
-     - mse_skill_score_ref
-   * - Coming Soon
+     - :math:`MSESS`
+     - :math:`1-\frac{\sum(prim-sec)^2}{\sum(prim-reference)^2}`
+   * - `Coming Soon`
      - Runoff Ratio Error
-     - RR Error
-     - runoff_ratio_error
-   * - Coming Soon
+     - :math:`RR\ Error`
+     - :math:`abs\left\|\frac{\mu(volume_{sec})}{\mu(precip\ volume)}-\frac{\mu(volume_{prim})}{\mu(precip\ volume)}\right\|`
+   * - `Coming Soon`
      - False Alarm Ratio
-     - FAR
-     - false_alarm_ratio
-   * - Coming Soon
+     - :math:`FAR`
+     - :math:`\frac{n_{FP}}{n_{TP}+n_{FP}}`
+   * - `Coming Soon`
      - Probability of Detection
-     - POD
-     - probability_of_detection
-   * - Coming Soon
+     - :math:`POD`
+     - :math:`\frac{n_{TP}}{n_{TP}+n_{FN}}`
+   * - `Coming Soon`
      - Probability of False Detection
-     - POFD
-     - probability_of_false_detection
-   * - Coming Soon
+     - :math:`POFD`
+     - :math:`\frac{n_{FP}}{n_{TN}+n_{FP}}`
+   * - `Coming Soon`
      - Critical Success Index (Threat Score)
-     - CSI
-     - critical_success_index
-   * - Coming Soon
+     - :math:`CSI`
+     - :math:`\frac{n_{TP}}{n_{TP}+n_{FN}+n_{FP}}`
+   * - `Coming Soon`
      - Brier Score
-     - BS
-     - brier_score
-   * - Coming Soon
+     - :math:`BS`
+     - :math:`\frac{\sum(sec\ ensemble\ prob-prim\ outcome)^2}{n}`
+   * - `Coming Soon`
      - Brier Skill Score
-     - BSS
-     - brier_skill_score
-   * - Coming Soon
-     - Continuous Ranked Probability Score
-     - CRPS
-     - cont_ranked_probability_score
-   * - Coming Soon
+     - :math:`BSS`
+     - :math:`1-\frac{BS}{BS_{ref}}`
+   * - `Coming Soon`
      - Continuous Ranked Probability Skill Score
-     - CRPSS
-     - cont_ranked_probability_skill_score
-
-
+     - :math:`CRPSS`
+     - :math:`1-\frac{CRPS}{CRPS_{ref}}`
 
 
 
