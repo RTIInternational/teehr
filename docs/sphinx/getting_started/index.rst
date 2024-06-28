@@ -75,14 +75,21 @@ TEEHR Components
 
 For more details on each component of TEEHR, see the following tutorials:
 
-* Data models: :ref:`data_model`
+:ref:`data_model`
 
-* Fetching and Loading Data: TODO
+Fetching and Loading Data [TODO]
 
-* Data Exploration: :ref:`queries`
+:ref:`queries`
 
-* Visualization: TODO
+Visualization [TODO]
 
+
+Additional Tutorials
+--------------------
+
+:doc:`/tutorials/joining_timeseries`
+
+:doc:`/tutorials/grouping_and_filtering`
 
 .. toctree::
     :maxdepth: 2
@@ -90,3 +97,4 @@ For more details on each component of TEEHR, see the following tutorials:
 
     data_model
     queries
+    /tutorials/tutorials_index

@@ -1,7 +1,7 @@
 .. _queries:
 
-Queries
-=======
+Model Evaluation Queries
+========================
 
 The TEEHR data library provides tools for querying data from the cached parquet files and for generating metrics.  This includes:
 
@@ -37,3 +37,5 @@ This feature starts by joining the timeseries as described above, then the times
    :scale: 70%
 
    Calculating metrics schematic.
+
+For a list of the metrics currently available in TEEHR, see :doc:`/user_guide/metrics/metrics`
