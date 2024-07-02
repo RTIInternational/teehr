@@ -77,7 +77,7 @@ For more details on each component of TEEHR, see the following tutorials:
 
 :ref:`data_model`
 
-Fetching and Loading Data [TODO]
+:doc:`Fetching and Loading Data </user_guide/notebooks/loading_examples_index>`
 
 :ref:`queries`
 
@@ -90,6 +90,8 @@ Additional Tutorials
 :doc:`/tutorials/joining_timeseries`
 
 :doc:`/tutorials/grouping_and_filtering`
+
+For a full list of metrics currently available in TEEHR, see the :doc:`/user_guide/metrics/metrics` documentation.
 
 .. toctree::
     :maxdepth: 2
