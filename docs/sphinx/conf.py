@@ -73,6 +73,9 @@ master_doc = 'index'
 
 # MyST-NB options
 nb_execution_mode = "off"
+myst_enable_extensions = [
+    "html_image"
+]
 
 
 # -- Options for HTML output -------------------------------------------------

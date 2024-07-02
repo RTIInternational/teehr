@@ -4,62 +4,51 @@
 User Guide
 ==========
 
-Run through several "use-cases" here, start to finish
+This guide provides examples of using some of TEEHR's core features.
 
-NWM retro
----------
+Fetching and Loading Data
+-------------------------
 
-* Fetch NWM retro and USGS data
-* Load into a database
-* Run some queries
-* Visualize some output
+TEEHR provides tools for fetching and loading hydrologic data into an efficient storage format (parquet). It currently
+supports both operational and retrospective National Water Model data as well as USGS streamflow data. Support for
+the Office of Water Prediction's Nextgen data is also in development.
 
+:doc:`NWM Operational Point Data </user_guide/notebooks/loading/point_loading_example>`
 
-NWM forecasts
--------------
-* Fetch NWM operational forecasts and USGS data
-* Load into a database
-* Run some queries
-* Visualize some output
+:doc:`NWM Operational Gridded Data [work-in-progress] </user_guide/notebooks/loading/grid_loading_example>`
 
+:doc:`NWM Retrospective Point Data [work-in-progress] </user_guide/notebooks/loading/load_retrospective>`
 
-Gridded/MAP analysis
---------------------
-* ...
+:doc:`NWM Retrospective Gridded Data [work-in-progress] </user_guide/notebooks/loading/load_retrospective>`
 
+:doc:`USGS Streamflow Data [work-in-progress] </user_guide/notebooks/loading/load_retrospective>`
 
-Web interface
--------------
-* ...
+Model Evaluation and Visualization with TEEHR
+---------------------------------------------
 
+Once the timeseries data conforms to the data model, we can take advantage of TEEHR's capabilities for
+quantifying and understanding model performance.  The following example notebooks demonstrate how to
+use TEEHR to join timeseries and evaluate model performance through calculation of various metrics.
 
-TEEHR-Hub
----------
-* ... ?
+While mapping and plotting functionality is not yet available in TEEHR, we provide several examples of visualizing
+model output using the `holoviews` library.
 
+Note: These notebooks were developed for the 2024 CIROH Developer's Conference and can be also found
+here: https://github.com/RTIInternational/teehr-devcon24-workshop
 
-Some Tests
-----------
+:doc:`Building a Simple TEEHR Dataset </user_guide/notebooks/evaluation/01-ex1-simple>`
 
-ipython example:
+:doc:`Building a Joined Database </user_guide/notebooks/evaluation/02-ex2_join_data>`
 
-.. ipython:: python
+:doc:`Evaluating and Visualizing Model Output, Ex. 1 </user_guide/notebooks/evaluation/03-ex2_evaluate>`
 
-   import pandas as pd
+:doc:`Evaluating and Visualizing Model Output, Ex. 2 </user_guide/notebooks/evaluation/04-ex3_evaluate>`
 
-   s = pd.Series([1, 3, 5, np.nan, 6, 8])
-   s
-
-:download:`Download this example notebook (right-click, Save-As) <notebooks/loading/grid_loading_example.ipynb>`
 
 .. toctree::
    :maxdepth: 2
    :hidden:
 
    notebooks/loading_examples_index
-   notebooks/queries_examples_index
+   notebooks/evaluation_examples_index
    metrics/metrics
-
-
-.. include: grid_loading_example.ipynb
-.. :parser: myst_nb.docutils_

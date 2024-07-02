@@ -12,7 +12,7 @@ time steps at five different locations (gage stations).
 
 When the timeseries and attributes have been brought into the TEEHR data model, it will look something like this:
 
-.. figure:: ../../images/nwm_usgs_ex_data_model.png
+.. figure:: ../../images/tutorials/joining/nwm_usgs_ex_data_model.png
    :scale: 60%
 
    Example NWM and USGS data in the TEEHR data model.
@@ -32,7 +32,7 @@ attributes.  This requires the crosswalk table to map the primary and secondary 
 the data may contain more than one variable (e.g., temperature, C) we also need to consider the `variable_name`
 and `measurement_unit` fields during the join.
 
-.. figure:: ../../images/nwm_usgs_ex_joining_snip.png
+.. figure:: ../../images/tutorials/joining/nwm_usgs_ex_joining_snip.png
    :scale: 55%
 
    Joining the primary and secondary streamflow values by location, time, variable name, and measurement unit.
@@ -40,7 +40,7 @@ and `measurement_unit` fields during the join.
 
 The initial joined timeseries table will look like this:
 
-.. figure:: ../../images/nwm_usgs_ex_joined.png
+.. figure:: ../../images/tutorials/joining/nwm_usgs_ex_joined.png
    :scale: 40%
 
    Example joined timeseries table.
@@ -52,7 +52,7 @@ easily filter and group the data based on the location attributes, and to visual
 To join the geometry, we can simply map each primary location ID in the joined timeseries table to the ID in the
 geometry table, which in this case contains the point geometries of the USGS gage stations.
 
-.. figure:: ../../images/nwm_usgs_ex_joining_geometry.png
+.. figure:: ../../images/tutorials/joining/nwm_usgs_ex_joining_geometry.png
    :scale: 55%
 
    Joining the geometry to the initial joined timeseries table.
@@ -60,7 +60,7 @@ geometry table, which in this case contains the point geometries of the USGS gag
 Finally, we can join additional, pre-calculated attributes the table, which give us more options for
 filtering and grouping the data when calculating performance metrics.
 
-.. figure:: ../../images/nwm_usgs_ex_joining_attributes.png
+.. figure:: ../../images/tutorials/joining/nwm_usgs_ex_joining_attributes.png
    :scale: 60%
 
    Joining the attributes to the initial joined timeseries table.

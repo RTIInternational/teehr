@@ -46,7 +46,7 @@ Data Model Diagram
 ------------------
 The following is a visual representation of the data model structure.
 
-.. figure:: ../../images/data_model.png
+.. figure:: ../../images/getting_started/data_model.png
   :scale: 100%
 
   The TEEHR data model.

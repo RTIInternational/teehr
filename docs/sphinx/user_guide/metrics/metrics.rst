@@ -1,6 +1,6 @@
-=======
-Metrics
-=======
+=================
+Available Metrics
+=================
 
 The metrics currently built into TEEHR are listed in the table below.
 Please note that some are still in development and planned for inclusion in future versions.

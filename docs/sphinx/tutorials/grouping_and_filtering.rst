@@ -18,7 +18,7 @@ quantitave and analysis.
 
 We'll look at an example to help illustrate the grouping and filtering concepts.
 
-.. figure:: ../../images/grouping_example_table.png
+.. figure:: ../../images/tutorials/grouping_filtering/grouping_example_table.png
     :scale: 60%
     :align: right
 
@@ -42,7 +42,7 @@ Let's use this table of joined timeseries values to demonstrate how grouping sel
 
 First, we'll calculate the relative bias for each model configuration at each location:
 
-.. figure:: ../../images/grouping_example_1.png
+.. figure:: ../../images/tutorials/grouping_filtering/grouping_example_1.png
     :scale: 55%
 
     Grouping the timeseries table by configuration.
@@ -75,7 +75,7 @@ even if it's not necessary for the grouping operation!
 For example, if we wanted to include ``q95_cms`` in the query result, we would need to include it in the
 ``group_by`` list:
 
-.. figure:: ../../images/grouping_example_2.png
+.. figure:: ../../images/tutorials/grouping_filtering/grouping_example_2.png
     :scale: 55%
     :align: left
 
@@ -97,7 +97,7 @@ Filtering
 Next, we'll add filtering to further narrow the population for our metric calculations. Let's say we only
 want to consider ``NWM v3.0`` and ``Marrmot`` model configurations:
 
-.. figure:: ../../images/grouping_example_3.png
+.. figure:: ../../images/tutorials/grouping_filtering/grouping_example_3.png
     :scale: 55%
 
     Grouping the timeseries table by configuration and filtering for NWM v3.0 and Marrmot.

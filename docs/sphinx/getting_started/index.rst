@@ -30,19 +30,17 @@ An Introduction to TEEHR
 ------------------------
 
 TEEHR is a collection of tools for evaluating and exploring hydrologic timeseries data. It is designed to be efficient, modular, and flexible,
-allowing users to work with a variety of data sources and formats. Quantifying the performance of a model is a relatively simple task
+allowing users to work with a variety of data sources and formats. Quantifying the performance of a model can be a relatively simple task
 consisting of comparing the model output to observed data through a series of metrics.
 
-.. figure:: ../../images/timeseries_plot.png
+.. figure:: ../../images/getting_started/timeseries_plot.png
    :scale: 80%
-
 
 .. container:: center-icon
 
    :material-regular:`arrow_downward;3.5em;sd-text-success`
 
-
-.. figure:: ../../images/metrics_table.png
+.. figure:: ../../images/getting_started/metrics_table.png
    :scale: 75%
 
    Evaluating simulations vs. observations through a series of performance metrics.
@@ -62,9 +60,9 @@ At its core, TEEHR consists of four main components:
 * **Data Models**: A set of schemas that define the structure of the data.
 * **Data Ingest and Storage**: Tools for fetching and loading hydrologic data into an efficient storage format.
 * **Exploration**: A set of tools for quantifying and understanding model performance.
-* **Visualization**: Tools for visualizing the data and results.
+* **Visualization**: Tools for visualizing the data and results. [work-in-progress]
 
-.. figure:: ../../images/teehr_components.png
+.. figure:: ../../images/getting_started/teehr_components.png
    :scale: 75%
 
    The four main components of TEEHR.
@@ -75,13 +73,13 @@ TEEHR Components
 
 For more details on each component of TEEHR, see the following tutorials:
 
-:ref:`data_model`
+:ref:`Data Models <data_model>`
 
 :doc:`Fetching and Loading Data </user_guide/notebooks/loading_examples_index>`
 
-:ref:`queries`
+:ref:`Metric Queries <queries>`
 
-Visualization [TODO]
+:doc:`Evaluation and Visualization </user_guide/notebooks/evaluation_examples_index>`
 
 
 Additional Tutorials
@@ -97,6 +95,6 @@ For a full list of metrics currently available in TEEHR, see the :doc:`/user_gui
     :maxdepth: 2
     :hidden:
 
-    data_model
-    queries
+    Data Models <data_model>
+    Metric Queries <queries>
     /tutorials/tutorials_index

@@ -24,7 +24,7 @@ Get Joined Timeseries
 ---------------------
 This feature joined two different tables of timeseries together based on location and time, applies filters and returns the paired timeseries
 
-.. figure:: ../../images/joined_timeseries.png
+.. figure:: ../../images/getting_started/joined_timeseries.png
    :scale: 75%
 
    Getting joined timeseries schematic.
@@ -33,7 +33,7 @@ Metrics
 -------
 This feature starts by joining the timeseries as described above, then the timeseries are grouped to create populations, then the requested metrics are calculated.
 
-.. figure:: ../../images/metrics.png
+.. figure:: ../../images/getting_started/metrics.png
    :scale: 70%
 
    Calculating metrics schematic.
