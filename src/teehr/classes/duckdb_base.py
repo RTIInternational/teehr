@@ -2,6 +2,9 @@
 import teehr.queries.duckdb_database as tqu_db
 import teehr.queries.utils as tqu
 
+from teehr.classes.dataframe_accessor import TEEHRDataFrameAccessor # noqa
+from teehr.classes.series_accessor import TEEHRSeriesAccessor # noqa
+
 import geopandas as gpd
 import pandas as pd
 
