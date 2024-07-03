@@ -15,13 +15,13 @@ the Office of Water Prediction's Nextgen data is also in development.
 
 :doc:`NWM Operational Point Data </user_guide/notebooks/loading/point_loading_example>`
 
-:doc:`NWM Operational Gridded Data [work-in-progress] </user_guide/notebooks/loading/grid_loading_example>`
+:doc:`NWM Operational Gridded Data </user_guide/notebooks/loading/grid_loading_example>`
 
-:doc:`NWM Retrospective Point Data [work-in-progress] </user_guide/notebooks/loading/load_retrospective>`
+:doc:`NWM Retrospective Point Data </user_guide/notebooks/loading/load_retrospective>`
 
-:doc:`NWM Retrospective Gridded Data [work-in-progress] </user_guide/notebooks/loading/load_retrospective>`
+:doc:`NWM Retrospective Gridded Data </user_guide/notebooks/loading/load_gridded_retrospective>`
 
-:doc:`USGS Streamflow Data [work-in-progress] </user_guide/notebooks/loading/load_retrospective>`
+:doc:`USGS Streamflow Data </user_guide/notebooks/loading/usgs_loading>`
 
 Model Evaluation and Visualization with TEEHR
 ---------------------------------------------
