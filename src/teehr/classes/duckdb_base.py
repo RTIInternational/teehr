@@ -2,8 +2,8 @@
 import teehr.queries.duckdb_database as tqu_db
 import teehr.queries.utils as tqu
 
-from teehr.classes.dataframe_accessor import TEEHRDataFrameAccessor # noqa
-from teehr.classes.series_accessor import TEEHRSeriesAccessor # noqa
+from teehr.classes.dataframe_accessor import DataFrameAccessor # noqa
+from teehr.classes.series_accessor import SeriesAccessor # noqa
 
 import geopandas as gpd
 import pandas as pd
@@ -172,6 +172,8 @@ class DuckDBBase(ABC):
         teehr.queries.duckdb_database.create_get_metrics_query : \
             Create the get metrics query.
         """
+        # from teehr.classes.dataframe_accessor import DataFrameAccessor # noqa
+
         query = tqu_db.create_get_metrics_query(
             mq,
             self.from_joined_timeseries_clause,

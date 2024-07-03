@@ -4,7 +4,7 @@ import numpy as np
 
 
 @pd.api.extensions.register_series_accessor("teehr")
-class TEEHRSeriesAccessor:
+class SeriesAccessor:
     """Extends pandas Series objects. MAYBE UNNECESSARY."""
 
     def __init__(self, pandas_obj):

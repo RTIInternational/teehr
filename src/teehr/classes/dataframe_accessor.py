@@ -5,8 +5,23 @@ import pandas as pd
 
 
 @pd.api.extensions.register_dataframe_accessor("teehr")
-class TEEHRDataFrameAccessor:
-    """Extends pandas DataFrame objects."""
+class DataFrameAccessor:
+    """Extends pandas DataFrame objects.
+
+    Notes
+    -----
+    This class is a test. We could potentially have separate accessor
+    classes for metrics and timeseries data, and only register them
+    when their specific methods are called (get_metrics, get_timeseries).
+    Seems that this would require less validation in the accessor classes,
+    but could be confusing for the user?
+
+    Alternative is to have a single accessor class that gets registered
+    when the DuckDB class is instantiated that would contain methods for
+    summarizing and plotting metrics as well as timeseries. This would require
+    more validation in each method to ensure the DataFrame has the
+    appropriate data.
+    """
 
     def __init__(self, pandas_obj):
         """Initialize the class."""
