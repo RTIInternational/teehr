@@ -8,7 +8,7 @@ This is intended to be a living document that provides a common data model to wo
 
 Timeseries
 ----------
-The ``timeseries`` data model (mostly taken from [HydroTools](https://github.com/NOAA-OWP/hydrotools)) describes the schema used to store, you guessed it, timeseries data from both observed and simulated sources.  In the context of this system, this data model will be utilized as the format to store data as parquet files.  As such, a standard file directory structure is also important.  See [Cache Directory Structure] below.
+The ``timeseries`` data model (mostly taken from `HydroTools <https://github.com/NOAA-OWP/hydrotools>`_) describes the schema used to store, you guessed it, timeseries data from both observed and simulated sources.  In the context of this system, this data model will be utilized as the format to store data as parquet files.  As such, a standard file directory structure is also important.
 
 - ``reference_time``: [datetime] This is a reference time for a particular model simulation.
 - ``value_time``: [datetime] This is the time a value is valid at.

@@ -10,7 +10,7 @@ we could group the ``configuration`` field to calculate performance metrics for 
 
 We could then include filters to further narrow the population subset such as only considering first order stream locations or
 locations below a certain mean slope value. This allows us to gain more insight into the model performance through specific
-quantitave and analysis.
+quantitative analysis.
 
 .. note::
     The grouping and filtering capabilities in TEEHR provide the ability to explore models across

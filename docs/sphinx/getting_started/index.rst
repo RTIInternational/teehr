@@ -86,7 +86,7 @@ To fetch and load retrospective NWM point data (ie, streamflow), you can import 
 Model Evaluation
 ^^^^^^^^^^^^^^^^
 
-TEEHR provides a set of classes for evaluating model performance using ``DuckDB`` either with parquet files
+TEEHR provides a set of classes for evaluating model performance using `DuckDB <https://duckdb.org/>`_ either with parquet files
 or a persistent database. To evaluate a model based on a parquet file of pre-joined timeseries data, you can
 import the ``DuckDBJoinedParquet`` class:
 

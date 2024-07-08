@@ -6,7 +6,7 @@ Joining Timeseries
 One of the first and most important steps in comparing simulated and observed timeseries data is to join
 the two datasets together based on location and time (and potentially other fields).
 
-In this example, we consider a comparison of National Water Model (NWM) v3.0 retropective
+In this example, we consider a comparison of National Water Model (NWM) v3.0 retrospective
 streamflow simulations ("secondary") to USGS observed streamflow data ("primary") for a few
 time steps at five different locations (gage stations).
 
