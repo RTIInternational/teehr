@@ -2,6 +2,18 @@ Release Notes
 =============
 
 
+0.3.27 - 2024-07-08
+-------------------
+
+Added
+^^^^^
+* Documentation updates primarly to Getting Started and User Guide sections.
+
+Changed
+^^^^^^^
+* None
+
+
 0.3.26 - 2024-06-27
 --------------------
 

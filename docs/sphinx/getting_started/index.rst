@@ -22,8 +22,8 @@ You can use Docker:
 
 .. code-block:: bash
 
-   docker build -t teehr:v0.3.26 .
-   docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.3.26 jupyter lab --ip 0.0.0.0 $HOME
+   docker build -t teehr:[RELEASE TAG] .
+   docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:[RELEASE TAG] jupyter lab --ip 0.0.0.0 $HOME
 
 
 Importing TEEHR into your project
