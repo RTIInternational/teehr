@@ -1,0 +1,387 @@
+:py:mod:`teehr.classes.duckdb_joined_parquet`
+=============================================
+
+.. py:module:: teehr.classes.duckdb_joined_parquet
+
+.. autoapi-nested-parse::
+
+   Class based queries based on joined parquet files.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   teehr.classes.duckdb_joined_parquet.DuckDBJoinedParquet
+
+
+
+
+.. py:class:: DuckDBJoinedParquet(joined_parquet_filepath: Union[str, pathlib.Path, List[Union[str, pathlib.Path]]], geometry_filepath: Optional[Union[str, pathlib.Path, List[Union[str, pathlib.Path]]]] = None)
+
+
+   Bases: :py:obj:`teehr.classes.duckdb_base.DuckDBBase`
+
+   
+   For querying joined parquet files.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:method:: get_metrics(group_by: List[str], order_by: List[str], include_metrics: Union[List[teehr.models.queries.MetricEnum], str] = 'all', filters: Union[List[dict], None] = None, include_geometry: bool = False, return_query: bool = False) -> Union[str, pandas.DataFrame, geopandas.GeoDataFrame]
+
+      
+      Calculate performance metrics using database queries.
+
+
+      :Parameters:
+
+          **group_by** : List[str]
+              List of column/field names to group timeseries data by.
+              Must provide at least one.
+
+          **order_by** : List[str]
+              List of column/field names to order results by.
+              Must provide at least one.
+
+          **include_metrics** : Union[List[MetricEnum], str]
+              List of metrics (see below) for allowable list, or "all" to return
+              all. Must provide at least one.
+
+          **filters** : Union[List[dict], None] = None
+              List of dictionaries describing the "where" clause to limit data
+              that is included in metrics.
+
+          **include_geometry** : bool, optional
+              True joins the geometry to the query results. Only works if
+              `primary_location_id` is included as a group_by field, and
+              'geometry_filepath' was included in instantiation.
+              Default is False.
+
+          **return_query** : bool, optional
+              When True, returns the query string instead of the data.
+              Default is False.
+
+      :Returns:
+
+          Union[pd.DataFrame, gpd.GeoDataFrame, str]
+              A DataFrame or optionally a GeoDataFrame containing query results,
+              or the query itself as a string.
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_get_metrics_query`
+              Create the get metrics query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: get_joined_timeseries(order_by: List[str], filters: Union[List[dict], None] = None, include_geometry: bool = False, return_query: bool = False) -> Union[pandas.DataFrame, geopandas.GeoDataFrame, str]
+
+      
+      Retrieve joined timeseries from the joined parquet file(s).
+
+
+      :Parameters:
+
+          **order_by** : List[str]
+              List of column/field names to order results by.
+              Must provide at least one.
+
+          **filters** : Union[List[dict], None] = None
+              List of dictionaries describing the "where" clause to limit data
+              that is included in metrics.
+
+          **include_geometry** : bool, optional
+              True joins the geometry to the query results. Only works if
+              `primary_location_id` is included as a group_by field, and
+              'geometry_filepath' was included in instantiation.
+              Default is False.
+
+          **return_query** : bool, optional
+              True returns the query string instead of the data.
+              Default is False.
+
+      :Returns:
+
+          Union[pd.DataFrame, gpd.GeoDataFrame str]
+              A DataFrame or GeoDataFrame of query results
+              or the query itself as a string.
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_get_joined_timeseries_query`
+              Create the get joined timeseries query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: get_timeseries(order_by: List[str], timeseries_name: str, filters: Union[List[dict], None] = None, return_query: bool = False) -> Union[pandas.DataFrame, str]
+
+      
+      Retrieve timeseries using database query.
+
+
+      :Parameters:
+
+          **order_by** : List[str]
+              List of column/field names to order results by.
+              Must provide at least one.
+
+          **timeseries_name** : str
+              Name of the time series to query ('primary' or 'secondary').
+
+          **filters** : Union[List[dict], None], optional
+              List of dictionaries describing the "where" clause to limit data
+              that is included in metrics, by default None.
+
+          **return_query** : bool, optional
+              True returns the query string instead of the data.
+              Default is False.
+
+      :Returns:
+
+          Union[pd.DataFrame, str]
+              A DataFrame of query results or the query itself as a string.
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_get_timeseries_query`
+              Create the get timeseries query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: get_timeseries_chars(group_by: List[str], order_by: List[str], timeseries_name: str, filters: Union[List[dict], None] = None, return_query: bool = False) -> Union[str, pandas.DataFrame]
+
+      
+      Retrieve timeseries characteristics using database query.
+
+
+      :Parameters:
+
+          **group_by** : List[str]
+              List of column/field names to group timeseries data by.
+              Must provide at least one.
+
+          **order_by** : List[str]
+              List of column/field names to order results by.
+              Must provide at least one.
+
+          **timeseries_name** : str
+              Name of the time series to query (primary or secondary).
+
+          **filters** : Union[List[dict], None], optional
+              List of dictionaries describing the "where" clause to limit data
+              that is included in metrics., by default None.
+
+          **return_query** : bool, optional
+              True returns the query string instead of the data.
+              Default is False.
+
+      :Returns:
+
+          Union[str, pd.DataFrame]
+              A DataFrame of time series characteristics including:
+              - count
+              - min
+              - max
+              - average
+              - sum
+              - variance
+              
+              or, the query itself as a string.
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_get_timeseries_char_query`
+              Create the get timeseries characteristics query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: get_unique_field_values(field_name: str) -> pandas.DataFrame
+
+      
+      Get unique values in data for a given field.
+
+
+      :Parameters:
+
+          **field_name** : str
+              Name of the joined_timeseries field.
+
+      :Returns:
+
+          pd.DataFrame
+              A dataframe containing unique values for the given field.
+
+
+
+
+
+
+
+      .. seealso::
+
+          
+          :obj:`teehr.queries.duckdb_database.create_unique_field_values_query`
+              Create the get unique field values query.
+          
+          
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: get_joined_timeseries_schema() -> pandas.DataFrame
+
+      
+      Get field names and field data types from the joined         parquet files.
+
+
+
+      :Returns:
+
+          pd.DataFrame
+              Includes column_name, column_type, null, key, default,
+              and extra columns.
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _check_geometry_available()
+
+      
+      Make sure the geometry filepath has been specified.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _validate_query_model(query_model: Any, data: Dict) -> Any
+
+      
+      Validate the query based on existing fields.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+

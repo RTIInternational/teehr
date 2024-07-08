@@ -1,0 +1,968 @@
+:py:mod:`teehr.queries.metrics`
+===============================
+
+.. py:module:: teehr.queries.metrics
+
+.. autoapi-nested-parse::
+
+   Contains functions for metric queries.
+
+   The functions herein are use to support:
+
+   def get_metrics_clause(
+       mq: Union[tmq.MetricQuery, tmqd.MetricQuery],
+       join_geometry_clause: str
+   ) -> str:
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.queries.metrics.nse_cte
+   teehr.queries.metrics.spearman_ranks_cte
+   teehr.queries.metrics.join_spearman_ranks_cte
+   teehr.queries.metrics.select_spearman_correlation
+   teehr.queries.metrics.annual_metrics_cte
+   teehr.queries.metrics.join_nse_cte
+   teehr.queries.metrics.join_annual_metrics_cte
+   teehr.queries.metrics.select_max_value_timedelta
+   teehr.queries.metrics.select_secondary_max_value_time
+   teehr.queries.metrics.select_primary_max_value_time
+   teehr.queries.metrics.select_root_mean_squared_error
+   teehr.queries.metrics.select_mean_squared_error
+   teehr.queries.metrics.select_mean_absolute_error
+   teehr.queries.metrics.select_mean_absolute_relative_error
+   teehr.queries.metrics.select_kling_gupta_efficiency
+   teehr.queries.metrics.select_kling_gupta_efficiency_mod1
+   teehr.queries.metrics.select_kling_gupta_efficiency_mod2
+   teehr.queries.metrics.select_nash_sutcliffe_efficiency
+   teehr.queries.metrics.select_nash_sutcliffe_efficiency_normalized
+   teehr.queries.metrics.select_mean_error
+   teehr.queries.metrics.select_relative_bias
+   teehr.queries.metrics.select_multiplicative_bias
+   teehr.queries.metrics.select_pearson_correlation
+   teehr.queries.metrics.select_r_squared
+   teehr.queries.metrics.select_max_value_delta
+   teehr.queries.metrics.select_primary_count
+   teehr.queries.metrics.select_secondary_count
+   teehr.queries.metrics.select_primary_minimum
+   teehr.queries.metrics.select_secondary_minimum
+   teehr.queries.metrics.select_primary_maximum
+   teehr.queries.metrics.select_secondary_maximum
+   teehr.queries.metrics.select_primary_average
+   teehr.queries.metrics.select_secondary_average
+   teehr.queries.metrics.select_primary_sum
+   teehr.queries.metrics.select_secondary_sum
+   teehr.queries.metrics.select_primary_variance
+   teehr.queries.metrics.select_secondary_variance
+   teehr.queries.metrics.metrics_select_clause
+   teehr.queries.metrics.get_metrics_clause
+
+
+
+.. py:function:: nse_cte(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the nash-sutcliffe-efficiency CTE.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: spearman_ranks_cte(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the spearman ranks CTE.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: join_spearman_ranks_cte(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the annual signature metrics CTE.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_spearman_correlation(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select spearman correlation query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: annual_metrics_cte(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the annual signature metrics CTE.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: join_nse_cte(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the join nash-sutcliffe-efficiency CTE.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: join_annual_metrics_cte(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the annual signature metrics CTE.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_max_value_timedelta(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select max value timedelta query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_secondary_max_value_time(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select secondary max value time query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_primary_max_value_time(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select primary max value time query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_root_mean_squared_error(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select root mean squared error query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_mean_squared_error(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select mean squared error query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_mean_absolute_error(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select mean absolute error query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_mean_absolute_relative_error(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select mean absolute relative error query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_kling_gupta_efficiency(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select kling gupta efficiency query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_kling_gupta_efficiency_mod1(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select kling gupta efficiency mod1 query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_kling_gupta_efficiency_mod2(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select kling gupta efficiency mod2 query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_nash_sutcliffe_efficiency(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select nash sutcliffe efficiency query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_nash_sutcliffe_efficiency_normalized(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select nash sutcliffe efficiency query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_mean_error(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select mean_error query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_relative_bias(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select relative bias query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_multiplicative_bias(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select multiplicative bias query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_pearson_correlation(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select pearson correlation query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_r_squared(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select r squared query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_max_value_delta(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select max value delta query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_primary_count(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select primary count query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_secondary_count(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select secondary count query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_primary_minimum(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select primary minimum query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_secondary_minimum(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select secondary minimum query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_primary_maximum(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select primary maximum query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_secondary_maximum(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select secondary maximum query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_primary_average(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select primary average query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_secondary_average(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select secondary average query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_primary_sum(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select primary sum query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_secondary_sum(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select secondary sum query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_primary_variance(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select primary variance query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: select_secondary_variance(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery]) -> str
+
+   
+   Generate the select secondary variance query segment.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: metrics_select_clause(q: Union[teehr.models.queries.MetricQuery, teehr.models.queries.JoinedTimeseriesQuery, teehr.models.queries_database.MetricQuery, teehr.models.queries_database.JoinedTimeseriesQuery]) -> str
+
+   
+   Generate the metrics select clause.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_metrics_clause(mq: Union[teehr.models.queries.MetricQuery, teehr.models.queries_database.MetricQuery], join_geometry_clause: str) -> str
+
+   
+   Generate the metrics calculation clause.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

@@ -1,0 +1,572 @@
+:py:mod:`teehr.loading.nwm.utils`
+=================================
+
+.. py:module:: teehr.loading.nwm.utils
+
+.. autoapi-nested-parse::
+
+   Module defining common utilities for fetching and processing NWM data.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.loading.nwm.utils.check_dates_against_nwm_version
+   teehr.loading.nwm.utils.generate_json_paths
+   teehr.loading.nwm.utils.write_parquet_file
+   teehr.loading.nwm.utils.load_gdf
+   teehr.loading.nwm.utils.parquet_to_gdf
+   teehr.loading.nwm.utils.np_to_list
+   teehr.loading.nwm.utils.get_dataset
+   teehr.loading.nwm.utils.list_to_np
+   teehr.loading.nwm.utils.check_for_prebuilt_json_paths
+   teehr.loading.nwm.utils.gen_json
+   teehr.loading.nwm.utils.build_zarr_references
+   teehr.loading.nwm.utils.construct_assim_paths
+   teehr.loading.nwm.utils.build_remote_nwm_filelist
+   teehr.loading.nwm.utils.get_period_start_end_times
+   teehr.loading.nwm.utils.create_periods_based_on_chunksize
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.loading.nwm.utils.logger
+
+
+.. py:data:: logger
+
+   
+
+.. py:function:: check_dates_against_nwm_version(nwm_version: str, start_date: Union[str, datetime.datetime], ingest_days: int)
+
+   
+   Make sure start/end dates work with specified NWM version.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: generate_json_paths(kerchunk_method: str, gcs_component_paths: List[str], json_dir: str, ignore_missing_file: bool) -> List[str]
+
+   
+   Generate file paths to Kerchunk reference json files.
+
+
+   :Parameters:
+
+       **kerchunk_method** : str
+           Specifies the preference in creating Kerchunk reference json files.
+
+       **gcs_component_paths** : List[str]
+           Paths to NWM netcdf files in GCS.
+
+       **json_dir** : str
+           Local directory for caching created json files.
+
+       **ignore_missing_file** : bool
+           Flag specifying whether or not to fail if a missing
+           NWM file is encountered.
+
+   :Returns:
+
+       List[str]
+           List of filepaths to json files locally and/or in s3.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: write_parquet_file(filepath: pathlib.Path, overwrite_output: bool, data: Union[pyarrow.Table, pandas.DataFrame])
+
+   
+   Write the output timeseries parquet file.
+
+   Includes logic controlling whether or not to overwrite an existing file.
+
+   :Parameters:
+
+       **filepath** : Path
+           Path to the output parquet file.
+
+       **overwrite_output** : bool
+           Flag controlling overwrite behavior.
+
+       **data** : Union[pa.Table, pd.DataFrame]
+           The output data as either a dataframe or pyarrow table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: load_gdf(filepath: Union[str, pathlib.Path], **kwargs: str) -> geopandas.GeoDataFrame
+
+   
+   Load any supported geospatial file type into a gdf using GeoPandas.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: parquet_to_gdf(parquet_filepath: str) -> geopandas.GeoDataFrame
+
+   
+   Read parquet as GeoDataFrame.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: np_to_list(t)
+
+   
+   Convert numpy array to list.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_dataset(filepath: str, ignore_missing_file: bool, **kwargs) -> xarray.Dataset
+
+   
+   Retrieve a blob from the data service as xarray.Dataset.
+
+
+   :Parameters:
+
+       **filepath** : str
+           Path to the kerchunk json file. Can be local or remote.
+
+       **ignore_missing_file** : bool
+           Flag controlling whether to ignore missing files.
+
+   :Returns:
+
+       xarray.Dataset
+           The data stored in the blob.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: list_to_np(lst)
+
+   
+   Convert list to a tuple.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: check_for_prebuilt_json_paths(fs: fsspec.filesystem, gcs_path: str, return_gcs_path=False) -> str
+
+   
+   Check for existence of a pre-built kerchunk json in s3 based     on its GCS path.
+
+
+   :Parameters:
+
+       **fs** : fsspec.filesystem
+           S3-based filesystem.
+
+       **gcs_path** : str
+           Path to the netcdf file in GCS.
+
+       **return_gcs_path** : bool, optional
+           Flag to return GCS path of s3 is missing, by default False.
+
+   :Returns:
+
+       str
+           Path to the json in s3 or netcdf file in GCS.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: gen_json(remote_path: str, fs: fsspec.filesystem, json_dir: Union[str, pathlib.Path], ignore_missing_file: bool) -> str
+
+   
+   Create a single kerchunk reference JSON file.
+
+
+   :Parameters:
+
+       **remote_path** : str
+           Path to the file in the remote location (ie, GCS bucket).
+
+       **fs** : fsspec.filesystem
+           Fsspec filesystem mapped to GCS.
+
+       **json_dir** : str
+           Directory for saving zarr reference json files.
+
+   :Returns:
+
+       str
+           Path to the local zarr reference json file.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: build_zarr_references(remote_paths: List[str], json_dir: Union[str, pathlib.Path], ignore_missing_file: bool) -> list[str]
+
+   
+   Build the single file zarr json reference files using kerchunk.
+
+
+   :Parameters:
+
+       **remote_paths** : List[str]
+           List of remote filepaths.
+
+       **json_dir** : str or Path
+           Local directory for caching json files.
+
+   :Returns:
+
+       list[str]
+           List of paths to the zarr reference json files.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: construct_assim_paths(gcs_dir: str, configuration: str, output_type: str, dates: pandas.DatetimeIndex, t_minus: Iterable[int], configuration_name_in_filepath: str, cycle_z_hours: Iterable[int], domain: str, file_extension: str = 'nc') -> list[str]
+
+   
+   Construct paths to NWM point assimilation data.
+
+   This function prioritizes value time over reference time so that only
+   files with value times falling within the specified date range are included
+   in the resulting file list.
+
+   :Parameters:
+
+       **gcs_dir** : str
+           Path to the NWM data on GCS.
+
+       **configuration** : str
+           Configuration type.
+
+       **output_type** : str
+           Output component of the configuration.
+
+       **dates** : pd.DatetimeIndex
+           Range of days to fetch data.
+
+       **t_minus** : Iterable[int]
+           Collection of lookback hours to include when fetching assimilation
+           data.
+
+       **configuration_name_in_filepath** : str
+           Name of the assimilation configuration as represented in the GCS file.
+           Defined in const_nwm.py.
+
+       **cycle_z_hours** : Iterable[int]
+           The z-hour of the assimilation configuration per day.
+           Defined in const_nwm.py.
+
+       **domain** : str
+           Geographic region covered by the assimilation configuration.
+           Defined in const_nwm.py.
+
+       **file_extension** : str
+           File extension ("nc" or "nc.json" for remote kerchunk).
+
+   :Returns:
+
+       list[str]
+           List of remote filepaths.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: build_remote_nwm_filelist(configuration: str, output_type: str, start_dt: Union[str, datetime.datetime], ingest_days: int, analysis_config_dict: Dict, t_minus_hours: Optional[Iterable[int]], ignore_missing_file: Optional[bool]) -> List[str]
+
+   
+   Assemble a list of remote NWM files based on user parameters.
+
+
+   :Parameters:
+
+       **configuration** : str
+           Configuration type.
+
+       **output_type** : str
+           Output component of the configuration.
+
+       **start_dt** : str “YYYY-MM-DD” or datetime
+           Date to begin data ingest.
+
+       **ingest_days** : int
+           Number of days to ingest data after start date.
+
+       **t_minus_hours** : Iterable[int]
+           Only necessary if assimilation data is requested.
+           Collection of lookback hours to include when fetching
+           assimilation data.
+
+       **ignore_missing_file** : bool
+           Flag specifying whether or not to fail if a missing
+           NWM file is encountered
+           True = skip and continue
+           False = fail.
+
+   :Returns:
+
+       list
+           List of remote filepaths (strings).
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_period_start_end_times(period: pandas.Period, start_date: datetime.datetime, end_date: datetime.datetime) -> Dict[str, datetime.datetime]
+
+   
+   Get the start and end times for a period.
+
+   Adjusts for the start and end dates of the total data ingest.
+
+   :Parameters:
+
+       **period** : pd.Period
+           The current period.
+
+       **start_date** : datetime
+           The start date of the data ingest.
+
+       **end_date** : datetime
+           Then end date of the data ingest.
+
+   :Returns:
+
+       Dict[str, datetime]
+           The start and end times for the period.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: create_periods_based_on_chunksize(start_date: datetime.datetime, end_date: datetime.datetime, chunk_by: Union[teehr.models.loading.utils.NWMChunkByEnum, None]) -> List[pandas.Period]
+
+   
+   Create a list of periods of a given frequency, start, and end time.
+
+
+   :Parameters:
+
+       **start_date** : datetime
+           The start date.
+
+       **end_date** : datetime
+           The end date.
+
+       **chunk_by** : Union[NWMChunkByEnum, None]
+           The chunk size frequency.
+
+   :Returns:
+
+       List[pd.Period]
+           A pandas period range.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

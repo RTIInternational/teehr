@@ -1,0 +1,62 @@
+:py:mod:`teehr.loading.nwm.const`
+=================================
+
+.. py:module:: teehr.loading.nwm.const
+
+.. autoapi-nested-parse::
+
+   Module for defining constants related to loading NWM data.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+.. py:data:: NWM_BUCKET
+   :value: 'national-water-model'
+
+   
+
+.. py:data:: NWM22_UNIT_LOOKUP
+
+   
+
+.. py:data:: NWM30_START_DATE
+
+   
+
+.. py:data:: NWM_S3_JSON_PATH
+   :value: 's3://ciroh-nwm-zarr-copy'
+
+   
+
+.. py:data:: NWM22_ANALYSIS_CONFIG
+
+   
+
+.. py:data:: NWM30_ANALYSIS_CONFIG
+
+   
+
+.. py:data:: CONUS_NWM_WKT
+   :value: 'PROJCS["Lambert_Conformal_Conic",GEOGCS["GCS_Sphere",DATUM["D_Sphere",SPHEROID["Sphere",6370000.0...'
+
+   
+
+.. py:data:: HI_NWM_WKT
+   :value: 'PROJCS["Lambert_Conformal_Conic",GEOGCS["GCS_Sphere",DATUM["D_Sphere",SPHEROID["Sphere",6370000.0...'
+
+   
+
+.. py:data:: PR_NWM_WKT
+   :value: 'PROJCS["Sphere_Lambert_Conformal_Conic",GEOGCS["GCS_Sphere",DATUM["D_Sphere",SPHEROID["Sphere",63...'
+
+   
+
+.. py:data:: AL_NWM_WKT
+   :value: 'PROJCS["Sphere_Stereographic",GEOGCS["Sphere",DATUM["Sphere",SPHEROID["unnamed",6370000,0]],...'
+
+   
+

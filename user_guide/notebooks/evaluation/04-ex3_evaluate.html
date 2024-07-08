@@ -1,0 +1,1166 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>TEEHR Evaluation Example 3 &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.26 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-design.min.css?v=87e54e7c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/teehr.css?v=1d214eac" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../_static/documentation_options.js?v=5dd7c21c"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/notebooks/evaluation/04-ex3_evaluate';</script>
+    <link rel="icon" href="../../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="Available Metrics" href="../../metrics/metrics.html" />
+    <link rel="prev" title="TEEHR Evaluation Example 2 - Continued" href="03-ex2_evaluate.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.26 documentation - Home"/>
+    <script>document.write(`<img src="../../../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.3.26 documentation - Home"/>`);</script>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../autoapi/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../autoapi/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../loading_examples_index.html">Fetching and Loading Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../loading/point_loading_example.html">NWM Operational Point Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../loading/grid_loading_example.html">NWM Operational Gridded Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../loading/load_retrospective.html">NWM Retrospective Point Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../loading/load_gridded_retrospective.html">NWM Retrospective Gridded Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../loading/usgs_loading.html">USGS Streamflow Data</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../evaluation_examples_index.html">Evaluation Examples</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="01-ex1-simple.html">Ex.1 - Building a Simple TEEHR Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02-ex2_join_data.html">Ex.2 - Building a Joined Database</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03-ex2_evaluate.html">Ex.2 (cont'd) - Evaluating and Visualizing</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Ex.3 - Evaluating and Visualizing</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../metrics/metrics.html">Available Metrics</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../evaluation_examples_index.html" class="nav-link">Evaluation Examples</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">TEEHR...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="teehr-evaluation-example-3">
+<h1>TEEHR Evaluation Example 3<a class="headerlink" href="#teehr-evaluation-example-3" title="Link to this heading">#</a></h1>
+<section id="hourly-nwm-retrospective-3-0-camels-subset-648">
+<h2>Hourly NWM Retrospective 3.0, CAMELS Subset (648)<a class="headerlink" href="#hourly-nwm-retrospective-3-0-camels-subset-648" title="Link to this heading">#</a></h2>
+<section id="get-the-data-from-s3">
+<h3>1. Get the data from S3<a class="headerlink" href="#get-the-data-from-s3" title="Link to this heading">#</a></h3>
+<p>For the sake of time, we prepared the individual datasets in advance and are simply copying to your 2i2c home directory. After running the cell below to copy the example_2 data.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>rm<span class="w"> </span>-rf<span class="w"> </span>~/teehr/example-3/*
+<span class="o">!</span>aws<span class="w"> </span>s3<span class="w"> </span>cp<span class="w"> </span>--recursive<span class="w"> </span>--no-sign-request<span class="w"> </span>s3://ciroh-rti-public-data/teehr-workshop-devcon-2024/workshop-data/example-3<span class="w"> </span>~/teehr/example-3
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>tree<span class="w"> </span>~/teehr/example-3/
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="evaluate-model-output">
+<h3>Evaluate Model Output<a class="headerlink" href="#evaluate-model-output" title="Link to this heading">#</a></h3>
+<p>This notebook we will demonstrate how to use TEEHR to calculate metrics from a previously created joined TEEHR database containing hourly NWM3.0 Retrospective simulations and USGS observations from 1981-2022, using a range of different options for grouping and filtering.  We will then create some common graphics based on the results (the same as Example 2)</p>
+<section id="in-this-notebook-we-will-perform-the-following-steps">
+<h4>In this notebook we will perform the following steps:<a class="headerlink" href="#in-this-notebook-we-will-perform-the-following-steps" title="Link to this heading">#</a></h4>
+<ol>
+    <li> Review the contents of our joined parquet file </li>
+    <li> Calculate metrics with different group_by options </li>
+    <li> Calculate metrics with different filters options </li>
+    <li> Example visualizations of TEEHR results</li> 
+</ol>
+</section>
+<section id="first-setup-the-teehr-class-and-review-the-contents-of-the-joined-parquet-file">
+<h4>First setup the TEEHR class and review the contents of the joined parquet file<a class="headerlink" href="#first-setup-the-teehr-class-and-review-the-contents-of-the-joined-parquet-file" title="Link to this heading">#</a></h4>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">teehr.classes.duckdb_joined_parquet</span> <span class="kn">import</span> <span class="n">DuckDBJoinedParquet</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="c1"># Define the paths to the joined parquet file and the geometry files</span>
+<span class="n">TEEHR_BASE</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">(),</span> <span class="s1">&#39;teehr/example-3&#39;</span><span class="p">)</span>
+<span class="n">JOINED_PARQUET_FILEPATH</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">TEEHR_BASE</span><span class="si">}</span><span class="s2">/joined/configuration=nwm30_retro/variable_name=streamflow_hourly_inst/*.parquet&quot;</span>
+<span class="n">GEOMETRY_FILEPATH</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">TEEHR_BASE</span><span class="si">}</span><span class="s2">/geometry/**/*.parquet&quot;</span>
+
+<span class="c1"># Initialize a teehr joined parquet class with our parquet file and geometry</span>
+<span class="n">joined_data</span> <span class="o">=</span> <span class="n">DuckDBJoinedParquet</span><span class="p">(</span>
+    <span class="n">joined_parquet_filepath</span> <span class="o">=</span> <span class="n">JOINED_PARQUET_FILEPATH</span><span class="p">,</span>
+    <span class="n">geometry_filepath</span> <span class="o">=</span> <span class="n">GEOMETRY_FILEPATH</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="review-the-contents-of-the-joined-parquet-files">
+<h3>1. Review the contents of the joined parquet files<a class="headerlink" href="#review-the-contents-of-the-joined-parquet-files" title="Link to this heading">#</a></h3>
+<p>In practice, you may want to review the fields of data in the parquet file to plan your evaluation strategy.  If the dataset is large, reading it into a dataframe may be cumbersome or even infeasible in some cases. TEEHR provides the <code class="docutils literal notranslate"><span class="pre">get_joined_timeseries_schema</span></code> method to quickly review the fields of the joined parquet file and the <code class="docutils literal notranslate"><span class="pre">get_unique_field_values</span></code> method to review the unique values contained in a specified field.  The latter is particularly helpful for building dashboards for evaluation (e.g., to populate a drop down menu of possible filter or group_by values).</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Remind ourselves what fields were included</span>
+<span class="n">joined_data</span><span class="o">.</span><span class="n">get_joined_timeseries_schema</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Review what configuration datasets were included</span>
+<span class="n">joined_data</span><span class="o">.</span><span class="n">get_unique_field_values</span><span class="p">(</span><span class="s1">&#39;configuration&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># ...number of locations</span>
+<span class="nb">len</span><span class="p">(</span><span class="n">joined_data</span><span class="o">.</span><span class="n">get_unique_field_values</span><span class="p">(</span><span class="s1">&#39;primary_location_id&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="calculate-metrics">
+<h3>2. Calculate metrics<a class="headerlink" href="#calculate-metrics" title="Link to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+
+<span class="n">gdf_all</span> <span class="o">=</span> <span class="n">joined_data</span><span class="o">.</span><span class="n">get_metrics</span><span class="p">(</span>
+    <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration&quot;</span><span class="p">],</span>
+    <span class="n">order_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration&quot;</span><span class="p">],</span>
+    <span class="n">include_metrics</span><span class="o">=</span><span class="p">[</span>
+        <span class="s1">&#39;kling_gupta_efficiency_mod2&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;relative_bias&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;pearson_correlation&#39;</span><span class="p">,</span>                  
+        <span class="s1">&#39;nash_sutcliffe_efficiency_normalized&#39;</span><span class="p">,</span>  
+        <span class="s1">&#39;mean_absolute_relative_error&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;primary_count&#39;</span> 
+    <span class="p">],</span>
+    <span class="n">include_geometry</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1"># view the dataframe</span>
+<span class="n">gdf_all</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># use pandas magic to create a nice summary table of the metrics by model configuration across locations</span>
+<span class="n">gdf_all</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;configuration&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="n">percentiles</span><span class="o">=</span><span class="p">[</span><span class="mf">.5</span><span class="p">])</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+    <span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;level_0&#39;</span><span class="p">:</span><span class="s1">&#39;metric&#39;</span><span class="p">,</span><span class="s1">&#39;level_1&#39;</span><span class="p">:</span><span class="s1">&#39;summary&#39;</span><span class="p">})</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span>
+    <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">,</span><span class="s1">&#39;configuration&#39;</span><span class="p">],</span> <span class="n">values</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">&#39;summary&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Calculate metrics separately for low flows and high flows based on the </span>
+<span class="sd">calculated field &quot;obs_flow_category_q_mean&quot; -&gt; add the field to the group_by list.  </span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="n">gdf_flowcat</span> <span class="o">=</span> <span class="n">joined_data</span><span class="o">.</span><span class="n">get_metrics</span><span class="p">(</span>
+    <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration&quot;</span><span class="p">,</span> <span class="s2">&quot;obs_flow_category_q_mean&quot;</span><span class="p">],</span>
+    <span class="n">order_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration&quot;</span><span class="p">],</span>
+    <span class="n">include_metrics</span><span class="o">=</span><span class="p">[</span>
+        <span class="s1">&#39;kling_gupta_efficiency_mod2&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;pearson_correlation&#39;</span><span class="p">,</span>                  
+        <span class="s1">&#39;mean_absolute_relative_error&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;primary_count&#39;</span> 
+    <span class="p">],</span>
+<span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">gdf_flowcat</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">gdf_flowcat</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">&#39;obs_flow_category_q_mean&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="n">percentiles</span><span class="o">=</span><span class="p">[</span><span class="mf">.5</span><span class="p">])</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+    <span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;level_0&#39;</span><span class="p">:</span><span class="s1">&#39;metric&#39;</span><span class="p">,</span><span class="s1">&#39;level_1&#39;</span><span class="p">:</span><span class="s1">&#39;summary&#39;</span><span class="p">})</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span>
+    <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">,</span><span class="s1">&#39;obs_flow_category_q_mean&#39;</span><span class="p">],</span> <span class="n">values</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">&#39;summary&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Now add the location characteristics you want included in the metrics table</span>
+<span class="sd">(for output tables and visualization)</span>
+
+<span class="sd">To include location-specific attributes in the metrics table, those attributes </span>
+<span class="sd">must be added to the group_by list.  If grouping across locations (.e.g., all locations </span>
+<span class="sd">within an RFC region), you should only add attributes that are already aggregated by that </span>
+<span class="sd">same region (TEEHR does not check for this). An example of including location characteristic </span>
+<span class="sd">attributes is included below.</span>
+
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="c1"># list the attributes that are location characteristics that you want to include </span>
+<span class="c1"># in the metrics results tables</span>
+<span class="c1"># in the metrics results tables</span>
+<span class="n">include_location_characteristics</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;aridity_none&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;runoff_ratio_none&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;baseflow_index_none&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;stream_order_none&#39;</span><span class="p">,</span>  
+    <span class="s1">&#39;q_mean_cms&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;slope_fdc_none&#39;</span><span class="p">,</span>  
+    <span class="s1">&#39;frac_urban_none&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;frac_snow_none&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;forest_frac_none&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ecoregion_L2_none&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;river_forecast_center_none&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="n">df_atts</span> <span class="o">=</span> <span class="n">joined_data</span><span class="o">.</span><span class="n">get_metrics</span><span class="p">(</span>
+    <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">include_location_characteristics</span><span class="p">,</span>
+    <span class="n">order_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration&quot;</span><span class="p">],</span>
+    <span class="n">include_metrics</span><span class="o">=</span><span class="p">[</span>
+        <span class="s1">&#39;kling_gupta_efficiency_mod2&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;pearson_correlation&#39;</span><span class="p">,</span>                  
+        <span class="s1">&#39;mean_absolute_relative_error&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;relative_bias&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;primary_count&#39;</span> 
+    <span class="p">],</span>
+    <span class="n">include_geometry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># view the dataframe</span>
+<span class="n">display</span><span class="p">(</span><span class="n">df_atts</span><span class="p">)</span>
+
+<span class="c1"># summarize just the median results across locations by attribute (river forecast center)</span>
+<span class="n">df_atts_summary</span> <span class="o">=</span> <span class="n">df_atts</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">&#39;configuration&#39;</span><span class="p">,</span><span class="s1">&#39;river_forecast_center_none&#39;</span><span class="p">])</span>\
+    <span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="n">percentiles</span><span class="o">=</span><span class="p">[</span><span class="mf">.5</span><span class="p">])</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span><span class="o">.</span><span class="n">unstack</span><span class="p">()</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>\
+    <span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;level_0&#39;</span><span class="p">:</span><span class="s1">&#39;metric&#39;</span><span class="p">,</span><span class="s1">&#39;level_1&#39;</span><span class="p">:</span><span class="s1">&#39;summary&#39;</span><span class="p">})</span>
+<span class="n">df_atts_summary</span><span class="p">[</span><span class="n">df_atts_summary</span><span class="p">[</span><span class="s1">&#39;summary&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="s1">&#39;50%&#39;</span><span class="p">])]</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span>
+    <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;river_forecast_center_none&#39;</span><span class="p">,</span><span class="s1">&#39;configuration&#39;</span><span class="p">],</span><span class="n">values</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">,</span><span class="s1">&#39;summary&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+
+<span class="kn">import</span> <span class="nn">geoviews</span> <span class="k">as</span> <span class="nn">gv</span>
+<span class="kn">import</span> <span class="nn">holoviews</span> <span class="k">as</span> <span class="nn">hv</span>
+<span class="kn">import</span> <span class="nn">colorcet</span> <span class="k">as</span> <span class="nn">cc</span>
+<span class="n">hv</span><span class="o">.</span><span class="n">extension</span><span class="p">(</span><span class="s1">&#39;bokeh&#39;</span><span class="p">,</span> <span class="n">logo</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">gv</span><span class="o">.</span><span class="n">extension</span><span class="p">(</span><span class="s1">&#39;bokeh&#39;</span><span class="p">,</span> <span class="n">logo</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">basemap</span> <span class="o">=</span> <span class="n">hv</span><span class="o">.</span><span class="n">element</span><span class="o">.</span><span class="n">tiles</span><span class="o">.</span><span class="n">CartoLight</span><span class="p">()</span>
+
+<span class="n">gdf_filters</span> <span class="o">=</span> <span class="n">joined_data</span><span class="o">.</span><span class="n">get_metrics</span><span class="p">(</span>
+    <span class="n">group_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration&quot;</span><span class="p">,</span> <span class="s2">&quot;stream_order_none&quot;</span><span class="p">],</span>
+    <span class="n">order_by</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;configuration&quot;</span><span class="p">],</span>
+    <span class="n">include_metrics</span><span class="o">=</span><span class="p">[</span>
+        <span class="s1">&#39;kling_gupta_efficiency_mod2&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;relative_bias&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;pearson_correlation&#39;</span><span class="p">,</span>                  
+        <span class="s1">&#39;nash_sutcliffe_efficiency_normalized&#39;</span><span class="p">,</span>  
+        <span class="s1">&#39;mean_absolute_relative_error&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;primary_count&#39;</span> 
+    <span class="p">],</span>
+    <span class="n">filters</span> <span class="o">=</span> <span class="p">[</span>
+          <span class="p">{</span>
+              <span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;stream_order_none&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;in&quot;</span><span class="p">,</span>
+              <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;1&#39;</span><span class="p">,</span><span class="s1">&#39;2&#39;</span><span class="p">,</span><span class="s1">&#39;3&#39;</span><span class="p">,</span><span class="s1">&#39;4&#39;</span><span class="p">]</span>
+              <span class="c1">#&quot;value&quot;: [&#39;5&#39;,&#39;6&#39;,&#39;7&#39;,&#39;8&#39;]</span>
+          <span class="p">},</span>
+         <span class="c1"># {</span>
+         <span class="c1">#     &quot;column&quot;: &quot;month&quot;,</span>
+         <span class="c1">#     &quot;operator&quot;: &quot;in&quot;,</span>
+         <span class="c1">#     &quot;value&quot;: [&#39;5&#39;,&#39;6&#39;,&#39;7&#39;,&#39;8&#39;,&#39;9&#39;]</span>
+         <span class="c1"># },</span>
+         <span class="c1"># {</span>
+         <span class="c1">#     &quot;column&quot;: &quot;river_forecast_center_none&quot;,</span>
+         <span class="c1">#     &quot;operator&quot;: &quot;=&quot;,</span>
+         <span class="c1">#     &quot;value&quot;: &quot;SERFC&quot;</span>
+         <span class="c1"># },</span>
+    <span class="p">],</span>
+    <span class="n">include_geometry</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1">#display(gdf_filters.head())</span>
+
+<span class="c1"># make a quick map of locations - see how it changes as you make different filter selections</span>
+<span class="n">basemap</span> <span class="o">*</span> <span class="n">gv</span><span class="o">.</span><span class="n">Points</span><span class="p">(</span><span class="n">gdf_filters</span><span class="p">,</span> <span class="n">vdims</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;kling_gupta_efficiency_mod2&#39;</span><span class="p">,</span><span class="s1">&#39;configuration&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">select</span><span class="p">(</span>
+    <span class="n">configuration</span><span class="o">=</span><span class="s1">&#39;nwm30_retro&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">opts</span><span class="p">(</span>
+    <span class="n">color</span><span class="o">=</span><span class="s1">&#39;kling_gupta_efficiency_mod2&#39;</span><span class="p">,</span> 
+    <span class="n">height</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> 
+    <span class="n">cmap</span><span class="o">=</span><span class="n">cc</span><span class="o">.</span><span class="n">rainbow</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">colorbar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">clim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="more-visualizations">
+<h3>4. More visualizations<a class="headerlink" href="#more-visualizations" title="Link to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># set up color and abbrevation settings to use across multiple plots</span>
+
+<span class="n">metric_abbrev</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+    <span class="n">kling_gupta_efficiency_mod2</span> <span class="o">=</span> <span class="s2">&quot;KGE&#39;&#39;&quot;</span><span class="p">,</span>
+    <span class="n">mean_absolute_relative_error</span> <span class="o">=</span> <span class="s2">&quot;MAE&quot;</span><span class="p">,</span>
+    <span class="n">pearson_correlation</span> <span class="o">=</span> <span class="s2">&quot;Corr&quot;</span><span class="p">,</span>
+    <span class="n">relative_bias</span>  <span class="o">=</span> <span class="s2">&quot;Rel.Bias&quot;</span><span class="p">,</span>
+    <span class="n">nash_sutcliffe_efficiency_normalized</span> <span class="o">=</span> <span class="s2">&quot;NNSE&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">cmap_lin</span> <span class="o">=</span> <span class="n">cc</span><span class="o">.</span><span class="n">rainbow</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">cmap_div</span> <span class="o">=</span> <span class="n">cc</span><span class="o">.</span><span class="n">CET_D1A</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">metric_colors</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+    <span class="n">kling_gupta_efficiency_mod2</span>          <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;cmap&#39;</span><span class="p">:</span> <span class="n">cmap_lin</span><span class="p">,</span> <span class="s1">&#39;clim&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)},</span>  
+    <span class="n">relative_bias</span>                        <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;cmap&#39;</span><span class="p">:</span> <span class="n">cmap_div</span><span class="p">,</span> <span class="s1">&#39;clim&#39;</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)},</span>   
+    <span class="n">pearson_correlation</span>                  <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;cmap&#39;</span><span class="p">:</span> <span class="n">cmap_lin</span><span class="p">,</span> <span class="s1">&#39;clim&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)},</span>     
+    <span class="n">nash_sutcliffe_efficiency_normalized</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;cmap&#39;</span><span class="p">:</span> <span class="n">cmap_lin</span><span class="p">,</span> <span class="s1">&#39;clim&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)},</span> 
+    <span class="n">mean_absolute_relative_error</span>         <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;cmap&#39;</span><span class="p">:</span> <span class="n">cmap_lin</span><span class="p">,</span> <span class="s1">&#39;clim&#39;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">)},</span>
+<span class="p">)</span>
+<span class="n">metrics</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">metric_colors</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="n">configs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;nwm30_retro&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="a-side-by-side-metric-maps">
+<h4>4a. Side by side metric maps<a class="headerlink" href="#a-side-by-side-metric-maps" title="Link to this heading">#</a></h4>
+<p>First we will create side-by-side maps of the first query results above (all locations and configurations, no filters), showing metric values at each location, where dots are colored by metric value and sized by sample size.  See how the comparison changes for each metric.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># map_metric = &#39;kling_gupta_efficiency_mod2&#39;</span>
+<span class="c1"># map_metric = &#39;pearson_correlation&#39;                  </span>
+<span class="c1"># map_metric = &#39;nash_sutcliffe_efficiency_normalized&#39;</span>
+<span class="c1"># map_metric = &#39;mean_absolute_relative_error&#39; </span>
+<span class="n">map_metric</span> <span class="o">=</span> <span class="s1">&#39;relative_bias&#39;</span>
+
+<span class="c1"># factor to size dots based on sample size </span>
+<span class="n">size_factor</span> <span class="o">=</span> <span class="mi">15</span><span class="o">/</span><span class="nb">max</span><span class="p">(</span><span class="n">gdf_filters</span><span class="p">[(</span><span class="s1">&#39;primary_count&#39;</span><span class="p">)])</span>
+
+<span class="n">polys</span> <span class="o">=</span> <span class="n">gv</span><span class="o">.</span><span class="n">Points</span><span class="p">(</span>
+    <span class="n">gdf_all</span><span class="p">,</span> 
+    <span class="n">vdims</span> <span class="o">=</span> <span class="n">metrics</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;primary_location_id&#39;</span><span class="p">,</span><span class="s1">&#39;configuration&#39;</span><span class="p">,</span><span class="s1">&#39;primary_count&#39;</span><span class="p">],</span>
+    <span class="n">label</span> <span class="o">=</span> <span class="s1">&#39;metric value (color), sample size (size)&#39;</span><span class="p">,</span>
+<span class="p">)</span><span class="o">.</span><span class="n">opts</span><span class="p">(</span>
+    <span class="n">height</span> <span class="o">=</span> <span class="mi">400</span><span class="p">,</span>
+    <span class="n">width</span> <span class="o">=</span> <span class="mi">600</span><span class="p">,</span>
+    <span class="n">line_color</span> <span class="o">=</span> <span class="s1">&#39;gray&#39;</span><span class="p">,</span>
+    <span class="n">colorbar</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="n">hv</span><span class="o">.</span><span class="n">dim</span><span class="p">(</span><span class="s1">&#39;primary_count&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="mi">15</span><span class="o">/</span><span class="nb">max</span><span class="p">(</span><span class="n">gdf_filters</span><span class="p">[(</span><span class="s1">&#39;primary_count&#39;</span><span class="p">)]),</span>
+    <span class="n">tools</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;hover&#39;</span><span class="p">],</span>
+    <span class="n">xaxis</span> <span class="o">=</span> <span class="s1">&#39;bare&#39;</span><span class="p">,</span>
+    <span class="n">yaxis</span> <span class="o">=</span> <span class="s1">&#39;bare&#39;</span><span class="p">,</span>
+    <span class="n">show_legend</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="p">)</span>
+<span class="n">maps</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">configs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">map_metric</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;kling_gupta_efficiency_mod2&#39;</span><span class="p">,</span><span class="s1">&#39;relative_bias&#39;</span><span class="p">]:</span>
+    <span class="n">maps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">basemap</span> <span class="o">*</span> <span class="n">polys</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">configuration</span><span class="o">=</span><span class="n">config</span><span class="p">)</span><span class="o">.</span><span class="n">opts</span><span class="p">(</span>
+            <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">config</span><span class="si">}</span><span class="s2"> | </span><span class="si">{</span><span class="n">metric_abbrev</span><span class="p">[</span><span class="n">map_metric</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">color</span> <span class="o">=</span> <span class="n">map_metric</span><span class="p">,</span>
+            <span class="n">clim</span> <span class="o">=</span> <span class="n">metric_colors</span><span class="p">[</span><span class="n">map_metric</span><span class="p">][</span><span class="s1">&#39;clim&#39;</span><span class="p">],</span>
+            <span class="n">cmap</span> <span class="o">=</span> <span class="n">metric_colors</span><span class="p">[</span><span class="n">map_metric</span><span class="p">][</span><span class="s1">&#39;cmap&#39;</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+<span class="n">maps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">maps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="b-dataframe-table-and-bar-chart-side-by-side">
+<h4>4b. Dataframe table and bar chart side by side<a class="headerlink" href="#b-dataframe-table-and-bar-chart-side-by-side" title="Link to this heading">#</a></h4>
+<p>Next we will summarize results across locations by creating a summary table with pandas (as we did above) and juxtapose it with a bar chart using holoviews and panel.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Display dataframes and simple plots side by side using Panel</span>
+<span class="kn">import</span> <span class="nn">panel</span> <span class="k">as</span> <span class="nn">pn</span>
+
+<span class="n">gdf_summary</span> <span class="o">=</span> <span class="n">gdf_all</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;configuration&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">describe</span><span class="p">(</span><span class="n">percentiles</span><span class="o">=</span><span class="p">[</span><span class="mf">.5</span><span class="p">])</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+    <span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;level_0&#39;</span><span class="p">:</span><span class="s1">&#39;metric&#39;</span><span class="p">,</span><span class="s1">&#39;level_1&#39;</span><span class="p">:</span><span class="s1">&#39;summary&#39;</span><span class="p">})</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span>
+    <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">,</span><span class="s1">&#39;configuration&#39;</span><span class="p">],</span> <span class="n">values</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">&#39;summary&#39;</span><span class="p">)</span>
+
+<span class="n">gdf_bars</span> <span class="o">=</span> <span class="n">gdf_summary</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;primary_count&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="s1">&#39;50%&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">({</span><span class="s1">&#39;metric&#39;</span><span class="p">:</span><span class="n">metric_abbrev</span><span class="p">})</span>
+<span class="n">bars</span> <span class="o">=</span> <span class="n">hv</span><span class="o">.</span><span class="n">Bars</span><span class="p">(</span><span class="n">gdf_bars</span><span class="p">,</span> <span class="n">kdims</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">,</span> <span class="s1">&#39;configuration&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">opts</span><span class="p">(</span>
+    <span class="n">xrotation</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;median&#39;</span><span class="p">,</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+<span class="n">pn</span><span class="o">.</span><span class="n">Row</span><span class="p">(</span><span class="n">pn</span><span class="o">.</span><span class="n">pane</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">gdf_summary</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">800</span><span class="p">),</span> <span class="n">bars</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="c-box-whisker-plots-of-results-by-metric-and-model">
+<h4>4c. Box-whisker plots of results by metric and model<a class="headerlink" href="#c-box-whisker-plots-of-results-by-metric-and-model" title="Link to this heading">#</a></h4>
+<p>Next we’ll create box-whisker plots to see the distribution of metrics across locations for each metric and configuration.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># remove geometry so holoviews knows this is not a map.</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">gdf_all</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;geometry&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">opts</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">show_legend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+    <span class="n">width</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> 
+    <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;Set1&#39;</span><span class="p">,</span> 
+    <span class="n">xrotation</span><span class="o">=</span><span class="mi">45</span><span class="p">,</span>
+    <span class="n">labelled</span><span class="o">=</span><span class="p">[]</span>
+<span class="p">)</span>
+<span class="n">boxplots</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">:</span>
+    <span class="n">boxplots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="n">hv</span><span class="o">.</span><span class="n">BoxWhisker</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="s1">&#39;configuration&#39;</span><span class="p">,</span> <span class="n">metric</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">metric_abbrev</span><span class="p">[</span><span class="n">metric</span><span class="p">])</span><span class="o">.</span><span class="n">opts</span><span class="p">(</span>
+            <span class="o">**</span><span class="n">opts</span><span class="p">,</span>
+            <span class="n">box_fill_color</span><span class="o">=</span><span class="n">hv</span><span class="o">.</span><span class="n">dim</span><span class="p">(</span><span class="s1">&#39;configuration&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+<span class="n">hv</span><span class="o">.</span><span class="n">Layout</span><span class="p">(</span><span class="n">boxplots</span><span class="p">)</span><span class="o">.</span><span class="n">cols</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">metrics</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="d-histograms-by-metric-and-model">
+<h4>4d. Histograms by metric and model<a class="headerlink" href="#d-histograms-by-metric-and-model" title="Link to this heading">#</a></h4>
+<p>Every good scientist loves a histogram.  The below example creates a layout of histograms by configuration and metric, which gives us a more complete understanding of the metric distributions.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">hvplot.pandas</span>
+<span class="n">histograms</span> <span class="o">=</span><span class="p">[]</span>
+<span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">:</span>
+    <span class="n">histograms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;configuration&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">config</span><span class="p">]</span><span class="o">.</span><span class="n">hvplot</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span>
+            <span class="n">y</span><span class="o">=</span><span class="n">metric</span><span class="p">,</span> 
+            <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">200</span><span class="p">),</span>
+            <span class="n">bin_range</span><span class="o">=</span><span class="n">metric_colors</span><span class="p">[</span><span class="n">metric</span><span class="p">][</span><span class="s1">&#39;clim&#39;</span><span class="p">],</span> 
+            <span class="n">xlabel</span><span class="o">=</span><span class="n">metric_abbrev</span><span class="p">[</span><span class="n">metric</span><span class="p">],</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">opts</span><span class="p">(</span><span class="n">height</span> <span class="o">=</span> <span class="mi">200</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span> <span class="n">title</span> <span class="o">=</span> <span class="n">config</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="n">hv</span><span class="o">.</span><span class="n">Layout</span><span class="p">(</span><span class="n">histograms</span><span class="p">)</span><span class="o">.</span><span class="n">cols</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">metrics</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="e-cdfs-overlays-by-metric">
+<h4>4e. CDFs overlays by metric<a class="headerlink" href="#e-cdfs-overlays-by-metric" title="Link to this heading">#</a></h4>
+<p>Every good scientist loves a CDF even more.  The below example creates a layout of histograms by configuration and metric, which gives us a more complete understanding of the metric distributions.  We include metrics here with (mostly) the same range (0,1) and ‘good’ value (1).</p>
+<p>We kept this graphic for consistiency, but it is not that interesting with 1 model scenario.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">layout</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="p">[</span>
+    <span class="s1">&#39;kling_gupta_efficiency_mod2&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;pearson_correlation&#39;</span><span class="p">,</span>                  
+    <span class="s1">&#39;nash_sutcliffe_efficiency_normalized&#39;</span><span class="p">,</span>
+<span class="p">]:</span>
+    <span class="n">xlim</span> <span class="o">=</span> <span class="n">metric_colors</span><span class="p">[</span><span class="n">metric</span><span class="p">][</span><span class="s1">&#39;clim&#39;</span><span class="p">]</span>
+    <span class="n">xlabel</span> <span class="o">=</span> <span class="n">metric_abbrev</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span>
+    
+    <span class="n">cdfs</span> <span class="o">=</span> <span class="n">hv</span><span class="o">.</span><span class="n">Curve</span><span class="p">([])</span>
+    <span class="k">for</span> <span class="n">config</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;nwm30_retro&#39;</span><span class="p">]:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;configuration&#39;</span><span class="p">]</span><span class="o">==</span><span class="n">config</span><span class="p">]</span>
+        <span class="n">data</span><span class="p">[</span><span class="n">xlabel</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">metric</span><span class="p">])</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">xlabel</span><span class="p">])</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>    
+        <span class="n">cdfs</span> <span class="o">=</span> <span class="n">cdfs</span> <span class="o">*</span> <span class="n">hv</span><span class="o">.</span><span class="n">Curve</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">xlabel</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+        
+    <span class="n">layout</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="n">cdfs</span><span class="o">.</span><span class="n">opts</span><span class="p">(</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="mi">300</span><span class="p">,</span>
+            <span class="n">legend_position</span><span class="o">=</span><span class="s1">&#39;top_left&#39;</span><span class="p">,</span>
+            <span class="n">xlim</span><span class="o">=</span><span class="n">xlim</span><span class="p">,</span> 
+            <span class="n">xlabel</span><span class="o">=</span><span class="n">xlabel</span><span class="p">,</span>
+            <span class="n">title</span><span class="o">=</span><span class="n">metric_abbrev</span><span class="p">[</span><span class="n">metric</span><span class="p">],</span>
+            <span class="n">shared_axes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    
+<span class="n">hv</span><span class="o">.</span><span class="n">Layout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span><span class="o">.</span><span class="n">cols</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="f-bar-charts-by-attribute">
+<h4>4f. Bar charts by attribute<a class="headerlink" href="#f-bar-charts-by-attribute" title="Link to this heading">#</a></h4>
+<p>In one of the queries above, we demonstrate how to add attributes to the resulting dataframe for summary and visualization purposes.  In that example we generated a summary table to RFC region.  The below example uses those result to build bar charts of the median performance metric across locations within each RFC region.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df_bars</span> <span class="o">=</span> <span class="n">df_atts_summary</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;metric&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;primary_count&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;summary&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s1">&#39;50%&#39;</span><span class="p">]</span>
+<span class="n">df_bars</span> <span class="o">=</span> <span class="n">df_bars</span><span class="o">.</span><span class="n">replace</span><span class="p">({</span><span class="s1">&#39;metric&#39;</span><span class="p">:</span> <span class="n">metric_abbrev</span><span class="p">})</span> \
+    <span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;river_forecast_center_none&#39;</span><span class="p">:</span><span class="s1">&#39;rfc&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">:</span><span class="s1">&#39;median&#39;</span><span class="p">})</span> \
+    <span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;summary&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">df_bars</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df_bars</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;MAE&#39;</span><span class="p">,</span> <span class="s1">&#39;median&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">df_bars</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">df_bars</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;MAE&#39;</span><span class="p">,</span> <span class="s1">&#39;median&#39;</span><span class="p">]</span>
+<span class="n">df_bars</span> <span class="o">=</span> <span class="n">df_bars</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;MAE&#39;</span><span class="p">,</span><span class="s1">&#39;1-MAE&#39;</span><span class="p">)</span>
+
+<span class="n">bars</span> <span class="o">=</span> <span class="n">hv</span><span class="o">.</span><span class="n">Bars</span><span class="p">(</span><span class="n">df_bars</span><span class="p">,</span> <span class="n">kdims</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;metric&#39;</span><span class="p">,</span><span class="s1">&#39;configuration&#39;</span><span class="p">,</span><span class="s1">&#39;rfc&#39;</span><span class="p">],</span> <span class="n">vdims</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;median&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">opts</span><span class="p">(</span>
+    <span class="n">xrotation</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;median&#39;</span><span class="p">,</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+<span class="n">layout</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">rfc</span> <span class="ow">in</span> <span class="n">df_bars</span><span class="p">[</span><span class="s1">&#39;rfc&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+    <span class="n">layout</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bars</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">rfc</span><span class="o">=</span><span class="n">rfc</span><span class="p">)</span><span class="o">.</span><span class="n">opts</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">rfc</span><span class="p">))</span>
+<span class="n">hv</span><span class="o">.</span><span class="n">Layout</span><span class="p">(</span><span class="n">layout</span><span class="p">)</span><span class="o">.</span><span class="n">cols</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="g-scatter-plots-by-attribute">
+<h4>4g Scatter plots by attribute<a class="headerlink" href="#g-scatter-plots-by-attribute" title="Link to this heading">#</a></h4>
+<p>Scatter plots of location metric values and location characteristics can provide insight about the relationship between the two - i.e., does model performance have a clear relationship with any of the characteristics?</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># As examples, let&#39;s create scatter plots of KGE with each of the numeric attributes</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">geoviews</span> <span class="k">as</span> <span class="nn">gv</span>
+<span class="kn">import</span> <span class="nn">holoviews</span> <span class="k">as</span> <span class="nn">hv</span>
+<span class="kn">import</span> <span class="nn">colorcet</span> <span class="k">as</span> <span class="nn">cc</span>
+<span class="n">hv</span><span class="o">.</span><span class="n">extension</span><span class="p">(</span><span class="s1">&#39;bokeh&#39;</span><span class="p">,</span> <span class="n">logo</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">gv</span><span class="o">.</span><span class="n">extension</span><span class="p">(</span><span class="s1">&#39;bokeh&#39;</span><span class="p">,</span> <span class="n">logo</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">basemap</span> <span class="o">=</span> <span class="n">hv</span><span class="o">.</span><span class="n">element</span><span class="o">.</span><span class="n">tiles</span><span class="o">.</span><span class="n">CartoLight</span><span class="p">()</span>
+
+<span class="n">location_chars</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;aridity&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;runoff_ratio&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;baseflow_index&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;stream_order&#39;</span><span class="p">,</span>  
+    <span class="s1">&#39;q_mean_cms&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;slope_fdc&#39;</span><span class="p">,</span>  
+    <span class="s1">&#39;frac_urban&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;frac_snow&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;forest_frac&#39;</span>
+<span class="p">]</span>
+<span class="n">df_atts</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">df_atts</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_none&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+<span class="n">df_atts</span><span class="p">[</span><span class="n">location_chars</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_atts</span><span class="p">[</span><span class="n">location_chars</span><span class="p">]</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">to_numeric</span><span class="p">)</span>
+<span class="n">df_atts</span><span class="p">[</span><span class="s1">&#39;config_num&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">df_atts</span><span class="p">[</span><span class="s1">&#39;configuration&#39;</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;nwm30_retro&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;kling_gupta_efficiency_mod2&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;pearson_correlation&#39;</span><span class="p">,</span>                  
+    <span class="s1">&#39;mean_absolute_relative_error&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;relative_bias&#39;</span><span class="p">,</span>
+<span class="p">]</span>
+<span class="kn">from</span> <span class="nn">bokeh.models</span> <span class="kn">import</span> <span class="n">FixedTicker</span>
+
+<span class="n">scatter_layout</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">location_chars</span><span class="p">:</span>
+    <span class="n">scatter_layout</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="n">hv</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+            <span class="n">df_atts</span><span class="p">,</span> 
+            <span class="n">kdims</span><span class="o">=</span><span class="p">[</span><span class="n">char</span><span class="p">],</span>
+            <span class="n">vdims</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;kling_gupta_efficiency_mod2&#39;</span><span class="p">,</span> <span class="s1">&#39;relative_bias&#39;</span><span class="p">,</span> <span class="s1">&#39;primary_location_id&#39;</span><span class="p">,</span><span class="s1">&#39;config_num&#39;</span><span class="p">],</span>
+            <span class="n">label</span><span class="o">=</span><span class="s2">&quot;nwm3.0&quot;</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">opts</span><span class="p">(</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="mi">400</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">300</span><span class="p">,</span>
+            <span class="c1">#color = &#39;relative_bias&#39;,</span>
+            <span class="c1">#color = &#39;config_num&#39;,</span>
+            <span class="c1">#cmap = [&#39;#377EB8&#39;, &#39;#E41A1C&#39;],</span>
+            <span class="c1">#colorbar = True,</span>
+            <span class="n">clim</span><span class="o">=</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">2.5</span><span class="p">),</span>
+            <span class="n">ylabel</span> <span class="o">=</span> <span class="s2">&quot;KGE&#39;&#39;&quot;</span><span class="p">,</span>
+            <span class="n">tools</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;hover&#39;</span><span class="p">],</span>
+            <span class="n">ylim</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
+            <span class="n">size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+            <span class="n">show_legend</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="c1"># colorbar_opts={</span>
+            <span class="c1">#     &#39;ticker&#39;: FixedTicker(ticks=[1,2]),</span>
+            <span class="c1">#     &#39;major_label_overrides&#39;: {</span>
+            <span class="c1">#         1: &#39;nwm30_retro&#39;,  </span>
+            <span class="c1">#     },</span>
+            <span class="c1">#     &#39;major_label_text_align&#39;: &#39;left&#39;,</span>
+            <span class="c1"># },</span>
+        <span class="p">))</span>
+<span class="n">hv</span><span class="o">.</span><span class="n">Layout</span><span class="p">(</span><span class="n">scatter_layout</span><span class="p">)</span><span class="o">.</span><span class="n">opts</span><span class="p">(</span><span class="n">show_legends</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">cols</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>        
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="03-ex2_evaluate.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">TEEHR Evaluation Example 2 - Continued</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../../metrics/metrics.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Available Metrics</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hourly-nwm-retrospective-3-0-camels-subset-648">Hourly NWM Retrospective 3.0, CAMELS Subset (648)</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#get-the-data-from-s3">1. Get the data from S3</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluate-model-output">Evaluate Model Output</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#in-this-notebook-we-will-perform-the-following-steps">In this notebook we will perform the following steps:</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#first-setup-the-teehr-class-and-review-the-contents-of-the-joined-parquet-file">First setup the TEEHR class and review the contents of the joined parquet file</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#review-the-contents-of-the-joined-parquet-files">1. Review the contents of the joined parquet files</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#calculate-metrics">2. Calculate metrics</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#more-visualizations">4. More visualizations</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#a-side-by-side-metric-maps">4a. Side by side metric maps</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#b-dataframe-table-and-bar-chart-side-by-side">4b. Dataframe table and bar chart side by side</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#c-box-whisker-plots-of-results-by-metric-and-model">4c. Box-whisker plots of results by metric and model</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#d-histograms-by-metric-and-model">4d. Histograms by metric and model</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#e-cdfs-overlays-by-metric">4e. CDFs overlays by metric</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#f-bar-charts-by-attribute">4f. Bar charts by attribute</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#g-scatter-plots-by-attribute">4g Scatter plots by attribute</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../../_sources/user_guide/notebooks/evaluation/04-ex3_evaluate.ipynb.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

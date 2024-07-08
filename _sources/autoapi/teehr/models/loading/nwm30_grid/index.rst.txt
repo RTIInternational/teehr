@@ -1,0 +1,527 @@
+:py:mod:`teehr.models.loading.nwm30_grid`
+=========================================
+
+.. py:module:: teehr.models.loading.nwm30_grid
+
+.. autoapi-nested-parse::
+
+   Module describing NWM v3.0 grid configuration variables.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   teehr.models.loading.nwm30_grid.StrEnum
+   teehr.models.loading.nwm30_grid.ConfigurationsEnum
+   teehr.models.loading.nwm30_grid.GridConfigurationModel
+
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.models.loading.nwm30_grid.configuration
+
+
+.. py:class:: StrEnum
+
+
+   Bases: :py:obj:`str`, :py:obj:`enum.Enum`
+
+   
+   str(object='') -> str
+   str(bytes_or_buffer[, encoding[, errors]]) -> str
+
+   Create a new string object from the given object. If encoding or
+   errors is specified, then the object must expose a data buffer
+   that will be decoded using the given encoding and error handler.
+   Otherwise, returns the result of object.__str__() (if defined)
+   or repr(object).
+   encoding defaults to sys.getdefaultencoding().
+   errors defaults to 'strict'.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:class:: ConfigurationsEnum
+
+
+   Bases: :py:obj:`enum.StrEnum`
+
+   
+   ConfigurationsEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: analysis_assim
+      :value: 'analysis_assim'
+
+      
+
+   .. py:attribute:: analysis_assim_no_da
+      :value: 'analysis_assim_no_da'
+
+      
+
+   .. py:attribute:: analysis_assim_extend
+      :value: 'analysis_assim_extend'
+
+      
+
+   .. py:attribute:: analysis_assim_extend_no_da
+      :value: 'analysis_assim_extend_no_da'
+
+      
+
+   .. py:attribute:: analysis_assim_long
+      :value: 'analysis_assim_long'
+
+      
+
+   .. py:attribute:: analysis_assim_long_no_da
+      :value: 'analysis_assim_long_no_da'
+
+      
+
+   .. py:attribute:: analysis_assim_hawaii
+      :value: 'analysis_assim_hawaii'
+
+      
+
+   .. py:attribute:: analysis_assim_hawaii_no_da
+      :value: 'analysis_assim_hawaii_no_da'
+
+      
+
+   .. py:attribute:: analysis_assim_puertorico
+      :value: 'analysis_assim_puertorico'
+
+      
+
+   .. py:attribute:: analysis_assim_puertorico_no_da
+      :value: 'analysis_assim_puertorico_no_da'
+
+      
+
+   .. py:attribute:: short_range
+      :value: 'short_range'
+
+      
+
+   .. py:attribute:: short_range_hawaii
+      :value: 'short_range_hawaii'
+
+      
+
+   .. py:attribute:: short_range_puertorico
+      :value: 'short_range_puertorico'
+
+      
+
+   .. py:attribute:: short_range_hawaii_no_da
+      :value: 'short_range_hawaii_no_da'
+
+      
+
+   .. py:attribute:: short_range_puertorico_no_da
+      :value: 'short_range_puertorico_no_da'
+
+      
+
+   .. py:attribute:: medium_range_mem1
+      :value: 'medium_range_mem1'
+
+      
+
+   .. py:attribute:: medium_range_mem2
+      :value: 'medium_range_mem2'
+
+      
+
+   .. py:attribute:: medium_range_mem3
+      :value: 'medium_range_mem3'
+
+      
+
+   .. py:attribute:: medium_range_mem4
+      :value: 'medium_range_mem4'
+
+      
+
+   .. py:attribute:: medium_range_mem5
+      :value: 'medium_range_mem5'
+
+      
+
+   .. py:attribute:: medium_range_mem6
+      :value: 'medium_range_mem6'
+
+      
+
+   .. py:attribute:: medium_range_mem7
+      :value: 'medium_range_mem7'
+
+      
+
+   .. py:attribute:: long_range_mem1
+      :value: 'long_range_mem1'
+
+      
+
+   .. py:attribute:: long_range_mem2
+      :value: 'long_range_mem2'
+
+      
+
+   .. py:attribute:: long_range_mem3
+      :value: 'long_range_mem3'
+
+      
+
+   .. py:attribute:: long_range_mem4
+      :value: 'long_range_mem4'
+
+      
+
+   .. py:attribute:: forcing_medium_range
+      :value: 'forcing_medium_range'
+
+      
+
+   .. py:attribute:: forcing_medium_range_blend
+      :value: 'forcing_medium_range_blend'
+
+      
+
+   .. py:attribute:: forcing_medium_range_alaska
+      :value: 'forcing_medium_range_alaska'
+
+      
+
+   .. py:attribute:: forcing_medium_range_blend_alaska
+      :value: 'forcing_medium_range_blend_alaska'
+
+      
+
+   .. py:attribute:: forcing_short_range
+      :value: 'forcing_short_range'
+
+      
+
+   .. py:attribute:: forcing_short_range_hawaii
+      :value: 'forcing_short_range_hawaii'
+
+      
+
+   .. py:attribute:: forcing_short_range_puertorico
+      :value: 'forcing_short_range_puertorico'
+
+      
+
+   .. py:attribute:: forcing_short_range_alaska
+      :value: 'forcing_short_range_alaska'
+
+      
+
+   .. py:attribute:: forcing_analysis_assim
+      :value: 'forcing_analysis_assim'
+
+      
+
+   .. py:attribute:: forcing_analysis_assim_extend
+      :value: 'forcing_analysis_assim_extend'
+
+      
+
+   .. py:attribute:: forcing_analysis_assim_hawaii
+      :value: 'forcing_analysis_assim_hawaii'
+
+      
+
+   .. py:attribute:: forcing_analysis_assim_puertorico
+      :value: 'forcing_analysis_assim_puertorico'
+
+      
+
+   .. py:attribute:: forcing_analysis_assim_alaska
+      :value: 'forcing_analysis_assim_alaska'
+
+      
+
+
+.. py:class:: GridConfigurationModel(/, **data: Any)
+
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+   
+   NWM v3.0 GridConfigurationModel.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: configuration
+      :type: ConfigurationsEnum
+
+      
+
+   .. py:attribute:: analysis_assim
+      :type: Optional[teehr.models.loading.nwm22_grid.Analysis]
+
+      
+
+   .. py:attribute:: analysis_assim_no_da
+      :type: Optional[teehr.models.loading.nwm22_grid.Analysis]
+
+      
+
+   .. py:attribute:: analysis_assim_extend
+      :type: Optional[teehr.models.loading.nwm22_grid.Analysis]
+
+      
+
+   .. py:attribute:: analysis_assim_extend_no_da
+      :type: Optional[teehr.models.loading.nwm22_grid.Analysis]
+
+      
+
+   .. py:attribute:: analysis_assim_long
+      :type: Optional[teehr.models.loading.nwm22_grid.Analysis]
+
+      
+
+   .. py:attribute:: analysis_assim_long_no_da
+      :type: Optional[teehr.models.loading.nwm22_grid.Analysis]
+
+      
+
+   .. py:attribute:: analysis_assim_hawaii
+      :type: Optional[teehr.models.loading.nwm22_grid.Analysis]
+
+      
+
+   .. py:attribute:: analysis_assim_hawaii_no_da
+      :type: Optional[teehr.models.loading.nwm22_grid.Analysis]
+
+      
+
+   .. py:attribute:: analysis_assim_puertorico
+      :type: Optional[teehr.models.loading.nwm22_grid.Analysis]
+
+      
+
+   .. py:attribute:: analysis_assim_puertorico_no_da
+      :type: Optional[teehr.models.loading.nwm22_grid.Analysis]
+
+      
+
+   .. py:attribute:: short_range
+      :type: Optional[teehr.models.loading.nwm22_grid.ShortRange]
+
+      
+
+   .. py:attribute:: short_range_hawaii
+      :type: Optional[teehr.models.loading.nwm22_grid.ShortRange]
+
+      
+
+   .. py:attribute:: short_range_puertorico
+      :type: Optional[teehr.models.loading.nwm22_grid.ShortRange]
+
+      
+
+   .. py:attribute:: short_range_hawaii_no_da
+      :type: Optional[teehr.models.loading.nwm22_grid.ShortRange]
+
+      
+
+   .. py:attribute:: short_range_puertorico_no_da
+      :type: Optional[teehr.models.loading.nwm22_grid.ShortRange]
+
+      
+
+   .. py:attribute:: medium_range_mem1
+      :type: Optional[teehr.models.loading.nwm22_grid.MediumRange]
+
+      
+
+   .. py:attribute:: medium_range_mem2
+      :type: Optional[teehr.models.loading.nwm22_grid.MediumRange]
+
+      
+
+   .. py:attribute:: medium_range_mem3
+      :type: Optional[teehr.models.loading.nwm22_grid.MediumRange]
+
+      
+
+   .. py:attribute:: medium_range_mem4
+      :type: Optional[teehr.models.loading.nwm22_grid.MediumRange]
+
+      
+
+   .. py:attribute:: medium_range_mem5
+      :type: Optional[teehr.models.loading.nwm22_grid.MediumRange]
+
+      
+
+   .. py:attribute:: medium_range_mem6
+      :type: Optional[teehr.models.loading.nwm22_grid.MediumRange]
+
+      
+
+   .. py:attribute:: medium_range_mem7
+      :type: Optional[teehr.models.loading.nwm22_grid.MediumRange]
+
+      
+
+   .. py:attribute:: medium_range_no_da
+      :type: Optional[teehr.models.loading.nwm22_grid.MediumRange]
+
+      
+
+   .. py:attribute:: long_range_mem1
+      :type: Optional[teehr.models.loading.nwm22_grid.LongRange]
+
+      
+
+   .. py:attribute:: long_range_mem2
+      :type: Optional[teehr.models.loading.nwm22_grid.LongRange]
+
+      
+
+   .. py:attribute:: long_range_mem3
+      :type: Optional[teehr.models.loading.nwm22_grid.LongRange]
+
+      
+
+   .. py:attribute:: long_range_mem4
+      :type: Optional[teehr.models.loading.nwm22_grid.LongRange]
+
+      
+
+   .. py:attribute:: forcing_medium_range
+      :type: Optional[teehr.models.loading.nwm22_grid.Forcing]
+
+      
+
+   .. py:attribute:: forcing_medium_range_blend
+      :type: Optional[teehr.models.loading.nwm22_grid.Forcing]
+
+      
+
+   .. py:attribute:: forcing_medium_range_alaska
+      :type: Optional[teehr.models.loading.nwm22_grid.Forcing]
+
+      
+
+   .. py:attribute:: forcing_medium_range_blend_alaska
+      :type: Optional[teehr.models.loading.nwm22_grid.Forcing]
+
+      
+
+   .. py:attribute:: forcing_short_range
+      :type: Optional[teehr.models.loading.nwm22_grid.Forcing]
+
+      
+
+   .. py:attribute:: forcing_short_range_hawaii
+      :type: Optional[teehr.models.loading.nwm22_grid.Forcing]
+
+      
+
+   .. py:attribute:: forcing_short_range_puertorico
+      :type: Optional[teehr.models.loading.nwm22_grid.Forcing]
+
+      
+
+   .. py:attribute:: forcing_short_range_alaska
+      :type: Optional[teehr.models.loading.nwm22_grid.Forcing]
+
+      
+
+   .. py:attribute:: forcing_analysis_assim
+      :type: Optional[teehr.models.loading.nwm22_grid.Forcing]
+
+      
+
+   .. py:attribute:: forcing_analysis_assim_extend
+      :type: Optional[teehr.models.loading.nwm22_grid.Forcing]
+
+      
+
+   .. py:attribute:: forcing_analysis_assim_hawaii
+      :type: Optional[teehr.models.loading.nwm22_grid.Forcing]
+
+      
+
+   .. py:attribute:: forcing_analysis_assim_puertorico
+      :type: Optional[teehr.models.loading.nwm22_grid.Forcing]
+
+      
+
+   .. py:attribute:: forcing_analysis_assim_alaska
+      :type: Optional[teehr.models.loading.nwm22_grid.Forcing]
+
+      
+
+
+.. py:data:: configuration
+   :value: 'forcing_medium_range_blend_alaska'
+
+   
+

@@ -1,0 +1,390 @@
+:py:mod:`teehr.queries.utils`
+=============================
+
+.. py:module:: teehr.queries.utils
+
+.. autoapi-nested-parse::
+
+   A module defining common utilities for queries.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.queries.utils._get_datetime_list_string
+   teehr.queries.utils._format_iterable_value
+   teehr.queries.utils._format_filepath
+   teehr.queries.utils._format_filter_item
+   teehr.queries.utils.filters_to_sql
+   teehr.queries.utils.geometry_joined_join_clause
+   teehr.queries.utils.geometry_db_join_clause
+   teehr.queries.utils.geometry_join_clause
+   teehr.queries.utils.geometry_select_clause
+   teehr.queries.utils.join_time_on
+   teehr.queries.utils.join_on
+   teehr.queries.utils.df_to_gdf
+   teehr.queries.utils.remove_empty_lines
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.queries.utils.SQL_DATETIME_STR_FORMAT
+
+
+.. py:data:: SQL_DATETIME_STR_FORMAT
+   :value: '%Y-%m-%d %H:%M:%S'
+
+   
+
+.. py:function:: _get_datetime_list_string(values)
+
+   
+   Get a datetime list as a list of strings.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: _format_iterable_value(values: collections.abc.Iterable[Union[str, int, float, datetime.datetime]]) -> str
+
+   
+   Return an SQL formatted string from list of values.
+
+
+   :Parameters:
+
+       **values** : Iterable
+           Contains values to be formatted as a string for SQL. Only one type of
+           value (str, int, float, datetime) should be used. First value in list
+           is used to determine value type. Values are not checked for type
+           consistency.
+
+   :Returns:
+
+       str
+           An SQL formatted string from list of values.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: _format_filepath(filepath: Union[str, pathlib.Path, List[Union[str, pathlib.Path]]]) -> str
+
+   
+   Format str, Path of list of the same for SQL.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: _format_filter_item(filter: Union[teehr.models.queries.JoinedFilter, teehr.models.queries.TimeseriesFilter, teehr.models.queries_database.Filter]) -> str
+
+   
+   Return an SQL formatted string for single filter object.
+
+
+   :Parameters:
+
+       **filter** : models.\\*Filter
+           A single \\*Filter object.
+
+   :Returns:
+
+       str
+           An SQL formatted string for single filter object.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: filters_to_sql(filters: Union[List[teehr.models.queries.JoinedFilter], List[teehr.models.queries_database.Filter]]) -> List[str]
+
+   
+   Generate SQL where clause string from filters.
+
+
+   :Parameters:
+
+       **filters** : Union[List[tmq.JoinedFilter], List[tmqd.Filter]]
+           A list of Filter objects describing the filters.
+
+   :Returns:
+
+       str
+           A where clause formatted string.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: geometry_joined_join_clause(q: Union[teehr.models.queries.MetricQuery, teehr.models.queries.JoinedTimeseriesQuery]) -> str
+
+   
+   Generate the join clause for joined timeseries or metrics.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: geometry_db_join_clause(q: Union[teehr.models.queries_database.MetricQuery, teehr.models.queries_database.JoinedTimeseriesQuery]) -> str
+
+   
+   Generate the metric geometry join clause for a database.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: geometry_join_clause(q: Union[teehr.models.queries.MetricQuery, teehr.models.queries.JoinedTimeseriesQuery, teehr.models.queries_database.MetricQuery, teehr.models.queries_database.JoinedTimeseriesQuery], geometry_join_clause: str) -> str
+
+   
+   Generate the geometry join clause.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: geometry_select_clause(q: Union[teehr.models.queries.MetricQuery, teehr.models.queries.JoinedTimeseriesQuery, teehr.models.queries_database.MetricQuery, teehr.models.queries_database.JoinedTimeseriesQuery]) -> str
+
+   
+   Generate the geometry select clause.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: join_time_on(join: str, join_to: str, join_on: List[str])
+
+   
+   Generate the join time on query.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: join_on(join: str, join_to: str, join_on: List[str]) -> str
+
+   
+   Generate the join on query.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: df_to_gdf(df: pandas.DataFrame) -> geopandas.GeoDataFrame
+
+   
+   Convert pd.DataFrame to gpd.GeoDataFrame.
+
+   When the `geometry` column is read from a parquet file using DuckBD
+   it is a bytearray in the resulting pd.DataFrame.  The `geometry` needs
+   to be convert to bytes before GeoPandas can work with it.  This function
+   does that.
+
+   :Parameters:
+
+       **df** : pd.DataFrame
+           DataFrame with a `geometry` column that has geometry stored as
+           a bytearray.
+
+   :Returns:
+
+       gpd.GeoDataFrame
+           GeoDataFrame with a valid `geometry` column.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: remove_empty_lines(text: str) -> str
+
+   
+   Remove empty lines from string.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

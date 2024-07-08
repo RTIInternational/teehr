@@ -1,0 +1,172 @@
+:py:mod:`teehr.loading.nwm.grid_utils`
+======================================
+
+.. py:module:: teehr.loading.nwm.grid_utils
+
+.. autoapi-nested-parse::
+
+   Module defining shared functions for processing NWM grid data.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.loading.nwm.grid_utils.get_weights_row_col_stats
+   teehr.loading.nwm.grid_utils.get_nwm_grid_data
+   teehr.loading.nwm.grid_utils.update_location_id_prefix
+   teehr.loading.nwm.grid_utils.compute_weighted_average
+   teehr.loading.nwm.grid_utils.process_single_nwm_grid_file
+   teehr.loading.nwm.grid_utils.fetch_and_format_nwm_grids
+
+
+
+.. py:function:: get_weights_row_col_stats(weights_df: pandas.DataFrame) -> Dict
+
+   
+   Get row and column statistics for weights dataframe.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_nwm_grid_data(var_da: xarray.DataArray, row_min: int, col_min: int, row_max: int, col_max: int)
+
+   
+   Read a subset nwm grid data into memory using row/col bounds.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: update_location_id_prefix(df: pandas.DataFrame, new_prefix: str) -> pandas.DataFrame
+
+   
+   Replace or add the location_id prefix in a dataframe.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: compute_weighted_average(grid_values: numpy.ndarray, weights_df: pandas.DataFrame) -> pandas.DataFrame
+
+   
+   Compute weighted average of pixels for given zones and weights.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: process_single_nwm_grid_file(row: Tuple, configuration: str, variable_name: str, weights_filepath: str, ignore_missing_file: bool, units_format_dict: Dict, location_id_prefix: Union[str, None]) -> pandas.DataFrame
+
+   
+   Fetch data for a single reference file and compute weighted average.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: fetch_and_format_nwm_grids(json_paths: List[str], configuration: str, variable_name: str, output_parquet_dir: str, zonal_weights_filepath: str, ignore_missing_file: bool, units_format_dict: Dict, overwrite_output: bool, location_id_prefix: Union[str, None])
+
+   
+   Compute weighted average, grouping by reference time.
+
+   Group a list of json files by reference time and compute the weighted
+   average of the variable values for each zone. The results are saved to
+   parquet files using TEEHR data model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

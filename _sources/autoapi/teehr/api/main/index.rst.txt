@@ -1,0 +1,405 @@
+:py:mod:`teehr.api.main`
+========================
+
+.. py:module:: teehr.api.main
+
+.. autoapi-nested-parse::
+
+   Module for database queries via FastAPI.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.api.main.format_response
+   teehr.api.main.read_root
+   teehr.api.main.get_datasets
+   teehr.api.main.read_dataset_by_id
+   teehr.api.main.get_metric_fields
+   teehr.api.main.get_data_fields
+   teehr.api.main.get_filter_operators
+   teehr.api.main.get_metrics_by_query
+   teehr.api.main.get_timeseries_by_query
+   teehr.api.main.get_timeseries_chars_by_query
+   teehr.api.main.get_unique_field_vals
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.api.main.app
+   teehr.api.main.origins
+   teehr.api.main.datasets
+
+
+.. py:data:: app
+
+   
+
+.. py:data:: origins
+   :value: ['http://localhost', 'http://localhost:5173', 'http://localhost:8000']
+
+   
+
+.. py:data:: datasets
+
+   
+
+.. py:function:: format_response(df: Union[geopandas.GeoDataFrame, pandas.DataFrame]) -> List[Dict]
+
+   
+   Convert the query response format from the dataframe to a dict.
+
+
+   :Parameters:
+
+       **df** : Union[gpd.GeoDataFrame, pd.DataFrame]
+           Dataframe or Geodataframe.
+
+   :Returns:
+
+       List[Dict]
+           A list of dictionaries.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: read_root()
+
+   
+   Root message.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_datasets()
+   :async:
+
+   
+   Get datasets.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: read_dataset_by_id(dataset_id: str) -> Dict
+   :async:
+
+   
+   Get a dataset by its ID.
+
+
+   :Parameters:
+
+       **dataset_id** : str
+           Dataset ID.
+
+   :Returns:
+
+       Dict
+           Dataset filepaths.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_metric_fields(dataset_id: str) -> List[str]
+   :async:
+
+   
+   Get metric fields.
+
+
+   :Parameters:
+
+       **dataset_id** : str
+           Dataset ID.
+
+   :Returns:
+
+       List
+           List of available metrics.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_data_fields(dataset_id: str) -> List[Dict]
+   :async:
+
+   
+   Get data fields and datatypes.
+
+
+   :Parameters:
+
+       **dataset_id** : str
+           Dataset ID.
+
+   :Returns:
+
+       List
+           A list of dictionaries of database fields and their types.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_filter_operators(dataset_id: str) -> Dict
+   :async:
+
+   
+   Get filter operators.
+
+
+   :Parameters:
+
+       **dataset_id** : str
+           Dataset ID.
+
+   :Returns:
+
+       Dict
+           A dictionary of filter operator keywords and their symbols.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_metrics_by_query(dataset_id: str, api_metrics_query: teehr.models.queries_database.MetricQuery) -> List[Dict]
+   :async:
+
+   
+   Get metrics by query.
+
+
+   :Parameters:
+
+       **dataset_id** : str
+           Dataset ID.
+
+       **api_metrics_query** : MetricQuery
+           Pydantic model of query variables.
+
+   :Returns:
+
+       List[Dict]
+           A list of dictionaries of query results.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_timeseries_by_query(dataset_id: str, api_timeseries_query: teehr.models.queries_database.TimeseriesQuery) -> List[Dict]
+   :async:
+
+   
+   Get timeseries by query.
+
+
+   :Parameters:
+
+       **dataset_id** : str
+           Dataset ID.
+
+       **api_timeseries_query** : TimeseriesQuery
+           Pydantic model of query variables.
+
+   :Returns:
+
+       List[Dict]
+           A list of dictionaries of query results.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_timeseries_chars_by_query(dataset_id: str, api_timeseries_char_query: teehr.models.queries_database.TimeseriesCharQuery) -> List[Dict]
+   :async:
+
+   
+   Get time series characteristics by query.
+
+
+   :Parameters:
+
+       **dataset_id** : str
+           Dataset ID.
+
+       **api_timeseries_char_query** : TimeseriesCharQuery
+           Pydantic model of query variables.
+
+   :Returns:
+
+       List[Dict]
+           A list of dictionaries of query results.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: get_unique_field_vals(dataset_id: str, api_field_name: teehr.models.queries_database.JoinedTimeseriesFieldName) -> List[Dict]
+   :async:
+
+   
+   Get unique field names in the joined_timeseries table.
+
+
+   :Parameters:
+
+       **dataset_id** : str
+           Dataset ID.
+
+       **api_field_name** : JoinedTimeseriesFieldName
+           Pydantic model of query variables.
+
+   :Returns:
+
+       List[Dict]
+           Pydantic model of query variables.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

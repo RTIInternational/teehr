@@ -1,0 +1,277 @@
+:py:mod:`teehr.loading.nwm.retrospective_points`
+================================================
+
+.. py:module:: teehr.loading.nwm.retrospective_points
+
+.. autoapi-nested-parse::
+
+   A module for loading retrospective NWM point data (i.e., streamflow).
+
+   The function ``nwm_retro_to_parquet()`` can be used to fetch and format three
+   different versions of retrospective NWM data (v2.0, v2.1, and v3.0) for
+   specified variables, locations, and date ranges.
+
+   Each version of the NWM data is hosted on `AWS S3
+   <https://registry.opendata.aws/nwm-archive/>`__ and is stored in Zarr format.
+   Several options are included for fetching the data in chunks, including by
+   week, month, or year, which can be specified using the ``chunk_by`` argument.
+
+   Care must be taken when choosing a ``chunk_by`` value to minimize the amount
+   of data transferred over the network.
+
+   The Zarr stores for each version of the NWM data have the same internal
+   chunking scheme: {"time": 672, "feature_id": 30000}, which defines the minimum
+   amount of data that can be accessed at once (a single chunk). This means that
+   if you specify ``chunk_by='week'``, the entire chunk
+   (672 hours x 30000 locations) will be fetched for each week (128 hours)
+   falling within that chunk, resulting in redundant data transfer.
+
+   While it is currently not possible to avoid all redundant data transfer,
+   it can be minimized by selecting the largest chunk_by size that can fit into
+   your computer's memory.
+
+   .. note::
+      It is recommended to set the ``chunk_by`` parameter to the largest time
+      period ('week', 'month', or 'year') that will fit into your systems memory
+      given the number of locations being fetched.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.loading.nwm.retrospective_points.validate_start_end_date
+   teehr.loading.nwm.retrospective_points.da_to_df
+   teehr.loading.nwm.retrospective_points.datetime_to_date
+   teehr.loading.nwm.retrospective_points.format_grouped_filename
+   teehr.loading.nwm.retrospective_points.nwm_retro_to_parquet
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   teehr.loading.nwm.retrospective_points.NWM20_MIN_DATE
+   teehr.loading.nwm.retrospective_points.NWM20_MAX_DATE
+   teehr.loading.nwm.retrospective_points.NWM21_MIN_DATE
+   teehr.loading.nwm.retrospective_points.NWM21_MAX_DATE
+   teehr.loading.nwm.retrospective_points.NWM30_MIN_DATE
+   teehr.loading.nwm.retrospective_points.NWM30_MAX_DATE
+
+
+.. py:data:: NWM20_MIN_DATE
+
+   
+
+.. py:data:: NWM20_MAX_DATE
+
+   
+
+.. py:data:: NWM21_MIN_DATE
+
+   
+
+.. py:data:: NWM21_MAX_DATE
+
+   
+
+.. py:data:: NWM30_MIN_DATE
+
+   
+
+.. py:data:: NWM30_MAX_DATE
+
+   
+
+.. py:function:: validate_start_end_date(nwm_version: teehr.models.loading.utils.SupportedNWMRetroVersionsEnum, start_date: Union[str, datetime.datetime], end_date: Union[str, datetime.datetime])
+
+   
+   Validate the start and end dates by NWM version.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: da_to_df(nwm_version: teehr.models.loading.utils.SupportedNWMRetroVersionsEnum, da: xarray.DataArray) -> pandas.DataFrame
+
+   
+   Format NWM retrospective data to TEEHR format.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: datetime_to_date(dt: datetime.datetime) -> datetime.datetime
+
+   
+   Convert datetime to date only.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: format_grouped_filename(ds_i: xarray.Dataset) -> str
+
+   
+   Format the output filename based on min and max datetime.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: nwm_retro_to_parquet(nwm_version: teehr.models.loading.utils.SupportedNWMRetroVersionsEnum, variable_name: str, location_ids: List[int], start_date: Union[str, datetime.datetime, pandas.Timestamp], end_date: Union[str, datetime.datetime, pandas.Timestamp], output_parquet_dir: Union[str, pathlib.Path], chunk_by: Union[teehr.models.loading.utils.NWMChunkByEnum, None] = None, overwrite_output: Optional[bool] = False, domain: Optional[teehr.models.loading.utils.SupportedNWMRetroDomainsEnum] = 'CONUS')
+
+   
+   Fetch NWM retrospective at NWM COMIDs and store as Parquet file.
+
+   All dates and times within the files and in the file names are in UTC.
+
+   :Parameters:
+
+       **nwm_version** : SupportedNWMRetroVersionsEnum
+           NWM retrospective version to fetch.
+           Currently `nwm20`, `nwm21`, and `nwm30` supported.
+
+       **variable_name** : str
+           Name of the NWM data variable to download.
+           (e.g., "streamflow", "velocity", ...).
+
+       **location_ids** : Iterable[int],
+           NWM feature_ids to fetch.
+
+       **start_date** : Union[str, datetime, pd.Timestamp]
+           Date to begin data ingest.
+           Str formats can include YYYY-MM-DD or MM/DD/YYYY
+           Rounds down to beginning of day.
+
+       **end_date** : Union[str, datetime, pd.Timestamp],
+           Last date to fetch.  Rounds up to end of day.
+           Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+
+       **output_parquet_dir** : Union[str, Path],
+           Directory where output will be saved.
+
+       **chunk_by** : Union[NWMChunkByEnum, None] = None,
+           If None (default) saves all timeseries to a single file, otherwise
+           the data is processed using the specified parameter.
+           Can be: 'week', 'month', or 'year'.
+
+       **overwrite_output** : bool = False,
+           Whether output should overwrite files if they exist.  Default is False.
+
+       **domain** : str = "CONUS"
+           Geographical domain when NWM version is v3.0.
+           Acceptable values are "Alaska", "CONUS" (default), "Hawaii", and "PR".
+           Only used when NWM version equals `nwm30`.
+
+
+
+
+
+
+
+
+
+
+
+   .. rubric:: Examples
+
+   Here we fetch and format retrospective NWM v2.0 streamflow data
+   for two locations.
+
+   Import the module.
+
+   >>> import teehr.loading.nwm.retrospective_points as nwm_retro
+
+   Specify the input variables.
+
+   >>> NWM_VERSION = "nwm20"
+   >>> VARIABLE_NAME = "streamflow"
+   >>> START_DATE = datetime(2000, 1, 1)
+   >>> END_DATE = datetime(2000, 1, 2, 23)
+   >>> LOCATION_IDS = [7086109, 7040481]
+   >>> OUTPUT_ROOT = Path(Path().home(), "temp")
+   >>> OUTPUT_DIR = Path(OUTPUT_ROOT, "nwm20_retrospective")
+
+   Fetch and format the data, writing to the specified directory.
+
+   >>> nwm_retro.nwm_retro_to_parquet(
+   >>>     nwm_version=NWM_VERSION,
+   >>>     variable_name=VARIABLE_NAME,
+   >>>     start_date=START_DATE,
+   >>>     end_date=END_DATE,
+   >>>     location_ids=LOCATION_IDS,
+   >>>     output_parquet_dir=OUTPUT_DIR
+   >>> )
+
+
+
+   ..
+       !! processed by numpydoc !!
+
