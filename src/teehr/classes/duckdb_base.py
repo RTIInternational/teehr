@@ -2,9 +2,6 @@
 import teehr.queries.duckdb_database as tqu_db
 import teehr.queries.utils as tqu
 
-from teehr.classes.dataframe_accessor import DataFrameAccessor # noqa
-from teehr.classes.series_accessor import SeriesAccessor # noqa
-
 import geopandas as gpd
 import pandas as pd
 
@@ -172,7 +169,8 @@ class DuckDBBase(ABC):
         teehr.queries.duckdb_database.create_get_metrics_query : \
             Create the get metrics query.
         """
-        # from teehr.classes.dataframe_accessor import DataFrameAccessor # noqa
+        # Register the pandas DataFrame accessor class.
+        from teehr.classes.accessor_metrics import GetMetricsAccessor # noqa
 
         query = tqu_db.create_get_metrics_query(
             mq,
@@ -208,6 +206,9 @@ class DuckDBBase(ABC):
         teehr.queries.duckdb_database.create_get_joined_timeseries_query : \
             Create the get joined timeseries query.
         """
+        # Register the pandas DataFrame accessor class.
+        from teehr.classes.accessor_timeseries import GetTimeseriesAccessor # noqa
+
         query = tqu_db.create_get_joined_timeseries_query(
             jtq,
             self.from_joined_timeseries_clause,
@@ -282,6 +283,9 @@ class DuckDBBase(ABC):
         teehr.queries.duckdb_database.create_get_timeseries_query : \
             Create the get timeseries query.
         """
+        # Register the pandas DataFrame accessor class.
+        from teehr.classes.accessor_timeseries import GetTimeseriesAccessor # noqa
+
         query = tqu_db.create_get_timeseries_query(
             tq,
             self.from_joined_timeseries_clause

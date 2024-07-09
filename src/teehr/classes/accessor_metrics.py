@@ -1,11 +1,11 @@
-"""Provides the teehr accessor extending pandas DataFrame objects."""
+"""Provides the teehr metrics accessor extending pandas DataFrames."""
 from typing import List
 
 import pandas as pd
 
 
 @pd.api.extensions.register_dataframe_accessor("teehr")
-class DataFrameAccessor:
+class GetMetricsAccessor:
     """Extends pandas DataFrame objects.
 
     Notes
@@ -26,7 +26,7 @@ class DataFrameAccessor:
     def __init__(self, pandas_obj):
         """Initialize the class."""
         self._validate(pandas_obj)
-        self._obj = pandas_obj
+        self.metrics_df = pandas_obj
 
     @staticmethod
     def _validate(obj):
@@ -39,10 +39,10 @@ class DataFrameAccessor:
     @property
     def center(self):
         """Some property."""
-        if "geometry" not in self._obj.columns:
+        if "geometry" not in self.metrics_df.columns:
             raise AttributeError("DataFrame must have a 'geometry' column.")
-        lat = self._obj.geometry.y
-        lon = self._obj.geometry.x
+        lat = self.metrics_df.geometry.y
+        lon = self.metrics_df.geometry.x
         return (float(lon.mean()), float(lat.mean()))
 
     def scatter_plot(self):
@@ -61,7 +61,7 @@ class DataFrameAccessor:
         percentiles: List[float] = [0.5],
     ) -> pd.DataFrame:
         """Summarize the DataFrame metrics."""
-        summary_df = self._obj.groupby(group_by) \
+        summary_df = self.metrics_df.groupby(group_by) \
             .describe(percentiles=percentiles).unstack().unstack() \
             .reset_index().rename(
                 columns={'level_0': 'metric', 'level_1': 'summary'}
@@ -69,6 +69,6 @@ class DataFrameAccessor:
         final_df = summary_df.pivot(
             index="metric",
             columns="summary",
-            values=self._obj[group_by].values.ravel()
+            values=self.metrics_df[group_by].values.ravel()
         )
         return final_df
