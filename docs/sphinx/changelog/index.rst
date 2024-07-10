@@ -1,6 +1,19 @@
 Release Notes
 =============
 
+0.3.28 - 2024-07-10
+--------------------
+
+Added
+^^^^^
+* pandas DataFrame accessor classes for metrics and timeseries queries, including some simple methods
+  for plotting and summarizing data.
+* Added Bokeh as a dependency for visualization.
+
+Changed
+^^^^^^^
+* None
+
 
 0.3.26 - 2024-06-27
 --------------------
