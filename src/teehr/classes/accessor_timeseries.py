@@ -2,7 +2,7 @@
 import itertools
 
 import pandas as pd
-from bokeh.plotting import figure, output_file, save
+from bokeh.plotting import figure, output_file, save, show
 from bokeh.palettes import Dark2_5 as palette
 
 
@@ -23,6 +23,12 @@ class GetTimeseriesAccessor:
     summarizing and plotting metrics as well as timeseries. This would require
     more validation in each method to ensure the DataFrame has the
     appropriate data.
+
+    You need to run the following code to show plots in Jupyter notebooks:
+    ```
+    from bokeh.io import output_notebook
+    output_notebook()
+    ```
     """
 
     def __init__(self, pandas_obj: pd.DataFrame):
@@ -58,10 +64,10 @@ class GetTimeseriesAccessor:
         variable_name: str,
         measurement_unit: str,
         configuration: str,
-        output_filepath: str,
+        output_filepath: str = None,
     ) -> figure:
         """Create a timeseries plot of forecasts vs. observations."""
-        output_file("test_plot.html")
+        # output_file("test_plot.html")
 
         plot_df = self.timeseries_df[
             (self.timeseries_df["primary_location_id"] == primary_location_id) &
@@ -110,4 +116,7 @@ class GetTimeseriesAccessor:
             color="black"
         )
 
-        save(p, filename=output_filepath)
+        if output_filepath:
+            save(p, filename=output_filepath)
+        else:
+            show(p)
