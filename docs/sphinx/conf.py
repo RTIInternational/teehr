@@ -31,16 +31,11 @@ extensions = [
     "sphinx.ext.autodoc",
     # "sphinx.ext.napoleon",
     "numpydoc",
-    # "sphinx.ext.coverage",
-    # "sphinx.ext.linkcode",
     "sphinx_design",  # gives us grids and other design elements
     "autoapi.extension",
     "sphinx.ext.autosummary",
-    # "sphinx_click",
-    # "myst_parser",
     "sphinx.ext.viewcode",  # links to source code
     "sphinx.ext.githubpages",
-    # "nbsphinx"  # for rendering jupyter notebooks  ?? or myst-nb ??
     "myst_nb",
     'IPython.sphinxext.ipython_console_highlighting',
     'IPython.sphinxext.ipython_directive'
@@ -86,18 +81,22 @@ nb_execution_mode = "off"
 # a list of builtin themes.
 #
 html_theme = 'pydata_sphinx_theme'
+html_static_path = ['_static']
 html_theme_options = {
   "show_toc_level": 2,
   "github_url": "https://github.com/RTIInternational/teehr",
   "footer_center": ["footer_center.html"],
-  # "favicons": [{"href": "../images/teehr_favicon_16.png"}]
+  "logo": {
+      "image_light": "../images/teehr.png",
+      "image_dark": "../images/TEEHR_Icon_DarkMode.png",
+   }
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
-html_logo = "../images/teehr.png"
+# html_static_path = ['_static']
+# html_logo = "../images/teehr.png"
 html_css_files = [
     # "css/getting_started.css",
     "css/teehr.css",
