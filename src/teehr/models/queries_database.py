@@ -138,20 +138,22 @@ class Filter(BaseModel):
             return True
         return False
 
-    @field_validator("value")
+    @model_validator(mode="before")
+    @classmethod
     def in_operator_must_have_iterable(
-        cls, v: str, info: ValidationInfo
+        cls, data, info: ValidationInfo
     ) -> str:
-        """Ensure the 'in' operator has an iterable."""
-        if cls.is_iterable_not_str(v) and info.data["operator"] != "in":
+        value = data["value"]
+        operator = data["operator"]
+        if cls.is_iterable_not_str(value) and operator != "in":
             raise ValueError("iterable value must be used with 'in' operator")
 
-        if info.data["operator"] == "in" and not cls.is_iterable_not_str(v):
+        if operator == "in" and not cls.is_iterable_not_str(value):
             raise ValueError(
                 "'in' operator can only be used with iterable value"
             )
 
-        return v
+        return data
 
 
 class InsertJoinedTimeseriesQuery(BaseModel):

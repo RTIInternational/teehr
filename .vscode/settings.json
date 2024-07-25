@@ -1,6 +1,9 @@
 {
-    "terminal.integrated.env.linux": {
-        "PYTHONPATH": "${workspaceFolder}/src"
-    },
-    "files.trimTrailingWhitespace": true,
+  "terminal.integrated.env.linux": {
+    "PYTHONPATH": "${workspaceFolder}/src"
+  },
+  "terminal.integrated.env.osx": {
+    "PYTHONPATH": "${workspaceFolder}/src"
+  },
+  "files.trimTrailingWhitespace": true
 }
