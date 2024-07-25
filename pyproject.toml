@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "teehr"
-version = "0.3.26"
+version = "0.3.28"
 description = "Tools for Exploratory Evaluation in Hydrologic Research"
 authors = [
     "RTI International",
@@ -33,6 +33,7 @@ fastapi = "^0.103.0"
 uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
 httpx = "^0.25.1"
 pandas = "^2.2.0"
+pydata-sphinx-theme = "^0.15.4"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"
@@ -51,6 +52,10 @@ flake8-docstrings = "^1.7.0"
 myst-nb = "^1.0.0"
 nbstripout = "^0.7.1"
 pickleshare = "^0.7.5"
+
+
+[tool.poetry.group.viz.dependencies]
+bokeh = "^3.5.0"
 
 [tool.numpydoc_validation]
 checks = [

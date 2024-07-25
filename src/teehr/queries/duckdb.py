@@ -144,6 +144,9 @@ def get_metrics(
     >>>     }
     >>> ]
     """
+    # Register the pandas DataFrame accessor class.
+    from teehr.classes.accessor_metrics import GetMetricsAccessor # noqa
+
     mq = MetricQuery.model_validate(
         {
             "primary_filepath": primary_filepath,
@@ -256,6 +259,9 @@ def get_joined_timeseries(
     >>>     }
     >>> ]
     """
+    # Register the pandas DataFrame accessor class.
+    from teehr.classes.accessor_timeseries import GetTimeseriesAccessor # noqa
+
     jtq = JoinedTimeseriesQuery.model_validate(
         {
             "primary_filepath": primary_filepath,
@@ -355,6 +361,9 @@ def get_timeseries(
     >>>     },
     >>> ]
     """
+    # Register the pandas DataFrame accessor class.
+    from teehr.classes.accessor_timeseries import GetTimeseriesAccessor # noqa
+
     tq = TimeseriesQuery.model_validate(
         {
             "timeseries_filepath": timeseries_filepath,
