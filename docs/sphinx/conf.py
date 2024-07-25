@@ -10,6 +10,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 from datetime import datetime
+import tomllib
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../src/teehr'))
@@ -17,10 +18,18 @@ sys.path.insert(0, os.path.abspath('../../src/teehr'))
 # -- Project information -----------------------------------------------------
 project = 'TEEHR: Tools for Exploratory Evaluation in Hydrologic Research'
 copyright = f'{datetime.now().year} RTI International'
-author = 'RTI International, Matthew Denno <mdenno@rti.org>, Katie van Werkhoven <kvanwerkhoven@rti.org>, Sam Lamont <slamont@rti.org>'
 
-# The full version, including alpha/beta/rc tags
-release = '0.3.2'
+
+def _get_project_meta():
+    with open('../../pyproject.toml', mode='rb') as pyproject:
+        return tomllib.load(pyproject)['tool']['poetry']
+
+
+# Get the authors and latest version from the pyproject.toml file.
+pkg_meta = _get_project_meta()
+author = ", ".join(pkg_meta['authors'])
+version = str(pkg_meta['version'])
+release = version
 
 # -- General configuration ---------------------------------------------------
 
@@ -73,6 +82,9 @@ master_doc = 'index'
 
 # MyST-NB options
 nb_execution_mode = "off"
+myst_enable_extensions = [
+    "html_image"
+]
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -83,6 +95,7 @@ nb_execution_mode = "off"
 html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
 html_theme_options = {
+  "footer_start": ["copyright", "version"],
   "show_toc_level": 2,
   "github_url": "https://github.com/RTIInternational/teehr",
   "footer_center": ["footer_center.html"],
