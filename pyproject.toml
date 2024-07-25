@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "teehr"
-version = "0.3.27"
+version = "0.3.28"
 description = "Tools for Exploratory Evaluation in Hydrologic Research"
 authors = [
     "RTI International",
@@ -52,6 +52,10 @@ flake8-docstrings = "^1.7.0"
 myst-nb = "^1.0.0"
 nbstripout = "^0.7.1"
 pickleshare = "^0.7.5"
+
+
+[tool.poetry.group.viz.dependencies]
+bokeh = "^3.5.0"
 
 [tool.numpydoc_validation]
 checks = [
