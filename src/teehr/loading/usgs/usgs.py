@@ -1,15 +1,36 @@
-"""Module for loading and processing USGS streamflow data."""
+"""Module for loading and processing USGS streamflow data.
+
+The function ``usgs_to_parquet`` fetches USGS streamflow data and saves it to
+parquet files following the TEEHR data model.  The OWP tool ``HydroTools`` is
+used to fetch the data from the USGS API.  Several ``chunk_by`` options are
+included to allow for the data to be fetched by location_id, day, week, month,
+and year (or None).
+
+Note that the USGS API is called for each unique value in the specified
+chunk_by option.  For example, if chunk_by is set to "location_id", the USGS
+API will be called for each unique location_id in the provided list.
+
+.. note::
+   Care should be taken to select the appropriate chunk_by option to based on
+   the number of locations and the time period of interest, to avoid excessive
+   API calls and produce more efficient queries.
+"""
 import pandas as pd
 
 from typing import List, Union, Optional
 from pathlib import Path
 from datetime import datetime, timedelta
 from hydrotools.nwis_client.iv import IVDataService
-from teehr.models.loading.utils import ChunkByEnum
+from teehr.models.loading.utils import USGSChunkByEnum
 from pydantic import validate_call, ConfigDict
-from teehr.loading.nwm.utils import write_parquet_file
+from teehr.loading.nwm.utils import (
+    write_parquet_file,
+    get_period_start_end_times,
+    create_periods_based_on_chunksize
+)
 
 DATETIME_STR_FMT = "%Y-%m-%dT%H:%M:00+0000"
+DAYLIGHT_SAVINGS_PAD = timedelta(hours=2)
 
 
 def _filter_to_hourly(df: pd.DataFrame) -> pd.DataFrame:
@@ -26,14 +47,12 @@ def _filter_to_hourly(df: pd.DataFrame) -> pd.DataFrame:
 
 def _filter_no_data(df: pd.DataFrame, no_data_value=-999) -> pd.DataFrame:
     """Filter out no data values."""
-
     df2 = df[df["value"] != no_data_value]
     return df2
 
 
 def _convert_to_si_units(df: pd.DataFrame) -> pd.DataFrame:
     """Convert streamflow values from english to metric."""
-
     df["value"] = df["value"] * 0.3048**3
     df["measurement_unit"] = "m3/s"
     return df
@@ -52,7 +71,6 @@ def _datetime_to_date(dt: datetime) -> datetime:
 
 def _format_df(df: pd.DataFrame) -> pd.DataFrame:
     """Format HydroTools dataframe columns to TEEHR data model."""
-
     df.rename(columns={"usgs_site_code": "location_id"}, inplace=True)
     df["location_id"] = "usgs-" + df["location_id"].astype(str)
     df["configuration"] = "usgs_gage_data"
@@ -77,7 +95,6 @@ def _fetch_usgs(
     convert_to_si: bool = True
 ) -> pd.DataFrame:
     """Fetch USGS gage data and format to TEEHR format."""
-
     start_dt_str = start_date.strftime(DATETIME_STR_FMT)
     end_dt_str = (
         end_date
@@ -108,8 +125,7 @@ def _fetch_usgs(
 
 
 def _format_output_filename(chunk_by: str, start_dt, end_dt) -> str:
-    """Format the output filename based on min and max
-    datetime in the dataset."""
+    """Format the output filename based on min and max datetime."""
     if chunk_by == "day":
         return f"{start_dt.strftime('%Y-%m-%d')}.parquet"
     else:
@@ -124,13 +140,15 @@ def usgs_to_parquet(
     start_date: Union[str, datetime, pd.Timestamp],
     end_date: Union[str, datetime, pd.Timestamp],
     output_parquet_dir: Union[str, Path],
-    chunk_by: Union[ChunkByEnum, None] = None,
+    chunk_by: Union[USGSChunkByEnum, None] = None,
     filter_to_hourly: bool = True,
     filter_no_data: bool = True,
     convert_to_si: bool = True,
     overwrite_output: Optional[bool] = False,
 ):
     """Fetch USGS gage data and save as a Parquet file.
+
+    All dates and times within the files and in the file names are in UTC.
 
     Parameters
     ----------
@@ -147,7 +165,7 @@ def usgs_to_parquet(
         Path of directory where parquet files will be saved.
     chunk_by : Union[str, None], default = None
         How to "chunk" the fetching and storing of the data.
-        Valid options = ["day", "site", None].
+        Valid options = ["location_id", "day", "week", "month", "year", None].
     filter_to_hourly : bool = True
         Return only values that fall on the hour (i.e. drop 15 minute data).
     filter_no_data : bool = True
@@ -187,7 +205,6 @@ def usgs_to_parquet(
     >>>     overwrite_output=OVERWRITE_OUTPUT
     >>> )
     """
-
     start_date = pd.Timestamp(start_date)
     end_date = pd.Timestamp(end_date)
 
@@ -196,35 +213,20 @@ def usgs_to_parquet(
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
 
-    # Fetch all at once
-    if chunk_by is None:
-        usgs_df = _fetch_usgs(
-            sites=sites,
-            start_date=start_date,
-            end_date=end_date,
-            filter_to_hourly=filter_to_hourly,
-            filter_no_data=filter_no_data,
-            convert_to_si=convert_to_si
-        )
-        if len(usgs_df) > 0:
-            output_filepath = Path(output_parquet_dir, "usgs.parquet")
-            write_parquet_file(
-                filepath=output_filepath,
-                overwrite_output=overwrite_output,
-                data=usgs_df
-            )
-        return
-
     if chunk_by == "location_id":
         for site in sites:
             usgs_df = _fetch_usgs(
                 sites=[site],
-                start_date=start_date,
-                end_date=end_date,
+                start_date=start_date - DAYLIGHT_SAVINGS_PAD,
+                end_date=end_date + DAYLIGHT_SAVINGS_PAD,
                 filter_to_hourly=filter_to_hourly,
                 filter_no_data=filter_no_data,
                 convert_to_si=convert_to_si
             )
+
+            usgs_df = usgs_df[(usgs_df["value_time"] >= start_date) &
+                              (usgs_df["value_time"] < end_date)]
+
             if len(usgs_df) > 0:
                 output_filepath = Path(
                     output_parquet_dir,
@@ -237,51 +239,40 @@ def usgs_to_parquet(
                 )
         return
 
-    # TODO: Print warning if chunk_by is bigger than start and end dates?
-
-    if chunk_by == "day":
-        date_intervals = pd.date_range(start_date, end_date, freq="D")
-
-    if chunk_by == "week":
-        date_intervals = pd.date_range(start_date, end_date, freq="W")
-
-    if chunk_by == "month":
-        date_intervals = pd.date_range(start_date, end_date, freq="M")
-
-    if chunk_by == "year":
-        date_intervals = pd.date_range(start_date, end_date, freq="Y")
-
-    # If the start date is not within the specified interval,
-    # it is not included, so add it here if it does not already exist.
-    date_intervals = date_intervals.union(
-        pd.DatetimeIndex([start_date]), sort=True
+    # Chunk data by time
+    periods = create_periods_based_on_chunksize(
+        start_date=start_date,
+        end_date=end_date,
+        chunk_by=chunk_by
     )
 
-    for i, dt_intvl in enumerate(date_intervals):
-        if i == 0:
-            start_dt = start_date
-        else:
-            start_dt = dt_intvl
+    for period in periods:
 
-        if i == len(date_intervals) - 1:
-            # Include data for the last day
-            end_dt = end_date + timedelta(hours=24) - timedelta(minutes=1)
+        if period is not None:
+            dts = get_period_start_end_times(
+                period=period,
+                start_date=start_date,
+                end_date=end_date
+            )
         else:
-            end_dt = date_intervals[i + 1] - timedelta(minutes=1)
+            dts = {"start_dt": start_date, "end_dt": end_date}
 
         usgs_df = _fetch_usgs(
             sites=sites,
-            start_date=start_dt,
-            end_date=end_dt,
+            start_date=dts["start_dt"] - DAYLIGHT_SAVINGS_PAD,
+            end_date=dts["end_dt"] + DAYLIGHT_SAVINGS_PAD,
             filter_to_hourly=filter_to_hourly,
             filter_no_data=filter_no_data,
             convert_to_si=convert_to_si
         )
 
+        usgs_df = usgs_df[(usgs_df["value_time"] >= dts["start_dt"]) &
+                          (usgs_df["value_time"] <= dts["end_dt"])]
+
         if len(usgs_df) > 0:
 
             output_filename = _format_output_filename(
-                chunk_by, start_dt, end_dt
+                chunk_by, dts["start_dt"], dts["end_dt"]
             )
 
             output_filepath = Path(output_parquet_dir, output_filename)

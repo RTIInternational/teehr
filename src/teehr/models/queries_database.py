@@ -1,7 +1,15 @@
 """Module for database query models."""
 from collections.abc import Iterable
 from datetime import datetime
-from enum import Enum  # , StrEnum  if 3.11
+try:
+    # breaking change introduced in python 3.11
+    from enum import StrEnum
+except ImportError:  # pragma: no cover
+    from enum import Enum  # pragma: no cover
+
+    class StrEnum(str, Enum):  # pragma: no cover
+        pass  # pragma: no cover
+
 from typing import List, Optional, Union
 
 from pydantic import BaseModel as PydanticBaseModel
@@ -13,13 +21,14 @@ from teehr.models.queries import FilterOperatorEnum, MetricEnum
 
 class BaseModel(PydanticBaseModel):
     """Basemodel configuration."""
+
     class ConfigDict:
         """ConfigDict."""
         arbitrary_types_allowed = True
         # smart_union = True # deprecated in v2
 
 
-class FieldTypeEnum(str, Enum):
+class FieldTypeEnum(StrEnum):
     """Allowable duckdb data types."""
 
     BIGINT = "BIGINT"
@@ -46,7 +55,7 @@ class FieldTypeEnum(str, Enum):
     VARCHAR = "VARCHAR"
 
 
-class JoinedFieldNameEnum(str, Enum):
+class JoinedFieldNameEnum(StrEnum):
     """Names of fields in base joined_timeseries table."""
 
     reference_time = "reference_time"
@@ -58,19 +67,19 @@ class JoinedFieldNameEnum(str, Enum):
     variable_name = "variable_name"
     primary_value = "primary_value"
     primary_location_id = "primary_location_id"
-    lead_time = "lead_time"
-    absolute_difference = "absolute_difference"
     geometry = "geometry"
 
 
-class TimeseriesNameEnum(str, Enum):
+class TimeseriesNameEnum(StrEnum):
     """Timeseries Names."""
+
     primary = "primary"
     secondary = "secondary"
 
 
 class JoinedTimeseriesFieldName(BaseModel):
     """Joined Timeseries Field Name model."""
+
     field_name: str
 
     @field_validator("field_name")
@@ -89,6 +98,7 @@ class JoinedTimeseriesFieldName(BaseModel):
 
 class CalculateField(BaseModel):
     """Calculate field model."""
+
     parameter_names: List[str]
     new_field_name: str
     new_field_type: FieldTypeEnum
@@ -115,6 +125,7 @@ class CalculateField(BaseModel):
 
 class Filter(BaseModel):
     """Filter model."""
+
     column: str
     operator: FilterOperatorEnum
     value: Union[
@@ -148,10 +159,11 @@ class Filter(BaseModel):
 class InsertJoinedTimeseriesQuery(BaseModel):
     """InsertJoinedTimeseriesQuery model."""
 
-    primary_filepath: Union[str, Path]
-    secondary_filepath: Union[str, Path]
-    crosswalk_filepath: Union[str, Path]
+    primary_filepath: Union[str, Path, List[Union[str, Path]]]
+    secondary_filepath: Union[str, Path, List[Union[str, Path]]]
+    crosswalk_filepath: Union[str, Path, List[Union[str, Path]]]
     order_by: Optional[List[JoinedFieldNameEnum]] = []
+    filters: Optional[List[Filter]] = []
 
 
 class JoinedTimeseriesQuery(BaseModel):
@@ -255,6 +267,7 @@ class TimeseriesQuery(BaseModel):
 
 class TimeseriesCharQuery(BaseModel):
     """Timeseries char query model."""
+
     order_by: List[str]
     group_by: List[str]
     filters: Optional[List[Filter]] = []
@@ -331,6 +344,7 @@ class TimeseriesCharQuery(BaseModel):
 
 class MetricQuery(BaseModel):
     """Metric query model."""
+
     include_geometry: bool
     group_by: List[str]
     order_by: List[str]

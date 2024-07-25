@@ -1,6 +1,6 @@
 """Module defining shared functions for processing NWM grid data."""
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 import re
 
 import dask
@@ -11,42 +11,86 @@ import xarray as xr
 from teehr.loading.nwm.utils import get_dataset, write_parquet_file
 
 
-def compute_zonal_mean(
-    da: xr.DataArray, weights_filepath: str
+def get_weights_row_col_stats(weights_df: pd.DataFrame) -> Dict:
+    """Get row and column statistics for weights dataframe."""
+    row_min = weights_df.row.values.min()
+    col_min = weights_df.col.values.min()
+    row_max = weights_df.row.values.max()
+    col_max = weights_df.col.values.max()
+
+    rows_norm = weights_df.row.values - row_min
+    cols_norm = weights_df.col.values - col_min
+    return {
+        "row_min": row_min,
+        "row_max": row_max,
+        "col_min": col_min,
+        "col_max": col_max,
+        "rows_norm": rows_norm,
+        "cols_norm": cols_norm
+    }
+
+
+def get_nwm_grid_data(
+    var_da: xr.DataArray,
+    row_min: int,
+    col_min: int,
+    row_max: int,
+    col_max: int
+):
+    """Read a subset nwm grid data into memory using row/col bounds."""
+    grid_values = var_da.isel(
+        x=slice(col_min, col_max+1), y=slice(row_min, row_max+1)
+    ).values
+    return grid_values
+
+
+def update_location_id_prefix(
+    df: pd.DataFrame,
+    new_prefix: str
 ) -> pd.DataFrame:
-    """Compute zonal mean of area-weighted pixels for given
-    zones and weights."""
-    # Read weights file
-    weights_df = pd.read_parquet(
-        weights_filepath, columns=["row", "col", "weight", "location_id"]
-    )
-    # Get variable data
-    arr_2d = da.values[0]
-    arr_2d[arr_2d == da.rio.nodata] = np.nan
-    # Get row/col indices
-    rows = weights_df.row.values
-    cols = weights_df.col.values
-    # Get the values and apply weights
-    var_values = arr_2d[rows, cols]
-    weights_df["value"] = var_values * weights_df.weight.values
-    # Compute mean
-    df = weights_df.groupby(by="location_id")["value"].mean().to_frame()
-    df.reset_index(inplace=True)
+    """Replace or add the location_id prefix in a dataframe."""
+    df = df.copy()
+    tmp_df = df.location_id.str.split("-", expand=True)
+
+    df["location_id"] = df["location_id"].astype(str)
+
+    if tmp_df.columns.size == 1:
+        df.loc[:, 'location_id'] = new_prefix + "-" + df['location_id']
+    elif tmp_df.columns.size == 2:
+        df.loc[:, 'location_id'] = new_prefix + "-" + tmp_df[1]
+    else:
+        raise ValueError("Location ID has more than two parts!")
 
     return df
 
 
+def compute_weighted_average(
+    grid_values: np.ndarray,
+    weights_df: pd.DataFrame
+) -> pd.DataFrame:
+    """Compute weighted average of pixels for given zones and weights."""
+    weights_df.loc[:, "weighted_value"] = grid_values * \
+        weights_df.weight.values
+
+    # Compute weighted average
+    df = weights_df.groupby(
+        by="location_id", as_index=False)[["weighted_value", "weight"]].sum()
+    df.loc[:, "value"] = df.weighted_value/df.weight
+
+    return df[["location_id", "value"]].copy()
+
+
 @dask.delayed
-def process_single_file(
+def process_single_nwm_grid_file(
     row: Tuple,
     configuration: str,
     variable_name: str,
     weights_filepath: str,
     ignore_missing_file: bool,
-    units_format_dict: Dict
+    units_format_dict: Dict,
+    location_id_prefix: Union[str, None]
 ) -> pd.DataFrame:
-    """Fetch a single json reference file and format \
-    to a dataframe using the TEEHR data model."""
+    """Fetch data for a single reference file and compute weighted average."""
     ds = get_dataset(
         row.filepath,
         ignore_missing_file,
@@ -62,16 +106,38 @@ def process_single_file(
     nwm_units = ds[variable_name].attrs["units"]
     teehr_units = units_format_dict.get(nwm_units, nwm_units)
     value_time = ds.time.values[0]
-    da = ds[variable_name]
+    da = ds[variable_name][0]
+
+    weights_df = pd.read_parquet(
+        weights_filepath, columns=["row", "col", "weight", "location_id"]
+    )
+
+    weights_bounds = get_weights_row_col_stats(weights_df)
+
+    grid_arr = get_nwm_grid_data(
+        da,
+        weights_bounds["row_min"],
+        weights_bounds["col_min"],
+        weights_bounds["row_max"],
+        weights_bounds["col_max"]
+    )
+
+    grid_values = grid_arr[
+        weights_bounds["rows_norm"],
+        weights_bounds["cols_norm"]
+    ]
 
     # Calculate mean areal value of selected variable
-    df = compute_zonal_mean(da, weights_filepath)
+    df = compute_weighted_average(grid_values, weights_df)
 
-    df["value_time"] = value_time
-    df["reference_time"] = ref_time
-    df["measurement_unit"] = teehr_units
-    df["configuration"] = configuration
-    df["variable_name"] = variable_name
+    df.loc[:, "value_time"] = value_time
+    df.loc[:, "reference_time"] = ref_time
+    df.loc[:, "measurement_unit"] = teehr_units
+    df.loc[:, "configuration"] = configuration
+    df.loc[:, "variable_name"] = variable_name
+
+    if location_id_prefix:
+        df = update_location_id_prefix(df, location_id_prefix)
 
     return df
 
@@ -85,10 +151,13 @@ def fetch_and_format_nwm_grids(
     ignore_missing_file: bool,
     units_format_dict: Dict,
     overwrite_output: bool,
+    location_id_prefix: Union[str, None]
 ):
-    """
-    Read in the single reference jsons, subset the NWM data based on
-    provided IDs and format and save the data as a parquet files.
+    """Compute weighted average, grouping by reference time.
+
+    Group a list of json files by reference time and compute the weighted
+    average of the variable values for each zone. The results are saved to
+    parquet files using TEEHR data model.
     """
     output_parquet_dir = Path(output_parquet_dir)
     if not output_parquet_dir.exists():
@@ -119,13 +188,14 @@ def fetch_and_format_nwm_grids(
         results = []
         for row in df.itertuples():
             results.append(
-                process_single_file(
+                process_single_nwm_grid_file(
                     row,
                     configuration,
                     variable_name,
                     zonal_weights_filepath,
                     ignore_missing_file,
                     units_format_dict,
+                    location_id_prefix
                 )
             )
 
@@ -140,7 +210,7 @@ def fetch_and_format_nwm_grids(
         # Save to parquet
         yrmoday = df.day.iloc[0]
         z_hour = df.z_hour.iloc[0][1:3]
-        ref_time_str = f"{yrmoday}T{z_hour}Z"
+        ref_time_str = f"{yrmoday}T{z_hour}"
         parquet_filepath = Path(
             Path(output_parquet_dir), f"{ref_time_str}.parquet"
         )

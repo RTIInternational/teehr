@@ -1,0 +1,4 @@
+location_id,attribute_name,attribute_value,attribute_unit
+gage-A,year_2_discharge,500,cms
+gage-B,year_2_discharge,200,cms
+gage-C,year_2_discharge,300,cms

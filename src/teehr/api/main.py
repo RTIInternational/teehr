@@ -15,7 +15,7 @@ from typing import Union, Dict, List
 from pathlib import Path
 
 # from teehr.queries.duckdb import get_metrics
-from teehr.database.teehr_dataset import TEEHRDatasetAPI
+from teehr.classes.duckdb_database_api import DuckDBDatabaseAPI
 from teehr.models.queries import (
     # JoinedFilterFieldEnum,
     # JoinedFilter,
@@ -145,7 +145,7 @@ async def get_data_fields(
         A list of dictionaries of database fields and their types.
     """
     config = datasets["datasets"][dataset_id]
-    tds = TEEHRDatasetAPI(config["database_filepath"])
+    tds = DuckDBDatabaseAPI(config["database_filepath"])
     fields = tds.get_joined_timeseries_schema()
     fields.rename(
         columns={
@@ -218,7 +218,7 @@ async def get_metrics_by_query(
         A list of dictionaries of query results.
     """
     config = datasets["datasets"][dataset_id]
-    tds = TEEHRDatasetAPI(config["database_filepath"])
+    tds = DuckDBDatabaseAPI(config["database_filepath"])
     df = tds.get_metrics(api_metrics_query)
 
     return format_response(df)
@@ -244,7 +244,7 @@ async def get_timeseries_by_query(
         A list of dictionaries of query results.
     """
     config = datasets["datasets"][dataset_id]
-    tds = TEEHRDatasetAPI(config["database_filepath"])
+    tds = DuckDBDatabaseAPI(config["database_filepath"])
     df = tds.get_timeseries(api_timeseries_query)
 
     return format_response(df)
@@ -270,7 +270,7 @@ async def get_timeseries_chars_by_query(
         A list of dictionaries of query results.
     """
     config = datasets["datasets"][dataset_id]
-    tds = TEEHRDatasetAPI(config["database_filepath"])
+    tds = DuckDBDatabaseAPI(config["database_filepath"])
     df = tds.get_timeseries_chars(api_timeseries_char_query)
 
     return format_response(df)
@@ -296,7 +296,7 @@ async def get_unique_field_vals(
         Pydantic model of query variables.
     """
     config = datasets["datasets"][dataset_id]
-    tds = TEEHRDatasetAPI(config["database_filepath"])
+    tds = DuckDBDatabaseAPI(config["database_filepath"])
     df = tds.get_unique_field_values(api_field_name)
 
     return format_response(df)

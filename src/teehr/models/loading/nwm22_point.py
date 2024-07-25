@@ -1,12 +1,20 @@
 """Module describing NWM v2.2 point data configuration variables."""
-from enum import Enum
+try:
+    # breaking change introduced in python 3.11
+    from enum import StrEnum
+except ImportError:  # pragma: no cover
+    from enum import Enum  # pragma: no cover
+
+    class StrEnum(str, Enum):  # pragma: no cover
+        pass  # pragma: no cover
+
 from typing import Optional
 
 from pydantic import BaseModel
 
 
 # VARIABLE ENUMS: Potential variable names for each output_type
-class ChannelRtVariableEnum(str, Enum):
+class ChannelRtVariableEnum(StrEnum):
     """ChannelRtVariableEnum."""
     nudge = "nudge"
     qBtmVertRunoff = "qBtmVertRunoff"
@@ -16,7 +24,7 @@ class ChannelRtVariableEnum(str, Enum):
     velocity = "velocity"
 
 
-class ChannelRtNoDAVariableEnum(str, Enum):
+class ChannelRtNoDAVariableEnum(StrEnum):
     """ChannelRtNoDAVariableEnum."""
     nudge = "nudge"
     qBucket = "qBucket"
@@ -25,20 +33,20 @@ class ChannelRtNoDAVariableEnum(str, Enum):
     velocity = "velocity"
 
 
-class ChannelRtLongVariableEnum(str, Enum):
+class ChannelRtLongVariableEnum(StrEnum):
     """ChannelRtLongVariableEnum."""
     nudge = "nudge"
     streamflow = "streamflow"
     velocity = "velocity"
 
 
-class TerrainRtVariableEnum(str, Enum):
+class TerrainRtVariableEnum(StrEnum):
     """TerrainRtVariableEnum."""
     sfcheadsubrt = "sfcheadsubrt"
     zwattablrt = "zwattablrt"
 
 
-class ReservoirVariableEnum(str, Enum):
+class ReservoirVariableEnum(StrEnum):
     """ReservoirVariableEnum."""
     inflow = "inflow"
     outflow = "outflow"
@@ -47,86 +55,86 @@ class ReservoirVariableEnum(str, Enum):
 
 
 # OUTPUT ENUMS: Potential output names for each configuration
-class ShortAndAnalysisOutputEnum(str, Enum):
+class ShortAndAnalysisOutputEnum(StrEnum):
     """ShortAndAnalysisOutputEnum."""
     channel_rt = "channel_rt"
     terrain_rt = "terrain_rt"
     reservoir = "reservoir"
 
 
-class Medium1OutputEnum(str, Enum):
+class Medium1OutputEnum(StrEnum):
     """Medium1OutputEnum."""
     channel_rt_1 = "channel_rt_1"
     terrain_rt_1 = "terrain_rt_1"
     reservoir_1 = "reservoir_1"
 
 
-class Medium2OutputEnum(str, Enum):
+class Medium2OutputEnum(StrEnum):
     """Medium2OutputEnum."""
     channel_rt_2 = "channel_rt_2"
     terrain_rt_2 = "terrain_rt_2"
     reservoir_2 = "reservoir_2"
 
 
-class Medium3OutputEnum(str, Enum):
+class Medium3OutputEnum(StrEnum):
     """Medium3OutputEnum."""
     channel_rt_3 = "channel_rt_3"
     terrain_rt_3 = "terrain_rt_3"
     reservoir_3 = "reservoir_3"
 
 
-class Medium4OutputEnum(str, Enum):
+class Medium4OutputEnum(StrEnum):
     """Medium4OutputEnum."""
     channel_rt_4 = "channel_rt_4"
     terrain_rt_4 = "terrain_rt_4"
     reservoir_4 = "reservoir_4"
 
 
-class Medium5OutputEnum(str, Enum):
+class Medium5OutputEnum(StrEnum):
     """Medium5OutputEnum."""
     channel_rt_5 = "channel_rt_5"
     terrain_rt_5 = "terrain_rt_5"
     reservoir_5 = "reservoir_5"
 
 
-class Medium6OutputEnum(str, Enum):
+class Medium6OutputEnum(StrEnum):
     """Medium6OutputEnum."""
     channel_rt_6 = "channel_rt_6"
     terrain_rt_6 = "terrain_rt_6"
     reservoir_6 = "reservoir_6"
 
 
-class Medium7OutputEnum(str, Enum):
+class Medium7OutputEnum(StrEnum):
     """Medium7OutputEnum."""
     channel_rt_7 = "channel_rt_7"
     terrain_rt_7 = "terrain_rt_7"
     reservoir_7 = "reservoir_7"
 
 
-class MediumNoDAEnum(str, Enum):
+class MediumNoDAEnum(StrEnum):
     """MediumNoDAEnum."""
     channel_rt = "channel_rt"
 
 
-class Long1OutputEnum(str, Enum):
+class Long1OutputEnum(StrEnum):
     """Long1OutputEnum."""
     channel_rt_1 = "channel_rt_1"
     reservoir_1 = "reservoir_1"
 
 
-class Long2OutputEnum(str, Enum):
+class Long2OutputEnum(StrEnum):
     """Long2OutputEnum."""
     channel_rt_2 = "channel_rt_2"
     reservoir_2 = "reservoir_2"
 
 
-class Long3OutputEnum(str, Enum):
+class Long3OutputEnum(StrEnum):
     """Long3OutputEnum."""
     channel_rt_3 = "channel_rt_3"
     reservoir_3 = "reservoir_3"
 
 
-class Long4OutputEnum(str, Enum):
+class Long4OutputEnum(StrEnum):
     """Long4OutputEnum."""
     channel_rt_4 = "channel_rt_4"
     reservoir_4 = "reservoir_4"
@@ -240,7 +248,7 @@ class LongRangeMem4(BaseModel):
 
 
 # POINT CONFIGURATION ENUM: Potential configuration names
-class ConfigurationsEnum(str, Enum):
+class ConfigurationsEnum(StrEnum):
     """ConfigurationsEnum."""
     analysis_assim = "analysis_assim"
     analysis_assim_no_da = "analysis_assim_no_da"

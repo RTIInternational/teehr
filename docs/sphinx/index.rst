@@ -3,7 +3,6 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. image: ../images/teehr.png
 
 ********************
 TEEHR documentation
@@ -21,8 +20,8 @@ TEEHR (pronounced "tier") is a python tool set for loading, storing, processing 
         :class-card: intro-card
         :shadow: md
 
-        New to *TEEHR*? Check out the getting started guides. They contain an
-        introduction to *TEEHR'* main concepts and links to additional tutorials.
+        New to TEEHR? Check out the getting started guides. They contain an
+        introduction to TEEHR main concepts and links to additional tutorials.
 
         +++
 
@@ -40,7 +39,7 @@ TEEHR (pronounced "tier") is a python tool set for loading, storing, processing 
         :shadow: md
 
         The user guide provides in-depth information on the
-        key concepts of pandas with useful background information and explanation.
+        key concepts of TEEHR with useful background information and explanation.
 
         +++
 

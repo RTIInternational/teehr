@@ -1,10 +1,19 @@
 """Module for NWM loading models."""
-from enum import Enum
-# from pydantic import BaseModel
+try:
+    # breaking change introduced in python 3.11
+    from enum import StrEnum
+except ImportError:  # pragma: no cover
+    from enum import Enum  # pragma: no cover
+
+    class StrEnum(str, Enum):  # pragma: no cover
+        """Instantiate StrEnum."""
+
+        pass  # pragma: no cover
 
 
-class ChunkByEnum(str, Enum):
-    """ChunkByEnum."""
+class USGSChunkByEnum(StrEnum):
+    """USGSChunkByEnum for loading USGS data."""
+
     day = "day"
     location_id = "location_id"
     week = "week"
@@ -12,35 +21,48 @@ class ChunkByEnum(str, Enum):
     year = "year"
 
 
-class SupportedNWMRetroVersionsEnum(str, Enum):
+class NWMChunkByEnum(StrEnum):
+    """NWMChunkByEnum for loading NWM data."""
+
+    week = "week"
+    month = "month"
+    year = "year"
+
+
+class SupportedNWMRetroVersionsEnum(StrEnum):
     """SupportedNWMRetroVersionsEnum."""
+
     nwm20 = "nwm20"
     nwm21 = "nwm21"
     nwm30 = "nwm30"
 
 
-class SupportedNWMOperationalVersionsEnum(str, Enum):
+class SupportedNWMOperationalVersionsEnum(StrEnum):
     """SupportedNWMOperationalVersionsEnum."""
+
     nwm22 = "nwm22"
     nwm30 = "nwm30"
 
 
-class SupportedNWMDataSourcesEnum(str, Enum):
+class SupportedNWMDataSourcesEnum(StrEnum):
     """SupportedNWMDataSourcesEnum."""
+
     GCS = "GCS"
     NOMADS = "NOMADS"
     DSTOR = "DSTOR"
 
 
-class SupportedKerchunkMethod(str, Enum):
+class SupportedKerchunkMethod(StrEnum):
     """SupportedKerchunkMethod."""
+
     local = "local"
     remote = "remote"
     auto = "auto"
 
 
-class SupportedNWMRetroDomainsEnum(str, Enum):
+class SupportedNWMRetroDomainsEnum(StrEnum):
     """SupportedNWMRetroDomainsEnum."""
+
     CONUS = "CONUS"
     Alaska = "Alaska"
     PR = "PR"

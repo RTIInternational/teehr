@@ -8,12 +8,15 @@ from teehr.loading.nwm.utils import (
     check_dates_against_nwm_version,
     build_remote_nwm_filelist,
     generate_json_paths,
-    get_dataset
+    get_dataset,
+    create_periods_based_on_chunksize
 )
 from teehr.loading.nwm.const import (
     NWM22_ANALYSIS_CONFIG,
     NWM30_ANALYSIS_CONFIG,
 )
+
+TIMEFORMAT = "%Y-%m-%d %H:%M:%S"
 
 TEST_DIR = Path("tests", "data", "nwm30")
 TEMP_DIR = Path("tests", "data", "temp")
@@ -151,6 +154,69 @@ def test_generate_json_for_bad_file():
         )
 
 
+def test_create_periods_based_on_day():
+    """Test creating periods based on daily chunksize."""
+    start_date = "2023-12-30"
+    end_date = "2024-01-02"
+    chunk_by = "day"
+
+    periods = create_periods_based_on_chunksize(
+        start_date=start_date,
+        end_date=end_date,
+        chunk_by=chunk_by
+    )
+    assert periods[0].start_time.strftime(TIMEFORMAT) == "2023-12-30 00:00:00"
+    assert periods[0].end_time.strftime(TIMEFORMAT) == "2023-12-30 23:59:59"
+    assert periods[1].start_time.strftime(TIMEFORMAT) == "2023-12-31 00:00:00"
+    assert periods[1].end_time.strftime(TIMEFORMAT) == "2023-12-31 23:59:59"
+    assert periods[2].start_time.strftime(TIMEFORMAT) == "2024-01-01 00:00:00"
+    assert periods[2].end_time.strftime(TIMEFORMAT) == "2024-01-01 23:59:59"
+    assert periods[3].start_time.strftime(TIMEFORMAT) == "2024-01-02 00:00:00"
+    assert periods[3].end_time.strftime(TIMEFORMAT) == "2024-01-02 23:59:59"
+
+
+def test_create_periods_based_on_week():
+    """Test creating periods based on weekly chunksize."""
+    start_date = "2023-12-30"
+    end_date = "2024-01-02"
+    chunk_by = "week"
+    periods = create_periods_based_on_chunksize(
+        start_date=start_date,
+        end_date=end_date,
+        chunk_by=chunk_by
+    )
+    assert periods[0].start_time.strftime(TIMEFORMAT) == "2023-12-25 00:00:00"
+    assert periods[0].end_time.strftime(TIMEFORMAT) == "2023-12-31 23:59:59"
+
+
+def test_create_periods_based_on_month():
+    """Test creating periods based on monthly chunksize."""
+    start_date = "2023-12-30"
+    end_date = "2024-01-02"
+    chunk_by = "month"
+    periods = create_periods_based_on_chunksize(
+        start_date=start_date,
+        end_date=end_date,
+        chunk_by=chunk_by
+    )
+    assert periods[0].start_time.strftime(TIMEFORMAT) == "2023-12-01 00:00:00"
+    assert periods[0].end_time.strftime(TIMEFORMAT) == "2023-12-31 23:59:59"
+
+
+def test_create_periods_based_on_year():
+    """Test creating periods based on yearly chunksize."""
+    start_date = "2023-12-30"
+    end_date = "2024-01-02"
+    chunk_by = "year"
+    periods = create_periods_based_on_chunksize(
+        start_date=start_date,
+        end_date=end_date,
+        chunk_by=chunk_by
+    )
+    assert periods[0].start_time.strftime(TIMEFORMAT) == "2023-01-01 00:00:00"
+    assert periods[0].end_time.strftime(TIMEFORMAT) == "2023-12-31 23:59:59"
+
+
 if __name__ == "__main__":
     test_dates_and_nwm_version()
     test_building_nwm30_gcs_paths()
@@ -158,3 +224,7 @@ if __name__ == "__main__":
     test_generate_json_paths()
     test_point_zarr_reference_file()
     test_generate_json_for_bad_file()
+    test_create_periods_based_on_day()
+    test_create_periods_based_on_week()
+    test_create_periods_based_on_month()
+    test_create_periods_based_on_year()

@@ -75,7 +75,6 @@ def process_chunk_of_files(
     nwm_version: str
 ):
     """Assemble a table for a chunk of NWM files."""
-
     location_ids = np.array(location_ids).astype(int)
 
     schema = pa.schema(
@@ -115,15 +114,15 @@ def process_chunk_of_files(
 
     if process_by_z_hour:
         row = df.iloc[0]
-        filename = f"{row.day}T{row.z_hour[1:3]}Z.parquet"
+        filename = f"{row.day}T{row.z_hour[1:3]}.parquet"
     else:
         # Use start and end dates including forecast hour
-        #  for the output file name
+        #  for the output file name.
         filepath_list = df.filepath.sort_values().tolist()
         start_json = filepath_list[0].split("/")[-1].split(".")
-        start = f"{start_json[1]}T{start_json[3][1:3]}Z{start_json[6][1:]}F"
+        start = f"{start_json[1]}T{start_json[3][1:3]}F{start_json[6][1:]}"
         end_json = filepath_list[-1].split("/")[-1].split(".")
-        end = f"{end_json[1]}T{end_json[3][1:3]}Z{end_json[6][1:]}F"
+        end = f"{end_json[1]}T{end_json[3][1:3]}F{end_json[6][1:]}"
         filename = f"{start}_{end}.parquet"
 
     write_parquet_file(
@@ -146,9 +145,11 @@ def fetch_and_format_nwm_points(
     overwrite_output: bool,
     nwm_version: str
 ):
-    """Read in the single reference jsons, subset the
-        NWM data based on provided IDs and formats and save
-        the data as parquet files using Dask.
+    """Fetch NWM point data and save as parquet files.
+
+    Read in previously generated Kerchunk reference jsons,
+    subset the NWM data based on provided location IDs, and format
+    and save to parquet files in the TEEHR data model using Dask.
 
     Parameters
     ----------
@@ -180,7 +181,6 @@ def fetch_and_format_nwm_points(
     nwm_version : str
         Specified NWM version.
     """
-
     output_parquet_dir = Path(output_parquet_dir)
     if not output_parquet_dir.exists():
         output_parquet_dir.mkdir(parents=True)

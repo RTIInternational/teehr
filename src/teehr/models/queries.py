@@ -1,7 +1,17 @@
 """Module for parquet-based query models."""
 from collections.abc import Iterable
 from datetime import datetime
-from enum import Enum  # StrEnum
+try:
+    # breaking change introduced in python 3.11
+    from enum import StrEnum
+except ImportError:  # pragma: no cover
+    from enum import Enum  # pragma: no cover
+
+    class StrEnum(str, Enum):  # pragma: no cover
+        """Enum with string values."""
+
+        pass  # pragma: no cover
+
 from typing import List, Optional, Union
 
 from pydantic import BaseModel as PydanticBaseModel
@@ -11,14 +21,17 @@ from pathlib import Path
 
 class BaseModel(PydanticBaseModel):
     """Basemodel configuration."""
+
     class ConfigDict:
-        """ConfigDict."""
+        """Config dictionary."""
+
         arbitrary_types_allowed = True
         # smart_union = True # deprecated in v2
 
 
-class FilterOperatorEnum(str, Enum):
+class FilterOperatorEnum(StrEnum):
     """Filter symbols."""
+
     eq = "="
     gt = ">"
     lt = "<"
@@ -28,8 +41,9 @@ class FilterOperatorEnum(str, Enum):
     isin = "in"
 
 
-class MetricEnum(str, Enum):
+class MetricEnum(StrEnum):
     """Available metrics."""
+
     primary_count = "primary_count"
     secondary_count = "secondary_count"
     primary_minimum = "primary_minimum"
@@ -43,19 +57,31 @@ class MetricEnum(str, Enum):
     primary_variance = "primary_variance"
     secondary_variance = "secondary_variance"
     max_value_delta = "max_value_delta"
-    bias = "bias"
     nash_sutcliffe_efficiency = "nash_sutcliffe_efficiency"
+    nash_sutcliffe_efficiency_normalized = "nash_sutcliffe_efficiency_normalized" # noqa
+    # nash_sutcliffe_efficiency_log = "nash_sutcliffe_efficiency_log" # noqa
     kling_gupta_efficiency = "kling_gupta_efficiency"
+    kling_gupta_efficiency_mod1 = "kling_gupta_efficiency_mod1"
+    kling_gupta_efficiency_mod2 = "kling_gupta_efficiency_mod2"
     mean_error = "mean_error"
+    mean_absolute_error = "mean_absolute_error"
     mean_squared_error = "mean_squared_error"
     root_mean_squared_error = "root_mean_squared_error"
     primary_max_value_time = "primary_max_value_time"
     secondary_max_value_time = "secondary_max_value_time"
     max_value_timedelta = "max_value_timedelta"
+    relative_bias = "relative_bias"
+    multiplicative_bias = "multiplicative_bias"
+    mean_absolute_relative_error = "mean_absolute_relative_error"
+    pearson_correlation = "pearson_correlation"
+    r_squared = "r_squared"
+    annual_peak_relative_bias = "annual_peak_relative_bias"
+    spearman_correlation = "spearman_correlation"
 
 
-class JoinedFilterFieldEnum(str, Enum):
+class JoinedFilterFieldEnum(StrEnum):
     """Joined filter fields."""
+
     value_time = "value_time"
     reference_time = "reference_time"
     secondary_location_id = "secondary_location_id"
@@ -65,12 +91,12 @@ class JoinedFilterFieldEnum(str, Enum):
     variable_name = "variable_name"
     primary_value = "primary_value"
     primary_location_id = "primary_location_id"
-    lead_time = "lead_time"
     geometry = "geometry"
 
 
-class TimeseriesFilterFieldEnum(str, Enum):
+class TimeseriesFilterFieldEnum(StrEnum):
     """Timeseries filter fields."""
+
     value_time = "value_time"
     reference_time = "reference_time"
     location_id = "location_id"
@@ -78,12 +104,12 @@ class TimeseriesFilterFieldEnum(str, Enum):
     configuration = "configuration"
     measurement_unit = "measurement_unit"
     variable_name = "variable_name"
-    lead_time = "lead_time"
     geometry = "geometry"
 
 
 class JoinedFilter(BaseModel):
     """Joined filter model."""
+
     column: JoinedFilterFieldEnum
     operator: FilterOperatorEnum
     value: Union[
@@ -112,6 +138,7 @@ class JoinedFilter(BaseModel):
 
 class TimeseriesFilter(BaseModel):
     """Timeseries filter model."""
+
     column: TimeseriesFilterFieldEnum
     operator: FilterOperatorEnum
     value: Union[
@@ -139,15 +166,16 @@ class TimeseriesFilter(BaseModel):
 
 class MetricQuery(BaseModel):
     """Metric query model."""
-    primary_filepath: Union[str, Path]
-    secondary_filepath: Union[str, Path]
-    crosswalk_filepath: Union[str, Path]
+
+    primary_filepath: Union[str, Path, List[Union[str, Path]]]
+    secondary_filepath: Union[str, Path, List[Union[str, Path]]]
+    crosswalk_filepath: Union[str, Path, List[Union[str, Path]]]
     group_by: List[JoinedFilterFieldEnum]
     order_by: List[JoinedFilterFieldEnum]
     include_metrics: Union[List[MetricEnum], MetricEnum, str]
     filters: Optional[List[JoinedFilter]] = []
     return_query: bool
-    geometry_filepath: Optional[Union[str, Path]]
+    geometry_filepath: Optional[Union[str, Path, List[Union[str, Path]]]]
     include_geometry: bool
     remove_duplicates: Optional[bool] = True
 
@@ -193,13 +221,14 @@ class MetricQuery(BaseModel):
 
 class JoinedTimeseriesQuery(BaseModel):
     """Joined timeseries query model."""
-    primary_filepath: Union[str, Path]
-    secondary_filepath: Union[str, Path]
-    crosswalk_filepath: Union[str, Path]
+
+    primary_filepath: Union[str, Path, List[Union[str, Path]]]
+    secondary_filepath: Union[str, Path, List[Union[str, Path]]]
+    crosswalk_filepath: Union[str, Path, List[Union[str, Path]]]
     order_by: List[JoinedFilterFieldEnum]
     filters: Optional[List[JoinedFilter]] = []
     return_query: bool
-    geometry_filepath: Optional[Union[str, Path]]
+    geometry_filepath: Optional[Union[str, Path, List[Union[str, Path]]]]
     include_geometry: bool
     remove_duplicates: Optional[bool] = True
 
@@ -226,7 +255,8 @@ class JoinedTimeseriesQuery(BaseModel):
 
 class TimeseriesQuery(BaseModel):
     """Timeseries query model."""
-    timeseries_filepath: Union[str, Path]
+
+    timeseries_filepath: Union[str, Path, List[Union[str, Path]]]
     order_by: List[TimeseriesFilterFieldEnum]
     filters: Optional[List[TimeseriesFilter]] = []
     return_query: bool
@@ -241,7 +271,8 @@ class TimeseriesQuery(BaseModel):
 
 class TimeseriesCharQuery(BaseModel):
     """Timeseries char query model."""
-    timeseries_filepath: Union[str, Path]
+
+    timeseries_filepath: Union[str, Path, List[Union[str, Path]]]
     order_by: List[TimeseriesFilterFieldEnum]
     group_by: List[TimeseriesFilterFieldEnum]
     filters: Optional[List[TimeseriesFilter]] = []

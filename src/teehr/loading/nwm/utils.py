@@ -21,7 +21,8 @@ from teehr.models.loading.utils import (
     SupportedKerchunkMethod
 )
 from teehr.models.loading.utils import (
-    SupportedNWMOperationalVersionsEnum
+    SupportedNWMOperationalVersionsEnum,
+    NWMChunkByEnum
 )
 from teehr.loading.nwm.const import (
     NWM_BUCKET,
@@ -67,8 +68,7 @@ def generate_json_paths(
     json_dir: str,
     ignore_missing_file: bool
 ) -> List[str]:
-    """Generate remote and/or local paths to Kerchunk reference json files
-    depending on the specified method.
+    """Generate file paths to Kerchunk reference json files.
 
     Parameters
     ----------
@@ -87,7 +87,6 @@ def generate_json_paths(
     List[str]
         List of filepaths to json files locally and/or in s3.
     """
-
     if kerchunk_method == SupportedKerchunkMethod.local:
         # Create them manually first
         json_paths = build_zarr_references(gcs_component_paths,
@@ -140,8 +139,9 @@ def write_parquet_file(
     overwrite_output: bool,
     data: Union[pa.Table, pd.DataFrame]
 ):
-    """Write output timeseries parquet file with logic controlling
-    whether or not to overwrite an existing file.
+    """Write the output timeseries parquet file.
+
+    Includes logic controlling whether or not to overwrite an existing file.
 
     Parameters
     ----------
@@ -240,7 +240,7 @@ def list_to_np(lst):
 def check_for_prebuilt_json_paths(
     fs: fsspec.filesystem, gcs_path: str, return_gcs_path=False
 ) -> str:
-    """Check for existence of a pre-built kerchunk json in s3 based
+    """Check for existence of a pre-built kerchunk json in s3 based \
     on its GCS path.
 
     Parameters
@@ -272,7 +272,7 @@ def gen_json(
     json_dir: Union[str, Path],
     ignore_missing_file: bool,
 ) -> str:
-    """Helper function for creating single-file kerchunk reference JSONs.
+    """Create a single kerchunk reference JSON file.
 
     Parameters
     ----------
@@ -309,8 +309,8 @@ def gen_json(
                     raise Exception(f"Corrupt file: {remote_path}") from err
                 else:
                     logger.warning(
-                        ("A potentially corrupt file was encountered:")
-                        (f"{remote_path}")
+                        "A potentially corrupt file was encountered:"
+                        f"{remote_path}"
                     )
                     return None
             with open(outf, "wb") as f:
@@ -391,8 +391,7 @@ def construct_assim_paths(
     domain: str,
     file_extension: str = "nc"
 ) -> list[str]:
-    """Construct paths to NWM point assimilation data based on specified
-        parameters.
+    """Construct paths to NWM point assimilation data.
 
     This function prioritizes value time over reference time so that only
     files with value times falling within the specified date range are included
@@ -409,7 +408,8 @@ def construct_assim_paths(
     dates : pd.DatetimeIndex
         Range of days to fetch data.
     t_minus : Iterable[int]
-        Collection of lookback hours to include when fetching assimilation data.
+        Collection of lookback hours to include when fetching assimilation
+        data.
     configuration_name_in_filepath : str
         Name of the assimilation configuration as represented in the GCS file.
         Defined in const_nwm.py.
@@ -499,8 +499,7 @@ def build_remote_nwm_filelist(
     t_minus_hours: Optional[Iterable[int]],
     ignore_missing_file: Optional[bool],
 ) -> List[str]:
-    """Assemble a list of remote NWM files in GCS based on specified user
-        parameters.
+    """Assemble a list of remote NWM files based on user parameters.
 
     Parameters
     ----------
@@ -573,3 +572,82 @@ def build_remote_nwm_filelist(
         component_paths = sorted([f"gcs://{path}" for path in component_paths])
 
     return component_paths
+
+
+def get_period_start_end_times(
+    period: pd.Period,
+    start_date: datetime,
+    end_date: datetime
+) -> Dict[str, datetime]:
+    """Get the start and end times for a period.
+
+    Adjusts for the start and end dates of the total data ingest.
+
+    Parameters
+    ----------
+    period : pd.Period
+        The current period.
+    start_date : datetime
+        The start date of the data ingest.
+    end_date : datetime
+        Then end date of the data ingest.
+
+    Returns
+    -------
+    Dict[str, datetime]
+        The start and end times for the period.
+    """
+    start_dt = period.start_time
+    end_dt = period.end_time
+
+    if start_date > period.start_time:
+        start_dt = start_date
+
+    if (end_date < period.end_time) & (period.freq.name != "D"):
+        end_dt = end_date
+
+    return {"start_dt": start_dt, "end_dt": end_dt}
+
+
+def create_periods_based_on_chunksize(
+    start_date: datetime,
+    end_date: datetime,
+    chunk_by: Union[NWMChunkByEnum, None]
+) -> List[pd.Period]:
+    """Create a list of periods of a given frequency, start, and end time.
+
+    Parameters
+    ----------
+    start_date : datetime
+        The start date.
+    end_date : datetime
+        The end date.
+    chunk_by : Union[NWMChunkByEnum, None]
+        The chunk size frequency.
+
+    Returns
+    -------
+    List[pd.Period]
+        A pandas period range.
+    """
+    if chunk_by is None:
+        periods = [None]
+
+    if chunk_by == "day":
+        periods = pd.period_range(start=start_date, end=end_date, freq="D")
+
+    if chunk_by == "week":
+        periods = pd.period_range(start=start_date, end=end_date, freq="W")
+
+    if chunk_by == "month":
+        periods = pd.period_range(start=start_date, end=end_date, freq="M")
+
+    if chunk_by == "year":
+        periods = pd.period_range(start=start_date, end=end_date, freq="Y")
+
+    if chunk_by == "location_id":
+        raise ValueError(
+            "A period range cannot be created based on location_id."
+        )
+
+    return periods

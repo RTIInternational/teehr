@@ -9,6 +9,10 @@
     width: auto; /* Override fit-content which breaks Styler user guide ipynb */
   }
 
+  .center-icon {
+    text-align: center;
+  }
+
   /* Main index page overview cards */
 
   .intro-card {

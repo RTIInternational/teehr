@@ -1,9 +1,9 @@
 .. _queries:
 
-Queries
-=======
+Model Evaluation Queries
+========================
 
-The TEEHR data library provides tools for querying data from the cached parquet files and for generating metrics.  This includes:
+The TEEHR data library provides tools for querying data from the cached parquet files or database and for generating metrics.  This includes:
 
 * Get Timeseries
 * Get Timeseries Characteristics
@@ -22,15 +22,20 @@ This feature returns simple summary statistics on the requested timeseries.
 
 Get Joined Timeseries
 ---------------------
-This feature joined two different tables of timeseries together based on location and time, applies filters and returns the paired timeseries
+This feature joins two different tables of timeseries together based on location and time, applies filters and returns the paired timeseries
 
-.. image:: ../../images/joined_timeseries.png
-  :width: 1000
+.. figure:: ../../images/getting_started/joined_timeseries.png
+   :scale: 75%
 
+   Getting joined timeseries schematic.
 
 Metrics
 -------
 This feature starts by joining the timeseries as described above, then the timeseries are grouped to create populations, then the requested metrics are calculated.
 
-.. image:: ../../images/metrics.png
-  :width: 1000
+.. figure:: ../../images/getting_started/metrics.png
+   :scale: 70%
+
+   Calculating metrics schematic.
+
+For a list of the metrics currently available in TEEHR, see :doc:`/user_guide/metrics/metrics`
