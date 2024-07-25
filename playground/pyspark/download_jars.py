@@ -1,3 +1,4 @@
+"""Download and copy AWS jars to SPARK install."""
 import pyspark
 import urllib.request
 
@@ -9,11 +10,11 @@ print(SPARK_VERSION)
 
 jars = [
     {
-        "url": "https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.262/aws-java-sdk-bundle-1.12.262.jar",
+        "url": "https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.262/aws-java-sdk-bundle-1.12.262.jar", # noqa
         "path": f"{SPARK_HOME}/jars/aws-java-sdk-bundle-1.12.262.jar"
     },
     {
-        "url": "https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar",
+        "url": "https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar", # noqa
         "path": f"{SPARK_HOME}/jars/hadoop-aws-3.3.4.jar"
     }
 ]

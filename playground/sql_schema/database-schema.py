@@ -6,9 +6,9 @@ conn.sql("""
 CREATE TABLE IF NOT EXISTS units (
          name VARCHAR PRIMARY KEY,
          long_name VARCHAR,
-         -- symbolic_name VARCHAR,
+         -- symbol VARCHAR,
 );
-COPY units FROM 'design/domains/units.csv';
+COPY units FROM 'playground/domain_examples/units.csv';
 """)
 
 conn.sql("""
@@ -17,35 +17,27 @@ CREATE TABLE IF NOT EXISTS configurations (
          type VARCHAR,
          description VARCHAR
 );
-COPY configurations FROM 'design/domains/configurations.csv';
+COPY configurations FROM 'playground/domain_examples/configurations.csv';
 """)
 
 conn.sql("""
 CREATE TABLE IF NOT EXISTS variables (
          name VARCHAR PRIMARY KEY,
          long_name VARCHAR
+         -- interval_seconds INTEGER,
 );
-COPY variables FROM 'design/domains/variables.csv';
+COPY variables FROM 'playground/domain_examples/variables.csv';
 """)
 
 conn.sql("""
 CREATE TABLE IF NOT EXISTS attributes (
          name VARCHAR PRIMARY KEY,
          unit_name VARCHAR,
+         type VARCHAR,
          FOREIGN KEY (unit_name) REFERENCES units (name)
 );
-INSERT INTO attributes VALUES ('drainage_area_km2', 'km2');
-INSERT INTO attributes VALUES ('mean_daily_flow_cms', 'cms');
-""")
-
-conn.sql("""
-CREATE TABLE IF NOT EXISTS location_crosswalk (
-         primary_location_id VARCHAR,
-         secondary_location_id VARCHAR UNIQUE,
-         PRIMARY KEY (secondary_location_id, primary_location_id)
-);
-INSERT INTO location_crosswalk VALUES ('p-1', 's-1');
-INSERT INTO location_crosswalk VALUES ('p-2', 's-2');
+INSERT INTO attributes VALUES ('drainage_area_km2', 'km2', 'continuous');
+INSERT INTO attributes VALUES ('mean_daily_flow_cms', 'cms', 'continuous');
 """)
 
 conn.sql("""
@@ -61,16 +53,27 @@ INSERT INTO locations VALUES ('p-2', 'gage-B', 'POINT(2 2)');
 """)
 
 conn.sql("""
+CREATE TABLE IF NOT EXISTS location_crosswalks (
+         primary_location_id VARCHAR,
+         secondary_location_id VARCHAR UNIQUE,
+         PRIMARY KEY (secondary_location_id, primary_location_id),
+         FOREIGN KEY (primary_location_id) REFERENCES locations (id)
+);
+INSERT INTO location_crosswalks VALUES ('p-1', 's-1');
+INSERT INTO location_crosswalks VALUES ('p-2', 's-2');
+""")
+
+conn.sql("""
 CREATE TABLE IF NOT EXISTS primary_timeseries (
     reference_time DATETIME,
     value_time DATETIME,
-    configuration VARCHAR,
-    measurement_unit VARCHAR,
+    configuration_name VARCHAR,
+    unit_name VARCHAR,
     variable_name VARCHAR,
     value FLOAT,
     location_id VARCHAR,
-    FOREIGN KEY (configuration) REFERENCES configurations (name),
-    FOREIGN KEY (measurement_unit) REFERENCES units (name),
+    FOREIGN KEY (configuration_name) REFERENCES configurations (name),
+    FOREIGN KEY (unit_name) REFERENCES units (name),
     FOREIGN KEY (variable_name) REFERENCES variables (name),
     FOREIGN KEY (location_id) REFERENCES locations (id)
 );
@@ -85,15 +88,15 @@ conn.sql("""
 CREATE TABLE IF NOT EXISTS secondary_timeseries (
     reference_time DATETIME,
     value_time DATETIME,
-    configuration VARCHAR,
-    measurement_unit VARCHAR,
+    configuration_name VARCHAR,
+    unit_name VARCHAR,
     variable_name VARCHAR,
     value FLOAT,
     location_id VARCHAR,
-    FOREIGN KEY (configuration) REFERENCES configurations (name),
-    FOREIGN KEY (measurement_unit) REFERENCES units (name),
+    FOREIGN KEY (configuration_name) REFERENCES configurations (name),
+    FOREIGN KEY (unit_name) REFERENCES units (name),
     FOREIGN KEY (variable_name) REFERENCES variables (name),
-    FOREIGN KEY (location_id) REFERENCES location_crosswalk (secondary_location_id)
+    FOREIGN KEY (location_id) REFERENCES location_crosswalks (secondary_location_id)
 );
 """)
 
@@ -104,9 +107,9 @@ INSERT INTO secondary_timeseries VALUES ('2024-01-02 12:00:00', '2024-01-01 12:0
 
 conn.sql("""
 CREATE TABLE IF NOT EXISTS location_attributes(
+         location_id VARCHAR,
          attribute_name VARCHAR PRIMARY KEY,
          value VARCHAR,
-         location_id VARCHAR,
          FOREIGN KEY (attribute_name) REFERENCES attributes (name),
          FOREIGN KEY (location_id) REFERENCES locations (id)
 );
@@ -116,18 +119,18 @@ conn.sql("""
 CREATE TABLE IF NOT EXISTS joined_timeseries(
     reference_time DATETIME,
     value_time DATETIME,
-    configuration VARCHAR,
-    measurement_unit VARCHAR,
+    configuration_name VARCHAR,
+    unit_name VARCHAR,
     variable_name VARCHAR,
     primary_location_id VARCHAR,
     secondary_location_id VARCHAR,
     primary_value FLOAT,
     secondary_value FLOAT,
-    FOREIGN KEY (configuration) REFERENCES configurations (name),
-    FOREIGN KEY (measurement_unit) REFERENCES units (name),
+    FOREIGN KEY (configuration_name) REFERENCES configurations (name),
+    FOREIGN KEY (unit_name) REFERENCES units (name),
     FOREIGN KEY (variable_name) REFERENCES variables (name),
     FOREIGN KEY (secondary_location_id)
-         REFERENCES location_crosswalk (secondary_location_id),
+         REFERENCES location_crosswalks (secondary_location_id),
     FOREIGN KEY (primary_location_id) REFERENCES locations(id)
 );
 """)
@@ -144,8 +147,8 @@ print(variables)
 attributes = conn.sql("SELECT * FROM attributes;")
 print(attributes)
 
-location_crosswalk = conn.sql("SELECT * FROM location_crosswalk;")
-print(location_crosswalk)
+location_crosswalks = conn.sql("SELECT * FROM location_crosswalks;")
+print(location_crosswalks)
 
 locations = conn.sql("SELECT * FROM locations;")
 print(locations)

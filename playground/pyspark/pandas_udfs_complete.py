@@ -1,3 +1,4 @@
+"""Pandas Userdefined aggregate functions for use in Spark."""
 from pyspark.sql.functions import pandas_udf
 import pandas as pd
 import numpy as np
@@ -145,7 +146,7 @@ def _mean_error(
     power: float = 1.0,
     root: bool = False
 ) -> float:
-    
+
     me = np.sum(np.abs(np.subtract(y_true, y_pred)) ** power) / len(y_true)
 
     # Return mean error, optionally return root mean error
@@ -192,7 +193,7 @@ def kling_gupta_efficiency(p: pd.Series, s: pd.Series) -> float:
     #     return np.nan
     if np.std(s) == 0 or np.std(p) == 0:
         return np.nan
-        
+
     # Pearson correlation coefficient
     linear_correlation = np.corrcoef(s, p)[0,1]
 
@@ -204,8 +205,8 @@ def kling_gupta_efficiency(p: pd.Series, s: pd.Series) -> float:
 
     # Scaled Euclidean distance
     euclidean_distance = np.sqrt(
-        (1.0 * (linear_correlation - 1.0)) ** 2.0 + 
-        (1.0  * (relative_variability - 1.0)) ** 2.0 + 
+        (1.0 * (linear_correlation - 1.0)) ** 2.0 +
+        (1.0  * (relative_variability - 1.0)) ** 2.0 +
         (1.0  * (relative_mean - 1.0)) ** 2.0
     )
 
@@ -223,7 +224,7 @@ def kling_gupta_efficiency_mod1(p: pd.Series, s: pd.Series) -> float:
     #     return np.nan
     if np.std(s) == 0 or np.std(p) == 0:
         return np.nan
-        
+
     # Pearson correlation coefficient (same as kge)
     linear_correlation = np.corrcoef(s, p)[0, 1]
 
@@ -254,7 +255,7 @@ def kling_gupta_efficiency_mod2(p: pd.Series, s: pd.Series) -> float:
     #     return np.nan
     if np.std(s) == 0 or np.std(p) == 0:
         return np.nan
-        
+
     # Pearson correlation coefficient (same as kge)
     linear_correlation = np.corrcoef(s, p)[0, 1]
 
