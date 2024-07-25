@@ -6,13 +6,7 @@ Getting started
 
 Installation
 ------------
-There are several methods for installing TEEHR.
-
-You can install from PyPI using pip [TODO]:
-
-.. code-block:: python
-
-   [TODO] pip install teehr
+There are several methods currently available for installing TEEHR.
 
 You can install from github:
 
@@ -28,65 +22,48 @@ You can use Docker:
 
 .. code-block:: bash
 
-   docker build -t teehr:v0.3.2 .
-   docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.3.2 jupyter lab --ip 0.0.0.0 $HOME
+   docker build -t teehr:[RELEASE TAG] .
+   docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:[RELEASE TAG] jupyter lab --ip 0.0.0.0 $HOME
 
 
-API Overview
-------------
-TEEHR is comprised of several submodules having specific functionality related to loading, storing,
-processing, and visualizing hydrologic data.
+Importing TEEHR into your project
+---------------------------------
 
-* **Loading**: For fetching and formatting data (ie, NWM forecasts or USGS streamflow records).
-* **Queries**: For querying data from cached parquet files or databases and for generating metrics.
-* **Database**: For building and querying data using a persistent database.
-* **API**: For enabling web-based analysis of a TEEHR database.
-* **Utilities**: Helper scripts for common analysis tasks.
+At its simplest, TEEHR is a collection of classes and modules that can be imported into your project:
 
-Each submodule can be imported independently:
+.. code-block:: bash
 
-.. ipython:: python
+   teehr
+   |__loading
+   |  |__nwm
+   |  |  |__nwm_grids
+   |  |  |__nwm_points
+   |  |  |__retrospective_grids
+   |  |  |__retrospective_points
+   |  |  |__ ...
+   |  |__usgs
+   |  |  |__ ...
+   |  |__nextgen
+   |  |  |__ ...
+   |__classes
+      |__duckdb_database
+      |__duckdb_joinedparquet
+      |__ ...
 
-   # To fetch and format NWM point data.
-   import teehr.loading.nwm.nwm_points as tlp
+The ``loading`` directory contains modules for fetching and loading data into the TEEHR data model from various sources.
+The ``classes`` directory contains classes for performing model evaluation and calculating performance metrics.
 
-   # For querying cached parquet files.
-   import teehr.queries.duckdb as tqd
+Fetching and Loading Data
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-
-.. note::
-
-   Add note about using Dask (many functions, are designed to take advantage of Dask,
-   especially loading, and you should see performance improvements by starting a local Dask cluster)
-
-For example:
-
-.. code-block:: python
-
-   import os
-   from dask.distributed import Client
-
-   n_workers = max(os.cpu_count() - 1, 1)
-   client = Client(n_workers=n_workers)
-
-
-Examples
---------
-
-Fetching NWM Data
-^^^^^^^^^^^^^^^^^
-
-An example of using TEEHR to fetch retrospective NWM v2.0 data and format into the TEEHR data model
-is shown here.
+To fetch and load retrospective NWM point data (ie, streamflow), you can import the ``retrospective_points`` module:
 
 .. code-block:: python
 
-   # Import the packages.
-   import teehr.loading.nwm.retrospective as nwm_retro
-   from pathlib import Path
-   from datetime import datetime
+   # Import the module for loading NWM retrospective point data.
+   from teehr.loading.nwm import retrospective_points
 
-   # Define the import variables.
+   # Define the parameters.
    NWM_VERSION = "nwm20"
    VARIABLE_NAME = "streamflow"
    START_DATE = datetime(2000, 1, 1)
@@ -96,79 +73,98 @@ is shown here.
    OUTPUT_ROOT = Path(Path().home(), "temp")
    OUTPUT_DIR = Path(OUTPUT_ROOT, "nwm20_retrospective")
 
-   # Fetch and format
+   # Fetch and load the data.
    nwm_retro.nwm_retro_to_parquet(
-      nwm_version=NWM_VERSION,
-      variable_name=VARIABLE_NAME,
-      start_date=START_DATE,
-      end_date=END_DATE,
-      location_ids=LOCATION_IDS,
-      output_parquet_dir=OUTPUT_DIR
+       nwm_version=NWM_VERSION,
+       variable_name=VARIABLE_NAME,
+       start_date=START_DATE,
+       end_date=END_DATE,
+       location_ids=LOCATION_IDS,
+       output_parquet_dir=OUTPUT_DIR
    )
 
-TEEHR Database
-^^^^^^^^^^^^^^
+Model Evaluation
+^^^^^^^^^^^^^^^^
 
-Once the data adheres to the TEEHR data model, we can use the `TEEHRDatasetDB` class
-to create a persisent database, allowing for efficient exploration and metric queries.
+TEEHR provides a set of classes for evaluating model performance using `DuckDB <https://duckdb.org/>`_ either with parquet files
+or a persistent database. To evaluate a model based on a parquet file of pre-joined timeseries data, you can
+import the ``DuckDBJoinedParquet`` class:
 
 .. code-block:: python
 
-   from pathlib import Path
+   from teehr.classes.duckdb_joined_parquet import DuckDBJoinedParquet
 
-   from teehr.database.teehr_dataset import TEEHRDatasetDB
+Refer to the :ref:`autoapi` for a full list of classes and modules available in TEEHR.
 
-   # Define file paths the test data
-   PRIMARY_FILEPATH = "getting_started/test_data/*short_obs.parquet"
-   SECONDARY_FILEPATH = "getting_started/test_data/*_fcast.parquet"
-   CROSSWALK_FILEPATH = "getting_started/test_data/crosswalk.parquet"
-   DATABASE_FILEPATH = Path("getting_started/test_data/temp_test.db")
+An Introduction to TEEHR
+------------------------
 
-   # Delete the test database if it already exists.
-   if DATABASE_FILEPATH.is_file():
-       DATABASE_FILEPATH.unlink()
+TEEHR is a collection of tools for evaluating and exploring hydrologic timeseries data. It is designed to be efficient, modular, and flexible,
+allowing users to work with a variety of data sources and formats. Quantifying the performance of a model can be a relatively simple task
+consisting of comparing the model output to observed data through a series of metrics.
 
-   # Initialize a database.
-   tds = TEEHRDatasetDB(DATABASE_FILEPATH)
+.. figure:: ../../images/getting_started/timeseries_plot.png
+   :scale: 80%
 
-   # Join the primary and secondary timeseries using the crosswalk table
-   # and insert the data into the `joined_timeseries` database table.
-   tds.insert_joined_timeseries(
-       primary_filepath=PRIMARY_FILEPATH,
-       secondary_filepath=SECONDARY_FILEPATH,
-       crosswalk_filepath=CROSSWALK_FILEPATH,
-       drop_added_fields=True,
-   )
+.. container:: center-icon
 
-   # Let's look at the table schema.
-   schema_df = tds.get_joined_timeseries_schema()
-   schema_df
+   :material-regular:`arrow_downward;3.5em;sd-text-success`
 
-   # Now we can perform queries and calculate metrics.
-   df = tds.query("SELECT * FROM joined_timeseries", format="df")
-   df
+.. figure:: ../../images/getting_started/metrics_table.png
+   :scale: 75%
+
+   Evaluating simulations vs. observations through a series of performance metrics.
+
+Understanding the reasons `why` a model performs well or poorly is a more complex task. It requires efficient, iterative
+exploration of the data, often across large spatial and temporal scales.
+
+These are the challenges that TEEHR is designed to address.
+
+.. note::
+
+   TEEHR is designed to provide efficient iterative exploration of billions of rows of timeseries data
+   across large spatial and temporal scales.
+
+At its core, TEEHR consists of four main components:
+
+* **Data Models**: A set of schemas that define the structure of the data.
+* **Data Ingest and Storage**: Tools for fetching and loading hydrologic data into an efficient storage format.
+* **Exploration**: A set of tools for quantifying and understanding model performance.
+* **Visualization**: Tools for visualizing the data and results. [work-in-progress]
+
+.. figure:: ../../images/getting_started/teehr_components.png
+   :scale: 75%
+
+   The four main components of TEEHR.
 
 
-Example notebooks
-^^^^^^^^^^^^^^^^^
+TEEHR Components
+----------------
 
-See the :doc:`Loading <../user_guide/notebooks/loading_examples_index>` and
-:doc:`Query <../user_guide/notebooks/queries_examples_index>` notebooks for more in-depth examples.
+For more details on each component of TEEHR, see the following tutorials:
 
-Data Model
-----------
+:ref:`Data Models <data_model>`
 
-Link to the data model documentation: :ref:`data_model`
+:doc:`Fetching and Loading Data </user_guide/notebooks/loading_examples_index>`
+
+:ref:`Metric Queries <queries>`
+
+:doc:`Evaluation and Visualization </user_guide/notebooks/evaluation_examples_index>`
 
 
-Queries
--------
+Additional Tutorials
+--------------------
 
-Link to the queries documentation: :ref:`queries`
+:doc:`/tutorials/joining_timeseries`
+
+:doc:`/tutorials/grouping_and_filtering`
+
+For a full list of metrics currently available in TEEHR, see the :doc:`/user_guide/metrics/metrics` documentation.
 
 .. toctree::
     :maxdepth: 2
     :hidden:
 
-    data_model
-    queries
+    Data Models <data_model>
+    Metric Queries <queries>
+    /tutorials/tutorials_index

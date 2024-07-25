@@ -1,66 +1,60 @@
 // import * as React from 'react';
-import { useState, useEffect } from 'react'
-import Box from '@mui/material/Box';
+import { useState, useEffect } from "react";
+import Box from "@mui/material/Box";
 import PropTypes from "prop-types";
-import { DataGrid } from '@mui/x-data-grid';
-
+import { DataGrid } from "@mui/x-data-grid";
 
 export default function DataGridDemo(props) {
-
-  const [columns, setColumns] = useState(null);
-  const [rows, setRows] = useState(null);
-
   const { data } = props;
-
-  // function getRowId(row) {
-  //   return row.primary_location_id;
-  // }
+  const [columns, setColumns] = useState([]);
+  const [rows, setRows] = useState([]);
 
   useEffect(() => {
     const getColumns = () => {
-      if (data) {
+      if (data && data.length > 0) {
         const base = [
           {
             field: "id",
             headerName: "id",
             editable: false,
-          }
-        ]
-        const arr = Object.keys(data.features[0].properties).map((c) => {
+            flex: 0.25,
+          },
+        ];
+        const headers = Object.keys(data[0]).map((c) => {
           return {
             field: c,
             headerName: c,
             editable: false,
-          }
-        })
-        base.push(...arr)
-        // console.log(arr)
-        setColumns(base)
+            flex: 1,
+          };
+        });
+        base.push(...headers);
+        setColumns(headers.some((o) => o.field === "id") ? headers : base);
       }
-    }
-    getColumns()
-  }, [data, setColumns])
+    };
+    getColumns();
+  }, [data, setColumns]);
 
   useEffect(() => {
-    const getRows= () => {
+    const getRows = () => {
       if (data) {
-        const arr = data.features.map((feat) => {
-          const obj = feat.properties
-          obj["id"] = feat.id
-          return obj
-        })
-        console.log(arr)
-        setRows(arr)
+        const arr = data.map((d, index) => {
+          const obj = { ...d };
+          if (!("id" in obj)) {
+            obj["id"] = index;
+          }
+          return obj;
+        });
+        setRows(arr);
       }
-    }
-    getRows()
-  }, [data, setRows])
-
+    };
+    getRows();
+  }, [data, setRows]);
 
   return (
-    (data && columns) && (
-
-      <Box sx={{ height: 400, width: '100%' }}>
+    data &&
+    columns && (
+      <Box sx={{ height: 400, width: "100%" }}>
         <DataGrid
           rows={rows}
           columns={columns}
@@ -74,14 +68,12 @@ export default function DataGridDemo(props) {
           pageSizeOptions={[5]}
           checkboxSelection
           disableRowSelectionOnClick
-          // getRowId={getRowId}
         />
       </Box>
-
     )
   );
 }
 
 DataGridDemo.propTypes = {
-  data: PropTypes.object.isRequired
+  data: PropTypes.array.isRequired,
 };
