@@ -4,9 +4,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-import teehr.queries.pandas as tqk
-import teehr.queries.duckdb as tqd
-from teehr.classes.duckdb_database import DuckDBDatabase
+import teehr_v0_3.queries.pandas as tqk
+import teehr_v0_3.queries.duckdb as tqd
+from teehr_v0_3.classes.duckdb_database import DuckDBDatabase
 
 TEST_STUDY_DIR = Path("tests", "data", "test_study")
 PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*short_obs.parquet")

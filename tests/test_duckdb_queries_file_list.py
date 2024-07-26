@@ -4,8 +4,8 @@ import numpy as np
 import geopandas as gpd
 import pytest
 from pydantic import ValidationError
-import teehr.queries.duckdb as tqd
-import teehr.queries.duckdb_database as tqbd
+import teehr_v0_3.queries.duckdb as tqd
+import teehr_v0_3.queries.duckdb_database as tqbd
 from pathlib import Path
 
 TEST_STUDY_DIR = Path("tests", "data", "test_study")

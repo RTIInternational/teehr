@@ -1,6 +1,6 @@
 """Test for the FastAPI endpoints."""
 from fastapi.testclient import TestClient
-from teehr.api.main import app
+from teehr_v0_3.api.main import app
 
 client = TestClient(app)
 

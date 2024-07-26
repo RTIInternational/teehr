@@ -4,7 +4,7 @@ import math
 
 import pandas as pd
 
-from teehr.loading.nwm.retrospective_grids import nwm_retro_grids_to_parquet
+from teehr_v0_3.loading.nwm.retrospective_grids import nwm_retro_grids_to_parquet
 
 
 TEMP_DIR = Path("tests", "data", "temp", "retro")

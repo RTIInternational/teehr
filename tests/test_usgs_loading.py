@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from teehr.loading.usgs.usgs import usgs_to_parquet
+from teehr_v0_3.loading.usgs.usgs import usgs_to_parquet
 
 TEMP_DIR = Path("tests", "data", "temp", "usgs")
 

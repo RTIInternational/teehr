@@ -5,7 +5,7 @@ import pandas as pd
 from datetime import datetime
 import math
 
-from teehr.loading.nwm.retrospective_points import nwm_retro_to_parquet
+from teehr_v0_3.loading.nwm.retrospective_points import nwm_retro_to_parquet
 
 LOCATION_IDS = [7086109]
 TEMP_DIR = Path("tests", "data", "temp", "retro")

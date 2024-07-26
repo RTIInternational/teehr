@@ -1,7 +1,7 @@
 """Tests for duckdb timeseries queries."""
 import pandas as pd
 import geopandas as gpd
-import teehr.queries.duckdb as tqd
+import teehr_v0_3.queries.duckdb as tqd
 from pathlib import Path
 from datetime import datetime
 

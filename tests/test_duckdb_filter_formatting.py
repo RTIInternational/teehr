@@ -2,9 +2,9 @@
 from datetime import datetime
 
 import pytest
-import teehr.models.queries as tmq
+import teehr_v0_3.models.queries as tmq
 from pydantic import ValidationError
-import teehr.queries.utils as tqu
+import teehr_v0_3.queries.utils as tqu
 
 
 def test_filter_string():

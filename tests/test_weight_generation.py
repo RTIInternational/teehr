@@ -3,8 +3,8 @@ import pandas as pd
 from pathlib import Path
 import numpy as np
 
-from teehr.utilities.generate_weights import generate_weights_file
-from teehr.loading.nwm.const import CONUS_NWM_WKT
+from teehr_v0_3.utilities.generate_weights import generate_weights_file
+from teehr_v0_3.loading.nwm.const import CONUS_NWM_WKT
 
 
 TEST_DIR = Path("tests", "data", "nwm22")

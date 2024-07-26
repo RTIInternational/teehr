@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 import xarray as xr
 
-from teehr.loading.nwm.grid_utils import (
+from teehr_v0_3.loading.nwm.grid_utils import (
     compute_weighted_average,
     get_nwm_grid_data,
     get_weights_row_col_stats

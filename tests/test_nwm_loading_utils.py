@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from teehr.loading.nwm.utils import (
+from teehr_v0_3.loading.nwm.utils import (
     build_zarr_references,
     check_dates_against_nwm_version,
     build_remote_nwm_filelist,
@@ -11,7 +11,7 @@ from teehr.loading.nwm.utils import (
     get_dataset,
     create_periods_based_on_chunksize
 )
-from teehr.loading.nwm.const import (
+from teehr_v0_3.loading.nwm.const import (
     NWM22_ANALYSIS_CONFIG,
     NWM30_ANALYSIS_CONFIG,
 )

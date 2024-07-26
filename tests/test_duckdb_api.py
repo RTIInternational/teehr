@@ -1,8 +1,8 @@
 """Tests for the TEEHR dataset API."""
 from pathlib import Path
 
-from teehr.classes.duckdb_database_api import DuckDBDatabaseAPI
-from teehr.models.queries_database import (
+from teehr_v0_3.classes.duckdb_database_api import DuckDBDatabaseAPI
+from teehr_v0_3.models.queries_database import (
     MetricQuery,
     JoinedTimeseriesFieldName,
     JoinedTimeseriesQuery

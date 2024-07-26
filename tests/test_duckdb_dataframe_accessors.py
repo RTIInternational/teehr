@@ -1,7 +1,7 @@
 """Tests for the teehr accessors extending pandas objects in DuckDB classes."""
 from pathlib import Path
 
-from teehr.classes.duckdb_joined_parquet import DuckDBJoinedParquet
+from teehr_v0_3.classes.duckdb_joined_parquet import DuckDBJoinedParquet
 
 
 # Test data

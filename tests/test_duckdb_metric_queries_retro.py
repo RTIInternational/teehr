@@ -3,7 +3,7 @@ import pandas as pd
 import geopandas as gpd
 import pytest
 from pydantic import ValidationError
-import teehr.queries.duckdb as tqu
+import teehr_v0_3.queries.duckdb as tqu
 from pathlib import Path
 
 TEST_STUDY_DIR = Path("tests", "data", "retro")

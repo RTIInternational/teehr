@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 
-from teehr.classes.duckdb_database import DuckDBDatabase
+from teehr_v0_3.classes.duckdb_database import DuckDBDatabase
 
 # Test data
 TEST_STUDY_DIR = Path("tests", "data", "test_study")

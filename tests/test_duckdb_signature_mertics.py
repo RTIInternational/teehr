@@ -1,7 +1,7 @@
 """Test duckdb metric queries."""
 import numpy as np
-import teehr.queries.duckdb as tqd
-import teehr.queries.pandas as tqp
+import teehr_v0_3.queries.duckdb as tqd
+import teehr_v0_3.queries.pandas as tqp
 from pathlib import Path
 
 

@@ -1,6 +1,6 @@
 """Test NWM22 loading configuration models."""
-from teehr.models.loading.nwm22_grid import GridConfigurationModel
-from teehr.models.loading.nwm22_point import PointConfigurationModel
+from teehr_v0_3.models.loading.nwm22_grid import GridConfigurationModel
+from teehr_v0_3.models.loading.nwm22_point import PointConfigurationModel
 
 
 def test_point_model():
