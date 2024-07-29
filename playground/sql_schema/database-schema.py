@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS units (
          name VARCHAR PRIMARY KEY,
          long_name VARCHAR,
          -- symbol VARCHAR,
+         -- aliases VARCHAR[],
 );
 COPY units FROM 'playground/domain_examples/units.csv';
 """)

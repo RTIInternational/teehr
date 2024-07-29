@@ -1,27 +1,52 @@
+"""Evaluation module."""
 import pandas as pd
 from typing import Union
 from pathlib import Path
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
+import logging
+from teehr.pre_processing.project_creation import copy_template_to
+
+logger = logging.getLogger(__name__)
 
 
-class Evaluation(
-    dir_path: Union[str, Path],
-    spark: SparkSession = None
-):
+class Evaluation():
+    """The Evaluation class.
 
-    def __init__(self, path: str):
+    This is the main class for the TEEHR evaluation.
+    """
+
+    def __init__(
+        self,
+        dir_path: Union[str, Path],
+        spark: SparkSession = None
+    ):
+        """Initialize the Evaluation class."""
         self.dir_path = dir_path
+        self.spark = spark
 
-        if not Path[self.dir_path].isdir():
+        if not Path(self.dir_path).is_dir():
+            logger.error(f"Directory {self.dir_path} does not exist.")
             raise NotADirectoryError
 
-    def create_study(path: str):
-        """Create a study.
+        # Create a local Spark Session if one is not provided.
+        if not self.spark:
+            logger.info("Creating a new Spark session.")
+            conf = SparkConf().setAppName("TEERH").setMaster("local")
+            self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
 
-        Includes creating directory skeleton, adding metadata and domains.
+        logging.basicConfig(filename=Path(dir_path,'teehr.log'), level=logging.DEBUG)
+
+    def create_study(self):
+        """Create a study from the standard template.
+
+        This method mainly copies the template directory to the specified
+        evaluation directory.
         """
-        pass
+        teehr_root = Path(__file__).parent.parent
+        template_dir = Path(teehr_root, "template")
+        logger.info(f"Copying template from {template_dir} to {self.dir_path}")
+        copy_template_to(template_dir, self.dir_path)
 
     def delete_study():
         """Delete a study.
@@ -37,19 +62,23 @@ class Evaluation(
         """
         pass
 
-    def load_study():
-        """Get a study.
+    def clone_study():
+        """Get a study from s3.
 
         Includes retrieving metadata and contents.
         """
         pass
 
-    def import_primary_timeseries(type: str):
-        """Import primary timeseries data.
+    def import_primary_timeseries(path: Union[Path, str], type: str):
+        """Import local primary timeseries data.
 
-        Includes validadtion and importing data.
+        Includes validation and importing data to database.
         """
-        pass
+        if type == "parquet":
+            pass
+
+        if type == "csv":
+            pass
 
     def import_secondary_timeseries():
         """Import secondary timeseries data.
