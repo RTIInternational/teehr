@@ -5,7 +5,7 @@ from pathlib import Path
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
 import logging
-from teehr.pre_processing.project_creation import copy_template_to
+from teehr.pre.project_creation import copy_template_to
 
 logger = logging.getLogger(__name__)
 
@@ -34,11 +34,6 @@ class Evaluation():
             logger.info("Creating a new Spark session.")
             conf = SparkConf().setAppName("TEERH").setMaster("local")
             self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
-
-        logging.basicConfig(
-            filename=Path(dir_path, 'teehr.log'),
-            level=logging.DEBUG
-        )
 
     def clone_template(self):
         """Create a study from the standard template.
