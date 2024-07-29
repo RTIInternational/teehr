@@ -35,9 +35,12 @@ class Evaluation():
             conf = SparkConf().setAppName("TEERH").setMaster("local")
             self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
 
-        logging.basicConfig(filename=Path(dir_path,'teehr.log'), level=logging.DEBUG)
+        logging.basicConfig(
+            filename=Path(dir_path, 'teehr.log'),
+            level=logging.DEBUG
+        )
 
-    def create_study(self):
+    def clone_template(self):
         """Create a study from the standard template.
 
         This method mainly copies the template directory to the specified

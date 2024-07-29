@@ -3,7 +3,7 @@ from pathlib import Path
 import shutil
 
 
-def test_create_study():
+def test_clone_template():
     """Test creating a new study."""
     from teehr import Evaluation
 
@@ -12,7 +12,7 @@ def test_create_study():
     TEST_STUDY_DIR.mkdir()
 
     eval = Evaluation(dir_path=TEST_STUDY_DIR)
-    eval.create_study()
+    eval.clone_template()
 
     # Not a complete test, but at least we know the function runs.
     assert Path(TEST_STUDY_DIR, "database").is_dir()
@@ -22,4 +22,4 @@ def test_create_study():
 
 
 if __name__ == "__main__":
-    test_create_study()
+    test_clone_template()
