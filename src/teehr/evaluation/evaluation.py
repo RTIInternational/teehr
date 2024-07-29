@@ -1,10 +1,20 @@
 import pandas as pd
+from typing import Union
+from pathlib import Path
+from pyspark.sql import SparkSession
+from pyspark import SparkConf
 
 
-class Evaluation(path: str, spark: SparkContext() = None):
+class Evaluation(
+    dir_path: Union[str, Path],
+    spark: SparkSession = None
+):
 
     def __init__(self, path: str):
-        self.path= path
+        self.dir_path = dir_path
+
+        if not Path[self.dir_path].isdir():
+            raise NotADirectoryError
 
     def create_study(path: str):
         """Create a study.
