@@ -1,0 +1,1 @@
+This directory is intended to contain Apache Parquet files.

@@ -1,0 +1,4 @@
+name|long_name|aliases
+cms|Cubic Meters Per Second|[m^3/s, m3/s, m3 s-1]
+cfs|Cubic Feet Per Second|[ft^3/s, ft3/s, ft3 s-1]
+km2|Square Kilometers|[km^2]
