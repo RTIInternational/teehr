@@ -18,7 +18,6 @@ def get_joined_timeseries_fields(
         raise FileNotFoundError
     else:
         logger.info(f"Reading fields from {joined_timeseries_dir}.")
-        print("here")
         qry = f"""
         DESCRIBE
         SELECT
