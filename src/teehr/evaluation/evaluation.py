@@ -5,9 +5,21 @@ from pathlib import Path
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
 import logging
-from teehr.pre.project_creation import copy_template_to
+from teehr.pre.evaluation import copy_template_to
+from teehr.pre.locations import (
+    validate_and_insert_locations,
+    convert_locations
+)
 
 logger = logging.getLogger(__name__)
+
+DATABASE_DIR = "database"
+TEMP_DIR = "temp"
+LOCATIONS_DIR = "locations"
+PRIMARY_TIMESERIES_DIR = "primary_timeseries"
+LOCATIONS_CROSSWALK_DIR = "locations_crosswalk"
+SECONDARY_TIMESERIES_DIR = "secondary_timeseries"
+JOINED_TIMESERIES_DIR = "joined_timeseries"
 
 
 class Evaluation():
@@ -24,6 +36,14 @@ class Evaluation():
         """Initialize the Evaluation class."""
         self.dir_path = dir_path
         self.spark = spark
+
+        self.database_dir = Path(self.dir_path, DATABASE_DIR)
+        self.temp_dir = Path(self.dir_path, TEMP_DIR)
+        self.locations_dir = Path(self.database_dir, LOCATIONS_DIR)
+        self.primary_timeseries_dir = Path(self.database_dir, PRIMARY_TIMESERIES_DIR)
+        self.locations_crosswalk_dir = Path(self.database_dir, LOCATIONS_CROSSWALK_DIR)
+        self.secondary_timeseries_dir = Path(self.database_dir, SECONDARY_TIMESERIES_DIR)
+        self.joined_timeseries_dir = Path(self.database_dir, JOINED_TIMESERIES_DIR)
 
         if not Path(self.dir_path).is_dir():
             logger.error(f"Directory {self.dir_path} does not exist.")
@@ -85,12 +105,17 @@ class Evaluation():
         """
         pass
 
-    def import_geometry():
+    def import_locations(self, filepath: Union[Path, str]):
         """Import geometry data.
-
-        Includes importing data and metadata.
         """
-        pass
+        temp_filepath = Path(
+            self.temp_dir, "locations", "locations.parquet"
+        )
+        output_filepath = Path(
+            self.locations_dir, "locations.parquet"
+        )
+        convert_locations(filepath, temp_filepath)
+        validate_and_insert_locations(temp_filepath, output_filepath)
 
     def import_location_crosswalk():
         """Import crosswalk data.

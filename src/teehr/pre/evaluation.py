@@ -6,7 +6,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def copy_template_to(template_dir: Union[str, Path], destination_dir: Union[str, Path]):
+def copy_template_to(
+        template_dir: Union[str, Path],
+        destination_dir: Union[str, Path]
+):
     """Copy the template directory to the destination directory."""
     template_dir = Path(template_dir)
     destination_dir = Path(destination_dir)
@@ -32,7 +35,7 @@ def copy_template_to(template_dir: Union[str, Path], destination_dir: Union[str,
             shutil.copy(file, destination_file)
 
     logger.debug(
-        f"Copying file {template_dir}/gitignore_template to {destination_dir}/.gitignore"
+        f"Renaming {destination_dir}/gitignore_template to .gitignore"
     )
 
     Path(destination_dir, "gitignore_template").rename(Path(destination_dir, ".gitignore"))
