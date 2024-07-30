@@ -8,13 +8,10 @@ def test_get_metrics():
     # Define the evaluation object.
     eval = Evaluation(dir_path="/home/sam/temp/temp_study_template")
 
-    # NOTE: Metrics, Bootstrap, and Operators
-    # could also be a class attribute/property?
-
     # Define the metrics to include.
-    boot = Bootstrap()
-    kge = Metrics.KGE(bootstrap=boot)
-    include_metrics = [kge, Metrics.RMSE()]
+    boot = Bootstrap(method="bias_corrected", num_samples=100)
+    kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
+    include_metrics = [kge, Metrics.RootMeanSquareError()]
 
     # Get the currently available fields to use in the query.
     flds = eval.fields

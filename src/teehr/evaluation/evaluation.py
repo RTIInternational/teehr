@@ -6,15 +6,15 @@ from enum import Enum
 from pathlib import Path
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
-import duckdb
 import logging
 
 from teehr.pre.project_creation import copy_template_to
 from teehr.models.metrics import MetricsBasemodel
+from teehr.evaluation.utils import get_joined_timeseries_fields
 
 logger = logging.getLogger(__name__)
 
-JOINED_TIMESERIES_DIR = "joined_timeseries"
+JOINED_TIMESERIES_DIR = Path("database", "joined_timeseries")
 
 
 class Evaluation():
@@ -31,7 +31,6 @@ class Evaluation():
         """Initialize the Evaluation class."""
         self.dir_path = dir_path
         self.spark = spark
-        self.joined_timeseries_dir = Path(self.dir_path, JOINED_TIMESERIES_DIR)
 
         if not Path(self.dir_path).is_dir():
             logger.error(f"Directory {self.dir_path} does not exist.")
@@ -44,24 +43,12 @@ class Evaluation():
             self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
 
     @property
-    def fields(self):
+    def fields(self) -> Enum:
         """The field names from the joined timeseries table."""
-        if len(list(Path(self.joined_timeseries_dir).glob("*.parquet"))) == 0:
-            logger.error(f"No parquet files in {self.joined_timeseries_dir}.")
-            raise FileNotFoundError
-        else:
-            logger.info(f"Reading fields from {self.joined_timeseries_dir}.")
-            qry = f"""
-            DESCRIBE
-            SELECT
-                *
-            FROM
-                read_parquet(
-                    '{str(Path(self.joined_timeseries_dir, "*.parquet"))}'
-                )
-            ;"""
-            fields_list = duckdb.sql(qry).df().column_name.tolist()
-            return Enum("Fields", {field: field for field in fields_list})
+        # logger.info("Getting fields from the joined timeseries table.")
+        return get_joined_timeseries_fields(
+            Path(self.dir_path, JOINED_TIMESERIES_DIR)
+        )
 
     def clone_template(self):
         """Create a study from the standard template.
