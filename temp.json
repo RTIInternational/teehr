@@ -1,0 +1,50 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "id": "0",
+            "type": "Feature",
+            "properties": {
+                "primary_location_id": "gage-A",
+                "primary_count": 72
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -80.71918431799998,
+                    35.1761134781112
+                ]
+            }
+        },
+        {
+            "id": "1",
+            "type": "Feature",
+            "properties": {
+                "primary_location_id": "gage-B",
+                "primary_count": 72
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -80.71308451799996,
+                    35.15839061111134
+                ]
+            }
+        },
+        {
+            "id": "2",
+            "type": "Feature",
+            "properties": {
+                "primary_location_id": "gage-C",
+                "primary_count": 72
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -80.73677251799995,
+                    35.18693221111115
+                ]
+            }
+        }
+    ]
+}

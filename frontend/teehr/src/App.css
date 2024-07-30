@@ -1,0 +1,32 @@
+#body {
+  height: 90vh;
+  width: 90vh;
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.leaflet-container {
+  height: calc(100vh - 10rem);
+  width: 100%;
+}
+
+.map-container {
+  height: calc(100vh - 10rem);
+  width: 100%;
+}
+
+.clicked-coord-label {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  background: white;
+  border-radius: 5px;
+}
+
+.clicked-coord-label p {
+  margin: 10px;
+}
