@@ -10,8 +10,8 @@ import geopandas as gpd
 
 # Setup database paths
 from pathlib import Path
-from teehr_v0_3.classes.duckdb_database import DuckDBDatabase
-from teehr_v0_3.classes.duckdb_joined_parquet import DuckDBJoinedParquet
+from teehr.classes.duckdb_database import DuckDBDatabase
+from teehr.classes.duckdb_joined_parquet import DuckDBJoinedParquet
 
 
 RAW_DATA_FILEPATH = Path("tests/data/simple_sim_example/raw")
