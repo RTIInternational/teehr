@@ -12,7 +12,7 @@ except ImportError:  # pragma: no cover
         pass  # pragma: no cover
 
 from pydantic import BaseModel as PydanticBaseModel
-from pydantic import Field, ConfigDict  # , computed_field
+from pydantic import Field, ConfigDict
 
 
 class Operators(StrEnum):
@@ -86,33 +86,12 @@ class Bootstrap(MetricsBasemodel):
     quantiles: Optional[List[float]] = Field(default=None)
 
 
-# class _KGEAttributes(Basemodel):
-#     """Static, database properties of the metric.
-
-#     Adding these as a computed field (property) completely
-#     eliminates the possibility of changing them, either during
-#     initialization or after.
-
-#     They are also only available through a second layer ("attrs").
-#     """
-
-#     short_name: str = Field(default="KGE", frozen=True)
-#     display_name: str = Field(default="Kling-Gupta Efficiency", frozen=True)
-#     category: str = Field(
-#         default=ValueTypeEnum.Deterministic.value,
-#         frozen=True
-#     )
-#     value_range: List[float] = Field(default=[0.0, 1.0], frozen=True)
-#     target_value: float = Field(default=1.0, frozen=True)
-#     version: str = Field(default="v0.3.13", frozen=True)
-
-
 KGE_ATTRIBUTES = {
     "short_name": "KGE",
     "display_name": "Kling-Gupta Efficiency",
     "category": "Deterministic",
     "value_range": [0.0, 1.0],
-    "target_value": 1.0,
+    "optimal_value": 1.0,
     "version": "v0.3.13"
 }
 
@@ -120,19 +99,11 @@ KGE_ATTRIBUTES = {
 class KGE(MetricsBasemodel):
     """Kling-Gupta Efficiency."""
 
-    # # Static, database properties of the metric
-    # # In this case you can't change the values after initialization
-    # # BUT, you can change the values during initialization. Not sure
-    # # which approach is preffered.
-    # short_name: str = Field(default="KGE", frozen=True)
-    # display_name: str = Field(default="Kling-Gupta Efficiency", frozen=True)
-    # value_type: str = Field(default="continuous", frozen=True)
-    # value_range: List[float] = Field(default=[0.0, 1.0], frozen=True)
-    # target_value: float = Field(default=1.0, frozen=True)
-    # User-defined properties of the metric
+    # User-defined properties of the metric.
     bootstrap: Bootstrap = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency")
+    # Static, database properties of the metric.
     attrs: Dict = Field(default=KGE_ATTRIBUTES, frozen=True)
 
     # @computed_field
@@ -140,18 +111,6 @@ class KGE(MetricsBasemodel):
     # def attrs(self) -> Dict:
     #     """Initialize the KGE attributes. Could do one at a time."""
     #     return KGE_ATTRIBUTES
-
-    # @model_validator(mode="after")
-    # @classmethod
-    # def validate_bootstrap_enabled(cls, values):
-    #     """Initialize the bootstrap object if bootstrapping is enabled."""
-    #     if values.enable_bootstrap is True:
-    #         # The following results in infinite recursion with
-    #         # validate_assignment=True:
-    #         # values.bootstrap = Bootstrap()
-    #         # Workaround:
-    #         values.__dict__["bootstrap"] = Bootstrap()
-    #     return cls
 
 
 class RMSE(MetricsBasemodel):

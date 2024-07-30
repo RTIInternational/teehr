@@ -45,8 +45,7 @@ class Evaluation():
 
     @property
     def fields(self):
-        """Get the field names from the joined timeseries table."""
-        # NOTE: Is this bad practice for a property?
+        """The field names from the joined timeseries table."""
         if len(list(Path(self.joined_timeseries_dir).glob("*.parquet"))) == 0:
             logger.error(f"No parquet files in {self.joined_timeseries_dir}.")
             raise FileNotFoundError

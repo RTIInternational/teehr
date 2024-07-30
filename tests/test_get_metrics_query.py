@@ -8,7 +8,8 @@ def test_get_metrics():
     # Define the evaluation object.
     eval = Evaluation(dir_path="/home/sam/temp/temp_study_template")
 
-    # NOTE: Metrics could also be a class attribute/property?
+    # NOTE: Metrics, Bootstrap, and Operators
+    # could also be a class attribute/property?
 
     # Define the metrics to include.
     boot = Bootstrap()
