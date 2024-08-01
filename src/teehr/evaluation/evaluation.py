@@ -15,6 +15,8 @@ from teehr.pre.locations import (
 from teehr.pre.timeseries import convert_primary_timeseries
 from teehr.models.metrics import MetricsBasemodel
 from teehr.evaluation.utils import get_joined_timeseries_fields
+from teehr.models.dataset import Configuration, Unit
+from teehr.pre.add_domains import add_configuration, add_unit
 
 logger = logging.getLogger(__name__)
 
@@ -45,10 +47,18 @@ class Evaluation():
         self.database_dir = Path(self.dir_path, DATABASE_DIR)
         self.temp_dir = Path(self.dir_path, TEMP_DIR)
         self.locations_dir = Path(self.database_dir, LOCATIONS_DIR)
-        self.primary_timeseries_dir = Path(self.database_dir, PRIMARY_TIMESERIES_DIR)
-        self.locations_crosswalk_dir = Path(self.database_dir, LOCATIONS_CROSSWALK_DIR)
-        self.secondary_timeseries_dir = Path(self.database_dir, SECONDARY_TIMESERIES_DIR)
-        self.joined_timeseries_dir = Path(self.database_dir, JOINED_TIMESERIES_DIR)
+        self.primary_timeseries_dir = Path(
+            self.database_dir, PRIMARY_TIMESERIES_DIR
+        )
+        self.locations_crosswalk_dir = Path(
+            self.database_dir, LOCATIONS_CROSSWALK_DIR
+        )
+        self.secondary_timeseries_dir = Path(
+            self.database_dir, SECONDARY_TIMESERIES_DIR
+        )
+        self.joined_timeseries_dir = Path(
+            self.database_dir, JOINED_TIMESERIES_DIR
+        )
 
         if not Path(self.dir_path).is_dir():
             logger.error(f"Directory {self.dir_path} does not exist.")
@@ -116,6 +126,20 @@ class Evaluation():
             pattern=pattern,
             field_mapping=field_mapping
         )
+
+    def add_configuration(
+        self,
+        configuration: Union[Configuration, List[Configuration]]
+    ):
+        """Add a configuration to the database."""
+        add_configuration(self.database_dir, configuration)
+
+    def add_unit(
+        self,
+        unit: Union[Unit, List[Unit]]
+    ):
+        """Add a configuration to the database."""
+        add_unit(self.database_dir, unit)
 
     def import_secondary_timeseries():
         """Import secondary timeseries data.

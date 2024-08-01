@@ -2,6 +2,8 @@
 from pathlib import Path
 import shutil
 from teehr import Evaluation
+from teehr.models.dataset import Configuration, Unit
+
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "test_study")
 TEMP_DIR = Path("tests", "data", "temp")
@@ -19,6 +21,22 @@ def test_validate_and_insert_primary_timeseries():
 
     geojson_filepath = Path(TEST_STUDY_DATA_DIR, "geo", "gages.geojson")
     eval.import_locations(filepath=geojson_filepath)
+
+    eval.add_configuration(
+        Configuration(
+            name="test_obs",
+            type="primary",
+            description="Test Observations Data"
+        )
+    )
+
+    eval.add_unit(
+        Unit(
+            name="m^3/s",
+            long_name="Cubic Meters per Second",
+            aliases=["cms"]
+        )
+    )
 
     primary_timeseries_filepath = Path(TEST_STUDY_DATA_DIR, "timeseries", "test_short_obs.parquet")
     eval.import_primary_timeseries(
