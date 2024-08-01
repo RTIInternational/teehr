@@ -1,6 +1,8 @@
 """Evaluation module."""
 import pandas as pd
-from typing import Union
+import geopandas as gpd
+from typing import Union, List
+from enum import Enum
 from pathlib import Path
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
@@ -11,6 +13,8 @@ from teehr.pre.locations import (
     convert_locations
 )
 from teehr.pre.timeseries import convert_primary_timeseries
+from teehr.models.metrics import MetricsBasemodel
+from teehr.evaluation.utils import get_joined_timeseries_fields
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +59,14 @@ class Evaluation():
             logger.info("Creating a new Spark session.")
             conf = SparkConf().setAppName("TEERH").setMaster("local")
             self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
+
+    @property
+    def fields(self) -> Enum:
+        """The field names from the joined timeseries table."""
+        # logger.info("Getting fields from the joined timeseries table.")
+        return get_joined_timeseries_fields(
+            Path(self.dir_path, JOINED_TIMESERIES_DIR)
+        )
 
     def clone_template(self):
         """Create a study from the standard template.
@@ -152,11 +164,20 @@ class Evaluation():
         """
         pass
 
-    def get_metrics() -> pd.DataFrame:
+    def get_metrics(
+        self,
+        group_by: List[Union[str, Enum]],
+        order_by: List[Union[str, Enum]],
+        include_metrics: Union[List[MetricsBasemodel], str],
+        filters: Union[List[dict], None] = None,
+        include_geometry: bool = False,
+        return_query: bool = False,
+    ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
         """Get metrics data.
 
         Includes retrieving data and metadata.
         """
+        logger.info("Calculating performance metrics.")
         pass
 
     def get_timeseries_chars():
