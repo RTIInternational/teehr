@@ -10,6 +10,7 @@ from teehr.pre.locations import (
     validate_and_insert_locations,
     convert_locations
 )
+from teehr.pre.timeseries import convert_primary_timeseries
 
 logger = logging.getLogger(__name__)
 
@@ -87,16 +88,22 @@ class Evaluation():
         """
         pass
 
-    def import_primary_timeseries(path: Union[Path, str], type: str):
+    def import_primary_timeseries(
+            self,
+            path: Union[Path, str],
+            pattern="**/*.parquet",
+            field_mapping=None
+    ):
         """Import local primary timeseries data.
 
         Includes validation and importing data to database.
         """
-        if type == "parquet":
-            pass
-
-        if type == "csv":
-            pass
+        convert_primary_timeseries(
+            input_filepath=path,
+            database_path=self.database_dir,
+            pattern=pattern,
+            field_mapping=field_mapping
+        )
 
     def import_secondary_timeseries():
         """Import secondary timeseries data.

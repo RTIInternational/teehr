@@ -95,6 +95,8 @@ def validate_and_insert_locations(
     """)
 
     conn.sql(f"""
-        COPY locations TO '{output_filepath}';
+        COPY (
+            SELECT id, name, ST_AsWKB(geometry) as geometry FROM locations
+        ) TO '{output_filepath}';
     """)
     logger.info(f"Locations copied to {output_filepath}.")
