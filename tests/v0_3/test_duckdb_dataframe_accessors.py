@@ -5,7 +5,7 @@ from teehr_v0_3.classes.duckdb_joined_parquet import DuckDBJoinedParquet
 
 
 # Test data
-TEST_STUDY_DIR = Path("tests", "data", "test_study")
+TEST_STUDY_DIR = Path("tests", "v0_3", "data", "test_study")
 JOINED_PARQUET_FILEPATH = Path(
     TEST_STUDY_DIR, "timeseries", "test_joined_timeseries_*.parquet"
 )
@@ -60,7 +60,7 @@ def test_timeseries_query_accessors():
     mask = df.reference_time == '2022-01-01 00:00:00'
     df.loc[mask, "secondary_value"] = df["secondary_value"][mask] * 0.7
 
-    output_file = Path("tests", "data", "temp", "test_plot.html")
+    output_file = Path("tests", "v0_3", "data", "temp", "test_plot.html")
     output_file.unlink(missing_ok=True)  # Remove the file if it exists.
 
     # Create a plot using the teehr accessor.

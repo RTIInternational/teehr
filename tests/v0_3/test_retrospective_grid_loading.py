@@ -7,9 +7,9 @@ import pandas as pd
 from teehr_v0_3.loading.nwm.retrospective_grids import nwm_retro_grids_to_parquet
 
 
-TEMP_DIR = Path("tests", "data", "temp", "retro")
+TEMP_DIR = Path("tests", "v0_3", "data", "temp", "retro")
 ZONAL_WEIGHTS = Path(
-    "tests", "data", "nwm22", "onehuc10_weights_retro.parquet"
+    "tests", "v0_3", "data", "nwm22", "onehuc10_weights_retro.parquet"
 )
 
 

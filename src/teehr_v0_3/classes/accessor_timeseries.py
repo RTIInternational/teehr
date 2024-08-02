@@ -6,6 +6,15 @@ from bokeh.plotting import figure, output_file, save, show
 from bokeh.palettes import Dark2_5 as palette
 
 
+try:
+    # Currently we have two different versions of the accessor both
+    # named "teehr". This is a workaround to avoid the warning of
+    # overwriting an existing accessor. Should we consider renaming?
+    del pd.DataFrame.teehr
+except AttributeError:
+    pass
+
+
 @pd.api.extensions.register_dataframe_accessor("teehr")
 class GetTimeseriesAccessor:
     """Extends pandas DataFrame objects.
@@ -117,6 +126,6 @@ class GetTimeseriesAccessor:
         )
 
         if output_filepath:
-            save(p, filename=output_filepath)
+            save(p, title="Timeseries Plot", filename=output_filepath)
         else:
             show(p)

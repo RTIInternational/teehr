@@ -4,6 +4,15 @@ from typing import List
 import pandas as pd
 
 
+try:
+    # Currently we have two different versions of the accessor both
+    # named "teehr". This is a workaround to avoid the warning of
+    # overwriting an existing accessor. Should we consider renaming?
+    del pd.DataFrame.teehr
+except AttributeError:
+    pass
+
+
 @pd.api.extensions.register_dataframe_accessor("teehr")
 class GetMetricsAccessor:
     """Extends pandas DataFrame objects.

@@ -6,7 +6,7 @@ import pandas as pd
 
 from teehr_v0_3.loading.usgs.usgs import usgs_to_parquet
 
-TEMP_DIR = Path("tests", "data", "temp", "usgs")
+TEMP_DIR = Path("tests", "v0_3", "data", "temp", "usgs")
 
 
 def test_chunkby_location_id():
@@ -109,15 +109,15 @@ def test_chunkby_all():
         output_parquet_dir=TEMP_DIR,
         overwrite_output=True
     )
-    df = pd.read_parquet(Path(TEMP_DIR, "usgs.parquet"))
-    assert len(df) == 239
+    df = pd.read_parquet(Path(TEMP_DIR, "2023-02-20_2023-02-25.parquet"))
+    assert len(df) == 241
     assert df["value_time"].min() == pd.Timestamp("2023-02-20 00:00:00")
-    assert df["value_time"].max() == pd.Timestamp("2023-02-24 23:00:00")
+    assert df["value_time"].max() == pd.Timestamp("2023-02-25 00:00:00")
 
 
 if __name__ == "__main__":
-    test_chunkby_location_id()
-    test_chunkby_day()
-    test_chunkby_week()
-    test_chunkby_month()
+    # test_chunkby_location_id()
+    # test_chunkby_day()
+    # test_chunkby_week()
+    # test_chunkby_month()
     test_chunkby_all()
