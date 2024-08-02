@@ -17,7 +17,21 @@ logger = logging.getLogger(__name__)
 JOINED_TIMESERIES_DIR = Path("database", "joined_timeseries")
 
 
-class Evaluation():
+class Utilities:
+    """The Utilities class."""
+
+    def __init__(self, eval_obj) -> None:
+        """Initialize the Utilities class."""
+        # Now we have access to the Evaluation object.
+        self.eval_obj = eval_obj
+
+    def insert_new_configuration(self):
+        """Insert new configuration."""
+        dir_path = self.eval_obj.dir_path
+        return f"I'm a utility to insert new a configuration! {dir_path}"
+
+
+class Evaluation:
     """The Evaluation class.
 
     This is the main class for the TEEHR evaluation.
@@ -41,6 +55,11 @@ class Evaluation():
             logger.info("Creating a new Spark session.")
             conf = SparkConf().setAppName("TEERH").setMaster("local")
             self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
+
+    @property
+    def utils(self):
+        """The utilities class."""
+        return Utilities(self)
 
     @property
     def fields(self) -> Enum:

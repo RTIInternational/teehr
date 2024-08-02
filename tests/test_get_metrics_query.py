@@ -8,6 +8,8 @@ def test_get_metrics():
     # Define the evaluation object.
     eval = Evaluation(dir_path="/home/sam/temp/temp_study_template")
 
+    eval.utils
+
     # Define the metrics to include.
     boot = Bootstrap(method="bias_corrected", num_samples=100)
     kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
