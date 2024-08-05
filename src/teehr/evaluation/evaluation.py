@@ -202,7 +202,68 @@ class Evaluation():
         convert_to_si: bool = True,
         overwrite_output: Optional[bool] = False,
     ):
-        """Fetch USGS streamflow data from NWIS."""
+        """Fetch USGS gage data and save as a Parquet file.
+
+        All dates and times within the files and in the file names are in UTC.
+
+        Parameters
+        ----------
+        sites : List[str]
+            List of USGS gages sites to fetch.
+            Must be string to preserve the leading 0.
+        start_date : datetime
+            Start time of data to fetch.
+        end_date : datetime
+            End time of data to fetch. Note, since startDt is inclusive for the
+            USGS service, we subtract 1 minute from this time so we don't get
+            overlap between consecutive calls.
+        output_parquet_dir : Union[str, Path]
+            Path of directory where parquet files will be saved.
+        chunk_by : Union[str, None], default = None
+            How to "chunk" the fetching and storing of the data.
+            Valid options = ["location_id", "day", "week", "month",
+            "year", None].
+        filter_to_hourly : bool = True
+            Return only values that fall on the hour
+            (i.e. drop 15 minute data).
+        filter_no_data : bool = True
+            Filter out -999 values.
+        convert_to_si : bool = True
+            Multiplies values by 0.3048**3 and sets `measurement_units`
+            to `m3/s`.
+        overwrite_output : bool
+            Flag specifying whether or not to overwrite output files if they
+            already exist.  True = overwrite; False = fail.
+
+        Examples
+        --------
+        Here we fetch five days worth of USGS hourly streamflow data,
+        to two gages, chunking by day.
+
+        Import the module.
+
+        >>> from teehr.loading.usgs.usgs import usgs_to_parquet
+
+        Set the input variables.
+
+        >>> SITES=["02449838", "02450825"]
+        >>> START_DATE=datetime(2023, 2, 20)
+        >>> END_DATE=datetime(2023, 2, 25)
+        >>> OUTPUT_PARQUET_DIR=Path(Path().home(), "temp", "usgs")
+        >>> CHUNK_BY="day",
+        >>> OVERWRITE_OUTPUT=True
+
+        Fetch the data, writing to the specified output directory.
+
+        >>> usgs_to_parquet(
+        >>>     sites=SITES,
+        >>>     start_date=START_DATE,
+        >>>     end_date=END_DATE,
+        >>>     output_parquet_dir=TEMP_DIR,
+        >>>     chunk_by=CHUNK_BY,
+        >>>     overwrite_output=OVERWRITE_OUTPUT
+        >>> )
+        """
         logger.info("Fetching USGS streamflow data.")
         usgs_to_parquet(
             sites=sites,
@@ -227,7 +288,69 @@ class Evaluation():
         overwrite_output: Optional[bool] = False,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS"
     ):
-        """Fetch NWM retrospective point data."""
+        """Fetch NWM retrospective at NWM COMIDs and store as Parquet file.
+
+        All dates and times within the files and in the file names are in UTC.
+
+        Parameters
+        ----------
+        nwm_version : SupportedNWMRetroVersionsEnum
+            NWM retrospective version to fetch.
+            Currently `nwm20`, `nwm21`, and `nwm30` supported.
+        variable_name : str
+            Name of the NWM data variable to download.
+            (e.g., "streamflow", "velocity", ...).
+        location_ids : Iterable[int],
+            NWM feature_ids to fetch.
+        start_date : Union[str, datetime, pd.Timestamp]
+            Date to begin data ingest.
+            Str formats can include YYYY-MM-DD or MM/DD/YYYY
+            Rounds down to beginning of day.
+        end_date : Union[str, datetime, pd.Timestamp],
+            Last date to fetch.  Rounds up to end of day.
+            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+        chunk_by : Union[NWMChunkByEnum, None] = None,
+            If None (default) saves all timeseries to a single file, otherwise
+            the data is processed using the specified parameter.
+            Can be: 'week', 'month', or 'year'.
+        overwrite_output : bool = False,
+            Whether output should overwrite files if they exist.
+            Default is False.
+        domain : str = "CONUS"
+            Geographical domain when NWM version is v3.0.
+            Acceptable values are "Alaska", "CONUS" (default), "Hawaii",
+            and "PR". Only used when NWM version equals `nwm30`.
+
+        Examples
+        --------
+        Here we fetch and format retrospective NWM v2.0 streamflow data
+        for two locations.
+
+        Import the module.
+
+        >>> import teehr.loading.nwm.retrospective_points as nwm_retro
+
+        Specify the input variables.
+
+        >>> NWM_VERSION = "nwm20"
+        >>> VARIABLE_NAME = "streamflow"
+        >>> START_DATE = datetime(2000, 1, 1)
+        >>> END_DATE = datetime(2000, 1, 2, 23)
+        >>> LOCATION_IDS = [7086109, 7040481]
+        >>> OUTPUT_ROOT = Path(Path().home(), "temp")
+        >>> OUTPUT_DIR = Path(OUTPUT_ROOT, "nwm20_retrospective")
+
+        Fetch and format the data, writing to the specified directory.
+
+        >>> nwm_retro.nwm_retro_to_parquet(
+        >>>     nwm_version=NWM_VERSION,
+        >>>     variable_name=VARIABLE_NAME,
+        >>>     start_date=START_DATE,
+        >>>     end_date=END_DATE,
+        >>>     location_ids=LOCATION_IDS,
+        >>>     output_parquet_dir=OUTPUT_DIR
+        >>> )
+        """
         logger.info("Fetching NWM retrospective point data.")
         nwm_retro_to_parquet(
             nwm_version=nwm_version,
@@ -253,7 +376,55 @@ class Evaluation():
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
         location_id_prefix: Optional[Union[str, None]] = None
     ):
-        """Fetch NWM retrospective grid data."""
+        """
+        Compute the weighted average for NWM v2.1 or v3.0 gridded data.
+
+        Pixel values are summarized to zones based on a pre-computed
+        zonal weights file, and the output is saved to parquet files.
+
+        All dates and times within the files and in the file names are in UTC.
+
+        Parameters
+        ----------
+        nwm_version : SupportedNWMRetroVersionsEnum
+            NWM retrospective version to fetch.
+            Currently `nwm21` and `nwm30` supported.
+        variable_name : str
+            Name of the NWM forcing data variable to download.
+            (e.g., "PRECIP", "PSFC", "Q2D", ...).
+        zonal_weights_filepath : str,
+            Path to the array containing fraction of pixel overlap
+            for each zone. The values in the location_id field from
+            the zonal weights file are used in the output of this function.
+        start_date : Union[str, datetime, pd.Timestamp]
+            Date to begin data ingest.
+            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+            Rounds down to beginning of day.
+        end_date : Union[str, datetime, pd.Timestamp],
+            Last date to fetch.  Rounds up to end of day.
+            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+        chunk_by : Union[NWMChunkByEnum, None] = None,
+            If None (default) saves all timeseries to a single file, otherwise
+            the data is processed using the specified parameter.
+            Can be: 'week' or 'month' for gridded data.
+        overwrite_output : bool = False,
+            Whether output should overwrite files if they exist.
+            Default is False.
+        domain : str = "CONUS"
+            Geographical domain when NWM version is v3.0.
+            Acceptable values are "Alaska", "CONUS" (default), "Hawaii",
+            and "PR". Only used when NWM version equals v3.0.
+        location_id_prefix : Union[str, None]
+            Optional location ID prefix to add (prepend) or replace.
+
+        Notes
+        -----
+        The location_id values in the zonal weights file are used as
+        location ids in the output of this function, unless a prefix is
+        specified which will be prepended to the location_id values if none
+        exists, or it will replace the existing prefix. It is assumed that
+        the location_id follows the pattern '[prefix]-[unique id]'.
+        """
         logger.info("Fetching NWM retrospective grid data.")
         nwm_retro_grids_to_parquet(
             nwm_version=nwm_version,
