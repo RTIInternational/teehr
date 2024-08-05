@@ -4,18 +4,23 @@ from pathlib import Path
 import shutil
 
 import pandas as pd
+import pytest
 
 from teehr.evaluation.evaluation import Evaluation
 
 TEMP_DIR = Path("tests", "data", "temp", "usgs")
 
 
-def test_chunkby_location_id(tmp_path):
-    """Test chunkby location id."""
-    temp_dir = tmp_path
-    temp_dir.mkdir(exist_ok=True)
+@pytest.fixture(scope="session")
+def temp_dir_fixture(tmp_path_factory):
+    """Create a temporary directory pytest fixture."""
+    temp_dir = tmp_path_factory.mktemp("usgs")
+    return temp_dir
 
-    eval = Evaluation(temp_dir)
+
+def test_chunkby_location_id(temp_dir_fixture):
+    """Test chunkby location id."""
+    eval = Evaluation(temp_dir_fixture)
     eval.clone_template()
 
     eval.fetch_usgs_streamflow(
@@ -38,12 +43,9 @@ def test_chunkby_location_id(tmp_path):
     assert df["value_time"].max() == pd.Timestamp("2023-02-24 23:00:00")
 
 
-def test_chunkby_day(tmp_path):
+def test_chunkby_day(temp_dir_fixture):
     """Test chunkby day."""
-    temp_dir = tmp_path
-    temp_dir.mkdir(exist_ok=True)
-
-    eval = Evaluation(temp_dir)
+    eval = Evaluation(temp_dir_fixture)
     eval.clone_template()
 
     eval.fetch_usgs_streamflow(
@@ -82,12 +84,9 @@ def test_chunkby_day(tmp_path):
     assert len(df) == 48
 
 
-def test_chunkby_week(tmp_path):
+def test_chunkby_week(temp_dir_fixture):
     """Test chunk by week."""
-    temp_dir = tmp_path
-    temp_dir.mkdir(exist_ok=True)
-
-    eval = Evaluation(temp_dir)
+    eval = Evaluation(temp_dir_fixture)
     eval.clone_template()
 
     eval.fetch_usgs_streamflow(
@@ -110,12 +109,9 @@ def test_chunkby_week(tmp_path):
     assert len(df) == 186
 
 
-def test_chunkby_month(tmp_path):
+def test_chunkby_month(temp_dir_fixture):
     """Test chunk by month."""
-    temp_dir = tmp_path
-    temp_dir.mkdir(exist_ok=True)
-
-    eval = Evaluation(temp_dir)
+    eval = Evaluation(temp_dir_fixture)
     eval.clone_template()
 
     eval.fetch_usgs_streamflow(
@@ -138,12 +134,9 @@ def test_chunkby_month(tmp_path):
     assert len(df) == 1111
 
 
-def test_chunkby_all(tmp_path):
+def test_chunkby_all(temp_dir_fixture):
     """Test chunkby all."""
-    temp_dir = tmp_path
-    temp_dir.mkdir(exist_ok=True)
-
-    eval = Evaluation(temp_dir)
+    eval = Evaluation(temp_dir_fixture)
     eval.clone_template()
 
     eval.fetch_usgs_streamflow(
@@ -164,6 +157,7 @@ def test_chunkby_all(tmp_path):
 
 
 if __name__ == "__main__":
+    TEMP_DIR.mkdir(exist_ok=True)
     test_chunkby_location_id(TEMP_DIR)
     test_chunkby_day(TEMP_DIR)
     test_chunkby_week(TEMP_DIR)

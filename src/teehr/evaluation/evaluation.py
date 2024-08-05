@@ -13,7 +13,13 @@ from teehr.pre.project_creation import copy_template_to
 from teehr.models.metrics.metrics import MetricsBasemodel
 from teehr.evaluation.utils import get_joined_timeseries_fields
 from teehr.loading.usgs.usgs import usgs_to_parquet
-from teehr.models.loading.utils import USGSChunkByEnum
+from teehr.loading.nwm.retrospective_points import nwm_retro_to_parquet
+from teehr.models.loading.utils import (
+    USGSChunkByEnum,
+    SupportedNWMRetroVersionsEnum,
+    SupportedNWMRetroDomainsEnum,
+    NWMChunkByEnum
+)
 
 logger = logging.getLogger(__name__)
 
@@ -194,10 +200,7 @@ class Evaluation():
         convert_to_si: bool = True,
         overwrite_output: Optional[bool] = False,
     ):
-        """Fetch USGS streamflow data from NWIS.
-
-        Includes retrieving data and metadata.
-        """
+        """Fetch USGS streamflow data from NWIS."""
         logger.info("Fetching USGS streamflow data.")
         usgs_to_parquet(
             sites=sites,
@@ -209,4 +212,29 @@ class Evaluation():
             filter_no_data=filter_no_data,
             convert_to_si=convert_to_si,
             overwrite_output=overwrite_output
+        )
+
+    def fetch_nwm_retrospective_points(
+        self,
+        nwm_version: SupportedNWMRetroVersionsEnum,
+        variable_name: str,
+        location_ids: List[int],
+        start_date: Union[str, datetime, pd.Timestamp],
+        end_date: Union[str, datetime, pd.Timestamp],
+        chunk_by: Union[NWMChunkByEnum, None] = None,
+        overwrite_output: Optional[bool] = False,
+        domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS"
+    ):
+        """Fetch NWM retrospective point data."""
+        logger.info("Fetching NWM retrospective point data.")
+        nwm_retro_to_parquet(
+            nwm_version=nwm_version,
+            variable_name=variable_name,
+            start_date=start_date,
+            end_date=end_date,
+            location_ids=location_ids,
+            output_parquet_dir=self.secondary_timeseries_dir,
+            chunk_by=chunk_by,
+            overwrite_output=overwrite_output,
+            domain=domain
         )
