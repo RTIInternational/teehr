@@ -29,7 +29,7 @@ from teehr_v0_3.loading.nwm.utils import (
     get_period_start_end_times,
     create_periods_based_on_chunksize
 )
-from teehr.loading.const import TIMESERIES_DATA_TYPES
+from teehr.loading.const import TIMESERIES_DATA_TYPES, USGS_NODATA_VALUES
 
 DATETIME_STR_FMT = "%Y-%m-%dT%H:%M:00+0000"
 DAYLIGHT_SAVINGS_PAD = timedelta(hours=2)
@@ -47,9 +47,9 @@ def _filter_to_hourly(df: pd.DataFrame) -> pd.DataFrame:
     return df2
 
 
-def _filter_no_data(df: pd.DataFrame, no_data_value=-999) -> pd.DataFrame:
+def _filter_no_data(df: pd.DataFrame) -> pd.DataFrame:
     """Filter out no data values."""
-    df2 = df[df["value"] != no_data_value]
+    df2 = df[~df["value"].isin(USGS_NODATA_VALUES)]
     df2.dropna(subset=["value"], inplace=True)
     return df2
 
