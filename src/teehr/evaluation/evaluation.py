@@ -1,7 +1,8 @@
 """Evaluation module."""
 import pandas as pd
 import geopandas as gpd
-from typing import Union, List
+from typing import Union, List, Optional
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from pyspark.sql import SparkSession
@@ -9,12 +10,20 @@ from pyspark import SparkConf
 import logging
 
 from teehr.pre.project_creation import copy_template_to
-from teehr.models.metrics import MetricsBasemodel
+from teehr.models.metrics.metrics import MetricsBasemodel
 from teehr.evaluation.utils import get_joined_timeseries_fields
+from teehr.loading.usgs.usgs import usgs_to_parquet
+from teehr.models.loading.utils import USGSChunkByEnum
 
 logger = logging.getLogger(__name__)
 
-JOINED_TIMESERIES_DIR = Path("database", "joined_timeseries")
+DATABASE_DIR = "database"
+TEMP_DIR = "temp"
+LOCATIONS_DIR = "locations"
+PRIMARY_TIMESERIES_DIR = "primary_timeseries"
+LOCATIONS_CROSSWALK_DIR = "locations_crosswalk"
+SECONDARY_TIMESERIES_DIR = "secondary_timeseries"
+JOINED_TIMESERIES_DIR = "joined_timeseries"
 
 
 class Evaluation():
@@ -31,6 +40,22 @@ class Evaluation():
         """Initialize the Evaluation class."""
         self.dir_path = dir_path
         self.spark = spark
+
+        self.database_dir = Path(self.dir_path, DATABASE_DIR)
+        self.temp_dir = Path(self.dir_path, TEMP_DIR)
+        self.locations_dir = Path(self.database_dir, LOCATIONS_DIR)
+        self.primary_timeseries_dir = Path(
+            self.database_dir, PRIMARY_TIMESERIES_DIR
+        )
+        self.locations_crosswalk_dir = Path(
+            self.database_dir, LOCATIONS_CROSSWALK_DIR
+        )
+        self.secondary_timeseries_dir = Path(
+            self.database_dir, SECONDARY_TIMESERIES_DIR
+        )
+        self.joined_timeseries_dir = Path(
+            self.database_dir, JOINED_TIMESERIES_DIR
+        )
 
         if not Path(self.dir_path).is_dir():
             logger.error(f"Directory {self.dir_path} does not exist.")
@@ -157,3 +182,31 @@ class Evaluation():
         Includes retrieving data and metadata.
         """
         pass
+
+    def fetch_usgs_streamflow(
+        self,
+        sites: List[str],
+        start_date: Union[str, datetime, pd.Timestamp],
+        end_date: Union[str, datetime, pd.Timestamp],
+        chunk_by: Union[USGSChunkByEnum, None] = None,
+        filter_to_hourly: bool = True,
+        filter_no_data: bool = True,
+        convert_to_si: bool = True,
+        overwrite_output: Optional[bool] = False,
+    ):
+        """Fetch USGS streamflow data from NWIS.
+
+        Includes retrieving data and metadata.
+        """
+        logger.info("Fetching USGS streamflow data.")
+        usgs_to_parquet(
+            sites=sites,
+            start_date=start_date,
+            end_date=end_date,
+            output_parquet_dir=self.primary_timeseries_dir,
+            chunk_by=chunk_by,
+            filter_to_hourly=filter_to_hourly,
+            filter_no_data=filter_no_data,
+            convert_to_si=convert_to_si,
+            overwrite_output=overwrite_output
+        )

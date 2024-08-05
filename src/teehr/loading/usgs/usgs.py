@@ -22,9 +22,9 @@ from pathlib import Path
 from datetime import datetime, timedelta
 # from hydrotools.nwis_client.iv import IVDataService
 import dataretrieval.nwis as nwis
-from teehr_v0_3.models.loading.utils import USGSChunkByEnum
+from teehr.models.loading.utils import USGSChunkByEnum
 from pydantic import validate_call, ConfigDict
-from teehr_v0_3.loading.nwm.utils import (
+from teehr.loading.utils import (
     write_parquet_file,
     get_period_start_end_times,
     create_periods_based_on_chunksize

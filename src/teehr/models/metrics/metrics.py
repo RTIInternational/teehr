@@ -14,8 +14,11 @@ except ImportError:  # pragma: no cover
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import Field, ConfigDict
 
-import teehr.models.metric_attributes as tma
-from teehr.models.metric_enums import BootstrapMethodEnum, TransformEnum
+import teehr.models.metrics.metric_attributes as tma
+from teehr.models.metrics.metric_enums import (
+    BootstrapMethodEnum,
+    TransformEnum
+)
 
 
 class MetricsBasemodel(PydanticBaseModel):
