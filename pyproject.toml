@@ -35,6 +35,7 @@ httpx = "^0.25.1"
 pandas = "^2.2.0"
 pydata-sphinx-theme = "^0.15.4"
 pyspark = "^3.5.1"
+dataretrieval = "^1.0.9"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"
