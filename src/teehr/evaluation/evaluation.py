@@ -14,6 +14,8 @@ from teehr.models.metrics.metrics import MetricsBasemodel
 from teehr.evaluation.utils import get_joined_timeseries_fields
 from teehr.loading.usgs.usgs import usgs_to_parquet
 from teehr.loading.nwm.retrospective_points import nwm_retro_to_parquet
+from teehr.loading.nwm.retrospective_grids import nwm_retro_grids_to_parquet
+from teehr.models.loading.nwm22_grid import ForcingVariablesEnum
 from teehr.models.loading.utils import (
     USGSChunkByEnum,
     SupportedNWMRetroVersionsEnum,
@@ -237,4 +239,31 @@ class Evaluation():
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
             domain=domain
+        )
+
+    def fetch_nwm_retrospective_grids(
+        self,
+        nwm_version: SupportedNWMRetroVersionsEnum,
+        variable_name: ForcingVariablesEnum,
+        zonal_weights_filepath: Union[str, Path],
+        start_date: Union[str, datetime, pd.Timestamp],
+        end_date: Union[str, datetime, pd.Timestamp],
+        chunk_by: Union[NWMChunkByEnum, None] = None,
+        overwrite_output: Optional[bool] = False,
+        domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
+        location_id_prefix: Optional[Union[str, None]] = None
+    ):
+        """Fetch NWM retrospective grid data."""
+        logger.info("Fetching NWM retrospective grid data.")
+        nwm_retro_grids_to_parquet(
+            nwm_version=nwm_version,
+            variable_name=variable_name,
+            zonal_weights_filepath=zonal_weights_filepath,
+            start_date=start_date,
+            end_date=end_date,
+            output_parquet_dir=self.secondary_timeseries_dir,
+            chunk_by=chunk_by,
+            overwrite_output=overwrite_output,
+            domain=domain,
+            location_id_prefix=location_id_prefix
         )
