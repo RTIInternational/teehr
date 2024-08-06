@@ -27,9 +27,10 @@ from pydantic import validate_call, ConfigDict
 from teehr.loading.utils import (
     write_parquet_file,
     get_period_start_end_times,
-    create_periods_based_on_chunksize
+    create_periods_based_on_chunksize,
+    format_timeseries_data_types
 )
-from teehr.loading.const import TIMESERIES_DATA_TYPES, USGS_NODATA_VALUES
+from teehr.loading.const import USGS_NODATA_VALUES
 
 DATETIME_STR_FMT = "%Y-%m-%dT%H:%M:00+0000"
 DAYLIGHT_SAVINGS_PAD = timedelta(hours=2)
@@ -72,35 +73,35 @@ def _convert_to_si_units(df: pd.DataFrame) -> pd.DataFrame:
 #     return dt
 
 
-def _format_df_data_types(df: pd.DataFrame) -> pd.DataFrame:
-    """Convert field types to TEEHR data model.
+# def _format_df_data_types(df: pd.DataFrame) -> pd.DataFrame:
+#     """Convert field types to TEEHR data model.
 
-    Notes
-    -----
-    dataretrieval attempts to return values in UTC, here we explicitly convert
-    to be sure. We also drop timezone information and convert to datetime64[ms].
+#     Notes
+#     -----
+#     dataretrieval attempts to return values in UTC, here we explicitly convert
+#     to be sure. We also drop timezone information and convert to datetime64[ms].
 
-    The fields types are specified in the TIMESERIES_DATA_TYPES dictionary.
-    """
-    # Convert to UTC if not already in UTC.
-    if df["value_time"].dt.tz is not None:
-        df["value_time"] = df["value_time"].dt.tz_convert("UTC")
-    if df["reference_time"].dt.tz is not None:
-        df["reference_time"] = df["reference_time"].dt.tz_convert("UTC")
-    # Drop timezone information.
-    df["value_time"] = df["value_time"].dt.tz_localize(None)
-    df["reference_time"] = df["reference_time"].dt.tz_localize(None)
-    # Convert to datetime64[ms].
-    df["value_time"] = df["value_time"].astype(TIMESERIES_DATA_TYPES["value_time"])  # noqa
-    df["reference_time"] = df["reference_time"].astype(TIMESERIES_DATA_TYPES["reference_time"])  # noqa
-    # Convert remaining fields.
-    df["value"] = df["value"].astype(TIMESERIES_DATA_TYPES["value"])
-    df["measurement_unit"] = df["measurement_unit"].astype(TIMESERIES_DATA_TYPES["measurement_unit"])  # noqa
-    df["variable_name"] = df["variable_name"].astype(TIMESERIES_DATA_TYPES["variable_name"])  # noqa
-    df["configuration"] = df["configuration"].astype(TIMESERIES_DATA_TYPES["configuration"])  # noqa
-    df["location_id"] = df["location_id"].astype(TIMESERIES_DATA_TYPES["location_id"])  # noqa
+#     The fields types are specified in the TIMESERIES_DATA_TYPES dictionary.
+#     """
+#     # Convert to UTC if not already in UTC.
+#     if df["value_time"].dt.tz is not None:
+#         df["value_time"] = df["value_time"].dt.tz_convert("UTC")
+#     if df["reference_time"].dt.tz is not None:
+#         df["reference_time"] = df["reference_time"].dt.tz_convert("UTC")
+#     # Drop timezone information.
+#     df["value_time"] = df["value_time"].dt.tz_localize(None)
+#     df["reference_time"] = df["reference_time"].dt.tz_localize(None)
+#     # Convert to datetime64[ms].
+#     df["value_time"] = df["value_time"].astype(TIMESERIES_DATA_TYPES["value_time"])  # noqa
+#     df["reference_time"] = df["reference_time"].astype(TIMESERIES_DATA_TYPES["reference_time"])  # noqa
+#     # Convert remaining fields.
+#     df["value"] = df["value"].astype(TIMESERIES_DATA_TYPES["value"])
+#     df["measurement_unit"] = df["measurement_unit"].astype(TIMESERIES_DATA_TYPES["measurement_unit"])  # noqa
+#     df["variable_name"] = df["variable_name"].astype(TIMESERIES_DATA_TYPES["variable_name"])  # noqa
+#     df["configuration"] = df["configuration"].astype(TIMESERIES_DATA_TYPES["configuration"])  # noqa
+#     df["location_id"] = df["location_id"].astype(TIMESERIES_DATA_TYPES["location_id"])  # noqa
 
-    return df
+#     return df
 
 
 def _format_df_column_names(df: pd.DataFrame) -> pd.DataFrame:
@@ -186,7 +187,7 @@ def _fetch_usgs_streamflow(
 
     usgs_df = _format_df_column_names(usgs_df)
 
-    usgs_df = _format_df_data_types(usgs_df)
+    usgs_df = format_timeseries_data_types(usgs_df)
 
     if filter_to_hourly is True:
         usgs_df = _filter_to_hourly(usgs_df)

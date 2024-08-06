@@ -57,7 +57,8 @@ from teehr.loading.utils import (
     write_parquet_file,
     get_dataset,
     get_period_start_end_times,
-    create_periods_based_on_chunksize
+    create_periods_based_on_chunksize,
+    format_timeseries_data_types
 )
 from teehr.loading.nwm.retrospective_points import (
     format_grouped_filename,
@@ -128,6 +129,8 @@ def process_nwm30_retro_group(
 
     if location_id_prefix:
         chunk_df = update_location_id_prefix(chunk_df, location_id_prefix)
+
+    chunk_df = format_timeseries_data_types(chunk_df)
 
     return chunk_df
 
@@ -348,6 +351,8 @@ def nwm_retro_grids_to_parquet(
                     output_parquet_dir,
                     f"{start}_{end}.parquet"
                 )
+
+            chunk_df = format_timeseries_data_types(chunk_df)
 
             write_parquet_file(
                 filepath=output_filename,

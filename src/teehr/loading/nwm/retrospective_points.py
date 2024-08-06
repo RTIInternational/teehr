@@ -47,7 +47,8 @@ from teehr.models.loading.utils import (
 from teehr.loading.utils import (
     write_parquet_file,
     get_period_start_end_times,
-    create_periods_based_on_chunksize
+    create_periods_based_on_chunksize,
+    format_timeseries_data_types
 )
 
 NWM20_MIN_DATE = datetime(1993, 1, 1)
@@ -124,13 +125,11 @@ def da_to_df(
     df.drop(columns=["latitude", "longitude"], inplace=True)
 
     df["location_id"] = f"{nwm_version}-" + df["location_id"].astype(str)
-    df["location_id"] = df["location_id"].astype(str).astype("category")
-    df["measurement_unit"] = df["measurement_unit"].astype("category")
-    df["variable_name"] = df["variable_name"].astype("category")
-    df["configuration"] = df["configuration"].astype("category")
 
     if (nwm_version == "nwm21") or (nwm_version == "nwm30"):
         df.drop(columns=["elevation", "gage_id", "order"], inplace=True)
+
+    df = format_timeseries_data_types(df)
 
     return df
 

@@ -8,7 +8,11 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from teehr.loading.utils import get_dataset, write_parquet_file
+from teehr.loading.utils import (
+    get_dataset,
+    write_parquet_file,
+    format_timeseries_data_types
+)
 
 
 def get_weights_row_col_stats(weights_df: pd.DataFrame) -> Dict:
@@ -207,7 +211,10 @@ def fetch_and_format_nwm_grids(
                                     "configuration were found in GCS!")
         z_hour_df = pd.concat(output)
 
-        # Save to parquet
+        # Assign data types.
+        z_hour_df = format_timeseries_data_types(z_hour_df)
+
+        # Save to parquet.
         yrmoday = df.day.iloc[0]
         z_hour = df.z_hour.iloc[0][1:3]
         ref_time_str = f"{yrmoday}T{z_hour}"

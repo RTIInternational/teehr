@@ -27,10 +27,43 @@ from teehr.models.loading.utils import (
 from teehr.loading.const import (
     NWM_BUCKET,
     NWM_S3_JSON_PATH,
-    NWM30_START_DATE
+    NWM30_START_DATE,
+    TIMESERIES_DATA_TYPES
 )
 
+
 logger = logging.getLogger(__name__)
+
+
+def format_timeseries_data_types(df: pd.DataFrame) -> pd.DataFrame:
+    """Convert field types to TEEHR data model.
+
+    Notes
+    -----
+    dataretrieval attempts to return values in UTC, here we explicitly convert
+    to be sure. We also drop timezone information and convert to datetime64[ms].
+
+    The fields types are specified in the TIMESERIES_DATA_TYPES dictionary.
+    """
+    # Convert to UTC if not already in UTC.
+    if df["value_time"].dt.tz is not None:
+        df["value_time"] = df["value_time"].dt.tz_convert("UTC")
+    if df["reference_time"].dt.tz is not None:
+        df["reference_time"] = df["reference_time"].dt.tz_convert("UTC")
+    # Drop timezone information.
+    df["value_time"] = df["value_time"].dt.tz_localize(None)
+    df["reference_time"] = df["reference_time"].dt.tz_localize(None)
+    # Convert to datetime64[ms].
+    df["value_time"] = df["value_time"].astype(TIMESERIES_DATA_TYPES["value_time"])  # noqa
+    df["reference_time"] = df["reference_time"].astype(TIMESERIES_DATA_TYPES["reference_time"])  # noqa
+    # Convert remaining fields.
+    df["value"] = df["value"].astype(TIMESERIES_DATA_TYPES["value"])
+    df["measurement_unit"] = df["measurement_unit"].astype(TIMESERIES_DATA_TYPES["measurement_unit"])  # noqa
+    df["variable_name"] = df["variable_name"].astype(TIMESERIES_DATA_TYPES["variable_name"])  # noqa
+    df["configuration"] = df["configuration"].astype(TIMESERIES_DATA_TYPES["configuration"])  # noqa
+    df["location_id"] = df["location_id"].astype(TIMESERIES_DATA_TYPES["location_id"])  # noqa
+
+    return df
 
 
 def check_dates_against_nwm_version(
