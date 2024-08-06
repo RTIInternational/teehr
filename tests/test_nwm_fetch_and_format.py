@@ -1,6 +1,6 @@
 """Test for fetching and formatting NWM data."""
 from pathlib import Path
-import shutil
+import tempfile
 
 import pandas as pd
 import numpy as np
@@ -13,17 +13,8 @@ from teehr.loading.const import (
     NWM22_UNIT_LOOKUP,
 )
 
-TEMP_DIR = Path("tests", "data", "temp", "nwm_forecasts")
 
-
-@pytest.fixture(scope="session")
-def temp_dir_fixture(tmp_path_factory):
-    """Create a temporary directory pytest fixture."""
-    temp_dir = tmp_path_factory.mktemp("nwm_forecasts")
-    return temp_dir
-
-
-def test_nwm22_point_fetch_and_format(temp_dir_fixture):
+def test_nwm22_point_fetch_and_format(tmpdir):
     """Test NWM22 point fetch and format."""
     test_data_dir = Path("tests", "data", "nwm22")
 
@@ -44,7 +35,7 @@ def test_nwm22_point_fetch_and_format(temp_dir_fixture):
         location_ids=location_ids,
         configuration="short_range",
         variable_name="streamflow",
-        output_parquet_dir=temp_dir_fixture,
+        output_parquet_dir=tmpdir,
         process_by_z_hour=True,
         stepsize=100,
         ignore_missing_file=False,
@@ -53,7 +44,7 @@ def test_nwm22_point_fetch_and_format(temp_dir_fixture):
         nwm_version="nwm22"
     )
 
-    parquet_file = Path(temp_dir_fixture, "20230318T14.parquet")
+    parquet_file = Path(tmpdir, "20230318T14.parquet")
     test_file = Path(test_data_dir, "point_benchmark.parquet")
 
     bench_df = pd.read_parquet(test_file)
@@ -62,7 +53,7 @@ def test_nwm22_point_fetch_and_format(temp_dir_fixture):
     assert test_df.compare(bench_df).index.size == 0
 
 
-def test_nwm30_point_fetch_and_format(temp_dir_fixture):
+def test_nwm30_point_fetch_and_format(tmpdir):
     """Test NWM30 point fetch and format."""
     test_data_dir = Path("tests", "data", "nwm30")
 
@@ -83,7 +74,7 @@ def test_nwm30_point_fetch_and_format(temp_dir_fixture):
         location_ids=location_ids,
         configuration="short_range",
         variable_name="streamflow",
-        output_parquet_dir=temp_dir_fixture,
+        output_parquet_dir=tmpdir,
         nwm_version="nwm30",
         process_by_z_hour=True,
         stepsize=100,
@@ -92,7 +83,7 @@ def test_nwm30_point_fetch_and_format(temp_dir_fixture):
         overwrite_output=True
     )
 
-    parquet_file = Path(temp_dir_fixture, "20231101T00.parquet")
+    parquet_file = Path(tmpdir, "20231101T00.parquet")
     test_file = Path(test_data_dir, "point_benchmark.parquet")
 
     bench_df = pd.read_parquet(test_file)
@@ -101,7 +92,7 @@ def test_nwm30_point_fetch_and_format(temp_dir_fixture):
     assert test_df.compare(bench_df).index.size == 0
 
 
-def test_nwm22_grid_fetch_and_format(temp_dir_fixture):
+def test_nwm22_grid_fetch_and_format(tmpdir):
     """Test NWM22 grid fetch and format."""
     test_data_dir = Path("tests", "data", "nwm22")
     weights_filepath = Path(test_data_dir, "onehuc10_weights.parquet")
@@ -114,7 +105,7 @@ def test_nwm22_grid_fetch_and_format(temp_dir_fixture):
         json_paths=json_paths,
         configuration="forcing_analysis_assim",
         variable_name="RAINRATE",
-        output_parquet_dir=temp_dir_fixture,
+        output_parquet_dir=tmpdir,
         zonal_weights_filepath=weights_filepath,
         ignore_missing_file=False,
         units_format_dict=NWM22_UNIT_LOOKUP,
@@ -122,7 +113,7 @@ def test_nwm22_grid_fetch_and_format(temp_dir_fixture):
         location_id_prefix=None
     )
 
-    parquet_file = Path(temp_dir_fixture, "20201218T00.parquet")
+    parquet_file = Path(tmpdir, "20201218T00.parquet")
     test_file = Path(test_data_dir, "grid_benchmark.parquet")
 
     bench_df = pd.read_parquet(test_file)
@@ -131,7 +122,7 @@ def test_nwm22_grid_fetch_and_format(temp_dir_fixture):
     assert test_df.compare(bench_df).index.size == 0
 
 
-def test_nwm30_grid_fetch_and_format(temp_dir_fixture):
+def test_nwm30_grid_fetch_and_format(tmpdir):
     """Test NWM30 grid fetch and format."""
     test_data_dir = Path("tests", "data", "nwm30")
     weights_filepath = Path(test_data_dir, "one_huc10_alaska_weights.parquet")
@@ -144,7 +135,7 @@ def test_nwm30_grid_fetch_and_format(temp_dir_fixture):
         json_paths=json_paths,
         configuration="forcing_analysis_assim_alaska",
         variable_name="RAINRATE",
-        output_parquet_dir=temp_dir_fixture,
+        output_parquet_dir=tmpdir,
         zonal_weights_filepath=weights_filepath,
         ignore_missing_file=False,
         units_format_dict=NWM22_UNIT_LOOKUP,
@@ -152,7 +143,7 @@ def test_nwm30_grid_fetch_and_format(temp_dir_fixture):
         location_id_prefix=None
     )
 
-    parquet_file = Path(temp_dir_fixture, "20231101T00.parquet")
+    parquet_file = Path(tmpdir, "20231101T00.parquet")
     test_file = Path(test_data_dir, "grid_benchmark.parquet")
 
     bench_df = pd.read_parquet(test_file)
@@ -212,12 +203,11 @@ def test_raise_location_id_prefix_error():
 
 
 if __name__ == "__main__":
-    TEMP_DIR.mkdir(exist_ok=True)
-    test_nwm22_point_fetch_and_format(TEMP_DIR)
-    test_nwm30_point_fetch_and_format(TEMP_DIR)
-    test_nwm22_grid_fetch_and_format(TEMP_DIR)
-    test_nwm30_grid_fetch_and_format(TEMP_DIR)
-    test_replace_location_id_prefix()  # no temp needed
-    test_prepend_location_id_prefix()  # no temp needed
-    test_raise_location_id_prefix_error()  # no temp needed
-    shutil.rmtree(TEMP_DIR)
+    with tempfile.TemporaryDirectory() as tempdir:
+        test_nwm22_point_fetch_and_format(tempfile.mktemp(dir=tempdir))
+        test_nwm30_point_fetch_and_format(tempfile.mktemp(dir=tempdir))
+        test_nwm22_grid_fetch_and_format(tempfile.mktemp(dir=tempdir))
+        test_nwm30_grid_fetch_and_format(tempfile.mktemp(dir=tempdir))
+        test_replace_location_id_prefix()
+        test_prepend_location_id_prefix()
+        test_raise_location_id_prefix_error()
