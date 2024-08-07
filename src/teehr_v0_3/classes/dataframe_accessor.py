@@ -1,73 +1,82 @@
-"""Provides the teehr timeseries accessor extending pandas DataFrames."""
+"""Provides the teehr accessor extending pandas DataFrames."""
+from typing import List
 import itertools
 
 import pandas as pd
-from bokeh.plotting import figure, output_file, save, show
+from bokeh.plotting import figure, save, show
 from bokeh.palettes import Dark2_5 as palette
 
 
-try:
-    # Currently we have two different versions of the accessor both
-    # named "teehr". This is a workaround to avoid the warning of
-    # overwriting an existing accessor. Should we consider renaming?
-    del pd.DataFrame.teehr
-except AttributeError:
-    pass
-
-
 @pd.api.extensions.register_dataframe_accessor("teehr")
-class GetTimeseriesAccessor:
+class TEEHRDataFrameAccessor:
     """Extends pandas DataFrame objects.
 
     Notes
     -----
-    This class is a test. We could potentially have separate accessor
-    classes for metrics and timeseries data, and only register them
-    when their specific methods are called (get_metrics, get_timeseries).
-    Seems that this would require less validation in the accessor classes,
-    but could be confusing for the user?
+    This class contains example methods for summarizing and plotting metrics
+    as well as timeseries. This requires more validation in each method to
+    ensure the DataFrame has the appropriate data.
 
-    Alternative is to have a single accessor class that gets registered
-    when the DuckDB class is instantiated that would contain methods for
-    summarizing and plotting metrics as well as timeseries. This would require
-    more validation in each method to ensure the DataFrame has the
-    appropriate data.
-
-    You need to run the following code to show plots in Jupyter notebooks:
-    ```
-    from bokeh.io import output_notebook
-    output_notebook()
-    ```
+    Methods operating on metrics data should start with 'metrics_' and methods
+    operating on timeseries data should start with 'timeseries_'.
     """
 
-    def __init__(self, pandas_obj: pd.DataFrame):
+    def __init__(self, pandas_obj):
         """Initialize the class."""
+        self._df = pandas_obj
         self._validate(pandas_obj)
-        self.timeseries_df = pandas_obj
 
     @staticmethod
-    def _validate(timeseries_df: pd.DataFrame):
+    def _validate(obj):
         """Validate the DataFrame object columns."""
-        if "primary_location_id" not in timeseries_df.columns:
+        if "primary_location_id" not in obj.columns:
             raise AttributeError("Must have 'primary_location_id'.")
-        if timeseries_df.index.size == 0:
+        if obj.index.size == 0:
             raise AttributeError("DataFrame must have data.")
 
     @property
     def center(self):
         """Some property."""
-        if "geometry" not in self.timeseries_df.columns:
+        if "geometry" not in self._df.columns:
             raise AttributeError("DataFrame must have a 'geometry' column.")
-        lat = self.timeseries_df.geometry.y
-        lon = self.timeseries_df.geometry.x
+        lat = self._df.geometry.y
+        lon = self._df.geometry.x
         return (float(lon.mean()), float(lat.mean()))
 
-    def scatter_plot(self):
+    def metrics_scatter_plot(self):
         """Create a scatter plot."""
         print("About to create a DataFrame-based scatter plot!")
         pass
 
-    def plot_forecasts(
+    def metrics_box_whisker_plot(self):
+        """Create a box and whisker plot."""
+        print("About to create a DataFrame-based box and whisker plot!")
+        pass
+
+    def metrics_summary(
+        self,
+        group_by: List[str] = ["primary_location_id"],
+        percentiles: List[float] = [0.5],
+    ) -> pd.DataFrame:
+        """Summarize the DataFrame metrics."""
+        summary_df = self._df.groupby(group_by) \
+            .describe(percentiles=percentiles).unstack().unstack() \
+            .reset_index().rename(
+                columns={'level_0': 'metric', 'level_1': 'summary'}
+            )
+        final_df = summary_df.pivot(
+            index="metric",
+            columns="summary",
+            values=self._df[group_by].values.ravel()
+        )
+        return final_df
+
+    def timeseries_summary(self):
+        """Provide summary info about a timeseries."""
+        print("About to create a DataFrame-based timeseries summary!")
+        pass
+
+    def timeseries_forecast_plot(
         self,
         primary_location_id: str,
         variable_name: str,
@@ -76,13 +85,11 @@ class GetTimeseriesAccessor:
         output_filepath: str = None,
     ) -> figure:
         """Create a timeseries plot of forecasts vs. observations."""
-        # output_file("test_plot.html")
-
-        plot_df = self.timeseries_df[
-            (self.timeseries_df["primary_location_id"] == primary_location_id) &
-            (self.timeseries_df["variable_name"] == variable_name) &
-            (self.timeseries_df["measurement_unit"] == measurement_unit) &
-            (self.timeseries_df["configuration"] == configuration)
+        plot_df = self._df[
+            (self._df["primary_location_id"] == primary_location_id) &  # noqa: E501
+            (self._df["variable_name"] == variable_name) &
+            (self._df["measurement_unit"] == measurement_unit) &
+            (self._df["configuration"] == configuration)
         ].copy()
 
         p = figure(

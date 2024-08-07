@@ -169,9 +169,6 @@ class DuckDBBase(ABC):
         teehr.queries.duckdb_database.create_get_metrics_query : \
             Create the get metrics query.
         """
-        # Register the pandas DataFrame accessor class.
-        from teehr_v0_3.classes.accessor_metrics import GetMetricsAccessor # noqa
-
         query = tqu_db.create_get_metrics_query(
             mq,
             self.from_joined_timeseries_clause,
@@ -206,9 +203,6 @@ class DuckDBBase(ABC):
         teehr.queries.duckdb_database.create_get_joined_timeseries_query : \
             Create the get joined timeseries query.
         """
-        # Register the pandas DataFrame accessor class.
-        from teehr_v0_3.classes.accessor_timeseries import GetTimeseriesAccessor # noqa
-
         query = tqu_db.create_get_joined_timeseries_query(
             jtq,
             self.from_joined_timeseries_clause,
@@ -283,9 +277,6 @@ class DuckDBBase(ABC):
         teehr.queries.duckdb_database.create_get_timeseries_query : \
             Create the get timeseries query.
         """
-        # Register the pandas DataFrame accessor class.
-        from teehr_v0_3.classes.accessor_timeseries import GetTimeseriesAccessor # noqa
-
         query = tqu_db.create_get_timeseries_query(
             tq,
             self.from_joined_timeseries_clause
