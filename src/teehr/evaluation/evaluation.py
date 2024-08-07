@@ -13,6 +13,8 @@ from teehr.pre.project_creation import copy_template_to
 from teehr.models.metrics.metrics import MetricsBasemodel
 from teehr.evaluation.utils import get_joined_timeseries_fields
 from teehr.loading.usgs.usgs import usgs_to_parquet
+from teehr.loading.nwm.nwm_points import nwm_to_parquet
+from teehr.loading.nwm.nwm_grids import nwm_grids_to_parquet
 from teehr.loading.nwm.retrospective_points import nwm_retro_to_parquet
 from teehr.loading.nwm.retrospective_grids import nwm_retro_grids_to_parquet
 from teehr.models.loading.nwm22_grid import ForcingVariablesEnum
@@ -20,7 +22,10 @@ from teehr.models.loading.utils import (
     USGSChunkByEnum,
     SupportedNWMRetroVersionsEnum,
     SupportedNWMRetroDomainsEnum,
-    NWMChunkByEnum
+    NWMChunkByEnum,
+    SupportedNWMOperationalVersionsEnum,
+    SupportedNWMDataSourcesEnum,
+    SupportedKerchunkMethod
 )
 
 logger = logging.getLogger(__name__)
@@ -32,6 +37,11 @@ PRIMARY_TIMESERIES_DIR = "primary_timeseries"
 LOCATIONS_CROSSWALK_DIR = "locations_crosswalk"
 SECONDARY_TIMESERIES_DIR = "secondary_timeseries"
 JOINED_TIMESERIES_DIR = "joined_timeseries"
+# NWM_POINT_FORECASTS_CACHE = "nwm_point_forecasts"
+# NWM_GRID_FORECASTS_CACHE = "nwm_grid_forecasts"
+# NWM_POINT_RETRO_CACHE = "nwm_point_retrospective"
+# NWM_GRID_RETRO_CACHE = "nwm_grid_retrospective"
+# USGS_STREAMFLOW_CACHE = "usgs_streamflow"
 
 
 class Evaluation():
@@ -80,7 +90,7 @@ class Evaluation():
         """The field names from the joined timeseries table."""
         # logger.info("Getting fields from the joined timeseries table.")
         return get_joined_timeseries_fields(
-            Path(self.dir_path, JOINED_TIMESERIES_DIR)
+            self.joined_timeseries_dir
         )
 
     def clone_template(self):
@@ -269,7 +279,7 @@ class Evaluation():
             sites=sites,
             start_date=start_date,
             end_date=end_date,
-            output_parquet_dir=self.primary_timeseries_dir,
+            output_parquet_dir=Path(self.temp_dir, PRIMARY_TIMESERIES_DIR),
             chunk_by=chunk_by,
             filter_to_hourly=filter_to_hourly,
             filter_no_data=filter_no_data,
@@ -351,6 +361,7 @@ class Evaluation():
         >>>     output_parquet_dir=OUTPUT_DIR
         >>> )
         """
+        # NOTE: Locations IDs will come from the locations table and crosswalk.
         logger.info("Fetching NWM retrospective point data.")
         nwm_retro_to_parquet(
             nwm_version=nwm_version,
@@ -358,7 +369,7 @@ class Evaluation():
             start_date=start_date,
             end_date=end_date,
             location_ids=location_ids,
-            output_parquet_dir=self.secondary_timeseries_dir,
+            output_parquet_dir=self.temp_dir,
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
             domain=domain
@@ -432,9 +443,96 @@ class Evaluation():
             zonal_weights_filepath=zonal_weights_filepath,
             start_date=start_date,
             end_date=end_date,
-            output_parquet_dir=self.secondary_timeseries_dir,
+            output_parquet_dir=self.temp_dir,
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
             domain=domain,
             location_id_prefix=location_id_prefix
         )
+
+    def fetch_nwm_forecast_points(
+        self,
+        configuration: str,
+        output_type: str,
+        variable_name: str,
+        start_date: Union[str, datetime],
+        ingest_days: int,
+        location_ids: List[int],
+        nwm_version: SupportedNWMOperationalVersionsEnum,
+        data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
+        kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
+        t_minus_hours: Optional[List[int]] = None,
+        process_by_z_hour: Optional[bool] = True,
+        stepsize: Optional[int] = 100,
+        ignore_missing_file: Optional[bool] = True,
+        overwrite_output: Optional[bool] = False,
+    ):
+        """Fetch NWM forecast point data.
+
+        Includes fetching and storing data.
+
+        - Get location IDs from the locations table.
+        - Validate configuration.
+
+
+        """
+        logger.info("Fetching NWM forecast point data.")
+        nwm_to_parquet(
+            configuration=configuration,
+            output_type=output_type,
+            variable_name=variable_name,
+            start_date=start_date,
+            ingest_days=ingest_days,
+            location_ids=location_ids,
+            json_dir=self.temp_dir,
+            output_parquet_dir=self.temp_dir,
+            nwm_version=nwm_version,
+            data_source=data_source,
+            kerchunk_method=kerchunk_method,
+            t_minus_hours=t_minus_hours,
+            process_by_z_hour=process_by_z_hour,
+            stepsize=stepsize,
+            ignore_missing_file=ignore_missing_file,
+            overwrite_output=overwrite_output
+        )
+        pass
+
+    def fetch_nwm_forecast_grids(
+        self,
+        configuration: str,
+        output_type: str,
+        variable_name: str,
+        start_date: Union[str, datetime],
+        ingest_days: int,
+        zonal_weights_filepath: Union[Path, str],
+        nwm_version: SupportedNWMOperationalVersionsEnum,
+        data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
+        kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
+        t_minus_hours: Optional[List[int]] = None,
+        ignore_missing_file: Optional[bool] = True,
+        overwrite_output: Optional[bool] = False,
+        location_id_prefix: Optional[Union[str, None]] = None
+    ):
+        """Fetch NWM forecast grid data.
+
+        Includes fetching and storing data.
+        """
+        logger.info("Fetching NWM forecast grid data.")
+        nwm_grids_to_parquet(
+            configuration=configuration,
+            output_type=output_type,
+            variable_name=variable_name,
+            start_date=start_date,
+            ingest_days=ingest_days,
+            zonal_weights_filepath=zonal_weights_filepath,
+            json_dir=self.temp_dir,
+            output_parquet_dir=self.temp_dir,
+            nwm_version=nwm_version,
+            data_source=data_source,
+            kerchunk_method=kerchunk_method,
+            t_minus_hours=t_minus_hours,
+            ignore_missing_file=ignore_missing_file,
+            overwrite_output=overwrite_output,
+            location_id_prefix=location_id_prefix
+        )
+        pass

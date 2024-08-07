@@ -167,11 +167,11 @@ def nwm_to_parquet(
     """ # noqa
     # Import appropriate config model and dicts based on NWM version
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
-        from teehr_v0_3.models.loading.nwm22_point import PointConfigurationModel
+        from teehr.models.loading.nwm22_point import PointConfigurationModel
         analysis_config_dict = NWM22_ANALYSIS_CONFIG
         unit_lookup_dict = NWM22_UNIT_LOOKUP
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm30:
-        from teehr_v0_3.models.loading.nwm30_point import PointConfigurationModel
+        from teehr.models.loading.nwm30_point import PointConfigurationModel
         analysis_config_dict = NWM30_ANALYSIS_CONFIG
         unit_lookup_dict = NWM22_UNIT_LOOKUP
     else:

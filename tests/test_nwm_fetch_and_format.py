@@ -203,11 +203,11 @@ def test_raise_location_id_prefix_error():
 
 
 if __name__ == "__main__":
-    with tempfile.TemporaryDirectory() as tempdir:
-        test_nwm22_point_fetch_and_format(tempfile.mktemp(dir=tempdir))
-        test_nwm30_point_fetch_and_format(tempfile.mktemp(dir=tempdir))
-        test_nwm22_grid_fetch_and_format(tempfile.mktemp(dir=tempdir))
-        test_nwm30_grid_fetch_and_format(tempfile.mktemp(dir=tempdir))
+    with tempfile.TemporaryDirectory(prefix="teehr") as tempdir:
+        test_nwm22_point_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
+        test_nwm30_point_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
+        test_nwm22_grid_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
+        test_nwm30_grid_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
         test_replace_location_id_prefix()
         test_prepend_location_id_prefix()
         test_raise_location_id_prefix_error()

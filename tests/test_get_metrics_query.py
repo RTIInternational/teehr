@@ -1,17 +1,28 @@
 """Test evaluation class."""
+import tempfile
+import shutil
+from pathlib import Path
+
 from teehr import Evaluation, Metrics, Bootstrap
 from teehr import Operators as ops
 
 
-def test_get_metrics():
+def test_get_metrics(tmpdir):
     """Test get_metrics method."""
     # Define the evaluation object.
-    eval = Evaluation(dir_path="/home/sam/temp/temp_study_template")
+    eval = Evaluation(dir_path=tmpdir)
+    eval.clone_template()
 
     # Define the metrics to include.
     boot = Bootstrap(method="bias_corrected", num_samples=100)
     kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
     include_metrics = [kge, Metrics.RootMeanSquareError()]
+
+    # HACK! For now, copy in a test joined timeseries file.
+    shutil.copyfile(
+        "tests/data/test_study/timeseries/test_joined_timeseries_part1.parquet",  # noqa
+        Path(eval.joined_timeseries_dir, "test_joined_timeseries_part1.parquet")  # noqa
+    )
 
     # Get the currently available fields to use in the query.
     flds = eval.fields
@@ -43,4 +54,5 @@ def test_get_metrics():
 
 
 if __name__ == "__main__":
-    test_get_metrics()
+    with tempfile.TemporaryDirectory(prefix="teehr-") as tempdir:
+        test_get_metrics(tempdir)

@@ -1,7 +1,7 @@
 """Test NWM loading utils."""
 from pathlib import Path
-import shutil
 
+import tempfile
 import pytest
 
 from teehr.loading.utils import (
@@ -19,18 +19,8 @@ from teehr.loading.const import (
 
 TIMEFORMAT = "%Y-%m-%d %H:%M:%S"
 
-# TEST_DIR = Path("tests", "data", "nwm30")
-TEMP_DIR = Path("tests", "data", "temp", "nwm_utils")
 
-
-@pytest.fixture(scope="session")
-def temp_dir_fixture(tmp_path_factory):
-    """Create a temporary directory pytest fixture."""
-    temp_dir = tmp_path_factory.mktemp("nwm_utils")
-    return temp_dir
-
-
-def test_point_zarr_reference_file(temp_dir_fixture):
+def test_point_zarr_reference_file(tmpdir):
     """Test the point zarr reference file creation."""
     component_paths = [
         "gcs://national-water-model/nwm.20231101/short_range_alaska/nwm.t00z.short_range.channel_rt.f001.alaska.nc" # noqa
@@ -38,7 +28,7 @@ def test_point_zarr_reference_file(temp_dir_fixture):
 
     built_files = build_zarr_references(
         remote_paths=component_paths,
-        json_dir=TEMP_DIR,
+        json_dir=tmpdir,
         ignore_missing_file=False
     )
     test_file = Path(
@@ -226,15 +216,14 @@ def test_create_periods_based_on_year():
 
 
 if __name__ == "__main__":
-    TEMP_DIR.mkdir(exist_ok=True)
-    test_dates_and_nwm_version()
+    with tempfile.TemporaryDirectory(prefix="teehr-") as tempdir:
+        test_point_zarr_reference_file(tempdir)
     test_building_nwm30_gcs_paths()
     test_building_nwm22_gcs_paths()
     test_generate_json_paths()
-    test_point_zarr_reference_file()
+    test_dates_and_nwm_version()
     test_generate_json_for_bad_file()
     test_create_periods_based_on_day()
     test_create_periods_based_on_week()
     test_create_periods_based_on_month()
     test_create_periods_based_on_year()
-    shutil.rmtree(TEMP_DIR)

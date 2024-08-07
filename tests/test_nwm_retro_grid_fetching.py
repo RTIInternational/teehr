@@ -1,30 +1,21 @@
 """Tests for retrospective NWM grid loading."""
 from pathlib import Path
 import math
-import shutil
+import tempfile
 
 import pandas as pd
-import pytest
 
 from teehr.evaluation.evaluation import Evaluation
 
 
-TEMP_DIR = Path("tests", "data", "temp", "retro")
 ZONAL_WEIGHTS = Path(
     "tests", "data", "nwm22", "onehuc10_weights_retro.parquet"
 )
 
 
-@pytest.fixture(scope="session")
-def temp_dir_fixture(tmp_path_factory):
-    """Create a temporary directory pytest fixture."""
-    temp_dir = tmp_path_factory.mktemp("retro_grids")
-    return temp_dir
-
-
-def test_nwm30_grid_loading(temp_dir_fixture):
+def test_nwm30_grid_loading(tmpdir):
     """Test NWM30 grid loading."""
-    eval = Evaluation(temp_dir_fixture)
+    eval = Evaluation(tmpdir)
     eval.clone_template()
 
     eval.fetch_nwm_retrospective_grids(
@@ -39,7 +30,7 @@ def test_nwm30_grid_loading(temp_dir_fixture):
     )
 
     df = pd.read_parquet(
-        Path(eval.secondary_timeseries_dir, "20080523.parquet")
+        Path(eval.temp_dir, "20080523.parquet")
     )
     assert len(df) == 15
     assert df["value_time"].min() == pd.Timestamp("2008-05-23 09:00")
@@ -59,9 +50,9 @@ def test_nwm30_grid_loading(temp_dir_fixture):
     ]
 
 
-def test_nwm21_grid_loading(temp_dir_fixture):
+def test_nwm21_grid_loading(tmpdir):
     """Test NWM21 grid loading."""
-    eval = Evaluation(temp_dir_fixture)
+    eval = Evaluation(tmpdir)
     eval.clone_template()
 
     eval.fetch_nwm_retrospective_grids(
@@ -76,7 +67,7 @@ def test_nwm21_grid_loading(temp_dir_fixture):
     )
 
     df = pd.read_parquet(
-        Path(eval.secondary_timeseries_dir, "20080523.parquet")
+        Path(eval.temp_dir, "20080523.parquet")
     )
     assert len(df) == 15
     assert df["value_time"].min() == pd.Timestamp("2008-05-23 09:00")
@@ -97,7 +88,6 @@ def test_nwm21_grid_loading(temp_dir_fixture):
 
 
 if __name__ == "__main__":
-    TEMP_DIR.mkdir(exist_ok=True)
-    test_nwm30_grid_loading(TEMP_DIR)
-    test_nwm21_grid_loading(TEMP_DIR)
-    shutil.rmtree(TEMP_DIR)
+    with tempfile.TemporaryDirectory(prefix="teehr-") as tempdir:
+        test_nwm30_grid_loading(tempfile.mkdtemp(dir=tempdir))
+        test_nwm21_grid_loading(tempfile.mkdtemp(dir=tempdir))
