@@ -30,7 +30,10 @@ def test_nwm30_grid_loading(tmpdir):
     )
 
     df = pd.read_parquet(
-        Path(eval.temp_dir, "20080523.parquet")
+        Path(
+            eval.primary_timeseries_cache_dir,
+            "20080523.parquet"
+        )
     )
     assert len(df) == 15
     assert df["value_time"].min() == pd.Timestamp("2008-05-23 09:00")
@@ -67,7 +70,10 @@ def test_nwm21_grid_loading(tmpdir):
     )
 
     df = pd.read_parquet(
-        Path(eval.temp_dir, "20080523.parquet")
+        Path(
+            eval.primary_timeseries_cache_dir,
+            "20080523.parquet"
+        )
     )
     assert len(df) == 15
     assert df["value_time"].min() == pd.Timestamp("2008-05-23 09:00")

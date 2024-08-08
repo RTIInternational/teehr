@@ -25,7 +25,10 @@ def test_nwm20_retro_one_file(tmpdir):
         overwrite_output=True,
     )
     df = pd.read_parquet(
-        Path(eval.temp_dir, "20000101_20000102.parquet")
+        Path(
+            eval.secondary_timeseries_cache_dir,
+            "20000101_20000102.parquet"
+        )
     )
     assert len(df) == 48
     assert df["value_time"].min() == pd.Timestamp("2000-01-01 00:00:00")
@@ -58,7 +61,10 @@ def test_nwm20_retro_week(tmpdir):
         overwrite_output=True,
     )
     df = pd.read_parquet(
-        Path(eval.temp_dir, "20000110_20000116.parquet")
+        Path(
+            eval.secondary_timeseries_cache_dir,
+            "20000110_20000116.parquet"
+        )
     )
     assert len(df) == 168
     assert df["value_time"].min() == pd.Timestamp("2000-01-10 00:00:00")
@@ -89,7 +95,10 @@ def test_nwm20_retro_month(tmpdir):
         overwrite_output=True,
     )
     df = pd.read_parquet(
-        Path(eval.temp_dir, "20000101_20000131.parquet")
+        Path(
+            eval.secondary_timeseries_cache_dir,
+            "20000101_20000131.parquet"
+        )
     )
     assert len(df) == 744
     assert df["value_time"].min() == pd.Timestamp("2000-01-01 00:00:00")
@@ -120,7 +129,10 @@ def test_nwm20_retro_year(tmpdir):
         overwrite_output=True,
     )
     df = pd.read_parquet(
-        Path(eval.temp_dir, "20000101_20001231.parquet")
+        Path(
+            eval.secondary_timeseries_cache_dir,
+            "20000101_20001231.parquet"
+        )
     )
     assert len(df) == 8784
     assert df["value_time"].min() == pd.Timestamp("2000-01-01 00:00:00")
@@ -150,7 +162,10 @@ def test_nwm21_retro_one_file(tmpdir):
         overwrite_output=True,
     )
     df = pd.read_parquet(
-        Path(eval.temp_dir, "20000101_20000102.parquet")
+        Path(
+            eval.secondary_timeseries_cache_dir,
+            "20000101_20000102.parquet"
+        )
     )
     assert len(df) == 48
     assert df["value_time"].min() == pd.Timestamp("2000-01-01 00:00:00")
@@ -184,7 +199,10 @@ def test_nwm30_one_file(tmpdir):
     )
 
     df = pd.read_parquet(
-        Path(eval.temp_dir, "20000101_20000102.parquet")
+        Path(
+            eval.secondary_timeseries_cache_dir,
+            "20000101_20000102.parquet"
+        )
     )
     assert len(df) == 48
     assert df["value_time"].min() == pd.Timestamp("2000-01-01 00:00:00")

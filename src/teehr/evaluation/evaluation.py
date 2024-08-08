@@ -11,7 +11,7 @@ import logging
 
 from teehr.pre.project_creation import copy_template_to
 from teehr.models.metrics.metrics import MetricsBasemodel
-from teehr.evaluation.utils import get_joined_timeseries_fields
+from teehr.evaluation.utils import _get_joined_timeseries_fields
 from teehr.loading.usgs.usgs import usgs_to_parquet
 from teehr.loading.nwm.nwm_points import nwm_to_parquet
 from teehr.loading.nwm.nwm_grids import nwm_grids_to_parquet
@@ -37,11 +37,6 @@ PRIMARY_TIMESERIES_DIR = "primary_timeseries"
 LOCATIONS_CROSSWALK_DIR = "locations_crosswalk"
 SECONDARY_TIMESERIES_DIR = "secondary_timeseries"
 JOINED_TIMESERIES_DIR = "joined_timeseries"
-# NWM_POINT_FORECASTS_CACHE = "nwm_point_forecasts"
-# NWM_GRID_FORECASTS_CACHE = "nwm_grid_forecasts"
-# NWM_POINT_RETRO_CACHE = "nwm_point_retrospective"
-# NWM_GRID_RETRO_CACHE = "nwm_grid_retrospective"
-# USGS_STREAMFLOW_CACHE = "usgs_streamflow"
 
 
 class Evaluation():
@@ -74,6 +69,12 @@ class Evaluation():
         self.joined_timeseries_dir = Path(
             self.database_dir, JOINED_TIMESERIES_DIR
         )
+        self.primary_timeseries_cache_dir = Path(
+            self.temp_dir, PRIMARY_TIMESERIES_DIR
+        )
+        self.secondary_timeseries_cache_dir = Path(
+            self.temp_dir, SECONDARY_TIMESERIES_DIR
+        )
 
         if not Path(self.dir_path).is_dir():
             logger.error(f"Directory {self.dir_path} does not exist.")
@@ -89,7 +90,7 @@ class Evaluation():
     def fields(self) -> Enum:
         """The field names from the joined timeseries table."""
         # logger.info("Getting fields from the joined timeseries table.")
-        return get_joined_timeseries_fields(
+        return _get_joined_timeseries_fields(
             self.joined_timeseries_dir
         )
 
@@ -201,6 +202,15 @@ class Evaluation():
         """
         pass
 
+    def _get_timeseries_cache_path(
+        self, is_primary: Optional[bool]
+    ) -> Path:
+        """Get the cache sub-directory path."""
+        if is_primary:
+            return self.primary_timeseries_cache_dir
+        else:
+            return self.secondary_timeseries_cache_dir
+
     def fetch_usgs_streamflow(
         self,
         sites: List[str],
@@ -211,6 +221,7 @@ class Evaluation():
         filter_no_data: bool = True,
         convert_to_si: bool = True,
         overwrite_output: Optional[bool] = False,
+        is_primary: Optional[bool] = True
     ):
         """Fetch USGS gage data and save as a Parquet file.
 
@@ -227,8 +238,6 @@ class Evaluation():
             End time of data to fetch. Note, since startDt is inclusive for the
             USGS service, we subtract 1 minute from this time so we don't get
             overlap between consecutive calls.
-        output_parquet_dir : Union[str, Path]
-            Path of directory where parquet files will be saved.
         chunk_by : Union[str, None], default = None
             How to "chunk" the fetching and storing of the data.
             Valid options = ["location_id", "day", "week", "month",
@@ -244,6 +253,9 @@ class Evaluation():
         overwrite_output : bool
             Flag specifying whether or not to overwrite output files if they
             already exist.  True = overwrite; False = fail.
+        is_primary : bool = True
+            Flag specifying whether the data should be considered the primary
+            or secondary timeseries.
 
         Examples
         --------
@@ -279,7 +291,7 @@ class Evaluation():
             sites=sites,
             start_date=start_date,
             end_date=end_date,
-            output_parquet_dir=Path(self.temp_dir, PRIMARY_TIMESERIES_DIR),
+            output_parquet_dir=self._get_timeseries_cache_path(is_primary),
             chunk_by=chunk_by,
             filter_to_hourly=filter_to_hourly,
             filter_no_data=filter_no_data,
@@ -296,7 +308,8 @@ class Evaluation():
         end_date: Union[str, datetime, pd.Timestamp],
         chunk_by: Union[NWMChunkByEnum, None] = None,
         overwrite_output: Optional[bool] = False,
-        domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS"
+        domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
+        is_primary: Optional[bool] = False
     ):
         """Fetch NWM retrospective at NWM COMIDs and store as Parquet file.
 
@@ -330,6 +343,9 @@ class Evaluation():
             Geographical domain when NWM version is v3.0.
             Acceptable values are "Alaska", "CONUS" (default), "Hawaii",
             and "PR". Only used when NWM version equals `nwm30`.
+        is_primary : bool = False
+            Flag specifying whether the data should be considered the primary
+            or secondary timeseries.
 
         Examples
         --------
@@ -369,7 +385,7 @@ class Evaluation():
             start_date=start_date,
             end_date=end_date,
             location_ids=location_ids,
-            output_parquet_dir=self.temp_dir,
+            output_parquet_dir=self._get_timeseries_cache_path(is_primary),
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
             domain=domain
@@ -385,7 +401,8 @@ class Evaluation():
         chunk_by: Union[NWMChunkByEnum, None] = None,
         overwrite_output: Optional[bool] = False,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
-        location_id_prefix: Optional[Union[str, None]] = None
+        location_id_prefix: Optional[Union[str, None]] = None,
+        is_primary: Optional[bool] = True
     ):
         """
         Compute the weighted average for NWM v2.1 or v3.0 gridded data.
@@ -427,6 +444,9 @@ class Evaluation():
             and "PR". Only used when NWM version equals v3.0.
         location_id_prefix : Union[str, None]
             Optional location ID prefix to add (prepend) or replace.
+        is_primary : bool = True
+            Flag specifying whether the data should be considered the primary
+            or secondary timeseries.
 
         Notes
         -----
@@ -443,7 +463,7 @@ class Evaluation():
             zonal_weights_filepath=zonal_weights_filepath,
             start_date=start_date,
             end_date=end_date,
-            output_parquet_dir=self.temp_dir,
+            output_parquet_dir=self._get_timeseries_cache_path(is_primary),
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
             domain=domain,
@@ -466,6 +486,7 @@ class Evaluation():
         stepsize: Optional[int] = 100,
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
+        is_primary: Optional[bool] = False
     ):
         """Fetch NWM forecast point data.
 
@@ -485,7 +506,7 @@ class Evaluation():
             ingest_days=ingest_days,
             location_ids=location_ids,
             json_dir=self.temp_dir,
-            output_parquet_dir=self.temp_dir,
+            output_parquet_dir=self._get_timeseries_cache_path(is_primary),
             nwm_version=nwm_version,
             data_source=data_source,
             kerchunk_method=kerchunk_method,
@@ -511,7 +532,8 @@ class Evaluation():
         t_minus_hours: Optional[List[int]] = None,
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
-        location_id_prefix: Optional[Union[str, None]] = None
+        location_id_prefix: Optional[Union[str, None]] = None,
+        is_primary: Optional[bool] = True
     ):
         """Fetch NWM forecast grid data.
 
@@ -526,7 +548,7 @@ class Evaluation():
             ingest_days=ingest_days,
             zonal_weights_filepath=zonal_weights_filepath,
             json_dir=self.temp_dir,
-            output_parquet_dir=self.temp_dir,
+            output_parquet_dir=self._get_timeseries_cache_path(is_primary),
             nwm_version=nwm_version,
             data_source=data_source,
             kerchunk_method=kerchunk_method,
