@@ -13,7 +13,7 @@ import dask
 import shapely
 
 from teehr_v0_3.loading.nwm.utils import load_gdf
-# from teehr.loading.nwm.const import AL_NWM_WKT
+from teehr.loading.const import LOCATION_ID
 
 
 @dask.delayed
@@ -267,13 +267,13 @@ def generate_weights_file(
 
     if unique_zone_id:
         df = weights_gdf[["row", "col", "weight", unique_zone_id]].copy()
-        df.rename(columns={unique_zone_id: "location_id"}, inplace=True)
+        df.rename(columns={unique_zone_id: LOCATION_ID}, inplace=True)
     else:
         df = weights_gdf[["row", "col", "weight"]]
-        df["location_id"] = weights_gdf.index.values
+        df[LOCATION_ID] = weights_gdf.index.values
 
     if location_id_prefix:
-        df.loc[:, "location_id"] = location_id_prefix + "-" + df["location_id"]
+        df.loc[:, LOCATION_ID] = location_id_prefix + "-" + df[LOCATION_ID]
 
     if output_weights_filepath:
         df.to_parquet(output_weights_filepath)

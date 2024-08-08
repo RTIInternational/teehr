@@ -38,7 +38,16 @@ from datetime import datetime
 from pathlib import Path
 from typing import Union, List, Optional
 
-from teehr.loading.const import NWM22_UNIT_LOOKUP
+from teehr.loading.const import (
+    NWM22_UNIT_LOOKUP,
+    VALUE,
+    VALUE_TIME,
+    REFERENCE_TIME,
+    LOCATION_ID,
+    UNIT_NAME,
+    VARIABLE_NAME,
+    CONFIGURATION_NAME
+)
 from teehr.models.loading.utils import (
     NWMChunkByEnum,
     SupportedNWMRetroVersionsEnum,
@@ -110,21 +119,21 @@ def da_to_df(
     """Format NWM retrospective data to TEEHR format."""
     df = da.to_dataframe()
     df.reset_index(inplace=True)
-    df["measurement_unit"] = NWM22_UNIT_LOOKUP.get(da.units, da.units)
-    df["variable_name"] = da.name
-    df["configuration"] = f"{nwm_version}_retrospective"
-    df["reference_time"] = df["time"]
+    df[UNIT_NAME] = NWM22_UNIT_LOOKUP.get(da.units, da.units)
+    df[VARIABLE_NAME] = da.name
+    df[CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
+    df[REFERENCE_TIME] = df["time"]
     df.rename(
         columns={
-            "time": "value_time",
-            "feature_id": "location_id",
-            da.name: "value",
+            "time": VALUE_TIME,
+            "feature_id": LOCATION_ID,
+            da.name: VALUE,
         },
         inplace=True,
     )
     df.drop(columns=["latitude", "longitude"], inplace=True)
 
-    df["location_id"] = f"{nwm_version}-" + df["location_id"].astype(str)
+    df[LOCATION_ID] = f"{nwm_version}-" + df[LOCATION_ID].astype(str)
 
     if (nwm_version == "nwm21") or (nwm_version == "nwm30"):
         df.drop(columns=["elevation", "gage_id", "order"], inplace=True)

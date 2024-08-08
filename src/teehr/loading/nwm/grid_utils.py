@@ -13,6 +13,15 @@ from teehr.loading.utils import (
     write_parquet_file,
     format_timeseries_data_types
 )
+from teehr.loading.const import (
+    VALUE,
+    VALUE_TIME,
+    REFERENCE_TIME,
+    LOCATION_ID,
+    UNIT_NAME,
+    VARIABLE_NAME,
+    CONFIGURATION_NAME
+)
 
 
 def get_weights_row_col_stats(weights_df: pd.DataFrame) -> Dict:
@@ -56,7 +65,7 @@ def update_location_id_prefix(
     df = df.copy()
     tmp_df = df.location_id.str.split("-", expand=True)
 
-    df["location_id"] = df["location_id"].astype(str)
+    df[LOCATION_ID] = df[LOCATION_ID].astype(str)
 
     if tmp_df.columns.size == 1:
         df.loc[:, 'location_id'] = new_prefix + "-" + df['location_id']
@@ -78,10 +87,10 @@ def compute_weighted_average(
 
     # Compute weighted average
     df = weights_df.groupby(
-        by="location_id", as_index=False)[["weighted_value", "weight"]].sum()
-    df.loc[:, "value"] = df.weighted_value/df.weight
+        by=LOCATION_ID, as_index=False)[["weighted_value", "weight"]].sum()
+    df.loc[:, VALUE] = df.weighted_value/df.weight
 
-    return df[["location_id", "value"]].copy()
+    return df[[LOCATION_ID, VALUE]].copy()
 
 
 @dask.delayed
@@ -113,7 +122,7 @@ def process_single_nwm_grid_file(
     da = ds[variable_name][0]
 
     weights_df = pd.read_parquet(
-        weights_filepath, columns=["row", "col", "weight", "location_id"]
+        weights_filepath, columns=["row", "col", "weight", LOCATION_ID]
     )
 
     weights_bounds = get_weights_row_col_stats(weights_df)
@@ -134,11 +143,11 @@ def process_single_nwm_grid_file(
     # Calculate mean areal value of selected variable
     df = compute_weighted_average(grid_values, weights_df)
 
-    df.loc[:, "value_time"] = value_time
-    df.loc[:, "reference_time"] = ref_time
-    df.loc[:, "measurement_unit"] = teehr_units
-    df.loc[:, "configuration"] = configuration
-    df.loc[:, "variable_name"] = variable_name
+    df.loc[:, VALUE_TIME] = value_time
+    df.loc[:, REFERENCE_TIME] = ref_time
+    df.loc[:, UNIT_NAME] = teehr_units
+    df.loc[:, CONFIGURATION_NAME] = configuration
+    df.loc[:, VARIABLE_NAME] = variable_name
 
     if location_id_prefix:
         df = update_location_id_prefix(df, location_id_prefix)
@@ -221,5 +230,5 @@ def fetch_and_format_nwm_grids(
         parquet_filepath = Path(
             Path(output_parquet_dir), f"{ref_time_str}.parquet"
         )
-        z_hour_df.sort_values(["location_id", "value_time"], inplace=True)
+        z_hour_df.sort_values([LOCATION_ID, VALUE_TIME], inplace=True)
         write_parquet_file(parquet_filepath, overwrite_output, z_hour_df)

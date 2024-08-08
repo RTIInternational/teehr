@@ -40,7 +40,15 @@ import fsspec
 from pydantic import validate_call
 import dask
 
-from teehr.loading.const import NWM22_UNIT_LOOKUP
+from teehr.loading.const import (
+    NWM22_UNIT_LOOKUP,
+    VALUE_TIME,
+    REFERENCE_TIME,
+    LOCATION_ID,
+    UNIT_NAME,
+    VARIABLE_NAME,
+    CONFIGURATION_NAME
+)
 from teehr.models.loading.utils import (
     NWMChunkByEnum,
     SupportedNWMRetroVersionsEnum,
@@ -95,7 +103,7 @@ def process_nwm30_retro_group(
     and the output is saved to parquet files.
     """
     weights_df = pd.read_parquet(
-        weights_filepath, columns=["row", "col", "weight", "location_id"]
+        weights_filepath, columns=["row", "col", "weight", LOCATION_ID]
     )
 
     weights_bounds = get_weights_row_col_stats(weights_df)
@@ -116,16 +124,16 @@ def process_nwm30_retro_group(
             weights_bounds["cols_norm"]
         ]
         df = compute_weighted_average(grid_values, weights_df)
-        df.loc[:, "value_time"] = pd.to_datetime(time)
+        df.loc[:, VALUE_TIME] = pd.to_datetime(time)
         hourly_dfs.append(df)
 
     chunk_df = pd.concat(hourly_dfs)
-    chunk_df.loc[:, "reference_time"] = chunk_df.value_time
+    chunk_df.loc[:, REFERENCE_TIME] = chunk_df.value_time
     nwm_units = da_i.attrs["units"]
     teehr_units = units_format_dict.get(nwm_units, nwm_units)
-    chunk_df.loc[:, "measurement_unit"] = teehr_units
-    chunk_df.loc[:, "configuration"] = f"{nwm_version}_retrospective"
-    chunk_df.loc[:, "variable_name"] = variable_name
+    chunk_df.loc[:, UNIT_NAME] = teehr_units
+    chunk_df.loc[:, CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
+    chunk_df.loc[:, VARIABLE_NAME] = variable_name
 
     if location_id_prefix:
         chunk_df = update_location_id_prefix(chunk_df, location_id_prefix)
@@ -185,7 +193,7 @@ def process_single_nwm21_retro_grid_file(
     da = ds[variable_name].isel(Time=0)
 
     weights_df = pd.read_parquet(
-        weights_filepath, columns=["row", "col", "weight", "location_id"]
+        weights_filepath, columns=["row", "col", "weight", LOCATION_ID]
     )
 
     weights_bounds = get_weights_row_col_stats(weights_df)
@@ -205,11 +213,11 @@ def process_single_nwm21_retro_grid_file(
     # Calculate mean areal of selected variable
     df = compute_weighted_average(grid_values, weights_df)
 
-    df.loc[:, "value_time"] = value_time
-    df.loc[:, "reference_time"] = value_time
-    df.loc[:, "measurement_unit"] = teehr_units
-    df.loc[:, "configuration"] = f"{nwm_version}_retrospective"
-    df.loc[:, "variable_name"] = variable_name
+    df.loc[:, VALUE_TIME] = value_time
+    df.loc[:, REFERENCE_TIME] = value_time
+    df.loc[:, UNIT_NAME] = teehr_units
+    df.loc[:, CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
+    df.loc[:, VARIABLE_NAME] = variable_name
 
     if location_id_prefix:
         df = update_location_id_prefix(df, location_id_prefix)
