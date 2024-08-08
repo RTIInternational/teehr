@@ -20,7 +20,6 @@ import pandas as pd
 from typing import List, Union, Optional
 from pathlib import Path
 from datetime import datetime, timedelta
-# from hydrotools.nwis_client.iv import IVDataService
 import dataretrieval.nwis as nwis
 from teehr.models.loading.utils import USGSChunkByEnum
 from pydantic import validate_call, ConfigDict
@@ -30,7 +29,20 @@ from teehr.loading.utils import (
     create_periods_based_on_chunksize,
     format_timeseries_data_types
 )
-from teehr.loading.const import USGS_NODATA_VALUES
+from teehr.loading.const import (
+    USGS_NODATA_VALUES,
+    USGS_CONFIGURATION_NAME,
+    USGS_UNIT_NAME,
+    USGS_SI_UNIT_NAME,
+    USGS_VARIABLE_NAME,
+    VALUE,
+    VALUE_TIME,
+    REFERENCE_TIME,
+    LOCATION_ID,
+    UNIT_NAME,
+    VARIABLE_NAME,
+    CONFIGURATION_NAME
+)
 
 DATETIME_STR_FMT = "%Y-%m-%dT%H:%M:00+0000"
 DAYLIGHT_SAVINGS_PAD = timedelta(hours=2)
@@ -38,7 +50,7 @@ DAYLIGHT_SAVINGS_PAD = timedelta(hours=2)
 
 def _filter_to_hourly(df: pd.DataFrame) -> pd.DataFrame:
     """Filter out data not reported on the hour."""
-    df.set_index("value_time", inplace=True)
+    df.set_index(VALUE_TIME, inplace=True)
     df2 = df[
         df.index.hour.isin(range(0, 24))
         & (df.index.minute == 0)
@@ -50,58 +62,16 @@ def _filter_to_hourly(df: pd.DataFrame) -> pd.DataFrame:
 
 def _filter_no_data(df: pd.DataFrame) -> pd.DataFrame:
     """Filter out no data values."""
-    df2 = df[~df["value"].isin(USGS_NODATA_VALUES)]
-    df2.dropna(subset=["value"], inplace=True)
+    df2 = df[~df[VALUE].isin(USGS_NODATA_VALUES)]
+    df2.dropna(subset=[VALUE], inplace=True)
     return df2
 
 
 def _convert_to_si_units(df: pd.DataFrame) -> pd.DataFrame:
     """Convert streamflow values from english to metric."""
-    df["value"] = df["value"] * 0.3048**3
-    df["measurement_unit"] = "m3/s"
+    df[VALUE] = df[VALUE] * 0.3048**3
+    df[UNIT_NAME] = USGS_SI_UNIT_NAME
     return df
-
-
-# def _datetime_to_date(dt: datetime) -> datetime:
-#     """Convert datetime to date only."""
-#     dt.replace(
-#         hour=0,
-#         minute=0,
-#         second=0,
-#         microsecond=0
-#     )
-#     return dt
-
-
-# def _format_df_data_types(df: pd.DataFrame) -> pd.DataFrame:
-#     """Convert field types to TEEHR data model.
-
-#     Notes
-#     -----
-#     dataretrieval attempts to return values in UTC, here we explicitly convert
-#     to be sure. We also drop timezone information and convert to datetime64[ms].
-
-#     The fields types are specified in the TIMESERIES_DATA_TYPES dictionary.
-#     """
-#     # Convert to UTC if not already in UTC.
-#     if df["value_time"].dt.tz is not None:
-#         df["value_time"] = df["value_time"].dt.tz_convert("UTC")
-#     if df["reference_time"].dt.tz is not None:
-#         df["reference_time"] = df["reference_time"].dt.tz_convert("UTC")
-#     # Drop timezone information.
-#     df["value_time"] = df["value_time"].dt.tz_localize(None)
-#     df["reference_time"] = df["reference_time"].dt.tz_localize(None)
-#     # Convert to datetime64[ms].
-#     df["value_time"] = df["value_time"].astype(TIMESERIES_DATA_TYPES["value_time"])  # noqa
-#     df["reference_time"] = df["reference_time"].astype(TIMESERIES_DATA_TYPES["reference_time"])  # noqa
-#     # Convert remaining fields.
-#     df["value"] = df["value"].astype(TIMESERIES_DATA_TYPES["value"])
-#     df["measurement_unit"] = df["measurement_unit"].astype(TIMESERIES_DATA_TYPES["measurement_unit"])  # noqa
-#     df["variable_name"] = df["variable_name"].astype(TIMESERIES_DATA_TYPES["variable_name"])  # noqa
-#     df["configuration"] = df["configuration"].astype(TIMESERIES_DATA_TYPES["configuration"])  # noqa
-#     df["location_id"] = df["location_id"].astype(TIMESERIES_DATA_TYPES["location_id"])  # noqa
-
-#     return df
 
 
 def _format_df_column_names(df: pd.DataFrame) -> pd.DataFrame:
@@ -109,42 +79,25 @@ def _format_df_column_names(df: pd.DataFrame) -> pd.DataFrame:
     df.reset_index(inplace=True)
     df.rename(
         columns={
-            "site_no": "location_id",
-            "00060": "value",
-            "datetime": "value_time"
+            "site_no": LOCATION_ID,
+            "00060": VALUE,
+            "datetime": VALUE_TIME
         },
         inplace=True
     )
-    df["location_id"] = "usgs-" + df["location_id"].astype(str)
-    df["configuration"] = "usgs_gage_data"
-    df["reference_time"] = df["value_time"]
-    df["measurement_unit"] = "ft3/s"
-    df["variable_name"] = "streamflow"
+    df[LOCATION_ID] = "usgs-" + df[LOCATION_ID].astype(str)
+    df[CONFIGURATION_NAME] = USGS_CONFIGURATION_NAME
+    df[REFERENCE_TIME] = df[VALUE_TIME]
+    df[UNIT_NAME] = USGS_UNIT_NAME
+    df[VARIABLE_NAME] = USGS_VARIABLE_NAME
     return df[[
-        "location_id",
-        "reference_time",
-        "value_time",
-        "value",
-        "variable_name",
-        "measurement_unit",
-        "configuration"
-    ]]
-
-
-def _format_ht_df(df: pd.DataFrame) -> pd.DataFrame:
-    """Format HydroTools dataframe columns to TEEHR data model."""
-    df.rename(columns={"usgs_site_code": "location_id"}, inplace=True)
-    df["location_id"] = "usgs-" + df["location_id"].astype(str)
-    df["configuration"] = "usgs_gage_data"
-    df["reference_time"] = df["value_time"]
-    return df[[
-        "location_id",
-        "reference_time",
-        "value_time",
-        "value",
-        "variable_name",
-        "measurement_unit",
-        "configuration"
+        LOCATION_ID,
+        REFERENCE_TIME,
+        VALUE_TIME,
+        VALUE,
+        VARIABLE_NAME,
+        UNIT_NAME,
+        CONFIGURATION_NAME
     ]]
 
 
@@ -163,17 +116,6 @@ def _fetch_usgs_streamflow(
         - timedelta(minutes=1)
     ).strftime(DATETIME_STR_FMT)
 
-    # # Retrieve data --> HydroTools
-    # service = IVDataService(
-    #     value_time_label="value_time",
-    #     enable_cache=False
-    # )
-    # usgs_ht_df = service.get(
-    #     sites=sites,
-    #     startDT=start_dt_str,
-    #     endDT=end_dt_str
-    # )
-
     # Retrieve data --> dataretrieval
     usgs_df = nwis.get_record(
         sites=sites,
@@ -182,7 +124,7 @@ def _fetch_usgs_streamflow(
         end=end_dt_str
     )
 
-    # NOTE: Can use get_iv to include station metadata.
+    # NOTE: We can use get_iv to include station metadata.
     # df, meta = nwis.get_iv(sites=sites, start=start_dt_str, end=end_dt_str)
 
     usgs_df = _format_df_column_names(usgs_df)
@@ -195,15 +137,6 @@ def _fetch_usgs_streamflow(
         usgs_df = _filter_no_data(usgs_df)
     if convert_to_si is True:
         usgs_df = _convert_to_si_units(usgs_df)
-
-    # # HydroTools data
-    # if filter_to_hourly is True:
-    #     usgs_ht_df = _filter_to_hourly(usgs_ht_df)
-    # if filter_no_data is True:
-    #     usgs_ht_df = _filter_no_data(usgs_ht_df)
-    # if convert_to_si is True:
-    #     usgs_ht_df = _convert_to_si_units(usgs_ht_df)
-    # usgs_ht_df = _format_ht_df(usgs_ht_df)
 
     # Return the data
     return usgs_df
@@ -309,8 +242,8 @@ def usgs_to_parquet(
                 convert_to_si=convert_to_si
             )
 
-            usgs_df = usgs_df[(usgs_df["value_time"] >= start_date) &
-                              (usgs_df["value_time"] < end_date)]
+            usgs_df = usgs_df[(usgs_df[VALUE_TIME] >= start_date) &
+                              (usgs_df[VALUE_TIME] < end_date)]
 
             if len(usgs_df) > 0:
                 output_filepath = Path(
@@ -351,8 +284,8 @@ def usgs_to_parquet(
             convert_to_si=convert_to_si
         )
 
-        usgs_df = usgs_df[(usgs_df["value_time"] >= dts["start_dt"]) &
-                          (usgs_df["value_time"] <= dts["end_dt"])]
+        usgs_df = usgs_df[(usgs_df[VALUE_TIME] >= dts["start_dt"]) &
+                          (usgs_df[VALUE_TIME] <= dts["end_dt"])]
 
         if len(usgs_df) > 0:
 
