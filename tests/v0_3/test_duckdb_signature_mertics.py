@@ -5,9 +5,10 @@ import teehr_v0_3.queries.pandas as tqp
 from pathlib import Path
 
 
-PRIMARY_FILEPATH = Path("tests/data/retro/primary_obs.parquet")
-SECONDARY_FILEPATH = Path("tests/data/retro/secondary_sim.parquet")
-CROSSWALK_FILEPATH = Path("tests/data/retro/xwalk.parquet")
+TEST_STUDY_DIR = Path("tests", "v0_3", "data", "retro")
+PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "primary_obs.parquet")
+SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "secondary_sim.parquet")
+CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "xwalk.parquet")
 
 
 def test_annual_peak_flow_bias():

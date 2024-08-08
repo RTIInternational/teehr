@@ -5,15 +5,15 @@ from teehr_v0_3.classes.duckdb_joined_parquet import DuckDBJoinedParquet
 
 
 # Test data
-TEST_STUDY_DIR = Path("tests", "data", "test_study")
+TEST_STUDY_DIR = Path("tests", "v0_3", "data", "test_study")
 JOINED_PARQUET_FILEPATH = Path(
     TEST_STUDY_DIR, "timeseries", "test_joined_timeseries_*.parquet"
 )
 GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
 
 
-def test_metrics_query_accessors():
-    """Test the pandas accessors with the get_metrics method."""
+def test_metrics_methods():
+    """Test the pandas accessor metrics methods."""
     tds = DuckDBJoinedParquet(
         JOINED_PARQUET_FILEPATH,
         GEOMETRY_FILEPATH
@@ -32,18 +32,16 @@ def test_metrics_query_accessors():
     )
 
     # Call the summarize_metrics method using the teehr accessor.
-    summary_df = df.teehr.summarize_metrics(
+    summary_df = df.teehr.metrics_summary(
         group_by=group_by,
         percentiles=[0.25, 0.5, 0.75]
     )
 
     assert summary_df.index.size == 32
 
-    pass
 
-
-def test_timeseries_query_accessors():
-    """Test the pandas accessors with the timeseries methods."""
+def test_timeseries_methods():
+    """Test the pandas accessor timeseries methods."""
     tds = DuckDBJoinedParquet(
         JOINED_PARQUET_FILEPATH,
         GEOMETRY_FILEPATH
@@ -60,11 +58,11 @@ def test_timeseries_query_accessors():
     mask = df.reference_time == '2022-01-01 00:00:00'
     df.loc[mask, "secondary_value"] = df["secondary_value"][mask] * 0.7
 
-    output_file = Path("tests", "data", "temp", "test_plot.html")
+    output_file = Path("tests", "v0_3", "data", "temp", "test_plot.html")
     output_file.unlink(missing_ok=True)  # Remove the file if it exists.
 
     # Create a plot using the teehr accessor.
-    df.teehr.plot_forecasts(
+    df.teehr.timeseries_forecast_plot(
         primary_location_id="gage-A",
         variable_name="streamflow",
         measurement_unit="m^3/s",
@@ -79,5 +77,5 @@ def test_timeseries_query_accessors():
 
 
 if __name__ == "__main__":
-    test_metrics_query_accessors()
-    test_timeseries_query_accessors()
+    test_metrics_methods()
+    test_timeseries_methods()

@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 JOINED_TIMESERIES_DIR = Path("database", "joined_timeseries")
 
 
-class Evaluation():
+class Evaluation:
     """The Evaluation class.
 
     This is the main class for the TEEHR evaluation.

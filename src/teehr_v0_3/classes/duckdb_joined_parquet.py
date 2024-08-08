@@ -5,7 +5,6 @@ from teehr_v0_3.classes.duckdb_base import DuckDBBase
 from teehr_v0_3.models.queries import MetricEnum
 
 
-import duckdb
 import geopandas as gpd
 import pandas as pd
 
@@ -37,6 +36,9 @@ class DuckDBJoinedParquet(DuckDBBase):
             to file(s) and can include wildcards.
             For example, "/path/to/parquet/\\*.parquet".
         """
+        # Register the pandas DataFrame accessor class.
+        from teehr_v0_3.classes.dataframe_accessor import TEEHRDataFrameAccessor # noqa
+
         self.joined_parquet_filepath = joined_parquet_filepath
         self.geometry_filepath = geometry_filepath
         self.from_joined_timeseries_clause = f"""

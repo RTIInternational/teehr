@@ -8,7 +8,7 @@ import math
 from teehr_v0_3.loading.nwm.retrospective_points import nwm_retro_to_parquet
 
 LOCATION_IDS = [7086109]
-TEMP_DIR = Path("tests", "data", "temp", "retro")
+TEMP_DIR = Path("tests", "v0_3", "data", "temp", "retro")
 
 
 def test_nwm20_retro_one_file():
