@@ -4,12 +4,15 @@ import teehr_v0_3.queries.duckdb as tqd
 import teehr_v0_3.queries.pandas as tqp
 from pathlib import Path
 
+TEST_STUDY_DIR = Path("tests", "v0_3", "data", "test_study")
+TEST_RETRO_DIR = Path("tests", "v0_3", "data", "retro")
+
 
 def test_spearmans_corr_1():
     """Tests the newly added spearmans_corr."""
-    PRIMARY_FILEPATH = Path("tests/data/test_study/timeseries/test_short_obs.parquet")
-    SECONDARY_FILEPATH = Path("tests/data/test_study/timeseries/test_short_fcast.parquet")
-    CROSSWALK_FILEPATH = Path("tests/data/test_study/geo/crosswalk.parquet")
+    PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries/test_short_obs.parquet")
+    SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries/test_short_fcast.parquet")
+    CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo/crosswalk.parquet")
 
     include_metrics = ['spearman_correlation']
     group_by = [
@@ -46,9 +49,9 @@ def test_spearmans_corr_1():
 
 def test_spearmans_corr_2():
     """Tests the newly added spearmans_corr."""
-    PRIMARY_FILEPATH = Path("tests/data/retro/primary_obs.parquet")
-    SECONDARY_FILEPATH = Path("tests/data/retro/secondary_sim.parquet")
-    CROSSWALK_FILEPATH = Path("tests/data/retro/xwalk.parquet")
+    PRIMARY_FILEPATH = Path(TEST_RETRO_DIR, "primary_obs.parquet")
+    SECONDARY_FILEPATH = Path(TEST_RETRO_DIR, "secondary_sim.parquet")
+    CROSSWALK_FILEPATH = Path(TEST_RETRO_DIR, "xwalk.parquet")
 
     include_metrics = ['spearman_correlation']
     group_by = [

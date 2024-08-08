@@ -6,7 +6,7 @@ from pydantic import ValidationError
 import teehr_v0_3.queries.duckdb as tqu
 from pathlib import Path
 
-TEST_STUDY_DIR = Path("tests", "data", "retro")
+TEST_STUDY_DIR = Path("tests", "v0_3", "data", "retro")
 PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "primary_obs.parquet")
 SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "secondary_sim.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "xwalk.parquet")

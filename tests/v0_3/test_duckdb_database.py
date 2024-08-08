@@ -7,7 +7,7 @@ import geopandas as gpd
 from teehr_v0_3.classes.duckdb_database import DuckDBDatabase
 
 # Test data
-TEST_STUDY_DIR = Path("tests", "data", "test_study")
+TEST_STUDY_DIR = Path("tests", "v0_3", "data", "test_study")
 PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*short_obs.parquet")
 PRIMARY_FILEPATH_DUPS = Path(TEST_STUDY_DIR, "timeseries", "*dup_obs.parquet")
 SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
@@ -15,7 +15,7 @@ CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
 GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
 ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr_*.parquet")
 NO_UNITS_ATTRIBUTE_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr_ecoregion.parquet")
-DATABASE_FILEPATH = Path("tests", "data", "temp", "temp_test.db")
+DATABASE_FILEPATH = Path("tests", "v0_3", "data", "temp", "temp_test.db")
 
 
 def test_insert_joined_timeseries():

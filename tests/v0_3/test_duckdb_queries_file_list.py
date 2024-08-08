@@ -8,7 +8,7 @@ import teehr_v0_3.queries.duckdb as tqd
 import teehr_v0_3.queries.duckdb_database as tqbd
 from pathlib import Path
 
-TEST_STUDY_DIR = Path("tests", "data", "test_study")
+TEST_STUDY_DIR = Path("tests", "v0_3", "data", "test_study")
 PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "test_short_obs*.parquet")
 SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "test_short_fcast*.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")

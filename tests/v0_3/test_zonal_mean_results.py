@@ -11,7 +11,7 @@ from teehr_v0_3.loading.nwm.grid_utils import (
 )
 
 
-TEST_DIR = Path("tests", "data", "nwm22")
+TEST_DIR = Path("tests", "v0_3", "data", "nwm22")
 
 TEMPLATE_FILEPATH = Path(TEST_DIR, "test_template_grid_nwm.nc")
 

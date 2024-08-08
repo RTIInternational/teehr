@@ -42,7 +42,7 @@ import teehr.const as const
 logger = logging.getLogger(__name__)
 
 
-class Evaluation():
+class Evaluation:
     """The Evaluation class.
 
     This is the main class for the TEEHR evaluation.
