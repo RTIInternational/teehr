@@ -12,6 +12,15 @@ from teehr.loading.utils import (
     get_dataset,
     write_parquet_file,
 )
+from teehr.loading.const import (
+    VALUE,
+    VALUE_TIME,
+    REFERENCE_TIME,
+    LOCATION_ID,
+    UNIT_NAME,
+    VARIABLE_NAME,
+    CONFIGURATION_NAME
+)
 
 
 @dask.delayed
@@ -48,13 +57,13 @@ def file_chunk_loop(
 
     output_table = pa.table(
         {
-            "value": vals,
-            "reference_time": np.full(vals.shape, ref_time),
-            "location_id": teehr_location_ids,
-            "value_time": np.full(vals.shape, valid_time),
-            "configuration": num_vals * [configuration],
-            "variable_name": num_vals * [variable_name],
-            "measurement_unit": num_vals * [teehr_units],
+            VALUE: vals,
+            REFERENCE_TIME: np.full(vals.shape, ref_time),
+            LOCATION_ID: teehr_location_ids,
+            VALUE_TIME: np.full(vals.shape, valid_time),
+            CONFIGURATION_NAME: num_vals * [configuration],
+            VARIABLE_NAME: num_vals * [variable_name],
+            UNIT_NAME: num_vals * [teehr_units],
         },
         schema=schema,
     )
@@ -79,13 +88,13 @@ def process_chunk_of_files(
 
     schema = pa.schema(
         [
-            ("value", pa.float32()),
-            ("reference_time", pa.timestamp("ms")),
-            ("location_id", pa.string()),
-            ("value_time", pa.timestamp("ms")),
-            ("configuration", pa.string()),
-            ("variable_name", pa.string()),
-            ("measurement_unit", pa.string()),
+            (VALUE, pa.float32()),
+            (REFERENCE_TIME, pa.timestamp("ms")),
+            (LOCATION_ID, pa.string()),
+            (VALUE_TIME, pa.timestamp("ms")),
+            (CONFIGURATION_NAME, pa.string()),
+            (VARIABLE_NAME, pa.string()),
+            (UNIT_NAME, pa.string()),
         ]
     )
 
