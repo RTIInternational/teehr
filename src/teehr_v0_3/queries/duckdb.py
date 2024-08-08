@@ -145,7 +145,7 @@ def get_metrics(
     >>> ]
     """
     # Register the pandas DataFrame accessor class.
-    from teehr_v0_3.classes.accessor_metrics import GetMetricsAccessor # noqa
+    from teehr_v0_3.classes.dataframe_accessor import TEEHRDataFrameAccessor # noqa
 
     mq = MetricQuery.model_validate(
         {
@@ -260,7 +260,7 @@ def get_joined_timeseries(
     >>> ]
     """
     # Register the pandas DataFrame accessor class.
-    from teehr_v0_3.classes.accessor_timeseries import GetTimeseriesAccessor # noqa
+    from teehr_v0_3.classes.dataframe_accessor import TEEHRDataFrameAccessor # noqa # noqa
 
     jtq = JoinedTimeseriesQuery.model_validate(
         {
@@ -362,7 +362,7 @@ def get_timeseries(
     >>> ]
     """
     # Register the pandas DataFrame accessor class.
-    from teehr_v0_3.classes.accessor_timeseries import GetTimeseriesAccessor # noqa
+    from teehr_v0_3.classes.dataframe_accessor import TEEHRDataFrameAccessor # noqa # noqa
 
     tq = TimeseriesQuery.model_validate(
         {
