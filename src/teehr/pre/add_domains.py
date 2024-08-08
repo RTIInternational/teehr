@@ -1,18 +1,28 @@
+"""Functions to add domain data to the dataset."""
 from pathlib import Path
 from typing import Union, List
 import duckdb
 import pandas as pd
-from teehr.models.dataset import Configuration, Unit
+from teehr.models.domain_tables import Configuration, Unit, Variable, Attribute
+import teehr.const as const
+import logging
+from teehr.pre.duckdb_utils import create_database_tables
+
+logger = logging.getLogger(__name__)
 
 
 def add_configuration(
-    database_path: Union[Path, str],
+    dataset_path: Union[Path, str],
     configuration: Union[Configuration, List[Configuration]]
 ):
-    """Insert a configuration into the database."""
+    """Insert a configuration into the dataset."""
     conn = duckdb.connect()
 
-    filepath = f"{database_path}/configurations/configurations.csv"
+    filepath = Path(
+        dataset_path, const.CONFIGURATIONS_DIR, const.CONFIGURATIONS_FILE
+    )
+    logger.debug(f"Adding configuration to {filepath}")
+
     org_df = pd.read_csv(filepath, sep="|")
     org_df = org_df[[key for key in Configuration.model_fields]]
     conn.register("org_df", org_df)
@@ -24,13 +34,8 @@ def add_configuration(
     new_df = new_df[[key for key in Configuration.model_fields]]
     conn.register("new_df", new_df)
 
-    conn.sql("""
-        CREATE TABLE IF NOT EXISTS configurations (
-            name VARCHAR PRIMARY KEY,
-            type VARCHAR,
-            description VARCHAR
-        );
-    """)
+    create_database_tables(conn)
+
     conn.sql("""
         INSERT INTO configurations
         SELECT * FROM org_df;
@@ -47,13 +52,15 @@ def add_configuration(
 
 
 def add_unit(
-    database_path: Union[Path, str],
+    dataset_path: Union[Path, str],
     unit: Union[Unit, List[Unit]]
 ):
-    """Insert a configuration into the database."""
+    """Insert a unit into the dataset."""
     conn = duckdb.connect()
 
-    filepath = f"{database_path}/units/units.csv"
+    filepath = Path(dataset_path, const.UNITS_DIR, const.UNITS_FILE)
+    logger.debug(f"Adding unit to {filepath}")
+
     org_df = pd.read_csv(filepath, sep="|")
     org_df = org_df[[key for key in Unit.model_fields]]
     conn.register("org_df", org_df)
@@ -65,13 +72,8 @@ def add_unit(
     new_df = new_df[[key for key in Unit.model_fields]]
     conn.register("new_df", new_df)
 
-    conn.sql("""
-        CREATE TABLE IF NOT EXISTS units (
-            name VARCHAR PRIMARY KEY,
-            long_name VARCHAR,
-            aliases VARCHAR[],
-        );
-    """)
+    create_database_tables(conn)
+
     conn.sql("""
         INSERT INTO units
         SELECT * FROM org_df;
@@ -83,5 +85,81 @@ def add_unit(
     conn.sql(f"""
         COPY (
             SELECT * FROM units
+        ) TO '{filepath}' WITH (HEADER, DELIMITER '|');
+    """)
+
+
+def add_variable(
+    dataset_path: Union[Path, str],
+    variable: Union[Variable, List[Variable]]
+):
+    """Insert a variable into the dataset."""
+    conn = duckdb.connect()
+
+    filepath = Path(dataset_path, const.VARIABLES_DIR, const.VARIABLES_FILE)
+    logger.debug(f"Adding variable to {filepath}")
+
+    org_df = pd.read_csv(filepath, sep="|")
+    org_df = org_df[[key for key in Variable.model_fields]]
+    conn.register("org_df", org_df)
+
+    if isinstance(variable, Variable):
+        variable = [variable]
+
+    new_df = pd.DataFrame([u.model_dump() for u in variable])
+    new_df = new_df[[key for key in Variable.model_fields]]
+    conn.register("new_df", new_df)
+
+    create_database_tables(conn)
+
+    conn.sql("""
+        INSERT INTO variables
+        SELECT * FROM org_df;
+    """)
+    conn.sql("""
+        INSERT INTO variables
+        SELECT * FROM new_df;
+    """)
+    conn.sql(f"""
+        COPY (
+            SELECT * FROM variables
+        ) TO '{filepath}' WITH (HEADER, DELIMITER '|');
+    """)
+
+
+def add_attribute(
+    dataset_path: Union[Path, str],
+    attribute: Union[Attribute, List[Attribute]]
+):
+    """Insert an attribute into the dataset."""
+    conn = duckdb.connect()
+
+    filepath = Path(dataset_path, const.ATTRIBUTES_DIR, const.ATTRIBUTES_FILE)
+    logger.debug(f"Adding attribute to {filepath}")
+
+    org_df = pd.read_csv(filepath, sep="|")
+    org_df = org_df[[key for key in Attribute.model_fields]]
+    conn.register("org_df", org_df)
+
+    if isinstance(attribute, Attribute):
+        attribute = [attribute]
+
+    new_df = pd.DataFrame([u.model_dump() for u in attribute])
+    new_df = new_df[[key for key in Attribute.model_fields]]
+    conn.register("new_df", new_df)
+
+    create_database_tables(conn)
+
+    conn.sql("""
+        INSERT INTO attributes
+        SELECT * FROM org_df;
+    """)
+    conn.sql("""
+        INSERT INTO attributes
+        SELECT * FROM new_df;
+    """)
+    conn.sql(f"""
+        COPY (
+            SELECT * FROM attributes
         ) TO '{filepath}' WITH (HEADER, DELIMITER '|');
     """)

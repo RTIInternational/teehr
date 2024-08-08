@@ -1,26 +1,30 @@
-# We will test the import_timeseries function in the Evaluation class.
+"""Test the import_timeseries function in the Evaluation class."""
 from pathlib import Path
-import shutil
 from teehr import Evaluation
-from teehr.models.dataset import Configuration, Unit
+from teehr.models.domain_tables import (
+    Configuration,
+    Unit,
+    Variable
+)
+import tempfile
 
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "test_study")
-TEMP_DIR = Path("tests", "data", "temp")
+GEOJSON_GAGES_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "gages.geojson")
+PRIMARY_TIMESERIES_FILEPATH = Path(TEST_STUDY_DATA_DIR, "timeseries", "test_short_obs.parquet")
+CROSSWALK_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "crosswalk.csv")
+SECONDARY_TIMESERIES_FILEPATH = Path(TEST_STUDY_DATA_DIR, "timeseries", "test_short_fcast.parquet")
 
 
-def test_validate_and_insert_primary_timeseries():
+def test_validate_and_insert_timeseries(tmpdir):
     """Test the validate_locations function."""
-    test_study_dir = Path(TEMP_DIR, "test_validate_and_insert_primary_timeseries")
-    if test_study_dir.is_dir():
-        shutil.rmtree(test_study_dir)
-    test_study_dir.mkdir()
+    eval = Evaluation(dir_path=tmpdir)
 
-    eval = Evaluation(dir_path=test_study_dir)
+    eval.enable_logging()
+
     eval.clone_template()
 
-    geojson_filepath = Path(TEST_STUDY_DATA_DIR, "geo", "gages.geojson")
-    eval.import_locations(filepath=geojson_filepath)
+    eval.import_locations(in_filepath=GEOJSON_GAGES_FILEPATH)
 
     eval.add_configuration(
         Configuration(
@@ -38,14 +42,44 @@ def test_validate_and_insert_primary_timeseries():
         )
     )
 
-    primary_timeseries_filepath = Path(TEST_STUDY_DATA_DIR, "timeseries", "test_short_obs.parquet")
+    eval.add_variable(
+        Variable(
+            name="streamflow",
+            long_name="Streamflow"
+        )
+    )
+
     eval.import_primary_timeseries(
-        path=primary_timeseries_filepath,
+        directory_path=PRIMARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
             "value_time": "value_time",
-            "configuration_name": "configuration",
-            "unit_name": "measurement_unit",
+            "configuration": "configuration_name",
+            "measurement_unit": "unit_name",
+            "variable_name": "variable_name",
+            "value": "value",
+            "location_id": "location_id"
+        })
+
+    eval.import_location_crosswalks(
+        in_filepath=CROSSWALK_FILEPATH
+    )
+
+    eval.add_configuration(
+        Configuration(
+            name="test_short",
+            type="secondary",
+            description="Test Forecast Data"
+        )
+    )
+
+    eval.import_secondary_timeseries(
+        directory_path=SECONDARY_TIMESERIES_FILEPATH,
+        field_mapping={
+            "reference_time": "reference_time",
+            "value_time": "value_time",
+            "configuration": "configuration_name",
+            "measurement_unit": "unit_name",
             "variable_name": "variable_name",
             "value": "value",
             "location_id": "location_id"
@@ -55,4 +89,12 @@ def test_validate_and_insert_primary_timeseries():
 
 
 if __name__ == "__main__":
-    test_validate_and_insert_primary_timeseries()
+    with tempfile.TemporaryDirectory(
+        prefix="teehr-"
+    ) as tempdir:
+        test_validate_and_insert_timeseries(
+            tempfile.mkdtemp(
+                prefix="1-",
+                dir=tempdir
+            )
+        )

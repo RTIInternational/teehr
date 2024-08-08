@@ -1,143 +1,164 @@
 from typing import Union
 from pathlib import Path
 import duckdb
-from teehr.pre.utils import validate_database_structure
+from teehr.pre.utils import validate_dataset_structure
+from teehr.pre.utils import merge_field_mappings
+from teehr.pre.duckdb_utils import (
+    create_database_tables,
+    insert_configurations,
+    insert_units,
+    insert_variables,
+    insert_locations,
+    insert_location_crosswalks,
+)
+import teehr.const as const
 
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-def read_insert_file(conn, src, dest, field_mapping):
+def read_insert_timeseries(
+    conn: duckdb.DuckDBPyConnection,
+    in_filepath: Union[str, Path],
+    out_filepath: Union[str, Path],
+    timeseries_type: str,
+    field_mapping: dict
+):
     """Read a file and insert into the primary_timeseries table."""
+    logger.info(f"Reading and inserting primary timeseries data from {in_filepath}")
+    if timeseries_type == "primary":
+        table = "primary_timeseries"
+    elif timeseries_type == "secondary":
+        table = "secondary_timeseries"
+    else:
+        raise ValueError("Invalid timeseries type.")
+
     conn.sql(f"""
         INSERT INTO
-                primary_timeseries
+                {table}
         SELECT
-            {field_mapping['reference_time']}::DATETIME as reference_time,
-            {field_mapping['value_time']}::DATETIME as value_time,
-            {field_mapping['configuration_name']}::VARCHAR as configuration_name,
-            {field_mapping['unit_name']}::VARCHAR as unit_name,
-            {field_mapping['variable_name']}::VARCHAR as variable_name,
-            {field_mapping['value']}::FLOAT as value,
-            {field_mapping['location_id']}::VARCHAR as location_id,
-        FROM read_parquet('{src}');
+            {field_mapping['reference_time']}::DATETIME
+                as reference_time,
+            {field_mapping['value_time']}::DATETIME
+                as value_time,
+            {field_mapping['configuration_name']}::VARCHAR
+                as configuration_name,
+            {field_mapping['unit_name']}::VARCHAR
+                as unit_name,
+            {field_mapping['variable_name']}::VARCHAR
+                as variable_name,
+            {field_mapping['value']}::FLOAT
+                as value,
+            {field_mapping['location_id']}::VARCHAR
+                as location_id,
+        FROM read_parquet('{in_filepath}');
     """)
     conn.sql(f"""
-        COPY primary_timeseries TO '{dest}';
+        COPY {table} TO '{out_filepath}';
     """)
-    conn.sql("TRUNCATE TABLE primary_timeseries;")
+    conn.sql(f"TRUNCATE TABLE {table};")
 
 
-def convert_primary_timeseries(
-    input_filepath: Union[str, Path],
-    database_path: Union[str, Path],
+def validate_and_insert_timeseries(
+    path: Union[str, Path],
+    dataset_path: Union[str, Path],
+    timeseries_type: str,
     pattern: str = "**/*.parquet",
     field_mapping: dict = None
 ):
-    """Convert primary timeseries data.
-    Data can be in either parquet or csv format.
-    """
-    input_filepath = Path(input_filepath)
-    logger.info(f"Converting primary timeseries data from {input_filepath}")
+    """Validate and insert primary timeseries data.
 
-    if not validate_database_structure(database_path):
+    Parameters
+    ----------
+    path : Union[str, Path]
+        Directory path or file path to the primary timeseries data.
+    dataset_path : Union[str, Path]
+        Path to the dataset.
+    timeseries_type : str
+        The type of timeseries data.
+        Valid values: "primary", "secondary"
+    pattern : str, optional (default: "**/*.parquet")
+        The pattern to match files.
+    field_mapping : dict, optional
+        A dictionary mapping input fields to output fields.
+        format: {input_field: output_field}
+
+    """
+    path = Path(path)
+    logger.info(f"Converting timeseries data from {path}")
+
+    if not validate_dataset_structure(dataset_path):
         raise ValueError("Database structure is not valid.")
 
-    if not field_mapping:
-        logger.debug("No field mapping provided. Using default field mapping.")
-        field_mapping = {
-            "reference_time": "reference_time",
-            "value_time": "value_time",
-            "configuration_name": "configuration_name",
-            "unit_name": "unit_name",
-            "variable_name": "variable_name",
-            "value": "value",
-            "location_id": "location_id"
-        }
+    default_field_mapping = {
+        "reference_time": "reference_time",
+        "value_time": "value_time",
+        "configuration_name": "configuration_name",
+        "unit_name": "unit_name",
+        "variable_name": "variable_name",
+        "value": "value",
+        "location_id": "location_id"
+    }
+    if field_mapping:
+        logger.debug("Merging user field_mapping with default field mapping.")
+        field_mapping = merge_field_mappings(
+            default_field_mapping,
+            field_mapping
+        )
+    else:
+        logger.debug("Using default field mapping.")
+        field_mapping = default_field_mapping
+
+    # swap keys and values for user provided field mapping
+    # required for consistiency with other functions
+    field_mapping = {v: k for k, v in field_mapping.items()}
 
     # setup validation database
-    conn = duckdb.connect(database=":memory:")
+    conn = duckdb.connect()
 
-    conn.sql(f"""
-    CREATE TABLE IF NOT EXISTS units (
-            name VARCHAR PRIMARY KEY,
-            long_name VARCHAR,
-            aliases VARCHAR[],
-    );
-    INSERT INTO units SELECT *
-    FROM read_csv(
-        '{database_path}/units/units.csv',
-        delim = '|',
-        header = true,
-        columns = {{'name': 'VARCHAR','long_name': 'VARCHAR','aliases': 'VARCHAR[]'}}
-    );
-    """)
+    # create tables if they do not exist
+    create_database_tables(conn)
 
-    conn.sql(f"""
-    CREATE TABLE IF NOT EXISTS configurations (
-            name VARCHAR PRIMARY KEY,
-            type VARCHAR,
-            description VARCHAR
-    );
-    INSERT INTO configurations SELECT *
-    FROM read_csv(
-        '{database_path}/configurations/configurations.csv',
-        delim = '|',
-        header = true,
-        columns = {{'name': 'VARCHAR','type': 'VARCHAR','description': 'VARCHAR'}}
-    );
-    """)
+    # insert domains
+    insert_units(conn, dataset_path)
+    insert_configurations(conn, dataset_path)
+    insert_variables(conn, dataset_path)
 
-    conn.sql(f"""
-    CREATE TABLE IF NOT EXISTS variables (
-            name VARCHAR PRIMARY KEY,
-            long_name VARCHAR
-    );
-    INSERT INTO variables SELECT *
-    FROM read_csv(
-        '{database_path}/variables/variables.csv',
-        delim = '|',
-        header = true,
-        columns = {{'name': 'VARCHAR','long_name': 'VARCHAR'}}
-    );
-    """)
+    # insert locations
+    insert_locations(
+        conn,
+        Path(dataset_path, const.LOCATIONS_DIR)
+    )
 
-    conn.sql(f"""
-    INSTALL spatial;
-    LOAD spatial;
-    CREATE TABLE IF NOT EXISTS locations (
-            id VARCHAR PRIMARY KEY,
-            name VARCHAR,
-            geometry GEOMETRY
-    );
-    INSERT INTO locations
-        SELECT id, name, ST_GeomFromWKB(geometry) as geometry
-        FROM read_parquet('{database_path}/locations/locations.parquet');
-    """)
-
-    conn.sql("""
-        CREATE TABLE primary_timeseries (
-            reference_time DATETIME,
-            value_time DATETIME,
-            configuration_name VARCHAR,
-            unit_name VARCHAR,
-            variable_name VARCHAR,
-            value FLOAT,
-            location_id VARCHAR,
-            FOREIGN KEY (configuration_name) REFERENCES configurations (name),
-            FOREIGN KEY (unit_name) REFERENCES units (name),
-            FOREIGN KEY (variable_name) REFERENCES variables (name),
-            FOREIGN KEY (location_id) REFERENCES locations (id)
-        );
-    """)
-
-    if input_filepath.is_dir():
-        # recursively convert all files in directory
-        for file in input_filepath.glob(f"{pattern}"):
-            dest_part = file.relative_to(input_filepath)
-            dest = Path(database_path, "primary_timeseries", dest_part)
-            read_insert_file(conn, file, dest, field_mapping)
+    if timeseries_type == "primary":
+        timeseries_dir = Path(dataset_path, const.PRIMARY_TIMESERIES_DIR)
+    elif timeseries_type == "secondary":
+        timeseries_dir = Path(dataset_path, const.SECONDARY_TIMESERIES_DIR)
+        insert_location_crosswalks(
+            conn,
+            Path(dataset_path, const.LOCATION_CROSSWALKS_DIR)
+        )
     else:
-        dest = Path(database_path, "primary_timeseries", input_filepath.name)
-        read_insert_file(conn, input_filepath, dest, field_mapping)
+        raise ValueError("Invalid timeseries type.")
+
+    if path.is_dir():
+        # recursively convert all files in directory
+        for in_filepath in path.glob(f"{pattern}"):
+            dest_part = in_filepath.relative_to(path)
+            out_filepath = Path(timeseries_dir, dest_part)
+            read_insert_timeseries(
+                conn, in_filepath,
+                out_filepath,
+                timeseries_type,
+                field_mapping
+            )
+    else:
+        out_filepath = Path(timeseries_dir, path.name)
+        read_insert_timeseries(
+            conn,
+            path,
+            out_filepath,
+            timeseries_type,
+            field_mapping
+        )

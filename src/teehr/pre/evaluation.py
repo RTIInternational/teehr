@@ -1,3 +1,4 @@
+"""Evaluation template setup functions."""
 from typing import Union
 from pathlib import Path
 import shutil
@@ -38,4 +39,5 @@ def copy_template_to(
         f"Renaming {destination_dir}/gitignore_template to .gitignore"
     )
 
-    Path(destination_dir, "gitignore_template").rename(Path(destination_dir, ".gitignore"))
+    gitignore_text = Path(destination_dir, "gitignore_template")
+    gitignore_text.rename(Path(destination_dir, ".gitignore"))
