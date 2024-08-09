@@ -8,7 +8,7 @@ from teehr_v0_3.classes.duckdb_joined_parquet import DuckDBJoinedParquet
 
 
 # Test data
-TEST_STUDY_DIR = Path("tests", "data", "test_study")
+TEST_STUDY_DIR = Path("tests", "v0_3", "data", "test_study")
 JOINED_PARQUET_FILEPATH = Path(
     TEST_STUDY_DIR, "timeseries", "test_joined_timeseries_*.parquet"
 )

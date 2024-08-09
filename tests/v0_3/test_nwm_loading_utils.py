@@ -18,8 +18,8 @@ from teehr_v0_3.loading.nwm.const import (
 
 TIMEFORMAT = "%Y-%m-%d %H:%M:%S"
 
-TEST_DIR = Path("tests", "data", "nwm30")
-TEMP_DIR = Path("tests", "data", "temp")
+TEST_DIR = Path("tests", "v0_3", "data", "nwm30")
+TEMP_DIR = Path("tests", "v0_3", "data", "temp")
 
 
 def test_point_zarr_reference_file():

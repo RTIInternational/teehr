@@ -9,13 +9,13 @@ from teehr_v0_3.models.queries_database import (
 )
 
 # Test data
-TEST_STUDY_DIR = Path("tests", "data", "test_study")
+TEST_STUDY_DIR = Path("tests", "v0_3", "data", "test_study")
 PRIMARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*short_obs.parquet")
 SECONDARY_FILEPATH = Path(TEST_STUDY_DIR, "timeseries", "*_fcast.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DIR, "geo", "crosswalk.parquet")
 GEOMETRY_FILEPATH = Path(TEST_STUDY_DIR, "geo", "gages.parquet")
 ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DIR, "geo", "test_attr_*.parquet")
-DATABASE_FILEPATH = Path("tests", "data", "test_study", "temp_test_api.db")
+DATABASE_FILEPATH = Path("tests", "v0_3", "data", "test_study", "temp_test_api.db")
 
 
 def test_unique_field_values():

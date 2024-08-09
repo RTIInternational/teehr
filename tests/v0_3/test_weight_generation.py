@@ -7,8 +7,8 @@ from teehr_v0_3.utilities.generate_weights import generate_weights_file
 from teehr_v0_3.loading.nwm.const import CONUS_NWM_WKT
 
 
-TEST_DIR = Path("tests", "data", "nwm22")
-TEMP_DIR = Path("tests", "data", "temp")
+TEST_DIR = Path("tests", "v0_3", "data", "nwm22")
+TEMP_DIR = Path("tests", "v0_3", "data", "temp")
 TEMPLATE_FILEPATH = Path(TEST_DIR, "test_template_grid_nwm.nc")
 ZONES_FILEPATH = Path(TEST_DIR, "test_ngen_divides.parquet")
 WEIGHTS_FILEPATH = Path(TEST_DIR, "test_weights_results.parquet")

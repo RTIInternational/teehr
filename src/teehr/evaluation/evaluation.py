@@ -42,7 +42,7 @@ KERCHUNK_DIR = "kerchunk"
 WEIGHTS_DIR = "weights"
 
 
-class Evaluation():
+class Evaluation:
     """The Evaluation class.
 
     This is the main class for the TEEHR evaluation.

@@ -12,12 +12,12 @@ from teehr_v0_3.loading.nwm.const import (
     NWM22_UNIT_LOOKUP,
 )
 
-TEMP_DIR = Path("tests", "data", "temp")
+TEMP_DIR = Path("tests", "v0_3", "data", "temp")
 
 
 def test_nwm22_point_fetch_and_format():
     """Test NWM22 point fetch and format."""
-    test_dir = Path("tests", "data", "nwm22")
+    test_dir = Path("tests", "v0_3", "data", "nwm22")
 
     json_paths = [Path(
         test_dir,
@@ -56,7 +56,7 @@ def test_nwm22_point_fetch_and_format():
 
 def test_nwm30_point_fetch_and_format():
     """Test NWM30 point fetch and format."""
-    test_dir = Path("tests", "data", "nwm30")
+    test_dir = Path("tests", "v0_3", "data", "nwm30")
 
     json_paths = [Path(
         test_dir,
@@ -95,7 +95,7 @@ def test_nwm30_point_fetch_and_format():
 
 def test_nwm22_grid_fetch_and_format():
     """Test NWM22 grid fetch and format."""
-    test_dir = Path("tests", "data", "nwm22")
+    test_dir = Path("tests", "v0_3", "data", "nwm22")
     weights_filepath = Path(test_dir, "onehuc10_weights.parquet")
 
     json_file = Path(test_dir,
@@ -125,7 +125,7 @@ def test_nwm22_grid_fetch_and_format():
 
 def test_nwm30_grid_fetch_and_format():
     """Test NWM30 grid fetch and format."""
-    test_dir = Path("tests", "data", "nwm30")
+    test_dir = Path("tests", "v0_3", "data", "nwm30")
     weights_filepath = Path(test_dir, "one_huc10_alaska_weights.parquet")
 
     json_file = Path(test_dir,

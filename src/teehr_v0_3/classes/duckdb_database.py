@@ -123,6 +123,9 @@ class DuckDBDatabase(DuckDBDatabaseAPI):
         database_filepath : Union[str, Path]
             Filepath to the database.
         """
+        # Register the pandas DataFrame accessor class.
+        from teehr_v0_3.classes.dataframe_accessor import TEEHRDataFrameAccessor # noqa
+
         self.database_filepath = str(database_filepath)
         self.from_joined_timeseries_clause = "FROM joined_timeseries sf"
         self.join_geometry_clause = """
