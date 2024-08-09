@@ -3,7 +3,7 @@ from pathlib import Path
 from teehr import Evaluation
 from teehr.models.domain_tables import (
     Configuration,
-    Unit,
+    # Unit,
     Variable
 )
 import tempfile
@@ -38,12 +38,12 @@ def test_validate_and_insert_timeseries(tmpdir):
         )
     )
 
-    eval.add_unit(
-        Unit(
-            name="m^3/s",
-            long_name="Cubic Meters per Second"
-        )
-    )
+    # eval.add_unit(
+    #     Unit(
+    #         name="m^3/s",
+    #         long_name="Cubic Meters per Second"
+    #     )
+    # )
 
     eval.add_variable(
         Variable(
@@ -86,7 +86,61 @@ def test_validate_and_insert_timeseries(tmpdir):
             "variable_name": "variable_name",
             "value": "value",
             "location_id": "location_id"
-        })
+        }
+    )
+
+    assert True
+
+
+def test_validate_and_insert_timeseries_set_const(tmpdir):
+    """Test the validate_locations function."""
+    eval = Evaluation(dir_path=tmpdir)
+
+    eval.enable_logging()
+
+    eval.clone_template()
+
+    eval.import_locations(in_path=GEOJSON_GAGES_FILEPATH)
+
+    eval.import_primary_timeseries(
+        in_path=PRIMARY_TIMESERIES_FILEPATH,
+        field_mapping={
+            "reference_time": "reference_time",
+            "value_time": "value_time",
+            "configuration": "configuration_name",
+            "measurement_unit": "unit_name",
+            "variable_name": "variable_name",
+            "value": "value",
+            "location_id": "location_id"
+        },
+        constant_field_values={
+            "unit_name": "m^3/s",
+            "variable_name": "streamflow_hourly_inst",
+            "configuration_name": "usgs_observations"
+        }
+    )
+
+    eval.import_location_crosswalks(
+        in_path=CROSSWALK_FILEPATH
+    )
+
+    eval.import_secondary_timeseries(
+        in_path=SECONDARY_TIMESERIES_FILEPATH,
+        field_mapping={
+            "reference_time": "reference_time",
+            "value_time": "value_time",
+            "configuration": "configuration_name",
+            "measurement_unit": "unit_name",
+            "variable_name": "variable_name",
+            "value": "value",
+            "location_id": "location_id"
+        },
+        constant_field_values={
+            "unit_name": "m^3/s",
+            "variable_name": "streamflow_hourly_inst",
+            "configuration_name": "nwm30_retro"
+        }
+    )
 
     assert True
 
@@ -98,6 +152,12 @@ if __name__ == "__main__":
         test_validate_and_insert_timeseries(
             tempfile.mkdtemp(
                 prefix="1-",
+                dir=tempdir
+            )
+        )
+        test_validate_and_insert_timeseries_set_const(
+            tempfile.mkdtemp(
+                prefix="2-",
                 dir=tempdir
             )
         )
