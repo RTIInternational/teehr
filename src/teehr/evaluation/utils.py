@@ -9,7 +9,7 @@ import duckdb
 logger = logging.getLogger(__name__)
 
 
-def get_joined_timeseries_fields(
+def _get_joined_timeseries_fields(
     joined_timeseries_dir: Union[Path, str]
 ) -> Enum:
     """Get the field names from the joined timeseries table."""

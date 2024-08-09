@@ -1,12 +1,25 @@
 """Test evaluation class."""
 from teehr import Evaluation, Metrics, Bootstrap
 from teehr import Operators as ops
+from pathlib import Path
+import shutil
+import tempfile
+
+TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
+JOINED_TIMESERIES_FILEPATH = Path(TEST_STUDY_DATA_DIR, "timeseries", "test_joined_timeseries_part1.parquet")
 
 
-def test_get_metrics():
+def test_get_metrics(tmpdir):
     """Test get_metrics method."""
     # Define the evaluation object.
-    eval = Evaluation(dir_path="/home/sam/temp/temp_study_template")
+    eval = Evaluation(dir_path=tmpdir)
+    eval.clone_template()
+
+    # Copy in joined timeseries file.
+    shutil.copy(
+        JOINED_TIMESERIES_FILEPATH,
+        Path(eval.joined_timeseries_dir, JOINED_TIMESERIES_FILEPATH.name)
+    )
 
     # Define the metrics to include.
     boot = Bootstrap(method="bias_corrected", num_samples=100)
@@ -43,4 +56,12 @@ def test_get_metrics():
 
 
 if __name__ == "__main__":
-    test_get_metrics()
+    with tempfile.TemporaryDirectory(
+        prefix="teehr-"
+    ) as tempdir:
+        test_get_metrics(
+            tempfile.mkdtemp(
+                prefix="1-",
+                dir=tempdir
+            )
+        )

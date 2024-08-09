@@ -1,3 +1,4 @@
+"""Project creation utilities."""
 from typing import Union
 from pathlib import Path
 import shutil
@@ -20,7 +21,7 @@ def copy_template_to(template_dir: Union[str, Path], destination_dir: Union[str,
             if not destination_file.parent.is_dir():
                 destination_file.parent.mkdir(parents=True)
             logger.debug(f"Making directory {destination_file}")
-            destination_file.mkdir()
+            destination_file.mkdir(exist_ok=True)
         if file.is_file():
             destination_file = Path(
                 destination_dir,
