@@ -38,6 +38,9 @@ LOCATIONS_CROSSWALK_DIR = "locations_crosswalk"
 SECONDARY_TIMESERIES_DIR = "secondary_timeseries"
 JOINED_TIMESERIES_DIR = "joined_timeseries"
 
+KERCHUNK_DIR = "kerchunk"
+WEIGHTS_DIR = "weights"
+
 
 class Evaluation():
     """The Evaluation class.
@@ -75,6 +78,8 @@ class Evaluation():
         self.secondary_timeseries_cache_dir = Path(
             self.temp_dir, SECONDARY_TIMESERIES_DIR
         )
+        self.kerchunk_cache_dir = Path(self.temp_dir, KERCHUNK_DIR)
+        self.weights_cache_dir = Path(self.temp_dir, WEIGHTS_DIR)
 
         if not Path(self.dir_path).is_dir():
             logger.error(f"Directory {self.dir_path} does not exist.")
@@ -262,26 +267,26 @@ class Evaluation():
         Here we fetch five days worth of USGS hourly streamflow data,
         to two gages, chunking by day.
 
-        Import the module.
+        Import the evaluation class and set up a new evaluation.
 
-        >>> from teehr.loading.usgs.usgs import usgs_to_parquet
+        >>> from teehr import Evaluation
+        >>> eval = Evaluation(<path_to_evaluation_directory>)
+        >>> eval.clone_template()
 
         Set the input variables.
 
         >>> SITES=["02449838", "02450825"]
         >>> START_DATE=datetime(2023, 2, 20)
         >>> END_DATE=datetime(2023, 2, 25)
-        >>> OUTPUT_PARQUET_DIR=Path(Path().home(), "temp", "usgs")
         >>> CHUNK_BY="day",
         >>> OVERWRITE_OUTPUT=True
 
         Fetch the data, writing to the specified output directory.
 
-        >>> usgs_to_parquet(
+        >>> fetch_usgs_streamflow(
         >>>     sites=SITES,
         >>>     start_date=START_DATE,
         >>>     end_date=END_DATE,
-        >>>     output_parquet_dir=TEMP_DIR,
         >>>     chunk_by=CHUNK_BY,
         >>>     overwrite_output=OVERWRITE_OUTPUT
         >>> )
@@ -352,9 +357,11 @@ class Evaluation():
         Here we fetch and format retrospective NWM v2.0 streamflow data
         for two locations.
 
-        Import the module.
+        Import the evaluation class and set up a new evaluation.
 
-        >>> import teehr.loading.nwm.retrospective_points as nwm_retro
+        >>> from teehr import Evaluation
+        >>> eval = Evaluation(<path_to_evaluation_directory>)
+        >>> eval.clone_template()
 
         Specify the input variables.
 
@@ -368,7 +375,7 @@ class Evaluation():
 
         Fetch and format the data, writing to the specified directory.
 
-        >>> nwm_retro.nwm_retro_to_parquet(
+        >>> eval.fetch_nwm_retrospective_points(
         >>>     nwm_version=NWM_VERSION,
         >>>     variable_name=VARIABLE_NAME,
         >>>     start_date=START_DATE,
@@ -488,15 +495,121 @@ class Evaluation():
         overwrite_output: Optional[bool] = False,
         is_primary: Optional[bool] = False
     ):
-        """Fetch NWM forecast point data.
+        """Fetch NWM point data and save as a Parquet file in TEEHR format.
 
-        Includes fetching and storing data.
+        Parameters
+        ----------
+        configuration : str
+            NWM forecast category.
+            (e.g., "analysis_assim", "short_range", ...).
+        output_type : str
+            Output component of the configuration.
+            (e.g., "channel_rt", "reservoir", ...).
+        variable_name : str
+            Name of the NWM data variable to download.
+            (e.g., "streamflow", "velocity", ...).
+        start_date : str or datetime
+            Date to begin data ingest.
+            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+        ingest_days : int
+            Number of days to ingest data after start date.
+        location_ids : List[int]
+            Array specifying NWM IDs of interest.
+        nwm_version : SupportedNWMOperationalVersionsEnum
+            The NWM operational version
+            "nwm22", or "nwm30".
+        data_source : Optional[SupportedNWMDataSourcesEnum]
+            Specifies the remote location from which to fetch the data
+            "GCS" (default), "NOMADS", or "DSTOR"
+            Currently only "GCS" is implemented.
+        kerchunk_method : Optional[SupportedKerchunkMethod]
+            When data_source = "GCS", specifies the preference in creating Kerchunk
+            reference json files. "local" (default) will create new json files from
+            netcdf files in GCS and save to a local directory if they do not already
+            exist locally, in which case the creation is skipped. "remote" - read the
+            CIROH pre-generated jsons from s3, ignoring any that are unavailable.
+            "auto" - read the CIROH pre-generated jsons from s3, and create any that
+            are unavailable, storing locally.
+        t_minus_hours : Optional[List[int]]
+            Specifies the look-back hours to include if an assimilation
+            configuration is specified.
+        process_by_z_hour : Optional[bool]
+            A boolean flag that determines the method of grouping files
+            for processing. The default is True, which groups by day and z_hour.
+            False groups files sequentially into chunks, whose size is determined
+            by stepsize. This allows users to process more data potentially more
+            efficiently, but runs to risk of splitting up forecasts into separate
+            output files.
+        stepsize : Optional[int]
+            The number of json files to process at one time. Used if
+            process_by_z_hour is set to False. Default value is 100. Larger values
+            can result in greater efficiency but require more memory.
+        ignore_missing_file : Optional[bool]
+            Flag specifying whether or not to fail if a missing NWM file is
+            encountered. True = skip and continue; False = fail.
+        overwrite_output : Optional[bool]
+            Flag specifying whether or not to overwrite output files if they
+            already exist.  True = overwrite; False = fail.
 
-        - Get location IDs from the locations table.
-        - Validate configuration.
+        Notes
+        -----
+        The NWM configuration variables, including configuration, output_type, and
+        variable_name are stored as pydantic models in point_config_models.py
 
+        Forecast and assimilation data is grouped and saved one file per reference
+        time, using the file name convention "YYYYMMDDTHH".  The tabular output
+        parquet files follow the timeseries data model described in the
+        :ref:`data model <data_model>`.
 
-        """
+        All dates and times within the files and in the file names are in UTC.
+
+        Examples
+        --------
+        Here we fetch operational streamflow forecasts for NWM v2.2 from GCS, and
+        save the output in the TEEHR :ref:`data model <data_model>` format.
+
+        Import the evaluation class and set a new evaluation.
+
+        >>> from teehr import Evaluation
+        >>> eval = Evaluation(<path_to_evaluation_directory>)
+        >>> eval.clone_template()
+
+        Specify the input variables.
+
+        >>> CONFIGURATION = "short_range"
+        >>> OUTPUT_TYPE = "channel_rt"
+        >>> VARIABLE_NAME = "streamflow"
+        >>> START_DATE = "2023-03-18"
+        >>> INGEST_DAYS = 1
+        >>> NWM_VERSION = "nwm22"
+        >>> DATA_SOURCE = "GCS"
+        >>> KERCHUNK_METHOD = "auto"
+        >>> T_MINUS = [0, 1, 2]
+        >>> IGNORE_MISSING_FILE = True
+        >>> OVERWRITE_OUTPUT = True
+        >>> PROCESS_BY_Z_HOUR = True
+        >>> STEPSIZE = 100
+        >>> LOCATION_IDS = [7086109,  7040481,  7053819]
+
+        Fetch and format the data, writing to the cache.
+
+        >>> eval.fetch_nwm_forecast_points(
+        >>>     configuration=CONFIGURATION,
+        >>>     output_type=OUTPUT_TYPE,
+        >>>     variable_name=VARIABLE_NAME,
+        >>>     start_date=START_DATE,
+        >>>     ingest_days=INGEST_DAYS,
+        >>>     location_ids=LOCATION_IDS,
+        >>>     nwm_version=NWM_VERSION,
+        >>>     data_source=DATA_SOURCE,
+        >>>     kerchunk_method=KERCHUNK_METHOD,
+        >>>     t_minus_hours=T_MINUS,
+        >>>     process_by_z_hour=PROCESS_BY_Z_HOUR,
+        >>>     stepsize=STEPSIZE,
+        >>>     ignore_missing_file=IGNORE_MISSING_FILE,
+        >>>     overwrite_output=OVERWRITE_OUTPUT,
+        >>> )
+        """ # noqa
         logger.info("Fetching NWM forecast point data.")
         nwm_to_parquet(
             configuration=configuration,
@@ -505,7 +618,7 @@ class Evaluation():
             start_date=start_date,
             ingest_days=ingest_days,
             location_ids=location_ids,
-            json_dir=self.temp_dir,
+            json_dir=self.kerchunk_cache_dir,
             output_parquet_dir=self._get_timeseries_cache_path(is_primary),
             nwm_version=nwm_version,
             data_source=data_source,
@@ -516,7 +629,6 @@ class Evaluation():
             ignore_missing_file=ignore_missing_file,
             overwrite_output=overwrite_output
         )
-        pass
 
     def fetch_nwm_forecast_grids(
         self,
@@ -535,10 +647,124 @@ class Evaluation():
         location_id_prefix: Optional[Union[str, None]] = None,
         is_primary: Optional[bool] = True
     ):
-        """Fetch NWM forecast grid data.
-
-        Includes fetching and storing data.
         """
+        Fetch NWM gridded data, calculate zonal statistics (currently only
+        mean is available) of selected variable for given zones, convert
+        and save to TEEHR tabular format.
+
+        Parameters
+        ----------
+        configuration : str
+            NWM forecast category.
+            (e.g., "analysis_assim", "short_range", ...).
+        output_type : str
+            Output component of the configuration.
+            (e.g., "channel_rt", "reservoir", ...).
+        variable_name : str
+            Name of the NWM data variable to download.
+            (e.g., "streamflow", "velocity", ...).
+        start_date : str or datetime
+            Date to begin data ingest.
+            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+        ingest_days : int
+            Number of days to ingest data after start date.
+        zonal_weights_filepath : str
+            Path to the array containing fraction of pixel overlap
+            for each zone.
+        nwm_version : SupportedNWMOperationalVersionsEnum
+            The NWM operational version.
+            "nwm22", or "nwm30".
+        data_source : Optional[SupportedNWMDataSourcesEnum]
+            Specifies the remote location from which to fetch the data
+            "GCS" (default), "NOMADS", or "DSTOR".
+            Currently only "GCS" is implemented.
+        kerchunk_method : Optional[SupportedKerchunkMethod]
+            When data_source = "GCS", specifies the preference in creating Kerchunk
+            reference json files. "local" (default) will create new json files from
+            netcdf files in GCS and save to a local directory if they do not already
+            exist locally, in which case the creation is skipped. "remote" - read the
+            CIROH pre-generated jsons from s3, ignoring any that are unavailable.
+            "auto" - read the CIROH pre-generated jsons from s3, and create any that
+            are unavailable, storing locally.
+        t_minus_hours : Optional[Iterable[int]]
+            Specifies the look-back hours to include if an assimilation
+            configuration is specified.
+        ignore_missing_file : bool
+            Flag specifying whether or not to fail if a missing NWM file is encountered
+            True = skip and continue; False = fail.
+        overwrite_output : bool
+            Flag specifying whether or not to overwrite output files if they already
+            exist.  True = overwrite; False = fail.
+        location_id_prefix : Union[str, None]
+            Optional location ID prefix to add (prepend) or replace.
+
+        See Also
+        --------
+        teehr.utilities.generate_weights.generate_weights_file : Weighted average.
+
+        Notes
+        -----
+        The NWM configuration variables, including configuration, output_type, and
+        variable_name are stored as a pydantic model in grid_config_models.py.
+
+        Forecast and assimilation data is grouped and saved one file per reference
+        time, using the file name convention "YYYYMMDDTHH".  The tabular output
+        parquet files follow the timeseries data model described in the
+        :ref:`data model <data_model>`.
+
+        Additionally, the location_id values in the zonal weights file are used as
+        location ids in the output of this function, unless a prefix is specified which
+        will be prepended to the location_id values if none exists, or will it replace
+        the existing prefix. It is assumed that the location_id follows the pattern
+        '[prefix]-[unique id]'.
+
+        All dates and times within the files and in the file names are in UTC.
+
+        Examples
+        --------
+        Here we will calculate mean areal precipitation using NWM forcing data for
+        some watersheds (polygons) a using pre-calculated weights file
+        (see: :func:`generate_weights_file()
+        <teehr.utilities.generate_weights.generate_weights_file>` for weights calculation).
+
+        Import the evaluation class and set a new evaluation.
+
+        >>> from teehr import Evaluation
+        >>> eval = Evaluation(<path_to_evaluation_directory>)
+        >>> eval.clone_template()
+
+        Specify the input variables.
+
+        >>> CONFIGURATION = "forcing_short_range"
+        >>> OUTPUT_TYPE = "forcing"
+        >>> VARIABLE_NAME = "RAINRATE"
+        >>> START_DATE = "2020-12-18"
+        >>> INGEST_DAYS = 1
+        >>> ZONAL_WEIGHTS_FILEPATH = Path(Path.home(), "nextgen_03S_weights.parquet")
+        >>> NWM_VERSION = "nwm22"
+        >>> DATA_SOURCE = "GCS"
+        >>> KERCHUNK_METHOD = "auto"
+        >>> T_MINUS = [0, 1, 2]
+        >>> IGNORE_MISSING_FILE = True
+        >>> OVERWRITE_OUTPUT = True
+
+        Perform the calculations, writing to the specified directory.
+
+        >>> eval.fetch_nwm_forecast_grids(
+        >>>     configuration=CONFIGURATION,
+        >>>     output_type=OUTPUT_TYPE,
+        >>>     variable_name=VARIABLE_NAME,
+        >>>     start_date=START_DATE,
+        >>>     ingest_days=INGEST_DAYS,
+        >>>     zonal_weights_filepath=ZONAL_WEIGHTS_FILEPATH,
+        >>>     nwm_version=NWM_VERSION,
+        >>>     data_source=DATA_SOURCE,
+        >>>     kerchunk_method=KERCHUNK_METHOD,
+        >>>     t_minus_hours=T_MINUS,
+        >>>     ignore_missing_file=IGNORE_MISSING_FILE,
+        >>>     overwrite_output=OVERWRITE_OUTPUT
+        >>> )
+        """ # noqa
         logger.info("Fetching NWM forecast grid data.")
         nwm_grids_to_parquet(
             configuration=configuration,
@@ -546,8 +772,8 @@ class Evaluation():
             variable_name=variable_name,
             start_date=start_date,
             ingest_days=ingest_days,
-            zonal_weights_filepath=zonal_weights_filepath,
-            json_dir=self.temp_dir,
+            zonal_weights_filepath=self.weights_cache_dir,
+            json_dir=self.kerchunk_cache_dir,
             output_parquet_dir=self._get_timeseries_cache_path(is_primary),
             nwm_version=nwm_version,
             data_source=data_source,
@@ -557,4 +783,3 @@ class Evaluation():
             overwrite_output=overwrite_output,
             location_id_prefix=location_id_prefix
         )
-        pass
