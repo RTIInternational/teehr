@@ -1,18 +1,18 @@
-import teehr.pre.locations as tpi
+from teehr.pre.locations import convert_single_locations
 from pathlib import Path
 from teehr import Evaluation
 import tempfile
 
 
-TEST_STUDY_DATA_DIR = Path("tests", "data", "test_study")
+TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
 GEOJSON_GAGES_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "gages.geojson")
 
 
-def test_import_geojson(tmpdir):
-    """Test the import_locations function on geojson."""
+def test_convert_locations_geojson(tmpdir):
+    """Test the convert_locations function on geojson."""
     output_filepath = Path(tmpdir, "location.parquet")
 
-    tpi.convert_locations(
+    convert_single_locations(
         input_filepath=GEOJSON_GAGES_FILEPATH,
         output_filepath=output_filepath,
     )
@@ -21,20 +21,19 @@ def test_import_geojson(tmpdir):
 
 def test_validate_and_insert_locations(tmpdir):
     """Test the validate_locations function."""
-
     eval = Evaluation(dir_path=tmpdir)
     eval.clone_template()
 
-    eval.import_locations(in_filepath=GEOJSON_GAGES_FILEPATH)
+    eval.import_locations(in_path=GEOJSON_GAGES_FILEPATH)
 
-    assert True
+    assert Path(eval.locations_dir, "gages.parquet").is_file()
 
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_import_geojson(
+        test_convert_locations_geojson(
             tempfile.mkdtemp(
                 prefix="1-",
                 dir=tempdir

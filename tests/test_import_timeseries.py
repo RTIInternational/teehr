@@ -9,7 +9,7 @@ from teehr.models.domain_tables import (
 import tempfile
 
 
-TEST_STUDY_DATA_DIR = Path("tests", "data", "test_study")
+TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
 GEOJSON_GAGES_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "gages.geojson")
 PRIMARY_TIMESERIES_FILEPATH = Path(TEST_STUDY_DATA_DIR, "timeseries", "test_short_obs.parquet")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "crosswalk.csv")
@@ -24,7 +24,7 @@ def test_validate_and_insert_timeseries(tmpdir):
 
     eval.clone_template()
 
-    eval.import_locations(in_filepath=GEOJSON_GAGES_FILEPATH)
+    eval.import_locations(in_path=GEOJSON_GAGES_FILEPATH)
 
     eval.add_configuration(
         Configuration(
@@ -50,7 +50,7 @@ def test_validate_and_insert_timeseries(tmpdir):
     )
 
     eval.import_primary_timeseries(
-        directory_path=PRIMARY_TIMESERIES_FILEPATH,
+        in_path=PRIMARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
             "value_time": "value_time",
@@ -62,7 +62,7 @@ def test_validate_and_insert_timeseries(tmpdir):
         })
 
     eval.import_location_crosswalks(
-        in_filepath=CROSSWALK_FILEPATH
+        in_path=CROSSWALK_FILEPATH
     )
 
     eval.add_configuration(
@@ -74,7 +74,7 @@ def test_validate_and_insert_timeseries(tmpdir):
     )
 
     eval.import_secondary_timeseries(
-        directory_path=SECONDARY_TIMESERIES_FILEPATH,
+        in_path=SECONDARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
             "value_time": "value_time",

@@ -1,6 +1,8 @@
+"""Convert and insert timeseries data into the dataset."""
 from typing import Union
 from pathlib import Path
 import duckdb
+import pandas as pd
 from teehr.pre.utils import validate_dataset_structure
 from teehr.pre.utils import merge_field_mappings
 from teehr.pre.duckdb_utils import (
@@ -18,15 +20,166 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def read_insert_timeseries(
+def convert_single_timeseries(
+    in_filepath: Union[str, Path],
+    out_filepath: Union[str, Path],
+    field_mapping: dict,
+    constant_field_values: dict = None,
+    **kwargs
+):
+    """Convert timeseries data to parquet format.
+
+    Parameters
+    ----------
+    in_filepath : Union[str, Path]
+        The input file path.
+    out_filepath : Union[str, Path]
+        The output file path.
+    field_mapping : dict
+        A dictionary mapping input fields to output fields.
+        format: {input_field: output_field}
+    constant_field_values : dict, optional
+        A dictionary mapping field names to constant values.
+        format: {field_name: value}
+    **kwargs
+        Additional keyword arguments are passed to pd.read_csv() or pd.read_parquet().
+
+    Steps:
+    1. Read the file
+    2. Rename the columns based on the field_mapping
+    3. Add constant field values to dataframe,
+        this may result in too many columns.
+    4. Subset only the columns in the field_mapping
+    5. Write the dataframe to parquet format
+
+    """
+    in_filepath = Path(in_filepath)
+    out_filepath = Path(out_filepath)
+
+    if in_filepath.suffix == ".parquet":
+        # read and convert parquet file
+        timeseries = pd.read_parquet(in_filepath, **kwargs)
+    elif in_filepath.suffix == ".csv":
+        # read and convert csv file
+        timeseries = pd.read_csv(in_filepath, **kwargs)
+    else:
+        raise ValueError("Unsupported file type.")
+
+    timeseries.rename(columns=field_mapping, inplace=True)
+
+    if constant_field_values:
+        for field, value in constant_field_values.items():
+            timeseries[field] = value
+
+    timeseries = timeseries[field_mapping.values()]
+
+    out_filepath.parent.mkdir(parents=True, exist_ok=True)
+    timeseries.to_parquet(out_filepath)
+
+
+def convert_timeseries(
+    in_path: Union[str, Path],
+    out_path: Union[str, Path],
+    field_mapping: dict = None,
+    constant_field_values: dict = None,
+    pattern: str = "**/*.parquet",
+    **kwargs
+):
+    """Convert timeseries data to parquet format.
+
+    Parameters
+    ----------
+    in_path : Union[str, Path]
+        The input file path.
+    out_path : Union[str, Path]
+        The output file path.
+    field_mapping : dict, optional
+        A dictionary mapping input fields to output fields.
+        format: {input_field: output_field}
+    constant_field_values : dict, optional
+        A dictionary mapping field names to constant values.
+        format: {field_name: value}
+    pattern : str, optional (default: "**/*.parquet")
+        The pattern to match files.
+    **kwargs
+        Additional keyword arguments are passed to pd.read_csv() or pd.read_parquet().
+
+    Can convert CSV or Parquet files.
+
+    """
+    in_path = Path(in_path)
+    out_path = Path(out_path)
+    logger.info(f"Converting timeseries data: {in_path}")
+
+    timeseries_field_names = [
+        "reference_time",
+        "value_time",
+        "configuration_name",
+        "unit_name",
+        "variable_name",
+        "value",
+        "location_id"
+    ]
+
+    default_field_mapping = {}
+    for field in timeseries_field_names:
+        if field not in default_field_mapping.values():
+            default_field_mapping[field] = field
+
+    if field_mapping:
+        logger.debug("Merging user field_mapping with default field mapping.")
+        field_mapping = merge_field_mappings(
+            default_field_mapping,
+            field_mapping
+        )
+    else:
+        logger.debug("Using default field mapping.")
+        field_mapping = default_field_mapping
+
+    # verify constant_field_values keys are in field_mapping values
+    if constant_field_values:
+        for field in constant_field_values.keys():
+            if field not in field_mapping.values():
+                raise ValueError(f"Field {field} not a valid field name.")
+
+    files_converted = 0
+    if in_path.is_dir():
+        # recursively convert all files in directory
+        logger.info(f"Recursively converting all files in {in_path}/{pattern}")
+        for in_filepath in in_path.glob(f"{pattern}"):
+            relative_name = in_filepath.relative_to(in_path)
+            out_filepath = Path(out_path, relative_name)
+            out_filepath = out_filepath.with_suffix(".parquet")
+            convert_single_timeseries(
+                in_filepath,
+                out_filepath,
+                field_mapping,
+                constant_field_values,
+                **kwargs
+            )
+            files_converted += 1
+    else:
+        out_filepath = Path(out_path, in_path.name)
+        out_filepath = out_filepath.with_suffix(".parquet")
+        convert_single_timeseries(
+            in_path,
+            out_filepath,
+            field_mapping,
+            constant_field_values,
+            **kwargs
+        )
+        files_converted += 1
+    logger.info(f"Converted {files_converted} files.")
+
+
+def verify_and_insert_single_timeseries(
     conn: duckdb.DuckDBPyConnection,
     in_filepath: Union[str, Path],
     out_filepath: Union[str, Path],
     timeseries_type: str,
-    field_mapping: dict
 ):
     """Read a file and insert into the primary_timeseries table."""
-    logger.info(f"Reading and inserting primary timeseries data from {in_filepath}")
+    logger.info(f"Reading and inserting timeseries data from {in_filepath}")
     if timeseries_type == "primary":
         table = "primary_timeseries"
     elif timeseries_type == "secondary":
@@ -38,20 +191,13 @@ def read_insert_timeseries(
         INSERT INTO
                 {table}
         SELECT
-            {field_mapping['reference_time']}::DATETIME
-                as reference_time,
-            {field_mapping['value_time']}::DATETIME
-                as value_time,
-            {field_mapping['configuration_name']}::VARCHAR
-                as configuration_name,
-            {field_mapping['unit_name']}::VARCHAR
-                as unit_name,
-            {field_mapping['variable_name']}::VARCHAR
-                as variable_name,
-            {field_mapping['value']}::FLOAT
-                as value,
-            {field_mapping['location_id']}::VARCHAR
-                as location_id,
+            reference_time::DATETIME as reference_time,
+            value_time::DATETIME as value_time,
+            configuration_name::VARCHAR as configuration_name,
+            unit_name::VARCHAR as unit_name,
+            variable_name::VARCHAR as variable_name,
+            value::FLOAT as value,
+            location_id::VARCHAR as location_id
         FROM read_parquet('{in_filepath}');
     """)
     conn.sql(f"""
@@ -61,17 +207,16 @@ def read_insert_timeseries(
 
 
 def validate_and_insert_timeseries(
-    path: Union[str, Path],
+    in_path: Union[str, Path],
     dataset_path: Union[str, Path],
     timeseries_type: str,
     pattern: str = "**/*.parquet",
-    field_mapping: dict = None
 ):
     """Validate and insert primary timeseries data.
 
     Parameters
     ----------
-    path : Union[str, Path]
+    in_path : Union[str, Path]
         Directory path or file path to the primary timeseries data.
     dataset_path : Union[str, Path]
         Path to the dataset.
@@ -80,39 +225,12 @@ def validate_and_insert_timeseries(
         Valid values: "primary", "secondary"
     pattern : str, optional (default: "**/*.parquet")
         The pattern to match files.
-    field_mapping : dict, optional
-        A dictionary mapping input fields to output fields.
-        format: {input_field: output_field}
-
     """
-    path = Path(path)
-    logger.info(f"Converting timeseries data from {path}")
+    in_path = Path(in_path)
+    logger.info(f"Validating and inserting timeseries data from {in_path}")
 
     if not validate_dataset_structure(dataset_path):
         raise ValueError("Database structure is not valid.")
-
-    default_field_mapping = {
-        "reference_time": "reference_time",
-        "value_time": "value_time",
-        "configuration_name": "configuration_name",
-        "unit_name": "unit_name",
-        "variable_name": "variable_name",
-        "value": "value",
-        "location_id": "location_id"
-    }
-    if field_mapping:
-        logger.debug("Merging user field_mapping with default field mapping.")
-        field_mapping = merge_field_mappings(
-            default_field_mapping,
-            field_mapping
-        )
-    else:
-        logger.debug("Using default field mapping.")
-        field_mapping = default_field_mapping
-
-    # swap keys and values for user provided field mapping
-    # required for consistiency with other functions
-    field_mapping = {v: k for k, v in field_mapping.items()}
 
     # setup validation database
     conn = duckdb.connect()
@@ -142,23 +260,23 @@ def validate_and_insert_timeseries(
     else:
         raise ValueError("Invalid timeseries type.")
 
-    if path.is_dir():
+    if in_path.is_dir():
         # recursively convert all files in directory
-        for in_filepath in path.glob(f"{pattern}"):
-            dest_part = in_filepath.relative_to(path)
-            out_filepath = Path(timeseries_dir, dest_part)
-            read_insert_timeseries(
-                conn, in_filepath,
+        logger.info(f"Recursively validating and inserting all files in {in_path}/{pattern}")
+        for in_filepath in in_path.glob(f"{pattern}"):
+            relative_path = in_filepath.relative_to(in_path)
+            out_filepath = Path(timeseries_dir, relative_path)
+            verify_and_insert_single_timeseries(
+                conn,
+                in_filepath,
                 out_filepath,
-                timeseries_type,
-                field_mapping
+                timeseries_type
             )
     else:
-        out_filepath = Path(timeseries_dir, path.name)
-        read_insert_timeseries(
+        out_filepath = Path(timeseries_dir, in_path.name)
+        verify_and_insert_single_timeseries(
             conn,
-            path,
+            in_path,
             out_filepath,
             timeseries_type,
-            field_mapping
         )

@@ -1,11 +1,11 @@
-"""Module for importing crosswalks from a file."""
+"""Module for importing location attributes from a file."""
 from typing import Union
 from pathlib import Path
 from teehr.pre.duckdb_utils import (
     create_database_tables,
-    insert_location_attributes,
-    insert_attributes,
     insert_locations,
+    insert_location_attributes,
+    insert_attributes
 )
 from teehr.pre.utils import (
     validate_dataset_structure,
@@ -22,9 +22,10 @@ logger = logging.getLogger(__name__)
 def convert_single_location_attributes(
     in_filepath: Union[str, Path],
     out_filepath: Union[str, Path],
-    field_mapping: dict = None
+    field_mapping: dict,
+    **kwargs
 ):
-    """Convert location attributes data to parquet format.
+    """Convert location_attributes data to parquet format.
 
     Parameters
     ----------
@@ -32,36 +33,24 @@ def convert_single_location_attributes(
         The input file path.
     out_filepath : Union[str, Path]
         The output file path.
-    field_mapping : dict, optional
+    field_mapping : dict
         A dictionary mapping input fields to output fields.
         format: {input_field: output_field}
+    **kwargs
+        Additional keyword arguments are passed to
+            pd.read_csv() or pd.read_parquet().
     """
     in_filepath = Path(in_filepath)
     out_filepath = Path(out_filepath)
 
-    default_field_mapping = {
-        "location_id": "location_id",
-        "attribute_name": "attribute_name",
-        "value": "value"
-    }
-
-    logger.info(f"Converting location attributes data from {in_filepath}")
-    if field_mapping:
-        logger.debug("Merging user field_mapping with default field mapping.")
-        field_mapping = merge_field_mappings(
-            default_field_mapping,
-            field_mapping
-        )
-    else:
-        logger.debug("Using default field mapping.")
-        field_mapping = default_field_mapping
+    logger.info(f"Converting location attributes data from: {in_filepath}")
 
     if in_filepath.suffix == ".parquet":
         # read and convert parquet file
-        location_attributes = pd.read_parquet(in_filepath)
+        location_attributes = pd.read_parquet(in_filepath, **kwargs)
     elif in_filepath.suffix == ".csv":
         # read and convert csv file
-        location_attributes = pd.read_csv(in_filepath)
+        location_attributes = pd.read_csv(in_filepath, **kwargs)
     else:
         raise ValueError("Unsupported file type.")
 
@@ -71,9 +60,6 @@ def convert_single_location_attributes(
     # make sure dataframe only contains required fields
     location_attributes = location_attributes[field_mapping.values()]
 
-    # make sure all dataframe columns are string
-    location_attributes = location_attributes.astype(str)
-
     # write to parquet
     out_filepath.parent.mkdir(parents=True, exist_ok=True)
     location_attributes.to_parquet(out_filepath)
@@ -81,70 +67,104 @@ def convert_single_location_attributes(
 
 def convert_location_attributes(
     in_path: Union[str, Path],
-    out_path: Union[str, Path],
+    out_dirpath: Union[str, Path],
+    field_mapping: dict = None,
     pattern: str = "**/*.parquet",
-    field_mapping: dict = None
+    **kwargs
 ):
-    """Convert location attributes data to parquet format.
+    """Convert crosswalk data to parquet format.
 
     Parameters
     ----------
     in_path : Union[str, Path]
-        The input file path. Can be file or directory.
-        Must match type of out_path.
-        If directory, all files matching pattern will be converted.
-    out_path : Union[str, Path]
-        The output file path. Can be file or directory.
-        Must match type of in_path.
-        If file, must be a parquet file.
-    pattern : str, optional (default: "**/*.parquet")
-        The pattern to match files.
+        The input file or directory path.
+    out_dirpath : Union[str, Path]
+        The output directory path.
     field_mapping : dict, optional
         A dictionary mapping input fields to output fields.
         format: {input_field: output_field}
+    pattern : str, optional (default: "**/*.parquet")
+        The pattern to match files.
+    **kwargs
+        Additional keyword arguments are passed to
+            pd.read_csv() or pd.read_parquet().
     """
     in_path = Path(in_path)
-    out_path = Path(out_path)
+    out_dirpath = Path(out_dirpath)
+    logger.info(f"Converting attributes data: {in_path}")
 
-    logger.info(f"Converting location attributes data from {in_path}")
+    location_attributes_field_names = [
+        "location_id",
+        "attribute_name",
+        "value"
+    ]
+    default_field_mapping = {}
+    for field in location_attributes_field_names:
+        if field not in default_field_mapping.values():
+            default_field_mapping[field] = field
 
-    if not in_path.is_dir() == out_path.is_dir():
-        raise ValueError(
-            "Input and output paths must both be directories or files."
+    if field_mapping:
+        logger.debug("Merging user field_mapping with default field mapping.")
+        field_mapping = merge_field_mappings(
+            default_field_mapping,
+            field_mapping
         )
 
-    if out_path.is_file():
-        if not out_path.suffix == ".parquet":
-            logger.error("Output file must be a parquet file.")
-            raise ValueError("Output file must be a parquet file.")
-
+    files_converted = 0
     if in_path.is_dir():
-        out_path.mkdir(parents=True, exist_ok=True)
-
-    if in_path.is_dir():
-        if len(list(in_path.glob(pattern))) == 0:
-            logger.error(f"No files match pattern '{pattern}' in '{in_path}'.")
-            raise FileNotFoundError
-
-    if in_path.is_dir():
-        for in_filepath in in_path.glob(pattern):
-            dest_part = in_filepath.relative_to(in_path)
-            out_filepath = Path(out_path, dest_part).with_suffix(".parquet")
-            convert_single_location_attributes(in_filepath, out_filepath, field_mapping)
+        # recursively convert all files in directory
+        logger.info(f"Recursively converting all files in {in_path}/{pattern}")
+        for in_filepath in in_path.glob(f"{pattern}"):
+            relative_name = in_filepath.relative_to(in_path)
+            out_filepath = Path(out_dirpath, relative_name)
+            out_filepath = out_filepath.with_suffix(".parquet")
+            convert_single_location_attributes(
+                in_filepath,
+                out_filepath,
+                field_mapping,
+                **kwargs
+            )
+            files_converted += 1
     else:
-        convert_single_location_attributes(in_path, out_path, field_mapping)
+        out_filepath = Path(out_dirpath, in_path.name)
+        out_filepath = out_filepath.with_suffix(".parquet")
+        convert_single_location_attributes(
+            in_path,
+            out_filepath,
+            field_mapping,
+            **kwargs
+        )
+        files_converted += 1
+    logger.info(f"Converted {files_converted} files.")
+
+
+def validate_and_insert_single_location_attributes(
+    conn: duckdb.DuckDBPyConnection,
+    in_filepath: Union[str, Path],
+    out_filepath: Union[str, Path],
+):
+    """Validate and insert location crosswalk data."""
+    logger.info(f"Validating and inserting crosswalk data from {in_filepath}")
+
+    # read and insert provided crosswalk data
+    insert_location_attributes(
+        conn,
+        in_filepath
+    )
+
+    conn.sql(f"COPY location_attributes TO '{out_filepath}';")
+
+    conn.sql("TRUNCATE location_attributes;")
 
 
 def validate_and_insert_location_attributes(
     in_path: Union[str, Path],
     dataset_dir: Union[str, Path],
-    pattern: str = "**/*.parquet"
+    pattern: str = "**/*.parquet",
 ):
-    """Validate and insert location_attributes data."""
-    in_path = Path(in_path)
-
+    """Validate and insert location attributes data."""
     logger.info(
-        f"Validating and inserting location_attributes data from {in_path}."
+        f"Validating and inserting location attributes data from {in_path}"
     )
 
     if not validate_dataset_structure(dataset_dir):
@@ -153,40 +173,34 @@ def validate_and_insert_location_attributes(
     # setup validation database
     conn = duckdb.connect()
     create_database_tables(conn)
-    insert_locations(conn, Path(dataset_dir, const.LOCATIONS_DIR))
+
+    insert_locations(
+        conn,
+        Path(dataset_dir, const.LOCATIONS_DIR)
+    )
+
     insert_attributes(conn, dataset_dir)
 
-    if in_path.is_dir():
-        if len(list(in_path.glob(pattern))) == 0:
-            logger.error(f"No parquet files in {in_path}.")
-            raise FileNotFoundError
+    location_attributes_dir = Path(dataset_dir, const.LOCATION_ATTRIBUTES_DIR)
 
     if in_path.is_dir():
-        for in_filepath in in_path.glob(pattern):
+        # recursively convert all files in directory
+        logger.info(
+            "Recursively validating and inserting "
+            f"all files in: {in_path}/{pattern}"
+        )
+        for in_filepath in in_path.glob(f"{pattern}"):
             relative_path = in_filepath.relative_to(in_path)
-            insert_location_attributes(
+            out_filepath = Path(location_attributes_dir, relative_path)
+            validate_and_insert_single_location_attributes(
                 conn,
-                in_filepath
+                in_filepath,
+                out_filepath,
             )
-
-            # export to dataset_dir
-            output_filepath = Path(
-                dataset_dir, const.LOCATION_ATTRIBUTES_DIR, relative_path
-            )
-            conn.sql(f"COPY location_attributes TO '{output_filepath}';")
-            conn.sql("TRUNCATE location_attributes;")
     else:
-        out_filename = in_path.name
-        insert_location_attributes(
+        out_filepath = Path(location_attributes_dir, in_path.name)
+        validate_and_insert_single_location_attributes(
             conn,
-            in_path
+            in_path,
+            out_filepath
         )
-
-        # export to dataset_dir
-        output_filepath = Path(
-            dataset_dir, const.LOCATION_ATTRIBUTES_DIR, out_filename
-        )
-        conn.sql(f"COPY location_attributes TO '{output_filepath}';")
-        conn.sql("TRUNCATE location_attributes;")
-
-

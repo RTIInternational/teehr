@@ -21,6 +21,7 @@ from teehr.pre.location_attributes import (
     validate_and_insert_location_attributes,
 )
 from teehr.pre.timeseries import (
+    convert_timeseries,
     validate_and_insert_timeseries
 )
 from teehr.models.metrics import MetricsBasemodel
@@ -92,7 +93,7 @@ class Evaluation:
     @property
     def fields(self) -> Enum:
         """The field names from the joined timeseries table."""
-        # logger.info("Getting fields from the joined timeseries table.")
+        logger.info("Getting fields from the joined timeseries table.")
         return get_joined_timeseries_fields(
             Path(self.joined_timeseries_dir)
         )
@@ -101,8 +102,14 @@ class Evaluation:
         """Enable logging."""
         logger = logging.getLogger("teehr")
         # logger.addHandler(logging.StreamHandler())
+        handler = logging.FileHandler(Path(self.dir_path, 'teehr.log'))
+        handler.setFormatter(
+            logging.Formatter(
+                "%(asctime)s %(levelname)s %(message)s"
+            )
+        )
         logger.addHandler(
-            logging.FileHandler(Path(self.dir_path, 'teehr.log'))
+            handler
         )
         logger.setLevel(logging.DEBUG)
 
@@ -161,75 +168,85 @@ class Evaluation:
 
     def import_locations(
             self,
-            in_filepath: Union[Path, str],
+            in_path: Union[Path, str],
             field_mapping: dict = None,
-            out_filename: str = None
+            pattern: str = "**/*.parquet",
+            **kwargs
     ):
         """Import geometry data.
 
         Parameters
         ----------
-        in_filepath : Union[Path, str]
-            The input file path.
+        in_path : Union[Path, str]
+            The input file or directory path.
             Any file format that can be read by GeoPandas.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
-        out_filename : str, optional
-            The output file name.
-            If the output file name is not provided, the input file name is
-            used.
+        pattern : str, optional (default: "**/*.parquet")
+            The pattern to match files.
+            Only used when in_path is a directory.
+        **kwargs
+            Additional keyword arguments are passed to GeoPandas read_file().
 
-        File is first converted to parquet format, field names renamed and
+        File is first read by GeoPandas, field names renamed and
         then validated and inserted into the dataset.
         """
-        if not out_filename:
-            out_filename = Path(in_filepath).name
-
-        temp_filepath = Path(
-            self.cache_dir, const.LOCATIONS_DIR, f"{out_filename}.parquet"
+        temp_dirpath = Path(
+            self.cache_dir, const.LOCATIONS_DIR
         )
-        convert_locations(in_filepath, temp_filepath, field_mapping)
-        validate_and_insert_locations(temp_filepath, self.dataset_dir)
+        convert_locations(
+            in_path,
+            temp_dirpath,
+            field_mapping=field_mapping,
+            pattern=pattern,
+            **kwargs
+        )
+        validate_and_insert_locations(temp_dirpath, self.dataset_dir)
 
     def import_location_crosswalks(
             self,
-            in_filepath: Union[Path, str],
+            in_path: Union[Path, str],
             field_mapping: dict = None,
-            out_filename: str = None
+            pattern: str = "**/*.parquet",
+            **kwargs
     ):
-        """Import crosswalk data.
+        """Import location crosswalks.
 
         Parameters
         ----------
-        in_filepath : Union[Path, str]
-            The input file path.
+        in_path : Union[Path, str]
+            The input file or directory path.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
-        out_filename : str, optional
-            The output file name.
-            If the output file name is not provided, the input file name is
-            used.
+        pattern : str, optional (default: "**/*.parquet")
+            The pattern to match files.
+            Only used when in_path is a directory.
+        **kwargs
+            Additional keyword arguments are passed to pd.read_csv().
         """
-        if not out_filename:
-            out_filename = Path(in_filepath).name
-
-        temp_filepath = Path(
+        temp_dirpath = Path(
             self.cache_dir,
-            const.LOCATION_CROSSWALKS_DIR,
-            f"{out_filename}.parquet"
+            const.LOCATION_CROSSWALKS_DIR
         )
-        convert_location_crosswalks(in_filepath, temp_filepath, field_mapping)
+        convert_location_crosswalks(
+            in_path,
+            temp_dirpath,
+            field_mapping=field_mapping,
+            pattern=pattern,
+            **kwargs
+        )
         validate_and_insert_location_crosswalks(
-            temp_filepath, self.dataset_dir
+            temp_dirpath, self.dataset_dir
         )
 
     def import_location_attributes(
             self,
             in_path: Union[Path, str],
             field_mapping: dict = None,
-            pattern: str = "**/*.parquet"
+            pattern: str = "**/*.parquet",
+            **kwargs
     ):
         """Import location_attributes.
 
@@ -240,6 +257,50 @@ class Evaluation:
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
+        pattern : str, optional (default: "**/*.parquet")
+            The pattern to match files.
+            Only used when in_path is a directory.
+        **kwargs
+            Additional keyword arguments are passed to pd.read_csv().
+        """
+        temp_dirpath = Path(
+            self.cache_dir,
+            const.LOCATION_ATTRIBUTES_DIR
+        )
+        convert_location_attributes(
+            in_path,
+            temp_dirpath,
+            pattern=pattern,
+            field_mapping=field_mapping,
+            **kwargs
+        )
+        validate_and_insert_location_attributes(
+            temp_dirpath, self.dataset_dir
+        )
+
+    def import_secondary_timeseries(
+        self,
+        in_path: Union[Path, str],
+        pattern="**/*.parquet",
+        field_mapping: dict = None,
+        constant_field_values: dict = None
+    ):
+        """Import secondary timeseries data.
+
+        Parameters
+        ----------
+        in_path : Union[Path, str]
+            Path to the timeseries data (file or directory).
+        pattern : str, optional (default: "**/*.parquet")
+            The pattern to match files if in_path is a directory.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+        constant_field_values : dict, optional
+            A dictionary mapping field names to constant values.
+            Format: {field_name: value}
+
+        Includes validation and importing data to database.
         """
         temp_path = Path(
             self.cache_dir,
@@ -247,75 +308,71 @@ class Evaluation:
         )
         temp_path.mkdir(parents=True, exist_ok=True)
 
-        if Path(in_path).is_file():
-            temp_path = Path(temp_path, Path(in_path).name)
-
-        convert_location_attributes(
-            in_path,
-            temp_path,
-            pattern=pattern,
-            field_mapping=field_mapping
-        )
-        validate_and_insert_location_attributes(
-            temp_path, self.dataset_dir
+        convert_timeseries(
+            in_path=in_path,
+            out_path=temp_path,
+            field_mapping=field_mapping,
+            constant_field_values=constant_field_values,
+            pattern=pattern
         )
 
-    def import_secondary_timeseries(
-        self,
-        directory_path: Union[Path, str],
-        pattern="**/*.parquet",
-        field_mapping=None
-    ):
-        """Import primary timeseries data.
+        if pattern.endswith(".csv"):
+            pattern = pattern.replace(".csv", ".parquet")
 
-        Parameters
-        ----------
-        directory_path : Union[Path, str]
-            Directory path to the primary timeseries data.
-        pattern : str, optional (default: "**/*.parquet")
-            The pattern to match files.
-        field_mapping : dict, optional
-            A dictionary mapping input fields to output fields.
-            Format: {input_field: output_field}
-
-        Includes validation and importing data to database.
-        """
         validate_and_insert_timeseries(
-            path=directory_path,
+            in_path=temp_path,
             dataset_path=self.dataset_dir,
             timeseries_type="secondary",
             pattern=pattern,
-            field_mapping=field_mapping
         )
 
     def import_primary_timeseries(
         self,
-        directory_path: Union[Path, str],
+        in_path: Union[Path, str],
         pattern="**/*.parquet",
-        field_mapping=None
+        field_mapping: dict = None,
+        constant_field_values: dict = None
     ):
         """Import primary timeseries data.
 
         Parameters
         ----------
-        directory_path : Union[Path, str]
-            Directory path to the primary timeseries data.
+        in_path : Union[Path, str]
+            Path to the timeseries data (file or directory).
         pattern : str, optional (default: "**/*.parquet")
-            The pattern to match files.
+            The pattern to match files if in_path is a directory.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
+        constant_field_values : dict, optional
+            A dictionary mapping field names to constant values.
+            Format: {field_name: value}
 
         Includes validation and importing data to database.
         """
-        validate_and_insert_timeseries(
-            path=directory_path,
-            dataset_path=self.dataset_dir,
-            timeseries_type="primary",
-            pattern=pattern,
-            field_mapping=field_mapping
+        temp_path = Path(
+            self.cache_dir,
+            const.PRIMARY_TIMESERIES_DIR
+        )
+        temp_path.mkdir(parents=True, exist_ok=True)
+
+        convert_timeseries(
+            in_path=in_path,
+            out_path=temp_path,
+            field_mapping=field_mapping,
+            constant_field_values=constant_field_values,
+            pattern=pattern
         )
 
+        if pattern.endswith(".csv"):
+            pattern = pattern.replace(".csv", ".parquet")
+
+        validate_and_insert_timeseries(
+            in_path=temp_path,
+            dataset_path=self.dataset_dir,
+            timeseries_type="primary",
+            pattern=pattern
+        )
 
     def import_usgs(args):
         """Import xxx data.

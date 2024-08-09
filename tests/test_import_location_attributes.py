@@ -1,3 +1,4 @@
+"""Test the import_location_attributes methods."""
 from teehr.pre.location_attributes import convert_location_attributes
 from pathlib import Path
 from teehr import Evaluation
@@ -7,9 +8,11 @@ from teehr.models.domain_tables import (
 )
 
 
-TEST_STUDY_DATA_DIR = Path("tests", "data", "test_study")
+TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
 GEOJSON_GAGES_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "gages.geojson")
-LOCATION_ATTRIBUTES_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "test_attr_2yr_discharge.csv")
+LOCATION_ATTRIBUTES_FILEPATH = Path(
+    TEST_STUDY_DATA_DIR, "geo", "test_attr_2yr_discharge.csv"
+)
 GEO_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo")
 
 
@@ -19,7 +22,7 @@ def test_convert_location_attributes(tmpdir):
 
     convert_location_attributes(
         in_path=LOCATION_ATTRIBUTES_FILEPATH,
-        out_path=output_filepath,
+        out_dirpath=tmpdir,
         field_mapping={"attribute_value": "value"}
     )
     assert output_filepath.is_file()
@@ -33,7 +36,7 @@ def test_validate_and_insert_location_attributes(tmpdir):
     eval.enable_logging()
 
     eval.import_locations(
-        in_filepath=GEOJSON_GAGES_FILEPATH
+        in_path=GEOJSON_GAGES_FILEPATH
     )
     eval.add_attribute(
         [
@@ -75,7 +78,7 @@ if __name__ == "__main__":
         )
         test_validate_and_insert_location_attributes(
             tempfile.mkdtemp(
-                prefix="1-",
+                prefix="2-",
                 dir=tempdir
             )
         )
