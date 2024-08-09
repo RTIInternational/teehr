@@ -6,7 +6,7 @@ import pandas as pd
 from teehr.models.domain_tables import Configuration, Unit, Variable, Attribute
 import teehr.const as const
 import logging
-from teehr.pre.duckdb_utils import create_database_tables
+from teehr.pre.duckdb_sql import create_database_tables
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ def add_configuration(
     )
     logger.debug(f"Adding configuration to {filepath}")
 
-    org_df = pd.read_csv(filepath, sep="|")
+    org_df = pd.read_csv(filepath)
     org_df = org_df[[key for key in Configuration.model_fields]]
     conn.register("org_df", org_df)
 
@@ -47,7 +47,7 @@ def add_configuration(
     conn.sql(f"""
         COPY (
             SELECT * FROM configurations
-        ) TO '{filepath}' WITH (HEADER, DELIMITER '|');
+        ) TO '{filepath}' WITH (HEADER);
     """)
 
 
@@ -61,7 +61,7 @@ def add_unit(
     filepath = Path(dataset_path, const.UNITS_DIR, const.UNITS_FILE)
     logger.debug(f"Adding unit to {filepath}")
 
-    org_df = pd.read_csv(filepath, sep="|")
+    org_df = pd.read_csv(filepath)
     org_df = org_df[[key for key in Unit.model_fields]]
     conn.register("org_df", org_df)
 
@@ -85,7 +85,7 @@ def add_unit(
     conn.sql(f"""
         COPY (
             SELECT * FROM units
-        ) TO '{filepath}' WITH (HEADER, DELIMITER '|');
+        ) TO '{filepath}' WITH (HEADER);
     """)
 
 
@@ -99,7 +99,7 @@ def add_variable(
     filepath = Path(dataset_path, const.VARIABLES_DIR, const.VARIABLES_FILE)
     logger.debug(f"Adding variable to {filepath}")
 
-    org_df = pd.read_csv(filepath, sep="|")
+    org_df = pd.read_csv(filepath)
     org_df = org_df[[key for key in Variable.model_fields]]
     conn.register("org_df", org_df)
 
@@ -123,7 +123,7 @@ def add_variable(
     conn.sql(f"""
         COPY (
             SELECT * FROM variables
-        ) TO '{filepath}' WITH (HEADER, DELIMITER '|');
+        ) TO '{filepath}' WITH (HEADER);
     """)
 
 
@@ -137,7 +137,7 @@ def add_attribute(
     filepath = Path(dataset_path, const.ATTRIBUTES_DIR, const.ATTRIBUTES_FILE)
     logger.debug(f"Adding attribute to {filepath}")
 
-    org_df = pd.read_csv(filepath, sep="|")
+    org_df = pd.read_csv(filepath)
     org_df = org_df[[key for key in Attribute.model_fields]]
     conn.register("org_df", org_df)
 
@@ -161,5 +161,5 @@ def add_attribute(
     conn.sql(f"""
         COPY (
             SELECT * FROM attributes
-        ) TO '{filepath}' WITH (HEADER, DELIMITER '|');
+        ) TO '{filepath}' WITH (HEADER);
     """)

@@ -1,7 +1,7 @@
 """Module for importing location crosswalks from a file."""
 from typing import Union
 from pathlib import Path
-from teehr.pre.duckdb_utils import (
+from teehr.pre.duckdb_sql import (
     create_database_tables,
     insert_locations,
     insert_location_crosswalks,
@@ -9,6 +9,7 @@ from teehr.pre.duckdb_utils import (
 from teehr.pre.utils import (
     validate_dataset_structure,
 )
+from teehr.models.data_tables import location_crosswalks_field_names
 from teehr.pre.utils import merge_field_mappings
 import teehr.const as const
 import duckdb
@@ -92,10 +93,6 @@ def convert_location_crosswalks(
     out_dirpath = Path(out_dirpath)
     logger.info(f"Converting crosswalks data: {in_path}")
 
-    location_crosswalks_field_names = [
-        "primary_location_id",
-        "secondary_location_id"
-    ]
     default_field_mapping = {}
     for field in location_crosswalks_field_names:
         if field not in default_field_mapping.values():
@@ -107,6 +104,9 @@ def convert_location_crosswalks(
             default_field_mapping,
             field_mapping
         )
+    else:
+        logger.debug("Using default field mapping.")
+        field_mapping = default_field_mapping
 
     files_converted = 0
     if in_path.is_dir():
@@ -183,7 +183,7 @@ def validate_and_insert_location_crosswalks(
     if in_path.is_dir():
         # recursively convert all files in directory
         logger.info(
-            "Recursively validating and inserting ",
+            "Recursively validating and inserting "
             f"all files in: {in_path}/{pattern}"
         )
         for in_filepath in in_path.glob(f"{pattern}"):

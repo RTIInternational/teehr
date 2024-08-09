@@ -3,7 +3,6 @@ from teehr.pre.utils import logger
 from pathlib import Path
 from typing import Union
 import teehr.const as const
-
 import duckdb
 
 
@@ -13,8 +12,7 @@ def create_database_tables(conn: duckdb.DuckDBPyConnection):
     conn.sql("""
         CREATE TABLE IF NOT EXISTS units (
             name VARCHAR PRIMARY KEY,
-            long_name VARCHAR,
-            aliases VARCHAR[],
+            long_name VARCHAR
         );
 
         CREATE TABLE IF NOT EXISTS configurations (
@@ -26,7 +24,6 @@ def create_database_tables(conn: duckdb.DuckDBPyConnection):
         CREATE TABLE IF NOT EXISTS variables (
             name VARCHAR PRIMARY KEY,
             long_name VARCHAR
-            -- interval_seconds INTEGER,
         );
 
         CREATE TABLE IF NOT EXISTS attributes (
@@ -107,64 +104,100 @@ def create_database_tables(conn: duckdb.DuckDBPyConnection):
     """)
 
 
-def insert_units(conn: duckdb.DuckDBPyConnection, dataset_path: str):
-    """Insert units into the database."""
-    logger.info("Inserting units from dataset to database.")
-    filepath = Path(dataset_path, const.UNITS_DIR, const.UNITS_FILE)
+def insert_units(
+    conn: duckdb.DuckDBPyConnection,
+    in_path: Union[Path, str],
+    pattern: str = "**/*.csv"
+):
+    """Insert units into the database from CSV."""
+    in_path = Path(in_path)
+
+    if in_path.is_dir():
+        if len(list(in_path.glob(pattern))) == 0:
+            logger.info(f"No CSV files in {in_path}/{pattern}.")
+        in_path = str(in_path) + pattern
+
+    logger.debug(f"Inserting units from {in_path}.")
+
     conn.sql(f"""
         INSERT INTO units SELECT *
         FROM read_csv(
-            '{filepath}',
-            delim = '|',
+            '{in_path}',
             header = true,
-            columns = {{'name': 'VARCHAR','long_name': 'VARCHAR','aliases': 'VARCHAR[]'}}
+            columns = {{'name': 'VARCHAR','long_name': 'VARCHAR'}}
         );
     """) # noqa
 
 
-def insert_configurations(conn: duckdb.DuckDBPyConnection, dataset_path: str):
-    """Insert configurations into the database."""
-    logger.info("Inserting configurations from dataset to database.")
-    filepath = Path(
-        dataset_path, const.CONFIGURATIONS_DIR, const.CONFIGURATIONS_FILE
-    )
+def insert_configurations(
+    conn: duckdb.DuckDBPyConnection,
+    in_path: Union[Path, str],
+    pattern: str = "**/*.csv"
+):
+    """Insert configurations into the database from CSV."""
+    in_path = Path(in_path)
+
+    if in_path.is_dir():
+        if len(list(in_path.glob(pattern))) == 0:
+            logger.info(f"No CSV files in {in_path}/{pattern}.")
+        in_path = str(in_path) + pattern
+
+    logger.debug(f"Inserting configurations from {in_path}.")
+
     conn.sql(f"""
         INSERT INTO configurations SELECT *
         FROM read_csv(
-            '{filepath}',
-            delim = '|',
+            '{in_path}',
             header = true,
             columns = {{'name': 'VARCHAR','type': 'VARCHAR','description': 'VARCHAR'}}
         );
     """) # noqa
 
 
-def insert_variables(conn: duckdb.DuckDBPyConnection, dataset_path: str):
-    """Insert variables into the database."""
-    logger.info("Inserting variables from dataset to database.")
-    filepath = Path(dataset_path, const.VARIABLES_DIR, const.VARIABLES_FILE)
+def insert_variables(
+    conn: duckdb.DuckDBPyConnection,
+    in_path: Union[Path, str],
+    pattern: str = "**/*.csv"
+):
+    """Insert variables into the database from CSV."""
+    in_path = Path(in_path)
+
+    if in_path.is_dir():
+        if len(list(in_path.glob(pattern))) == 0:
+            logger.info(f"No CSV files in {in_path}/{pattern}.")
+        in_path = str(in_path) + pattern
+
+    logger.debug(f"Inserting variables from {in_path}.")
+
     conn.sql(f"""
         INSERT INTO variables SELECT *
         FROM read_csv(
-            '{filepath}',
-            delim = '|',
+            '{in_path}',
             header = true,
             columns = {{'name': 'VARCHAR','long_name': 'VARCHAR'}}
         );
     """)
 
 
-def insert_attributes(conn: duckdb.DuckDBPyConnection, dataset_path: str):
-    """Insert attributes into the database."""
-    logger.info("Inserting attributes from dataset to database.")
-    filepath = Path(
-        dataset_path, const.ATTRIBUTES_DIR, const.ATTRIBUTES_FILE
-    )
+def insert_attributes(
+    conn: duckdb.DuckDBPyConnection,
+    in_path: Union[Path, str],
+    pattern: str = "**/*.csv"
+):
+    """Insert attributes into the database from CSV."""
+    in_path = Path(in_path)
+
+    if in_path.is_dir():
+        if len(list(in_path.glob(pattern))) == 0:
+            logger.info(f"No CSV files in {in_path}/{pattern}.")
+        in_path = str(in_path) + pattern
+
+    logger.debug(f"Inserting attributes from {in_path}.")
+
     conn.sql(f"""
         INSERT INTO attributes SELECT *
         FROM read_csv(
-            '{filepath}',
-            delim = '|',
+            '{in_path}',
             header = true,
             columns = {{'name': 'VARCHAR','type': 'VARCHAR', 'description': 'VARCHAR'}}
         );
@@ -174,17 +207,15 @@ def insert_attributes(conn: duckdb.DuckDBPyConnection, dataset_path: str):
 def insert_locations(
     conn: duckdb.DuckDBPyConnection,
     in_path: Union[Path, str],
-    in_pattern: str = "**/*.parquet"
+    pattern: str = "**/*.parquet"
 ):
-    """Insert locations into the database."""
-    logger.info("Inserting locations.")
+    """Insert locations into the database from Parquet."""
     in_path = Path(in_path)
 
     if in_path.is_dir():
-        if len(list(in_path.glob(in_pattern))) == 0:
-            logger.error(f"No parquet files in {in_path}.")
-            raise FileNotFoundError
-        in_path = str(in_path) + in_pattern
+        if len(list(in_path.glob(pattern))) == 0:
+            logger.info(f"No Parquet files in {in_path}/{pattern}.")
+        in_path = str(in_path) + pattern
 
     logger.debug(f"Inserting locations from {in_path}.")
 
@@ -198,16 +229,15 @@ def insert_locations(
 def insert_location_crosswalks(
     conn: duckdb.DuckDBPyConnection,
     in_path: Union[Path, str],
-    in_pattern: str = "**/*.parquet"
+    pattern: str = "**/*.parquet"
 ):
     """Insert location crosswalks into the database."""
-    logger.info("Inserting location crosswalks.")
     in_path = Path(in_path)
+
     if in_path.is_dir():
-        if len(list(in_path.glob(in_pattern))) == 0:
-            logger.error(f"No parquet files in {in_path}.")
-            raise FileNotFoundError
-        in_path = str(in_path) + in_pattern
+        if len(list(in_path.glob(pattern))) == 0:
+            logger.info(f"No Parquet files in {in_path}/{pattern}.")
+        in_path = str(in_path) + pattern
 
     logger.debug(f"Inserting location crosswalks from {in_path}.")
 
@@ -220,16 +250,15 @@ def insert_location_crosswalks(
 def insert_location_attributes(
     conn: duckdb.DuckDBPyConnection,
     in_path: Union[Path, str],
-    in_pattern: str = "**/*.parquet"
+    pattern: str = "**/*.parquet"
 ):
     """Insert location_attributes into the database."""
-    logger.info("Inserting location_attributes.")
     in_path = Path(in_path)
+
     if in_path.is_dir():
-        if len(list(in_path.glob(in_pattern))) == 0:
-            logger.error(f"No parquet files in {in_path}.")
-            raise FileNotFoundError
-        in_path = str(in_path) + in_pattern
+        if len(list(in_path.glob(pattern))) == 0:
+            logger.info(f"No Parquet files in {in_path}/{pattern}.")
+        in_path = str(in_path) + pattern
 
     logger.debug(f"Inserting location_attributes from {in_path}.")
 
@@ -237,3 +266,92 @@ def insert_location_attributes(
         INSERT INTO location_attributes SELECT *
         FROM read_parquet('{in_path}');
     """)
+
+
+# Load from dataset
+def load_units_from_dataset(
+    conn: duckdb.DuckDBPyConnection,
+    dataset_path: Union[Path, str]
+):
+    """Insert units into the database."""
+    logger.info("Inserting units from dataset to database.")
+    filepath = Path(dataset_path, const.UNITS_DIR, const.UNITS_FILE)
+    insert_units(conn, filepath)
+
+
+def load_configurations_from_dataset(
+    conn: duckdb.DuckDBPyConnection,
+    dataset_path: Union[Path, str]
+):
+    """Insert configurations into the database."""
+    logger.info("Inserting configurations from dataset to database.")
+    filepath = Path(
+        dataset_path, const.CONFIGURATIONS_DIR, const.CONFIGURATIONS_FILE
+    )
+    insert_configurations(conn, filepath)
+
+
+def load_variables_from_dataset(
+    conn: duckdb.DuckDBPyConnection,
+    dataset_path: Union[Path, str]
+):
+    """Insert variables into the database."""
+    logger.info("Inserting variables from dataset to database.")
+    filepath = Path(dataset_path, const.VARIABLES_DIR, const.VARIABLES_FILE)
+    insert_variables(conn, filepath)
+
+
+def load_attributes_from_dataset(
+    conn: duckdb.DuckDBPyConnection,
+    dataset_path: Union[Path, str]
+):
+    """Insert attributes into the database."""
+    logger.info("Inserting attributes from dataset to database.")
+    filepath = Path(
+        dataset_path, const.ATTRIBUTES_DIR, const.ATTRIBUTES_FILE
+    )
+    insert_attributes(conn, filepath)
+
+
+def load_locations_from_dataset(
+    conn: duckdb.DuckDBPyConnection,
+    dataset_path: Union[Path, str]
+):
+    """Insert locations into the database."""
+    logger.info("Inserting locations from dataset to database.")
+    filepath = Path(dataset_path, const.LOCATIONS_DIR)
+    insert_locations(conn, filepath)
+
+
+def load_location_crosswalks_from_dataset(
+    conn: duckdb.DuckDBPyConnection,
+    dataset_path: Union[Path, str]
+):
+    """Insert location crosswalks into the database."""
+    logger.info("Inserting location crosswalks from dataset to database.")
+    filepath = Path(dataset_path, const.LOCATION_CROSSWALKS_DIR)
+    insert_location_crosswalks(conn, filepath)
+
+
+def load_location_attributes_from_dataset(
+    conn: duckdb.DuckDBPyConnection,
+    dataset_path: Union[Path, str]
+):
+    """Insert location attributes into the database."""
+    logger.info("Inserting location attributes from dataset to database.")
+    filepath = Path(dataset_path, const.LOCATION_ATTRIBUTES_DIR)
+    insert_location_attributes(conn, filepath)
+
+
+def load_dataset_to_database(
+    conn: duckdb.DuckDBPyConnection,
+    dataset_path: Union[Path, str]
+):
+    """Load a dataset to the database."""
+    load_units_from_dataset(conn, dataset_path)
+    load_configurations_from_dataset(conn, dataset_path)
+    load_variables_from_dataset(conn, dataset_path)
+    load_attributes_from_dataset(conn, dataset_path)
+    load_locations_from_dataset(conn, dataset_path)
+    load_location_crosswalks_from_dataset(conn, dataset_path)
+    load_location_attributes_from_dataset(conn, dataset_path)

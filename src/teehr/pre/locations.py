@@ -3,13 +3,14 @@ from typing import Union
 from pathlib import Path
 import teehr.pre.utils as tpu
 import duckdb
-from teehr.pre.duckdb_utils import (
+from teehr.pre.duckdb_sql import (
     create_database_tables,
     insert_locations,
 )
 from teehr.pre.utils import (
     validate_dataset_structure,
 )
+from teehr.models.data_tables import locations_field_names
 from teehr.pre.utils import merge_field_mappings
 import teehr.const as const
 
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 def convert_single_locations(
         input_filepath: Union[str, Path],
         output_filepath: Union[str, Path],
-        field_mapping: dict = None,
+        field_mapping: dict,
         **kwargs
 ):
     """Import locations from a file.
@@ -60,9 +61,7 @@ def convert_single_locations(
     # convert to EPSG:4326
     locations.to_crs("EPSG:4326", inplace=True)
 
-    # rename fields if field_mapping provided
-    if field_mapping:
-        locations.rename(columns=field_mapping, inplace=True)
+    locations.rename(columns=field_mapping, inplace=True)
 
     # ensure fields are correct type
     locations["id"] = locations["id"].astype(str)
@@ -107,7 +106,6 @@ def convert_locations(
     in_path = Path(in_path)
     out_dirpath = Path(out_dirpath)
 
-    locations_field_names = ["id", "name", "geometry"]
     default_field_mapping = {}
     for field in locations_field_names:
         if field not in default_field_mapping.values():

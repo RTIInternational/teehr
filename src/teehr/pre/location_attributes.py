@@ -1,15 +1,16 @@
 """Module for importing location attributes from a file."""
 from typing import Union
 from pathlib import Path
-from teehr.pre.duckdb_utils import (
+from teehr.pre.duckdb_sql import (
     create_database_tables,
     insert_locations,
     insert_location_attributes,
-    insert_attributes
+    load_attributes_from_dataset
 )
 from teehr.pre.utils import (
     validate_dataset_structure,
 )
+from teehr.models.data_tables import location_attributes_field_names
 from teehr.pre.utils import merge_field_mappings
 import teehr.const as const
 import duckdb
@@ -93,11 +94,6 @@ def convert_location_attributes(
     out_dirpath = Path(out_dirpath)
     logger.info(f"Converting attributes data: {in_path}")
 
-    location_attributes_field_names = [
-        "location_id",
-        "attribute_name",
-        "value"
-    ]
     default_field_mapping = {}
     for field in location_attributes_field_names:
         if field not in default_field_mapping.values():
@@ -109,6 +105,9 @@ def convert_location_attributes(
             default_field_mapping,
             field_mapping
         )
+    else:
+        logger.debug("Using default field mapping.")
+        field_mapping = default_field_mapping
 
     files_converted = 0
     if in_path.is_dir():
@@ -179,7 +178,7 @@ def validate_and_insert_location_attributes(
         Path(dataset_dir, const.LOCATIONS_DIR)
     )
 
-    insert_attributes(conn, dataset_dir)
+    load_attributes_from_dataset(conn, dataset_dir)
 
     location_attributes_dir = Path(dataset_dir, const.LOCATION_ATTRIBUTES_DIR)
 

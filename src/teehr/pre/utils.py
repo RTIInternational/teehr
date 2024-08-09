@@ -1,8 +1,10 @@
 """Utility functions for the preprocessing."""
 import geopandas as gpd
 from pathlib import Path
-from typing import Union
+from typing import Union, List
 import logging
+import shutil
+
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +60,23 @@ def validate_dataset_structure(dataset_filepath: Union[str, Path]) -> bool:
     return True
 
 
+def validate_constant_values_dict(
+    constant_values_dict: dict,
+    fields: List[str],
+):
+    """Validate the values of the constants."""
+    constant_keys = constant_values_dict.keys()
+    for key in constant_keys:
+        if key not in fields:
+            logger.error(
+                f"Invalid constant value key: {key}"
+                f"Valid keys are: {fields}"
+            )
+            raise ValueError(f"Invalid constant value key: {key}")
+
+    return True
+
+
 def merge_field_mappings(
         default_mapping: dict,
         custom_mapping: dict
@@ -80,10 +99,55 @@ def merge_field_mappings(
 
     Merges based on output field names.
     """
+    default_values = set(default_mapping.values())
+    custom_values = set(custom_mapping.values())
+    if not custom_values.issubset(default_values):
+        logger.error(
+            f"All custom values must be in default values: {default_values}"
+        )
+        raise ValueError("All custom values must be in default values")
+
     default_mapping = default_mapping.copy()
     custom_mapping = custom_mapping.copy()
     default_mapping = {v: k for k, v in default_mapping.items()}
     custom_mapping = {v: k for k, v in custom_mapping.items()}
+
     default_mapping.update(custom_mapping)
     mapping = {v: k for k, v in default_mapping.items()}
     return mapping
+
+
+def copy_template_to(
+        template_dir: Union[str, Path],
+        destination_dir: Union[str, Path]
+):
+    """Copy the template directory to the destination directory."""
+    template_dir = Path(template_dir)
+    destination_dir = Path(destination_dir)
+
+    for file in template_dir.glob('**/*'):
+        if file.is_dir():
+            destination_file = Path(
+                destination_dir,
+                file.relative_to(template_dir)
+            )
+            if not destination_file.parent.is_dir():
+                destination_file.parent.mkdir(parents=True)
+            logger.debug(f"Making directory {destination_file}")
+            destination_file.mkdir()
+        if file.is_file():
+            destination_file = Path(
+                destination_dir,
+                file.relative_to(template_dir)
+            )
+            if not destination_file.parent.is_dir():
+                destination_file.parent.mkdir(parents=True)
+            logger.debug(f"Copying file {file} to {destination_file}")
+            shutil.copy(file, destination_file)
+
+    logger.debug(
+        f"Renaming {destination_dir}/gitignore_template to .gitignore"
+    )
+
+    gitignore_text = Path(destination_dir, "gitignore_template")
+    gitignore_text.rename(Path(destination_dir, ".gitignore"))

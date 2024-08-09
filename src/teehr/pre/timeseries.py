@@ -3,16 +3,20 @@ from typing import Union
 from pathlib import Path
 import duckdb
 import pandas as pd
-from teehr.pre.utils import validate_dataset_structure
-from teehr.pre.utils import merge_field_mappings
-from teehr.pre.duckdb_utils import (
+from teehr.pre.utils import (
+    validate_dataset_structure,
+    merge_field_mappings,
+    validate_constant_values_dict
+)
+from teehr.pre.duckdb_sql import (
     create_database_tables,
-    insert_configurations,
-    insert_units,
-    insert_variables,
+    load_configurations_from_dataset,
+    load_units_from_dataset,
+    load_variables_from_dataset,
     insert_locations,
     insert_location_crosswalks,
 )
+from teehr.models.data_tables import timeseries_field_names
 import teehr.const as const
 
 import logging
@@ -42,7 +46,8 @@ def convert_single_timeseries(
         A dictionary mapping field names to constant values.
         format: {field_name: value}
     **kwargs
-        Additional keyword arguments are passed to pd.read_csv() or pd.read_parquet().
+        Additional keyword arguments are passed to
+            pd.read_csv() or pd.read_parquet().
 
     Steps:
     1. Read the file
@@ -102,7 +107,8 @@ def convert_timeseries(
     pattern : str, optional (default: "**/*.parquet")
         The pattern to match files.
     **kwargs
-        Additional keyword arguments are passed to pd.read_csv() or pd.read_parquet().
+        Additional keyword arguments are passed to
+            pd.read_csv() or pd.read_parquet().
 
     Can convert CSV or Parquet files.
 
@@ -110,16 +116,6 @@ def convert_timeseries(
     in_path = Path(in_path)
     out_path = Path(out_path)
     logger.info(f"Converting timeseries data: {in_path}")
-
-    timeseries_field_names = [
-        "reference_time",
-        "value_time",
-        "configuration_name",
-        "unit_name",
-        "variable_name",
-        "value",
-        "location_id"
-    ]
 
     default_field_mapping = {}
     for field in timeseries_field_names:
@@ -138,9 +134,10 @@ def convert_timeseries(
 
     # verify constant_field_values keys are in field_mapping values
     if constant_field_values:
-        for field in constant_field_values.keys():
-            if field not in field_mapping.values():
-                raise ValueError(f"Field {field} not a valid field name.")
+        validate_constant_values_dict(
+            constant_field_values,
+            field_mapping.values()
+        )
 
     files_converted = 0
     if in_path.is_dir():
@@ -172,7 +169,7 @@ def convert_timeseries(
     logger.info(f"Converted {files_converted} files.")
 
 
-def verify_and_insert_single_timeseries(
+def validate_and_insert_single_timeseries(
     conn: duckdb.DuckDBPyConnection,
     in_filepath: Union[str, Path],
     out_filepath: Union[str, Path],
@@ -239,9 +236,9 @@ def validate_and_insert_timeseries(
     create_database_tables(conn)
 
     # insert domains
-    insert_units(conn, dataset_path)
-    insert_configurations(conn, dataset_path)
-    insert_variables(conn, dataset_path)
+    load_units_from_dataset(conn, dataset_path)
+    load_configurations_from_dataset(conn, dataset_path)
+    load_variables_from_dataset(conn, dataset_path)
 
     # insert locations
     insert_locations(
@@ -262,11 +259,14 @@ def validate_and_insert_timeseries(
 
     if in_path.is_dir():
         # recursively convert all files in directory
-        logger.info(f"Recursively validating and inserting all files in {in_path}/{pattern}")
+        logger.info(
+            "Recursively validating and inserting all files "
+            f"in {in_path}/{pattern}"
+        )
         for in_filepath in in_path.glob(f"{pattern}"):
             relative_path = in_filepath.relative_to(in_path)
             out_filepath = Path(timeseries_dir, relative_path)
-            verify_and_insert_single_timeseries(
+            validate_and_insert_single_timeseries(
                 conn,
                 in_filepath,
                 out_filepath,
@@ -274,7 +274,7 @@ def validate_and_insert_timeseries(
             )
     else:
         out_filepath = Path(timeseries_dir, in_path.name)
-        verify_and_insert_single_timeseries(
+        validate_and_insert_single_timeseries(
             conn,
             in_path,
             out_filepath,

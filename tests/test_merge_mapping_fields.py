@@ -1,3 +1,4 @@
+"""Tests for merging of default and custom field mappings."""
 from teehr.pre.utils import merge_field_mappings
 
 
@@ -18,7 +19,17 @@ def test_merge_mapping_fields():
         "variable": "variable_name"
     }
     merged = merge_field_mappings(default_mapping, custom_mapping)
-    print(merged)
+
+    target = {
+        'reference_time': 'reference_time',
+        'value_time': 'value_time',
+        'configuration': 'configuration_name',
+        'unit': 'unit_name',
+        'variable': 'variable_name',
+        'value': 'value',
+        'location_id': 'location_id'
+    }
+    assert merged == target
 
 
 if __name__ == "__main__":

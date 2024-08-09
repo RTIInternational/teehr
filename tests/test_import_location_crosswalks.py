@@ -15,8 +15,8 @@ def test_convert_location_crosswalk(tmpdir):
     output_filepath = Path(tmpdir, "crosswalk.parquet")
 
     convert_location_crosswalks(
-        in_filepath=CROSSWALK_FILEPATH,
-        out_filepath=output_filepath,
+        in_path=CROSSWALK_FILEPATH,
+        out_dirpath=tmpdir,
     )
     assert output_filepath.is_file()
 

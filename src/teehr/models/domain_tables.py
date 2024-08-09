@@ -15,7 +15,6 @@ class Unit(BaseModel):
 
     name: str
     long_name: str
-    aliases: list[str]
 
 
 class Variable(BaseModel):

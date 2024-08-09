@@ -7,7 +7,7 @@ from pathlib import Path
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
 import logging
-from teehr.pre.evaluation import copy_template_to
+from teehr.pre.utils import copy_template_to
 from teehr.pre.locations import (
     convert_locations,
     validate_and_insert_locations,
