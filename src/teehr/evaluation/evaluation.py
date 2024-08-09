@@ -283,7 +283,7 @@ class Evaluation:
 
         Fetch the data, writing to the specified output directory.
 
-        >>> fetch_usgs_streamflow(
+        >>> eval.fetch_usgs_streamflow(
         >>>     sites=SITES,
         >>>     start_date=START_DATE,
         >>>     end_date=END_DATE,
