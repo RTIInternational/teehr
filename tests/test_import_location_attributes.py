@@ -17,7 +17,7 @@ GEO_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo")
 
 
 def test_convert_location_attributes(tmpdir):
-    """Test converson of single location_attributes file."""
+    """Test conversion of single location_attributes file."""
     output_filepath = Path(tmpdir, "test_attr_2yr_discharge.parquet")
 
     convert_location_attributes(
