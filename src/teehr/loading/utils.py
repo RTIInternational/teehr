@@ -28,7 +28,14 @@ from teehr.loading.const import (
     NWM_BUCKET,
     NWM_S3_JSON_PATH,
     NWM30_START_DATE,
-    TIMESERIES_DATA_TYPES
+    TIMESERIES_DATA_TYPES,
+    VALUE,
+    VALUE_TIME,
+    REFERENCE_TIME,
+    LOCATION_ID,
+    UNIT_NAME,
+    VARIABLE_NAME,
+    CONFIGURATION_NAME
 )
 
 
@@ -46,22 +53,22 @@ def format_timeseries_data_types(df: pd.DataFrame) -> pd.DataFrame:
     The fields types are specified in the TIMESERIES_DATA_TYPES dictionary.
     """
     # Convert to UTC if not already in UTC.
-    if df["value_time"].dt.tz is not None:
-        df["value_time"] = df["value_time"].dt.tz_convert("UTC")
-    if df["reference_time"].dt.tz is not None:
-        df["reference_time"] = df["reference_time"].dt.tz_convert("UTC")
+    if df[VALUE_TIME].dt.tz is not None:
+        df[VALUE_TIME] = df[VALUE_TIME].dt.tz_convert("UTC")
+    if df[REFERENCE_TIME].dt.tz is not None:
+        df[REFERENCE_TIME] = df[REFERENCE_TIME].dt.tz_convert("UTC")
     # Drop timezone information.
-    df["value_time"] = df["value_time"].dt.tz_localize(None)
-    df["reference_time"] = df["reference_time"].dt.tz_localize(None)
+    df[VALUE_TIME] = df[VALUE_TIME].dt.tz_localize(None)
+    df[REFERENCE_TIME] = df[REFERENCE_TIME].dt.tz_localize(None)
     # Convert to datetime64[ms].
-    df["value_time"] = df["value_time"].astype(TIMESERIES_DATA_TYPES["value_time"])  # noqa
-    df["reference_time"] = df["reference_time"].astype(TIMESERIES_DATA_TYPES["reference_time"])  # noqa
+    df[VALUE_TIME] = df[VALUE_TIME].astype(TIMESERIES_DATA_TYPES[VALUE_TIME])  # noqa
+    df[REFERENCE_TIME] = df[REFERENCE_TIME].astype(TIMESERIES_DATA_TYPES[REFERENCE_TIME])  # noqa
     # Convert remaining fields.
-    df["value"] = df["value"].astype(TIMESERIES_DATA_TYPES["value"])
-    df["measurement_unit"] = df["measurement_unit"].astype(TIMESERIES_DATA_TYPES["measurement_unit"])  # noqa
-    df["variable_name"] = df["variable_name"].astype(TIMESERIES_DATA_TYPES["variable_name"])  # noqa
-    df["configuration"] = df["configuration"].astype(TIMESERIES_DATA_TYPES["configuration"])  # noqa
-    df["location_id"] = df["location_id"].astype(TIMESERIES_DATA_TYPES["location_id"])  # noqa
+    df[VALUE] = df[VALUE].astype(TIMESERIES_DATA_TYPES[VALUE])
+    df[UNIT_NAME] = df[UNIT_NAME].astype(TIMESERIES_DATA_TYPES[UNIT_NAME])  # noqa
+    df[VARIABLE_NAME] = df[VARIABLE_NAME].astype(TIMESERIES_DATA_TYPES[VARIABLE_NAME])  # noqa
+    df[CONFIGURATION_NAME] = df[CONFIGURATION_NAME].astype(TIMESERIES_DATA_TYPES[CONFIGURATION_NAME])  # noqa
+    df[LOCATION_ID] = df[LOCATION_ID].astype(TIMESERIES_DATA_TYPES[LOCATION_ID])  # noqa
 
     return df
 

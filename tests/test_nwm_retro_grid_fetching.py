@@ -39,7 +39,7 @@ def test_nwm30_grid_loading(tmpdir):
     assert df["value_time"].min() == pd.Timestamp("2008-05-23 09:00")
     assert df["value_time"].max() == pd.Timestamp("2008-05-23 23:00")
     assert df["location_id"].unique()[0] == "ngen-1016000606"
-    assert df["configuration"].unique()[0] == "nwm30_retrospective"
+    assert df["configuration_name"].unique()[0] == "nwm30_retrospective"
     test_val = df[df.value_time == "2008-05-23 09:00:00"].value.values[0]
     assert math.isclose(test_val, 0.00025580, rel_tol=1e-4)
     assert df.columns.to_list() == [
@@ -47,8 +47,8 @@ def test_nwm30_grid_loading(tmpdir):
         "value",
         "value_time",
         "reference_time",
-        "measurement_unit",
-        "configuration",
+        "unit_name",
+        "configuration_name",
         "variable_name",
     ]
 
@@ -79,7 +79,7 @@ def test_nwm21_grid_loading(tmpdir):
     assert df["value_time"].min() == pd.Timestamp("2008-05-23 09:00")
     assert df["value_time"].max() == pd.Timestamp("2008-05-23 23:00")
     assert df["location_id"].unique()[0] == "xyz-1016000606"
-    assert df["configuration"].unique()[0] == "nwm21_retrospective"
+    assert df["configuration_name"].unique()[0] == "nwm21_retrospective"
     test_val = df[df.value_time == "2008-05-23 09:00:00"].value.values[0]
     assert math.isclose(test_val, 0.00025678, rel_tol=1e-4)
     assert df.columns.to_list() == [
@@ -87,8 +87,8 @@ def test_nwm21_grid_loading(tmpdir):
         "value",
         "value_time",
         "reference_time",
-        "measurement_unit",
-        "configuration",
+        "unit_name",
+        "configuration_name",
         "variable_name",
     ]
 
