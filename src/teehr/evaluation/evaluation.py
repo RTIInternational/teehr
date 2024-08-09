@@ -772,7 +772,7 @@ class Evaluation:
             variable_name=variable_name,
             start_date=start_date,
             ingest_days=ingest_days,
-            zonal_weights_filepath=self.weights_cache_dir,
+            zonal_weights_filepath=zonal_weights_filepath,
             json_dir=self.kerchunk_cache_dir,
             output_parquet_dir=self._get_timeseries_cache_path(is_primary),
             nwm_version=nwm_version,
