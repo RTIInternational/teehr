@@ -10,7 +10,9 @@ from pyspark import SparkConf
 import logging
 from teehr.pre.utils import (
     copy_template_to,
-    get_joined_timeseries_fields,
+)
+from teehr.evaluation.utils import (
+    _get_joined_timeseries_fields,
 )
 from teehr.pre.locations import (
     convert_locations,
@@ -98,8 +100,14 @@ class Evaluation:
         self.joined_timeseries_dir = Path(
             self.dataset_dir, const.JOINED_TIMESERIES_DIR
         )
-        self.kerchunk_cache_dir = Path(self.temp_dir, const.KERCHUNK_DIR)
-        self.weights_cache_dir = Path(self.temp_dir, const.WEIGHTS_DIR)
+        self.usgs_cache_dir = Path(
+            self.cache_dir, const.FETCHING_CACHE_DIR, const.USGS_CACHE_DIR
+        )
+        self.nwm_cache_dir = Path(
+            self.cache_dir, const.FETCHING_CACHE_DIR, const.NWM_CACHE_DIR
+        )
+        self.kerchunk_cache_dir = Path(self.cache_dir, const.KERCHUNK_DIR)
+        self.weights_cache_dir = Path(self.cache_dir, const.WEIGHTS_DIR)
 
         if not Path(self.dir_path).is_dir():
             logger.error(f"Directory {self.dir_path} does not exist.")
@@ -115,7 +123,7 @@ class Evaluation:
     def fields(self) -> Enum:
         """The field names from the joined timeseries table."""
         logger.info("Getting fields from the joined timeseries table.")
-        return get_joined_timeseries_fields(
+        return _get_joined_timeseries_fields(
             Path(self.joined_timeseries_dir)
         )
 
@@ -133,10 +141,6 @@ class Evaluation:
             handler
         )
         logger.setLevel(logging.DEBUG)
-        # logger.info("Getting fields from the joined timeseries table.")
-        return _get_joined_timeseries_fields(
-            self.joined_timeseries_dir
-        )
 
     def clone_template(self):
         """Create a study from the standard template.
