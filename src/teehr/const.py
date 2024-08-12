@@ -27,3 +27,6 @@ USGS_CACHE_DIR = "usgs"
 NWM_CACHE_DIR = "nwm"
 KERCHUNK_DIR = "kerchunk"
 WEIGHTS_DIR = "weights"
+
+# Loading cache directories
+LOADING_CACHE_DIR = "loading"

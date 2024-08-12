@@ -16,7 +16,7 @@ def test_nwm20_retro_one_file(tmpdir):
     eval = Evaluation(tmpdir)
     eval.clone_template()
 
-    eval.fetch_nwm_retrospective_points(
+    eval.fetch.nwm_retrospective_points(
         nwm_version="nwm20",
         variable_name="streamflow",
         start_date="2000-01-01",
@@ -26,7 +26,7 @@ def test_nwm20_retro_one_file(tmpdir):
     )
     df = pd.read_parquet(
         Path(
-            eval.nwm_cache_dir,
+            eval.fetch.nwm_cache_dir,
             "20000101_20000102.parquet"
         )
     )
@@ -51,7 +51,7 @@ def test_nwm20_retro_week(tmpdir):
     eval = Evaluation(tmpdir)
     eval.clone_template()
 
-    eval.fetch_nwm_retrospective_points(
+    eval.fetch.nwm_retrospective_points(
         nwm_version="nwm20",
         variable_name="streamflow",
         start_date=datetime(2000, 1, 10),
@@ -62,7 +62,7 @@ def test_nwm20_retro_week(tmpdir):
     )
     df = pd.read_parquet(
         Path(
-            eval.nwm_cache_dir,
+            eval.fetch.nwm_cache_dir,
             "20000110_20000116.parquet"
         )
     )
@@ -85,7 +85,7 @@ def test_nwm20_retro_month(tmpdir):
     eval = Evaluation(tmpdir)
     eval.clone_template()
 
-    eval.fetch_nwm_retrospective_points(
+    eval.fetch.nwm_retrospective_points(
         nwm_version="nwm20",
         variable_name="streamflow",
         start_date=datetime(2000, 1, 1),
@@ -96,7 +96,7 @@ def test_nwm20_retro_month(tmpdir):
     )
     df = pd.read_parquet(
         Path(
-            eval.nwm_cache_dir,
+            eval.fetch.nwm_cache_dir,
             "20000101_20000131.parquet"
         )
     )
@@ -119,7 +119,7 @@ def test_nwm20_retro_year(tmpdir):
     eval = Evaluation(tmpdir)
     eval.clone_template()
 
-    eval.fetch_nwm_retrospective_points(
+    eval.fetch.nwm_retrospective_points(
         nwm_version="nwm20",
         variable_name="streamflow",
         start_date=datetime(2000, 1, 1),
@@ -130,7 +130,7 @@ def test_nwm20_retro_year(tmpdir):
     )
     df = pd.read_parquet(
         Path(
-            eval.nwm_cache_dir,
+            eval.fetch.nwm_cache_dir,
             "20000101_20001231.parquet"
         )
     )
@@ -153,7 +153,7 @@ def test_nwm21_retro_one_file(tmpdir):
     eval = Evaluation(tmpdir)
     eval.clone_template()
 
-    eval.fetch_nwm_retrospective_points(
+    eval.fetch.nwm_retrospective_points(
         nwm_version="nwm21",
         variable_name="streamflow",
         start_date="2000-01-01",
@@ -163,7 +163,7 @@ def test_nwm21_retro_one_file(tmpdir):
     )
     df = pd.read_parquet(
         Path(
-            eval.nwm_cache_dir,
+            eval.fetch.nwm_cache_dir,
             "20000101_20000102.parquet"
         )
     )
@@ -188,7 +188,7 @@ def test_nwm30_one_file(tmpdir):
     eval = Evaluation(tmpdir)
     eval.clone_template()
 
-    eval.fetch_nwm_retrospective_points(
+    eval.fetch.nwm_retrospective_points(
         nwm_version="nwm30",
         variable_name="streamflow",
         start_date=datetime(2000, 1, 1),
@@ -200,7 +200,7 @@ def test_nwm30_one_file(tmpdir):
 
     df = pd.read_parquet(
         Path(
-            eval.nwm_cache_dir,
+            eval.fetch.nwm_cache_dir,
             "20000101_20000102.parquet"
         )
     )

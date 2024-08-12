@@ -18,7 +18,7 @@ def test_nwm30_grid_fetching(tmpdir):
     eval = Evaluation(tmpdir)
     eval.clone_template()
 
-    eval.fetch_nwm_retrospective_grids(
+    eval.fetch.nwm_retrospective_grids(
         nwm_version="nwm30",
         variable_name="RAINRATE",
         zonal_weights_filepath=ZONAL_WEIGHTS,
@@ -31,7 +31,7 @@ def test_nwm30_grid_fetching(tmpdir):
 
     df = pd.read_parquet(
         Path(
-            eval.nwm_cache_dir,
+            eval.fetch.nwm_cache_dir,
             "20080523.parquet"
         )
     )
@@ -58,7 +58,7 @@ def test_nwm21_grid_fetching(tmpdir):
     eval = Evaluation(tmpdir)
     eval.clone_template()
 
-    eval.fetch_nwm_retrospective_grids(
+    eval.fetch.nwm_retrospective_grids(
         nwm_version="nwm21",
         variable_name="RAINRATE",
         zonal_weights_filepath=ZONAL_WEIGHTS,
@@ -71,7 +71,7 @@ def test_nwm21_grid_fetching(tmpdir):
 
     df = pd.read_parquet(
         Path(
-            eval.nwm_cache_dir,
+            eval.fetch.nwm_cache_dir,
             "20080523.parquet"
         )
     )
