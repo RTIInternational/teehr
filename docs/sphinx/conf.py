@@ -10,7 +10,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 from datetime import datetime
-import tomllib
+import tomli
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../src/teehr'))
@@ -22,7 +22,7 @@ copyright = f'{datetime.now().year} RTI International'
 
 def _get_project_meta():
     with open('../../pyproject.toml', mode='rb') as pyproject:
-        return tomllib.load(pyproject)['tool']['poetry']
+        return tomli.load(pyproject)['tool']['poetry']
 
 
 # Get the authors and latest version from the pyproject.toml file.
