@@ -24,6 +24,14 @@ def test_get_metrics(tmpdir):
         JOINED_TIMESERIES_FILEPATH,
         Path(eval.joined_timeseries_dir, JOINED_TIMESERIES_FILEPATH.name)
     )
+    eval = Evaluation(dir_path=tmpdir)
+    eval.clone_template()
+
+    # Copy in joined timeseries file.
+    shutil.copy(
+        JOINED_TIMESERIES_FILEPATH,
+        Path(eval.joined_timeseries_dir, JOINED_TIMESERIES_FILEPATH.name)
+    )
 
     # Define the metrics to include.
     boot = Bootstrap(method="bias_corrected", num_samples=100)

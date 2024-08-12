@@ -2,12 +2,16 @@
 from pathlib import Path
 # import shutil
 import tempfile
+# import shutil
+import tempfile
 
 
+def test_clone_template(tmpdir):
 def test_clone_template(tmpdir):
     """Test creating a new study."""
     from teehr import Evaluation
 
+    eval = Evaluation(dir_path=tmpdir)
     eval = Evaluation(dir_path=tmpdir)
     eval.clone_template()
 
