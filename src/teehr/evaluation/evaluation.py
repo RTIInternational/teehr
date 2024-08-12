@@ -71,12 +71,12 @@ class Evaluation:
             self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
 
     @property
-    def fetch(self) -> str:
+    def fetch(self) -> Fetch:
         """The fetch component class."""
         return Fetch(self)
 
     @property
-    def load(self) -> str:
+    def load(self) -> Load:
         """The load component class."""
         return Load(self)
 
