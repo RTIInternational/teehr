@@ -31,7 +31,6 @@ from teehr.pre.timeseries import (
     validate_and_insert_timeseries,
 )
 from teehr.models.metrics.metrics import MetricsBasemodel
-from teehr.evaluation.utils import _get_joined_timeseries_fields
 from teehr.models.domain_tables import (
     Configuration,
     Unit,
