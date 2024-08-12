@@ -31,7 +31,7 @@ def test_nwm30_grid_fetching(tmpdir):
 
     df = pd.read_parquet(
         Path(
-            eval.primary_timeseries_cache_dir,
+            eval.nwm_cache_dir,
             "20080523.parquet"
         )
     )
@@ -71,7 +71,7 @@ def test_nwm21_grid_fetching(tmpdir):
 
     df = pd.read_parquet(
         Path(
-            eval.primary_timeseries_cache_dir,
+            eval.nwm_cache_dir,
             "20080523.parquet"
         )
     )

@@ -26,7 +26,7 @@ def test_nwm20_retro_one_file(tmpdir):
     )
     df = pd.read_parquet(
         Path(
-            eval.secondary_timeseries_cache_dir,
+            eval.nwm_cache_dir,
             "20000101_20000102.parquet"
         )
     )
@@ -62,7 +62,7 @@ def test_nwm20_retro_week(tmpdir):
     )
     df = pd.read_parquet(
         Path(
-            eval.secondary_timeseries_cache_dir,
+            eval.nwm_cache_dir,
             "20000110_20000116.parquet"
         )
     )
@@ -96,7 +96,7 @@ def test_nwm20_retro_month(tmpdir):
     )
     df = pd.read_parquet(
         Path(
-            eval.secondary_timeseries_cache_dir,
+            eval.nwm_cache_dir,
             "20000101_20000131.parquet"
         )
     )
@@ -130,7 +130,7 @@ def test_nwm20_retro_year(tmpdir):
     )
     df = pd.read_parquet(
         Path(
-            eval.secondary_timeseries_cache_dir,
+            eval.nwm_cache_dir,
             "20000101_20001231.parquet"
         )
     )
@@ -163,7 +163,7 @@ def test_nwm21_retro_one_file(tmpdir):
     )
     df = pd.read_parquet(
         Path(
-            eval.secondary_timeseries_cache_dir,
+            eval.nwm_cache_dir,
             "20000101_20000102.parquet"
         )
     )
@@ -200,7 +200,7 @@ def test_nwm30_one_file(tmpdir):
 
     df = pd.read_parquet(
         Path(
-            eval.secondary_timeseries_cache_dir,
+            eval.nwm_cache_dir,
             "20000101_20000102.parquet"
         )
     )

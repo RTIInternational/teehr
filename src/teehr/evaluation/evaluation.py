@@ -37,6 +37,9 @@ PRIMARY_TIMESERIES_DIR = "primary_timeseries"
 LOCATIONS_CROSSWALK_DIR = "locations_crosswalk"
 SECONDARY_TIMESERIES_DIR = "secondary_timeseries"
 JOINED_TIMESERIES_DIR = "joined_timeseries"
+FETCHING_CACHE_DIR = "fetching"
+USGS_CACHE_DIR = "usgs"
+NWM_CACHE_DIR = "nwm"
 
 KERCHUNK_DIR = "kerchunk"
 WEIGHTS_DIR = "weights"
@@ -72,11 +75,11 @@ class Evaluation:
         self.joined_timeseries_dir = Path(
             self.database_dir, JOINED_TIMESERIES_DIR
         )
-        self.primary_timeseries_cache_dir = Path(
-            self.temp_dir, PRIMARY_TIMESERIES_DIR
+        self.usgs_cache_dir = Path(
+            self.temp_dir, FETCHING_CACHE_DIR, USGS_CACHE_DIR
         )
-        self.secondary_timeseries_cache_dir = Path(
-            self.temp_dir, SECONDARY_TIMESERIES_DIR
+        self.nwm_cache_dir = Path(
+            self.temp_dir, FETCHING_CACHE_DIR, NWM_CACHE_DIR
         )
         self.kerchunk_cache_dir = Path(self.temp_dir, KERCHUNK_DIR)
         self.weights_cache_dir = Path(self.temp_dir, WEIGHTS_DIR)
@@ -207,15 +210,6 @@ class Evaluation:
         """
         pass
 
-    def _get_timeseries_cache_path(
-        self, is_primary: Optional[bool]
-    ) -> Path:
-        """Get the cache sub-directory path."""
-        if is_primary:
-            return self.primary_timeseries_cache_dir
-        else:
-            return self.secondary_timeseries_cache_dir
-
     def fetch_usgs_streamflow(
         self,
         sites: List[str],
@@ -225,8 +219,7 @@ class Evaluation:
         filter_to_hourly: bool = True,
         filter_no_data: bool = True,
         convert_to_si: bool = True,
-        overwrite_output: Optional[bool] = False,
-        is_primary: Optional[bool] = True
+        overwrite_output: Optional[bool] = False
     ):
         """Fetch USGS gage data and save as a Parquet file.
 
@@ -258,9 +251,6 @@ class Evaluation:
         overwrite_output : bool
             Flag specifying whether or not to overwrite output files if they
             already exist.  True = overwrite; False = fail.
-        is_primary : bool = True
-            Flag specifying whether the data should be considered the primary
-            or secondary timeseries.
 
         Examples
         --------
@@ -296,7 +286,7 @@ class Evaluation:
             sites=sites,
             start_date=start_date,
             end_date=end_date,
-            output_parquet_dir=self._get_timeseries_cache_path(is_primary),
+            output_parquet_dir=self.usgs_cache_dir,
             chunk_by=chunk_by,
             filter_to_hourly=filter_to_hourly,
             filter_no_data=filter_no_data,
@@ -313,8 +303,7 @@ class Evaluation:
         end_date: Union[str, datetime, pd.Timestamp],
         chunk_by: Union[NWMChunkByEnum, None] = None,
         overwrite_output: Optional[bool] = False,
-        domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
-        is_primary: Optional[bool] = False
+        domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS"
     ):
         """Fetch NWM retrospective at NWM COMIDs and store as Parquet file.
 
@@ -348,9 +337,6 @@ class Evaluation:
             Geographical domain when NWM version is v3.0.
             Acceptable values are "Alaska", "CONUS" (default), "Hawaii",
             and "PR". Only used when NWM version equals `nwm30`.
-        is_primary : bool = False
-            Flag specifying whether the data should be considered the primary
-            or secondary timeseries.
 
         Examples
         --------
@@ -392,7 +378,7 @@ class Evaluation:
             start_date=start_date,
             end_date=end_date,
             location_ids=location_ids,
-            output_parquet_dir=self._get_timeseries_cache_path(is_primary),
+            output_parquet_dir=self.nwm_cache_dir,
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
             domain=domain
@@ -408,8 +394,7 @@ class Evaluation:
         chunk_by: Union[NWMChunkByEnum, None] = None,
         overwrite_output: Optional[bool] = False,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
-        location_id_prefix: Optional[Union[str, None]] = None,
-        is_primary: Optional[bool] = True
+        location_id_prefix: Optional[Union[str, None]] = None
     ):
         """
         Compute the weighted average for NWM v2.1 or v3.0 gridded data.
@@ -451,9 +436,6 @@ class Evaluation:
             and "PR". Only used when NWM version equals v3.0.
         location_id_prefix : Union[str, None]
             Optional location ID prefix to add (prepend) or replace.
-        is_primary : bool = True
-            Flag specifying whether the data should be considered the primary
-            or secondary timeseries.
 
         Notes
         -----
@@ -470,7 +452,7 @@ class Evaluation:
             zonal_weights_filepath=zonal_weights_filepath,
             start_date=start_date,
             end_date=end_date,
-            output_parquet_dir=self._get_timeseries_cache_path(is_primary),
+            output_parquet_dir=self.nwm_cache_dir,
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
             domain=domain,
@@ -492,8 +474,7 @@ class Evaluation:
         process_by_z_hour: Optional[bool] = True,
         stepsize: Optional[int] = 100,
         ignore_missing_file: Optional[bool] = True,
-        overwrite_output: Optional[bool] = False,
-        is_primary: Optional[bool] = False
+        overwrite_output: Optional[bool] = False
     ):
         """Fetch NWM point data and save as a Parquet file in TEEHR format.
 
@@ -619,7 +600,7 @@ class Evaluation:
             ingest_days=ingest_days,
             location_ids=location_ids,
             json_dir=self.kerchunk_cache_dir,
-            output_parquet_dir=self._get_timeseries_cache_path(is_primary),
+            output_parquet_dir=self.nwm_cache_dir,
             nwm_version=nwm_version,
             data_source=data_source,
             kerchunk_method=kerchunk_method,
@@ -644,8 +625,7 @@ class Evaluation:
         t_minus_hours: Optional[List[int]] = None,
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
-        location_id_prefix: Optional[Union[str, None]] = None,
-        is_primary: Optional[bool] = True
+        location_id_prefix: Optional[Union[str, None]] = None
     ):
         """
         Fetch NWM gridded data, calculate zonal statistics (currently only
@@ -774,7 +754,7 @@ class Evaluation:
             ingest_days=ingest_days,
             zonal_weights_filepath=zonal_weights_filepath,
             json_dir=self.kerchunk_cache_dir,
-            output_parquet_dir=self._get_timeseries_cache_path(is_primary),
+            output_parquet_dir=self.nwm_cache_dir,
             nwm_version=nwm_version,
             data_source=data_source,
             kerchunk_method=kerchunk_method,
