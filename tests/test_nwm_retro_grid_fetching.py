@@ -1,4 +1,4 @@
-"""Tests for retrospective NWM grid loading."""
+"""Tests for retrospective NWM grid fetching."""
 from pathlib import Path
 import math
 import tempfile
@@ -13,8 +13,8 @@ ZONAL_WEIGHTS = Path(
 )
 
 
-def test_nwm30_grid_loading(tmpdir):
-    """Test NWM30 grid loading."""
+def test_nwm30_grid_fetching(tmpdir):
+    """Test NWM30 grid fetching."""
     eval = Evaluation(tmpdir)
     eval.clone_template()
 
@@ -53,8 +53,8 @@ def test_nwm30_grid_loading(tmpdir):
     ]
 
 
-def test_nwm21_grid_loading(tmpdir):
-    """Test NWM21 grid loading."""
+def test_nwm21_grid_fetching(tmpdir):
+    """Test NWM21 grid fetching."""
     eval = Evaluation(tmpdir)
     eval.clone_template()
 
@@ -95,5 +95,5 @@ def test_nwm21_grid_loading(tmpdir):
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(prefix="teehr-") as tempdir:
-        test_nwm30_grid_loading(tempfile.mkdtemp(dir=tempdir))
-        test_nwm21_grid_loading(tempfile.mkdtemp(dir=tempdir))
+        test_nwm30_grid_fetching(tempfile.mkdtemp(dir=tempdir))
+        test_nwm21_grid_fetching(tempfile.mkdtemp(dir=tempdir))

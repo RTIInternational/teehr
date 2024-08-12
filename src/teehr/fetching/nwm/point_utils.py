@@ -8,11 +8,11 @@ import numpy as np
 import pandas as pd
 import pyarrow as pa
 
-from teehr.loading.utils import (
+from teehr.fetching.utils import (
     get_dataset,
     write_parquet_file,
 )
-from teehr.loading.const import (
+from teehr.fetching.const import (
     VALUE,
     VALUE_TIME,
     REFERENCE_TIME,

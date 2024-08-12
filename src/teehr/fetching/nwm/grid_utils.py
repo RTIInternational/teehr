@@ -8,12 +8,12 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from teehr.loading.utils import (
+from teehr.fetching.utils import (
     get_dataset,
     write_parquet_file,
     format_timeseries_data_types
 )
-from teehr.loading.const import (
+from teehr.fetching.const import (
     VALUE,
     VALUE_TIME,
     REFERENCE_TIME,

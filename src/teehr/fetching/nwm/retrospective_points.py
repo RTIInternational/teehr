@@ -1,4 +1,4 @@
-"""A module for loading retrospective NWM point data (i.e., streamflow).
+"""A module for fetching retrospective NWM point data (i.e., streamflow).
 
 The function ``nwm_retro_to_parquet()`` can be used to fetch and format three
 different versions of retrospective NWM data (v2.0, v2.1, and v3.0) for
@@ -38,7 +38,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Union, List, Optional
 
-from teehr.loading.const import (
+from teehr.fetching.const import (
     NWM22_UNIT_LOOKUP,
     VALUE,
     VALUE_TIME,
@@ -48,12 +48,12 @@ from teehr.loading.const import (
     VARIABLE_NAME,
     CONFIGURATION_NAME
 )
-from teehr.models.loading.utils import (
+from teehr.models.fetching.utils import (
     NWMChunkByEnum,
     SupportedNWMRetroVersionsEnum,
     SupportedNWMRetroDomainsEnum
 )
-from teehr.loading.utils import (
+from teehr.fetching.utils import (
     write_parquet_file,
     get_period_start_end_times,
     create_periods_based_on_chunksize,
@@ -221,7 +221,7 @@ def nwm_retro_to_parquet(
 
     Import the module.
 
-    >>> import teehr.loading.nwm.retrospective_points as nwm_retro
+    >>> import teehr.fetching.nwm.retrospective_points as nwm_retro
 
     Specify the input variables.
 

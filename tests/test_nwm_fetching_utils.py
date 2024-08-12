@@ -1,10 +1,10 @@
-"""Test NWM loading utils."""
+"""Test NWM fetching utils."""
 from pathlib import Path
 
 import tempfile
 import pytest
 
-from teehr.loading.utils import (
+from teehr.fetching.utils import (
     build_zarr_references,
     check_dates_against_nwm_version,
     build_remote_nwm_filelist,
@@ -12,7 +12,7 @@ from teehr.loading.utils import (
     get_dataset,
     create_periods_based_on_chunksize
 )
-from teehr.loading.const import (
+from teehr.fetching.const import (
     NWM22_ANALYSIS_CONFIG,
     NWM30_ANALYSIS_CONFIG,
 )

@@ -1,4 +1,4 @@
-"""Tests for retrospective NWM point loading."""
+"""Tests for retrospective NWM point fetching."""
 from pathlib import Path
 import pandas as pd
 

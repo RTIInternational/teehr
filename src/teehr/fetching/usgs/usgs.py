@@ -1,4 +1,4 @@
-"""Module for loading and processing USGS streamflow data.
+"""Module for fetching and processing USGS streamflow data.
 
 The function ``usgs_to_parquet`` fetches USGS streamflow data and saves it to
 parquet files following the TEEHR data model.  The OWP tool ``HydroTools`` is
@@ -21,15 +21,15 @@ from typing import List, Union, Optional
 from pathlib import Path
 from datetime import datetime, timedelta
 import dataretrieval.nwis as nwis
-from teehr.models.loading.utils import USGSChunkByEnum
+from teehr.models.fetching.utils import USGSChunkByEnum
 from pydantic import validate_call, ConfigDict
-from teehr.loading.utils import (
+from teehr.fetching.utils import (
     write_parquet_file,
     get_period_start_end_times,
     create_periods_based_on_chunksize,
     format_timeseries_data_types
 )
-from teehr.loading.const import (
+from teehr.fetching.const import (
     USGS_NODATA_VALUES,
     USGS_CONFIGURATION_NAME,
     USGS_UNIT_NAME,
@@ -201,7 +201,7 @@ def usgs_to_parquet(
 
     Import the module.
 
-    >>> from teehr.loading.usgs.usgs import usgs_to_parquet
+    >>> from teehr.fetching.usgs.usgs import usgs_to_parquet
 
     Set the input variables.
 

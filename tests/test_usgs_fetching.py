@@ -1,4 +1,4 @@
-"""Test USGS loading."""
+"""Test USGS fetching."""
 from datetime import datetime
 from pathlib import Path
 import tempfile

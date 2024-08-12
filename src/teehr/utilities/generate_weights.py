@@ -12,8 +12,8 @@ import pandas as pd
 import dask
 import shapely
 
-from teehr.loading.utils import load_gdf
-from teehr.loading.const import LOCATION_ID
+from teehr.fetching.utils import load_gdf
+from teehr.fetching.const import LOCATION_ID
 
 
 @dask.delayed
@@ -204,7 +204,7 @@ def generate_weights_file(
     Import the necessary modules.
 
     >>> from teehr.utilities.generate_weights import generate_weights_file
-    >>> from teehr.loading.nwm.const import CONUS_NWM_WKT
+    >>> from teehr.fetching.nwm.const import CONUS_NWM_WKT
 
     Define the input variables.
 

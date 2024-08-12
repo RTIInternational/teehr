@@ -1,4 +1,4 @@
-"""A module for loading retrospective NWM gridded data.
+"""A module for fetching retrospective NWM gridded data.
 
 The function ``nwm_retro_grids_to_parquet()`` can be used to fetch and format
 two different versions of retrospective NWM data (v2.1 and v3.0) for
@@ -40,7 +40,7 @@ import fsspec
 from pydantic import validate_call
 import dask
 
-from teehr.loading.const import (
+from teehr.fetching.const import (
     NWM22_UNIT_LOOKUP,
     VALUE_TIME,
     REFERENCE_TIME,
@@ -49,26 +49,26 @@ from teehr.loading.const import (
     VARIABLE_NAME,
     CONFIGURATION_NAME
 )
-from teehr.models.loading.utils import (
+from teehr.models.fetching.utils import (
     NWMChunkByEnum,
     SupportedNWMRetroVersionsEnum,
     SupportedNWMRetroDomainsEnum
 )
-from teehr.models.loading.nwm22_grid import ForcingVariablesEnum
-from teehr.loading.nwm.grid_utils import (
+from teehr.models.fetching.nwm22_grid import ForcingVariablesEnum
+from teehr.fetching.nwm.grid_utils import (
     update_location_id_prefix,
     compute_weighted_average,
     get_nwm_grid_data,
     get_weights_row_col_stats
 )
-from teehr.loading.utils import (
+from teehr.fetching.utils import (
     write_parquet_file,
     get_dataset,
     get_period_start_end_times,
     create_periods_based_on_chunksize,
     format_timeseries_data_types
 )
-from teehr.loading.nwm.retrospective_points import (
+from teehr.fetching.nwm.retrospective_points import (
     format_grouped_filename,
     validate_start_end_date,
 )

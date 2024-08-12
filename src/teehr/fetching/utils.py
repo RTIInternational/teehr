@@ -17,14 +17,14 @@ import geopandas as gpd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-from teehr.models.loading.utils import (
+from teehr.models.fetching.utils import (
     SupportedKerchunkMethod
 )
-from teehr.models.loading.utils import (
+from teehr.models.fetching.utils import (
     SupportedNWMOperationalVersionsEnum,
     NWMChunkByEnum
 )
-from teehr.loading.const import (
+from teehr.fetching.const import (
     NWM_BUCKET,
     NWM_S3_JSON_PATH,
     NWM30_START_DATE,

@@ -5,20 +5,20 @@ from pathlib import Path
 
 from pydantic import validate_call
 
-from teehr.loading.nwm.point_utils import (
+from teehr.fetching.nwm.point_utils import (
     fetch_and_format_nwm_points,
 )
-from teehr.loading.utils import (
+from teehr.fetching.utils import (
     generate_json_paths,
     build_remote_nwm_filelist,
     check_dates_against_nwm_version
 )
-from teehr.models.loading.utils import (
+from teehr.models.fetching.utils import (
     SupportedNWMOperationalVersionsEnum,
     SupportedNWMDataSourcesEnum,
     SupportedKerchunkMethod
 )
-from teehr.loading.const import (
+from teehr.fetching.const import (
     NWM22_UNIT_LOOKUP,
     NWM22_ANALYSIS_CONFIG,
     NWM30_ANALYSIS_CONFIG,
@@ -123,7 +123,7 @@ def nwm_to_parquet(
 
     Import the necessary module.
 
-    >>> import teehr.loading.nwm.nwm_points as tlp
+    >>> import teehr.fetching.nwm.nwm_points as tlp
 
     Specify the input variables.
 
@@ -167,11 +167,11 @@ def nwm_to_parquet(
     """ # noqa
     # Import appropriate config model and dicts based on NWM version
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
-        from teehr.models.loading.nwm22_point import PointConfigurationModel
+        from teehr.models.fetching.nwm22_point import PointConfigurationModel
         analysis_config_dict = NWM22_ANALYSIS_CONFIG
         unit_lookup_dict = NWM22_UNIT_LOOKUP
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm30:
-        from teehr.models.loading.nwm30_point import PointConfigurationModel
+        from teehr.models.fetching.nwm30_point import PointConfigurationModel
         analysis_config_dict = NWM30_ANALYSIS_CONFIG
         unit_lookup_dict = NWM22_UNIT_LOOKUP
     else:
@@ -194,10 +194,10 @@ def nwm_to_parquet(
     # Check data_source
     if data_source == SupportedNWMDataSourcesEnum.NOMADS:
         # TODO
-        raise ValueError("Loading from NOMADS is not yet implemented")
+        raise ValueError("Fetching from NOMADS is not yet implemented")
     elif data_source == SupportedNWMDataSourcesEnum.DSTOR:
         # TODO
-        raise ValueError("Loading from DSTOR is not yet implemented")
+        raise ValueError("Fetching from DSTOR is not yet implemented")
     else:
 
         # Make sure start/end dates work with specified NWM version

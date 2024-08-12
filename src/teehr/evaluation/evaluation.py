@@ -12,13 +12,13 @@ import logging
 from teehr.pre.project_creation import copy_template_to
 from teehr.models.metrics.metrics import MetricsBasemodel
 from teehr.evaluation.utils import _get_joined_timeseries_fields
-from teehr.loading.usgs.usgs import usgs_to_parquet
-from teehr.loading.nwm.nwm_points import nwm_to_parquet
-from teehr.loading.nwm.nwm_grids import nwm_grids_to_parquet
-from teehr.loading.nwm.retrospective_points import nwm_retro_to_parquet
-from teehr.loading.nwm.retrospective_grids import nwm_retro_grids_to_parquet
-from teehr.models.loading.nwm22_grid import ForcingVariablesEnum
-from teehr.models.loading.utils import (
+from teehr.fetching.usgs.usgs import usgs_to_parquet
+from teehr.fetching.nwm.nwm_points import nwm_to_parquet
+from teehr.fetching.nwm.nwm_grids import nwm_grids_to_parquet
+from teehr.fetching.nwm.retrospective_points import nwm_retro_to_parquet
+from teehr.fetching.nwm.retrospective_grids import nwm_retro_grids_to_parquet
+from teehr.models.fetching.nwm22_grid import ForcingVariablesEnum
+from teehr.models.fetching.utils import (
     USGSChunkByEnum,
     SupportedNWMRetroVersionsEnum,
     SupportedNWMRetroDomainsEnum,

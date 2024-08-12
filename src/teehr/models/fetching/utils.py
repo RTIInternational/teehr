@@ -1,4 +1,4 @@
-"""Module for NWM loading models."""
+"""Module for NWM fetching models."""
 try:
     # breaking change introduced in python 3.11
     from enum import StrEnum
@@ -12,7 +12,7 @@ except ImportError:  # pragma: no cover
 
 
 class USGSChunkByEnum(StrEnum):
-    """USGSChunkByEnum for loading USGS data."""
+    """USGSChunkByEnum for fetching USGS data."""
 
     day = "day"
     location_id = "location_id"
@@ -22,7 +22,7 @@ class USGSChunkByEnum(StrEnum):
 
 
 class NWMChunkByEnum(StrEnum):
-    """NWMChunkByEnum for loading NWM data."""
+    """NWMChunkByEnum for fetching NWM data."""
 
     week = "week"
     month = "month"

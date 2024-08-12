@@ -6,10 +6,10 @@ import pandas as pd
 import numpy as np
 import pytest
 
-from teehr.loading.nwm.grid_utils import update_location_id_prefix
-from teehr.loading.nwm.nwm_points import fetch_and_format_nwm_points
-from teehr.loading.nwm.nwm_grids import fetch_and_format_nwm_grids
-from teehr.loading.const import (
+from teehr.fetching.nwm.grid_utils import update_location_id_prefix
+from teehr.fetching.nwm.nwm_points import fetch_and_format_nwm_points
+from teehr.fetching.nwm.nwm_grids import fetch_and_format_nwm_grids
+from teehr.fetching.const import (
     NWM22_UNIT_LOOKUP,
 )
 
