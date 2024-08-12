@@ -35,10 +35,10 @@ def test_validate_and_insert_location_attributes(tmpdir):
 
     eval.enable_logging()
 
-    eval.import_locations(
+    eval.load.import_locations(
         in_path=GEOJSON_GAGES_FILEPATH
     )
-    eval.add_attribute(
+    eval.load.add_attribute(
         [
             Attribute(
                 name="drainage_area",
@@ -57,7 +57,7 @@ def test_validate_and_insert_location_attributes(tmpdir):
             ),
         ]
     )
-    eval.import_location_attributes(
+    eval.load.import_location_attributes(
         in_path=GEO_FILEPATH,
         field_mapping={"attribute_value": "value"},
         pattern="test_attr_*.parquet",

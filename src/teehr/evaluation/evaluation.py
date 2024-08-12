@@ -15,6 +15,7 @@ from teehr.evaluation.utils import (
 )
 
 import teehr.const as const
+from teehr.models.metrics.metrics import MetricsBasemodel
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.load import Load
 

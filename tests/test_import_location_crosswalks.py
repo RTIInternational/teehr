@@ -26,11 +26,11 @@ def test_validate_and_insert_crosswalks(tmpdir):
     eval = Evaluation(dir_path=tmpdir)
     eval.clone_template()
 
-    eval.import_locations(
+    eval.load.import_locations(
         in_path=GEOJSON_GAGES_FILEPATH
     )
 
-    eval.import_location_crosswalks(
+    eval.load.import_location_crosswalks(
         in_path=CROSSWALK_FILEPATH
     )
 

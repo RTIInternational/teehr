@@ -28,9 +28,9 @@ def test_validate_and_insert_timeseries(tmpdir):
 
     eval.clone_template()
 
-    eval.import_locations(in_path=GEOJSON_GAGES_FILEPATH)
+    eval.load.import_locations(in_path=GEOJSON_GAGES_FILEPATH)
 
-    eval.add_configuration(
+    eval.load.add_configuration(
         Configuration(
             name="test_obs",
             type="primary",
@@ -45,14 +45,14 @@ def test_validate_and_insert_timeseries(tmpdir):
     #     )
     # )
 
-    eval.add_variable(
+    eval.load.add_variable(
         Variable(
             name="streamflow",
             long_name="Streamflow"
         )
     )
 
-    eval.import_primary_timeseries(
+    eval.load.import_primary_timeseries(
         in_path=PRIMARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
@@ -64,11 +64,11 @@ def test_validate_and_insert_timeseries(tmpdir):
             "location_id": "location_id"
         })
 
-    eval.import_location_crosswalks(
+    eval.load.import_location_crosswalks(
         in_path=CROSSWALK_FILEPATH
     )
 
-    eval.add_configuration(
+    eval.load.add_configuration(
         Configuration(
             name="test_short",
             type="secondary",
@@ -76,7 +76,7 @@ def test_validate_and_insert_timeseries(tmpdir):
         )
     )
 
-    eval.import_secondary_timeseries(
+    eval.load.import_secondary_timeseries(
         in_path=SECONDARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
@@ -100,9 +100,9 @@ def test_validate_and_insert_timeseries_set_const(tmpdir):
 
     eval.clone_template()
 
-    eval.import_locations(in_path=GEOJSON_GAGES_FILEPATH)
+    eval.load.import_locations(in_path=GEOJSON_GAGES_FILEPATH)
 
-    eval.import_primary_timeseries(
+    eval.load.import_primary_timeseries(
         in_path=PRIMARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
@@ -120,11 +120,11 @@ def test_validate_and_insert_timeseries_set_const(tmpdir):
         }
     )
 
-    eval.import_location_crosswalks(
+    eval.load.import_location_crosswalks(
         in_path=CROSSWALK_FILEPATH
     )
 
-    eval.import_secondary_timeseries(
+    eval.load.import_secondary_timeseries(
         in_path=SECONDARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
