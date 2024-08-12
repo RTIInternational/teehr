@@ -8,10 +8,42 @@ from pathlib import Path
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
 import logging
-
-from teehr.pre.project_creation import copy_template_to
+from teehr.pre.utils import (
+    copy_template_to,
+)
+from teehr.evaluation.utils import (
+    _get_joined_timeseries_fields,
+)
+from teehr.pre.locations import (
+    convert_locations,
+    validate_and_insert_locations,
+)
+from teehr.pre.location_crosswalks import (
+    convert_location_crosswalks,
+    validate_and_insert_location_crosswalks,
+)
+from teehr.pre.location_attributes import (
+    convert_location_attributes,
+    validate_and_insert_location_attributes,
+)
+from teehr.pre.timeseries import (
+    convert_timeseries,
+    validate_and_insert_timeseries,
+)
 from teehr.models.metrics.metrics import MetricsBasemodel
-from teehr.evaluation.utils import _get_joined_timeseries_fields
+from teehr.models.domain_tables import (
+    Configuration,
+    Unit,
+    Variable,
+    Attribute,
+)
+from teehr.pre.add_domains import (
+    add_configuration,
+    add_unit,
+    add_variable,
+    add_attribute,
+)
+import teehr.const as const
 from teehr.fetching.usgs.usgs import usgs_to_parquet
 from teehr.fetching.nwm.nwm_points import nwm_to_parquet
 from teehr.fetching.nwm.nwm_grids import nwm_grids_to_parquet
@@ -30,20 +62,6 @@ from teehr.models.fetching.utils import (
 
 logger = logging.getLogger(__name__)
 
-DATABASE_DIR = "database"
-TEMP_DIR = "temp"
-LOCATIONS_DIR = "locations"
-PRIMARY_TIMESERIES_DIR = "primary_timeseries"
-LOCATIONS_CROSSWALK_DIR = "locations_crosswalk"
-SECONDARY_TIMESERIES_DIR = "secondary_timeseries"
-JOINED_TIMESERIES_DIR = "joined_timeseries"
-FETCHING_CACHE_DIR = "fetching"
-USGS_CACHE_DIR = "usgs"
-NWM_CACHE_DIR = "nwm"
-
-KERCHUNK_DIR = "kerchunk"
-WEIGHTS_DIR = "weights"
-
 
 class Evaluation:
     """The Evaluation class.
@@ -60,29 +78,35 @@ class Evaluation:
         self.dir_path = dir_path
         self.spark = spark
 
-        self.database_dir = Path(self.dir_path, DATABASE_DIR)
-        self.temp_dir = Path(self.dir_path, TEMP_DIR)
-        self.locations_dir = Path(self.database_dir, LOCATIONS_DIR)
+        self.dataset_dir = Path(
+            self.dir_path, const.DATASET_DIR
+        )
+        self.cache_dir = Path(
+            self.dir_path, const.CACHE_DIR
+        )
+        self.locations_dir = Path(
+            self.dataset_dir, const.LOCATIONS_DIR
+        )
         self.primary_timeseries_dir = Path(
-            self.database_dir, PRIMARY_TIMESERIES_DIR
+            self.dataset_dir, const.PRIMARY_TIMESERIES_DIR
         )
         self.locations_crosswalk_dir = Path(
-            self.database_dir, LOCATIONS_CROSSWALK_DIR
+            self.dataset_dir, const.LOCATION_CROSSWALKS_DIR
         )
         self.secondary_timeseries_dir = Path(
-            self.database_dir, SECONDARY_TIMESERIES_DIR
+            self.dataset_dir, const.SECONDARY_TIMESERIES_DIR
         )
         self.joined_timeseries_dir = Path(
-            self.database_dir, JOINED_TIMESERIES_DIR
+            self.dataset_dir, const.JOINED_TIMESERIES_DIR
         )
         self.usgs_cache_dir = Path(
-            self.temp_dir, FETCHING_CACHE_DIR, USGS_CACHE_DIR
+            self.cache_dir, const.FETCHING_CACHE_DIR, const.USGS_CACHE_DIR
         )
         self.nwm_cache_dir = Path(
-            self.temp_dir, FETCHING_CACHE_DIR, NWM_CACHE_DIR
+            self.cache_dir, const.FETCHING_CACHE_DIR, const.NWM_CACHE_DIR
         )
-        self.kerchunk_cache_dir = Path(self.temp_dir, KERCHUNK_DIR)
-        self.weights_cache_dir = Path(self.temp_dir, WEIGHTS_DIR)
+        self.kerchunk_cache_dir = Path(self.cache_dir, const.KERCHUNK_DIR)
+        self.weights_cache_dir = Path(self.cache_dir, const.WEIGHTS_DIR)
 
         if not Path(self.dir_path).is_dir():
             logger.error(f"Directory {self.dir_path} does not exist.")
@@ -91,16 +115,31 @@ class Evaluation:
         # Create a local Spark Session if one is not provided.
         if not self.spark:
             logger.info("Creating a new Spark session.")
-            conf = SparkConf().setAppName("TEERH").setMaster("local")
+            conf = SparkConf().setAppName("TEEHR").setMaster("local")
             self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
 
     @property
     def fields(self) -> Enum:
         """The field names from the joined timeseries table."""
-        # logger.info("Getting fields from the joined timeseries table.")
+        logger.info("Getting fields from the joined timeseries table.")
         return _get_joined_timeseries_fields(
-            self.joined_timeseries_dir
+            Path(self.joined_timeseries_dir)
         )
+
+    def enable_logging(self):
+        """Enable logging."""
+        logger = logging.getLogger("teehr")
+        # logger.addHandler(logging.StreamHandler())
+        handler = logging.FileHandler(Path(self.dir_path, 'teehr.log'))
+        handler.setFormatter(
+            logging.Formatter(
+                "%(asctime)s %(levelname)s %(message)s"
+            )
+        )
+        logger.addHandler(
+            handler
+        )
+        logger.setLevel(logging.DEBUG)
 
     def clone_template(self):
         """Create a study from the standard template.
@@ -113,14 +152,7 @@ class Evaluation:
         logger.info(f"Copying template from {template_dir} to {self.dir_path}")
         copy_template_to(template_dir, self.dir_path)
 
-    def delete_study():
-        """Delete a study.
-
-        Includes removing directory and all contents.
-        """
-        pass
-
-    def clean_temp():
+    def clean_cache():
         """Clean temporary files.
 
         Includes removing temporary files.
@@ -134,37 +166,241 @@ class Evaluation:
         """
         pass
 
-    def import_primary_timeseries(path: Union[Path, str], type: str):
-        """Import local primary timeseries data.
+    def add_configuration(
+        self,
+        configuration: Union[Configuration, List[Configuration]]
+    ):
+        """Add a configuration domain to the evaluation."""
+        add_configuration(self.dataset_dir, configuration)
+
+    def add_unit(
+        self,
+        unit: Union[Unit, List[Unit]]
+    ):
+        """Add a unit to the evaluation."""
+        add_unit(self.dataset_dir, unit)
+
+    def add_variable(
+        self,
+        variable: Union[Variable, List[Variable]]
+    ):
+        """Add a unit to the evaluation."""
+        add_variable(self.dataset_dir, variable)
+
+    def add_attribute(
+        self,
+        attribute: Union[Attribute, List[Attribute]]
+    ):
+        """Add an attribute to the evaluation."""
+        add_attribute(self.dataset_dir, attribute)
+
+    def import_locations(
+            self,
+            in_path: Union[Path, str],
+            field_mapping: dict = None,
+            pattern: str = "**/*.parquet",
+            **kwargs
+    ):
+        """Import geometry data.
+
+        Parameters
+        ----------
+        in_path : Union[Path, str]
+            The input file or directory path.
+            Any file format that can be read by GeoPandas.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+        pattern : str, optional (default: "**/*.parquet")
+            The pattern to match files.
+            Only used when in_path is a directory.
+        **kwargs
+            Additional keyword arguments are passed to GeoPandas read_file().
+
+        File is first read by GeoPandas, field names renamed and
+        then validated and inserted into the dataset.
+        """
+        temp_dirpath = Path(
+            self.cache_dir, const.LOCATIONS_DIR
+        )
+        convert_locations(
+            in_path,
+            temp_dirpath,
+            field_mapping=field_mapping,
+            pattern=pattern,
+            **kwargs
+        )
+        validate_and_insert_locations(temp_dirpath, self.dataset_dir)
+
+    def import_location_crosswalks(
+            self,
+            in_path: Union[Path, str],
+            field_mapping: dict = None,
+            pattern: str = "**/*.parquet",
+            **kwargs
+    ):
+        """Import location crosswalks.
+
+        Parameters
+        ----------
+        in_path : Union[Path, str]
+            The input file or directory path.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+        pattern : str, optional (default: "**/*.parquet")
+            The pattern to match files.
+            Only used when in_path is a directory.
+        **kwargs
+            Additional keyword arguments are passed to pd.read_csv().
+        """
+        temp_dirpath = Path(
+            self.cache_dir,
+            const.LOCATION_CROSSWALKS_DIR
+        )
+        convert_location_crosswalks(
+            in_path,
+            temp_dirpath,
+            field_mapping=field_mapping,
+            pattern=pattern,
+            **kwargs
+        )
+        validate_and_insert_location_crosswalks(
+            temp_dirpath, self.dataset_dir
+        )
+
+    def import_location_attributes(
+            self,
+            in_path: Union[Path, str],
+            field_mapping: dict = None,
+            pattern: str = "**/*.parquet",
+            **kwargs
+    ):
+        """Import location_attributes.
+
+        Parameters
+        ----------
+        in_path : Union[Path, str]
+            The input file or directory path.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+        pattern : str, optional (default: "**/*.parquet")
+            The pattern to match files.
+            Only used when in_path is a directory.
+        **kwargs
+            Additional keyword arguments are passed to pd.read_csv().
+        """
+        temp_dirpath = Path(
+            self.cache_dir,
+            const.LOCATION_ATTRIBUTES_DIR
+        )
+        convert_location_attributes(
+            in_path,
+            temp_dirpath,
+            pattern=pattern,
+            field_mapping=field_mapping,
+            **kwargs
+        )
+        validate_and_insert_location_attributes(
+            temp_dirpath, self.dataset_dir
+        )
+
+    def import_secondary_timeseries(
+        self,
+        in_path: Union[Path, str],
+        pattern="**/*.parquet",
+        field_mapping: dict = None,
+        constant_field_values: dict = None
+    ):
+        """Import secondary timeseries data.
+
+        Parameters
+        ----------
+        in_path : Union[Path, str]
+            Path to the timeseries data (file or directory).
+        pattern : str, optional (default: "**/*.parquet")
+            The pattern to match files if in_path is a directory.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+        constant_field_values : dict, optional
+            A dictionary mapping field names to constant values.
+            Format: {field_name: value}
 
         Includes validation and importing data to database.
         """
-        if type == "parquet":
-            pass
+        temp_path = Path(
+            self.cache_dir,
+            const.LOCATION_ATTRIBUTES_DIR
+        )
+        temp_path.mkdir(parents=True, exist_ok=True)
 
-        if type == "csv":
-            pass
+        convert_timeseries(
+            in_path=in_path,
+            out_path=temp_path,
+            field_mapping=field_mapping,
+            constant_field_values=constant_field_values,
+            pattern=pattern
+        )
 
-    def import_secondary_timeseries():
-        """Import secondary timeseries data.
+        if pattern.endswith(".csv"):
+            pattern = pattern.replace(".csv", ".parquet")
 
-        Includes importing data and metadata.
+        validate_and_insert_timeseries(
+            in_path=temp_path,
+            dataset_path=self.dataset_dir,
+            timeseries_type="secondary",
+            pattern=pattern,
+        )
+
+    def import_primary_timeseries(
+        self,
+        in_path: Union[Path, str],
+        pattern="**/*.parquet",
+        field_mapping: dict = None,
+        constant_field_values: dict = None
+    ):
+        """Import primary timeseries data.
+
+        Parameters
+        ----------
+        in_path : Union[Path, str]
+            Path to the timeseries data (file or directory).
+        pattern : str, optional (default: "**/*.parquet")
+            The pattern to match files if in_path is a directory.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+        constant_field_values : dict, optional
+            A dictionary mapping field names to constant values.
+            Format: {field_name: value}
+
+        Includes validation and importing data to database.
         """
-        pass
+        temp_path = Path(
+            self.cache_dir,
+            const.PRIMARY_TIMESERIES_DIR
+        )
+        temp_path.mkdir(parents=True, exist_ok=True)
 
-    def import_geometry():
-        """Import geometry data.
+        convert_timeseries(
+            in_path=in_path,
+            out_path=temp_path,
+            field_mapping=field_mapping,
+            constant_field_values=constant_field_values,
+            pattern=pattern
+        )
 
-        Includes importing data and metadata.
-        """
-        pass
+        if pattern.endswith(".csv"):
+            pattern = pattern.replace(".csv", ".parquet")
 
-    def import_location_crosswalk():
-        """Import crosswalk data.
-
-        Includes importing data and metadata.
-        """
-        pass
+        validate_and_insert_timeseries(
+            in_path=temp_path,
+            dataset_path=self.dataset_dir,
+            timeseries_type="primary",
+            pattern=pattern
+        )
 
     def import_usgs(args):
         """Import xxx data.

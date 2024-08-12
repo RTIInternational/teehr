@@ -6,7 +6,11 @@ import shutil
 import tempfile
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
-JOINED_TIMESERIES_FILEPATH = Path(TEST_STUDY_DATA_DIR, "timeseries", "test_joined_timeseries_part1.parquet")
+JOINED_TIMESERIES_FILEPATH = Path(
+    TEST_STUDY_DATA_DIR,
+    "timeseries",
+    "test_joined_timeseries_part1.parquet"
+)
 
 
 def test_get_metrics(tmpdir):
