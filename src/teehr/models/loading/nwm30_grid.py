@@ -12,7 +12,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from teehr_v0_3.models.loading.nwm22_grid import (
+from teehr.models.loading.nwm22_grid import (
     Analysis,
     ShortRange,
     MediumRange,

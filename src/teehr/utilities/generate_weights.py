@@ -12,7 +12,7 @@ import pandas as pd
 import dask
 import shapely
 
-from teehr_v0_3.loading.nwm.utils import load_gdf
+from teehr.loading.utils import load_gdf
 from teehr.loading.const import LOCATION_ID
 
 
