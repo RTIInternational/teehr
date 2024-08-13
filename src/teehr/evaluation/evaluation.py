@@ -18,6 +18,7 @@ import teehr.const as const
 from teehr.models.metrics.metrics import MetricsBasemodel
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.load import Load
+from teehr.evaluation.query import Query
 
 
 logger = logging.getLogger(__name__)
@@ -79,6 +80,12 @@ class Evaluation:
     def load(self) -> Load:
         """The load component class."""
         return Load(self)
+
+    @property
+    def query(self) -> Load:
+        """The query component class."""
+        # TODO: Implement the Query class.
+        return Query(self)
 
     @property
     def fields(self) -> Enum:

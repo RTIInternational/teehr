@@ -1,3 +1,6 @@
 name,type,description
-nwm30_retro,secondary,NWM 3.0 Retrospective
+nwm30_retrospective,secondary,NWM 3.0 Retrospective
+nwm22_retrospective,secondary,NWM 2.2 Retrospective
+nwm21_retrospective,secondary,NWM 2.1 Retrospective
+nwm20_retrospective,secondary,NWM 2.0 Retrospective
 usgs_observations,primary,USGS Observations
