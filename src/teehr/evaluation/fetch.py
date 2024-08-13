@@ -22,6 +22,10 @@ from teehr.models.fetching.utils import (
     SupportedNWMDataSourcesEnum,
     SupportedKerchunkMethod
 )
+from teehr.fetching.const import (
+    USGS_CONFIGURATION_NAME,
+    USGS_VARIABLE_NAME
+)
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +39,7 @@ class Fetch:
         self.usgs_cache_dir = Path(
             eval.cache_dir,
             const.FETCHING_CACHE_DIR,
-            const.USGS_CACHE_DIR
+            const.USGS_CACHE_DIR,
         )
         self.nwm_cache_dir = Path(
             eval.cache_dir,
@@ -128,7 +132,11 @@ class Fetch:
             sites=sites,
             start_date=start_date,
             end_date=end_date,
-            output_parquet_dir=self.usgs_cache_dir,
+            output_parquet_dir=Path(
+                self.usgs_cache_dir,
+                USGS_CONFIGURATION_NAME,
+                USGS_VARIABLE_NAME
+            ),
             chunk_by=chunk_by,
             filter_to_hourly=filter_to_hourly,
             filter_no_data=filter_no_data,
@@ -214,13 +222,18 @@ class Fetch:
         """
         # NOTE: Locations IDs will come from the locations table and crosswalk.
         logger.info("Fetching NWM retrospective point data.")
+        configuration = f"{nwm_version}_retrospective"
         nwm_retro_to_parquet(
             nwm_version=nwm_version,
             variable_name=variable_name,
             start_date=start_date,
             end_date=end_date,
             location_ids=location_ids,
-            output_parquet_dir=self.nwm_cache_dir,
+            output_parquet_dir=Path(
+                self.nwm_cache_dir,
+                configuration,
+                variable_name
+            ),
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
             domain=domain
@@ -288,13 +301,18 @@ class Fetch:
         the location_id follows the pattern '[prefix]-[unique id]'.
         """
         logger.info("Fetching NWM retrospective grid data.")
+        configuration = f"{nwm_version}_retrospective"
         nwm_retro_grids_to_parquet(
             nwm_version=nwm_version,
             variable_name=variable_name,
             zonal_weights_filepath=zonal_weights_filepath,
             start_date=start_date,
             end_date=end_date,
-            output_parquet_dir=self.nwm_cache_dir,
+            output_parquet_dir=Path(
+                self.nwm_cache_dir,
+                configuration,
+                variable_name
+            ),
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
             domain=domain,
@@ -441,8 +459,12 @@ class Fetch:
             start_date=start_date,
             ingest_days=ingest_days,
             location_ids=location_ids,
-            # json_dir=self.kerchunk_cache_dir,
-            output_parquet_dir=self.nwm_cache_dir,
+            json_dir=self.kerchunk_cache_dir,
+            output_parquet_dir=Path(
+                self.nwm_cache_dir,
+                configuration,
+                variable_name
+            ),
             nwm_version=nwm_version,
             data_source=data_source,
             kerchunk_method=kerchunk_method,
@@ -596,7 +618,11 @@ class Fetch:
             ingest_days=ingest_days,
             zonal_weights_filepath=zonal_weights_filepath,
             json_dir=self.kerchunk_cache_dir,
-            output_parquet_dir=self.nwm_cache_dir,
+            output_parquet_dir=Path(
+                self.nwm_cache_dir,
+                configuration,
+                variable_name
+            ),
             nwm_version=nwm_version,
             data_source=data_source,
             kerchunk_method=kerchunk_method,

@@ -6,6 +6,10 @@ import tempfile
 import pandas as pd
 
 from teehr.evaluation.evaluation import Evaluation
+from teehr.fetching.const import (
+    USGS_CONFIGURATION_NAME,
+    USGS_VARIABLE_NAME
+)
 
 
 def test_chunkby_location_id(tmpdir):
@@ -24,13 +28,23 @@ def test_chunkby_location_id(tmpdir):
         overwrite_output=True
     )
     df = pd.read_parquet(
-        Path(eval.fetch.usgs_cache_dir, "02449838.parquet")
+        Path(
+            eval.fetch.usgs_cache_dir,
+            USGS_CONFIGURATION_NAME,
+            USGS_VARIABLE_NAME,
+            "02449838.parquet"
+        )
     )
     assert len(df) == 120
     assert df["value_time"].min() == pd.Timestamp("2023-02-20 00:00:00")
     assert df["value_time"].max() == pd.Timestamp("2023-02-24 23:00:00")
     df = pd.read_parquet(
-        Path(eval.fetch.usgs_cache_dir, "02450825.parquet")
+        Path(
+            eval.fetch.usgs_cache_dir,
+            USGS_CONFIGURATION_NAME,
+            USGS_VARIABLE_NAME,
+            "02450825.parquet"
+        )
     )
     assert len(df) == 119
     assert df["value_time"].min() == pd.Timestamp("2023-02-20 00:00:00")
@@ -53,27 +67,57 @@ def test_chunkby_day(tmpdir):
         overwrite_output=True
     )
     df = pd.read_parquet(
-        Path(eval.fetch.usgs_cache_dir, "2023-02-20.parquet")
+        Path(
+            eval.fetch.usgs_cache_dir,
+            USGS_CONFIGURATION_NAME,
+            USGS_VARIABLE_NAME,
+            "2023-02-20.parquet"
+        )
     )
     assert len(df) == 48
     df = pd.read_parquet(
-        Path(eval.fetch.usgs_cache_dir, "2023-02-21.parquet")
+        Path(
+            eval.fetch.usgs_cache_dir,
+            USGS_CONFIGURATION_NAME,
+            USGS_VARIABLE_NAME,
+            "2023-02-21.parquet"
+        )
     )
     assert len(df) == 48
     df = pd.read_parquet(
-        Path(eval.fetch.usgs_cache_dir, "2023-02-22.parquet")
+        Path(
+            eval.fetch.usgs_cache_dir,
+            USGS_CONFIGURATION_NAME,
+            USGS_VARIABLE_NAME,
+            "2023-02-22.parquet"
+        )
     )
     assert len(df) == 48
     df = pd.read_parquet(
-        Path(eval.fetch.usgs_cache_dir, "2023-02-23.parquet")
+        Path(
+            eval.fetch.usgs_cache_dir,
+            USGS_CONFIGURATION_NAME,
+            USGS_VARIABLE_NAME,
+            "2023-02-23.parquet"
+        )
     )
     assert len(df) == 48
     df = pd.read_parquet(
-        Path(eval.fetch.usgs_cache_dir, "2023-02-24.parquet")
+        Path(
+            eval.fetch.usgs_cache_dir,
+            USGS_CONFIGURATION_NAME,
+            USGS_VARIABLE_NAME,
+            "2023-02-24.parquet"
+        )
     )
     assert len(df) == 47  # missing hour 17
     df = pd.read_parquet(
-        Path(eval.fetch.usgs_cache_dir, "2023-02-25.parquet")
+        Path(
+            eval.fetch.usgs_cache_dir,
+            USGS_CONFIGURATION_NAME,
+            USGS_VARIABLE_NAME,
+            "2023-02-25.parquet"
+        )
     )
     assert len(df) == 48
 
@@ -96,6 +140,8 @@ def test_chunkby_week(tmpdir):
     df = pd.read_parquet(
         Path(
             eval.fetch.usgs_cache_dir,
+            USGS_CONFIGURATION_NAME,
+            USGS_VARIABLE_NAME,
             "2023-02-20_2023-02-26.parquet"
         )
     )
@@ -103,6 +149,8 @@ def test_chunkby_week(tmpdir):
     df = pd.read_parquet(
         Path(
             eval.fetch.usgs_cache_dir,
+            USGS_CONFIGURATION_NAME,
+            USGS_VARIABLE_NAME,
             "2023-02-27_2023-03-03.parquet"
         )
     )
@@ -127,6 +175,8 @@ def test_chunkby_month(tmpdir):
     df = pd.read_parquet(
         Path(
             eval.fetch.usgs_cache_dir,
+            USGS_CONFIGURATION_NAME,
+            USGS_VARIABLE_NAME,
             "2023-02-20_2023-02-28.parquet"
         )
     )
@@ -134,6 +184,8 @@ def test_chunkby_month(tmpdir):
     df = pd.read_parquet(
         Path(
             eval.fetch.usgs_cache_dir,
+            USGS_CONFIGURATION_NAME,
+            USGS_VARIABLE_NAME,
             "2023-03-01_2023-03-25.parquet"
         )
     )
@@ -157,6 +209,8 @@ def test_chunkby_all(tmpdir):
     df = pd.read_parquet(
         Path(
             eval.fetch.usgs_cache_dir,
+            USGS_CONFIGURATION_NAME,
+            USGS_VARIABLE_NAME,
             "2023-02-20_2023-02-25.parquet"
         )
     )

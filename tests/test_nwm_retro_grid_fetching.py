@@ -32,6 +32,8 @@ def test_nwm30_grid_fetching(tmpdir):
     df = pd.read_parquet(
         Path(
             eval.fetch.nwm_cache_dir,
+            "nwm30_retrospective",
+            "RAINRATE",
             "20080523.parquet"
         )
     )
@@ -72,6 +74,8 @@ def test_nwm21_grid_fetching(tmpdir):
     df = pd.read_parquet(
         Path(
             eval.fetch.nwm_cache_dir,
+            "nwm21_retrospective",
+            "RAINRATE",
             "20080523.parquet"
         )
     )
