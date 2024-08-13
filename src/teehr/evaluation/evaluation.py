@@ -7,13 +7,15 @@ from pathlib import Path
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
 import logging
-from teehr.pre.utils import (
+from teehr.loading.utils import (
     copy_template_to,
 )
 from teehr.evaluation.utils import (
     _get_joined_timeseries_fields,
 )
-from teehr.pre.joined_timeseries import create_joined_timeseries
+from teehr.loading.joined_timeseries import (
+    create_joined_timeseries,
+)
 import teehr.const as const
 from teehr.models.metrics.metrics import MetricsBasemodel
 from teehr.evaluation.fetch import Fetch

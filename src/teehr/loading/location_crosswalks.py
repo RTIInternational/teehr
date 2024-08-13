@@ -1,16 +1,16 @@
 """Module for importing location crosswalks from a file."""
 from typing import Union
 from pathlib import Path
-from teehr.pre.duckdb_sql import (
+from teehr.loading.duckdb_sql import (
     create_database_tables,
     insert_locations,
     insert_location_crosswalks,
 )
-from teehr.pre.utils import (
+from teehr.loading.utils import (
     validate_dataset_structure,
 )
 from teehr.models.data_tables import location_crosswalks_field_names
-from teehr.pre.utils import merge_field_mappings
+from teehr.loading.utils import merge_field_mappings
 import teehr.const as const
 import duckdb
 import logging

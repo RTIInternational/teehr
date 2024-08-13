@@ -1,5 +1,5 @@
 """Tests for merging of default and custom field mappings."""
-from teehr.pre.utils import merge_field_mappings
+from teehr.loading.utils import merge_field_mappings
 
 
 def test_merge_mapping_fields():

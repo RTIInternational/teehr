@@ -6,7 +6,7 @@ import pandas as pd
 from teehr.models.domain_tables import Configuration, Unit, Variable, Attribute
 import teehr.const as const
 import logging
-from teehr.pre.duckdb_sql import create_database_tables
+from teehr.loading.duckdb_sql import create_database_tables
 
 logger = logging.getLogger(__name__)
 

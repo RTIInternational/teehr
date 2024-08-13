@@ -1,5 +1,5 @@
 """Test the import_location_attributes methods."""
-from teehr.pre.location_attributes import convert_location_attributes
+from teehr.loading.location_attributes import convert_location_attributes
 from pathlib import Path
 from teehr import Evaluation
 import tempfile

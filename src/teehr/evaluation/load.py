@@ -3,19 +3,19 @@ from typing import Union, List
 import logging
 from pathlib import Path
 
-from teehr.pre.locations import (
+from teehr.loading.locations import (
     convert_locations,
     validate_and_insert_locations,
 )
-from teehr.pre.location_crosswalks import (
+from teehr.loading.location_crosswalks import (
     convert_location_crosswalks,
     validate_and_insert_location_crosswalks,
 )
-from teehr.pre.location_attributes import (
+from teehr.loading.location_attributes import (
     convert_location_attributes,
     validate_and_insert_location_attributes,
 )
-from teehr.pre.timeseries import (
+from teehr.loading.timeseries import (
     convert_timeseries,
     validate_and_insert_timeseries,
 )
@@ -25,7 +25,7 @@ from teehr.models.domain_tables import (
     Variable,
     Attribute,
 )
-from teehr.pre.add_domains import (
+from teehr.loading.add_domains import (
     add_configuration,
     add_unit,
     add_variable,
