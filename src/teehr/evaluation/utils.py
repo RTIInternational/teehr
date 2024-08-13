@@ -13,7 +13,7 @@ def _get_joined_timeseries_fields(
     joined_timeseries_dir: Union[Path, str]
 ) -> Enum:
     """Get the field names from the joined timeseries table."""
-    if len(list(Path(joined_timeseries_dir).glob("*.parquet"))) == 0:
+    if len(list(Path(joined_timeseries_dir).glob("**/*.parquet"))) == 0:
         logger.error(f"No parquet files in {joined_timeseries_dir}.")
         raise FileNotFoundError
     else:
@@ -24,7 +24,7 @@ def _get_joined_timeseries_fields(
             *
         FROM
             read_parquet(
-                '{str(Path(joined_timeseries_dir, "*.parquet"))}'
+                '{str(Path(joined_timeseries_dir, "**/*.parquet"))}'
             )
         ;"""
         fields_list = duckdb.sql(qry).df().column_name.tolist()

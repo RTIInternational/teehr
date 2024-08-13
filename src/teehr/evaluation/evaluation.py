@@ -13,7 +13,7 @@ from teehr.pre.utils import (
 from teehr.evaluation.utils import (
     _get_joined_timeseries_fields,
 )
-
+from teehr.pre.joined_timeseries import create_joined_timeseries
 import teehr.const as const
 from teehr.models.metrics.metrics import MetricsBasemodel
 from teehr.evaluation.fetch import Fetch
@@ -134,6 +134,13 @@ class Evaluation:
         Includes retrieving data and metadata.
         """
         pass
+
+    def create_joined_timeseries(self):
+        """Create joined timeseries."""
+        create_joined_timeseries(
+            self.spark,
+            self.dataset_dir
+        )
 
     def get_metrics(
         self,
