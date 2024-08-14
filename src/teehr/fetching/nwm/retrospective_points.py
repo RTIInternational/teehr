@@ -36,22 +36,23 @@ from pydantic import validate_call
 from datetime import datetime
 
 from pathlib import Path
-from typing import Union, List, Optional
+from typing import Union, List, Optional, Dict
 
 from teehr.fetching.const import (
-    NWM22_UNIT_LOOKUP,
     VALUE,
     VALUE_TIME,
     REFERENCE_TIME,
     LOCATION_ID,
     UNIT_NAME,
     VARIABLE_NAME,
-    CONFIGURATION_NAME
+    CONFIGURATION_NAME,
+    NWM_VARIABLE_MAPPER
 )
 from teehr.models.fetching.utils import (
     NWMChunkByEnum,
     SupportedNWMRetroVersionsEnum,
-    SupportedNWMRetroDomainsEnum
+    SupportedNWMRetroDomainsEnum,
+    ChannelRtRetroVariableEnum
 )
 from teehr.fetching.utils import (
     write_parquet_file,
@@ -114,13 +115,17 @@ def validate_start_end_date(
 
 def da_to_df(
         nwm_version: SupportedNWMRetroVersionsEnum,
-        da: xr.DataArray
+        da: xr.DataArray,
+        variable_mapper: Dict[str, Dict[str, str]]
 ) -> pd.DataFrame:
     """Format NWM retrospective data to TEEHR format."""
     df = da.to_dataframe()
     df.reset_index(inplace=True)
-    df[UNIT_NAME] = NWM22_UNIT_LOOKUP.get(da.units, da.units)
-    df[VARIABLE_NAME] = da.name
+
+    df[UNIT_NAME] = variable_mapper[UNIT_NAME].get(da.units, da.units)
+    df[VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].get(
+        da.name, da.name
+    )
     df[CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
     df[REFERENCE_TIME] = df["time"]
     df.rename(
@@ -171,14 +176,15 @@ def format_grouped_filename(ds_i: xr.Dataset) -> str:
 @validate_call(config=dict(arbitrary_types_allowed=True))
 def nwm_retro_to_parquet(
     nwm_version: SupportedNWMRetroVersionsEnum,
-    variable_name: str,
+    variable_name: ChannelRtRetroVariableEnum,
     location_ids: List[int],
     start_date: Union[str, datetime, pd.Timestamp],
     end_date: Union[str, datetime, pd.Timestamp],
     output_parquet_dir: Union[str, Path],
     chunk_by: Union[NWMChunkByEnum, None] = None,
     overwrite_output: Optional[bool] = False,
-    domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS"
+    domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
+    variable_mapper: Dict[str, Dict[str, str]] = NWM_VARIABLE_MAPPER,
 ):
     """Fetch NWM retrospective at NWM COMIDs and store as Parquet file.
 
@@ -213,6 +219,10 @@ def nwm_retro_to_parquet(
         Geographical domain when NWM version is v3.0.
         Acceptable values are "Alaska", "CONUS" (default), "Hawaii", and "PR".
         Only used when NWM version equals `nwm30`.
+    variable_mapper : Dict[str, Dict[str, str]]
+        Dictionary mapping NWM variable and unit names to TEEHR variable
+        and unit names.
+
 
     Examples
     --------
@@ -293,7 +303,7 @@ def nwm_retro_to_parquet(
 
         da_i = da.sel(time=slice(dts["start_dt"], dts["end_dt"]))
 
-        df = da_to_df(nwm_version, da_i)
+        df = da_to_df(nwm_version, da_i, variable_mapper)
         output_filename = format_grouped_filename(da_i)
         output_filepath = Path(
             output_parquet_dir, output_filename

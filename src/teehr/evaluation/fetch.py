@@ -12,19 +12,26 @@ from teehr.fetching.nwm.nwm_points import nwm_to_parquet
 from teehr.fetching.nwm.nwm_grids import nwm_grids_to_parquet
 from teehr.fetching.nwm.retrospective_points import nwm_retro_to_parquet
 from teehr.fetching.nwm.retrospective_grids import nwm_retro_grids_to_parquet
+from teehr.pre.timeseries import (
+    # convert_timeseries,
+    validate_and_insert_timeseries,
+)
 from teehr.models.fetching.nwm22_grid import ForcingVariablesEnum
 from teehr.models.fetching.utils import (
     USGSChunkByEnum,
+    USGSServiceEnum,
     SupportedNWMRetroVersionsEnum,
     SupportedNWMRetroDomainsEnum,
     NWMChunkByEnum,
+    ChannelRtRetroVariableEnum,
     SupportedNWMOperationalVersionsEnum,
     SupportedNWMDataSourcesEnum,
     SupportedKerchunkMethod
 )
 from teehr.fetching.const import (
     USGS_CONFIGURATION_NAME,
-    USGS_VARIABLE_NAME
+    USGS_VARIABLE_MAPPER,
+    VARIABLE_NAME
 )
 
 logger = logging.getLogger(__name__)
@@ -63,6 +70,7 @@ class Fetch:
         end_date: Union[str, datetime, pd.Timestamp],
         sites: Optional[List[str]] = None,
         chunk_by: Union[USGSChunkByEnum, None] = None,
+        service: USGSServiceEnum = USGSServiceEnum.iv,
         filter_to_hourly: bool = True,
         filter_no_data: bool = True,
         convert_to_si: bool = True,
@@ -74,6 +82,8 @@ class Fetch:
             locations = self.eval.query.get_locations()
             sites = locations["id"].str.removeprefix("usgs-").to_list()
 
+        usgs_variable_name = USGS_VARIABLE_MAPPER[VARIABLE_NAME][service]
+
         usgs_to_parquet(
             sites=sites,
             start_date=start_date,
@@ -81,7 +91,7 @@ class Fetch:
             output_parquet_dir=Path(
                 self.usgs_cache_dir,
                 USGS_CONFIGURATION_NAME,
-                USGS_VARIABLE_NAME
+                usgs_variable_name
             ),
             chunk_by=chunk_by,
             filter_to_hourly=filter_to_hourly,
@@ -90,18 +100,20 @@ class Fetch:
             overwrite_output=overwrite_output
         )
 
-        self.eval.load.import_primary_timeseries(
+        validate_and_insert_timeseries(
             in_path=Path(
                 self.usgs_cache_dir,
                 USGS_CONFIGURATION_NAME,
-                USGS_VARIABLE_NAME
-            )
+                usgs_variable_name
+            ),
+            dataset_path=self.eval.dataset_dir,
+            timeseries_type="primary",
         )
 
     def nwm_retrospective_points(
         self,
         nwm_version: SupportedNWMRetroVersionsEnum,
-        variable_name: str,
+        variable_name: ChannelRtRetroVariableEnum,
         start_date: Union[str, datetime, pd.Timestamp],
         end_date: Union[str, datetime, pd.Timestamp],
         location_ids: Optional[List[int]] = None,
@@ -118,6 +130,8 @@ class Fetch:
             crosswalk = self.eval.query.get_crosswalk()
             location_ids = crosswalk["secondary_location_id"]. \
                 str.removeprefix(f"{nwm_version}-").to_list()
+
+        # But what if the locations are just a small subset of the crosswalk?
 
         nwm_retro_to_parquet(
             nwm_version=nwm_version,
@@ -136,7 +150,8 @@ class Fetch:
         )
         # TODO: Do we need a mapper for all possible unit names and
         # variable names so they conform to our schema? Or just manually
-        # add them all to the csv.
+        # add them all to the csv. But, variable names are in the pydantic
+        # model.
         self.eval.load.import_secondary_timeseries(
             in_path=Path(
                 self.nwm_cache_dir,
@@ -159,7 +174,14 @@ class Fetch:
     ):
         """Compute the weighted average for NWM gridded data."""
         logger.info("Fetching NWM retrospective grid data.")
+
         configuration = f"{nwm_version}_retrospective"
+
+        # if location_ids is None:
+        #     crosswalk = self.eval.query.get_crosswalk()
+        #     location_ids = crosswalk["secondary_location_id"]. \
+        #         str.removeprefix(f"{nwm_version}-").to_list()
+
         nwm_retro_grids_to_parquet(
             nwm_version=nwm_version,
             variable_name=variable_name,

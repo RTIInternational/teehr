@@ -31,8 +31,7 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
 
     eval.fetch.usgs_streamflow(
         start_date=datetime(2022, 2, 22),
-        end_date=datetime(2022, 2, 23),
-        chunk_by="location_id"
+        end_date=datetime(2022, 2, 23)
     )
 
     eval.load.import_location_crosswalks(
