@@ -16,7 +16,7 @@ from teehr.loading.duckdb_sql import (
     insert_locations,
     insert_location_crosswalks,
 )
-from teehr.models.data_tables import timeseries_field_names
+from teehr.models.loading.data_tables import timeseries_field_names
 import teehr.const as const
 
 import logging

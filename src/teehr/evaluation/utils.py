@@ -3,13 +3,28 @@ import logging
 from pathlib import Path
 from enum import Enum
 from typing import Union
-
-import duckdb
+from pyspark.sql import SparkSession
+from pyspark.sql.types import StructType
 
 logger = logging.getLogger(__name__)
 
 
-def _get_joined_timeseries_fields(
+def get_spark_schema(
+        spark: SparkSession,
+        data_dir: Union[Path, str]
+) -> StructType:
+    """Get the schema of the dataset."""
+    df = (
+        spark.read.format("parquet")
+        .option("recursiveFileLookup", "true")
+        .option("mergeSchema", "true")
+        .load(str(data_dir))
+    )
+    return df.schema
+
+
+def get_joined_timeseries_fields(
+    spark: SparkSession,
     joined_timeseries_dir: Union[Path, str]
 ) -> Enum:
     """Get the field names from the joined timeseries table."""
@@ -18,14 +33,6 @@ def _get_joined_timeseries_fields(
         raise FileNotFoundError
     else:
         logger.info(f"Reading fields from {joined_timeseries_dir}.")
-        qry = f"""
-        DESCRIBE
-        SELECT
-            *
-        FROM
-            read_parquet(
-                '{str(Path(joined_timeseries_dir, "**/*.parquet"))}'
-            )
-        ;"""
-        fields_list = duckdb.sql(qry).df().column_name.tolist()
+        schema = get_spark_schema(spark, joined_timeseries_dir)
+        fields_list = [field.name for field in schema.fields]
         return Enum("Fields", {field: field for field in fields_list})
