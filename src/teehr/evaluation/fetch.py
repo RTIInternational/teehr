@@ -83,9 +83,9 @@ class Fetch:
         timeseries_type: TimeseriesTypeEnum = "primary"
     ):
         """Fetch USGS gage data and save as a Parquet file."""
-        logger.info("Fetching USGS streamflow data.")
+        logger.info("Getting primary location IDs.")
         if sites is None:
-            locations = self.eval.query.get_locations()
+            locations = self.eval.query.get_locations_table()
             sites = locations["id"].str.removeprefix("usgs-").to_list()
 
         usgs_variable_name = USGS_VARIABLE_MAPPER[VARIABLE_NAME][service]
@@ -135,11 +135,15 @@ class Fetch:
         domain_variable_name = get_domain_variable_name(variable_name)
 
         if location_ids is None:
-            crosswalk = self.eval.query.get_crosswalk()
-            location_ids = crosswalk["secondary_location_id"]. \
+            # TODO: Revisit this.
+            locations = self.eval.query.get_locations_table()
+            primary_location_ids = locations["id"].to_list()
+            secondary_location_ids = self.eval.query.\
+                get_secondary_location_ids(
+                    primary_location_ids=primary_location_ids
+                )
+            location_ids = secondary_location_ids.\
                 str.removeprefix(f"{nwm_version}-").to_list()
-
-        # But what if the locations are just a small subset of the crosswalk?
 
         nwm_retro_to_parquet(
             nwm_version=nwm_version,
@@ -185,11 +189,6 @@ class Fetch:
         logger.info("Fetching NWM retrospective grid data.")
 
         configuration = f"{nwm_version}_retrospective"
-
-        # if location_ids is None:
-        #     crosswalk = self.eval.query.get_crosswalk()
-        #     location_ids = crosswalk["secondary_location_id"]. \
-        #         str.removeprefix(f"{nwm_version}-").to_list()
 
         nwm_retro_grids_to_parquet(
             nwm_version=nwm_version,

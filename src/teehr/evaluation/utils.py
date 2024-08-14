@@ -35,5 +35,6 @@ def get_joined_timeseries_fields(
 
 def get_domain_variable_name(variable_name: str) -> str:
     """Get the domain variable name."""
+    logger.info(f"Getting domain variable name for {variable_name}.")
     return NWM_VARIABLE_MAPPER[VARIABLE_NAME]. \
         get(variable_name, variable_name)

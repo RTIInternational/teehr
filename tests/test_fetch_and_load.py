@@ -22,9 +22,7 @@ CROSSWALK_FILEPATH = Path(
 def test_fetch_and_load_nwm_retro_points(tmpdir):
     """Test the NWM retro fetch and load."""
     eval = Evaluation(dir_path=tmpdir)
-
     eval.enable_logging()
-
     eval.clone_template()
 
     eval.load.import_locations(in_path=GEO_GAGES_FILEPATH)

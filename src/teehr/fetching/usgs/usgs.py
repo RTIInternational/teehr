@@ -16,6 +16,7 @@ API will be called for each unique location_id in the provided list.
    API calls and produce more efficient queries.
 """
 import pandas as pd
+import logging
 
 from typing import List, Union, Optional, Dict
 from pathlib import Path
@@ -32,9 +33,6 @@ from teehr.fetching.utils import (
 from teehr.fetching.const import (
     USGS_NODATA_VALUES,
     USGS_CONFIGURATION_NAME,
-    # USGS_UNIT_NAME,
-    # USGS_SI_UNIT_NAME,
-    # USGS_VARIABLE_NAME,
     VALUE,
     VALUE_TIME,
     REFERENCE_TIME,
@@ -48,9 +46,12 @@ from teehr.fetching.const import (
 DATETIME_STR_FMT = "%Y-%m-%dT%H:%M:00+0000"
 DAYLIGHT_SAVINGS_PAD = timedelta(hours=2)
 
+logger = logging.getLogger(__name__)
+
 
 def _filter_to_hourly(df: pd.DataFrame) -> pd.DataFrame:
     """Filter out data not reported on the hour."""
+    logger.debug("Filtering to hourly data.")
     df.set_index(VALUE_TIME, inplace=True)
     df2 = df[
         df.index.hour.isin(range(0, 24))
@@ -63,6 +64,7 @@ def _filter_to_hourly(df: pd.DataFrame) -> pd.DataFrame:
 
 def _filter_no_data(df: pd.DataFrame) -> pd.DataFrame:
     """Filter out no data values."""
+    logger.debug("Filtering out no data values.")
     df2 = df[~df[VALUE].isin(USGS_NODATA_VALUES)]
     df2.dropna(subset=[VALUE], inplace=True)
     return df2
@@ -70,6 +72,7 @@ def _filter_no_data(df: pd.DataFrame) -> pd.DataFrame:
 
 def _convert_to_si_units(df: pd.DataFrame, unit_name: str) -> pd.DataFrame:
     """Convert streamflow values from english to metric."""
+    logger.debug("Converting to SI units.")
     df[VALUE] = df[VALUE] * 0.3048**3
     df[UNIT_NAME] = unit_name
     return df
@@ -81,6 +84,7 @@ def _format_df_column_names(
     unit_name: str
 ) -> pd.DataFrame:
     """Format dataretrieval dataframe columns to TEEHR data model."""
+    logger.debug("Formatting column names.")
     df.reset_index(inplace=True)
     df.rename(
         columns={
@@ -117,6 +121,7 @@ def _fetch_usgs_streamflow(
     convert_to_si: bool = True,
 ) -> pd.DataFrame:
     """Fetch USGS gage data and format to TEEHR format."""
+    logger.debug("Fetching USGS streamflow data from NWIS.")
     start_dt_str = start_date.strftime(DATETIME_STR_FMT)
     end_dt_str = (
         end_date
@@ -151,6 +156,7 @@ def _fetch_usgs_streamflow(
 
 def _format_output_filename(chunk_by: str, start_dt, end_dt) -> str:
     """Format the output filename based on min and max datetime."""
+    logger.debug("Formatting output filename.")
     if chunk_by == "day":
         return f"{start_dt.strftime('%Y-%m-%d')}.parquet"
     else:
@@ -240,6 +246,7 @@ def usgs_to_parquet(
     >>>     overwrite_output=OVERWRITE_OUTPUT
     >>> )
     """
+    logger.info("Fetching USGS streamflow data.")
     start_date = pd.Timestamp(start_date)
     end_date = pd.Timestamp(end_date)
 
