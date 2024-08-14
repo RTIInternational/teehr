@@ -6,10 +6,12 @@ from typing import Union
 
 import duckdb
 
+from teehr.fetching.const import NWM_VARIABLE_MAPPER, VARIABLE_NAME
+
 logger = logging.getLogger(__name__)
 
 
-def _get_joined_timeseries_fields(
+def get_joined_timeseries_fields(
     joined_timeseries_dir: Union[Path, str]
 ) -> Enum:
     """Get the field names from the joined timeseries table."""
@@ -29,3 +31,9 @@ def _get_joined_timeseries_fields(
         ;"""
         fields_list = duckdb.sql(qry).df().column_name.tolist()
         return Enum("Fields", {field: field for field in fields_list})
+
+
+def get_domain_variable_name(variable_name: str) -> str:
+    """Get the domain variable name."""
+    return NWM_VARIABLE_MAPPER[VARIABLE_NAME]. \
+        get(variable_name, variable_name)

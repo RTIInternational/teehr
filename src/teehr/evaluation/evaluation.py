@@ -11,7 +11,7 @@ from teehr.pre.utils import (
     copy_template_to,
 )
 from teehr.evaluation.utils import (
-    _get_joined_timeseries_fields,
+    get_joined_timeseries_fields,
 )
 
 import teehr.const as const
@@ -91,7 +91,7 @@ class Evaluation:
     def fields(self) -> Enum:
         """The field names from the joined timeseries table."""
         logger.info("Getting fields from the joined timeseries table.")
-        return _get_joined_timeseries_fields(
+        return get_joined_timeseries_fields(
             Path(self.joined_timeseries_dir)
         )
 

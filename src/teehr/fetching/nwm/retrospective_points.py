@@ -122,10 +122,15 @@ def da_to_df(
     df = da.to_dataframe()
     df.reset_index(inplace=True)
 
-    df[UNIT_NAME] = variable_mapper[UNIT_NAME].get(da.units, da.units)
-    df[VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].get(
-        da.name, da.name
-    )
+    if not variable_mapper:
+        df[UNIT_NAME] = da.units
+        df[VARIABLE_NAME] = da.name.value
+    else:
+        # TODO: Make sure the mapping values are valid?
+        df[UNIT_NAME] = variable_mapper[UNIT_NAME].get(da.units, da.units)
+        df[VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].get(
+            da.name, da.name
+        )
     df[CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
     df[REFERENCE_TIME] = df["time"]
     df.rename(
@@ -184,7 +189,7 @@ def nwm_retro_to_parquet(
     chunk_by: Union[NWMChunkByEnum, None] = None,
     overwrite_output: Optional[bool] = False,
     domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
-    variable_mapper: Dict[str, Dict[str, str]] = NWM_VARIABLE_MAPPER,
+    variable_mapper: Dict[str, Dict[str, str]] = None,
 ):
     """Fetch NWM retrospective at NWM COMIDs and store as Parquet file.
 

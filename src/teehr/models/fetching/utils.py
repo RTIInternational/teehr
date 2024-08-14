@@ -11,6 +11,14 @@ except ImportError:  # pragma: no cover
         pass  # pragma: no cover
 
 
+# Timeseries models.
+class TimeseriesTypeEnum(StrEnum):
+    """Timeseries types enum."""
+
+    primary = "primary"
+    secondary = "secondary"
+
+
 # Retrospective models.
 class ChannelRtRetroVariableEnum(StrEnum):
     """ChannelRtRetro variables enum."""

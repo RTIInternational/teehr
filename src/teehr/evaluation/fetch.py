@@ -16,6 +16,9 @@ from teehr.pre.timeseries import (
     # convert_timeseries,
     validate_and_insert_timeseries,
 )
+from teehr.evaluation.utils import (
+    get_domain_variable_name,
+)
 from teehr.models.fetching.nwm22_grid import ForcingVariablesEnum
 from teehr.models.fetching.utils import (
     USGSChunkByEnum,
@@ -26,12 +29,14 @@ from teehr.models.fetching.utils import (
     ChannelRtRetroVariableEnum,
     SupportedNWMOperationalVersionsEnum,
     SupportedNWMDataSourcesEnum,
-    SupportedKerchunkMethod
+    SupportedKerchunkMethod,
+    TimeseriesTypeEnum
 )
 from teehr.fetching.const import (
     USGS_CONFIGURATION_NAME,
     USGS_VARIABLE_MAPPER,
-    VARIABLE_NAME
+    VARIABLE_NAME,
+    NWM_VARIABLE_MAPPER
 )
 
 logger = logging.getLogger(__name__)
@@ -70,11 +75,12 @@ class Fetch:
         end_date: Union[str, datetime, pd.Timestamp],
         sites: Optional[List[str]] = None,
         chunk_by: Union[USGSChunkByEnum, None] = None,
-        service: USGSServiceEnum = USGSServiceEnum.iv,
+        service: USGSServiceEnum = "iv",
         filter_to_hourly: bool = True,
         filter_no_data: bool = True,
         convert_to_si: bool = True,
-        overwrite_output: Optional[bool] = False
+        overwrite_output: Optional[bool] = False,
+        timeseries_type: TimeseriesTypeEnum = "primary"
     ):
         """Fetch USGS gage data and save as a Parquet file."""
         logger.info("Fetching USGS streamflow data.")
@@ -107,7 +113,7 @@ class Fetch:
                 usgs_variable_name
             ),
             dataset_path=self.eval.dataset_dir,
-            timeseries_type="primary",
+            timeseries_type=timeseries_type,
         )
 
     def nwm_retrospective_points(
@@ -119,12 +125,14 @@ class Fetch:
         location_ids: Optional[List[int]] = None,
         chunk_by: Union[NWMChunkByEnum, None] = None,
         overwrite_output: Optional[bool] = False,
-        domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS"
+        domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
+        timeseries_type: TimeseriesTypeEnum = "secondary"
     ):
         """Fetch NWM retrospective at NWM COMIDs and store as Parquet file."""
         logger.info("Fetching NWM retrospective point data.")
 
         configuration = f"{nwm_version}_retrospective"
+        domain_variable_name = get_domain_variable_name(variable_name)
 
         if location_ids is None:
             crosswalk = self.eval.query.get_crosswalk()
@@ -142,22 +150,22 @@ class Fetch:
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
                 configuration,
-                variable_name
+                domain_variable_name
             ),
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
-            domain=domain
+            domain=domain,
+            variable_mapper=NWM_VARIABLE_MAPPER
         )
-        # TODO: Do we need a mapper for all possible unit names and
-        # variable names so they conform to our schema? Or just manually
-        # add them all to the csv. But, variable names are in the pydantic
-        # model.
-        self.eval.load.import_secondary_timeseries(
+
+        validate_and_insert_timeseries(
             in_path=Path(
                 self.nwm_cache_dir,
                 configuration,
-                variable_name
-            )
+                domain_variable_name
+            ),
+            dataset_path=self.eval.dataset_dir,
+            timeseries_type=timeseries_type,
         )
 
     def nwm_retrospective_grids(
@@ -170,7 +178,8 @@ class Fetch:
         chunk_by: Union[NWMChunkByEnum, None] = None,
         overwrite_output: Optional[bool] = False,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
-        location_id_prefix: Optional[Union[str, None]] = None
+        location_id_prefix: Optional[Union[str, None]] = None,
+        timeseries_type: TimeseriesTypeEnum = "primary"
     ):
         """Compute the weighted average for NWM gridded data."""
         logger.info("Fetching NWM retrospective grid data.")
