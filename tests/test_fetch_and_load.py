@@ -4,6 +4,7 @@ from datetime import datetime
 import tempfile
 
 from teehr import Evaluation
+import pandas as pd
 
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "test_study")
@@ -64,14 +65,18 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
     eval.load.import_locations(in_path=ZONAL_LOCATIONS)
 
     eval.fetch.nwm_retrospective_grids(
-        nwm_version="nwm30",
+        nwm_version="nwm21",
         variable_name="RAINRATE",
         zonal_weights_filepath=ZONAL_WEIGHTS,
         start_date="2008-05-23 09:00",
         end_date="2008-05-23 10:00",
         location_id_prefix="huc10"
     )
-    # TODO: Assert something here.
+    # TODO: This could be eval.query.timeseries() or something similar.
+    ts_df = pd.read_parquet(
+        Path(tmpdir, "dataset", "primary_timeseries", "20080523.parquet")
+    )
+    assert isinstance(ts_df, pd.DataFrame)
     pass
 
 

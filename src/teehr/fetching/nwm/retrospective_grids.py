@@ -177,9 +177,9 @@ def process_single_nwm21_retro_grid_file(
     variable_name: str,
     weights_filepath: str,
     ignore_missing_file: bool,
-    units_format_dict: Dict,
     nwm_version: str,
-    location_id_prefix: Union[str, None]
+    location_id_prefix: Union[str, None],
+    variable_mapper: Dict[str, Dict[str, str]]
 ):
     """Compute the zonal mean for a single json reference file.
 
@@ -194,7 +194,7 @@ def process_single_nwm21_retro_grid_file(
         return None
 
     nwm_units = ds[variable_name].attrs["units"]
-    teehr_units = units_format_dict.get(nwm_units, nwm_units)
+
     value_time = row.datetime
     da = ds[variable_name].isel(Time=0)
 
@@ -219,11 +219,18 @@ def process_single_nwm21_retro_grid_file(
     # Calculate mean areal of selected variable
     df = compute_weighted_average(grid_values, weights_df)
 
+    if not variable_mapper:
+        df.loc[:, UNIT_NAME] = nwm_units
+        df.loc[:, VARIABLE_NAME] = variable_name.value
+    else:
+        df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
+            get(nwm_units, nwm_units)
+        df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
+            get(variable_name, variable_name)
+
     df.loc[:, VALUE_TIME] = value_time
     df.loc[:, REFERENCE_TIME] = value_time
-    df.loc[:, UNIT_NAME] = teehr_units
     df.loc[:, CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
-    df.loc[:, VARIABLE_NAME] = variable_name
 
     if location_id_prefix:
         df = update_location_id_prefix(df, location_id_prefix)
@@ -347,9 +354,9 @@ def nwm_retro_grids_to_parquet(
                         variable_name=variable_name,
                         weights_filepath=zonal_weights_filepath,
                         ignore_missing_file=False,
-                        units_format_dict=NWM22_UNIT_LOOKUP,
                         nwm_version=nwm_version,
-                        location_id_prefix=location_id_prefix
+                        location_id_prefix=location_id_prefix,
+                        variable_mapper=variable_mapper
                     )
                 )
             output = dask.compute(*results)
