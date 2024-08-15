@@ -33,8 +33,8 @@ def get_joined_timeseries_fields(
         return Enum("Fields", {field: field for field in fields_list})
 
 
-def get_domain_variable_name(variable_name: str) -> str:
-    """Get the domain variable name."""
-    logger.info(f"Getting domain variable name for {variable_name}.")
+def get_schema_variable_name(variable_name: str) -> str:
+    """Get the variable name from the Evaluation schema."""
+    logger.info(f"Getting schema variable name for {variable_name}.")
     return NWM_VARIABLE_MAPPER[VARIABLE_NAME]. \
         get(variable_name, variable_name)

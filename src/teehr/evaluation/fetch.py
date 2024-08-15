@@ -17,7 +17,7 @@ from teehr.pre.timeseries import (
     validate_and_insert_timeseries,
 )
 from teehr.evaluation.utils import (
-    get_domain_variable_name,
+    get_schema_variable_name,
 )
 from teehr.models.fetching.nwm22_grid import ForcingVariablesEnum
 from teehr.models.fetching.utils import (
@@ -132,7 +132,7 @@ class Fetch:
         logger.info("Fetching NWM retrospective point data.")
 
         configuration = f"{nwm_version}_retrospective"
-        domain_variable_name = get_domain_variable_name(variable_name)
+        schema_variable_name = get_schema_variable_name(variable_name)
 
         if location_ids is None:
             # TODO: Revisit this.
@@ -154,7 +154,7 @@ class Fetch:
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
                 configuration,
-                domain_variable_name
+                schema_variable_name
             ),
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
@@ -166,7 +166,7 @@ class Fetch:
             in_path=Path(
                 self.nwm_cache_dir,
                 configuration,
-                domain_variable_name
+                schema_variable_name
             ),
             dataset_path=self.eval.dataset_dir,
             timeseries_type=timeseries_type,
@@ -189,6 +189,7 @@ class Fetch:
         logger.info("Fetching NWM retrospective grid data.")
 
         configuration = f"{nwm_version}_retrospective"
+        schema_variable_name = get_schema_variable_name(variable_name)
 
         nwm_retro_grids_to_parquet(
             nwm_version=nwm_version,
@@ -199,12 +200,23 @@ class Fetch:
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
                 configuration,
-                variable_name
+                schema_variable_name
             ),
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
             domain=domain,
-            location_id_prefix=location_id_prefix
+            location_id_prefix=location_id_prefix,
+            variable_mapper=NWM_VARIABLE_MAPPER
+        )
+
+        validate_and_insert_timeseries(
+            in_path=Path(
+                self.nwm_cache_dir,
+                configuration,
+                schema_variable_name
+            ),
+            dataset_path=self.eval.dataset_dir,
+            timeseries_type=timeseries_type,
         )
 
     def nwm_forecast_points(

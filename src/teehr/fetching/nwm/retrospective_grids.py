@@ -93,9 +93,9 @@ def process_nwm30_retro_group(
     da_i: xr.DataArray,
     weights_filepath: str,
     variable_name: str,
-    units_format_dict: Dict,
     nwm_version: str,
-    location_id_prefix: Union[str, None]
+    location_id_prefix: Union[str, None],
+    variable_mapper: Dict[str, Dict[str, str]]
 ):
     """Compute the weighted average for a chunk of NWM v3.0 data.
 
@@ -127,13 +127,19 @@ def process_nwm30_retro_group(
         df.loc[:, VALUE_TIME] = pd.to_datetime(time)
         hourly_dfs.append(df)
 
-    chunk_df = pd.concat(hourly_dfs)
-    chunk_df.loc[:, REFERENCE_TIME] = chunk_df.value_time
     nwm_units = da_i.attrs["units"]
-    teehr_units = units_format_dict.get(nwm_units, nwm_units)
-    chunk_df.loc[:, UNIT_NAME] = teehr_units
+    chunk_df = pd.concat(hourly_dfs)
+    if not variable_mapper:
+        chunk_df.loc[:, UNIT_NAME] = nwm_units
+        chunk_df.loc[:, VARIABLE_NAME] = variable_name.value
+    else:
+        chunk_df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
+            get(nwm_units, nwm_units)
+        chunk_df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
+            get(variable_name, variable_name)
+
+    chunk_df.loc[:, REFERENCE_TIME] = chunk_df.value_time
     chunk_df.loc[:, CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
-    chunk_df.loc[:, VARIABLE_NAME] = variable_name
 
     if location_id_prefix:
         chunk_df = update_location_id_prefix(chunk_df, location_id_prefix)
@@ -236,7 +242,8 @@ def nwm_retro_grids_to_parquet(
     chunk_by: Union[NWMChunkByEnum, None] = None,
     overwrite_output: Optional[bool] = False,
     domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
-    location_id_prefix: Optional[Union[str, None]] = None
+    location_id_prefix: Optional[Union[str, None]] = None,
+    variable_mapper: Dict[str, Dict[str, str]] = None
 ):
     """Compute the weighted average for NWM v2.1 or v3.0 gridded data.
 
@@ -278,6 +285,9 @@ def nwm_retro_grids_to_parquet(
         Only used when NWM version equals v3.0.
     location_id_prefix : Union[str, None]
         Optional location ID prefix to add (prepend) or replace.
+    variable_mapper : Dict[str, Dict[str, str]]
+        Dictionary mapping NWM variable and unit names to TEEHR variable
+        and unit names.
 
     Notes
     -----
@@ -412,9 +422,9 @@ def nwm_retro_grids_to_parquet(
                 da_i=da_i,
                 weights_filepath=zonal_weights_filepath,
                 variable_name=variable_name,
-                units_format_dict=NWM22_UNIT_LOOKUP,
                 nwm_version=nwm_version,
-                location_id_prefix=location_id_prefix
+                location_id_prefix=location_id_prefix,
+                variable_mapper=variable_mapper
             )
 
             fname = format_grouped_filename(da_i)

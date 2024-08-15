@@ -43,9 +43,11 @@ USGS_VARIABLE_MAPPER = {
 NWM_VARIABLE_MAPPER = {
     VARIABLE_NAME: {
         "streamflow": "streamflow_hourly_inst",
+        "RAINRATE": "rainfall_hourly_rate",
     },
     UNIT_NAME: {
         "m3 s-1": "m^3/s",
+        "mm s^-1": "mm/s",
     },
 }
 
