@@ -9,9 +9,6 @@ import pytest
 from teehr.fetching.nwm.grid_utils import update_location_id_prefix
 from teehr.fetching.nwm.nwm_points import fetch_and_format_nwm_points
 from teehr.fetching.nwm.nwm_grids import fetch_and_format_nwm_grids
-from teehr.fetching.const import (
-    NWM22_UNIT_LOOKUP,
-)
 
 
 def test_nwm22_point_fetch_and_format(tmpdir):
@@ -39,7 +36,6 @@ def test_nwm22_point_fetch_and_format(tmpdir):
         process_by_z_hour=True,
         stepsize=100,
         ignore_missing_file=False,
-        units_format_dict=NWM22_UNIT_LOOKUP,
         overwrite_output=True,
         nwm_version="nwm22"
     )
@@ -79,7 +75,6 @@ def test_nwm30_point_fetch_and_format(tmpdir):
         process_by_z_hour=True,
         stepsize=100,
         ignore_missing_file=False,
-        units_format_dict=NWM22_UNIT_LOOKUP,
         overwrite_output=True
     )
 
@@ -108,7 +103,6 @@ def test_nwm22_grid_fetch_and_format(tmpdir):
         output_parquet_dir=tmpdir,
         zonal_weights_filepath=weights_filepath,
         ignore_missing_file=False,
-        units_format_dict=NWM22_UNIT_LOOKUP,
         overwrite_output=True,
         location_id_prefix=None
     )
@@ -138,7 +132,6 @@ def test_nwm30_grid_fetch_and_format(tmpdir):
         output_parquet_dir=tmpdir,
         zonal_weights_filepath=weights_filepath,
         ignore_missing_file=False,
-        units_format_dict=NWM22_UNIT_LOOKUP,
         overwrite_output=True,
         location_id_prefix=None
     )

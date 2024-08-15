@@ -5,6 +5,8 @@ import tempfile
 
 from teehr import Evaluation
 import pandas as pd
+import numpy as np
+import pytest
 
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "test_study")
@@ -51,8 +53,31 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
         start_date=datetime(2022, 2, 22),
         end_date=datetime(2022, 2, 23)
     )
-    # TODO: Assert something here.
-    pass
+    # TODO: This could be eval.query.timeseries() or something similar.
+    ts_df = pd.read_parquet(
+        Path
+        (
+            tmpdir,
+            "dataset",
+            "secondary_timeseries",
+            "20220222_20220223.parquet"
+        )
+    )
+    assert isinstance(ts_df, pd.DataFrame)
+    assert ts_df.columns.tolist() == [
+            "reference_time",
+            "value_time",
+            "configuration_name",
+            "unit_name",
+            "variable_name",
+            "value",
+            "location_id"
+            ]
+    assert ts_df.unit_name.iloc[0] == "m^3/s"
+    assert ts_df.variable_name.iloc[0] == "streamflow_hourly_inst"
+    assert ts_df.value.sum() == np.float32(7319.99)
+    assert ts_df.value_time.min() == pd.Timestamp("2022-02-22 00:00:00")
+    assert ts_df.value_time.max() == pd.Timestamp("2022-02-23 23:00:00")
 
 
 def test_fetch_and_load_nwm_retro_grids(tmpdir):
@@ -65,7 +90,7 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
     eval.load.import_locations(in_path=ZONAL_LOCATIONS)
 
     eval.fetch.nwm_retrospective_grids(
-        nwm_version="nwm21",
+        nwm_version="nwm30",
         variable_name="RAINRATE",
         zonal_weights_filepath=ZONAL_WEIGHTS,
         start_date="2008-05-23 09:00",
@@ -77,7 +102,119 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
         Path(tmpdir, "dataset", "primary_timeseries", "20080523.parquet")
     )
     assert isinstance(ts_df, pd.DataFrame)
-    pass
+    assert ts_df.columns.tolist() == [
+            "reference_time",
+            "value_time",
+            "configuration_name",
+            "unit_name",
+            "variable_name",
+            "value",
+            "location_id"
+            ]
+    assert ts_df.unit_name.iloc[0] == "mm/s"
+    assert ts_df.variable_name.iloc[0] == "rainfall_hourly_rate"
+    assert ts_df.value.sum() == np.float32(0.00028747512)
+    assert ts_df.value_time.min() == pd.Timestamp("2008-05-23 09:00:00")
+    assert ts_df.value_time.max() == pd.Timestamp("2008-05-23 23:00:00")
+
+
+def test_fetch_and_load_nwm_forecast_points(tmpdir):
+    """Test the NWM forecast point fetch and load."""
+    eval = Evaluation(dir_path=tmpdir)
+    eval.enable_logging()
+    eval.clone_template()
+
+    eval.load.import_locations(in_path=GEO_GAGES_FILEPATH)
+
+    eval.load.import_location_crosswalks(
+        in_path=CROSSWALK_FILEPATH
+    )
+
+    eval.fetch.nwm_forecast_points(
+        configuration="analysis_assim",
+        output_type="channel_rt",
+        variable_name="streamflow",
+        start_date=datetime(2024, 2, 22),
+        ingest_days=1,
+        nwm_version="nwm30",
+        t_minus_hours=[0],
+        process_by_z_hour=False
+    )
+    # TODO: This could be eval.query.timeseries() or something similar.
+    ts_df = pd.read_parquet(
+        Path(
+            tmpdir,
+            "dataset",
+            "secondary_timeseries",
+            "20240222T00Fm00_20240222T23Fm00.parquet"
+        )
+    )
+    assert isinstance(ts_df, pd.DataFrame)
+    assert ts_df.columns.tolist() == [
+            "reference_time",
+            "value_time",
+            "configuration_name",
+            "unit_name",
+            "variable_name",
+            "value",
+            "location_id"
+            ]
+    assert ts_df.unit_name.iloc[0] == "m^3/s"
+    assert ts_df.variable_name.iloc[0] == "streamflow_hourly_inst"
+    assert ts_df.value.sum() == np.float32(658.14)
+    assert ts_df.value_time.min() == pd.Timestamp("2024-02-22 00:00:00")
+    assert ts_df.value_time.max() == pd.Timestamp("2024-02-22 23:00:00")
+
+
+@pytest.mark.skip(reason="This takes forever!")
+def test_fetch_and_load_nwm_forecast_grids(tmpdir):
+    """Test the NWM forecast grids fetch and load."""
+    eval = Evaluation(dir_path=tmpdir)
+    eval.enable_logging()
+    eval.clone_template()
+
+    eval.load.import_locations(in_path=ZONAL_LOCATIONS)
+
+    eval.fetch.nwm_forecast_grids(
+        configuration="forcing_analysis_assim",
+        output_type="forcing",
+        variable_name="RAINRATE",
+        start_date=datetime(2024, 2, 22),
+        ingest_days=1,
+        zonal_weights_filepath=ZONAL_WEIGHTS,
+        nwm_version="nwm30",
+        t_minus_hours=[0],
+        location_id_prefix="huc10"
+    )
+
+    # TODO: This could be eval.query.timeseries() or something similar.
+    ts_df = pd.read_parquet(
+        Path(
+            tmpdir,
+            "dataset",
+            "primary_timeseries",
+            "20240222T00.parquet"
+        )
+    )
+    assert isinstance(ts_df, pd.DataFrame)
+    assert ts_df.columns.tolist() == [
+            "reference_time",
+            "value_time",
+            "configuration_name",
+            "unit_name",
+            "variable_name",
+            "value",
+            "location_id"
+            ]
+    assert ts_df.unit_name.iloc[0] == "mm/s"
+    assert ts_df.variable_name.iloc[0] == "rainfall_hourly_rate"
+    assert ts_df.value.sum() == np.float32(0.0)
+    assert ts_df.value_time.min() == pd.Timestamp("2024-02-22 00:00:00")
+    assert ts_df.value_time.max() == pd.Timestamp("2024-02-22 23:00:00")
+    file_list = list(
+        Path(tmpdir, "dataset", "primary_timeseries").glob("*.parquet")
+    )
+    assert len(file_list) == 24
 
 
 if __name__ == "__main__":
@@ -90,9 +227,21 @@ if __name__ == "__main__":
         #         dir=tempdir
         #     )
         # )
-        test_fetch_and_load_nwm_retro_grids(
+        # test_fetch_and_load_nwm_retro_grids(
+        #     tempfile.mkdtemp(
+        #         prefix="2-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_fetch_and_load_nwm_forecast_points(
+        #     tempfile.mkdtemp(
+        #         prefix="3-",
+        #         dir=tempdir
+        #     )
+        # )
+        test_fetch_and_load_nwm_forecast_grids(
             tempfile.mkdtemp(
-                prefix="2-",
+                prefix="4-",
                 dir=tempdir
             )
         )

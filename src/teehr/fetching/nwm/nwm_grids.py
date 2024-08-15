@@ -1,5 +1,5 @@
 """Module for fetching and processing NWM gridded data."""
-from typing import Union, List, Optional
+from typing import Union, List, Optional, Dict
 from datetime import datetime
 from pathlib import Path
 
@@ -39,7 +39,8 @@ def nwm_grids_to_parquet(
     t_minus_hours: Optional[List[int]] = None,
     ignore_missing_file: Optional[bool] = True,
     overwrite_output: Optional[bool] = False,
-    location_id_prefix: Optional[Union[str, None]] = None
+    location_id_prefix: Optional[Union[str, None]] = None,
+    variable_mapper: Dict[str, Dict[str, str]] = None
 ):
     """
     Fetch NWM gridded data, calculate zonal statistics (currently only
@@ -231,9 +232,9 @@ def nwm_grids_to_parquet(
             output_parquet_dir,
             zonal_weights_filepath,
             ignore_missing_file,
-            unit_lookup_dict,
             overwrite_output,
-            location_id_prefix
+            location_id_prefix,
+            variable_mapper
         )
 
 

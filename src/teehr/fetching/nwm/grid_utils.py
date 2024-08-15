@@ -100,8 +100,8 @@ def process_single_nwm_grid_file(
     variable_name: str,
     weights_filepath: str,
     ignore_missing_file: bool,
-    units_format_dict: Dict,
-    location_id_prefix: Union[str, None]
+    location_id_prefix: Union[str, None],
+    variable_mapper: Dict[str, Dict[str, str]]
 ) -> pd.DataFrame:
     """Fetch data for a single reference file and compute weighted average."""
     ds = get_dataset(
@@ -117,7 +117,6 @@ def process_single_nwm_grid_file(
         + pd.to_timedelta(int(z_hour), unit="h")
 
     nwm_units = ds[variable_name].attrs["units"]
-    teehr_units = units_format_dict.get(nwm_units, nwm_units)
     value_time = ds.time.values[0]
     da = ds[variable_name][0]
 
@@ -143,11 +142,18 @@ def process_single_nwm_grid_file(
     # Calculate mean areal value of selected variable
     df = compute_weighted_average(grid_values, weights_df)
 
+    if not variable_mapper:
+        df.loc[:, UNIT_NAME] = nwm_units
+        df.loc[:, VARIABLE_NAME] = variable_name
+    else:
+        df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
+            get(nwm_units, nwm_units)
+        df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
+            get(variable_name, variable_name)
+
     df.loc[:, VALUE_TIME] = value_time
     df.loc[:, REFERENCE_TIME] = ref_time
-    df.loc[:, UNIT_NAME] = teehr_units
     df.loc[:, CONFIGURATION_NAME] = configuration
-    df.loc[:, VARIABLE_NAME] = variable_name
 
     if location_id_prefix:
         df = update_location_id_prefix(df, location_id_prefix)
@@ -162,9 +168,9 @@ def fetch_and_format_nwm_grids(
     output_parquet_dir: str,
     zonal_weights_filepath: str,
     ignore_missing_file: bool,
-    units_format_dict: Dict,
     overwrite_output: bool,
-    location_id_prefix: Union[str, None]
+    location_id_prefix: Union[str, None],
+    variable_mapper: Dict[str, Dict[str, str]]
 ):
     """Compute weighted average, grouping by reference time.
 
@@ -207,8 +213,8 @@ def fetch_and_format_nwm_grids(
                     variable_name,
                     zonal_weights_filepath,
                     ignore_missing_file,
-                    units_format_dict,
-                    location_id_prefix
+                    location_id_prefix,
+                    variable_mapper
                 )
             )
 

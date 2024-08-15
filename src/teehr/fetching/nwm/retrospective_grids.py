@@ -33,6 +33,7 @@ of data transferred over the network.
 from datetime import datetime
 from pathlib import Path
 from typing import Union, Optional, Tuple, Dict
+import logging
 
 import pandas as pd
 import xarray as xr
@@ -41,7 +42,6 @@ from pydantic import validate_call
 import dask
 
 from teehr.fetching.const import (
-    NWM22_UNIT_LOOKUP,
     VALUE_TIME,
     REFERENCE_TIME,
     LOCATION_ID,
@@ -73,6 +73,8 @@ from teehr.fetching.nwm.retrospective_points import (
     validate_start_end_date,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def get_nwm21_retro_grid_data(
     var_da: xr.DataArray,
@@ -82,6 +84,7 @@ def get_nwm21_retro_grid_data(
     col_max: int
 ):
     """Read a subset nwm21 retro grid data into memory from row/col bounds."""
+    logger.debug("Getting the nwm21 retro grid data")
     grid_values = var_da.isel(
         west_east=slice(col_min, col_max+1),
         south_north=slice(row_min, row_max+1)
@@ -102,6 +105,7 @@ def process_nwm30_retro_group(
     Pixel weights for each zone are defined in weights_df,
     and the output is saved to parquet files.
     """
+    logger.debug("Processing NWM v3.0 retro grid data chunk.")
     weights_df = pd.read_parquet(
         weights_filepath, columns=["row", "col", "weight", LOCATION_ID]
     )
@@ -154,6 +158,7 @@ def construct_nwm21_json_paths(
     end_date: Union[str, datetime]
 ):
     """Construct the remote paths for NWM v2.1 json files as a dataframe."""
+    logger.debug("Constructing NWM v2.1 json paths.")
     base_path = (
         "s3://ciroh-nwm-zarr-retrospective-data-copy/"
         "noaa-nwm-retrospective-2-1-zarr-pds/forcing"
@@ -304,6 +309,10 @@ def nwm_retro_grids_to_parquet(
     will replace the existing prefix. It is assumed that the location_id
     follows the pattern '[prefix]-[unique id]'.
     """
+    logger.info(
+        f"Fetching NWM retrospective grid data, version: {nwm_version}."
+    )
+
     start_date = pd.Timestamp(start_date)
     end_date = pd.Timestamp(end_date)
 
@@ -443,22 +452,5 @@ def nwm_retro_grids_to_parquet(
             write_parquet_file(
                 filepath=output_filename,
                 overwrite_output=overwrite_output,
-                data=chunk_df)
-
-
-# if __name__ == "__main__":
-
-#     # t0 = time.time()
-
-#     nwm_retro_grids_to_parquet(
-#         nwm_version="nwm21",
-#         variable_name="RAINRATE",
-#         zonal_weights_filepath="/mnt/data/merit/YalansBasins/cat_pfaf_7_conus_subset_nwm_v30_weights.parquet",
-#         start_date="2020-12-10",
-#         end_date="2020-12-31 12:00",
-#         output_parquet_dir="/mnt/data/ciroh/retro",
-#         overwrite_output=True,
-#         chunk_by="week"
-#     )
-
-    # print(f"Total elapsed: {(time.time() - t0):.2f} secs")
+                data=chunk_df
+            )

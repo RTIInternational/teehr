@@ -56,6 +56,7 @@ class Fetch:
         )
         self.nwm_cache_dir = Path(
             eval.cache_dir,
+            const.FETCHING_CACHE_DIR,
             const.NWM_CACHE_DIR
         )
         self.kerchunk_cache_dir = Path(
@@ -129,20 +130,20 @@ class Fetch:
         timeseries_type: TimeseriesTypeEnum = "secondary"
     ):
         """Fetch NWM retrospective at NWM COMIDs and store as Parquet file."""
-        logger.info("Fetching NWM retrospective point data.")
-
         configuration = f"{nwm_version}_retrospective"
         schema_variable_name = get_schema_variable_name(variable_name)
 
+        logger.info("Getting secondary location IDs.")
+        # NOTE: Does this depend on timeseries_type? This will be a method on
+        # crosswalk table component class.
         if location_ids is None:
-            # TODO: Revisit this.
             locations = self.eval.query.get_locations_table()
             primary_location_ids = locations["id"].to_list()
             secondary_location_ids = self.eval.query.\
                 get_secondary_location_ids(
                     primary_location_ids=primary_location_ids
                 )
-            location_ids = secondary_location_ids.\
+            location_ids = secondary_location_ids.secondary_location_id.\
                 str.removeprefix(f"{nwm_version}-").to_list()
 
         nwm_retro_to_parquet(
@@ -186,8 +187,6 @@ class Fetch:
         timeseries_type: TimeseriesTypeEnum = "primary"
     ):
         """Compute the weighted average for NWM gridded data."""
-        logger.info("Fetching NWM retrospective grid data.")
-
         configuration = f"{nwm_version}_retrospective"
         schema_variable_name = get_schema_variable_name(variable_name)
 
@@ -226,18 +225,34 @@ class Fetch:
         variable_name: str,
         start_date: Union[str, datetime],
         ingest_days: int,
-        location_ids: List[int],
         nwm_version: SupportedNWMOperationalVersionsEnum,
+        location_ids: Optional[List[int]] = None,
         data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
         kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
         t_minus_hours: Optional[List[int]] = None,
         process_by_z_hour: Optional[bool] = True,
         stepsize: Optional[int] = 100,
         ignore_missing_file: Optional[bool] = True,
-        overwrite_output: Optional[bool] = False
+        overwrite_output: Optional[bool] = False,
+        timeseries_type: TimeseriesTypeEnum = "secondary"
     ):
         """Fetch NWM point data and save as a Parquet file in TEEHR format.""" # noqa
-        logger.info("Fetching NWM forecast point data.")
+        logger.info("Getting primary location IDs.")
+        # NOTE: Does this depend on timeseries_type? This will be a method on
+        # crosswalk table component class.
+        if location_ids is None:
+            locations = self.eval.query.get_locations_table()
+            primary_location_ids = locations["id"].to_list()
+            secondary_location_ids = self.eval.query.\
+                get_secondary_location_ids(
+                    primary_location_ids=primary_location_ids
+                )
+            location_ids = secondary_location_ids.secondary_location_id.\
+                str.removeprefix(f"{nwm_version}-").to_list()
+
+        # TODO: Read timeseries_type from the configurations table?
+
+        schema_variable_name = get_schema_variable_name(variable_name)
         nwm_to_parquet(
             configuration=configuration,
             output_type=output_type,
@@ -249,7 +264,7 @@ class Fetch:
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
                 configuration,
-                variable_name
+                schema_variable_name
             ),
             nwm_version=nwm_version,
             data_source=data_source,
@@ -258,7 +273,18 @@ class Fetch:
             process_by_z_hour=process_by_z_hour,
             stepsize=stepsize,
             ignore_missing_file=ignore_missing_file,
-            overwrite_output=overwrite_output
+            overwrite_output=overwrite_output,
+            variable_mapper=NWM_VARIABLE_MAPPER
+        )
+
+        validate_and_insert_timeseries(
+            in_path=Path(
+                self.nwm_cache_dir,
+                configuration,
+                schema_variable_name
+            ),
+            dataset_path=self.eval.dataset_dir,
+            timeseries_type=timeseries_type,
         )
 
     def nwm_forecast_grids(
@@ -275,14 +301,15 @@ class Fetch:
         t_minus_hours: Optional[List[int]] = None,
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
-        location_id_prefix: Optional[Union[str, None]] = None
+        location_id_prefix: Optional[Union[str, None]] = None,
+        timeseries_type: TimeseriesTypeEnum = "primary"
     ):
         """
         Fetch NWM gridded data, calculate zonal statistics (currently only
         mean is available) of selected variable for given zones, convert
         and save to TEEHR tabular format.
         """ # noqa
-        logger.info("Fetching NWM forecast grid data.")
+        schema_variable_name = get_schema_variable_name(variable_name)
         nwm_grids_to_parquet(
             configuration=configuration,
             output_type=output_type,
@@ -294,7 +321,7 @@ class Fetch:
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
                 configuration,
-                variable_name
+                schema_variable_name
             ),
             nwm_version=nwm_version,
             data_source=data_source,
@@ -302,5 +329,18 @@ class Fetch:
             t_minus_hours=t_minus_hours,
             ignore_missing_file=ignore_missing_file,
             overwrite_output=overwrite_output,
-            location_id_prefix=location_id_prefix
+            location_id_prefix=location_id_prefix,
+            variable_mapper=NWM_VARIABLE_MAPPER
+        )
+
+        pass
+
+        validate_and_insert_timeseries(
+            in_path=Path(
+                self.nwm_cache_dir,
+                configuration,
+                schema_variable_name
+            ),
+            dataset_path=self.eval.dataset_dir,
+            timeseries_type=timeseries_type,
         )

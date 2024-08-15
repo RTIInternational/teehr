@@ -37,6 +37,7 @@ from datetime import datetime
 
 from pathlib import Path
 from typing import Union, List, Optional, Dict
+import logging
 
 from teehr.fetching.const import (
     VALUE,
@@ -45,8 +46,7 @@ from teehr.fetching.const import (
     LOCATION_ID,
     UNIT_NAME,
     VARIABLE_NAME,
-    CONFIGURATION_NAME,
-    NWM_VARIABLE_MAPPER
+    CONFIGURATION_NAME
 )
 from teehr.models.fetching.utils import (
     NWMChunkByEnum,
@@ -67,6 +67,8 @@ NWM21_MIN_DATE = pd.Timestamp(1979, 1, 1)
 NWM21_MAX_DATE = pd.Timestamp(2020, 12, 31, 23)
 NWM30_MIN_DATE = pd.Timestamp(1979, 2, 1, 1)
 NWM30_MAX_DATE = pd.Timestamp(2023, 1, 31, 23)
+
+logger = logging.getLogger(__name__)
 
 
 def validate_start_end_date(
@@ -119,6 +121,7 @@ def da_to_df(
         variable_mapper: Dict[str, Dict[str, str]]
 ) -> pd.DataFrame:
     """Format NWM retrospective data to TEEHR format."""
+    logger.debug("Converting DataArray to a formatted DataFrame.")
     df = da.to_dataframe()
     df.reset_index(inplace=True)
 
@@ -259,6 +262,10 @@ def nwm_retro_to_parquet(
     >>>     output_parquet_dir=OUTPUT_DIR
     >>> )
     """
+    logger.info(
+        f"Fetching NWM retrospective point data, version: {nwm_version}."
+    )
+
     if nwm_version == SupportedNWMRetroVersionsEnum.nwm20:
         s3_zarr_url = "s3://noaa-nwm-retro-v2-zarr-pds"
     elif nwm_version == SupportedNWMRetroVersionsEnum.nwm21:
@@ -289,6 +296,7 @@ def nwm_retro_to_parquet(
     )
 
     # Chunk data by time
+    logger.debug("Chunking data by time.")
     periods = create_periods_based_on_chunksize(
         start_date=start_date,
         end_date=end_date,
@@ -308,102 +316,13 @@ def nwm_retro_to_parquet(
 
         da_i = da.sel(time=slice(dts["start_dt"], dts["end_dt"]))
 
+        logger.debug(
+            f"Fetching point data for {dts['start_dt']} to {dts['end_dt']}."
+        )
+
         df = da_to_df(nwm_version, da_i, variable_mapper)
         output_filename = format_grouped_filename(da_i)
         output_filepath = Path(
             output_parquet_dir, output_filename
         )
         write_parquet_file(output_filepath, overwrite_output, df)
-
-
-# if __name__ == "__main__":
-#     # Examples
-
-#     LOCATION_IDS = [7086109, 7040481]
-
-#     # NWM21_MAX_DATE = pd.Timestamp(2020, 12, 31, 23)
-#     # NWM30_MAX_DATE = pd.Timestamp(2023, 1, 31, 23)
-
-    # nwm_retro_to_parquet(
-    #     nwm_version="nwm30",
-    #     variable_name="streamflow",
-    #     start_date="2020-12-10",
-    #     end_date="2023-01-31 23:00",
-    #     location_ids=LOCATION_IDS,
-    #     output_parquet_dir=Path(
-    #         Path().home(),
-    #         "temp",
-    #         "nwm20_retrospective"
-    #     ),
-    #     chunk_by="day"
-    # )
-
-    # nwm_retro_to_parquet(
-    #     nwm_version="nwm20",
-    #     variable_name="streamflow",
-    #     start_date=datetime(2000, 1, 1),
-    #     end_date=datetime(2000, 10, 2),
-    #     location_ids=LOCATION_IDS,
-    #     output_parquet_dir=Path(
-    #         Path().home(),
-    #         "temp",
-    #         "nwm20_retrospective"
-    #     ),
-    #     chunk_by="month",
-    # )
-
-    # nwm_retro_to_parquet(
-    #     nwm_version="nwm20",
-    #     variable_name="streamflow",
-    #     start_date=datetime(2000, 1, 1),
-    #     end_date=datetime(2000, 1, 2),
-    #     location_ids=LOCATION_IDS,
-    #     output_parquet_dir=Path(
-    #         Path().home(),
-    #         "temp",
-    #         "nwm20_retrospective"
-    #     ),
-    #     chunk_by="location_id",
-    # )
-
-    # nwm_retro_to_parquet(
-    #     nwm_version="nwm21",
-    #     variable_name="streamflow",
-    #     start_date="2000-01-01",
-    #     end_date="2000-01-02",
-    #     location_ids=LOCATION_IDS,
-    #     output_parquet_dir=Path(
-    #         Path().home(),
-    #         "temp",
-    #         "nwm21_retrospective"
-    #     ),
-    # )
-
-    # nwm_retro_to_parquet(
-    #     nwm_version="nwm21",
-    #     variable_name="streamflow",
-    #     start_date=datetime(2000, 1, 1),
-    #     end_date=datetime(2000, 1, 2),
-    #     location_ids=LOCATION_IDS,
-    #     output_parquet_dir=Path(
-    #         Path().home(),
-    #         "temp",
-    #         "nwm21_retrospective"
-    #     ),
-    #     chunk_by="day",
-    # )
-
-    # nwm_retro_to_parquet(
-    #     nwm_version="nwm21",
-    #     variable_name="streamflow",
-    #     start_date=datetime(2000, 1, 1),
-    #     end_date=datetime(2000, 1, 2),
-    #     location_ids=LOCATION_IDS,
-    #     output_parquet_dir=Path(
-    #         Path().home(),
-    #         "temp",
-    #         "nwm21_retrospective"
-    #     ),
-    #     chunk_by="location_id",
-    # )
-    # pass
