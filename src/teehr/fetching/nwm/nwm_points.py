@@ -20,7 +20,6 @@ from teehr.models.fetching.utils import (
     SupportedKerchunkMethod
 )
 from teehr.fetching.const import (
-    NWM22_UNIT_LOOKUP,
     NWM22_ANALYSIS_CONFIG,
     NWM30_ANALYSIS_CONFIG,
 )

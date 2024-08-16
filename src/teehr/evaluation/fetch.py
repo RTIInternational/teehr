@@ -91,6 +91,8 @@ class Fetch:
 
         usgs_variable_name = USGS_VARIABLE_MAPPER[VARIABLE_NAME][service]
 
+        # TODO: Get timeseries_type from the configurations table?
+
         usgs_to_parquet(
             sites=sites,
             start_date=start_date,
@@ -132,6 +134,8 @@ class Fetch:
         """Fetch NWM retrospective at NWM COMIDs and store as Parquet file."""
         configuration = f"{nwm_version}_retrospective"
         schema_variable_name = get_schema_variable_name(variable_name)
+
+        # TODO: Get timeseries_type from the configurations table?
 
         logger.info("Getting secondary location IDs.")
         # NOTE: Does this depend on timeseries_type? This will be a method on
@@ -189,6 +193,8 @@ class Fetch:
         """Compute the weighted average for NWM gridded data."""
         configuration = f"{nwm_version}_retrospective"
         schema_variable_name = get_schema_variable_name(variable_name)
+
+        # TODO: Get timeseries_type from the configurations table?
 
         nwm_retro_grids_to_parquet(
             nwm_version=nwm_version,
@@ -309,6 +315,9 @@ class Fetch:
         mean is available) of selected variable for given zones, convert
         and save to TEEHR tabular format.
         """ # noqa
+
+        # TODO: Get timeseries_type from the configurations table?
+
         schema_variable_name = get_schema_variable_name(variable_name)
         nwm_grids_to_parquet(
             configuration=configuration,

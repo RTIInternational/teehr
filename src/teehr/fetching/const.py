@@ -47,7 +47,8 @@ NWM_VARIABLE_MAPPER = {
     },
     UNIT_NAME: {
         "m3 s-1": "m^3/s",
-        "mm s^-1": "mm/s",
+        "mm s^-1": "mm/s",  # NWM 3.0 forcing
+        "mm s-1": "mm/s",   # NWM 2.2 forcing
     },
 }
 

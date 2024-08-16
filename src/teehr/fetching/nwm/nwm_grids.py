@@ -17,7 +17,6 @@ from teehr.models.fetching.utils import (
     SupportedKerchunkMethod
 )
 from teehr.fetching.const import (
-    NWM22_UNIT_LOOKUP,
     NWM22_ANALYSIS_CONFIG,
     NWM30_ANALYSIS_CONFIG,
 )
@@ -170,11 +169,9 @@ def nwm_grids_to_parquet(
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
         from teehr.models.fetching.nwm22_grid import GridConfigurationModel
         analysis_config_dict = NWM22_ANALYSIS_CONFIG
-        unit_lookup_dict = NWM22_UNIT_LOOKUP
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm30:
         from teehr.models.fetching.nwm30_grid import GridConfigurationModel
         analysis_config_dict = NWM30_ANALYSIS_CONFIG
-        unit_lookup_dict = NWM22_UNIT_LOOKUP
     else:
         raise ValueError("nwm_version must equal 'nwm22' or 'nwm30'")
 

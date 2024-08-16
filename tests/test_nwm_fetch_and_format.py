@@ -10,6 +10,16 @@ from teehr.fetching.nwm.grid_utils import update_location_id_prefix
 from teehr.fetching.nwm.nwm_points import fetch_and_format_nwm_points
 from teehr.fetching.nwm.nwm_grids import fetch_and_format_nwm_grids
 
+TEST_NWM_VARIABLE_MAPPER = {
+    "variable_name": {
+        # "streamflow": "streamflow",
+        # "RAINRATE": "rainfall_hourly_rate",
+    },
+    "unit_name": {
+        "m3 s-1": "m3/s",
+    },
+}
+
 
 def test_nwm22_point_fetch_and_format(tmpdir):
     """Test NWM22 point fetch and format."""
@@ -37,7 +47,8 @@ def test_nwm22_point_fetch_and_format(tmpdir):
         stepsize=100,
         ignore_missing_file=False,
         overwrite_output=True,
-        nwm_version="nwm22"
+        nwm_version="nwm22",
+        variable_mapper=TEST_NWM_VARIABLE_MAPPER
     )
 
     parquet_file = Path(tmpdir, "20230318T14.parquet")
@@ -75,7 +86,8 @@ def test_nwm30_point_fetch_and_format(tmpdir):
         process_by_z_hour=True,
         stepsize=100,
         ignore_missing_file=False,
-        overwrite_output=True
+        overwrite_output=True,
+        variable_mapper=TEST_NWM_VARIABLE_MAPPER
     )
 
     parquet_file = Path(tmpdir, "20231101T00.parquet")
@@ -104,7 +116,9 @@ def test_nwm22_grid_fetch_and_format(tmpdir):
         zonal_weights_filepath=weights_filepath,
         ignore_missing_file=False,
         overwrite_output=True,
-        location_id_prefix=None
+        location_id_prefix=None,
+        # variable_mapper=TEST_NWM_VARIABLE_MAPPER
+        variable_mapper=None
     )
 
     parquet_file = Path(tmpdir, "20201218T00.parquet")
@@ -112,6 +126,16 @@ def test_nwm22_grid_fetch_and_format(tmpdir):
 
     bench_df = pd.read_parquet(test_file)
     test_df = pd.read_parquet(parquet_file)
+    # Match the column order.
+    bench_df = bench_df[[
+        'location_id',
+        'value',
+        'unit_name',
+        'variable_name',
+        'value_time',
+        'reference_time',
+        'configuration_name'
+    ]].copy()
 
     assert test_df.compare(bench_df).index.size == 0
 
@@ -133,7 +157,8 @@ def test_nwm30_grid_fetch_and_format(tmpdir):
         zonal_weights_filepath=weights_filepath,
         ignore_missing_file=False,
         overwrite_output=True,
-        location_id_prefix=None
+        location_id_prefix=None,
+        variable_mapper=TEST_NWM_VARIABLE_MAPPER
     )
 
     parquet_file = Path(tmpdir, "20231101T00.parquet")
@@ -141,6 +166,16 @@ def test_nwm30_grid_fetch_and_format(tmpdir):
 
     bench_df = pd.read_parquet(test_file)
     test_df = pd.read_parquet(parquet_file)
+    # Match the column order.
+    bench_df = bench_df[[
+        'location_id',
+        'value',
+        'unit_name',
+        'variable_name',
+        'value_time',
+        'reference_time',
+        'configuration_name'
+    ]].copy()
 
     assert test_df.compare(bench_df).index.size == 0
 

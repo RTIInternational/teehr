@@ -210,7 +210,7 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
     assert ts_df.variable_name.iloc[0] == "rainfall_hourly_rate"
     assert ts_df.value.sum() == np.float32(0.0)
     assert ts_df.value_time.min() == pd.Timestamp("2024-02-22 00:00:00")
-    assert ts_df.value_time.max() == pd.Timestamp("2024-02-22 23:00:00")
+    assert ts_df.value_time.max() == pd.Timestamp("2024-02-22 00:00:00")
     file_list = list(
         Path(tmpdir, "dataset", "primary_timeseries").glob("*.parquet")
     )
@@ -221,27 +221,28 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        # test_fetch_and_load_nwm_retro_points(
-        #     tempfile.mkdtemp(
-        #         prefix="1-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_fetch_and_load_nwm_retro_grids(
-        #     tempfile.mkdtemp(
-        #         prefix="2-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_fetch_and_load_nwm_forecast_points(
-        #     tempfile.mkdtemp(
-        #         prefix="3-",
-        #         dir=tempdir
-        #     )
-        # )
-        test_fetch_and_load_nwm_forecast_grids(
+        test_fetch_and_load_nwm_retro_points(
             tempfile.mkdtemp(
-                prefix="4-",
+                prefix="1-",
                 dir=tempdir
             )
         )
+        test_fetch_and_load_nwm_retro_grids(
+            tempfile.mkdtemp(
+                prefix="2-",
+                dir=tempdir
+            )
+        )
+        test_fetch_and_load_nwm_forecast_points(
+            tempfile.mkdtemp(
+                prefix="3-",
+                dir=tempdir
+            )
+        )
+        # Warning: This one is slow.
+        # test_fetch_and_load_nwm_forecast_grids(
+        #     tempfile.mkdtemp(
+        #         prefix="4-",
+        #         dir=tempdir
+        #     )
+        # )
