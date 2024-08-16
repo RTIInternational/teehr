@@ -1,5 +1,5 @@
 """Functions for creating and inserting data to a DuckDB in-memory database."""
-from teehr.pre.utils import logger
+from teehr.loading.utils import logger
 from pathlib import Path
 from typing import Union
 import teehr.const as const

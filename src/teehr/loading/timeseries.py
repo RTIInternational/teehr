@@ -3,12 +3,12 @@ from typing import Union
 from pathlib import Path
 import duckdb
 import pandas as pd
-from teehr.pre.utils import (
+from teehr.loading.utils import (
     validate_dataset_structure,
     merge_field_mappings,
     validate_constant_values_dict
 )
-from teehr.pre.duckdb_sql import (
+from teehr.loading.duckdb_sql import (
     create_database_tables,
     load_configurations_from_dataset,
     load_units_from_dataset,
@@ -16,7 +16,7 @@ from teehr.pre.duckdb_sql import (
     insert_locations,
     insert_location_crosswalks,
 )
-from teehr.models.data_tables import timeseries_field_names
+from teehr.models.loading.data_tables import timeseries_field_names
 import teehr.const as const
 
 import logging

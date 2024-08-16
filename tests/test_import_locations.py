@@ -1,5 +1,5 @@
 """Test the import locations functionality."""
-from teehr.pre.locations import convert_locations
+from teehr.loading.locations import convert_locations
 from pathlib import Path
 from teehr import Evaluation
 import tempfile

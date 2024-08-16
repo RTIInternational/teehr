@@ -1,5 +1,5 @@
 """Test the import_location_crosswalks function."""
-from teehr.pre.location_crosswalks import convert_location_crosswalks
+from teehr.loading.location_crosswalks import convert_location_crosswalks
 from pathlib import Path
 from teehr import Evaluation
 import tempfile

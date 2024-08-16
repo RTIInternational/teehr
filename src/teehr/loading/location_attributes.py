@@ -1,16 +1,17 @@
-"""Module for importing location crosswalks from a file."""
+"""Module for importing location attributes from a file."""
 from typing import Union
 from pathlib import Path
-from teehr.pre.duckdb_sql import (
+from teehr.loading.duckdb_sql import (
     create_database_tables,
     insert_locations,
-    insert_location_crosswalks,
+    insert_location_attributes,
+    load_attributes_from_dataset
 )
-from teehr.pre.utils import (
+from teehr.loading.utils import (
     validate_dataset_structure,
 )
-from teehr.models.data_tables import location_crosswalks_field_names
-from teehr.pre.utils import merge_field_mappings
+from teehr.models.loading.data_tables import location_attributes_field_names
+from teehr.loading.utils import merge_field_mappings
 import teehr.const as const
 import duckdb
 import logging
@@ -19,13 +20,13 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-def convert_single_location_crosswalks(
+def convert_single_location_attributes(
     in_filepath: Union[str, Path],
     out_filepath: Union[str, Path],
     field_mapping: dict,
     **kwargs
 ):
-    """Convert location_crosswalks data to parquet format.
+    """Convert location_attributes data to parquet format.
 
     Parameters
     ----------
@@ -43,29 +44,29 @@ def convert_single_location_crosswalks(
     in_filepath = Path(in_filepath)
     out_filepath = Path(out_filepath)
 
-    logger.info(f"Converting location crosswalks data from: {in_filepath}")
+    logger.info(f"Converting location attributes data from: {in_filepath}")
 
     if in_filepath.suffix == ".parquet":
         # read and convert parquet file
-        location_crosswalks = pd.read_parquet(in_filepath, **kwargs)
+        location_attributes = pd.read_parquet(in_filepath, **kwargs)
     elif in_filepath.suffix == ".csv":
         # read and convert csv file
-        location_crosswalks = pd.read_csv(in_filepath, **kwargs)
+        location_attributes = pd.read_csv(in_filepath, **kwargs)
     else:
         raise ValueError("Unsupported file type.")
 
     # rename fields if field_mapping provided
-    location_crosswalks.rename(columns=field_mapping, inplace=True)
+    location_attributes.rename(columns=field_mapping, inplace=True)
 
     # make sure dataframe only contains required fields
-    location_crosswalks = location_crosswalks[field_mapping.values()]
+    location_attributes = location_attributes[field_mapping.values()]
 
     # write to parquet
     out_filepath.parent.mkdir(parents=True, exist_ok=True)
-    location_crosswalks.to_parquet(out_filepath)
+    location_attributes.to_parquet(out_filepath)
 
 
-def convert_location_crosswalks(
+def convert_location_attributes(
     in_path: Union[str, Path],
     out_dirpath: Union[str, Path],
     field_mapping: dict = None,
@@ -91,10 +92,10 @@ def convert_location_crosswalks(
     """
     in_path = Path(in_path)
     out_dirpath = Path(out_dirpath)
-    logger.info(f"Converting crosswalks data: {in_path}")
+    logger.info(f"Converting attributes data: {in_path}")
 
     default_field_mapping = {}
-    for field in location_crosswalks_field_names:
+    for field in location_attributes_field_names:
         if field not in default_field_mapping.values():
             default_field_mapping[field] = field
 
@@ -116,7 +117,7 @@ def convert_location_crosswalks(
             relative_name = in_filepath.relative_to(in_path)
             out_filepath = Path(out_dirpath, relative_name)
             out_filepath = out_filepath.with_suffix(".parquet")
-            convert_single_location_crosswalks(
+            convert_single_location_attributes(
                 in_filepath,
                 out_filepath,
                 field_mapping,
@@ -126,7 +127,7 @@ def convert_location_crosswalks(
     else:
         out_filepath = Path(out_dirpath, in_path.name)
         out_filepath = out_filepath.with_suffix(".parquet")
-        convert_single_location_crosswalks(
+        convert_single_location_attributes(
             in_path,
             out_filepath,
             field_mapping,
@@ -136,7 +137,7 @@ def convert_location_crosswalks(
     logger.info(f"Converted {files_converted} files.")
 
 
-def validate_and_insert_single_location_crosswalks(
+def validate_and_insert_single_location_attributes(
     conn: duckdb.DuckDBPyConnection,
     in_filepath: Union[str, Path],
     out_filepath: Union[str, Path],
@@ -145,24 +146,24 @@ def validate_and_insert_single_location_crosswalks(
     logger.info(f"Validating and inserting crosswalk data from {in_filepath}")
 
     # read and insert provided crosswalk data
-    insert_location_crosswalks(
+    insert_location_attributes(
         conn,
         in_filepath
     )
 
-    conn.sql(f"COPY location_crosswalks TO '{out_filepath}';")
+    conn.sql(f"COPY location_attributes TO '{out_filepath}';")
 
-    conn.sql("TRUNCATE location_crosswalks;")
+    conn.sql("TRUNCATE location_attributes;")
 
 
-def validate_and_insert_location_crosswalks(
+def validate_and_insert_location_attributes(
     in_path: Union[str, Path],
     dataset_dir: Union[str, Path],
     pattern: str = "**/*.parquet",
 ):
-    """Validate and insert location crosswalks data."""
+    """Validate and insert location attributes data."""
     logger.info(
-        f"Validating and inserting location crosswalks data from {in_path}"
+        f"Validating and inserting location attributes data from {in_path}"
     )
 
     if not validate_dataset_structure(dataset_dir):
@@ -172,13 +173,14 @@ def validate_and_insert_location_crosswalks(
     conn = duckdb.connect()
     create_database_tables(conn)
 
-    # read and insert location data from dataset
     insert_locations(
         conn,
         Path(dataset_dir, const.LOCATIONS_DIR)
     )
 
-    location_crosswalks_dir = Path(dataset_dir, const.LOCATION_CROSSWALKS_DIR)
+    load_attributes_from_dataset(conn, dataset_dir)
+
+    location_attributes_dir = Path(dataset_dir, const.LOCATION_ATTRIBUTES_DIR)
 
     if in_path.is_dir():
         # recursively convert all files in directory
@@ -188,15 +190,15 @@ def validate_and_insert_location_crosswalks(
         )
         for in_filepath in in_path.glob(f"{pattern}"):
             relative_path = in_filepath.relative_to(in_path)
-            out_filepath = Path(location_crosswalks_dir, relative_path)
-            validate_and_insert_single_location_crosswalks(
+            out_filepath = Path(location_attributes_dir, relative_path)
+            validate_and_insert_single_location_attributes(
                 conn,
                 in_filepath,
                 out_filepath,
             )
     else:
-        out_filepath = Path(location_crosswalks_dir, in_path.name)
-        validate_and_insert_single_location_crosswalks(
+        out_filepath = Path(location_attributes_dir, in_path.name)
+        validate_and_insert_single_location_attributes(
             conn,
             in_path,
             out_filepath

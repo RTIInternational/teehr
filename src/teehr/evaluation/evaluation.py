@@ -7,13 +7,15 @@ from pathlib import Path
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
 import logging
-from teehr.pre.utils import (
+from teehr.loading.utils import (
     copy_template_to,
 )
 from teehr.evaluation.utils import (
     get_joined_timeseries_fields,
 )
-
+from teehr.loading.joined_timeseries import (
+    create_joined_timeseries_dataset,
+)
 import teehr.const as const
 from teehr.models.metrics.metrics import MetricsBasemodel
 from teehr.evaluation.fetch import Fetch
@@ -44,6 +46,9 @@ class Evaluation:
         )
         self.cache_dir = Path(
             self.dir_path, const.CACHE_DIR
+        )
+        self.scripts_dir = Path(
+            self.dir_path, const.SCRIPTS_DIR
         )
         self.locations_dir = Path(
             self.dataset_dir, const.LOCATIONS_DIR
@@ -82,9 +87,8 @@ class Evaluation:
         return Load(self)
 
     @property
-    def query(self) -> Load:
-        """The query component class."""
-        # TODO: Implement the Query class.
+    def query(self) -> Query:
+        """The load component class."""
         return Query(self)
 
     @property
@@ -92,6 +96,7 @@ class Evaluation:
         """The field names from the joined timeseries table."""
         logger.info("Getting fields from the joined timeseries table.")
         return get_joined_timeseries_fields(
+            self.spark,
             Path(self.joined_timeseries_dir)
         )
 
@@ -142,6 +147,14 @@ class Evaluation:
         """
         pass
 
+    def create_joined_timeseries(self):
+        """Create joined timeseries."""
+        create_joined_timeseries_dataset(
+            self.spark,
+            self.dataset_dir,
+            self.scripts_dir
+        )
+
     def get_metrics(
         self,
         group_by: List[Union[str, Enum]],
@@ -164,4 +177,3 @@ class Evaluation:
         Includes retrieving data and metadata.
         """
         pass
-

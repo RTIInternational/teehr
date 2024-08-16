@@ -4,6 +4,7 @@
 # Primary evaluation directories
 DATASET_DIR = "dataset"
 CACHE_DIR = "cache"
+SCRIPTS_DIR = "scripts"
 LOCATIONS_DIR = "locations"
 PRIMARY_TIMESERIES_DIR = "primary_timeseries"
 LOCATION_CROSSWALKS_DIR = "location_crosswalks"
