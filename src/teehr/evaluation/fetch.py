@@ -12,8 +12,7 @@ from teehr.fetching.nwm.nwm_points import nwm_to_parquet
 from teehr.fetching.nwm.nwm_grids import nwm_grids_to_parquet
 from teehr.fetching.nwm.retrospective_points import nwm_retro_to_parquet
 from teehr.fetching.nwm.retrospective_grids import nwm_retro_grids_to_parquet
-from teehr.pre.timeseries import (
-    # convert_timeseries,
+from teehr.loading.timeseries import (
     validate_and_insert_timeseries,
 )
 from teehr.evaluation.utils import (
