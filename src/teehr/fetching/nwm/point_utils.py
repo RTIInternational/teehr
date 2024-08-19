@@ -11,6 +11,7 @@ import pyarrow as pa
 from teehr.fetching.utils import (
     get_dataset,
     write_parquet_file,
+    split_dataframe
 )
 from teehr.fetching.const import (
     VALUE,
@@ -225,11 +226,7 @@ def fetch_and_format_nwm_points(
         dfs = [df for _, df in gps]
     else:
         # Option #2. Chunk by some number of files
-        if stepsize > df_refs.index.size:
-            num_partitions = 1
-        else:
-            num_partitions = int(df_refs.index.size / stepsize)
-        dfs = np.array_split(df_refs, num_partitions)
+        dfs = split_dataframe(df_refs, stepsize)
 
     for df in dfs:
         process_chunk_of_files(

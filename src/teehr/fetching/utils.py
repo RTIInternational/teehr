@@ -713,3 +713,24 @@ def create_periods_based_on_chunksize(
         )
 
     return periods
+
+
+def split_dataframe(df: pd.DataFrame, chunk_size: int) -> List[pd.DataFrame]:
+    """Split a dataframe into chunks of a specified size.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The input dataframe.
+    chunk_size : int
+        The size of the chunks.
+
+    Returns
+    -------
+    List[pd.DataFrame]
+        A list of dataframes.
+    """
+    chunks = []
+    for i in range(0, df.shape[0], chunk_size):
+        chunks.append(df.iloc[i:i + chunk_size])
+    return chunks
