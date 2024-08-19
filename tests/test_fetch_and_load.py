@@ -60,6 +60,8 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
             tmpdir,
             "dataset",
             "secondary_timeseries",
+            "nwm30_retrospective",
+            "streamflow_hourly_inst",
             "20220222_20220223.parquet"
         )
     )
@@ -99,7 +101,14 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
     )
     # TODO: This could be eval.query.timeseries() or something similar.
     ts_df = pd.read_parquet(
-        Path(tmpdir, "dataset", "primary_timeseries", "20080523.parquet")
+        Path(
+            tmpdir,
+            "dataset",
+            "primary_timeseries",
+            "nwm30_retrospective",
+            "rainfall_hourly_rate",
+            "20080523.parquet"
+        )
     )
     assert isinstance(ts_df, pd.DataFrame)
     assert ts_df.columns.tolist() == [
@@ -146,6 +155,8 @@ def test_fetch_and_load_nwm_forecast_points(tmpdir):
             tmpdir,
             "dataset",
             "secondary_timeseries",
+            "analysis_assim",
+            "streamflow_hourly_inst",
             "20240222T00Fm00_20240222T23Fm00.parquet"
         )
     )
@@ -193,6 +204,8 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
             tmpdir,
             "dataset",
             "primary_timeseries",
+            "forcing_analysis_assim",
+            "rainfall_hourly_rate",
             "20240222T00.parquet"
         )
     )
@@ -212,7 +225,13 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
     assert ts_df.value_time.min() == pd.Timestamp("2024-02-22 00:00:00")
     assert ts_df.value_time.max() == pd.Timestamp("2024-02-22 00:00:00")
     file_list = list(
-        Path(tmpdir, "dataset", "primary_timeseries").glob("*.parquet")
+        Path(
+            tmpdir,
+            "dataset",
+            "primary_timeseries",
+            "forcing_analysis_assim",
+            "rainfall_hourly_rate"
+            ).glob("*.parquet")
     )
     assert len(file_list) == 24
 
@@ -239,7 +258,7 @@ if __name__ == "__main__":
                 dir=tempdir
             )
         )
-        # Warning: This one is slow.
+        # # Warning: This one is slow.
         # test_fetch_and_load_nwm_forecast_grids(
         #     tempfile.mkdtemp(
         #         prefix="4-",
