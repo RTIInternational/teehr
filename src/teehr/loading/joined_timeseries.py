@@ -86,6 +86,10 @@ def create_joined_df(
             and sf.variable_name = pf.variable_name
     """)
 
+    spark.catalog.dropTempView("pf")
+    spark.catalog.dropTempView("sf")
+    spark.catalog.dropTempView("cf")
+
     return joined_df
 
 
@@ -110,50 +114,58 @@ def add_attr_to_joined_df(
     DataFrame
         Joined timeseries DataFrame with attributes
     """
-    # Add attributes
-    logger.info("Adding attributes")
+    dataset_dir = Path(dataset_dir)
+    if len(list(Path(dataset_dir, const.LOCATION_ATTRIBUTES_DIR).glob("**/*.parquet"))) == 0:
+        logger.info(f"No parquet files in {dataset_dir}.  Skipping add attributes.")
+        return joined_df
+    else:
+        logger.info("Adding attributes")
 
-    location_attributes_df = (
-        spark.read.format("parquet")
-        .option("recursiveFileLookup", "true")
-        .option("mergeSchema", "true")
-        .load(
-            str(Path(dataset_dir, const.LOCATION_ATTRIBUTES_DIR))
+        location_attributes_df = (
+            spark.read.format("parquet")
+            .option("recursiveFileLookup", "true")
+            .option("mergeSchema", "true")
+            .load(
+                str(Path(dataset_dir, const.LOCATION_ATTRIBUTES_DIR))
+            )
         )
-    )
 
-    joined_df.createTempView("joined")
+        joined_df.createTempView("joined")
 
-    # Get distinct attribute names
-    distinct_attributes = (
-        location_attributes_df.select("attribute_name")
-        .distinct().rdd.flatMap(lambda x: x).collect()
-    )
-    # Pivot the table
-    pivot_df = (
-        location_attributes_df.groupBy("location_id")
-        .pivot("attribute_name", distinct_attributes).agg({"value": "max"})
-    )
+        # Get distinct attribute names
+        distinct_attributes = (
+            location_attributes_df.select("attribute_name")
+            .distinct().rdd.flatMap(lambda x: x).collect()
+        )
+        # Pivot the table
+        pivot_df = (
+            location_attributes_df.groupBy("location_id")
+            .pivot("attribute_name", distinct_attributes).agg({"value": "max"})
+        )
 
-    # Create a view
-    pivot_df.createTempView("attrs")
+        # Create a view
+        pivot_df.createTempView("attrs")
 
-    joined_df = spark.sql("""
-        SELECT
-            joined.*
-            , attrs.*
-        FROM joined
-        JOIN attrs
-            on joined.primary_location_id = attrs.location_id
-    """)
+        joined_df = spark.sql("""
+            SELECT
+                joined.*
+                , attrs.*
+            FROM joined
+            JOIN attrs
+                on joined.primary_location_id = attrs.location_id
+        """)
 
-    return joined_df
+        spark.catalog.dropTempView("joined")
+        spark.catalog.dropTempView("attrs")
+
+        return joined_df
 
 
 def create_joined_timeseries_dataset(
     spark: SparkSession,
     dataset_dir: Union[str, Path],
-    scripts_dir: Union[str, Path]
+    scripts_dir: Union[str, Path],
+    execute_udf: bool = False,
 ):
     """Create joined timeseries.
 
@@ -171,16 +183,17 @@ def create_joined_timeseries_dataset(
     joined_df = create_joined_df(spark, dataset_dir)
     joined_df = add_attr_to_joined_df(spark, joined_df, dataset_dir)
 
-    # This is kinda hacky, but it works
-    try:
-        sys.path.append(str(Path(scripts_dir)))
-        import user_defined_fields as udf # noqa
-        joined_df = udf.add_user_defined_fields(joined_df)
-    except ImportError:
-        logger.info(
-            f"No user-defined fields found in {scripts_dir}."
-            "Not adding user-defined fields."
-        )
+    if execute_udf:
+        # This is kinda hacky, but it works
+        try:
+            sys.path.append(str(Path(scripts_dir)))
+            import user_defined_fields as udf # noqa
+            joined_df = udf.add_user_defined_fields(joined_df)
+        except ImportError:
+            logger.info(
+                f"No user-defined fields found in {scripts_dir}."
+                "Not adding user-defined fields."
+            )
 
     # Write the joined timeseries to the disk
     # Depending on the size of the data, repartitioning might be needed
