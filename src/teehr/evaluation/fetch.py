@@ -252,6 +252,7 @@ class Fetch:
         # TODO: Read timeseries_type from the configurations table?
 
         schema_variable_name = get_schema_variable_name(variable_name)
+        schema_configuration_name = f"{nwm_version}_{configuration}"
         nwm_to_parquet(
             configuration=configuration,
             output_type=output_type,
@@ -262,7 +263,7 @@ class Fetch:
             json_dir=self.kerchunk_cache_dir,
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
-                configuration,
+                schema_configuration_name,
                 schema_variable_name
             ),
             nwm_version=nwm_version,
@@ -310,6 +311,7 @@ class Fetch:
         # TODO: Get timeseries_type from the configurations table?
 
         schema_variable_name = get_schema_variable_name(variable_name)
+        schema_configuration_name = f"{nwm_version}_{configuration}"
         nwm_grids_to_parquet(
             configuration=configuration,
             output_type=output_type,
@@ -320,7 +322,7 @@ class Fetch:
             json_dir=self.kerchunk_cache_dir,
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
-                configuration,
+                schema_configuration_name,
                 schema_variable_name
             ),
             nwm_version=nwm_version,

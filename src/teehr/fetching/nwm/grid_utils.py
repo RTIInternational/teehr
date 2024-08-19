@@ -96,7 +96,7 @@ def compute_weighted_average(
 @dask.delayed
 def process_single_nwm_grid_file(
     row: Tuple,
-    configuration: str,
+    configuration_name: str,
     variable_name: str,
     weights_filepath: str,
     ignore_missing_file: bool,
@@ -153,7 +153,7 @@ def process_single_nwm_grid_file(
 
     df.loc[:, VALUE_TIME] = value_time
     df.loc[:, REFERENCE_TIME] = ref_time
-    df.loc[:, CONFIGURATION_NAME] = configuration
+    df.loc[:, CONFIGURATION_NAME] = configuration_name
 
     if location_id_prefix:
         df = update_location_id_prefix(df, location_id_prefix)
@@ -163,7 +163,7 @@ def process_single_nwm_grid_file(
 
 def fetch_and_format_nwm_grids(
     json_paths: List[str],
-    configuration: str,
+    configuration_name: str,
     variable_name: str,
     output_parquet_dir: str,
     zonal_weights_filepath: str,
@@ -209,7 +209,7 @@ def fetch_and_format_nwm_grids(
             results.append(
                 process_single_nwm_grid_file(
                     row,
-                    configuration,
+                    configuration_name,
                     variable_name,
                     zonal_weights_filepath,
                     ignore_missing_file,

@@ -223,15 +223,15 @@ def nwm_grids_to_parquet(
 
         # Fetch the data, saving to parquet files based on TEEHR data model
         fetch_and_format_nwm_grids(
-            json_paths,
-            configuration,
-            variable_name,
-            output_parquet_dir,
-            zonal_weights_filepath,
-            ignore_missing_file,
-            overwrite_output,
-            location_id_prefix,
-            variable_mapper
+            json_paths=json_paths,
+            configuration_name=f"{nwm_version}_{configuration}",
+            variable_name=variable_name,
+            output_parquet_dir=output_parquet_dir,
+            zonal_weights_filepath=zonal_weights_filepath,
+            ignore_missing_file=ignore_missing_file,
+            overwrite_output=overwrite_output,
+            location_id_prefix=location_id_prefix,
+            variable_mapper=variable_mapper
         )
 
 

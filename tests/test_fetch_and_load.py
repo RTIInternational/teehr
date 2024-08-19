@@ -155,7 +155,7 @@ def test_fetch_and_load_nwm_forecast_points(tmpdir):
             tmpdir,
             "dataset",
             "secondary_timeseries",
-            "analysis_assim",
+            "nwm30_analysis_assim",
             "streamflow_hourly_inst",
             "20240222T00Fm00_20240222T23Fm00.parquet"
         )
@@ -204,7 +204,7 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
             tmpdir,
             "dataset",
             "primary_timeseries",
-            "forcing_analysis_assim",
+            "nwm30_forcing_analysis_assim",
             "rainfall_hourly_rate",
             "20240222T00.parquet"
         )
@@ -229,7 +229,7 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
             tmpdir,
             "dataset",
             "primary_timeseries",
-            "forcing_analysis_assim",
+            "nwm30_forcing_analysis_assim",
             "rainfall_hourly_rate"
             ).glob("*.parquet")
     )
