@@ -7,12 +7,14 @@ class.
 """
 from teehr import Evaluation
 from pathlib import Path
-from teehr.models.loading.domain_tables import (
+from teehr.models.dataset.table_models import (
     Attribute,
 )
 
+# Set a path to the directory where the evaluation will be created
 TEST_STUDY_DIR = Path(Path().home(), "temp", "test_study")
 
+# Set a path to the directory where the test data is stored
 TEST_DATA_DIR = Path("/home/matt/repos/teehr/tests/data/v0_3_test_study")
 GEOJSON_GAGES_FILEPATH = Path(TEST_DATA_DIR, "geo", "gages.geojson")
 PRIMARY_TIMESERIES_FILEPATH = Path(
@@ -24,14 +26,20 @@ SECONDARY_TIMESERIES_FILEPATH = Path(
 )
 GEO_FILEPATH = Path(TEST_DATA_DIR, "geo")
 
+# Create an Evaluation object
 eval = Evaluation(dir_path=TEST_STUDY_DIR)
 
+# Enable logging
 eval.enable_logging()
 
+# Clone the template
 eval.clone_template()
 
+# Load the location data
 eval.load.import_locations(in_path=GEOJSON_GAGES_FILEPATH)
 
+
+# Load the timeseries data and map over the fields and set constants
 eval.load.import_primary_timeseries(
     in_path=PRIMARY_TIMESERIES_FILEPATH,
     field_mapping={
@@ -50,10 +58,12 @@ eval.load.import_primary_timeseries(
     }
 )
 
+# Load the crosswalk data
 eval.load.import_location_crosswalks(
     in_path=CROSSWALK_FILEPATH
 )
 
+# Load the secondary timeseries data and map over the fields and set constants
 eval.load.import_secondary_timeseries(
     in_path=SECONDARY_TIMESERIES_FILEPATH,
     field_mapping={
@@ -72,6 +82,7 @@ eval.load.import_secondary_timeseries(
     }
 )
 
+# Add some attributes
 eval.load.add_attribute(
     [
         Attribute(
@@ -91,13 +102,13 @@ eval.load.add_attribute(
         ),
     ]
 )
+
+# Load the location attribute data
 eval.load.import_location_attributes(
     in_path=GEO_FILEPATH,
     field_mapping={"attribute_value": "value"},
     pattern="test_attr_*.parquet",
 )
 
-eval.create_joined_timeseries()
-
-jt_df = eval.query.joined_timeseries()
-print(jt_df.head())
+# Create the joined timeseries
+eval.create_joined_timeseries(execute_udf=True)

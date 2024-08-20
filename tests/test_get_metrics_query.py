@@ -31,7 +31,7 @@ def test_get_metrics(tmpdir):
     include_metrics = [kge, Metrics.RootMeanSquareError()]
 
     # Get the currently available fields to use in the query.
-    flds = eval.fields
+    flds = eval.fields.get_joined_timeseries_fields()
 
     # Define some filters.
     filters = [

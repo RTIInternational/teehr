@@ -10,7 +10,7 @@ import logging
 from teehr.loading.utils import (
     copy_template_to,
 )
-from teehr.evaluation.utils import (
+from teehr.querying.field_enums import (
     get_joined_timeseries_fields,
 )
 from teehr.loading.joined_timeseries import (
@@ -21,6 +21,7 @@ from teehr.models.metrics.metrics import MetricsBasemodel
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.load import Load
 from teehr.evaluation.query import Query
+from teehr.evaluation.fields import Fields
 
 
 logger = logging.getLogger(__name__)
@@ -50,14 +51,29 @@ class Evaluation:
         self.scripts_dir = Path(
             self.dir_path, const.SCRIPTS_DIR
         )
+        self.units_dir = Path(
+            self.dataset_dir, const.UNITS_DIR
+        )
+        self.variables_dir = Path(
+            self.dataset_dir, const.VARIABLES_DIR
+        )
+        self.configurations_dir = Path(
+            self.dataset_dir, const.CONFIGURATIONS_DIR
+        )
+        self.attributes_dir = Path(
+            self.dataset_dir, const.ATTRIBUTES_DIR
+        )
         self.locations_dir = Path(
             self.dataset_dir, const.LOCATIONS_DIR
         )
+        self.location_crosswalks_dir = Path(
+            self.dataset_dir, const.LOCATION_CROSSWALKS_DIR
+        )
+        self.location_attributes_dir = Path(
+            self.dataset_dir, const.LOCATION_ATTRIBUTES_DIR
+        )
         self.primary_timeseries_dir = Path(
             self.dataset_dir, const.PRIMARY_TIMESERIES_DIR
-        )
-        self.locations_crosswalk_dir = Path(
-            self.dataset_dir, const.LOCATION_CROSSWALKS_DIR
         )
         self.secondary_timeseries_dir = Path(
             self.dataset_dir, const.SECONDARY_TIMESERIES_DIR
@@ -92,13 +108,9 @@ class Evaluation:
         return Query(self)
 
     @property
-    def fields(self) -> Enum:
-        """The field names from the joined timeseries table."""
-        logger.info("Getting fields from the joined timeseries table.")
-        return get_joined_timeseries_fields(
-            self.spark,
-            Path(self.joined_timeseries_dir)
-        )
+    def fields(self) -> Fields:
+        """The load component class."""
+        return Fields(self)
 
     def enable_logging(self):
         """Enable logging."""
@@ -147,12 +159,19 @@ class Evaluation:
         """
         pass
 
-    def create_joined_timeseries(self):
-        """Create joined timeseries."""
+    def create_joined_timeseries(self, execute_udf: bool = False):
+        """Create joined timeseries.
+
+        Parameters
+        ----------
+        execute_udf : bool, optional
+            Execute UDFs, by default False
+        """
         create_joined_timeseries_dataset(
             self.spark,
             self.dataset_dir,
-            self.scripts_dir
+            self.scripts_dir,
+            execute_udf,
         )
 
     def get_metrics(

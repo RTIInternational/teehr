@@ -9,7 +9,7 @@ from teehr.loading.duckdb_sql import (
 from teehr.loading.utils import (
     validate_dataset_structure,
 )
-from teehr.models.loading.data_tables import location_crosswalks_field_names
+from teehr.models.dataset.table_models import LocationCrosswalk
 from teehr.loading.utils import merge_field_mappings
 import teehr.const as const
 import duckdb
@@ -94,7 +94,7 @@ def convert_location_crosswalks(
     logger.info(f"Converting crosswalks data: {in_path}")
 
     default_field_mapping = {}
-    for field in location_crosswalks_field_names:
+    for field in LocationCrosswalk.get_field_names():
         if field not in default_field_mapping.values():
             default_field_mapping[field] = field
 
