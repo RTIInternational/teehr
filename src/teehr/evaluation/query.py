@@ -1,11 +1,8 @@
 """Module for querying the dataset."""
-import logging
-from pathlib import Path
-from typing import List
+from typing import Union, List
 
 import pandas as pd
 import geopandas as gpd
-from typing import Union, List
 from teehr.models.dataset.filters import (
     UnitFilter,
     VariableFilter,
@@ -219,71 +216,3 @@ class Query:
     def get_metrics(self):
         """Get the metrics in the dataset."""
         pass
-
-# TEMP:
-    def get_locations_table(
-        self,
-        pattern: str = "**/*.parquet"
-    ):
-        """Get locations from the dataset."""
-        conn = duckdb.connect()
-
-        in_path = Path(self.eval.locations_dir)
-
-        if in_path.is_dir():
-            if len(list(in_path.glob(pattern))) == 0:
-                logger.info(f"No Parquet files in {in_path}/{pattern}.")
-            in_path = str(in_path) + pattern
-
-        logger.debug(f"Get locations from {in_path}.")
-
-        return conn.sql(f"""
-            INSTALL spatial;
-            LOAD spatial;
-            SELECT id, name, ST_GeomFromWKB(geometry) as geometry
-            FROM read_parquet('{in_path}');
-        """).to_df()
-
-    def get_crosswalk_table(
-        self,
-        pattern: str = "**/*.parquet"
-    ):
-        """Get cross walk table from the dataset."""
-        conn = duckdb.connect()
-
-        in_path = Path(self.eval.locations_crosswalk_dir)
-
-        if in_path.is_dir():
-            if len(list(in_path.glob(pattern))) == 0:
-                logger.info(f"No Parquet files in {in_path}/{pattern}.")
-            in_path = str(in_path) + pattern
-
-        logger.debug(f"Get crosswalk from {in_path}.")
-
-        return conn.sql(f"""
-            SELECT primary_location_id, secondary_location_id
-            FROM read_parquet('{in_path}');
-        """).to_df()
-
-    def get_secondary_location_ids(
-        self,
-        primary_location_ids: List[str],
-        pattern: str = "**/*.parquet"
-    ):
-        """Get secondary location ids from the dataset."""
-        conn = duckdb.connect()
-
-        in_path = Path(self.eval.locations_crosswalk_dir)
-
-        if in_path.is_dir():
-            if len(list(in_path.glob(pattern))) == 0:
-                logger.info(f"No Parquet files in {in_path}/{pattern}.")
-            in_path = str(in_path) + pattern
-
-        logger.debug("Getting secondary IDs from crosswalk.")
-
-        return conn.sql(f"""
-            SELECT secondary_location_id
-            FROM read_parquet('{in_path}')
-            WHERE primary_location_id IN {tuple(primary_location_ids)};
-        """).to_df()

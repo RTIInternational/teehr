@@ -31,11 +31,19 @@ from teehr.models.fetching.utils import (
     SupportedKerchunkMethod,
     TimeseriesTypeEnum
 )
+from teehr.models.dataset.filters import (
+    LocationCrosswalkFilter,
+    FilterOperatorEnum
+)
 from teehr.fetching.const import (
     USGS_CONFIGURATION_NAME,
     USGS_VARIABLE_MAPPER,
     VARIABLE_NAME,
     NWM_VARIABLE_MAPPER
+)
+from teehr.querying.table_queries import (
+    get_locations,
+    get_location_crosswalks
 )
 
 logger = logging.getLogger(__name__)
@@ -69,6 +77,31 @@ class Fetch:
             const.WEIGHTS_DIR
         )
 
+    def _get_secondary_location_ids(self, prefix: str) -> List[str]:
+        """Get the secondary location IDs corresponding to primary IDs."""
+        locations_gdf = get_locations(
+            spark=self.eval.spark,
+            dirpath=self.eval.locations_dir
+        )
+        primary_location_ids = locations_gdf["id"].to_list()
+        lcw_fields = self.eval.fields.get_location_crosswalk_fields()
+        lcw_filter = LocationCrosswalkFilter.model_validate(
+            {
+                "column": lcw_fields.primary_location_id,
+                "operator": FilterOperatorEnum.isin,
+                "value": primary_location_ids
+            }
+        )
+        lcw_df = get_location_crosswalks(
+            spark=self.eval.spark,
+            dirpath=self.eval.location_crosswalks_dir,
+            filters=lcw_filter
+        )
+        location_ids = lcw_df.secondary_location_id.\
+            str.removeprefix(f"{prefix}-").to_list()
+
+        return location_ids
+
     def usgs_streamflow(
         self,
         start_date: Union[str, datetime, pd.Timestamp],
@@ -85,8 +118,11 @@ class Fetch:
         """Fetch USGS gage data and save as a Parquet file."""
         logger.info("Getting primary location IDs.")
         if sites is None:
-            locations = self.eval.query.get_locations_table()
-            sites = locations["id"].str.removeprefix("usgs-").to_list()
+            locations_gdf = get_locations(
+                self.eval.spark,
+                self.eval.locations_dir
+            )
+            sites = locations_gdf["id"].str.removeprefix("usgs-").to_list()
 
         usgs_variable_name = USGS_VARIABLE_MAPPER[VARIABLE_NAME][service]
 
@@ -135,17 +171,10 @@ class Fetch:
         # TODO: Get timeseries_type from the configurations table?
 
         logger.info("Getting secondary location IDs.")
-        # NOTE: Does this depend on timeseries_type? This will be a method on
-        # crosswalk table component class.
         if location_ids is None:
-            locations = self.eval.query.get_locations_table()
-            primary_location_ids = locations["id"].to_list()
-            secondary_location_ids = self.eval.query.\
-                get_secondary_location_ids(
-                    primary_location_ids=primary_location_ids
-                )
-            location_ids = secondary_location_ids.secondary_location_id.\
-                str.removeprefix(f"{nwm_version}-").to_list()
+            location_ids = self._get_secondary_location_ids(
+                prefix=nwm_version
+            )
 
         nwm_retro_to_parquet(
             nwm_version=nwm_version,
@@ -237,17 +266,10 @@ class Fetch:
     ):
         """Fetch NWM point data and save as a Parquet file in TEEHR format.""" # noqa
         logger.info("Getting primary location IDs.")
-        # NOTE: Does this depend on timeseries_type? This will be a method on
-        # crosswalk table component class.
         if location_ids is None:
-            locations = self.eval.query.get_locations_table()
-            primary_location_ids = locations["id"].to_list()
-            secondary_location_ids = self.eval.query.\
-                get_secondary_location_ids(
-                    primary_location_ids=primary_location_ids
-                )
-            location_ids = secondary_location_ids.secondary_location_id.\
-                str.removeprefix(f"{nwm_version}-").to_list()
+            location_ids = self._get_secondary_location_ids(
+                prefix=nwm_version
+            )
 
         # TODO: Read timeseries_type from the configurations table?
 

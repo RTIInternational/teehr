@@ -6,7 +6,7 @@ from teehr.models.dataset.table_models import (
 )
 import tempfile
 
-TEST_DATA_DIR = Path("/home/matt/repos/teehr/tests/data/v0_3_test_study")
+TEST_DATA_DIR = Path("tests", "v0_3", "data", "test_study")
 GEOJSON_GAGES_FILEPATH = Path(TEST_DATA_DIR, "geo", "gages.geojson")
 PRIMARY_TIMESERIES_FILEPATH = Path(
     TEST_DATA_DIR, "timeseries", "test_short_obs.parquet"
@@ -70,7 +70,7 @@ def test_create_joined_timeseries(tmpdir):
         constant_field_values={
             "unit_name": "m^3/s",
             "variable_name": "streamflow_hourly_inst",
-            "configuration_name": "nwm30_retro"
+            "configuration_name": "nwm30_retrospective"
         }
     )
 
