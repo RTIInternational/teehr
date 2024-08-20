@@ -1,7 +1,8 @@
 """Module for fetchning and processing NWM point data."""
-from typing import Union, Optional, List
+from typing import Union, Optional, List, Dict
 from datetime import datetime
 from pathlib import Path
+import logging
 
 from pydantic import validate_call
 
@@ -19,10 +20,11 @@ from teehr.models.fetching.utils import (
     SupportedKerchunkMethod
 )
 from teehr.fetching.const import (
-    NWM22_UNIT_LOOKUP,
     NWM22_ANALYSIS_CONFIG,
     NWM30_ANALYSIS_CONFIG,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @validate_call()
@@ -43,6 +45,7 @@ def nwm_to_parquet(
     stepsize: Optional[int] = 100,
     ignore_missing_file: Optional[bool] = True,
     overwrite_output: Optional[bool] = False,
+    variable_mapper: Dict[str, Dict[str, str]] = None
 ):
     """Fetch NWM point data and save as a Parquet file in TEEHR format.
 
@@ -165,15 +168,15 @@ def nwm_to_parquet(
     >>>     overwrite_output=OVERWRITE_OUTPUT,
     >>> )
     """ # noqa
+    logger.info(f"Fetching {configuration} data. Version: {nwm_version}")
+
     # Import appropriate config model and dicts based on NWM version
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
         from teehr.models.fetching.nwm22_point import PointConfigurationModel
         analysis_config_dict = NWM22_ANALYSIS_CONFIG
-        unit_lookup_dict = NWM22_UNIT_LOOKUP
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm30:
         from teehr.models.fetching.nwm30_point import PointConfigurationModel
         analysis_config_dict = NWM30_ANALYSIS_CONFIG
-        unit_lookup_dict = NWM22_UNIT_LOOKUP
     else:
         raise ValueError("nwm_version must equal 'nwm22' or 'nwm30'")
 
@@ -232,63 +235,7 @@ def nwm_to_parquet(
             process_by_z_hour,
             stepsize,
             ignore_missing_file,
-            unit_lookup_dict,
             overwrite_output,
             nwm_version,
+            variable_mapper
         )
-
-
-# if __name__ == "__main__":
-#     # analysis_assim_extend, short_range, analysis_assim_alaska
-#     configuration = (
-#         "analysis_assim_extend"
-#     )
-#     output_type = "channel_rt"
-#     variable_name = "streamflow"
-#     start_date = "2023-11-28"
-#     ingest_days = 1
-#     location_ids = [
-#         7086109,
-#         7040481,
-#         7053819,
-#         7111205,
-#         7110249,
-#         14299781,
-#         14251875,
-#         14267476,
-#         7152082,
-#         14828145,
-#     ]
-#     # location_ids = np.load(
-#     #     "/mnt/sf_shared/data/ciroh/temp_location_ids.npy"
-#     # )  # all 2.7 million
-#     json_dir = "/mnt/data/ciroh/jsons"
-#     output_parquet_dir = "/mnt/data/ciroh/parquet"
-
-#     process_by_z_hour = True
-#     stepsize = 100
-#     ignore_missing_file = False
-
-#     import time
-#     t1 = time.time()
-
-#     nwm_to_parquet(
-#         configuration,
-#         output_type,
-#         variable_name,
-#         start_date,
-#         ingest_days,
-#         location_ids,
-#         json_dir,
-#         output_parquet_dir,
-#         nwm_version="nwm30",
-#         data_source="GCS",
-#         kerchunk_method="use_available",
-#         t_minus_hours=[0],
-#         process_by_z_hour=process_by_z_hour,
-#         stepsize=stepsize,
-#         ignore_missing_file=ignore_missing_file,
-#         overwrite_output=False,
-#     )
-
-#     print(f"elapsed: {time.time() - t1:.2f} s")

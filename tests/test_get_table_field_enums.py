@@ -139,7 +139,7 @@ def test_get_joined_timeseries_fields(tmpdir):
         constant_field_values={
             "unit_name": "m^3/s",
             "variable_name": "streamflow_hourly_inst",
-            "configuration_name": "nwm30_retro"
+            "configuration_name": "nwm30_retrospective"
         }
     )
 

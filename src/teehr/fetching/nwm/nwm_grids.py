@@ -1,5 +1,5 @@
 """Module for fetching and processing NWM gridded data."""
-from typing import Union, List, Optional
+from typing import Union, List, Optional, Dict
 from datetime import datetime
 from pathlib import Path
 
@@ -17,7 +17,6 @@ from teehr.models.fetching.utils import (
     SupportedKerchunkMethod
 )
 from teehr.fetching.const import (
-    NWM22_UNIT_LOOKUP,
     NWM22_ANALYSIS_CONFIG,
     NWM30_ANALYSIS_CONFIG,
 )
@@ -39,7 +38,8 @@ def nwm_grids_to_parquet(
     t_minus_hours: Optional[List[int]] = None,
     ignore_missing_file: Optional[bool] = True,
     overwrite_output: Optional[bool] = False,
-    location_id_prefix: Optional[Union[str, None]] = None
+    location_id_prefix: Optional[Union[str, None]] = None,
+    variable_mapper: Dict[str, Dict[str, str]] = None
 ):
     """
     Fetch NWM gridded data, calculate zonal statistics (currently only
@@ -169,11 +169,9 @@ def nwm_grids_to_parquet(
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
         from teehr.models.fetching.nwm22_grid import GridConfigurationModel
         analysis_config_dict = NWM22_ANALYSIS_CONFIG
-        unit_lookup_dict = NWM22_UNIT_LOOKUP
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm30:
         from teehr.models.fetching.nwm30_grid import GridConfigurationModel
         analysis_config_dict = NWM30_ANALYSIS_CONFIG
-        unit_lookup_dict = NWM22_UNIT_LOOKUP
     else:
         raise ValueError("nwm_version must equal 'nwm22' or 'nwm30'")
 
@@ -225,15 +223,15 @@ def nwm_grids_to_parquet(
 
         # Fetch the data, saving to parquet files based on TEEHR data model
         fetch_and_format_nwm_grids(
-            json_paths,
-            configuration,
-            variable_name,
-            output_parquet_dir,
-            zonal_weights_filepath,
-            ignore_missing_file,
-            unit_lookup_dict,
-            overwrite_output,
-            location_id_prefix
+            json_paths=json_paths,
+            configuration_name=f"{nwm_version}_{configuration}",
+            variable_name=variable_name,
+            output_parquet_dir=output_parquet_dir,
+            zonal_weights_filepath=zonal_weights_filepath,
+            ignore_missing_file=ignore_missing_file,
+            overwrite_output=overwrite_output,
+            location_id_prefix=location_id_prefix,
+            variable_mapper=variable_mapper
         )
 
 

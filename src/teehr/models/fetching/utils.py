@@ -11,6 +11,33 @@ except ImportError:  # pragma: no cover
         pass  # pragma: no cover
 
 
+# Timeseries models.
+class TimeseriesTypeEnum(StrEnum):
+    """Timeseries types enum."""
+
+    primary = "primary"
+    secondary = "secondary"
+
+
+# Retrospective models.
+class ChannelRtRetroVariableEnum(StrEnum):
+    """ChannelRtRetro variables enum."""
+
+    nudge = "nudge"
+    qBtmVertRunoff = "qBtmVertRunoff"
+    qBucket = "qBucket"
+    qSfcLatRunoff = "qSfcLatRunoff"
+    streamflow = "streamflow"
+    velocity = "velocity"
+
+
+class USGSServiceEnum(StrEnum):
+    """USGSServiceEnum for fetching USGS data."""
+
+    dv = "dv"
+    iv = "iv"
+
+
 class USGSChunkByEnum(StrEnum):
     """USGSChunkByEnum for fetching USGS data."""
 

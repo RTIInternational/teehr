@@ -11,6 +11,7 @@ import pyarrow as pa
 from teehr.fetching.utils import (
     get_dataset,
     write_parquet_file,
+    split_dataframe
 )
 from teehr.fetching.const import (
     VALUE,
@@ -31,8 +32,8 @@ def file_chunk_loop(
     configuration: str,
     schema: pa.Schema,
     ignore_missing_file: bool,
-    units_format_dict: Dict,
-    nwm_version: str
+    nwm_version: str,
+    variable_mapper: Dict[str, Dict[str, str]]
 ):
     """Fetch NWM values and convert to tabular format for a single json."""
     ds = get_dataset(
@@ -44,8 +45,18 @@ def file_chunk_loop(
         return None
     ds = ds.sel(feature_id=location_ids)
     vals = ds[variable_name].astype("float32").values
-    nwm22_units = ds[variable_name].units
-    teehr_units = units_format_dict.get(nwm22_units, nwm22_units)
+
+    nwm_units = ds[variable_name].units
+
+    if not variable_mapper:
+        teehr_units = nwm_units
+        teehr_variable_name = variable_name
+    else:
+        teehr_units = variable_mapper[UNIT_NAME].get(nwm_units, nwm_units)
+        teehr_variable_name = variable_mapper[VARIABLE_NAME].get(
+            variable_name, variable_name
+        )
+
     ref_time = pd.to_datetime(row.day) \
         + pd.to_timedelta(int(row.z_hour[1:3]), unit="h")
 
@@ -61,8 +72,8 @@ def file_chunk_loop(
             REFERENCE_TIME: np.full(vals.shape, ref_time),
             LOCATION_ID: teehr_location_ids,
             VALUE_TIME: np.full(vals.shape, valid_time),
-            CONFIGURATION_NAME: num_vals * [configuration],
-            VARIABLE_NAME: num_vals * [variable_name],
+            CONFIGURATION_NAME: num_vals * [nwm_version + "_" + configuration],
+            VARIABLE_NAME: num_vals * [teehr_variable_name],
             UNIT_NAME: num_vals * [teehr_units],
         },
         schema=schema,
@@ -79,9 +90,9 @@ def process_chunk_of_files(
     output_parquet_dir: str,
     process_by_z_hour: bool,
     ignore_missing_file: bool,
-    units_format_dict: Dict,
     overwrite_output: bool,
-    nwm_version: str
+    nwm_version: str,
+    variable_mapper: Dict[str, Dict[str, str]]
 ):
     """Assemble a table for a chunk of NWM files."""
     location_ids = np.array(location_ids).astype(int)
@@ -108,8 +119,8 @@ def process_chunk_of_files(
                 configuration,
                 schema,
                 ignore_missing_file,
-                units_format_dict,
-                nwm_version
+                nwm_version,
+                variable_mapper
             )
         )
     output = dask.compute(*results)
@@ -150,9 +161,9 @@ def fetch_and_format_nwm_points(
     process_by_z_hour: bool,
     stepsize: int,
     ignore_missing_file: bool,
-    units_format_dict: Dict,
     overwrite_output: bool,
-    nwm_version: str
+    nwm_version: str,
+    variable_mapper: Dict[str, Dict[str, str]]
 ):
     """Fetch NWM point data and save as parquet files.
 
@@ -182,8 +193,6 @@ def fetch_and_format_nwm_points(
         file is encountered
         True = skip and continue
         False = fail.
-    units_format_dict : Dict,
-        Dictionary of unit formats.
     overwrite_output : bool
         Flag specifying whether or not to overwrite output files if
         they already exist.  True = overwrite; False = fail.
@@ -217,11 +226,7 @@ def fetch_and_format_nwm_points(
         dfs = [df for _, df in gps]
     else:
         # Option #2. Chunk by some number of files
-        if stepsize > df_refs.index.size:
-            num_partitions = 1
-        else:
-            num_partitions = int(df_refs.index.size / stepsize)
-        dfs = np.array_split(df_refs, num_partitions)
+        dfs = split_dataframe(df_refs, stepsize)
 
     for df in dfs:
         process_chunk_of_files(
@@ -232,7 +237,7 @@ def fetch_and_format_nwm_points(
             output_parquet_dir,
             process_by_z_hour,
             ignore_missing_file,
-            units_format_dict,
             overwrite_output,
-            nwm_version
+            nwm_version,
+            variable_mapper
         )

@@ -9,9 +9,16 @@ import pytest
 from teehr.fetching.nwm.grid_utils import update_location_id_prefix
 from teehr.fetching.nwm.nwm_points import fetch_and_format_nwm_points
 from teehr.fetching.nwm.nwm_grids import fetch_and_format_nwm_grids
-from teehr.fetching.const import (
-    NWM22_UNIT_LOOKUP,
-)
+
+TEST_NWM_VARIABLE_MAPPER = {
+    "variable_name": {
+        # "streamflow": "streamflow",
+        # "RAINRATE": "rainfall_hourly_rate",
+    },
+    "unit_name": {
+        "m3 s-1": "m3/s",
+    },
+}
 
 
 def test_nwm22_point_fetch_and_format(tmpdir):
@@ -39,15 +46,15 @@ def test_nwm22_point_fetch_and_format(tmpdir):
         process_by_z_hour=True,
         stepsize=100,
         ignore_missing_file=False,
-        units_format_dict=NWM22_UNIT_LOOKUP,
         overwrite_output=True,
-        nwm_version="nwm22"
+        nwm_version="nwm22",
+        variable_mapper=TEST_NWM_VARIABLE_MAPPER
     )
 
     parquet_file = Path(tmpdir, "20230318T14.parquet")
-    test_file = Path(test_data_dir, "point_benchmark.parquet")
+    benchmark_file = Path(test_data_dir, "point_benchmark.parquet")
 
-    bench_df = pd.read_parquet(test_file)
+    bench_df = pd.read_parquet(benchmark_file)
     test_df = pd.read_parquet(parquet_file)
 
     assert test_df.compare(bench_df).index.size == 0
@@ -79,14 +86,14 @@ def test_nwm30_point_fetch_and_format(tmpdir):
         process_by_z_hour=True,
         stepsize=100,
         ignore_missing_file=False,
-        units_format_dict=NWM22_UNIT_LOOKUP,
-        overwrite_output=True
+        overwrite_output=True,
+        variable_mapper=TEST_NWM_VARIABLE_MAPPER
     )
 
     parquet_file = Path(tmpdir, "20231101T00.parquet")
-    test_file = Path(test_data_dir, "point_benchmark.parquet")
+    benchmark_file = Path(test_data_dir, "point_benchmark.parquet")
 
-    bench_df = pd.read_parquet(test_file)
+    bench_df = pd.read_parquet(benchmark_file)
     test_df = pd.read_parquet(parquet_file)
 
     assert test_df.compare(bench_df).index.size == 0
@@ -103,21 +110,31 @@ def test_nwm22_grid_fetch_and_format(tmpdir):
 
     fetch_and_format_nwm_grids(
         json_paths=json_paths,
-        configuration="forcing_analysis_assim",
+        configuration_name="forcing_analysis_assim",
         variable_name="RAINRATE",
         output_parquet_dir=tmpdir,
         zonal_weights_filepath=weights_filepath,
         ignore_missing_file=False,
-        units_format_dict=NWM22_UNIT_LOOKUP,
         overwrite_output=True,
-        location_id_prefix=None
+        location_id_prefix=None,
+        variable_mapper=None
     )
 
     parquet_file = Path(tmpdir, "20201218T00.parquet")
-    test_file = Path(test_data_dir, "grid_benchmark.parquet")
+    benchmark_file = Path(test_data_dir, "grid_benchmark.parquet")
 
-    bench_df = pd.read_parquet(test_file)
+    bench_df = pd.read_parquet(benchmark_file)
     test_df = pd.read_parquet(parquet_file)
+    # Match the column order.
+    bench_df = bench_df[[
+        'location_id',
+        'value',
+        'unit_name',
+        'variable_name',
+        'value_time',
+        'reference_time',
+        'configuration_name'
+    ]].copy()
 
     assert test_df.compare(bench_df).index.size == 0
 
@@ -133,21 +150,31 @@ def test_nwm30_grid_fetch_and_format(tmpdir):
 
     fetch_and_format_nwm_grids(
         json_paths=json_paths,
-        configuration="forcing_analysis_assim_alaska",
+        configuration_name="forcing_analysis_assim_alaska",
         variable_name="RAINRATE",
         output_parquet_dir=tmpdir,
         zonal_weights_filepath=weights_filepath,
         ignore_missing_file=False,
-        units_format_dict=NWM22_UNIT_LOOKUP,
         overwrite_output=True,
-        location_id_prefix=None
+        location_id_prefix=None,
+        variable_mapper=TEST_NWM_VARIABLE_MAPPER
     )
 
     parquet_file = Path(tmpdir, "20231101T00.parquet")
-    test_file = Path(test_data_dir, "grid_benchmark.parquet")
+    benchmark_file = Path(test_data_dir, "grid_benchmark.parquet")
 
-    bench_df = pd.read_parquet(test_file)
+    bench_df = pd.read_parquet(benchmark_file)
     test_df = pd.read_parquet(parquet_file)
+    # Match the column order.
+    bench_df = bench_df[[
+        'location_id',
+        'value',
+        'unit_name',
+        'variable_name',
+        'value_time',
+        'reference_time',
+        'configuration_name'
+    ]].copy()
 
     assert test_df.compare(bench_df).index.size == 0
 

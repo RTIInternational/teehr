@@ -33,6 +33,7 @@ of data transferred over the network.
 from datetime import datetime
 from pathlib import Path
 from typing import Union, Optional, Tuple, Dict
+import logging
 
 import pandas as pd
 import xarray as xr
@@ -41,7 +42,6 @@ from pydantic import validate_call
 import dask
 
 from teehr.fetching.const import (
-    NWM22_UNIT_LOOKUP,
     VALUE_TIME,
     REFERENCE_TIME,
     LOCATION_ID,
@@ -73,6 +73,8 @@ from teehr.fetching.nwm.retrospective_points import (
     validate_start_end_date,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def get_nwm21_retro_grid_data(
     var_da: xr.DataArray,
@@ -82,6 +84,7 @@ def get_nwm21_retro_grid_data(
     col_max: int
 ):
     """Read a subset nwm21 retro grid data into memory from row/col bounds."""
+    logger.debug("Getting the nwm21 retro grid data")
     grid_values = var_da.isel(
         west_east=slice(col_min, col_max+1),
         south_north=slice(row_min, row_max+1)
@@ -93,15 +96,16 @@ def process_nwm30_retro_group(
     da_i: xr.DataArray,
     weights_filepath: str,
     variable_name: str,
-    units_format_dict: Dict,
     nwm_version: str,
-    location_id_prefix: Union[str, None]
+    location_id_prefix: Union[str, None],
+    variable_mapper: Dict[str, Dict[str, str]]
 ):
     """Compute the weighted average for a chunk of NWM v3.0 data.
 
     Pixel weights for each zone are defined in weights_df,
     and the output is saved to parquet files.
     """
+    logger.debug("Processing NWM v3.0 retro grid data chunk.")
     weights_df = pd.read_parquet(
         weights_filepath, columns=["row", "col", "weight", LOCATION_ID]
     )
@@ -127,13 +131,19 @@ def process_nwm30_retro_group(
         df.loc[:, VALUE_TIME] = pd.to_datetime(time)
         hourly_dfs.append(df)
 
-    chunk_df = pd.concat(hourly_dfs)
-    chunk_df.loc[:, REFERENCE_TIME] = chunk_df.value_time
     nwm_units = da_i.attrs["units"]
-    teehr_units = units_format_dict.get(nwm_units, nwm_units)
-    chunk_df.loc[:, UNIT_NAME] = teehr_units
+    chunk_df = pd.concat(hourly_dfs)
+    if not variable_mapper:
+        chunk_df.loc[:, UNIT_NAME] = nwm_units
+        chunk_df.loc[:, VARIABLE_NAME] = variable_name.value
+    else:
+        chunk_df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
+            get(nwm_units, nwm_units)
+        chunk_df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
+            get(variable_name, variable_name)
+
+    chunk_df.loc[:, REFERENCE_TIME] = chunk_df.value_time
     chunk_df.loc[:, CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
-    chunk_df.loc[:, VARIABLE_NAME] = variable_name
 
     if location_id_prefix:
         chunk_df = update_location_id_prefix(chunk_df, location_id_prefix)
@@ -148,6 +158,7 @@ def construct_nwm21_json_paths(
     end_date: Union[str, datetime]
 ):
     """Construct the remote paths for NWM v2.1 json files as a dataframe."""
+    logger.debug("Constructing NWM v2.1 json paths.")
     base_path = (
         "s3://ciroh-nwm-zarr-retrospective-data-copy/"
         "noaa-nwm-retrospective-2-1-zarr-pds/forcing"
@@ -171,9 +182,9 @@ def process_single_nwm21_retro_grid_file(
     variable_name: str,
     weights_filepath: str,
     ignore_missing_file: bool,
-    units_format_dict: Dict,
     nwm_version: str,
-    location_id_prefix: Union[str, None]
+    location_id_prefix: Union[str, None],
+    variable_mapper: Dict[str, Dict[str, str]]
 ):
     """Compute the zonal mean for a single json reference file.
 
@@ -188,7 +199,7 @@ def process_single_nwm21_retro_grid_file(
         return None
 
     nwm_units = ds[variable_name].attrs["units"]
-    teehr_units = units_format_dict.get(nwm_units, nwm_units)
+
     value_time = row.datetime
     da = ds[variable_name].isel(Time=0)
 
@@ -213,11 +224,18 @@ def process_single_nwm21_retro_grid_file(
     # Calculate mean areal of selected variable
     df = compute_weighted_average(grid_values, weights_df)
 
+    if not variable_mapper:
+        df.loc[:, UNIT_NAME] = nwm_units
+        df.loc[:, VARIABLE_NAME] = variable_name.value
+    else:
+        df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
+            get(nwm_units, nwm_units)
+        df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
+            get(variable_name, variable_name)
+
     df.loc[:, VALUE_TIME] = value_time
     df.loc[:, REFERENCE_TIME] = value_time
-    df.loc[:, UNIT_NAME] = teehr_units
     df.loc[:, CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
-    df.loc[:, VARIABLE_NAME] = variable_name
 
     if location_id_prefix:
         df = update_location_id_prefix(df, location_id_prefix)
@@ -236,7 +254,8 @@ def nwm_retro_grids_to_parquet(
     chunk_by: Union[NWMChunkByEnum, None] = None,
     overwrite_output: Optional[bool] = False,
     domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
-    location_id_prefix: Optional[Union[str, None]] = None
+    location_id_prefix: Optional[Union[str, None]] = None,
+    variable_mapper: Dict[str, Dict[str, str]] = None
 ):
     """Compute the weighted average for NWM v2.1 or v3.0 gridded data.
 
@@ -278,6 +297,9 @@ def nwm_retro_grids_to_parquet(
         Only used when NWM version equals v3.0.
     location_id_prefix : Union[str, None]
         Optional location ID prefix to add (prepend) or replace.
+    variable_mapper : Dict[str, Dict[str, str]]
+        Dictionary mapping NWM variable and unit names to TEEHR variable
+        and unit names.
 
     Notes
     -----
@@ -287,6 +309,10 @@ def nwm_retro_grids_to_parquet(
     will replace the existing prefix. It is assumed that the location_id
     follows the pattern '[prefix]-[unique id]'.
     """
+    logger.info(
+        f"Fetching NWM retrospective grid data, version: {nwm_version}."
+    )
+
     start_date = pd.Timestamp(start_date)
     end_date = pd.Timestamp(end_date)
 
@@ -337,9 +363,9 @@ def nwm_retro_grids_to_parquet(
                         variable_name=variable_name,
                         weights_filepath=zonal_weights_filepath,
                         ignore_missing_file=False,
-                        units_format_dict=NWM22_UNIT_LOOKUP,
                         nwm_version=nwm_version,
-                        location_id_prefix=location_id_prefix
+                        location_id_prefix=location_id_prefix,
+                        variable_mapper=variable_mapper
                     )
                 )
             output = dask.compute(*results)
@@ -412,9 +438,9 @@ def nwm_retro_grids_to_parquet(
                 da_i=da_i,
                 weights_filepath=zonal_weights_filepath,
                 variable_name=variable_name,
-                units_format_dict=NWM22_UNIT_LOOKUP,
                 nwm_version=nwm_version,
-                location_id_prefix=location_id_prefix
+                location_id_prefix=location_id_prefix,
+                variable_mapper=variable_mapper
             )
 
             fname = format_grouped_filename(da_i)
@@ -426,22 +452,5 @@ def nwm_retro_grids_to_parquet(
             write_parquet_file(
                 filepath=output_filename,
                 overwrite_output=overwrite_output,
-                data=chunk_df)
-
-
-# if __name__ == "__main__":
-
-#     # t0 = time.time()
-
-#     nwm_retro_grids_to_parquet(
-#         nwm_version="nwm21",
-#         variable_name="RAINRATE",
-#         zonal_weights_filepath="/mnt/data/merit/YalansBasins/cat_pfaf_7_conus_subset_nwm_v30_weights.parquet",
-#         start_date="2020-12-10",
-#         end_date="2020-12-31 12:00",
-#         output_parquet_dir="/mnt/data/ciroh/retro",
-#         overwrite_output=True,
-#         chunk_by="week"
-#     )
-
-    # print(f"Total elapsed: {(time.time() - t0):.2f} secs")
+                data=chunk_df
+            )

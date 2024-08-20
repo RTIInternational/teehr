@@ -1,7 +1,8 @@
 """Module for querying the dataset."""
+from typing import Union, List
+
 import pandas as pd
 import geopandas as gpd
-from typing import Union, List
 from teehr.models.dataset.filters import (
     UnitFilter,
     VariableFilter,

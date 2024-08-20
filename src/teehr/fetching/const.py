@@ -22,15 +22,35 @@ TIMESERIES_DATA_TYPES = {
 }
 
 USGS_NODATA_VALUES = [-999999, -999, -9999, -99999]
-USGS_CONFIGURATION_NAME = "usgs_gage_data"
-USGS_UNIT_NAME = "ft3/s"
-USGS_SI_UNIT_NAME = "m3/s"
-USGS_VARIABLE_NAME = "streamflow"
+USGS_CONFIGURATION_NAME = "usgs_observations"
 
 NWM_BUCKET = "national-water-model"
-NWM22_UNIT_LOOKUP = {"m3 s-1": "m3/s"}
+NWM22_UNIT_LOOKUP = {"m3 s-1": "m^3/s"}
 NWM30_START_DATE = datetime(2023, 9, 19, 0)
 NWM_S3_JSON_PATH = "s3://ciroh-nwm-zarr-copy"
+
+USGS_VARIABLE_MAPPER = {
+    VARIABLE_NAME: {
+        "iv": "streamflow_hourly_inst",
+        "dv": "streamflow_daily_mean",
+    },
+    UNIT_NAME: {
+        "SI": "m^3/s",
+        "Imperial": "ft^3/s",
+    },
+}
+
+NWM_VARIABLE_MAPPER = {
+    VARIABLE_NAME: {
+        "streamflow": "streamflow_hourly_inst",
+        "RAINRATE": "rainfall_hourly_rate",
+    },
+    UNIT_NAME: {
+        "m3 s-1": "m^3/s",
+        "mm s^-1": "mm/s",  # NWM 3.0 forcing
+        "mm s-1": "mm/s",   # NWM 2.2 forcing
+    },
+}
 
 
 NWM22_ANALYSIS_CONFIG = {

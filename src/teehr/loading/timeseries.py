@@ -184,6 +184,10 @@ def validate_and_insert_single_timeseries(
     else:
         raise ValueError("Invalid timeseries type.")
 
+    out_filepath = Path(out_filepath)
+    if not out_filepath.parent.exists():
+        out_filepath.parent.mkdir(parents=True)
+
     conn.sql(f"""
         INSERT INTO
                 {table}

@@ -16,12 +16,13 @@ API will be called for each unique location_id in the provided list.
    API calls and produce more efficient queries.
 """
 import pandas as pd
+import logging
 
-from typing import List, Union, Optional
+from typing import List, Union, Optional, Dict
 from pathlib import Path
 from datetime import datetime, timedelta
 import dataretrieval.nwis as nwis
-from teehr.models.fetching.utils import USGSChunkByEnum
+from teehr.models.fetching.utils import USGSChunkByEnum, USGSServiceEnum
 from pydantic import validate_call, ConfigDict
 from teehr.fetching.utils import (
     write_parquet_file,
@@ -32,24 +33,25 @@ from teehr.fetching.utils import (
 from teehr.fetching.const import (
     USGS_NODATA_VALUES,
     USGS_CONFIGURATION_NAME,
-    USGS_UNIT_NAME,
-    USGS_SI_UNIT_NAME,
-    USGS_VARIABLE_NAME,
     VALUE,
     VALUE_TIME,
     REFERENCE_TIME,
     LOCATION_ID,
     UNIT_NAME,
     VARIABLE_NAME,
-    CONFIGURATION_NAME
+    CONFIGURATION_NAME,
+    USGS_VARIABLE_MAPPER
 )
 
 DATETIME_STR_FMT = "%Y-%m-%dT%H:%M:00+0000"
 DAYLIGHT_SAVINGS_PAD = timedelta(hours=2)
 
+logger = logging.getLogger(__name__)
+
 
 def _filter_to_hourly(df: pd.DataFrame) -> pd.DataFrame:
     """Filter out data not reported on the hour."""
+    logger.debug("Filtering to hourly data.")
     df.set_index(VALUE_TIME, inplace=True)
     df2 = df[
         df.index.hour.isin(range(0, 24))
@@ -62,20 +64,27 @@ def _filter_to_hourly(df: pd.DataFrame) -> pd.DataFrame:
 
 def _filter_no_data(df: pd.DataFrame) -> pd.DataFrame:
     """Filter out no data values."""
+    logger.debug("Filtering out no data values.")
     df2 = df[~df[VALUE].isin(USGS_NODATA_VALUES)]
     df2.dropna(subset=[VALUE], inplace=True)
     return df2
 
 
-def _convert_to_si_units(df: pd.DataFrame) -> pd.DataFrame:
+def _convert_to_si_units(df: pd.DataFrame, unit_name: str) -> pd.DataFrame:
     """Convert streamflow values from english to metric."""
+    logger.debug("Converting to SI units.")
     df[VALUE] = df[VALUE] * 0.3048**3
-    df[UNIT_NAME] = USGS_SI_UNIT_NAME
+    df[UNIT_NAME] = unit_name
     return df
 
 
-def _format_df_column_names(df: pd.DataFrame) -> pd.DataFrame:
+def _format_df_column_names(
+    df: pd.DataFrame,
+    variable_name: str,
+    unit_name: str
+) -> pd.DataFrame:
     """Format dataretrieval dataframe columns to TEEHR data model."""
+    logger.debug("Formatting column names.")
     df.reset_index(inplace=True)
     df.rename(
         columns={
@@ -88,8 +97,8 @@ def _format_df_column_names(df: pd.DataFrame) -> pd.DataFrame:
     df[LOCATION_ID] = "usgs-" + df[LOCATION_ID].astype(str)
     df[CONFIGURATION_NAME] = USGS_CONFIGURATION_NAME
     df[REFERENCE_TIME] = df[VALUE_TIME]
-    df[UNIT_NAME] = USGS_UNIT_NAME
-    df[VARIABLE_NAME] = USGS_VARIABLE_NAME
+    df[UNIT_NAME] = unit_name
+    df[VARIABLE_NAME] = variable_name
     return df[[
         LOCATION_ID,
         REFERENCE_TIME,
@@ -105,11 +114,14 @@ def _fetch_usgs_streamflow(
     sites: List[str],
     start_date: datetime,
     end_date: datetime,
+    service: str,
+    variable_mapper: Dict[str, Dict[str, str]],
     filter_to_hourly: bool = True,
     filter_no_data: bool = True,
-    convert_to_si: bool = True
+    convert_to_si: bool = True,
 ) -> pd.DataFrame:
     """Fetch USGS gage data and format to TEEHR format."""
+    logger.debug("Fetching USGS streamflow data from NWIS.")
     start_dt_str = start_date.strftime(DATETIME_STR_FMT)
     end_dt_str = (
         end_date
@@ -119,15 +131,15 @@ def _fetch_usgs_streamflow(
     # Retrieve data --> dataretrieval
     usgs_df = nwis.get_record(
         sites=sites,
-        service="iv",  # Instantaneous values
+        service=service,
         start=start_dt_str,
         end=end_dt_str
     )
 
-    # NOTE: We can use get_iv to include station metadata.
-    # df, meta = nwis.get_iv(sites=sites, start=start_dt_str, end=end_dt_str)
+    variable_name = variable_mapper[VARIABLE_NAME][service]
+    unit_name = variable_mapper[UNIT_NAME]["Imperial"]
 
-    usgs_df = _format_df_column_names(usgs_df)
+    usgs_df = _format_df_column_names(usgs_df, variable_name, unit_name)
 
     usgs_df = format_timeseries_data_types(usgs_df)
 
@@ -136,14 +148,15 @@ def _fetch_usgs_streamflow(
     if filter_no_data is True:
         usgs_df = _filter_no_data(usgs_df)
     if convert_to_si is True:
-        usgs_df = _convert_to_si_units(usgs_df)
+        unit_name = variable_mapper[UNIT_NAME]["SI"]
+        usgs_df = _convert_to_si_units(usgs_df, unit_name)
 
-    # Return the data
     return usgs_df
 
 
 def _format_output_filename(chunk_by: str, start_dt, end_dt) -> str:
     """Format the output filename based on min and max datetime."""
+    logger.debug("Formatting output filename.")
     if chunk_by == "day":
         return f"{start_dt.strftime('%Y-%m-%d')}.parquet"
     else:
@@ -158,11 +171,13 @@ def usgs_to_parquet(
     start_date: Union[str, datetime, pd.Timestamp],
     end_date: Union[str, datetime, pd.Timestamp],
     output_parquet_dir: Union[str, Path],
+    service: USGSServiceEnum = USGSServiceEnum.iv,
     chunk_by: Union[USGSChunkByEnum, None] = None,
     filter_to_hourly: bool = True,
     filter_no_data: bool = True,
     convert_to_si: bool = True,
     overwrite_output: Optional[bool] = False,
+    variable_mapper: Dict[str, Dict[str, str]] = USGS_VARIABLE_MAPPER
 ):
     """Fetch USGS gage data and save as a Parquet file.
 
@@ -181,6 +196,9 @@ def usgs_to_parquet(
         overlap between consecutive calls.
     output_parquet_dir : Union[str, Path]
         Path of directory where parquet files will be saved.
+    service : USGSServiceEnum
+        The USGS service to use for fetching data ('iv' for hourly
+        instantaneous values or 'dv' for daily mean values).
     chunk_by : Union[str, None], default = None
         How to "chunk" the fetching and storing of the data.
         Valid options = ["location_id", "day", "week", "month", "year", None].
@@ -193,6 +211,11 @@ def usgs_to_parquet(
     overwrite_output : bool
         Flag specifying whether or not to overwrite output files if they
         already exist.  True = overwrite; False = fail.
+    varible_mapper : Dict[str]
+        Dictionary mapping the USGS service to the variable name and defining
+        the unit name. default: {"variable": {"iv": "streamflow_hourly_inst",
+        "dv": "streamflow_daily_mean"}, "unit": {"SI": "m^3/s",
+        "Imperial": "ft^3/s"}}
 
     Examples
     --------
@@ -223,6 +246,7 @@ def usgs_to_parquet(
     >>>     overwrite_output=OVERWRITE_OUTPUT
     >>> )
     """
+    logger.info("Fetching USGS streamflow data.")
     start_date = pd.Timestamp(start_date)
     end_date = pd.Timestamp(end_date)
 
@@ -237,9 +261,11 @@ def usgs_to_parquet(
                 sites=[site],
                 start_date=start_date - DAYLIGHT_SAVINGS_PAD,
                 end_date=end_date + DAYLIGHT_SAVINGS_PAD,
+                service=service,
+                variable_mapper=variable_mapper,
                 filter_to_hourly=filter_to_hourly,
                 filter_no_data=filter_no_data,
-                convert_to_si=convert_to_si
+                convert_to_si=convert_to_si,
             )
 
             usgs_df = usgs_df[(usgs_df[VALUE_TIME] >= start_date) &
@@ -279,6 +305,8 @@ def usgs_to_parquet(
             sites=sites,
             start_date=dts["start_dt"] - DAYLIGHT_SAVINGS_PAD,
             end_date=dts["end_dt"] + DAYLIGHT_SAVINGS_PAD,
+            service=service,
+            variable_mapper=variable_mapper,
             filter_to_hourly=filter_to_hourly,
             filter_no_data=filter_no_data,
             convert_to_si=convert_to_si

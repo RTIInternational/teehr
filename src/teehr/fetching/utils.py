@@ -52,6 +52,8 @@ def format_timeseries_data_types(df: pd.DataFrame) -> pd.DataFrame:
 
     The fields types are specified in the TIMESERIES_DATA_TYPES dictionary.
     """
+    logger.debug("Formatting timeseries data types.")
+
     # Convert to UTC if not already in UTC.
     if df[VALUE_TIME].dt.tz is not None:
         df[VALUE_TIME] = df[VALUE_TIME].dt.tz_convert("UTC")
@@ -79,6 +81,8 @@ def check_dates_against_nwm_version(
     ingest_days: int
 ):
     """Make sure start/end dates work with specified NWM version."""
+    logger.debug("Checking dates against NWM version.")
+
     if isinstance(start_date, str):
         start_date = parse(start_date)
 
@@ -127,6 +131,8 @@ def generate_json_paths(
     List[str]
         List of filepaths to json files locally and/or in s3.
     """
+    logger.debug(f"Generating json paths. kerchunk_method: {kerchunk_method}")
+
     if kerchunk_method == SupportedKerchunkMethod.local:
         # Create them manually first
         json_paths = build_zarr_references(gcs_component_paths,
@@ -192,6 +198,8 @@ def write_parquet_file(
     data : Union[pa.Table, pd.DataFrame]
         The output data as either a dataframe or pyarrow table.
     """
+    logger.debug(f"Writing parquet file: {filepath}")
+
     if not filepath.is_file():
         if isinstance(data, pa.Table):
             pq.write_table(data, filepath)
@@ -212,6 +220,8 @@ def write_parquet_file(
 
 def load_gdf(filepath: Union[str, Path], **kwargs: str) -> gpd.GeoDataFrame:
     """Load any supported geospatial file type into a gdf using GeoPandas."""
+    logger.debug(f"Loading geospatial file: {filepath}")
+
     try:
         gdf = gpd.read_file(filepath, **kwargs)
         return gdf
@@ -257,6 +267,8 @@ def get_dataset(
     xarray.Dataset
         The data stored in the blob.
     """
+    logger.debug(f"Getting xarray dataset from: {filepath}")
+
     try:
         m = fsspec.filesystem(
             "reference", fo=filepath, **kwargs
@@ -383,6 +395,8 @@ def build_zarr_references(
     list[str]
         List of paths to the zarr reference json files.
     """
+    logger.debug("Building zarr references.")
+
     json_dir_path = Path(json_dir)
     if not json_dir_path.exists():
         json_dir_path.mkdir(parents=True)
@@ -467,6 +481,8 @@ def construct_assim_paths(
     list[str]
         List of remote filepaths.
     """
+    logger.debug("Constructing assimilation paths.")
+
     component_paths = []
 
     for dt in dates:
@@ -566,6 +582,8 @@ def build_remote_nwm_filelist(
     list
         List of remote filepaths (strings).
     """
+    logger.debug("Building remote NWM file list from GCS.")
+
     gcs_dir = f"gcs://{NWM_BUCKET}"
     fs = fsspec.filesystem("gcs", anon=True)
     dates = pd.date_range(start=start_dt, periods=ingest_days, freq="1d")
@@ -637,6 +655,8 @@ def get_period_start_end_times(
     Dict[str, datetime]
         The start and end times for the period.
     """
+    logger.debug("Getting period start and end times.")
+
     start_dt = period.start_time
     end_dt = period.end_time
 
@@ -670,6 +690,8 @@ def create_periods_based_on_chunksize(
     List[pd.Period]
         A pandas period range.
     """
+    logger.debug("Creating periods based on chunk_by.")
+
     if chunk_by is None:
         periods = [None]
 
@@ -691,3 +713,24 @@ def create_periods_based_on_chunksize(
         )
 
     return periods
+
+
+def split_dataframe(df: pd.DataFrame, chunk_size: int) -> List[pd.DataFrame]:
+    """Split a dataframe into chunks of a specified size.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The input dataframe.
+    chunk_size : int
+        The size of the chunks.
+
+    Returns
+    -------
+    List[pd.DataFrame]
+        A list of dataframes.
+    """
+    chunks = []
+    for i in range(0, df.shape[0], chunk_size):
+        chunks.append(df.iloc[i:i + chunk_size])
+    return chunks
