@@ -66,8 +66,8 @@ def add_user_defined_fields(
 
     @udf(returnType=IntegerType())
     def water_year_from_date(date):
-        if date.month < 10:
-            return date.year - 1
+        if date.month >= 10:
+            return date.year + 1
         else:
             return date.year
 

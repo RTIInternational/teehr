@@ -10,7 +10,7 @@ from teehr.loading.duckdb_sql import (
 from teehr.loading.utils import (
     validate_dataset_structure,
 )
-from teehr.models.loading.data_tables import location_attributes_field_names
+from teehr.models.dataset.table_models import LocationAttribute
 from teehr.loading.utils import merge_field_mappings
 import teehr.const as const
 import duckdb
@@ -95,7 +95,7 @@ def convert_location_attributes(
     logger.info(f"Converting attributes data: {in_path}")
 
     default_field_mapping = {}
-    for field in location_attributes_field_names:
+    for field in LocationAttribute.get_field_names():
         if field not in default_field_mapping.values():
             default_field_mapping[field] = field
 

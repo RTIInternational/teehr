@@ -16,7 +16,7 @@ from teehr.loading.duckdb_sql import (
     insert_locations,
     insert_location_crosswalks,
 )
-from teehr.models.loading.data_tables import timeseries_field_names
+from teehr.models.dataset.table_models import Timeseries
 import teehr.const as const
 
 import logging
@@ -118,7 +118,7 @@ def convert_timeseries(
     logger.info(f"Converting timeseries data: {in_path}")
 
     default_field_mapping = {}
-    for field in timeseries_field_names:
+    for field in Timeseries.get_field_names():
         if field not in default_field_mapping.values():
             default_field_mapping[field] = field
 
