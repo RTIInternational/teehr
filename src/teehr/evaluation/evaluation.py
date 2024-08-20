@@ -10,9 +10,6 @@ import logging
 from teehr.loading.utils import (
     copy_template_to,
 )
-from teehr.querying.field_enums import (
-    get_joined_timeseries_fields,
-)
 from teehr.loading.joined_timeseries import (
     create_joined_timeseries_dataset,
 )
