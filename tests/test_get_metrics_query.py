@@ -26,12 +26,19 @@ def test_get_metrics(tmpdir):
         JOINED_TIMESERIES_FILEPATH,
         Path(eval.joined_timeseries_dir, JOINED_TIMESERIES_FILEPATH.name)
     )
+    # Copy in the locations file.
+    shutil.copy(
+        Path(TEST_STUDY_DATA_DIR, "geo", "gages.parquet"),
+        Path(eval.locations_dir, "gages.parquet")
+    )
 
     # Define the metrics to include.
     boot = Bootstrap(method="bias_corrected", num_samples=100)
-    kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
-    # include_metrics = [kge, Metrics.RootMeanSquareError()]
-    include_metrics = [kge]
+    kge = Metrics.KlingGuptaEfficiency()
+    primary_avg = Metrics.PrimaryAverage()
+
+    include_metrics = [kge, primary_avg]
+    # include_metrics = [kge]
 
     # Get the currently available fields to use in the query.
     flds = eval.fields.get_joined_timeseries_fields()
@@ -42,23 +49,20 @@ def test_get_metrics(tmpdir):
             column=flds.primary_location_id,
             operator=ops.eq,
             value="gage-A"
-        ),
-        JoinedTimeseriesFilter(
-            column=flds.reference_time,
-            operator=ops.eq,
-            value="2022-01-01 00:00:00"
-        ),
+        )
     ]
 
     metrics_df = eval.query.get_metrics(
         include_metrics=include_metrics,
         group_by=[flds.primary_location_id],
-        # order_by=[flds.primary_location_id],
-        # filters=filters,
+        order_by=[flds.primary_location_id],
+        filters=filters,
         include_geometry=True
     )
 
     assert metrics_df.index.size > 0
+
+    print(metrics_df)
 
     pass
 

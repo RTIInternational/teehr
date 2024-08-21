@@ -1,4 +1,5 @@
 """Functions to query the joined timeseries data."""
+import logging
 from typing import Union, List
 from pathlib import Path
 from pyspark.sql import SparkSession
@@ -6,11 +7,12 @@ import geopandas as gpd
 import pandas as pd
 
 from teehr.querying.filter_format import apply_filters, validate_filter_values
-from teehr.querying.metrics_format import apply_metrics
+from teehr.querying.metrics_format import apply_aggregation_metrics
 from teehr.querying.utils import (
     order_df,
     df_to_gdf,
-    group_df
+    group_df,
+    join_locations_geometry
 )
 from teehr.models.metrics.metrics import MetricsBasemodel
 from teehr.models.dataset.table_models import (
@@ -45,6 +47,8 @@ from teehr.models.dataset.table_enums import (
     TimeseriesFields,
     JoinedTimeseriesFields
 )
+
+logger = logging.getLogger(__name__)
 
 
 def get_units(
@@ -299,6 +303,7 @@ def get_joined_timeseries(
 def get_metrics(
     spark: SparkSession,
     dirpath: Union[str, Path],
+    locations_dirpath: Union[str, Path],
     include_metrics: Union[
         List[MetricsBasemodel],
         str
@@ -316,7 +321,7 @@ def get_metrics(
         List[JoinedTimeseriesFields]
     ] = None,
     include_geometry: bool = False
-) -> pd.DataFrame:
+) -> Union[pd.DataFrame, gpd.GeoDataFrame]:
     """Get the metrics data."""
     joined_timeseries_df = (
         spark.read.format("parquet")
@@ -332,9 +337,17 @@ def get_metrics(
 
     grouped_df = group_df(joined_timeseries_df, group_by)
 
-    metrics_df = apply_metrics(
+    metrics_df = apply_aggregation_metrics(
         grouped_df,
         include_metrics
     )
+
+    if include_geometry:
+        return join_locations_geometry(
+            spark,
+            metrics_df,
+            group_by,
+            locations_dirpath
+        )
 
     return metrics_df.toPandas()

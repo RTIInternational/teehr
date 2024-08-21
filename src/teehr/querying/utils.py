@@ -45,3 +45,36 @@ def group_df(df, group_by):
     if not isinstance(group_by, List):
         group_by = [group_by]
     return df.groupBy([field.value for field in group_by])
+
+
+def join_locations_geometry(
+    spark,
+    df,
+    group_by,
+    locations_dirpath
+):
+    """Join geometry."""
+    if "primary_location_id" not in group_by:
+        logger.warning(
+            "The primary_location_id field must be "
+            "included in the group_by to include geometry."
+        )
+        return df.toPandas()
+
+    locations_df = (
+        spark.read.format("parquet")
+        .option("recursiveFileLookup", "true")
+        .option("mergeSchema", "true")
+        .load(str(locations_dirpath))
+    )
+
+    joined_df = df.join(
+        locations_df.withColumnRenamed(
+            "id",
+            "primary_location_id"
+        ).select(
+            "primary_location_id",
+            "geometry"
+        ), on="primary_location_id"
+    )
+    return df_to_gdf(joined_df.toPandas())

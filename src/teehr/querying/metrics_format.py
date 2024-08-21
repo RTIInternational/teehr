@@ -8,7 +8,7 @@ from pyspark.sql.functions import pandas_udf
 from teehr.models.metrics.metrics import MetricsBasemodel
 
 
-def apply_metrics(
+def apply_aggregation_metrics(
     df: GroupedData,
     include_metrics: Union[
         List[MetricsBasemodel],
@@ -21,17 +21,25 @@ def apply_metrics(
 
     # validate the metric models?
 
+    func_list = []
     for model in include_metrics:
 
-        # Convert to pandas_udf
+        # if model.func.__module__ == "pyspark.sql.functions":
+        #     func_pd = model.func
+        # else:
         func_pd = pandas_udf(model.func, "double")
 
         # Get the alias for the metric
         alias = model.attrs["short_name"]
 
-        # Apply the metric function to the dataframe
-        results_df = df.agg(
+        func_list.append(
             func_pd(*model.input_field_names).alias(alias)
         )
+        # # Apply the metric function to the dataframe
+        # df = df.agg(
+        #     func_pd(*model.input_field_names).alias(alias)
+        # )
 
-    return results_df
+    df = df.agg(*func_list)
+
+    return df

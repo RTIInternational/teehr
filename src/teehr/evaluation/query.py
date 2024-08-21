@@ -239,6 +239,7 @@ class Query:
         return get_metrics(
             self.spark,
             self.joined_timeseries_dir,
+            self.locations_dir,
             filters=filters,
             order_by=order_by,
             group_by=group_by,
