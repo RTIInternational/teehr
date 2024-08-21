@@ -43,6 +43,11 @@ def test_get_metrics(tmpdir):
     # include_metrics = [kge, primary_avg]
     include_metrics = [pmvt, mvtd, primary_avg, kge]
 
+    # Test all the metrics.
+    include_all_metrics = [
+        func() for func in Metrics.__dict__.values() if callable(func)
+    ]
+
     # Get the currently available fields to use in the query.
     flds = eval.fields.get_joined_timeseries_fields()
 
@@ -56,7 +61,7 @@ def test_get_metrics(tmpdir):
     ]
 
     metrics_df = eval.query.get_metrics(
-        include_metrics=include_metrics,
+        include_metrics=include_all_metrics,
         group_by=[flds.primary_location_id],
         order_by=[flds.primary_location_id],
         # filters=filters,
@@ -64,6 +69,7 @@ def test_get_metrics(tmpdir):
     )
 
     assert metrics_df.index.size > 0
+    assert metrics_df.columns.size == 33
 
     print(metrics_df)
 

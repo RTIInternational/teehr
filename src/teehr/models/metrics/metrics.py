@@ -453,7 +453,7 @@ class ANNUAL_PEAK_RBIAS(MetricsBasemodel):
     output_field_name: str = Field(default="annual_peak_flow_bias")
     func: Callable = udfs.annual_peak_relative_bias
     input_field_names: List[JoinedTimeseriesFields] = Field(
-        default=["primary_value"]
+        default=["primary_value", "secondary_value", "value_time"]
     )
     attrs: Dict = Field(default=tma.ANNUAL_PEAK_RBIAS_ATTRS, frozen=True)
 
