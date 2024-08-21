@@ -14,6 +14,7 @@ from teehr.models.dataset.filters import (
     TimeseriesFilter,
     JoinedTimeseriesFilter
 )
+from teehr.models.metrics.metrics import MetricsBasemodel
 from teehr.querying.field_enums import (
     UnitFields,
     VariableFields,
@@ -34,7 +35,8 @@ from teehr.querying.table_queries import (
     get_location_attributes,
     get_location_crosswalks,
     get_timeseries,
-    get_joined_timeseries
+    get_joined_timeseries,
+    get_metrics
 )
 
 
@@ -213,6 +215,33 @@ class Query:
             order_by=order_by
         )
 
-    def get_metrics(self):
+    def get_metrics(
+        self,
+        filters: Union[
+            JoinedTimeseriesFilter,
+            List[JoinedTimeseriesFilter]
+        ] = None,
+        order_by: Union[
+            JoinedTimeseriesFields,
+            List[JoinedTimeseriesFields]
+        ] = None,
+        group_by: Union[
+            JoinedTimeseriesFields,
+            List[JoinedTimeseriesFields]
+        ] = None,
+        include_metrics: Union[
+            List[MetricsBasemodel],
+            str
+        ] = None,
+        include_geometry: bool = False
+    ) -> Union[pd.DataFrame, gpd.GeoDataFrame]:
         """Get the metrics in the dataset."""
-        pass
+        return get_metrics(
+            self.spark,
+            self.joined_timeseries_dir,
+            filters=filters,
+            order_by=order_by,
+            group_by=group_by,
+            include_metrics=include_metrics,
+            include_geometry=include_geometry
+        )

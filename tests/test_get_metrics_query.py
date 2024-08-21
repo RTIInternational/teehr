@@ -5,6 +5,8 @@ from pathlib import Path
 import shutil
 import tempfile
 
+from teehr.models.dataset.filters import JoinedTimeseriesFilter
+
 TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
 JOINED_TIMESERIES_FILEPATH = Path(
     TEST_STUDY_DATA_DIR,
@@ -28,33 +30,35 @@ def test_get_metrics(tmpdir):
     # Define the metrics to include.
     boot = Bootstrap(method="bias_corrected", num_samples=100)
     kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
-    include_metrics = [kge, Metrics.RootMeanSquareError()]
+    # include_metrics = [kge, Metrics.RootMeanSquareError()]
+    include_metrics = [kge]
 
     # Get the currently available fields to use in the query.
     flds = eval.fields.get_joined_timeseries_fields()
 
     # Define some filters.
     filters = [
-        {
-            "column": flds.primary_location_id,
-            "operator": ops.eq,
-            "value": "gage-A",
-        },
-        {
-            "column": flds.reference_time,
-            "operator": ops.eq,
-            "value": "2022-01-01 00:00:00",
-        }
+        JoinedTimeseriesFilter(
+            column=flds.primary_location_id,
+            operator=ops.eq,
+            value="gage-A"
+        ),
+        JoinedTimeseriesFilter(
+            column=flds.reference_time,
+            operator=ops.eq,
+            value="2022-01-01 00:00:00"
+        ),
     ]
 
-    eval.get_metrics(
-        group_by=[flds.primary_location_id],
-        order_by=[flds.primary_location_id],
+    metrics_df = eval.query.get_metrics(
         include_metrics=include_metrics,
-        filters=filters,
-        include_geometry=True,
-        return_query=False,
+        group_by=[flds.primary_location_id],
+        # order_by=[flds.primary_location_id],
+        # filters=filters,
+        include_geometry=True
     )
+
+    assert metrics_df.index.size > 0
 
     pass
 

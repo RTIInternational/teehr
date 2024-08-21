@@ -1,5 +1,5 @@
 """Metric Query Models."""
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Callable
 try:
     # breaking change introduced in python 3.11
     from enum import StrEnum
@@ -18,6 +18,10 @@ import teehr.models.metrics.metric_attributes as tma
 from teehr.models.metrics.metric_enums import (
     BootstrapMethodEnum,
     TransformEnum
+)
+from teehr.metrics import udfs as udfs
+from teehr.models.dataset.table_enums import (
+    JoinedTimeseriesFields
 )
 
 
@@ -159,6 +163,10 @@ class KGE(MetricsBasemodel):
     bootstrap: Bootstrap = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency")
+    func: Callable = udfs.kling_gupta_efficiency
+    input_field_names: List[JoinedTimeseriesFields] = Field(
+        default=["primary_value", "secondary_value"]
+    )
     attrs: Dict = Field(default=tma.KGE_ATTRS, frozen=True)
 
 

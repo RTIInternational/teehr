@@ -6,10 +6,13 @@ import geopandas as gpd
 import pandas as pd
 
 from teehr.querying.filter_format import apply_filters, validate_filter_values
+from teehr.querying.metrics_format import apply_metrics
 from teehr.querying.utils import (
     order_df,
-    df_to_gdf
+    df_to_gdf,
+    group_df
 )
+from teehr.models.metrics.metrics import MetricsBasemodel
 from teehr.models.dataset.table_models import (
     Configuration,
     Unit,
@@ -291,3 +294,47 @@ def get_joined_timeseries(
         joined_timeseries_df = order_df(joined_timeseries_df, order_by)
 
     return joined_timeseries_df.toPandas()
+
+
+def get_metrics(
+    spark: SparkSession,
+    dirpath: Union[str, Path],
+    include_metrics: Union[
+        List[MetricsBasemodel],
+        str
+    ],
+    group_by: Union[
+        JoinedTimeseriesFields,
+        List[JoinedTimeseriesFields]
+    ],
+    filters: Union[
+        JoinedTimeseriesFilter,
+        List[JoinedTimeseriesFilter]
+    ] = None,
+    order_by: Union[
+        JoinedTimeseriesFields,
+        List[JoinedTimeseriesFields]
+    ] = None,
+    include_geometry: bool = False
+) -> pd.DataFrame:
+    """Get the metrics data."""
+    joined_timeseries_df = (
+        spark.read.format("parquet")
+        .option("recursiveFileLookup", "true")
+        .option("mergeSchema", "true")
+        .load(str(dirpath))
+    )
+    if filters is not None:
+        joined_timeseries_df = apply_filters(joined_timeseries_df, filters)
+
+    if order_by is not None:
+        joined_timeseries_df = order_df(joined_timeseries_df, order_by)
+
+    grouped_df = group_df(joined_timeseries_df, group_by)
+
+    metrics_df = apply_metrics(
+        grouped_df,
+        include_metrics
+    )
+
+    return metrics_df.toPandas()

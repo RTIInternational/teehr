@@ -92,7 +92,8 @@ KGE_ATTRS = {
     "display_name": "Kling-Gupta Efficiency - original",
     "category": "Deterministic",
     "value_range": [0.0, 1.0],
-    "optimal_value": 1.0
+    "optimal_value": 1.0,
+    "output_type": "float"
 }
 
 KGE1_ATTRS = {

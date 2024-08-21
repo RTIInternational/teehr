@@ -40,3 +40,8 @@ def order_df(df, sort_by):
     return df.orderBy([field.value for field in sort_by])
 
 
+def group_df(df, group_by):
+    """Group a DataFrame by a list of columns."""
+    if not isinstance(group_by, List):
+        group_by = [group_by]
+    return df.groupBy([field.value for field in group_by])
