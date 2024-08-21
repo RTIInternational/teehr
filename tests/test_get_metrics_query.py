@@ -34,11 +34,14 @@ def test_get_metrics(tmpdir):
 
     # Define the metrics to include.
     boot = Bootstrap(method="bias_corrected", num_samples=100)
+
     kge = Metrics.KlingGuptaEfficiency()
     primary_avg = Metrics.PrimaryAverage()
+    mvtd = Metrics.MaxValueTimeDelta()
+    pmvt = Metrics.PrimaryMaxValueTime()
 
-    include_metrics = [kge, primary_avg]
-    # include_metrics = [kge]
+    # include_metrics = [kge, primary_avg]
+    include_metrics = [pmvt, mvtd, primary_avg, kge]
 
     # Get the currently available fields to use in the query.
     flds = eval.fields.get_joined_timeseries_fields()
@@ -56,8 +59,8 @@ def test_get_metrics(tmpdir):
         include_metrics=include_metrics,
         group_by=[flds.primary_location_id],
         order_by=[flds.primary_location_id],
-        filters=filters,
-        include_geometry=True
+        # filters=filters,
+        include_geometry=False
     )
 
     assert metrics_df.index.size > 0

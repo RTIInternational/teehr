@@ -27,7 +27,7 @@ def apply_aggregation_metrics(
         # if model.func.__module__ == "pyspark.sql.functions":
         #     func_pd = model.func
         # else:
-        func_pd = pandas_udf(model.func, "double")
+        func_pd = pandas_udf(model.func, model.attrs["return_type"])
 
         # Get the alias for the metric
         alias = model.attrs["short_name"]
@@ -35,7 +35,7 @@ def apply_aggregation_metrics(
         func_list.append(
             func_pd(*model.input_field_names).alias(alias)
         )
-        # # Apply the metric function to the dataframe
+        # # This fails.
         # df = df.agg(
         #     func_pd(*model.input_field_names).alias(alias)
         # )

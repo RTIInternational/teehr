@@ -403,32 +403,46 @@ class MAX_VALUE_DELTA(MetricsBasemodel):
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="max_value_delta")
     func: Callable = udfs.max_value_delta
+    input_field_names: List[JoinedTimeseriesFields] = Field(
+        default=["primary_value", "secondary_value"]
+    )
     attrs: Dict = Field(default=tma.MAX_VALUE_DELTA_ATTRS, frozen=True)
 
 
-# class MAX_VALUE_TIME_DELTA(MetricsBasemodel):
-#     """Max Value Time Delta."""
+class MAX_VALUE_TIME_DELTA(MetricsBasemodel):
+    """Max Value Time Delta."""
 
-#     transform: TransformEnum = Field(default=None)
-#     output_field_name: str = Field(default="max_value_time_delta")
-#     func: Callable = udfs # TODO
-#     attrs: Dict = Field(default=tma.MAX_VALUE_TIMEDELTA_ATTRS, frozen=True)
-
-
-# class PRIMARY_MAX_VALUE_TIME(MetricsBasemodel):
-#     """Primary Max Value Time."""
-
-#     transform: TransformEnum = Field(default=None)
-#     output_field_name: str = Field(default="primary_max_value_time")
-#     attrs: Dict = Field(default=tma.PRIMARY_MAX_VAL_TIME_ATTRS, frozen=True)
+    transform: TransformEnum = Field(default=None)
+    output_field_name: str = Field(default="max_value_time_delta")
+    func: Callable = udfs.max_value_timedelta
+    input_field_names: List[JoinedTimeseriesFields] = Field(
+        default=["primary_value", "secondary_value", "value_time"]
+    )
+    attrs: Dict = Field(default=tma.MAX_VALUE_TIMEDELTA_ATTRS, frozen=True)
 
 
-# class SECONDARY_MAX_VALUE_TIME(MetricsBasemodel):
-#     """Secondary Max Value Time."""
+class PRIMARY_MAX_VALUE_TIME(MetricsBasemodel):
+    """Primary Max Value Time."""
 
-#     transform: TransformEnum = Field(default=None)
-#     output_field_name: str = Field(default="secondary_max_value_time")
-#     attrs: Dict = Field(default=tma.SECONDARY_MAX_VAL_TIME_ATTRS, frozen=True)
+    transform: TransformEnum = Field(default=None)
+    output_field_name: str = Field(default="primary_max_value_time")
+    func: Callable = udfs.primary_max_value_time
+    input_field_names: List[JoinedTimeseriesFields] = Field(
+        default=["primary_value", "value_time"]
+    )
+    attrs: Dict = Field(default=tma.PRIMARY_MAX_VAL_TIME_ATTRS, frozen=True)
+
+
+class SECONDARY_MAX_VALUE_TIME(MetricsBasemodel):
+    """Secondary Max Value Time."""
+
+    transform: TransformEnum = Field(default=None)
+    output_field_name: str = Field(default="secondary_max_value_time")
+    func: Callable = udfs.secondary_max_value_time
+    input_field_names: List[JoinedTimeseriesFields] = Field(
+        default=["secondary_value", "value_time"]
+    )
+    attrs: Dict = Field(default=tma.SECONDARY_MAX_VAL_TIME_ATTRS, frozen=True)
 
 
 class ANNUAL_PEAK_RBIAS(MetricsBasemodel):
@@ -451,8 +465,8 @@ class Metrics():
     KlingGuptaEfficiency = KGE
     KlingGuptaEfficiencyMod1 = KGE_Mod1
     KlingGuptaEfficiencyMod2 = KGE_Mod2
-    # MaxValueDelta = MAX_VALUE_DELTA
-    # MaxValueTimeDelta = MAX_VALUE_TIME_DELTA
+    MaxValueDelta = MAX_VALUE_DELTA
+    MaxValueTimeDelta = MAX_VALUE_TIME_DELTA
     MeanError = ME
     MeanAbsoluteError = MAE
     MeanAbsoluteRelativeError = REL_MAE
@@ -461,7 +475,7 @@ class Metrics():
     PearsonCorrelation = PEARSON_R
     PrimaryAverage = PRIMARY_AVERAGE
     PrimaryCount = PRIMARY_COUNT
-    # PrimaryMaxValueTime = PRIMARY_MAX_VALUE_TIME
+    PrimaryMaxValueTime = PRIMARY_MAX_VALUE_TIME
     PrimaryMaximum = PRIMARY_MAXIMUM
     PrimaryMinimum = PRIMARY_MINIMUM
     PrimarySum = PRIMARY_SUM
@@ -474,7 +488,7 @@ class Metrics():
     SecondaryAverage = SECONDARY_AVERAGE
     SecondaryCount = SECONDARY_COUNT
     SecondaryMaximum = SECONDARY_MAXIMUM
-    # SecondaryMaxValueTime = SECONDARY_MAX_VALUE_TIME
+    SecondaryMaxValueTime = SECONDARY_MAX_VALUE_TIME
     SecondaryMinimum = SECONDARY_MINIMUM
     SecondarySum = SECONDARY_SUM
     SecondaryVariance = SECONDARY_VARIANCE
