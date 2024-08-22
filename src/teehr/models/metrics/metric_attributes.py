@@ -1,5 +1,4 @@
 """Dictionaries defining static metric attributes."""
-import pyspark.sql.types as T
 
 
 ME_ATTRS = {
@@ -251,7 +250,7 @@ PRIMARY_MAX_VAL_TIME_ATTRS = {
     "category": "Simple",
     "value_range": None,
     "optimal_value": None,
-    "return_type": T.TimestampType()
+    "return_type": "timestamp"
 }
 
 SECONDARY_MAX_VAL_TIME_ATTRS = {
@@ -260,7 +259,7 @@ SECONDARY_MAX_VAL_TIME_ATTRS = {
     "category": "Simple",
     "value_range": None,
     "optimal_value": None,
-    "return_type": T.TimestampType()
+    "return_type": "timestamp"
 }
 
 MAX_VALUE_TIMEDELTA_ATTRS = {
