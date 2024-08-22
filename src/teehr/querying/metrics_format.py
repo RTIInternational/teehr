@@ -1,11 +1,14 @@
 """Functions for formatting metrics for querying."""
 from typing import List, Union
+import logging
 
 import pandas as pd
 from pyspark.sql import GroupedData
 from pyspark.sql.functions import pandas_udf
 
 from teehr.models.metrics.metrics import MetricsBasemodel
+
+logger = logging.getLogger(__name__)
 
 
 def apply_aggregation_metrics(
@@ -24,21 +27,16 @@ def apply_aggregation_metrics(
     func_list = []
     for model in include_metrics:
 
-        # if model.func.__module__ == "pyspark.sql.functions":
-        #     func_pd = model.func
-        # else:
-        func_pd = pandas_udf(model.func, model.attrs["return_type"])
-
         # Get the alias for the metric
         alias = model.attrs["short_name"]
+
+        logger.debug(f"Applying metric: {alias}")
+
+        func_pd = pandas_udf(model.func, model.attrs["return_type"])
 
         func_list.append(
             func_pd(*model.input_field_names).alias(alias)
         )
-        # # This fails.
-        # df = df.agg(
-        #     func_pd(*model.input_field_names).alias(alias)
-        # )
 
     df = df.agg(*func_list)
 

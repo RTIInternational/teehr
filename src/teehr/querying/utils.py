@@ -54,6 +54,7 @@ def join_locations_geometry(
     locations_dirpath
 ):
     """Join geometry."""
+    logger.debug("Joining locations geometry.")
     if "primary_location_id" not in group_by:
         logger.warning(
             "The primary_location_id field must be "

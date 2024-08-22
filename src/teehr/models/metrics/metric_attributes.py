@@ -269,7 +269,8 @@ MAX_VALUE_TIMEDELTA_ATTRS = {
     "category": "Simple",
     "value_range": None,
     "optimal_value": None,
-    "return_type": "float"
+    "return_type": "float",
+    "units": "seconds"
 }
 
 ANNUAL_PEAK_RBIAS_ATTRS = {

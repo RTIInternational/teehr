@@ -58,6 +58,7 @@ def get_units(
     order_by: Union[UnitFields, List[UnitFields]] = None
 ) -> pd.DataFrame:
     """Get the units data."""
+    logger.info("Querying the units table.")
     # Read all the files in the given directory
     units_df = (
         spark.read.format("csv")
@@ -84,6 +85,7 @@ def get_variables(
     order_by: Union[VariableFields, List[VariableFields]] = None
 ) -> pd.DataFrame:
     """Get the variables data."""
+    logger.info("Querying the variables table.")
     # Read all the files in the given directory
     variables_df = (
         spark.read.format("csv")
@@ -109,6 +111,7 @@ def get_attributes(
     order_by: Union[AttributeFields, List[AttributeFields]] = None
 ) -> pd.DataFrame:
     """Get the attributes data."""
+    logger.info("Querying the attributes table.")
     # Read all the files in the given directory
     attributes_df = (
         spark.read.format("csv")
@@ -140,6 +143,7 @@ def get_configurations(
     ] = None
 ) -> pd.DataFrame:
     """Get the configurations data."""
+    logger.info("Querying the configurations table.")
     # Read all the files in the given directory
     configurations_df = (
         spark.read.format("csv")
@@ -165,6 +169,7 @@ def get_locations(
     order_by: Union[LocationFields, List[LocationFields]] = None,
 ) -> gpd.GeoDataFrame:
     """Get the locations data."""
+    logger.info("Querying the locations table.")
     # Read all the files in the given directory
     locations_df = (
         spark.read.format("parquet")
@@ -195,6 +200,7 @@ def get_location_attributes(
     ] = None
 ) -> pd.DataFrame:
     """Get the location attributes data."""
+    logger.info("Querying the locations attributes table.")
     # Read all the files in the given directory
     location_attributes_df = (
         spark.read.format("parquet")
@@ -227,6 +233,7 @@ def get_location_crosswalks(
     ] = None
 ) -> pd.DataFrame:
     """Get the location crosswalks data."""
+    logger.info("Querying the locations crosswalk table.")
     # Read all the files in the given directory
     location_crosswalks_df = (
         spark.read.format("parquet")
@@ -253,6 +260,7 @@ def get_timeseries(
     order_by: Union[TimeseriesFields, List[TimeseriesFields]] = None
 ) -> pd.DataFrame:
     """Get the timeseries data."""
+    logger.info("Querying the timeseries table.")
     # Read all the files in the given directory
     timeseries_df = (
         spark.read.format("parquet")
@@ -283,6 +291,7 @@ def get_joined_timeseries(
     ] = None
 ) -> pd.DataFrame:
     """Get the joined timeseries data."""
+    logger.info("Querying the joined timeseries table.")
     # Read all the files in the given directory
     joined_timeseries_df = (
         spark.read.format("parquet")
@@ -323,6 +332,7 @@ def get_metrics(
     include_geometry: bool = False
 ) -> Union[pd.DataFrame, gpd.GeoDataFrame]:
     """Get the metrics data."""
+    logger.info("Calculating performance metrics.")
     joined_timeseries_df = (
         spark.read.format("parquet")
         .option("recursiveFileLookup", "true")
@@ -330,11 +340,14 @@ def get_metrics(
         .load(str(dirpath))
     )
     if filters is not None:
+        logger.debug("Applying filters to the metrics query.")
         joined_timeseries_df = apply_filters(joined_timeseries_df, filters)
 
     if order_by is not None:
+        logger.debug("Ordering the metrics query.")
         joined_timeseries_df = order_df(joined_timeseries_df, order_by)
 
+    logger.debug("Grouping the metrics query.")
     grouped_df = group_df(joined_timeseries_df, group_by)
 
     metrics_df = apply_aggregation_metrics(
