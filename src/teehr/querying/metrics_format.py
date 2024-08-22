@@ -28,7 +28,7 @@ def apply_aggregation_metrics(
     for model in include_metrics:
 
         # Get the alias for the metric
-        alias = model.attrs["short_name"]
+        alias = model.output_field_name
 
         logger.debug(f"Applying metric: {alias}")
 
