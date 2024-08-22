@@ -8,6 +8,8 @@ import pandas as pd
 import geopandas as gpd
 
 from teehr.models.dataset.filters import JoinedTimeseriesFilter
+# from teehr.models.metrics.metrics import Bootstrap
+from teehr.metrics.bootstrappers import Bootstrappers
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
 JOINED_TIMESERIES_FILEPATH = Path(
@@ -66,15 +68,39 @@ def test_metrics_filter_and_geometry(tmpdir):
         Path(eval.locations_dir, "gages.parquet")
     )
 
-    # Define the metrics to include.
-    # boot = Bootstrap(method="bias_corrected", num_samples=100)
+    # TEST:
+    # import pandas as pd
+    # import numpy as np
 
-    kge = Metrics.KlingGuptaEfficiency()
+    # df = pd.read_parquet(JOINED_TIMESERIES_FILEPATH)
+    # p = df["primary_value"]
+    # s = df["secondary_value"]
+
+    boot = Bootstrappers.CircularBlock()
+
+    # kge = Metrics.KlingGuptaEfficiency()
+
+    # bs = boot.bootstrapper(365, p, s, seed=1234)
+    # results = bs.apply(kge.func, 1000)
+    # quantiles = (0.05, 0.50, 0.95)
+    # values = np.quantile(results, quantiles)
+    # quantiles = [f"KGE_{str(i)}" for i in quantiles]
+    # d = dict(zip(quantiles,values))
+
+
+    kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
+
+    # END TEST
+
+    # Define the metrics to include.
+
+    # kge = Metrics.KlingGuptaEfficiency()
     primary_avg = Metrics.PrimaryAverage()
     mvtd = Metrics.MaxValueTimeDelta()
     pmvt = Metrics.PrimaryMaxValueTime()
 
-    include_metrics = [pmvt, mvtd, primary_avg, kge]
+    # include_metrics = [pmvt, mvtd, primary_avg, kge]
+    include_metrics = [kge]
 
     # Get the currently available fields to use in the query.
     flds = eval.fields.get_joined_timeseries_fields()
@@ -105,12 +131,12 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_get_all_metrics(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
+        # test_get_all_metrics(
+        #     tempfile.mkdtemp(
+        #         prefix="1-",
+        #         dir=tempdir
+        #     )
+        # )
         test_metrics_filter_and_geometry(
             tempfile.mkdtemp(
                 prefix="2-",

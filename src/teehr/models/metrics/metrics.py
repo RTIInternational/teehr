@@ -13,16 +13,18 @@ except ImportError:  # pragma: no cover
 
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import Field, ConfigDict
-
+from teehr.metrics.bootstrappers import GumBoots
 import teehr.models.metrics.metric_attributes as tma
 from teehr.models.metrics.metric_enums import (
-    BootstrapMethodEnum,
+    # BootstrapMethodEnum,
     TransformEnum
 )
 from teehr.metrics import udfs as udfs
 from teehr.models.dataset.table_enums import (
     JoinedTimeseriesFields
 )
+from arch.bootstrap import IIDBootstrap
+from teehr.metrics.bootstrappers import BootstrapBasemodel
 
 
 class MetricsBasemodel(PydanticBaseModel):
@@ -35,31 +37,32 @@ class MetricsBasemodel(PydanticBaseModel):
     )
 
 
-class Bootstrap(MetricsBasemodel):
-    """Bootstrap configuration.
+# class Bootstrap(MetricsBasemodel):
+#     """Bootstrap configuration.
 
-    This will depend on the library used to calculate the bootstrap.
+#     This will depend on the library used to calculate the bootstrap.
 
-    scipy: https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.bootstrap.html
+#     scipy: https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.bootstrap.html
 
-    gumboot (R): https://cran.r-project.org/web/packages/gumboot/gumboot.pdf
+#     gumboot (R): https://cran.r-project.org/web/packages/gumboot/gumboot.pdf
 
-    arch: https://bashtage.github.io/arch/index.html
+#     arch: https://bashtage.github.io/arch/index.html
 
-    Use instances of arch Bootstrap classes here?
-    (StationaryBootstrap, CircularBlockBootstrap)
-    """
+#     Use instances of arch Bootstrap classes here?
+#     (StationaryBootstrap, CircularBlockBootstrap)
+#     """
 
-    method: BootstrapMethodEnum = Field(default="percentile")
-    num_samples: int = Field(default=1000)
-    seed: Optional[int] = Field(default=None)
-    quantiles: Optional[List[float]] = Field(default=None)
+#     # method: BootstrapMethodEnum = Field(default="percentile")
+#     bootstrapper: IIDBootstrap = Field(default=GumBoots)
+#     # num_samples: int = Field(default=1000)
+#     # seed: Optional[int] = Field(default=None)
+#     # quantiles: Optional[List[float]] = Field(default=None)
 
 
 class ME(MetricsBasemodel):
     """Mean Error."""
 
-    bootstrap: Bootstrap = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="mean_error")
     func: Callable = udfs.mean_error
@@ -72,7 +75,7 @@ class ME(MetricsBasemodel):
 class REL_BIAS(MetricsBasemodel):
     """Relative Bias."""
 
-    bootstrap: Bootstrap = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="relative_bias")
     func: Callable = udfs.relative_bias
@@ -85,7 +88,7 @@ class REL_BIAS(MetricsBasemodel):
 class MULT_BIAS(MetricsBasemodel):
     """Multiplicative Bias."""
 
-    bootstrap: Bootstrap = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="multiplicative_bias")
     func: Callable = udfs.multiplicative_bias
@@ -98,7 +101,7 @@ class MULT_BIAS(MetricsBasemodel):
 class MSE(MetricsBasemodel):
     """Mean Square Error."""
 
-    bootstrap: Bootstrap = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="mean_square_error")
     func: Callable = udfs.mean_squared_error
@@ -111,7 +114,7 @@ class MSE(MetricsBasemodel):
 class RMSE(MetricsBasemodel):
     """Root Mean Squared Error."""
 
-    bootstrap: Bootstrap = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="root_mean_square_error")
     func: Callable = udfs.root_mean_squared_error
@@ -124,7 +127,7 @@ class RMSE(MetricsBasemodel):
 class MAE(MetricsBasemodel):
     """Mean Absolute Error."""
 
-    bootstrap: Bootstrap = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="mean_absolute_error")
     func: Callable = udfs.mean_absolute_error
@@ -137,7 +140,7 @@ class MAE(MetricsBasemodel):
 class REL_MAE(MetricsBasemodel):
     """Relative Mean Absolute Error."""
 
-    bootstrap: Bootstrap = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="mean_absolute_relative_error")
     func: Callable = udfs.mean_absolute_relative_error
@@ -150,7 +153,7 @@ class REL_MAE(MetricsBasemodel):
 class PEARSON_R(MetricsBasemodel):
     """Pearson Correlation."""
 
-    bootstrap: Bootstrap = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="pearson_correlation")
     func: Callable = udfs.pearson_correlation
@@ -163,7 +166,7 @@ class PEARSON_R(MetricsBasemodel):
 class R2(MetricsBasemodel):
     """Coefficient of Determination."""
 
-    bootstrap: Bootstrap = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="r_squared")
     func: Callable = udfs.r_squared
@@ -176,7 +179,7 @@ class R2(MetricsBasemodel):
 class NSE(MetricsBasemodel):
     """Nash-Sutcliffe Efficiency."""
 
-    bootstrap: Bootstrap = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="nash_sutcliffe_efficiency")
     func: Callable = udfs.nash_sutcliffe_efficiency
@@ -189,7 +192,7 @@ class NSE(MetricsBasemodel):
 class NNSE(MetricsBasemodel):
     """Normalized Nash-Sutcliffe Efficiency."""
 
-    bootstrap: Bootstrap = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(
         default="nash_sutcliffe_efficiency_normalized"
@@ -204,7 +207,7 @@ class NNSE(MetricsBasemodel):
 class KGE(MetricsBasemodel):
     """Kling-Gupta Efficiency."""
 
-    bootstrap: Bootstrap = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency")
     func: Callable = udfs.kling_gupta_efficiency  # List of UDFs?
@@ -217,7 +220,7 @@ class KGE(MetricsBasemodel):
 class KGE_Mod1(MetricsBasemodel):
     """Kling Gupta Efficiency - modified 1 (2012)."""
 
-    bootstrap: Bootstrap = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency_mod1")
     func: Callable = udfs.kling_gupta_efficiency_mod1
@@ -230,7 +233,7 @@ class KGE_Mod1(MetricsBasemodel):
 class KGE_Mod2(MetricsBasemodel):
     """Kling Gupta Efficiency - modified 2 (2021)."""
 
-    bootstrap: Bootstrap = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency_mod2")
     func: Callable = udfs.kling_gupta_efficiency_mod2
@@ -243,7 +246,7 @@ class KGE_Mod2(MetricsBasemodel):
 class SPEARMAN_R(MetricsBasemodel):
     """Spearman Rank Correlation Coefficient."""
 
-    bootstrap: Bootstrap = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="spearman_correlation")
     func: Callable = udfs.spearman_correlation
@@ -374,7 +377,7 @@ class SECONDARY_SUM(MetricsBasemodel):
 class PRIMARY_VARIANCE(MetricsBasemodel):
     """Primary Variance."""
 
-    bootstrap: Bootstrap = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="primary_variance")
     func: Callable = udfs.primary_variance
@@ -387,7 +390,7 @@ class PRIMARY_VARIANCE(MetricsBasemodel):
 class SECONDARY_VARIANCE(MetricsBasemodel):
     """Secondary Variance."""
 
-    bootstrap: Bootstrap = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="secondary_variance")
     func: Callable = udfs.secondary_variance
@@ -448,7 +451,7 @@ class SECONDARY_MAX_VALUE_TIME(MetricsBasemodel):
 class ANNUAL_PEAK_RBIAS(MetricsBasemodel):
     """Annual Peak Relative Bias."""
 
-    bootstrap: Bootstrap = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="annual_peak_flow_bias")
     func: Callable = udfs.annual_peak_relative_bias
