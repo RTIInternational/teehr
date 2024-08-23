@@ -3,7 +3,7 @@ from teehr import Evaluation
 from datetime import datetime
 from teehr.models.dataset.filters import (
     TimeseriesFilter,
-    FilterOperatorEnum
+    FilterOperators
 )
 from teehr.querying.filter_format import (
     format_filter_to_str
@@ -18,7 +18,7 @@ def test_filter_eq_str(tmpdir):
     fields = eval.fields.get_timeseries_fields()
     filter = TimeseriesFilter(
         column=fields.variable_name,
-        operator=FilterOperatorEnum.eq,
+        operator=FilterOperators.eq,
         value="foo"
     )
     filter_str = format_filter_to_str(filter)
@@ -31,7 +31,7 @@ def test_filter_in_str(tmpdir):
     fields = eval.fields.get_timeseries_fields()
     filter = TimeseriesFilter(
         column=fields.variable_name,
-        operator=FilterOperatorEnum.isin,
+        operator=FilterOperators.isin,
         value=["foo", "bar"]
     )
     filter_str = format_filter_to_str(filter)
@@ -44,7 +44,7 @@ def test_filter_in_str_series(tmpdir):
     fields = eval.fields.get_timeseries_fields()
     filter = TimeseriesFilter(
         column=fields.variable_name,
-        operator=FilterOperatorEnum.isin,
+        operator=FilterOperators.isin,
         value=pd.Series(["foo", "bar"])
     )
     filter_str = format_filter_to_str(filter)
@@ -57,7 +57,7 @@ def test_filter_gt_dt(tmpdir):
     fields = eval.fields.get_timeseries_fields()
     filter = TimeseriesFilter(
         column=fields.reference_time,
-        operator=FilterOperatorEnum.gt,
+        operator=FilterOperators.gt,
         value=datetime(2021, 1, 1)
     )
     filter_str = format_filter_to_str(filter)
@@ -70,7 +70,7 @@ def test_filter_lt_int(tmpdir):
     fields = eval.fields.get_timeseries_fields()
     filter = TimeseriesFilter(
         column=fields.value,
-        operator=FilterOperatorEnum.lt,
+        operator=FilterOperators.lt,
         value=50
     )
     filter_str = format_filter_to_str(filter)

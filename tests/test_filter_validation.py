@@ -3,7 +3,7 @@ from teehr import Evaluation
 from datetime import datetime
 from teehr.models.dataset.filters import (
     TimeseriesFilter,
-    FilterOperatorEnum
+    FilterOperators
 )
 import pandas as pd
 from teehr.models.dataset.table_models import Timeseries
@@ -19,7 +19,7 @@ def test_filter_string_passes(tmpdir):
     fields = eval.fields.get_timeseries_fields()
     filter = TimeseriesFilter(
         column=fields.variable_name,
-        operator=FilterOperatorEnum.eq,
+        operator=FilterOperators.eq,
         value="foo"
     )
     filter = validate_filter_values(filter, Timeseries)
@@ -32,7 +32,7 @@ def test_filters_string_passes(tmpdir):
     fields = eval.fields.get_timeseries_fields()
     filter = TimeseriesFilter(
         column=fields.variable_name,
-        operator=FilterOperatorEnum.eq,
+        operator=FilterOperators.eq,
         value="foo"
     )
     filters = validate_filter_values([filter], Timeseries)
@@ -46,12 +46,12 @@ def test_filters_string_passes2(tmpdir):
     filter = [
         TimeseriesFilter(
             column=fields.variable_name,
-            operator=FilterOperatorEnum.eq,
+            operator=FilterOperators.eq,
             value="foo"
         ),
         TimeseriesFilter(
             column=fields.variable_name,
-            operator=FilterOperatorEnum.eq,
+            operator=FilterOperators.eq,
             value="bar"
         )
     ]
@@ -66,7 +66,7 @@ def test_filter_int_to_string_passes(tmpdir):
     fields = eval.fields.get_timeseries_fields()
     filter = TimeseriesFilter(
         column=fields.variable_name,
-        operator=FilterOperatorEnum.eq,
+        operator=FilterOperators.eq,
         value=10
     )
     filter = validate_filter_values(filter, Timeseries)
@@ -79,7 +79,7 @@ def test_filter_float_passes(tmpdir):
     fields = eval.fields.get_timeseries_fields()
     filter = TimeseriesFilter(
         column=fields.value,
-        operator=FilterOperatorEnum.eq,
+        operator=FilterOperators.eq,
         value=10.1
     )
     filter = validate_filter_values(filter, Timeseries)
@@ -92,7 +92,7 @@ def test_filter_int_to_float_passes(tmpdir):
     fields = eval.fields.get_timeseries_fields()
     filter = TimeseriesFilter(
         column=fields.value,
-        operator=FilterOperatorEnum.eq,
+        operator=FilterOperators.eq,
         value=10
     )
     filter = validate_filter_values(filter, Timeseries)
@@ -106,7 +106,7 @@ def test_filter_str_to_float_fails(tmpdir):
         fields = eval.fields.get_timeseries_fields()
         filter = TimeseriesFilter(
             column=fields.value,
-            operator=FilterOperatorEnum.eq,
+            operator=FilterOperators.eq,
             value="foo"
         )
         validate_filter_values(filter, Timeseries)
@@ -118,7 +118,7 @@ def test_filter_datetime_passes(tmpdir):
     fields = eval.fields.get_timeseries_fields()
     filter = TimeseriesFilter(
         column=fields.value_time,
-        operator=FilterOperatorEnum.eq,
+        operator=FilterOperators.eq,
         value=datetime(2021, 1, 1)
     )
     filter = validate_filter_values(filter, Timeseries)
@@ -131,7 +131,7 @@ def test_filter_datetime_passes2(tmpdir):
     fields = eval.fields.get_timeseries_fields()
     filter = TimeseriesFilter(
         column=fields.value_time,
-        operator=FilterOperatorEnum.eq,
+        operator=FilterOperators.eq,
         value="2021-01-01"
     )
     filter = validate_filter_values(filter, Timeseries)
@@ -144,7 +144,7 @@ def test_filter_datetime_passes3(tmpdir):
     fields = eval.fields.get_timeseries_fields()
     filter = TimeseriesFilter(
         column=fields.value_time,
-        operator=FilterOperatorEnum.eq,
+        operator=FilterOperators.eq,
         value="2021-01-01T00:00:00"
     )
     filter = validate_filter_values(filter, Timeseries)
@@ -157,7 +157,7 @@ def test_filter_datetime_passes4(tmpdir):
     fields = eval.fields.get_timeseries_fields()
     filter = TimeseriesFilter(
         column=fields.value_time,
-        operator=FilterOperatorEnum.eq,
+        operator=FilterOperators.eq,
         value=pd.Timestamp("2021-01-01T00:00:00")
     )
     filter = validate_filter_values(filter, Timeseries)
@@ -170,7 +170,7 @@ def test_filter_datetime_passes5(tmpdir):
     fields = eval.fields.get_timeseries_fields()
     filter = TimeseriesFilter(
         column=fields.value_time,
-        operator=FilterOperatorEnum.eq,
+        operator=FilterOperators.eq,
         value="2021-01-01 00:00"
     )
     filter = validate_filter_values(filter, Timeseries)
@@ -184,7 +184,7 @@ def test_filter_datetime_fails(tmpdir):
         fields = eval.fields.get_timeseries_fields()
         filter = TimeseriesFilter(
             column=fields.value_time,
-            operator=FilterOperatorEnum.eq,
+            operator=FilterOperators.eq,
             value="10"
         )
         validate_filter_values(filter, Timeseries)
@@ -197,7 +197,7 @@ def test_filter_in_str_fails(tmpdir):
         fields = eval.fields.get_timeseries_fields()
         filter = TimeseriesFilter(
             column=fields.configuration,
-            operator=FilterOperatorEnum.isin,
+            operator=FilterOperators.isin,
             value="10"
         )
         validate_filter_values(filter, Timeseries)

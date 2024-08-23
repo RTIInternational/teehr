@@ -28,7 +28,7 @@ from teehr.models.dataset.table_enums import (
 )
 
 
-class FilterOperatorEnum(StrEnum):
+class FilterOperators(StrEnum):
     """Filter symbols."""
 
     eq = "="
@@ -70,7 +70,7 @@ class ConfigurationFilter(FilterBaseModel):
     """Configuration filter model."""
 
     column: ConfigurationFields
-    operator: FilterOperatorEnum
+    operator: FilterOperators
     value: Union[str, List[str]]
 
 
@@ -78,7 +78,7 @@ class UnitFilter(FilterBaseModel):
     """Unit filter model."""
 
     column: UnitFields
-    operator: FilterOperatorEnum
+    operator: FilterOperators
     value: Union[str, List[str]]
 
 
@@ -86,7 +86,7 @@ class VariableFilter(FilterBaseModel):
     """Variable filter model."""
 
     column: VariableFields
-    operator: FilterOperatorEnum
+    operator: FilterOperators
     value: Union[str, List[str]]
 
 
@@ -94,7 +94,7 @@ class AttributeFilter(FilterBaseModel):
     """Attribute filter model."""
 
     column: AttributeFields
-    operator: FilterOperatorEnum
+    operator: FilterOperators
     value: Union[str, List[str]]
 
 
@@ -105,7 +105,7 @@ class LocationFilter(FilterBaseModel):
     """
 
     column: LocationFields
-    operator: FilterOperatorEnum
+    operator: FilterOperators
     value: Union[str, List[str]]
 
 
@@ -117,7 +117,7 @@ class LocationAttributeFilter(FilterBaseModel):
     """
 
     column: LocationAttributeFields
-    operator: FilterOperatorEnum
+    operator: FilterOperators
     value: Union[str, List[str]]
 
 
@@ -125,7 +125,7 @@ class LocationCrosswalkFilter(FilterBaseModel):
     """Location crosswalk filter model."""
 
     column: LocationCrosswalkFields
-    operator: FilterOperatorEnum
+    operator: FilterOperators
     value: Union[str, List[str]]
 
 
@@ -133,7 +133,7 @@ class TimeseriesFilter(FilterBaseModel):
     """Timeseries filter model."""
 
     column: TimeseriesFields
-    operator: FilterOperatorEnum
+    operator: FilterOperators
     value: Union[
         str, int, float, datetime, List[Union[str, int, float, datetime]]
     ]
@@ -143,7 +143,7 @@ class JoinedTimeseriesFilter(FilterBaseModel):
     """Joined timeseries filter model."""
 
     column: JoinedTimeseriesFields
-    operator: FilterOperatorEnum
+    operator: FilterOperators
     value: Union[
         str, int, float, datetime, List[Union[str, int, float, datetime]]
     ]

@@ -34,7 +34,7 @@ def get_location_fields() -> LocationFields:
     logger.debug("Getting location fields.")
     fields_list = Location.get_field_names()
     return LocationFields(
-        "LocationFieldEnum",
+        "LocationFields",
         {field: field for field in fields_list}
     )
 
@@ -44,7 +44,7 @@ def get_configuration_fields() -> ConfigurationFields:
     logger.debug("Getting configuration fields.")
     fields_list = Configuration.get_field_names()
     return ConfigurationFields(
-        "ConfigurationFieldEnum",
+        "ConfigurationFields",
         {field: field for field in fields_list}
     )
 
@@ -54,7 +54,7 @@ def get_unit_fields() -> UnitFields:
     logger.debug("Getting unit fields.")
     fields_list = Unit.get_field_names()
     return UnitFields(
-        "UnitFieldEnum",
+        "UnitFields",
         {field: field for field in fields_list}
     )
 
@@ -64,7 +64,7 @@ def get_variable_fields() -> VariableFields:
     logger.debug("Getting variable fields.")
     fields_list = Variable.get_field_names()
     return VariableFields(
-        "VariableFieldEnum",
+        "VariableFields",
         {field: field for field in fields_list}
     )
 
@@ -74,7 +74,7 @@ def get_attribute_fields() -> AttributeFields:
     logger.debug("Getting attribute fields.")
     field_list = Attribute.get_field_names()
     return AttributeFields(
-        "AttributeFieldEnum",
+        "AttributeFields",
         {field: field for field in field_list}
     )
 
@@ -84,7 +84,7 @@ def get_location_attribute_fields() -> LocationAttributeFields:
     logger.debug("Getting location attribute fields.")
     field_list = LocationAttribute.get_field_names()
     return LocationAttributeFields(
-        "LocationAttributeFieldEnum",
+        "LocationAttributeFields",
         {field: field for field in field_list}
     )
 
@@ -94,7 +94,7 @@ def get_location_crosswalk_fields() -> LocationCrosswalkFields:
     logger.debug("Getting location crosswalk fields.")
     field_list = LocationCrosswalk.get_field_names()
     return LocationCrosswalkFields(
-        "LocationCrosswalkFieldEnum",
+        "LocationCrosswalkFields",
         {field: field for field in field_list}
     )
 
@@ -104,7 +104,7 @@ def get_timeseries_fields() -> TimeseriesFields:
     logger.debug("Getting timeseries fields.")
     field_list = Timeseries.get_field_names()
     return TimeseriesFields(
-        "TimeseriesFieldEnum",
+        "TimeseriesFields",
         {field: field for field in field_list}
     )
 
@@ -126,6 +126,6 @@ def get_joined_timeseries_fields(
         schema = get_spark_schema(spark, joined_timeseries_dir)
         fields_list = [field.name for field in schema.fields]
         return JoinedTimeseriesFields(
-            "JoinedTimeseriesFieldEnum",
+            "JoinedTimeseriesFields",
             {field: field for field in fields_list}
         )

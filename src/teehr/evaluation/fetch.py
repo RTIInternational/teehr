@@ -33,7 +33,7 @@ from teehr.models.fetching.utils import (
 )
 from teehr.models.dataset.filters import (
     LocationCrosswalkFilter,
-    FilterOperatorEnum
+    FilterOperators
 )
 from teehr.fetching.const import (
     USGS_CONFIGURATION_NAME,
@@ -88,7 +88,7 @@ class Fetch:
         lcw_filter = LocationCrosswalkFilter.model_validate(
             {
                 "column": lcw_fields.primary_location_id,
-                "operator": FilterOperatorEnum.isin,
+                "operator": FilterOperators.isin,
                 "value": primary_location_ids
             }
         )
