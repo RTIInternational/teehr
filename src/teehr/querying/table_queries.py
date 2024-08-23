@@ -14,7 +14,7 @@ from teehr.querying.utils import (
     group_df,
     join_locations_geometry
 )
-from teehr.models.metrics.metrics import MetricsBasemodel
+from teehr.models.metrics.metrics_models import MetricsBasemodel
 from teehr.models.dataset.table_models import (
     Configuration,
     Unit,

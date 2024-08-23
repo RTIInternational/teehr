@@ -8,8 +8,8 @@ import pandas as pd
 import geopandas as gpd
 
 from teehr.models.dataset.filters import JoinedTimeseriesFilter
-# from teehr.models.metrics.metrics import Bootstrap
-from teehr.metrics.bootstrappers import Bootstrappers
+from teehr.models.metrics.bootstrap_models import Bootstrappers
+# from teehr.metrics.bootstrappers import Bootstrappers
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
 JOINED_TIMESERIES_FILEPATH = Path(
@@ -76,7 +76,8 @@ def test_metrics_filter_and_geometry(tmpdir):
     # p = df["primary_value"]
     # s = df["secondary_value"]
 
-    boot = Bootstrappers.CircularBlock()
+    # boot = Bootstrappers.CircularBlock()
+    boot = Bootstrappers.Stationary()
 
     # kge = Metrics.KlingGuptaEfficiency()
 

@@ -1,14 +1,7 @@
-"""Contains UDFs for use in Spark queries."""
+"""Contains UDFs for metric calculations for use in Spark queries."""
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-
-# from pyspark.sql import functions as F
-# from pyspark.sql import Column
-
-# def mean_wrapper(p: pd.Series) -> float:
-#     """Wrapper for mean function."""
-#     return F.mean(F.col(p))
 
 
 def primary_count(p: pd.Series) -> float:
