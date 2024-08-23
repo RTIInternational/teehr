@@ -1,9 +1,13 @@
 """Test evaluation class."""
-from teehr import Evaluation, Metrics, Bootstrap
+from teehr import Evaluation, Metrics
 from teehr import Operators as ops
 from pathlib import Path
 import shutil
 import tempfile
+import pandas as pd
+import geopandas as gpd
+
+from teehr.models.dataset.filters import JoinedTimeseriesFilter
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
 JOINED_TIMESERIES_FILEPATH = Path(
@@ -13,7 +17,7 @@ JOINED_TIMESERIES_FILEPATH = Path(
 )
 
 
-def test_get_metrics(tmpdir):
+def test_get_all_metrics(tmpdir):
     """Test get_metrics method."""
     # Define the evaluation object.
     eval = Evaluation(dir_path=tmpdir)
@@ -25,47 +29,91 @@ def test_get_metrics(tmpdir):
         Path(eval.joined_timeseries_dir, JOINED_TIMESERIES_FILEPATH.name)
     )
 
+    # Test all the metrics.
+    include_all_metrics = [
+        func() for func in Metrics.__dict__.values() if callable(func)
+    ]
+
+    # Get the currently available fields to use in the query.
+    flds = eval.fields.get_joined_timeseries_fields()
+
+    metrics_df = eval.query.get_metrics(
+        include_metrics=include_all_metrics,
+        group_by=[flds.primary_location_id],
+        order_by=[flds.primary_location_id],
+        include_geometry=False
+    )
+
+    assert isinstance(metrics_df, pd.DataFrame)
+    assert metrics_df.index.size == 2
+    assert metrics_df.columns.size == 33
+
+
+def test_metrics_filter_and_geometry(tmpdir):
+    """Test get_metrics method with filter and geometry."""
+    # Define the evaluation object.
+    eval = Evaluation(dir_path=tmpdir)
+    eval.clone_template()
+
+    # Copy in joined timeseries file.
+    shutil.copy(
+        JOINED_TIMESERIES_FILEPATH,
+        Path(eval.joined_timeseries_dir, JOINED_TIMESERIES_FILEPATH.name)
+    )
+    # Copy in the locations file.
+    shutil.copy(
+        Path(TEST_STUDY_DATA_DIR, "geo", "gages.parquet"),
+        Path(eval.locations_dir, "gages.parquet")
+    )
+
     # Define the metrics to include.
-    boot = Bootstrap(method="bias_corrected", num_samples=100)
-    kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
-    include_metrics = [kge, Metrics.RootMeanSquareError()]
+    # boot = Bootstrap(method="bias_corrected", num_samples=100)
+
+    kge = Metrics.KlingGuptaEfficiency()
+    primary_avg = Metrics.PrimaryAverage()
+    mvtd = Metrics.MaxValueTimeDelta()
+    pmvt = Metrics.PrimaryMaxValueTime()
+
+    include_metrics = [pmvt, mvtd, primary_avg, kge]
 
     # Get the currently available fields to use in the query.
     flds = eval.fields.get_joined_timeseries_fields()
 
     # Define some filters.
     filters = [
-        {
-            "column": flds.primary_location_id,
-            "operator": ops.eq,
-            "value": "gage-A",
-        },
-        {
-            "column": flds.reference_time,
-            "operator": ops.eq,
-            "value": "2022-01-01 00:00:00",
-        }
+        JoinedTimeseriesFilter(
+            column=flds.primary_location_id,
+            operator=ops.eq,
+            value="gage-A"
+        )
     ]
 
-    eval.get_metrics(
+    metrics_df = eval.query.get_metrics(
+        include_metrics=include_metrics,
         group_by=[flds.primary_location_id],
         order_by=[flds.primary_location_id],
-        include_metrics=include_metrics,
         filters=filters,
-        include_geometry=True,
-        return_query=False,
+        include_geometry=True
     )
 
-    pass
+    assert isinstance(metrics_df, gpd.GeoDataFrame)
+    assert metrics_df.index.size == 1
+    assert metrics_df.columns.size == 6
 
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_get_metrics(
+        test_get_all_metrics(
             tempfile.mkdtemp(
                 prefix="1-",
+                dir=tempdir
+            )
+        )
+        test_metrics_filter_and_geometry(
+            tempfile.mkdtemp(
+                prefix="2-",
                 dir=tempdir
             )
         )

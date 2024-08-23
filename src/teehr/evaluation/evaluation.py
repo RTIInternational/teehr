@@ -14,7 +14,6 @@ from teehr.loading.joined_timeseries import (
     create_joined_timeseries_dataset,
 )
 import teehr.const as const
-from teehr.models.metrics.metrics import MetricsBasemodel
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.load import Load
 from teehr.evaluation.query import Query
@@ -149,13 +148,6 @@ class Evaluation:
         """
         pass
 
-    def get_timeseries() -> pd.DataFrame:
-        """Get timeseries data.
-
-        Includes retrieving data and metadata.
-        """
-        pass
-
     def create_joined_timeseries(self, execute_udf: bool = False):
         """Create joined timeseries.
 
@@ -170,26 +162,3 @@ class Evaluation:
             self.scripts_dir,
             execute_udf,
         )
-
-    def get_metrics(
-        self,
-        group_by: List[Union[str, Enum]],
-        order_by: List[Union[str, Enum]],
-        include_metrics: Union[List[MetricsBasemodel], str],
-        filters: Union[List[dict], None] = None,
-        include_geometry: bool = False,
-        return_query: bool = False,
-    ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
-        """Get metrics data.
-
-        Includes retrieving data and metadata.
-        """
-        logger.info("Calculating performance metrics.")
-        pass
-
-    def get_timeseries_chars():
-        """Get timeseries characteristics.
-
-        Includes retrieving data and metadata.
-        """
-        pass
