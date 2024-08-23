@@ -1,6 +1,5 @@
 """Functions to query the joined timeseries data."""
 import logging
-import logging
 from typing import Union, List
 from pathlib import Path
 from pyspark.sql import SparkSession
@@ -9,12 +8,8 @@ import pandas as pd
 
 from teehr.querying.filter_format import apply_filters, validate_filter_values
 from teehr.querying.metrics_format import apply_aggregation_metrics
-from teehr.querying.metrics_format import apply_aggregation_metrics
 from teehr.querying.utils import (
     order_df,
-    df_to_gdf,
-    group_df,
-    join_locations_geometry
     df_to_gdf,
     group_df,
     join_locations_geometry
