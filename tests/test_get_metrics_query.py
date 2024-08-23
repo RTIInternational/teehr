@@ -1,5 +1,6 @@
 """Test evaluation class."""
 from teehr import Evaluation, Metrics
+from teehr import Evaluation, Metrics
 from teehr import Operators as ops
 from pathlib import Path
 import shutil
@@ -20,6 +21,7 @@ JOINED_TIMESERIES_FILEPATH = Path(
 
 
 def test_get_all_metrics(tmpdir):
+def test_get_all_metrics(tmpdir):
     """Test get_metrics method."""
     # Define the evaluation object.
     eval = Evaluation(dir_path=tmpdir)
@@ -29,6 +31,43 @@ def test_get_all_metrics(tmpdir):
     shutil.copy(
         JOINED_TIMESERIES_FILEPATH,
         Path(eval.joined_timeseries_dir, JOINED_TIMESERIES_FILEPATH.name)
+    )
+
+    # Test all the metrics.
+    include_all_metrics = [
+        func() for func in Metrics.__dict__.values() if callable(func)
+    ]
+
+    # Get the currently available fields to use in the query.
+    flds = eval.fields.get_joined_timeseries_fields()
+
+    metrics_df = eval.query.get_metrics(
+        include_metrics=include_all_metrics,
+        group_by=[flds.primary_location_id],
+        order_by=[flds.primary_location_id],
+        include_geometry=False
+    )
+
+    assert isinstance(metrics_df, pd.DataFrame)
+    assert metrics_df.index.size == 2
+    assert metrics_df.columns.size == 33
+
+
+def test_metrics_filter_and_geometry(tmpdir):
+    """Test get_metrics method with filter and geometry."""
+    # Define the evaluation object.
+    eval = Evaluation(dir_path=tmpdir)
+    eval.clone_template()
+
+    # Copy in joined timeseries file.
+    shutil.copy(
+        JOINED_TIMESERIES_FILEPATH,
+        Path(eval.joined_timeseries_dir, JOINED_TIMESERIES_FILEPATH.name)
+    )
+    # Copy in the locations file.
+    shutil.copy(
+        Path(TEST_STUDY_DATA_DIR, "geo", "gages.parquet"),
+        Path(eval.locations_dir, "gages.parquet")
     )
 
     # Test all the metrics.
