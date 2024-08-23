@@ -9,7 +9,7 @@ from arch.bootstrap import (
 )
 
 # from teehr.models.metrics.metrics_models import MetricsBasemodel  # circular
-import teehr.metrics.bootstrap_classes as boots
+from teehr.metrics.gumboots_bootstrap import GumBootsBootstrap
 
 
 # NOTE: All UDFs need to return the same signature.
@@ -49,17 +49,20 @@ def create_circularblock_udf(model: Any) -> Callable:
 
 def create_gumboots_udf(model: Any) -> Callable:
     """Create the GumBoots bootstrap UDF."""
-    def bootstrap_udf(p: pd.Series, s: pd.Series, v: pd.Series) -> Dict:
+    def bootstrap_udf(p: pd.Series, s: pd.Series) -> Dict:
         """Bootstrap UDF."""
-        bs = boots.GumBootsBootstrap(
+        bs = GumBootsBootstrap(
             model.bootstrap.block_size,
             p,
             s,
-            v,
-            model.bootstrap.seed,
-            model.bootstrap.random_state
+            seed=model.bootstrap.seed,
+            random_state=model.bootstrap.random_state
         )
-        results = bs.apply(model.func, model.bootstrap.reps)
+        results = bs.apply(
+            model.func,
+            model.bootstrap.reps,
+            model.bootstrap.time_field_name
+        )
         return _unpack_bootstrap_results(
             model.output_field_name,
             results,

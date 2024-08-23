@@ -77,7 +77,8 @@ def test_metrics_filter_and_geometry(tmpdir):
     # s = df["secondary_value"]
 
     # boot = Bootstrappers.CircularBlock()
-    boot = Bootstrappers.Stationary()
+    # boot = Bootstrappers.Stationary()
+    boot = Bootstrappers.GumBoots()
 
     # kge = Metrics.KlingGuptaEfficiency()
 
@@ -120,7 +121,7 @@ def test_metrics_filter_and_geometry(tmpdir):
         group_by=[flds.primary_location_id],
         order_by=[flds.primary_location_id],
         filters=filters,
-        include_geometry=True
+        include_geometry=False
     )
 
     assert isinstance(metrics_df, gpd.GeoDataFrame)

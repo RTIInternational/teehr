@@ -35,27 +35,15 @@ def apply_aggregation_metrics(
             logger.debug(f"Applying metric: {alias} with bootstrapping")
             func_pd = pandas_udf(
                 model.bootstrap.create_func(model),
-                T.MapType(T.StringType(), T.FloatType())  # is this affected by number of quantiles?
+                T.MapType(T.StringType(), T.FloatType())
             )
-            if model.bootstrap.additional_fields:
-                func_list.append(
-                    func_pd(
-                        *model.input_field_names.extend(
-                            model.bootstrap.additional_fields
-                        )
-                    ).alias(alias)
-                )
-            else:
-                func_list.append(
-                    func_pd(*model.input_field_names).alias(alias)
-                )
         else:
             logger.debug(f"Applying metric: {alias}")
             func_pd = pandas_udf(model.func, model.attrs["return_type"])
 
-            func_list.append(
-                func_pd(*model.input_field_names).alias(alias)
-            )
+        func_list.append(
+            func_pd(*model.input_field_names).alias(alias)
+        )
 
         # Collect the metric attributes here and attach them to the DataFrame?
 

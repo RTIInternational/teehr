@@ -1,5 +1,5 @@
 """Classes for bootstrapping sampling methods."""
-from typing import Union, Callable, List
+from typing import Callable, List
 
 from arch.typing import ArrayLike
 from numpy.random import RandomState
@@ -31,6 +31,7 @@ class GumBootsModel(BootstrapBasemodel):
     create_func: Callable = bootstrap_udfs.create_gumboots_udf
     reps: int = 1000
     seed: int = 42
+    block_size: int = 365
     random_state: RandomState | None = None
     quantiles: List[float] = [0.05, 0.5, 0.95]
     args: ArrayLike | None = []
@@ -40,8 +41,8 @@ class GumBootsModel(BootstrapBasemodel):
     # endYear = None,
     # minDays = 100,
     # minYears = 10
-    additional_fields: Union[List[JoinedTimeseriesFields], None] = Field(
-        default=["value_time"]
+    time_field_name: JoinedTimeseriesFields = Field(
+        default="value_time"
     )
 
 
@@ -54,7 +55,6 @@ class CircularBlockModel(BootstrapBasemodel):
     reps: int = 1000
     block_size: int = 365
     quantiles: List[float] = [0.05, 0.5, 0.95]
-    additional_fields: Union[List[JoinedTimeseriesFields], None] = None
     # args_arch: ArrayLike | None = []  # positional arguments passed to CircularBlockBootstrap.bootstrap  # noqa
     # kwargs_arch: ArrayLike | None = None # keyword arguments passed to CircularBlockBootstrap.bootstrap  # noqa
 
@@ -68,7 +68,6 @@ class StationaryModel(BootstrapBasemodel):
     reps: int = 1000
     block_size: int = 365
     quantiles: List[float] = [0.05, 0.5, 0.95]
-    additional_fields: Union[List[JoinedTimeseriesFields], None] = None
     # args_arch: ArrayLike | None = []  # positional arguments passed to CircularBlockBootstrap.bootstrap  # noqa
     # kwargs_arch: ArrayLike | None = None # keyword arguments passed to CircularBlockBootstrap.bootstrap  # noqa
 
