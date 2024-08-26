@@ -67,38 +67,59 @@ def test_metrics_filter_and_geometry(tmpdir):
         Path(eval.locations_dir, "gages.parquet")
     )
 
-    # TEST:
-    # import pandas as pd
-    # import numpy as np
-
-    # df = pd.read_parquet(JOINED_TIMESERIES_FILEPATH)
-    # p = df["primary_value"]
-    # s = df["secondary_value"]
-
-    # boot = Bootstrappers.CircularBlock()
-    # boot = Bootstrappers.Stationary()
-    boot = Bootstrappers.GumBoots()
-
-    # kge = Metrics.KlingGuptaEfficiency()
-
-    # bs = boot.bootstrapper(365, p, s, seed=1234)
-    # results = bs.apply(kge.func, 1000)
-    # quantiles = (0.05, 0.50, 0.95)
-    # values = np.quantile(results, quantiles)
-    # quantiles = [f"KGE_{str(i)}" for i in quantiles]
-    # d = dict(zip(quantiles,values))
-
-
-    kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
-
-    # END TEST
-
-    # Define the metrics to include.
-
-    # kge = Metrics.KlingGuptaEfficiency()
+    # Define some metrics.
+    kge = Metrics.KlingGuptaEfficiency()
     primary_avg = Metrics.PrimaryAverage()
     mvtd = Metrics.MaxValueTimeDelta()
     pmvt = Metrics.PrimaryMaxValueTime()
+
+    include_metrics = [pmvt, mvtd, primary_avg, kge]
+
+    # Get the currently available fields to use in the query.
+    flds = eval.fields.get_joined_timeseries_fields()
+
+    # Define some filters.
+    filters = [
+        JoinedTimeseriesFilter(
+            column=flds.primary_location_id,
+            operator=ops.eq,
+            value="gage-A"
+        )
+    ]
+
+    metrics_df = eval.query.get_metrics(
+        include_metrics=include_metrics,
+        group_by=[flds.primary_location_id],
+        order_by=[flds.primary_location_id],
+        filters=filters,
+        include_geometry=True
+    )
+
+    assert isinstance(metrics_df, gpd.GeoDataFrame)
+    assert metrics_df.index.size == 1
+    assert metrics_df.columns.size == 6
+
+
+def test_metric_bootstrapping(tmpdir):
+    """Test get_metrics method with filter and geometry."""
+    # Define the evaluation object.
+    eval = Evaluation(dir_path=tmpdir)
+    eval.clone_template()
+
+    # Copy in joined timeseries file.
+    shutil.copy(
+        JOINED_TIMESERIES_FILEPATH,
+        Path(eval.joined_timeseries_dir, JOINED_TIMESERIES_FILEPATH.name)
+    )
+    # Copy in the locations file.
+    shutil.copy(
+        Path(TEST_STUDY_DATA_DIR, "geo", "gages.parquet"),
+        Path(eval.locations_dir, "gages.parquet")
+    )
+
+    # Define a bootstrapper.
+    boot = Bootstrappers.GumBoots()
+    kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
 
     # include_metrics = [pmvt, mvtd, primary_avg, kge]
     include_metrics = [kge]
@@ -125,22 +146,29 @@ def test_metrics_filter_and_geometry(tmpdir):
 
     assert isinstance(metrics_df, gpd.GeoDataFrame)
     assert metrics_df.index.size == 1
-    assert metrics_df.columns.size == 6
+    assert metrics_df.columns.size == 3
+    pass
 
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        # test_get_all_metrics(
-        #     tempfile.mkdtemp(
-        #         prefix="1-",
-        #         dir=tempdir
-        #     )
-        # )
+        test_get_all_metrics(
+            tempfile.mkdtemp(
+                prefix="1-",
+                dir=tempdir
+            )
+        )
         test_metrics_filter_and_geometry(
             tempfile.mkdtemp(
                 prefix="2-",
+                dir=tempdir
+            )
+        )
+        test_metric_bootstrapping(
+            tempfile.mkdtemp(
+                prefix="3-",
                 dir=tempdir
             )
         )

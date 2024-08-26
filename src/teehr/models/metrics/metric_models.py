@@ -13,17 +13,14 @@ except ImportError:  # pragma: no cover
 
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import Field, ConfigDict
-# from teehr.metrics.bootstrappers import GumBoots
 import teehr.models.metrics.metric_attributes as tma
 from teehr.models.metrics.metric_enums import (
     TransformEnum
 )
-from teehr.metrics import metric_udfs as metric_udfs
+from teehr.metrics import metric_funcs as metric_funcs
 from teehr.models.dataset.table_enums import (
     JoinedTimeseriesFields
 )
-# from arch.bootstrap import IIDBootstrap
-from teehr.models.metrics.bootstrap_models import BootstrapBasemodel
 
 
 class MetricsBasemodel(PydanticBaseModel):
@@ -39,10 +36,10 @@ class MetricsBasemodel(PydanticBaseModel):
 class ME(MetricsBasemodel):
     """Mean Error."""
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
+    bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="mean_error")
-    func: Callable = metric_udfs.mean_error
+    func: Callable = metric_funcs.mean_error
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -52,10 +49,10 @@ class ME(MetricsBasemodel):
 class REL_BIAS(MetricsBasemodel):
     """Relative Bias."""
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
+    bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="relative_bias")
-    func: Callable = metric_udfs.relative_bias
+    func: Callable = metric_funcs.relative_bias
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -65,10 +62,10 @@ class REL_BIAS(MetricsBasemodel):
 class MULT_BIAS(MetricsBasemodel):
     """Multiplicative Bias."""
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
+    bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="multiplicative_bias")
-    func: Callable = metric_udfs.multiplicative_bias
+    func: Callable = metric_funcs.multiplicative_bias
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -78,10 +75,10 @@ class MULT_BIAS(MetricsBasemodel):
 class MSE(MetricsBasemodel):
     """Mean Square Error."""
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
+    bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="mean_square_error")
-    func: Callable = metric_udfs.mean_squared_error
+    func: Callable = metric_funcs.mean_squared_error
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -91,10 +88,10 @@ class MSE(MetricsBasemodel):
 class RMSE(MetricsBasemodel):
     """Root Mean Squared Error."""
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
+    bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="root_mean_square_error")
-    func: Callable = metric_udfs.root_mean_squared_error
+    func: Callable = metric_funcs.root_mean_squared_error
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -104,10 +101,10 @@ class RMSE(MetricsBasemodel):
 class MAE(MetricsBasemodel):
     """Mean Absolute Error."""
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
+    bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="mean_absolute_error")
-    func: Callable = metric_udfs.mean_absolute_error
+    func: Callable = metric_funcs.mean_absolute_error
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -117,10 +114,10 @@ class MAE(MetricsBasemodel):
 class REL_MAE(MetricsBasemodel):
     """Relative Mean Absolute Error."""
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
+    bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="mean_absolute_relative_error")
-    func: Callable = metric_udfs.mean_absolute_relative_error
+    func: Callable = metric_funcs.mean_absolute_relative_error
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -130,10 +127,10 @@ class REL_MAE(MetricsBasemodel):
 class PEARSON_R(MetricsBasemodel):
     """Pearson Correlation."""
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
+    bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="pearson_correlation")
-    func: Callable = metric_udfs.pearson_correlation
+    func: Callable = metric_funcs.pearson_correlation
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -143,10 +140,10 @@ class PEARSON_R(MetricsBasemodel):
 class R2(MetricsBasemodel):
     """Coefficient of Determination."""
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
+    bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="r_squared")
-    func: Callable = metric_udfs.r_squared
+    func: Callable = metric_funcs.r_squared
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -156,10 +153,10 @@ class R2(MetricsBasemodel):
 class NSE(MetricsBasemodel):
     """Nash-Sutcliffe Efficiency."""
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
+    bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="nash_sutcliffe_efficiency")
-    func: Callable = metric_udfs.nash_sutcliffe_efficiency
+    func: Callable = metric_funcs.nash_sutcliffe_efficiency
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -169,12 +166,12 @@ class NSE(MetricsBasemodel):
 class NNSE(MetricsBasemodel):
     """Normalized Nash-Sutcliffe Efficiency."""
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
+    bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(
         default="nash_sutcliffe_efficiency_normalized"
     )
-    func: Callable = metric_udfs.nash_sutcliffe_efficiency_normalized
+    func: Callable = metric_funcs.nash_sutcliffe_efficiency_normalized
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -182,12 +179,29 @@ class NNSE(MetricsBasemodel):
 
 
 class KGE(MetricsBasemodel):
-    """Kling-Gupta Efficiency."""
+    """Kling-Gupta Efficiency.
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "kling_gupta_efficiency".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.kling_gupta_efficiency.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
+
+    bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency")
-    func: Callable = metric_udfs.kling_gupta_efficiency  # List of UDFs?
+    func: Callable = metric_funcs.kling_gupta_efficiency  # List of UDFs?
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -197,10 +211,10 @@ class KGE(MetricsBasemodel):
 class KGE_Mod1(MetricsBasemodel):
     """Kling Gupta Efficiency - modified 1 (2012)."""
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
+    bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency_mod1")
-    func: Callable = metric_udfs.kling_gupta_efficiency_mod1
+    func: Callable = metric_funcs.kling_gupta_efficiency_mod1
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -210,10 +224,10 @@ class KGE_Mod1(MetricsBasemodel):
 class KGE_Mod2(MetricsBasemodel):
     """Kling Gupta Efficiency - modified 2 (2021)."""
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
+    bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency_mod2")
-    func: Callable = metric_udfs.kling_gupta_efficiency_mod2
+    func: Callable = metric_funcs.kling_gupta_efficiency_mod2
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -223,10 +237,10 @@ class KGE_Mod2(MetricsBasemodel):
 class SPEARMAN_R(MetricsBasemodel):
     """Spearman Rank Correlation Coefficient."""
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
+    bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="spearman_correlation")
-    func: Callable = metric_udfs.spearman_correlation
+    func: Callable = metric_funcs.spearman_correlation
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -237,7 +251,7 @@ class PRIMARY_COUNT(MetricsBasemodel):
     """Primary Count."""
 
     output_field_name: str = Field(default="primary_count")
-    func: Callable = metric_udfs.primary_count
+    func: Callable = metric_funcs.primary_count
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value"]
     )
@@ -248,7 +262,7 @@ class SECONDARY_COUNT(MetricsBasemodel):
     """Secondary Count."""
 
     output_field_name: str = Field(default="secondary_count")
-    func: Callable = metric_udfs.secondary_count
+    func: Callable = metric_funcs.secondary_count
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["secondary_value"]
     )
@@ -260,7 +274,7 @@ class PRIMARY_MINIMUM(MetricsBasemodel):
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="primary_minimum")
-    func: Callable = metric_udfs.primary_minimum
+    func: Callable = metric_funcs.primary_minimum
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value"]
     )
@@ -272,7 +286,7 @@ class SECONDARY_MINIMUM(MetricsBasemodel):
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="secondary_minimum")
-    func: Callable = metric_udfs.secondary_minimum
+    func: Callable = metric_funcs.secondary_minimum
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["secondary_value"]
     )
@@ -284,7 +298,7 @@ class PRIMARY_MAXIMUM(MetricsBasemodel):
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="primary_maximum")
-    func: Callable = metric_udfs.primary_maximum
+    func: Callable = metric_funcs.primary_maximum
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value"]
     )
@@ -296,7 +310,7 @@ class SECONDARY_MAXIMUM(MetricsBasemodel):
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="secondary_maximum")
-    func: Callable = metric_udfs.secondary_maximum
+    func: Callable = metric_funcs.secondary_maximum
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["secondary_value"]
     )
@@ -308,7 +322,7 @@ class PRIMARY_AVERAGE(MetricsBasemodel):
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="primary_average")
-    func: Callable = metric_udfs.primary_average
+    func: Callable = metric_funcs.primary_average
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value"]
     )
@@ -320,7 +334,7 @@ class SECONDARY_AVERAGE(MetricsBasemodel):
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="secondary_average")
-    func: Callable = metric_udfs.secondary_average
+    func: Callable = metric_funcs.secondary_average
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["secondary_value"]
     )
@@ -332,7 +346,7 @@ class PRIMARY_SUM(MetricsBasemodel):
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="primary_sum")
-    func: Callable = metric_udfs.primary_sum
+    func: Callable = metric_funcs.primary_sum
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value"]
     )
@@ -344,7 +358,7 @@ class SECONDARY_SUM(MetricsBasemodel):
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="secondary_sum")
-    func: Callable = metric_udfs.secondary_sum
+    func: Callable = metric_funcs.secondary_sum
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["secondary_value"]
     )
@@ -354,10 +368,10 @@ class SECONDARY_SUM(MetricsBasemodel):
 class PRIMARY_VARIANCE(MetricsBasemodel):
     """Primary Variance."""
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
+    bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="primary_variance")
-    func: Callable = metric_udfs.primary_variance
+    func: Callable = metric_funcs.primary_variance
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value"]
     )
@@ -367,10 +381,10 @@ class PRIMARY_VARIANCE(MetricsBasemodel):
 class SECONDARY_VARIANCE(MetricsBasemodel):
     """Secondary Variance."""
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
+    bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="secondary_variance")
-    func: Callable = metric_udfs.secondary_variance
+    func: Callable = metric_funcs.secondary_variance
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["secondary_value"]
     )
@@ -382,7 +396,7 @@ class MAX_VALUE_DELTA(MetricsBasemodel):
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="max_value_delta")
-    func: Callable = metric_udfs.max_value_delta
+    func: Callable = metric_funcs.max_value_delta
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -394,7 +408,7 @@ class MAX_VALUE_TIME_DELTA(MetricsBasemodel):
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="max_value_time_delta")
-    func: Callable = metric_udfs.max_value_timedelta
+    func: Callable = metric_funcs.max_value_timedelta
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value", "secondary_value", "value_time"]
     )
@@ -406,7 +420,7 @@ class PRIMARY_MAX_VALUE_TIME(MetricsBasemodel):
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="primary_max_value_time")
-    func: Callable = metric_udfs.primary_max_value_time
+    func: Callable = metric_funcs.primary_max_value_time
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value", "value_time"]
     )
@@ -418,7 +432,7 @@ class SECONDARY_MAX_VALUE_TIME(MetricsBasemodel):
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="secondary_max_value_time")
-    func: Callable = metric_udfs.secondary_max_value_time
+    func: Callable = metric_funcs.secondary_max_value_time
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["secondary_value", "value_time"]
     )
@@ -428,10 +442,10 @@ class SECONDARY_MAX_VALUE_TIME(MetricsBasemodel):
 class ANNUAL_PEAK_RBIAS(MetricsBasemodel):
     """Annual Peak Relative Bias."""
 
-    bootstrap: BootstrapBasemodel = Field(default=None)
+    bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="annual_peak_flow_bias")
-    func: Callable = metric_udfs.annual_peak_relative_bias
+    func: Callable = metric_funcs.annual_peak_relative_bias
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value", "secondary_value", "value_time"]
     )

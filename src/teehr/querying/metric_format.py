@@ -31,7 +31,7 @@ def apply_aggregation_metrics(
         # Get the alias for the metric
         alias = model.attrs["short_name"]
 
-        if model.bootstrap:
+        if "bootstrap" in model.model_dump() and model.bootstrap is not None:
             logger.debug(f"Applying metric: {alias} with bootstrapping")
             func_pd = pandas_udf(
                 model.bootstrap.func(model),

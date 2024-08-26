@@ -1,5 +1,5 @@
-"""Contains UDFs for bootstrap calculations for use in Spark queries."""
-from typing import Dict, Callable, Any
+"""Contains functions for bootstrap calculations for use in Spark queries."""
+from typing import Dict, Callable
 
 import pandas as pd
 import numpy as np
@@ -8,14 +8,14 @@ from arch.bootstrap import (
     CircularBlockBootstrap,
 )
 
-# from teehr.models.metrics.metrics_models import MetricsBasemodel  # circular
+from teehr.models.metrics.metric_models import MetricsBasemodel
 from teehr.metrics.gumboots_bootstrap import GumBootsBootstrap
 
 
-# NOTE: All UDFs need to return the same signature.
+# NOTE: All functions need to return the same signature.
 # What if the user specifies a different number of quantiles??
 # We need some generic way to return the data.
-def _unpack_bootstrap_results(
+def _calculate_quantiles(
     output_field_name: str,
     results: np.ndarray,
     quantiles: list
@@ -27,10 +27,10 @@ def _unpack_bootstrap_results(
     return d
 
 
-def create_circularblock_udf(model: Any) -> Callable:
-    """Create the CircularBlock bootstrap UDF."""
-    def bootstrap_udf(p: pd.Series, s: pd.Series) -> Dict:
-        """Bootstrap UDF."""
+def create_circularblock_func(model: MetricsBasemodel) -> Callable:
+    """Create the CircularBlock bootstrap function."""
+    def bootstrap_func(p: pd.Series, s: pd.Series) -> Dict:
+        """Bootstrap function."""
         bs = CircularBlockBootstrap(
             model.bootstrap.block_size,
             p,
@@ -39,18 +39,18 @@ def create_circularblock_udf(model: Any) -> Callable:
             random_state=model.bootstrap.random_state
         )
         results = bs.apply(model.func, model.bootstrap.reps)
-        return _unpack_bootstrap_results(
+        return _calculate_quantiles(
             model.output_field_name,
             results,
             model.bootstrap.quantiles,
         )
-    return bootstrap_udf
+    return bootstrap_func
 
 
-def create_gumboots_udf(model: Any) -> Callable:
-    """Create the GumBoots bootstrap UDF."""
-    def bootstrap_udf(p: pd.Series, s: pd.Series) -> Dict:
-        """Bootstrap UDF."""
+def create_gumboots_func(model: MetricsBasemodel) -> Callable:
+    """Create the GumBoots bootstrap function."""
+    def bootstrap_func(p: pd.Series, s: pd.Series) -> Dict:
+        """Bootstrap function."""
         bs = GumBootsBootstrap(
             model.bootstrap.block_size,
             p,
@@ -63,18 +63,18 @@ def create_gumboots_udf(model: Any) -> Callable:
             model.bootstrap.reps,
             model.bootstrap.time_field_name
         )
-        return _unpack_bootstrap_results(
+        return _calculate_quantiles(
             model.output_field_name,
             results,
             model.bootstrap.quantiles,
         )
-    return bootstrap_udf
+    return bootstrap_func
 
 
-def create_stationary_udf(model: Any) -> Callable:
-    """Create the Stationary bootstrap UDF."""
-    def bootstrap_udf(p: pd.Series, s: pd.Series) -> Dict:
-        """Bootstrap UDF."""
+def create_stationary_func(model: MetricsBasemodel) -> Callable:
+    """Create the Stationary bootstrap function."""
+    def bootstrap_func(p: pd.Series, s: pd.Series) -> Dict:
+        """Bootstrap function."""
         bs = StationaryBootstrap(
             model.bootstrap.block_size,
             p,
@@ -83,9 +83,9 @@ def create_stationary_udf(model: Any) -> Callable:
             random_state=model.bootstrap.random_state
         )
         results = bs.apply(model.func, model.bootstrap.reps)
-        return _unpack_bootstrap_results(
+        return _calculate_quantiles(
             model.output_field_name,
             results,
             model.bootstrap.quantiles,
         )
-    return bootstrap_udf
+    return bootstrap_func

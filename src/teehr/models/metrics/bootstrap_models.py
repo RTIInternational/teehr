@@ -3,32 +3,21 @@ from typing import Callable, List
 
 from arch.typing import ArrayLike
 from numpy.random import RandomState
+from pydantic import Field
 
-from pydantic import BaseModel as PydanticBaseModel
-from pydantic import ConfigDict, Field
-
-import teehr.metrics.bootstrap_udfs as bootstrap_udfs
+import teehr.metrics.bootstrap_funcs as bootstrap_funcs
 from teehr.models.dataset.table_enums import (
     JoinedTimeseriesFields
 )
-
-
-class BootstrapBasemodel(PydanticBaseModel):
-    """Bootstrap Basemodel configuration."""
-
-    model_config = ConfigDict(
-        arbitrary_types_allowed=True,
-        validate_assignment=True,
-        # extra='forbid'  # raise an error if extra fields are passed
-    )
+from teehr.models.metrics.metric_models import MetricsBasemodel
 
 
 # TODO: Extend an abstract base class for bootstrapping classes to ensure
 # that the necessary fields are included?  For Metrics too?
-class GumBootsModel(BootstrapBasemodel):
+class GumBootsModel(MetricsBasemodel):
     """Model for GumBoots bootstrapping."""
 
-    func: Callable = bootstrap_udfs.create_gumboots_udf
+    func: Callable = bootstrap_funcs.create_gumboots_func
     reps: int = 1000
     seed: int = 42
     block_size: int = 365
@@ -46,10 +35,10 @@ class GumBootsModel(BootstrapBasemodel):
     )
 
 
-class CircularBlockModel(BootstrapBasemodel):
+class CircularBlockModel(MetricsBasemodel):
     """Model for arch CircularBlock bootstrapping."""
 
-    func: Callable = bootstrap_udfs.create_circularblock_udf
+    func: Callable = bootstrap_funcs.create_circularblock_func
     seed: int = 42
     random_state: RandomState | None = None
     reps: int = 1000
@@ -59,10 +48,10 @@ class CircularBlockModel(BootstrapBasemodel):
     # kwargs_arch: ArrayLike | None = None # keyword arguments passed to CircularBlockBootstrap.bootstrap  # noqa
 
 
-class StationaryModel(BootstrapBasemodel):
+class StationaryModel(MetricsBasemodel):
     """Model for arch Stationary bootstrapping."""
 
-    func: Callable = bootstrap_udfs.create_stationary_udf
+    func: Callable = bootstrap_funcs.create_stationary_func
     seed: int = 42
     random_state: RandomState | None = None
     reps: int = 1000
