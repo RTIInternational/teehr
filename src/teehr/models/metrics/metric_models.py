@@ -34,7 +34,25 @@ class MetricsBasemodel(PydanticBaseModel):
 
 
 class ME(MetricsBasemodel):
-    """Mean Error."""
+    """Mean Error.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default
+        "mean_error".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.mean_error.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
@@ -47,7 +65,25 @@ class ME(MetricsBasemodel):
 
 
 class REL_BIAS(MetricsBasemodel):
-    """Relative Bias."""
+    """Relative Bias.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default
+        "relative_bias".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.relative_bias.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
@@ -60,7 +96,25 @@ class REL_BIAS(MetricsBasemodel):
 
 
 class MULT_BIAS(MetricsBasemodel):
-    """Multiplicative Bias."""
+    """Multiplicative Bias.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default
+        "multiplicative_bias".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.multiplicative_bias.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
@@ -73,7 +127,25 @@ class MULT_BIAS(MetricsBasemodel):
 
 
 class MSE(MetricsBasemodel):
-    """Mean Square Error."""
+    """Mean Square Error.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default
+        "mean_squared_error".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.mean_squared_error.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
@@ -86,7 +158,25 @@ class MSE(MetricsBasemodel):
 
 
 class RMSE(MetricsBasemodel):
-    """Root Mean Squared Error."""
+    """Root Mean Squared Error.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default
+        "root_mean_square_error".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.root_mean_square_error.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
@@ -99,7 +189,25 @@ class RMSE(MetricsBasemodel):
 
 
 class MAE(MetricsBasemodel):
-    """Mean Absolute Error."""
+    """Mean Absolute Error.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default
+        "mean_absolute_error".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.mean_absolute_error.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
@@ -112,7 +220,25 @@ class MAE(MetricsBasemodel):
 
 
 class REL_MAE(MetricsBasemodel):
-    """Relative Mean Absolute Error."""
+    """Relative Mean Absolute Error.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default
+        "mean_absolute_relative_error".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.mean_absolute_relative_error.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
@@ -125,7 +251,25 @@ class REL_MAE(MetricsBasemodel):
 
 
 class PEARSON_R(MetricsBasemodel):
-    """Pearson Correlation."""
+    """Pearson Correlation.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default
+        "pearson_correlation".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.pearson_correlation.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
@@ -138,7 +282,25 @@ class PEARSON_R(MetricsBasemodel):
 
 
 class R2(MetricsBasemodel):
-    """Coefficient of Determination."""
+    """Coefficient of Determination.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default
+        "r_squared".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.r_squared.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
@@ -151,7 +313,25 @@ class R2(MetricsBasemodel):
 
 
 class NSE(MetricsBasemodel):
-    """Nash-Sutcliffe Efficiency."""
+    """Nash-Sutcliffe Efficiency.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default
+        "nash_sutcliffe_efficiency".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.nash_sutcliffe_efficiency.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
@@ -164,7 +344,25 @@ class NSE(MetricsBasemodel):
 
 
 class NNSE(MetricsBasemodel):
-    """Normalized Nash-Sutcliffe Efficiency."""
+    """Normalized Nash-Sutcliffe Efficiency.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default
+        "nash_sutcliffe_efficiency_normalized".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.nash_sutcliffe_efficiency_normalized.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
@@ -201,7 +399,7 @@ class KGE(MetricsBasemodel):
     bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency")
-    func: Callable = metric_funcs.kling_gupta_efficiency  # List of UDFs?
+    func: Callable = metric_funcs.kling_gupta_efficiency
     input_field_names: List[JoinedTimeseriesFields] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -209,7 +407,24 @@ class KGE(MetricsBasemodel):
 
 
 class KGE_Mod1(MetricsBasemodel):
-    """Kling Gupta Efficiency - modified 1 (2012)."""
+    """Kling-Gupta Efficiency - modified 1 (2012).
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "kling_gupta_efficiency_mod1".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.kling_gupta_efficiency_mod1.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
@@ -222,7 +437,24 @@ class KGE_Mod1(MetricsBasemodel):
 
 
 class KGE_Mod2(MetricsBasemodel):
-    """Kling Gupta Efficiency - modified 2 (2021)."""
+    """Kling-Gupta Efficiency - modified 2 (2021).
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "kling_gupta_efficiency_mod2".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.kling_gupta_efficiency_mod2.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
@@ -235,7 +467,24 @@ class KGE_Mod2(MetricsBasemodel):
 
 
 class SPEARMAN_R(MetricsBasemodel):
-    """Spearman Rank Correlation Coefficient."""
+    """Spearman Rank Correlation Coefficient.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "spearman_correlation".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.spearman_correlation.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
@@ -248,7 +497,24 @@ class SPEARMAN_R(MetricsBasemodel):
 
 
 class PRIMARY_COUNT(MetricsBasemodel):
-    """Primary Count."""
+    """Primary Count.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "primary_count".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.primary_count.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     output_field_name: str = Field(default="primary_count")
     func: Callable = metric_funcs.primary_count
@@ -259,7 +525,24 @@ class PRIMARY_COUNT(MetricsBasemodel):
 
 
 class SECONDARY_COUNT(MetricsBasemodel):
-    """Secondary Count."""
+    """Secondary Count.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "secondary_count".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.secondary_count.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     output_field_name: str = Field(default="secondary_count")
     func: Callable = metric_funcs.secondary_count
@@ -270,7 +553,24 @@ class SECONDARY_COUNT(MetricsBasemodel):
 
 
 class PRIMARY_MINIMUM(MetricsBasemodel):
-    """Primary Minimum."""
+    """Primary Minimum.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "primary_minimum".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.primary_minimum.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="primary_minimum")
@@ -282,7 +582,24 @@ class PRIMARY_MINIMUM(MetricsBasemodel):
 
 
 class SECONDARY_MINIMUM(MetricsBasemodel):
-    """Secondary Minimum."""
+    """Secondary Minimum.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "secondary_minimum".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.secondary_minimum.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="secondary_minimum")
@@ -294,7 +611,24 @@ class SECONDARY_MINIMUM(MetricsBasemodel):
 
 
 class PRIMARY_MAXIMUM(MetricsBasemodel):
-    """Primary Maximum."""
+    """Primary Maximum.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "primary_maximum".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.primary_maximum.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="primary_maximum")
@@ -306,7 +640,24 @@ class PRIMARY_MAXIMUM(MetricsBasemodel):
 
 
 class SECONDARY_MAXIMUM(MetricsBasemodel):
-    """Secondary Maximum."""
+    """Secondary Maximum.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "secondary_maximum".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.secondary_maximum.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="secondary_maximum")
@@ -318,7 +669,24 @@ class SECONDARY_MAXIMUM(MetricsBasemodel):
 
 
 class PRIMARY_AVERAGE(MetricsBasemodel):
-    """Primary Average."""
+    """Primary Average.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "primary_average".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.primary_average.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="primary_average")
@@ -330,7 +698,24 @@ class PRIMARY_AVERAGE(MetricsBasemodel):
 
 
 class SECONDARY_AVERAGE(MetricsBasemodel):
-    """Secondary Average."""
+    """Secondary Average.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "secondary_average".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.secondary_average.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="secondary_average")
@@ -342,7 +727,24 @@ class SECONDARY_AVERAGE(MetricsBasemodel):
 
 
 class PRIMARY_SUM(MetricsBasemodel):
-    """Primary Sum."""
+    """Primary Sum.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "primary_sum".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.primary_sum.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="primary_sum")
@@ -354,7 +756,24 @@ class PRIMARY_SUM(MetricsBasemodel):
 
 
 class SECONDARY_SUM(MetricsBasemodel):
-    """Secondary Sum."""
+    """Secondary Sum.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "secondary_sum".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.secondary_sum.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="secondary_sum")
@@ -366,7 +785,24 @@ class SECONDARY_SUM(MetricsBasemodel):
 
 
 class PRIMARY_VARIANCE(MetricsBasemodel):
-    """Primary Variance."""
+    """Primary Variance.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "primary_variance".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.primary_variance.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
@@ -379,7 +815,24 @@ class PRIMARY_VARIANCE(MetricsBasemodel):
 
 
 class SECONDARY_VARIANCE(MetricsBasemodel):
-    """Secondary Variance."""
+    """Secondary Variance.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "secondary_variance".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.secondary_variance.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
@@ -392,7 +845,24 @@ class SECONDARY_VARIANCE(MetricsBasemodel):
 
 
 class MAX_VALUE_DELTA(MetricsBasemodel):
-    """Max Value Delta."""
+    """Max Value Delta.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "max_value_delta".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.max_value_delta.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="max_value_delta")
@@ -404,7 +874,25 @@ class MAX_VALUE_DELTA(MetricsBasemodel):
 
 
 class MAX_VALUE_TIME_DELTA(MetricsBasemodel):
-    """Max Value Time Delta."""
+    """Max Value Time Delta.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "max_value_timedelta".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.max_value_timedelta.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default
+        ["primary_value", "secondary_value", "value_time"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="max_value_time_delta")
@@ -416,7 +904,24 @@ class MAX_VALUE_TIME_DELTA(MetricsBasemodel):
 
 
 class PRIMARY_MAX_VALUE_TIME(MetricsBasemodel):
-    """Primary Max Value Time."""
+    """Primary Max Value Time.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "primary_max_value_time".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.primary_max_value_time.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="primary_max_value_time")
@@ -428,7 +933,24 @@ class PRIMARY_MAX_VALUE_TIME(MetricsBasemodel):
 
 
 class SECONDARY_MAX_VALUE_TIME(MetricsBasemodel):
-    """Secondary Max Value Time."""
+    """Secondary Max Value Time.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "secondary_max_value_time".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.secondary_max_value_time.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default ["secondary_value", "value_time"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="secondary_max_value_time")
@@ -440,7 +962,25 @@ class SECONDARY_MAX_VALUE_TIME(MetricsBasemodel):
 
 
 class ANNUAL_PEAK_RBIAS(MetricsBasemodel):
-    """Annual Peak Relative Bias."""
+    """Annual Peak Relative Bias..
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "annual_peak_relative_bias".
+    func : Callable
+        The function to apply to the data, by default
+        metric_funcs.annual_peak_relative_bias.
+    input_field_names : List[JoinedTimeseriesFields]
+        The input field names, by default
+        ["primary_value", "secondary_value", "value_time"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
 
     bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
