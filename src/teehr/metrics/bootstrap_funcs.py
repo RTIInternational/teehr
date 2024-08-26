@@ -12,9 +12,6 @@ from teehr.models.metrics.metric_models import MetricsBasemodel
 from teehr.metrics.gumboots_bootstrap import GumBootsBootstrap
 
 
-# NOTE: All functions need to return the same signature.
-# What if the user specifies a different number of quantiles??
-# We need some generic way to return the data.
 def _calculate_quantiles(
     output_field_name: str,
     results: np.ndarray,
