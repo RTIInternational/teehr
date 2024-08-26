@@ -6,7 +6,7 @@ from pyspark.sql import SparkSession
 import geopandas as gpd
 import pandas as pd
 
-from teehr.querying.filter_format import apply_filters, validate_filter_values
+from teehr.querying.filter_format import validate_and_apply_filters
 from teehr.querying.metrics_format import apply_aggregation_metrics
 from teehr.querying.utils import (
     order_df,
@@ -69,8 +69,7 @@ def get_units(
         .load(str(dirpath))
     )
     if filters is not None:
-        validated_filters = validate_filter_values(filters, Unit)
-        units_df = apply_filters(units_df, validated_filters)
+        units_df = validate_and_apply_filters(units_df, filters, Unit, UnitFilter)
 
     if order_by is not None:
         units_df = order_df(units_df, order_by)
@@ -95,8 +94,7 @@ def get_variables(
         .load(str(dirpath))
     )
     if filters is not None:
-        validated_filters = validate_filter_values(filters, Variable)
-        variables_df = apply_filters(variables_df, validated_filters)
+        variables_df - validate_and_apply_filters(variables_df, filters, Variable, VariableFilter)
 
     if order_by is not None:
         variables_df = order_df(variables_df, order_by)
@@ -121,8 +119,7 @@ def get_attributes(
         .load(str(dirpath))
     )
     if filters is not None:
-        validated_filters = validate_filter_values(filters, Attribute)
-        attributes_df = apply_filters(attributes_df, validated_filters)
+        attributes_df = validate_and_apply_filters(attributes_df, filters, Attribute, AttributeFilter)
 
     if order_by is not None:
         attributes_df = order_df(attributes_df, order_by)
@@ -153,8 +150,7 @@ def get_configurations(
         .load(str(dirpath))
     )
     if filters is not None:
-        validated_filters = validate_filter_values(filters, Configuration)
-        configurations_df = apply_filters(configurations_df, validated_filters)
+        configurations_df = validate_and_apply_filters(configurations_df, filters, Configuration, ConfigurationFilter)
 
     if order_by is not None:
         configurations_df = order_df(configurations_df, order_by)
@@ -178,8 +174,7 @@ def get_locations(
         .load(str(dirpath))
     )
     if filters is not None:
-        validated_filters = validate_filter_values(filters, Location)
-        locations_df = apply_filters(locations_df, validated_filters)
+        locations_df = validate_and_apply_filters(locations_df, filters, Location, LocationFilter)
 
     if order_by is not None:
         locations_df = order_df(locations_df, order_by)
@@ -209,9 +204,11 @@ def get_location_attributes(
         .load(str(dirpath))
     )
     if filters is not None:
-        validated_filters = validate_filter_values(filters, LocationAttribute)
-        location_attributes_df = apply_filters(
-            location_attributes_df, validated_filters
+        location_attributes_df = validate_and_apply_filters(
+            location_attributes_df,
+            filters,
+            LocationAttribute,
+            LocationAttributeFilter
         )
 
     if order_by is not None:
@@ -242,9 +239,11 @@ def get_location_crosswalks(
         .load(str(dirpath))
     )
     if filters is not None:
-        validated_filters = validate_filter_values(filters, LocationCrosswalk)
-        location_crosswalks_df = apply_filters(
-            location_crosswalks_df, validated_filters
+        location_crosswalks_df = validate_and_apply_filters(
+            location_crosswalks_df,
+            filters,
+            LocationCrosswalk,
+            LocationCrosswalkFilter
         )
 
     if order_by is not None:
@@ -269,8 +268,12 @@ def get_timeseries(
         .load(str(dirpath))
     )
     if filters is not None:
-        validated_filters = validate_filter_values(filters, Timeseries)
-        timeseries_df = apply_filters(timeseries_df, validated_filters)
+        timeseries_df = validate_and_apply_filters(
+            timeseries_df,
+            filters,
+            Timeseries,
+            TimeseriesFilter
+        )
 
     if order_by is not None:
         timeseries_df = order_df(timeseries_df, order_by)
@@ -301,7 +304,12 @@ def get_joined_timeseries(
     )
     # validated_filters = validate_filter_values(filters, Timeseries)
     if filters is not None:
-        joined_timeseries_df = apply_filters(joined_timeseries_df, filters)
+        joined_timeseries_df = validate_and_apply_filters(
+            joined_timeseries_df,
+            filters,
+            JoinedTimeseriesFilter,
+            validate=False
+        )
 
     if order_by is not None:
         joined_timeseries_df = order_df(joined_timeseries_df, order_by)

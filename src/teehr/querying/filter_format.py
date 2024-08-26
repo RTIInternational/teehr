@@ -6,6 +6,7 @@ from collections.abc import Iterable
 from datetime import datetime
 from typing import List, Union
 import logging
+from pyspark.sql import DataFrame
 
 from teehr.models.dataset.filters import FilterBaseModel
 from teehr.models.dataset.table_models import TableBaseModel
@@ -54,14 +55,14 @@ def format_iterable_value(
         return f"""({",".join([f"'{str(v)}'" for v in values])})"""
 
 
-def format_filter_to_str(
-    filter: FilterBaseModel
+def format_filter(
+    filter: FilterBaseModel,
 ) -> str:
     r"""Return an SQL formatted string for single filter object.
 
     Parameters
     ----------
-    filter : FilterBaseModel
+    filter : str or FilterBaseModel
         A single FilterBaseModel object or a subclass
         of FilterBaseModel.
 
@@ -97,11 +98,53 @@ def format_filter_to_str(
         return f"""{column} {operator} '{str(filter.value)}'"""
 
 
+def validate_filter(
+    filter: FilterBaseModel,
+    model: TableBaseModel
+):
+    """Validate a single model."""
+    if filter.column not in model.model_fields:
+        raise ValueError(f"Filter column not in model fields: {filter}")
+
+    model_field_data_type = model.model_fields[filter.column].annotation
+    logging.debug(
+        f"Model field {filter.column} has type: {model_field_data_type}"
+    )
+
+    # if string or not iterable, make it iterable
+    vals = filter.value
+    value_was_iterable = True
+    if isinstance(vals, str) or not isinstance(vals, Iterable):
+        vals = [vals]
+        value_was_iterable = False
+
+    validate_vals = []
+    for v in vals:
+        logging.debug(f"Validating filter value: {v}")
+        if model_field_data_type == str:
+            validate_vals.append(str(v))
+        elif model_field_data_type == int:
+            validate_vals.append(int(v))
+        elif model_field_data_type == float:
+            validate_vals.append(float(v))
+        elif model_field_data_type == datetime:
+            validate_vals.append(pd.Timestamp(v))
+        else:
+            validate_vals.append(str(v))
+
+    if value_was_iterable:
+        filter.value = validate_vals
+    else:
+        filter.value = validate_vals[0]
+
+    return filter
+
+
 def validate_filter_values(
     filters: Union[FilterBaseModel, List[FilterBaseModel]],
     model: TableBaseModel
 ):
-    """Validate filter values."""
+    """Validate list filter values."""
     filter_was_iterable = True
     if not isinstance(filters, List):
         filters = [filters]
@@ -109,41 +152,7 @@ def validate_filter_values(
 
     validated_filters = []
     for filter in filters:
-        if filter.column not in model.model_fields:
-            raise ValueError(f"Filter column not in model fields: {filter}")
-
-        model_field_data_type = model.model_fields[filter.column].annotation
-        logging.debug(
-            f"Model field {filter.column} has type: {model_field_data_type}"
-        )
-
-        # if string or not iterable, make it iterable
-        vals = filter.value
-        value_was_iterable = True
-        if isinstance(vals, str) or not isinstance(vals, Iterable):
-            vals = [vals]
-            value_was_iterable = False
-
-        validate_vals = []
-        for v in vals:
-            logging.debug(f"Validating filter value: {v}")
-            if model_field_data_type == str:
-                validate_vals.append(str(v))
-            elif model_field_data_type == int:
-                validate_vals.append(int(v))
-            elif model_field_data_type == float:
-                validate_vals.append(float(v))
-            elif model_field_data_type == datetime:
-                validate_vals.append(pd.Timestamp(v))
-            else:
-                validate_vals.append(str(v))
-
-        if value_was_iterable:
-            filter.value = validate_vals
-            validated_filters.append(filter)
-        else:
-            filter.value = validate_vals[0]
-            validated_filters.append(filter)
+        validated_filters.append(validate_filter(filter, model))
 
     if filter_was_iterable:
         return validated_filters
@@ -157,6 +166,36 @@ def apply_filters(df, filters):
         filters = [filters]
 
     for filter in filters:
-        filter_str = format_filter_to_str(filter)
+        filter_str = format_filter(filter)
         df = df.filter(filter_str)
+    return df
+
+
+def validate_and_apply_filters(
+    df: DataFrame,
+    filters: Union[FilterBaseModel, List[FilterBaseModel]],
+    filter_model: FilterBaseModel,
+    table_model: TableBaseModel = None,
+    validate: bool = True
+):
+    """Validate and apply filters."""
+    if isinstance(filters, str):
+        logger.debug(f"Filter {filters} is already string.  Applying as is.")
+        df = df.filter(filters)
+        return df
+
+    if not isinstance(filters, List):
+        logger.debug("Filter is not a list.  Making a list.")
+        filters = [filters]
+
+    for filter in filters:
+        logger.debug(f"Validating and applying {filter}")
+
+        filter = filter_model.model_validate(filter, filter_model)
+
+        if validate:
+            filter = validate_filter(filter, table_model)
+        filter_str = format_filter(filter)
+        df = df.filter(filter_str)
+
     return df

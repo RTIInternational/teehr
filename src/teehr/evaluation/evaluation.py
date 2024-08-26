@@ -18,6 +18,7 @@ from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.load import Load
 from teehr.evaluation.query import Query
 from teehr.evaluation.fields import Fields
+from teehr.evaluation.tables.units import Units
 
 
 logger = logging.getLogger(__name__)
@@ -107,6 +108,10 @@ class Evaluation:
     def fields(self) -> Fields:
         """The load component class."""
         return Fields(self)
+
+    @property
+    def units(self) -> Units:
+        return Units(self)
 
     def enable_logging(self):
         """Enable logging."""

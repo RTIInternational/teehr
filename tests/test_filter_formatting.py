@@ -6,7 +6,7 @@ from teehr.models.dataset.filters import (
     FilterOperators
 )
 from teehr.querying.filter_format import (
-    format_filter_to_str
+    format_filter
 )
 import pandas as pd
 import tempfile
@@ -21,7 +21,7 @@ def test_filter_eq_str(tmpdir):
         operator=FilterOperators.eq,
         value="foo"
     )
-    filter_str = format_filter_to_str(filter)
+    filter_str = format_filter(filter)
     assert filter_str == "variable_name = 'foo'"
 
 
@@ -34,7 +34,7 @@ def test_filter_in_str(tmpdir):
         operator=FilterOperators.isin,
         value=["foo", "bar"]
     )
-    filter_str = format_filter_to_str(filter)
+    filter_str = format_filter(filter)
     assert filter_str == "variable_name in ('foo','bar')"
 
 
@@ -47,7 +47,7 @@ def test_filter_in_str_series(tmpdir):
         operator=FilterOperators.isin,
         value=pd.Series(["foo", "bar"])
     )
-    filter_str = format_filter_to_str(filter)
+    filter_str = format_filter(filter)
     assert filter_str == "variable_name in ('foo','bar')"
 
 
@@ -60,7 +60,7 @@ def test_filter_gt_dt(tmpdir):
         operator=FilterOperators.gt,
         value=datetime(2021, 1, 1)
     )
-    filter_str = format_filter_to_str(filter)
+    filter_str = format_filter(filter)
     assert filter_str == "reference_time > '2021-01-01 00:00:00'"
 
 
@@ -73,7 +73,7 @@ def test_filter_lt_int(tmpdir):
         operator=FilterOperators.lt,
         value=50
     )
-    filter_str = format_filter_to_str(filter)
+    filter_str = format_filter(filter)
     assert filter_str == "value < 50"
 
 
