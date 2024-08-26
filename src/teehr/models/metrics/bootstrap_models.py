@@ -15,7 +15,23 @@ from teehr.models.metrics.metric_models import MetricsBasemodel
 # TODO: Extend an abstract base class for bootstrapping classes to ensure
 # that the necessary fields are included?  For Metrics too?
 class GumBootsModel(MetricsBasemodel):
-    """Model for GumBoots bootstrapping."""
+    """GumBoots bootstrapping.
+
+    Parameters
+    ----------
+    func : Callable
+        The wrapper to generate the bootstrapping function.
+    seed : int
+        The seed for the random number generator.
+    random_state : RandomState, optional
+        The random state for the random number generator.
+    reps : int
+        The number of bootstrap replications.
+    block_size : int
+        The block size for the GumBootsBootstrap.
+    quantiles : List[float]
+        The quantiles to calculate from the bootstrap results
+    """
 
     func: Callable = bootstrap_funcs.create_gumboots_func
     reps: int = 1000
@@ -36,7 +52,23 @@ class GumBootsModel(MetricsBasemodel):
 
 
 class CircularBlockModel(MetricsBasemodel):
-    """Model for arch CircularBlock bootstrapping."""
+    """CircularBlock bootstrapping from the arch package.
+
+    Parameters
+    ----------
+    func : Callable
+        The wrapper to generate the bootstrapping function.
+    seed : int
+        The seed for the random number generator.
+    random_state : RandomState, optional
+        The random state for the random number generator.
+    reps : int
+        The number of bootstrap replications.
+    block_size : int
+        The block size for the CircularBlockBootstrap.
+    quantiles : List[float]
+        The quantiles to calculate from the bootstrap results
+    """
 
     func: Callable = bootstrap_funcs.create_circularblock_func
     seed: int = 42
@@ -49,7 +81,23 @@ class CircularBlockModel(MetricsBasemodel):
 
 
 class StationaryModel(MetricsBasemodel):
-    """Model for arch Stationary bootstrapping."""
+    """Stationary bootstrapping from the arch package.
+
+    Parameters
+    ----------
+    func : Callable
+        The wrapper to generate the bootstrapping function.
+    seed : int
+        The seed for the random number generator.
+    random_state : RandomState, optional
+        The random state for the random number generator.
+    reps : int
+        The number of bootstrap replications.
+    block_size : int
+        The block size for the StationaryBootstrap.
+    quantiles : List[float]
+        The quantiles to calculate from the bootstrap results
+    """
 
     func: Callable = bootstrap_funcs.create_stationary_func
     seed: int = 42

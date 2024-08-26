@@ -121,7 +121,6 @@ def test_metric_bootstrapping(tmpdir):
     boot = Bootstrappers.GumBoots()
     kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
 
-    # include_metrics = [pmvt, mvtd, primary_avg, kge]
     include_metrics = [kge]
 
     # Get the currently available fields to use in the query.
@@ -146,8 +145,7 @@ def test_metric_bootstrapping(tmpdir):
 
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 1
-    # assert metrics_df.columns.size == 3
-    # pass
+    assert metrics_df.columns.size == 2
 
 
 if __name__ == "__main__":
