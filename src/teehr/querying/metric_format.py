@@ -7,7 +7,7 @@ from pyspark.sql import GroupedData
 from pyspark.sql.functions import pandas_udf
 from pyspark.sql import types as T
 
-from teehr.models.metrics.metrics_models import MetricsBasemodel
+from teehr.models.metrics.metric_models import MetricsBasemodel
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ def apply_aggregation_metrics(
         if model.bootstrap:
             logger.debug(f"Applying metric: {alias} with bootstrapping")
             func_pd = pandas_udf(
-                model.bootstrap.create_func(model),
+                model.bootstrap.func(model),
                 T.MapType(T.StringType(), T.FloatType())
             )
         else:

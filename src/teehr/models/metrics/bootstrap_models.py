@@ -28,7 +28,7 @@ class BootstrapBasemodel(PydanticBaseModel):
 class GumBootsModel(BootstrapBasemodel):
     """Model for GumBoots bootstrapping."""
 
-    create_func: Callable = bootstrap_udfs.create_gumboots_udf
+    func: Callable = bootstrap_udfs.create_gumboots_udf
     reps: int = 1000
     seed: int = 42
     block_size: int = 365
@@ -49,7 +49,7 @@ class GumBootsModel(BootstrapBasemodel):
 class CircularBlockModel(BootstrapBasemodel):
     """Model for arch CircularBlock bootstrapping."""
 
-    create_func: Callable = bootstrap_udfs.create_circularblock_udf
+    func: Callable = bootstrap_udfs.create_circularblock_udf
     seed: int = 42
     random_state: RandomState | None = None
     reps: int = 1000
@@ -62,7 +62,7 @@ class CircularBlockModel(BootstrapBasemodel):
 class StationaryModel(BootstrapBasemodel):
     """Model for arch Stationary bootstrapping."""
 
-    create_func: Callable = bootstrap_udfs.create_stationary_udf
+    func: Callable = bootstrap_udfs.create_stationary_udf
     seed: int = 42
     random_state: RandomState | None = None
     reps: int = 1000

@@ -7,14 +7,14 @@ import geopandas as gpd
 import pandas as pd
 
 from teehr.querying.filter_format import apply_filters, validate_filter_values
-from teehr.querying.metrics_format import apply_aggregation_metrics
+from teehr.querying.metric_format import apply_aggregation_metrics
 from teehr.querying.utils import (
     order_df,
     df_to_gdf,
     group_df,
     join_locations_geometry
 )
-from teehr.models.metrics.metrics_models import MetricsBasemodel
+from teehr.models.metrics.metric_models import MetricsBasemodel
 from teehr.models.dataset.table_models import (
     Configuration,
     Unit,

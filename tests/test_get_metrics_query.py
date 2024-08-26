@@ -9,7 +9,6 @@ import geopandas as gpd
 
 from teehr.models.dataset.filters import JoinedTimeseriesFilter
 from teehr.models.metrics.bootstrap_models import Bootstrappers
-# from teehr.metrics.bootstrappers import Bootstrappers
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
 JOINED_TIMESERIES_FILEPATH = Path(
