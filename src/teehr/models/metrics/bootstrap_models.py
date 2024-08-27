@@ -39,6 +39,7 @@ class GumBootsModel(MetricsBasemodel):
     block_size: int = 365
     random_state: RandomState | None = None
     quantiles: List[float] = [0.05, 0.5, 0.95]
+    name: str = Field(default="GumBoots")
     args: ArrayLike | None = []
     kwargs: ArrayLike | None = None
     # waterYearMonth = 10,
@@ -76,6 +77,7 @@ class CircularBlockModel(MetricsBasemodel):
     reps: int = 1000
     block_size: int = 365
     quantiles: List[float] = [0.05, 0.5, 0.95]
+    name: str = Field(default="CircularBlock")
     # args_arch: ArrayLike | None = []  # positional arguments passed to CircularBlockBootstrap.bootstrap  # noqa
     # kwargs_arch: ArrayLike | None = None # keyword arguments passed to CircularBlockBootstrap.bootstrap  # noqa
 
@@ -105,6 +107,7 @@ class StationaryModel(MetricsBasemodel):
     reps: int = 1000
     block_size: int = 365
     quantiles: List[float] = [0.05, 0.5, 0.95]
+    name: str = Field(default="Stationary")
     # args_arch: ArrayLike | None = []  # positional arguments passed to CircularBlockBootstrap.bootstrap  # noqa
     # kwargs_arch: ArrayLike | None = None # keyword arguments passed to CircularBlockBootstrap.bootstrap  # noqa
 

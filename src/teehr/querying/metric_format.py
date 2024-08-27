@@ -32,7 +32,10 @@ def apply_aggregation_metrics(
         alias = model.attrs["short_name"]
 
         if "bootstrap" in model.model_dump() and model.bootstrap is not None:
-            logger.debug(f"Applying metric: {alias} with bootstrapping")
+            logger.debug(
+                f"Applying metric: {alias} with {model.bootstrap.name}"
+                " bootstrapping"
+            )
             func_pd = pandas_udf(
                 model.bootstrap.func(model),
                 T.MapType(T.StringType(), T.FloatType())
@@ -48,6 +51,7 @@ def apply_aggregation_metrics(
         # Collect the metric attributes here and attach them to the DataFrame?
 
     df = df.agg(*func_list)
+
 
     # df.show()
     return df

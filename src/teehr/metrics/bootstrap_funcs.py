@@ -1,5 +1,6 @@
 """Contains functions for bootstrap calculations for use in Spark queries."""
 from typing import Dict, Callable
+import logging
 
 import pandas as pd
 import numpy as np
@@ -10,6 +11,8 @@ from arch.bootstrap import (
 
 from teehr.models.metrics.metric_models import MetricsBasemodel
 from teehr.metrics.gumboots_bootstrap import GumBootsBootstrap
+
+logger = logging.getLogger(__name__)
 
 
 def _calculate_quantiles(
@@ -26,6 +29,8 @@ def _calculate_quantiles(
 
 def create_circularblock_func(model: MetricsBasemodel) -> Callable:
     """Create the CircularBlock bootstrap function."""
+    logger.debug("Building the Circular Block bootstrap func.")
+
     def bootstrap_func(p: pd.Series, s: pd.Series) -> Dict:
         """Bootstrap function."""
         bs = CircularBlockBootstrap(
@@ -46,6 +51,8 @@ def create_circularblock_func(model: MetricsBasemodel) -> Callable:
 
 def create_gumboots_func(model: MetricsBasemodel) -> Callable:
     """Create the GumBoots bootstrap function."""
+    logger.debug("Building the GumBoots bootstrap func.")
+
     def bootstrap_func(p: pd.Series, s: pd.Series) -> Dict:
         """Bootstrap function."""
         bs = GumBootsBootstrap(
@@ -70,6 +77,8 @@ def create_gumboots_func(model: MetricsBasemodel) -> Callable:
 
 def create_stationary_func(model: MetricsBasemodel) -> Callable:
     """Create the Stationary bootstrap function."""
+    logger.debug("Building the Stationary bootstrap func.")
+
     def bootstrap_func(p: pd.Series, s: pd.Series) -> Dict:
         """Bootstrap function."""
         bs = StationaryBootstrap(
