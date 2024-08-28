@@ -20,7 +20,7 @@ def _calculate_quantiles(
     results: np.ndarray,
     quantiles: list
 ) -> Dict:
-    """Unpack the bootstrap results."""
+    """Calculate quantile values of the bootstrap results."""
     values = np.quantile(results, quantiles)
     quantiles = [f"{output_field_name}_{str(i)}" for i in quantiles]
     d = dict(zip(quantiles, values))
@@ -41,11 +41,14 @@ def create_circularblock_func(model: MetricsBasemodel) -> Callable:
             random_state=model.bootstrap.random_state
         )
         results = bs.apply(model.func, model.bootstrap.reps)
-        return _calculate_quantiles(
-            model.output_field_name,
-            results,
-            model.bootstrap.quantiles,
-        )
+        if model.bootstrap.quantiles is not None:
+            return _calculate_quantiles(
+                model.output_field_name,
+                results,
+                model.bootstrap.quantiles,
+            )
+        else:
+            return results.ravel()
     return bootstrap_func
 
 
@@ -67,11 +70,14 @@ def create_gumboots_func(model: MetricsBasemodel) -> Callable:
             model.bootstrap.reps,
             model.bootstrap.time_field_name
         )
-        return _calculate_quantiles(
-            model.output_field_name,
-            results,
-            model.bootstrap.quantiles,
-        )
+        if model.bootstrap.quantiles is not None:
+            return _calculate_quantiles(
+                model.output_field_name,
+                results,
+                model.bootstrap.quantiles,
+            )
+        else:
+            return results.ravel()
     return bootstrap_func
 
 
@@ -89,9 +95,12 @@ def create_stationary_func(model: MetricsBasemodel) -> Callable:
             random_state=model.bootstrap.random_state
         )
         results = bs.apply(model.func, model.bootstrap.reps)
-        return _calculate_quantiles(
-            model.output_field_name,
-            results,
-            model.bootstrap.quantiles,
-        )
+        if model.bootstrap.quantiles is not None:
+            return _calculate_quantiles(
+                model.output_field_name,
+                results,
+                model.bootstrap.quantiles,
+            )
+        else:
+            return results.ravel()
     return bootstrap_func

@@ -11,6 +11,9 @@ from teehr.models.metrics.metric_models import MetricsBasemodel
 
 logger = logging.getLogger(__name__)
 
+ARRAY_TYPE = T.ArrayType(T.DoubleType())  # Array results.
+DICT_TYPE = T.MapType(T.StringType(), T.FloatType())  # Quantile results.
+
 
 def apply_aggregation_metrics(
     df: GroupedData,
@@ -23,12 +26,9 @@ def apply_aggregation_metrics(
     if not isinstance(include_metrics, List):
         include_metrics = [include_metrics]
 
-    # validate the metric models?
-
     func_list = []
     for model in include_metrics:
 
-        # Get the alias for the metric
         alias = model.attrs["short_name"]
 
         if "bootstrap" in model.model_dump() and model.bootstrap is not None:
@@ -36,9 +36,13 @@ def apply_aggregation_metrics(
                 f"Applying metric: {alias} with {model.bootstrap.name}"
                 " bootstrapping"
             )
+            if model.bootstrap.quantiles is None:
+                return_type = ARRAY_TYPE
+            else:
+                return_type = DICT_TYPE
             func_pd = pandas_udf(
                 model.bootstrap.func(model),
-                T.MapType(T.StringType(), T.FloatType())
+                return_type
             )
         else:
             logger.debug(f"Applying metric: {alias}")
@@ -52,6 +56,4 @@ def apply_aggregation_metrics(
 
     df = df.agg(*func_list)
 
-
-    # df.show()
     return df

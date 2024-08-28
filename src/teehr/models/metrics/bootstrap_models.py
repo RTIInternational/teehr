@@ -1,5 +1,5 @@
 """Classes for bootstrapping sampling methods."""
-from typing import Callable, List
+from typing import Callable, List, Union
 
 from arch.typing import ArrayLike
 from numpy.random import RandomState
@@ -37,11 +37,11 @@ class GumBootsModel(MetricsBasemodel):
     reps: int = 1000
     seed: int = 42
     block_size: int = 365
-    random_state: RandomState | None = None
-    quantiles: List[float] = [0.05, 0.5, 0.95]
+    random_state: Union[RandomState, None] = None
+    quantiles: Union[List[float], None] = [0.05, 0.5, 0.95]
     name: str = Field(default="GumBoots")
-    args: ArrayLike | None = []
-    kwargs: ArrayLike | None = None
+    args: Union[ArrayLike, None] = []
+    kwargs: Union[ArrayLike, None] = None
     # waterYearMonth = 10,
     # startYear = None,
     # endYear = None,
@@ -73,13 +73,11 @@ class CircularBlockModel(MetricsBasemodel):
 
     func: Callable = bootstrap_funcs.create_circularblock_func
     seed: int = 42
-    random_state: RandomState | None = None
+    random_state: Union[RandomState, None] = None
     reps: int = 1000
     block_size: int = 365
-    quantiles: List[float] = [0.05, 0.5, 0.95]
+    quantiles: Union[List[float], None] = [0.05, 0.5, 0.95]
     name: str = Field(default="CircularBlock")
-    # args_arch: ArrayLike | None = []  # positional arguments passed to CircularBlockBootstrap.bootstrap  # noqa
-    # kwargs_arch: ArrayLike | None = None # keyword arguments passed to CircularBlockBootstrap.bootstrap  # noqa
 
 
 class StationaryModel(MetricsBasemodel):
@@ -103,13 +101,11 @@ class StationaryModel(MetricsBasemodel):
 
     func: Callable = bootstrap_funcs.create_stationary_func
     seed: int = 42
-    random_state: RandomState | None = None
+    random_state: Union[RandomState, None] = None
     reps: int = 1000
     block_size: int = 365
-    quantiles: List[float] = [0.05, 0.5, 0.95]
+    quantiles: Union[List[float], None] = [0.05, 0.5, 0.95]
     name: str = Field(default="Stationary")
-    # args_arch: ArrayLike | None = []  # positional arguments passed to CircularBlockBootstrap.bootstrap  # noqa
-    # kwargs_arch: ArrayLike | None = None # keyword arguments passed to CircularBlockBootstrap.bootstrap  # noqa
 
 
 class Bootstrappers:

@@ -6,6 +6,8 @@ import shutil
 import tempfile
 import pandas as pd
 import geopandas as gpd
+import numpy as np
+from arch.bootstrap import CircularBlockBootstrap, StationaryBootstrap
 
 from teehr.models.dataset.filters import JoinedTimeseriesFilter
 from teehr.models.metrics.bootstrap_models import Bootstrappers
@@ -100,8 +102,8 @@ def test_metrics_filter_and_geometry(tmpdir):
     assert metrics_df.columns.size == 6
 
 
-def test_metric_bootstrapping(tmpdir):
-    """Test get_metrics method with filter and geometry."""
+def test_circularblock_bootstrapping(tmpdir):
+    """Test get_metrics method circular block bootstrapping."""
     # Define the evaluation object.
     eval = Evaluation(dir_path=tmpdir)
     eval.clone_template()
@@ -118,15 +120,36 @@ def test_metric_bootstrapping(tmpdir):
     )
 
     # Define a bootstrapper.
-    boot = Bootstrappers.GumBoots()
+    boot = Bootstrappers.CircularBlock(
+        seed=40,
+        block_size=100,
+        quantiles=None,
+        reps=500
+    )
     kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
 
-    include_metrics = [kge]
+    # Manual bootstrapping.
+    df = pd.read_parquet(JOINED_TIMESERIES_FILEPATH)
+    df_gageA = df.groupby("primary_location_id").get_group("gage-A")
 
-    # Get the currently available fields to use in the query.
+    p = df_gageA.primary_value
+    s = df_gageA.secondary_value
+
+    bs = CircularBlockBootstrap(
+        kge.bootstrap.block_size,
+        p,
+        s,
+        seed=kge.bootstrap.seed,
+        random_state=kge.bootstrap.random_state
+    )
+    results = bs.apply(
+        kge.func,
+        kge.bootstrap.reps,
+    )
+
+    # TEEHR bootstrapping.
     flds = eval.fields.get_joined_timeseries_fields()
 
-    # Define some filters.
     filters = [
         JoinedTimeseriesFilter(
             column=flds.primary_location_id,
@@ -136,13 +159,90 @@ def test_metric_bootstrapping(tmpdir):
     ]
 
     metrics_df = eval.query.get_metrics(
-        include_metrics=include_metrics,
-        group_by=[flds.primary_location_id],
-        order_by=[flds.primary_location_id],
+        include_metrics=[kge],
         filters=filters,
+        group_by=[flds.primary_location_id],
         include_geometry=False
     )
 
+    # Unpack and compare the results.
+    teehr_results = np.sort(np.array(metrics_df.KGE.values[0]))
+    manual_results = np.sort(results.ravel())
+
+    assert (teehr_results == manual_results).all()
+    assert isinstance(metrics_df, pd.DataFrame)
+    assert metrics_df.index.size == 1
+    assert metrics_df.columns.size == 2
+
+
+def test_stationary_bootstrapping(tmpdir):
+    """Test get_metrics method stationary bootstrapping."""
+    # Define the evaluation object.
+    eval = Evaluation(dir_path=tmpdir)
+    eval.clone_template()
+
+    # Copy in joined timeseries file.
+    shutil.copy(
+        JOINED_TIMESERIES_FILEPATH,
+        Path(eval.joined_timeseries_dir, JOINED_TIMESERIES_FILEPATH.name)
+    )
+    # Copy in the locations file.
+    shutil.copy(
+        Path(TEST_STUDY_DATA_DIR, "geo", "gages.parquet"),
+        Path(eval.locations_dir, "gages.parquet")
+    )
+
+    # Define a bootstrapper.
+    boot = Bootstrappers.Stationary(
+        seed=40,
+        block_size=100,
+        quantiles=None,
+        reps=500
+    )
+    kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
+
+    # Manual bootstrapping.
+    df = pd.read_parquet(JOINED_TIMESERIES_FILEPATH)
+    df_gageA = df.groupby("primary_location_id").get_group("gage-A")
+
+    p = df_gageA.primary_value
+    s = df_gageA.secondary_value
+
+    bs = StationaryBootstrap(
+        kge.bootstrap.block_size,
+        p,
+        s,
+        seed=kge.bootstrap.seed,
+        random_state=kge.bootstrap.random_state
+    )
+    results = bs.apply(
+        kge.func,
+        kge.bootstrap.reps,
+    )
+
+    # TEEHR bootstrapping.
+    flds = eval.fields.get_joined_timeseries_fields()
+
+    filters = [
+        JoinedTimeseriesFilter(
+            column=flds.primary_location_id,
+            operator=ops.eq,
+            value="gage-A"
+        )
+    ]
+
+    metrics_df = eval.query.get_metrics(
+        include_metrics=[kge],
+        filters=filters,
+        group_by=[flds.primary_location_id],
+        include_geometry=False
+    )
+
+    # Unpack and compare the results.
+    teehr_results = np.sort(np.array(metrics_df.KGE.values[0]))
+    manual_results = np.sort(results.ravel())
+
+    assert (teehr_results == manual_results).all()
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 2
@@ -164,9 +264,15 @@ if __name__ == "__main__":
                 dir=tempdir
             )
         )
-        test_metric_bootstrapping(
+        test_circularblock_bootstrapping(
             tempfile.mkdtemp(
                 prefix="3-",
+                dir=tempdir
+            )
+        )
+        test_stationary_bootstrapping(
+            tempfile.mkdtemp(
+                prefix="4-",
                 dir=tempdir
             )
         )
