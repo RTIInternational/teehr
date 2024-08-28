@@ -1,14 +1,5 @@
 """Module for NWM fetching models."""
-try:
-    # breaking change introduced in python 3.11
-    from enum import StrEnum
-except ImportError:  # pragma: no cover
-    from enum import Enum  # pragma: no cover
-
-    class StrEnum(str, Enum):  # pragma: no cover
-        """Instantiate StrEnum."""
-
-        pass  # pragma: no cover
+from teehr.models.enums import StrEnum
 
 
 # Timeseries models.

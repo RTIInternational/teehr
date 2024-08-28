@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import List, Union
 import logging
 from pyspark.sql import DataFrame
+from teehr.models.enums import StrEnum
 
 from teehr.models.dataset.filters import FilterBaseModel
 from teehr.models.dataset.table_models import TableBaseModel
@@ -92,7 +93,7 @@ def format_filter(
         return f"""{column} {operator} {value}"""
     else:
         logger.warn(
-            f"treating value {filter.value} as string because "
+            f"Treating value {filter.value} as string because "
             "didn't know what else to do."
         )
         return f"""{column} {operator} '{str(filter.value)}'"""
@@ -103,12 +104,12 @@ def validate_filter(
     model: TableBaseModel
 ):
     """Validate a single model."""
-    if filter.column not in model.model_fields:
+    if filter.column.value not in model.model_fields:
         raise ValueError(f"Filter column not in model fields: {filter}")
 
-    model_field_data_type = model.model_fields[filter.column].annotation
+    model_field_data_type = model.model_fields[filter.column.value].annotation
     logging.debug(
-        f"Model field {filter.column} has type: {model_field_data_type}"
+        f"Model field {filter.column.value} has type: {model_field_data_type}"
     )
 
     # if string or not iterable, make it iterable
@@ -140,49 +141,61 @@ def validate_filter(
     return filter
 
 
-def validate_filter_values(
-    filters: Union[FilterBaseModel, List[FilterBaseModel]],
-    model: TableBaseModel
-):
-    """Validate list filter values."""
-    filter_was_iterable = True
-    if not isinstance(filters, List):
-        filters = [filters]
-        filter_was_iterable = False
+# def validate_filter_values(
+#     filters: Union[FilterBaseModel, List[FilterBaseModel]],
+#     model: TableBaseModel
+# ):
+#     """Validate list filter values."""
+#     filter_was_iterable = True
+#     if not isinstance(filters, List):
+#         filters = [filters]
+#         filter_was_iterable = False
 
-    validated_filters = []
-    for filter in filters:
-        validated_filters.append(validate_filter(filter, model))
+#     validated_filters = []
+#     for filter in filters:
+#         validated_filters.append(validate_filter(filter, model))
 
-    if filter_was_iterable:
-        return validated_filters
-    else:
-        return validated_filters[0]
+#     if filter_was_iterable:
+#         return validated_filters
+#     else:
+#         return validated_filters[0]
 
 
-def apply_filters(df, filters):
-    """Apply filters to a DataFrame."""
-    if not isinstance(filters, List):
-        filters = [filters]
+# def apply_filters(df, filters):
+#     """Apply filters to a DataFrame."""
+#     if not isinstance(filters, List):
+#         filters = [filters]
 
-    for filter in filters:
-        filter_str = format_filter(filter)
-        df = df.filter(filter_str)
-    return df
+#     for filter in filters:
+#         filter_str = format_filter(filter)
+#         df = df.filter(filter_str)
+#     return df
+
+
+# def is_iterable_not_str(obj):
+#     """Check if is type Iterable and not str.
+
+#     We should not have the case where a string is provided, but doesn't
+#     hurt to check.
+#     """
+#     if isinstance(obj, Iterable) and not isinstance(obj, str):
+#         return True
+#     return False
 
 
 def validate_and_apply_filters(
-    df: DataFrame,
-    filters: Union[FilterBaseModel, List[FilterBaseModel]],
+    sdf: DataFrame,
+    filters: Union[str, dict, List[dict]],
     filter_model: FilterBaseModel,
+    fields_enum: StrEnum,
     table_model: TableBaseModel = None,
     validate: bool = True
 ):
     """Validate and apply filters."""
     if isinstance(filters, str):
         logger.debug(f"Filter {filters} is already string.  Applying as is.")
-        df = df.filter(filters)
-        return df
+        sdf = sdf.filter(filters)
+        return sdf
 
     if not isinstance(filters, List):
         logger.debug("Filter is not a list.  Making a list.")
@@ -191,11 +204,15 @@ def validate_and_apply_filters(
     for filter in filters:
         logger.debug(f"Validating and applying {filter}")
 
-        filter = filter_model.model_validate(filter, filter_model)
+        if not isinstance(filter, str):
+            filter = filter_model.model_validate(
+                filter,
+                context={"fields_enum": fields_enum}
+            )
+            if validate:
+                filter = validate_filter(filter, table_model)
+            filter = format_filter(filter)
 
-        if validate:
-            filter = validate_filter(filter, table_model)
-        filter_str = format_filter(filter)
-        df = df.filter(filter_str)
+        sdf = sdf.filter(filter)
 
-    return df
+    return sdf

@@ -35,7 +35,7 @@ def test_get_all_metrics(tmpdir):
     ]
 
     # Get the currently available fields to use in the query.
-    flds = eval.fields.get_joined_timeseries_fields()
+    flds = eval.joined_timeseries.field_enum()
 
     metrics_df = eval.query.get_metrics(
         include_metrics=include_all_metrics,
@@ -77,7 +77,7 @@ def test_metrics_filter_and_geometry(tmpdir):
     include_metrics = [pmvt, mvtd, primary_avg, kge]
 
     # Get the currently available fields to use in the query.
-    flds = eval.fields.get_joined_timeseries_fields()
+    flds = eval.joined_timeseries.field_enum()
 
     # Define some filters.
     filters = [
