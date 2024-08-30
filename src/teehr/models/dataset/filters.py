@@ -2,19 +2,21 @@
 from collections.abc import Iterable
 from typing import List, Union
 from pydantic import BaseModel as BaseModel
-from pydantic import ValidationInfo, field_validator
+from pydantic import FieldValidationInfo, field_validator
 from datetime import datetime
-try:
-    # breaking change introduced in python 3.11
-    from enum import StrEnum
-except ImportError:  # pragma: no cover
-    from enum import Enum  # pragma: no cover
-
-    class StrEnum(str, Enum):  # pragma: no cover
-        """Enum with string values."""
-
-        pass  # pragma: no cover
-
+import logging
+from teehr.models.enums import StrEnum
+# from teehr.querying.field_enums import (
+#     get_unit_fields,
+#     get_variable_fields,
+#     get_attribute_fields,
+#     get_configuration_fields,
+#     get_location_fields,
+#     get_location_attribute_fields,
+#     get_location_crosswalk_fields,
+#     get_timeseries_fields,
+#     get_joined_timeseries_fields,
+# )
 from teehr.models.dataset.table_enums import (
     ConfigurationFields,
     UnitFields,
@@ -26,6 +28,12 @@ from teehr.models.dataset.table_enums import (
     TimeseriesFields,
     JoinedTimeseriesFields
 )
+from teehr.models.dataset.table_models import (
+    TableBaseModel
+)
+
+
+logger = logging.getLogger(__name__)
 
 
 class FilterOperators(StrEnum):
@@ -43,6 +51,10 @@ class FilterOperators(StrEnum):
 class FilterBaseModel(BaseModel):
     """Base model for filters."""
 
+    column: TableBaseModel
+    operator: FilterOperators
+    value: Union[str, List[str]]
+
     def is_iterable_not_str(obj):
         """Check if is type Iterable and not str.
 
@@ -53,8 +65,8 @@ class FilterBaseModel(BaseModel):
             return True
         return False
 
-    @field_validator("value", check_fields=False)
-    def in_operator_must_have_iterable(cls, v, info: ValidationInfo):
+    @field_validator("value")
+    def in_operator_must_have_iterable(cls, v, info: FieldValidationInfo):
         """Ensure that an 'in' operator has an iterable type."""
         if cls.is_iterable_not_str(v) and info.data["operator"] != "in":
             raise ValueError("iterable value must be used with 'in' operator")
@@ -65,37 +77,37 @@ class FilterBaseModel(BaseModel):
             )
         return v
 
+    @field_validator("column", mode='before')
+    def coerce_column_to_enum(cls, v, info: FieldValidationInfo):
+        """Column name must exist in the database table."""
+        if not isinstance(v, StrEnum):
+            fields = info.context.get("fields_enum")
+            v = fields[v]
+        return v
+
 
 class ConfigurationFilter(FilterBaseModel):
     """Configuration filter model."""
 
     column: ConfigurationFields
-    operator: FilterOperators
-    value: Union[str, List[str]]
 
 
 class UnitFilter(FilterBaseModel):
     """Unit filter model."""
 
     column: UnitFields
-    operator: FilterOperators
-    value: Union[str, List[str]]
 
 
 class VariableFilter(FilterBaseModel):
     """Variable filter model."""
 
     column: VariableFields
-    operator: FilterOperators
-    value: Union[str, List[str]]
 
 
 class AttributeFilter(FilterBaseModel):
     """Attribute filter model."""
 
     column: AttributeFields
-    operator: FilterOperators
-    value: Union[str, List[str]]
 
 
 class LocationFilter(FilterBaseModel):
@@ -105,8 +117,6 @@ class LocationFilter(FilterBaseModel):
     """
 
     column: LocationFields
-    operator: FilterOperators
-    value: Union[str, List[str]]
 
 
 class LocationAttributeFilter(FilterBaseModel):
@@ -117,23 +127,18 @@ class LocationAttributeFilter(FilterBaseModel):
     """
 
     column: LocationAttributeFields
-    operator: FilterOperators
-    value: Union[str, List[str]]
 
 
 class LocationCrosswalkFilter(FilterBaseModel):
     """Location crosswalk filter model."""
 
     column: LocationCrosswalkFields
-    operator: FilterOperators
-    value: Union[str, List[str]]
 
 
 class TimeseriesFilter(FilterBaseModel):
     """Timeseries filter model."""
 
     column: TimeseriesFields
-    operator: FilterOperators
     value: Union[
         str, int, float, datetime, List[Union[str, int, float, datetime]]
     ]
@@ -143,7 +148,6 @@ class JoinedTimeseriesFilter(FilterBaseModel):
     """Joined timeseries filter model."""
 
     column: JoinedTimeseriesFields
-    operator: FilterOperators
     value: Union[
         str, int, float, datetime, List[Union[str, int, float, datetime]]
     ]

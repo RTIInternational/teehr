@@ -1,8 +1,8 @@
 """Evaluation module."""
-import pandas as pd
-import geopandas as gpd
-from typing import Union, List
-from enum import Enum
+# import pandas as pd
+# import geopandas as gpd
+from typing import Union
+# from enum import Enum
 from pathlib import Path
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
@@ -17,7 +17,19 @@ import teehr.const as const
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.load import Load
 from teehr.evaluation.query import Query
-from teehr.evaluation.fields import Fields
+# from teehr.evaluation.fields import Fields
+from teehr.evaluation.tables.tables import (
+    UnitTable,
+    VariableTable,
+    AttributeTable,
+    ConfigurationTable,
+    LocationTable,
+    LocationAttributeTable,
+    LocationCrosswalkTable,
+    PrimaryTimeseriesTable,
+    SecondaryTimeseriesTable,
+    JoinedTimeseriesTable,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -103,10 +115,60 @@ class Evaluation:
         """The load component class."""
         return Query(self)
 
+    # @property
+    # def fields(self) -> Fields:
+    #     """The load component class."""
+    #     return Fields(self)
+
     @property
-    def fields(self) -> Fields:
-        """The load component class."""
-        return Fields(self)
+    def units(self) -> UnitTable:
+        """Access the units table."""
+        return UnitTable(self)
+
+    @property
+    def variables(self) -> VariableTable:
+        """Access the variables table."""
+        return VariableTable(self)
+
+    @property
+    def attributes(self) -> AttributeTable:
+        """Access the attributes table."""
+        return AttributeTable(self)
+
+    @property
+    def configurations(self) -> ConfigurationTable:
+        """Access the configurations table."""
+        return ConfigurationTable(self)
+
+    @property
+    def locations(self) -> LocationTable:
+        """Access the locations table."""
+        return LocationTable(self)
+
+    @property
+    def location_attributes(self) -> LocationAttributeTable:
+        """Access the location attributes table."""
+        return LocationAttributeTable(self)
+
+    @property
+    def location_crosswalks(self) -> LocationCrosswalkTable:
+        """Access the location crosswalks table."""
+        return LocationCrosswalkTable(self)
+
+    @property
+    def primary_timeseries(self) -> PrimaryTimeseriesTable:
+        """Access the primary timeseries table."""
+        return PrimaryTimeseriesTable(self)
+
+    @property
+    def secondary_timeseries(self) -> SecondaryTimeseriesTable:
+        """Access the secondary timeseries table."""
+        return SecondaryTimeseriesTable(self)
+
+    @property
+    def joined_timeseries(self) -> JoinedTimeseriesTable:
+        """Access the joined timeseries table."""
+        return JoinedTimeseriesTable(self)
 
     def enable_logging(self):
         """Enable logging."""
