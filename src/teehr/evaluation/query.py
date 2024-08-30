@@ -59,7 +59,8 @@ class Query:
         # self.location_crosswalks_dir = eval.location_crosswalks_dir
         # self.primary_timeseries_dir = eval.primary_timeseries_dir
         # self.secondary_timeseries_dir = eval.secondary_timeseries_dir
-        self.joined_timeseries_dir = eval.joined_timeseries_dir
+        # self.joined_timeseries_dir = eval.joined_timeseries_dir
+        self.joined_timeseries_table = eval.joined_timeseries
 
     # def get_units(
     #     self,
@@ -238,7 +239,7 @@ class Query:
         """Get the metrics in the dataset."""
         return get_metrics(
             self.spark,
-            self.joined_timeseries_dir,
+            self.joined_timeseries_table,
             self.locations_dir,
             filters=filters,
             order_by=order_by,

@@ -148,7 +148,7 @@ def test_circularblock_bootstrapping(tmpdir):
     )
 
     # TEEHR bootstrapping.
-    flds = eval.fields.get_joined_timeseries_fields()
+    flds = eval.joined_timeseries.field_enum()
 
     filters = [
         JoinedTimeseriesFilter(
@@ -221,7 +221,7 @@ def test_stationary_bootstrapping(tmpdir):
     )
 
     # TEEHR bootstrapping.
-    flds = eval.fields.get_joined_timeseries_fields()
+    flds = eval.joined_timeseries.field_enum()
 
     filters = [
         JoinedTimeseriesFilter(

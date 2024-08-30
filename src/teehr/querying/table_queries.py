@@ -47,6 +47,7 @@ from teehr.models.dataset.table_enums import (
     # TimeseriesFields,
     JoinedTimeseriesFields
 )
+from teehr.evaluation.tables.tables import JoinedTimeseriesTable
 
 logger = logging.getLogger(__name__)
 
@@ -319,7 +320,7 @@ logger = logging.getLogger(__name__)
 
 def get_metrics(
     spark: SparkSession,
-    dirpath: Union[str, Path],
+    joined_timeseries_table: JoinedTimeseriesTable,
     locations_dirpath: Union[str, Path],
     include_metrics: Union[
         List[MetricsBasemodel],
@@ -341,15 +342,16 @@ def get_metrics(
 ) -> Union[pd.DataFrame, gpd.GeoDataFrame]:
     """Get the metrics data."""
     logger.info("Calculating performance metrics.")
-    joined_timeseries_df = (
-        spark.read.format("parquet")
-        .option("recursiveFileLookup", "true")
-        .option("mergeSchema", "true")
-        .load(str(dirpath))
-    )
+    joined_timeseries_df = joined_timeseries_table.to_sdf()
     if filters is not None:
         logger.debug("Applying filters to the metrics query.")
-        joined_timeseries_df = validate_and_apply_filters(joined_timeseries_df, filters)
+        joined_timeseries_df = validate_and_apply_filters(
+            sdf=joined_timeseries_df,
+            filter_model=joined_timeseries_table.filter_model,
+            filters=filters,
+            fields_enum=joined_timeseries_table.field_enum(),
+            validate=False
+            )
 
     if order_by is not None:
         logger.debug("Ordering the metrics query.")
