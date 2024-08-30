@@ -14,7 +14,7 @@ from teehr.models.dataset.filters import (
     # TimeseriesFilter,
     JoinedTimeseriesFilter
 )
-from teehr.models.metrics.metrics import MetricsBasemodel
+from teehr.models.metrics.metric_models import MetricsBasemodel
 from teehr.models.dataset.table_enums import (
     # UnitFields,
     # VariableFields,
