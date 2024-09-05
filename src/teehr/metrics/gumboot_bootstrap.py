@@ -2,10 +2,11 @@
 from typing import Any, Callable
 from collections.abc import Generator as PyGenerator
 
-from arch.bootstrap import IIDBootstrap
+# from arch.bootstrap import IIDBootstrap
 from arch.typing import ArrayLike, Int64Array, Float64Array
 from numpy.random import Generator, RandomState
 import numpy as np
+import pandas as pd
 
 
 def _get_random_integers(
@@ -49,48 +50,79 @@ def _add_extra_kwargs(
         return kwargs_copy
 
 
-class GumBootsBootstrap(IIDBootstrap):
-    """Custom implementation inheriting IIDBootstrap from the arch package."""
+class GumbootBootstrap:
+    """Python implementation the Gumboot R package."""
 
     def __init__(
         self,
         block_size: int,
+        p: pd.Series,
+        s: pd.Series,
+        reps: int = 1000,
+        water_year_month: int = 10,
+        start_year: int = None,
+        end_year: int = None,
+        min_days: int = 100,
+        min_years: int = 10,
+        return_samples: bool = False,
+        boot_year_file: str = None,
         *args: ArrayLike,
         random_state: RandomState | None = None,
         seed: None | int | Generator | RandomState = None,
         **kwargs: ArrayLike,
     ) -> None:
-        """Initialize the GumBoots class."""
-        super().__init__(*args, random_state=random_state, seed=seed, **kwargs)
+        """Initialize the Gumboot class."""
         self.block_size: int = block_size
         self._parameters = [block_size]
+        self.reps: int = reps
 
-    def update_indices(
+        # Define water years.
+        # Get valid number of years, num_valid_years (ie, 19)
+        # self.num_valid_years = num_valid_years
+
+        # Get indices where obs and sim values are valid
+
+    def update_bootstrap_indices(
         self,
         time_field_name: str
     ) -> Int64Array:  # type: ignore
         """
-        TODO: This will be the GumBoots implementation.
+        TODO: This will be the Gumboot implementation.
 
         Notes
         -----
         This requires an extra field (value_time) to create indices based on
         water year (time).
         """
-        num_blocks = self._num_items // self.block_size
-        if num_blocks * self.block_size < self._num_items:
-            num_blocks += 1
-        indices = _get_random_integers(
-            self._generator, self._num_items, size=num_blocks
-        )
-        indices = indices[:, None] + np.arange(self.block_size)
-        indices = indices.flatten()
-        indices %= self._num_items
 
-        if indices.shape[0] > self._num_items:
-            return indices[: self._num_items]
-        else:
-            return indices
+
+        # m_sample = self.reps + 1
+        # Loop through sample
+
+
+
+
+
+        pass
+
+
+    def update_jackknife_indices(
+        self,
+        time_field_name: str
+    ) -> Int64Array:  # type: ignore
+        """
+        TODO: This will be the Gumboot implementation.
+
+        Notes
+        -----
+        This requires an extra field (value_time) to create indices based on
+        water year (time).
+        """
+
+        # m_sample = self.num_valid_years
+        # Loop through sample
+
+        pass
 
     def apply(
         self,
@@ -132,32 +164,32 @@ class GumBootsBootstrap(IIDBootstrap):
             count += 1
         return results
 
-    def bootstrap(
-        self, reps: int, time_field_name: str = "value_time"
-    ) -> PyGenerator[
-            tuple[tuple[ArrayLike, ...], dict[str, ArrayLike]],
-            None,
-            None
-    ]:
-        """
-        Create iterator for use when bootstrapping.
+    # def bootstrap(
+    #     self, reps: int, time_field_name: str = "value_time"
+    # ) -> PyGenerator[
+    #         tuple[tuple[ArrayLike, ...], dict[str, ArrayLike]],
+    #         None,
+    #         None
+    # ]:
+    #     """
+    #     Create iterator for use when bootstrapping.
 
-        Parameters
-        ----------
-        reps : int
-            Number of bootstrap replications
+    #     Parameters
+    #     ----------
+    #     reps : int
+    #         Number of bootstrap replications
 
-        Returns
-        -------
-        generator
-            Generator to iterate over in bootstrap calculations
+    #     Returns
+    #     -------
+    #     generator
+    #         Generator to iterate over in bootstrap calculations
 
-        Notes
-        -----
-        The iterator returns a tuple containing the data entered in positional
-        arguments as a tuple and the data entered using keywords as a
-        dictionary
-        """
-        for _ in range(reps):
-            self._index = self.update_indices(time_field_name)
-            yield self._resample()
+    #     Notes
+    #     -----
+    #     The iterator returns a tuple containing the data entered in positional
+    #     arguments as a tuple and the data entered using keywords as a
+    #     dictionary
+    #     """
+    #     for _ in range(reps):
+    #         self._index = self.update_indices(time_field_name)
+    #         yield self._resample()

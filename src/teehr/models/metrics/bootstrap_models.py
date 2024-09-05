@@ -14,8 +14,8 @@ from teehr.models.metrics.metric_models import MetricsBasemodel
 
 # TODO: Extend an abstract base class for bootstrapping classes to ensure
 # that the necessary fields are included?  For Metrics too?
-class GumBootsModel(MetricsBasemodel):
-    """GumBoots bootstrapping.
+class GumbootModel(MetricsBasemodel):
+    """Gumboot bootstrapping.
 
     Parameters
     ----------
@@ -33,7 +33,7 @@ class GumBootsModel(MetricsBasemodel):
         The quantiles to calculate from the bootstrap results
     """
 
-    func: Callable = bootstrap_funcs.create_gumboots_func
+    func: Callable = bootstrap_funcs.create_gumboot_func
     reps: int = 1000
     seed: int = 42
     block_size: int = 365
@@ -111,6 +111,6 @@ class StationaryModel(MetricsBasemodel):
 class Bootstrappers:
     """Container class for bootstrap sampling classes."""
 
-    GumBoots = GumBootsModel
+    Gumboot = GumbootModel
     CircularBlock = CircularBlockModel
     Stationary = StationaryModel

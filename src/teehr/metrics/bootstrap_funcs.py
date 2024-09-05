@@ -10,7 +10,7 @@ from arch.bootstrap import (
 )
 
 from teehr.models.metrics.metric_models import MetricsBasemodel
-from teehr.metrics.gumboots_bootstrap import GumBootsBootstrap
+from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 
 logger = logging.getLogger(__name__)
 
@@ -52,23 +52,23 @@ def create_circularblock_func(model: MetricsBasemodel) -> Callable:
     return bootstrap_func
 
 
-def create_gumboots_func(model: MetricsBasemodel) -> Callable:
-    """Create the GumBoots bootstrap function."""
-    logger.debug("Building the GumBoots bootstrap func.")
+def create_gumboot_func(model: MetricsBasemodel) -> Callable:
+    """Create the Gumboot bootstrap function."""
+    logger.debug("Building the Gumboot bootstrap func.")
 
     def bootstrap_func(p: pd.Series, s: pd.Series) -> Dict:
         """Bootstrap function."""
-        bs = GumBootsBootstrap(
+        bs = GumbootBootstrap(
             model.bootstrap.block_size,
             p,
             s,
+            model.bootstrap.time_field_name,
             seed=model.bootstrap.seed,
             random_state=model.bootstrap.random_state
         )
         results = bs.apply(
             model.func,
-            model.bootstrap.reps,
-            model.bootstrap.time_field_name
+            model.bootstrap.reps
         )
         if model.bootstrap.quantiles is not None:
             return _calculate_quantiles(
