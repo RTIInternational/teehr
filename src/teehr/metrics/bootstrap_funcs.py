@@ -66,7 +66,6 @@ def create_gumboot_func(model: MetricsBasemodel) -> Callable:
             random_state=model.bootstrap.random_state,
             min_days=model.bootstrap.min_days,
             min_years=model.bootstrap.min_years,
-            reps=model.bootstrap.reps,
             water_year_month=model.bootstrap.water_year_month,
             start_year=model.bootstrap.start_year,
             end_year=model.bootstrap.end_year,

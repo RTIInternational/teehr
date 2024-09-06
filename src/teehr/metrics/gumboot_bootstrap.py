@@ -60,7 +60,6 @@ class GumbootBootstrap(IIDBootstrap):
         self,
         *args: ArrayLike,
         value_time: pd.Series,
-        reps: Union[int, None] = None,
         water_year_month: Union[int, None] = None,
         start_year: Union[int, None] = None,
         end_year: Union[int, None] = None,
@@ -76,7 +75,6 @@ class GumbootBootstrap(IIDBootstrap):
 
         p, s = self._args  # for preprocessing
 
-        self.reps: int = reps
         self.boot_year_array: Union[np.array, None] = None
 
         # Define water years.
@@ -143,10 +141,9 @@ class GumbootBootstrap(IIDBootstrap):
         self.water_year_array = valid_water_years_df.water_year.values
 
         if boot_year_file:
-            self.boot_year_array = np.genfromtxt(boot_year_file, delimiter=",", dtype=int)
-
-
-        pass
+            self.boot_year_array = np.genfromtxt(
+                boot_year_file, delimiter=",", dtype=int
+            )
 
     def update_indices(
         self,
@@ -165,11 +162,12 @@ class GumbootBootstrap(IIDBootstrap):
         if rep == 0:
             jx_valid = self.valid_value_indices
         else:
-            year_indexes = rng.integers(self.num_valid_years, size=self.num_valid_years)
-
             if self.boot_year_array is not None:
-                years = self.boot_year_array[:, rep]
+                years = self.boot_year_array[:, rep - 1]
             else:
+                year_indexes = rng.integers(
+                    self.num_valid_years, size=self.num_valid_years
+                )
                 years = np.array(self.valid_water_years)[year_indexes]
 
             # Get the indexes of values corresponding to the randomly selected
@@ -223,6 +221,8 @@ class GumbootBootstrap(IIDBootstrap):
             reps by nparam array of computed function values where each row
             corresponds to a bootstrap iteration
         """
+        reps = reps + 1
+
         kwargs = _add_extra_kwargs(self._kwargs, extra_kwargs)
         base = func(*self._args, **kwargs)
         try:

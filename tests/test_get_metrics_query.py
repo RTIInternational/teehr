@@ -275,7 +275,8 @@ def test_gumboot_bootstrapping(tmpdir):
         Path(eval.locations_dir, "gages.parquet")
     )
 
-    quantiles = [0.05, 0.5, 0.95]
+    # quantiles = [0.05, 0.5, 0.95]
+    quantiles = None
 
     # Define a bootstrapper.
     boot = Bootstrappers.Gumboot(
@@ -305,7 +306,6 @@ def test_gumboot_bootstrapping(tmpdir):
         random_state=kge.bootstrap.random_state,
         min_days=kge.bootstrap.min_days,
         min_years=kge.bootstrap.min_years,
-        reps=kge.bootstrap.reps,
         water_year_month=kge.bootstrap.water_year_month,
         start_year=kge.bootstrap.start_year,
         end_year=kge.bootstrap.end_year,
@@ -334,12 +334,17 @@ def test_gumboot_bootstrapping(tmpdir):
         include_geometry=False
     )
 
-    # # Unpack and compare the results.
-    # teehr_results = np.sort(np.array(metrics_df.KGE.values[0]))
-    # manual_results = np.sort(results.ravel())
+    # Unpack and compare the results.
+    teehr_results = np.sort(np.array(metrics_df.kling_gupta_efficiency.values[0]))
+    manual_results = np.sort(results.ravel())
 
-    # assert (teehr_results == manual_results).all()
-    # assert isinstance(metrics_df, pd.DataFrame)
+    assert (teehr_results == manual_results).all()
+    assert isinstance(metrics_df, pd.DataFrame)
+
+    r_df = pd.read_csv("/home/sam/temp/stats_boot_R_500.csv")
+    r_kge_vals = np.sort(r_df.KGE.values)
+
+    assert np.allclose(teehr_results, r_kge_vals, rtol=1e-08)
 
     pass
 
