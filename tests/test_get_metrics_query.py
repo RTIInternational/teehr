@@ -11,6 +11,7 @@ from arch.bootstrap import CircularBlockBootstrap, StationaryBootstrap
 
 from teehr.models.dataset.filters import JoinedTimeseriesFilter
 from teehr.models.metrics.bootstrap_models import Bootstrappers
+from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
 JOINED_TIMESERIES_FILEPATH = Path(
@@ -248,6 +249,102 @@ def test_stationary_bootstrapping(tmpdir):
     assert metrics_df.columns.size == 2
 
 
+def test_gumboot_bootstrapping(tmpdir):
+    """Test get_metrics method gumboot bootstrapping."""
+    # Define the evaluation object.
+    eval = Evaluation(dir_path=tmpdir)
+    eval.clone_template()
+
+    # TODO:
+    JOINED_TIMESERIES_FILEPATH = Path(
+        "tests",
+        "data",
+        "test_study",
+        "timeseries",
+        "flows_1030500.parquet"
+    )
+
+    # Copy in joined timeseries file.
+    shutil.copy(
+        JOINED_TIMESERIES_FILEPATH,
+        Path(eval.joined_timeseries_dir, JOINED_TIMESERIES_FILEPATH.name)
+    )
+    # Copy in the locations file.
+    shutil.copy(
+        Path(TEST_STUDY_DATA_DIR, "geo", "gages.parquet"),
+        Path(eval.locations_dir, "gages.parquet")
+    )
+
+    quantiles = [0.05, 0.5, 0.95]
+
+    # Define a bootstrapper.
+    boot = Bootstrappers.Gumboot(
+        seed=40,
+        quantiles=quantiles,
+        reps=500,
+        boot_year_file="/home/sam/temp/boot_year_file_R.csv",
+        min_days=100,
+        min_years=10
+    )
+    kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
+    nse = Metrics.NashSutcliffeEfficiency(bootstrap=boot)
+
+    # Manually calling Gumboot.
+    df = pd.read_parquet(JOINED_TIMESERIES_FILEPATH)
+    df_gageA = df.groupby("primary_location_id").get_group("gage-A")
+
+    p = df_gageA.primary_value
+    s = df_gageA.secondary_value
+    vt = df_gageA.value_time
+
+    bs = GumbootBootstrap(
+        p,
+        s,
+        value_time=vt,
+        seed=kge.bootstrap.seed,
+        random_state=kge.bootstrap.random_state,
+        min_days=kge.bootstrap.min_days,
+        min_years=kge.bootstrap.min_years,
+        reps=kge.bootstrap.reps,
+        water_year_month=kge.bootstrap.water_year_month,
+        start_year=kge.bootstrap.start_year,
+        end_year=kge.bootstrap.end_year,
+        boot_year_file=kge.bootstrap.boot_year_file
+    )
+    results = bs.apply(
+        kge.func,
+        kge.bootstrap.reps,
+    )
+
+    # TEEHR Gumboot bootstrapping.
+    flds = eval.joined_timeseries.field_enum()
+
+    filters = [
+        JoinedTimeseriesFilter(
+            column=flds.primary_location_id,
+            operator=ops.eq,
+            value="gage-A"
+        )
+    ]
+
+    metrics_df = eval.query.get_metrics(
+        include_metrics=[kge, nse],
+        filters=filters,
+        group_by=[flds.primary_location_id],
+        include_geometry=False
+    )
+
+    # # Unpack and compare the results.
+    # teehr_results = np.sort(np.array(metrics_df.KGE.values[0]))
+    # manual_results = np.sort(results.ravel())
+
+    # assert (teehr_results == manual_results).all()
+    # assert isinstance(metrics_df, pd.DataFrame)
+
+    pass
+
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
@@ -264,15 +361,21 @@ if __name__ == "__main__":
         #         dir=tempdir
         #     )
         # )
-        test_circularblock_bootstrapping(
+        # test_circularblock_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="3-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_stationary_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="4-",
+        #         dir=tempdir
+        #     )
+        # )
+        test_gumboot_bootstrapping(
             tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        test_stationary_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="4-",
+                prefix="5-",
                 dir=tempdir
             )
         )

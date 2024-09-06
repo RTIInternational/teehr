@@ -56,15 +56,21 @@ def create_gumboot_func(model: MetricsBasemodel) -> Callable:
     """Create the Gumboot bootstrap function."""
     logger.debug("Building the Gumboot bootstrap func.")
 
-    def bootstrap_func(p: pd.Series, s: pd.Series) -> Dict:
+    def bootstrap_func(p: pd.Series, s: pd.Series, vt: pd.Series) -> Dict:
         """Bootstrap function."""
         bs = GumbootBootstrap(
-            model.bootstrap.block_size,
             p,
             s,
-            model.bootstrap.time_field_name,
+            value_time=vt,
             seed=model.bootstrap.seed,
-            random_state=model.bootstrap.random_state
+            random_state=model.bootstrap.random_state,
+            min_days=model.bootstrap.min_days,
+            min_years=model.bootstrap.min_years,
+            reps=model.bootstrap.reps,
+            water_year_month=model.bootstrap.water_year_month,
+            start_year=model.bootstrap.start_year,
+            end_year=model.bootstrap.end_year,
+            boot_year_file=model.bootstrap.boot_year_file
         )
         results = bs.apply(
             model.func,

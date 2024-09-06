@@ -1,5 +1,6 @@
 """Classes for bootstrapping sampling methods."""
 from typing import Callable, List, Union
+from pathlib import Path
 
 from arch.typing import ArrayLike
 from numpy.random import RandomState
@@ -35,21 +36,19 @@ class GumbootModel(MetricsBasemodel):
 
     func: Callable = bootstrap_funcs.create_gumboot_func
     reps: int = 1000
-    seed: int = 42
-    block_size: int = 365
+    seed: Union[int, None] = 42
     random_state: Union[RandomState, None] = None
     quantiles: Union[List[float], None] = [0.05, 0.5, 0.95]
     name: str = Field(default="GumBoots")
+    boot_year_file: Union[str, Path, None] = None
     args: Union[ArrayLike, None] = []
     kwargs: Union[ArrayLike, None] = None
-    # waterYearMonth = 10,
-    # startYear = None,
-    # endYear = None,
-    # minDays = 100,
-    # minYears = 10
-    time_field_name: JoinedTimeseriesFields = Field(
-        default="value_time"
-    )
+    water_year_month: int = 10
+    start_year: Union[int, None] = None
+    end_year: Union[int, None] = None
+    min_days: int = 100
+    min_years: int = 10
+    include_value_time: bool = True
 
 
 class CircularBlockModel(MetricsBasemodel):
@@ -78,6 +77,7 @@ class CircularBlockModel(MetricsBasemodel):
     block_size: int = 365
     quantiles: Union[List[float], None] = [0.05, 0.5, 0.95]
     name: str = Field(default="CircularBlock")
+    include_value_time: bool = False
 
 
 class StationaryModel(MetricsBasemodel):
@@ -106,6 +106,7 @@ class StationaryModel(MetricsBasemodel):
     block_size: int = 365
     quantiles: Union[List[float], None] = [0.05, 0.5, 0.95]
     name: str = Field(default="Stationary")
+    include_value_time: bool = False
 
 
 class Bootstrappers:

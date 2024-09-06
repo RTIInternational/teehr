@@ -29,7 +29,7 @@ def apply_aggregation_metrics(
     func_list = []
     for model in include_metrics:
 
-        alias = model.attrs["short_name"]
+        alias = model.output_field_name
 
         if "bootstrap" in model.model_dump() and model.bootstrap is not None:
             logger.debug(
@@ -40,10 +40,13 @@ def apply_aggregation_metrics(
                 return_type = ARRAY_TYPE
             else:
                 return_type = DICT_TYPE
+
             func_pd = pandas_udf(
                 model.bootstrap.func(model),
                 return_type
             )
+            if model.bootstrap.include_value_time:
+                model.input_field_names.append("value_time")
         else:
             logger.debug(f"Applying metric: {alias}")
             func_pd = pandas_udf(model.func, model.attrs["return_type"])
