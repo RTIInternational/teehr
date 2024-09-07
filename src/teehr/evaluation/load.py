@@ -19,7 +19,7 @@ from teehr.loading.timeseries import (
     convert_timeseries,
     validate_and_insert_timeseries,
 )
-from teehr.models.dataset.table_models import (
+from teehr.models.tables import (
     Configuration,
     Unit,
     Variable,

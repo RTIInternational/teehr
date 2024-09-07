@@ -31,20 +31,12 @@ from teehr.models.fetching.utils import (
     SupportedKerchunkMethod,
     TimeseriesTypeEnum
 )
-# from teehr.models.dataset.filters import (
-#     LocationCrosswalkFilter,
-#     FilterOperators
-# )
 from teehr.fetching.const import (
     USGS_CONFIGURATION_NAME,
     USGS_VARIABLE_MAPPER,
     VARIABLE_NAME,
     NWM_VARIABLE_MAPPER
 )
-# from teehr.querying.table_queries import (
-#     get_locations,
-#     get_location_crosswalks
-# )
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +77,7 @@ class Fetch:
                 "operator": "like",
                 "value": f"{prefix}-%"
             }
-        ).to_df()
+        ).to_pandas()
 
         location_ids = (
             lcw_df.secondary_location_id.
@@ -116,7 +108,7 @@ class Fetch:
                     "operator": "like",
                     "value": "usgs-%"
                 }
-            ).to_df()
+            ).to_pandas()
             sites = locations_gdf["id"].str.removeprefix("usgs-").to_list()
 
         usgs_variable_name = USGS_VARIABLE_MAPPER[VARIABLE_NAME][service]

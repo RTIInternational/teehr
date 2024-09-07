@@ -7,7 +7,7 @@ def test_chain_filter_single(tmpdir):
     """Test filter string."""
     eval = Evaluation(dir_path=tmpdir)
     eval.clone_template()
-    units_df = eval.units.filter("name = 'm^3/s'").to_df()
+    units_df = eval.units.filter("name = 'm^3/s'").to_pandas()
     assert len(units_df) == 1
 
 
@@ -22,7 +22,7 @@ def test_dict_parse(tmpdir):
             "operator": "=",
             "value": "m^3/s"
         }]
-    ).to_df()
+    ).to_pandas()
     assert len(units_df) == 1
 
 

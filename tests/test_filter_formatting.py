@@ -1,7 +1,6 @@
 """Tests for the filter formatting functions."""
-from teehr import Evaluation
 from datetime import datetime
-from teehr.models.dataset.filters import (
+from teehr.models.filters import (
     TimeseriesFilter,
     FilterOperators
 )

@@ -18,7 +18,7 @@ from teehr.models.metrics.metric_enums import (
     TransformEnum
 )
 from teehr.metrics import metric_funcs as metric_funcs
-from teehr.models.dataset.table_enums import (
+from teehr.models.table_enums import (
     JoinedTimeseriesFields
 )
 

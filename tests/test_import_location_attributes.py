@@ -3,7 +3,7 @@ from teehr.loading.location_attributes import convert_location_attributes
 from pathlib import Path
 from teehr import Evaluation
 import tempfile
-from teehr.models.dataset.table_models import (
+from teehr.models.tables import (
     Attribute,
 )
 

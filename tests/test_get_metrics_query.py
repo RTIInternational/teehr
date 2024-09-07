@@ -1,36 +1,22 @@
 """Test evaluation class."""
-from teehr import Evaluation, Metrics
+from teehr import Metrics
 from teehr import Operators as ops
-from pathlib import Path
-import shutil
 import tempfile
 import pandas as pd
 import geopandas as gpd
 import numpy as np
 from arch.bootstrap import CircularBlockBootstrap, StationaryBootstrap
 
-from teehr.models.dataset.filters import JoinedTimeseriesFilter
+from teehr.models.filters import JoinedTimeseriesFilter
 from teehr.models.metrics.bootstrap_models import Bootstrappers
 
-TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
-JOINED_TIMESERIES_FILEPATH = Path(
-    TEST_STUDY_DATA_DIR,
-    "timeseries",
-    "test_joined_timeseries_part1.parquet"
-)
+from setup_v0_3_study import setup_v0_3_study
 
 
 def test_get_all_metrics(tmpdir):
     """Test get_metrics method."""
     # Define the evaluation object.
-    eval = Evaluation(dir_path=tmpdir)
-    eval.clone_template()
-
-    # Copy in joined timeseries file.
-    shutil.copy(
-        JOINED_TIMESERIES_FILEPATH,
-        Path(eval.joined_timeseries_dir, JOINED_TIMESERIES_FILEPATH.name)
-    )
+    eval = setup_v0_3_study(tmpdir)
 
     # Test all the metrics.
     include_all_metrics = [
@@ -40,34 +26,21 @@ def test_get_all_metrics(tmpdir):
     # Get the currently available fields to use in the query.
     flds = eval.joined_timeseries.field_enum()
 
-    metrics_df = eval.query.get_metrics(
+    metrics_df = eval.metrics.query(
         include_metrics=include_all_metrics,
         group_by=[flds.primary_location_id],
         order_by=[flds.primary_location_id],
-        include_geometry=False
-    )
+    ).to_pandas()
 
     assert isinstance(metrics_df, pd.DataFrame)
-    assert metrics_df.index.size == 2
+    assert metrics_df.index.size == 3
     assert metrics_df.columns.size == 33
 
 
 def test_metrics_filter_and_geometry(tmpdir):
     """Test get_metrics method with filter and geometry."""
     # Define the evaluation object.
-    eval = Evaluation(dir_path=tmpdir)
-    eval.clone_template()
-
-    # Copy in joined timeseries file.
-    shutil.copy(
-        JOINED_TIMESERIES_FILEPATH,
-        Path(eval.joined_timeseries_dir, JOINED_TIMESERIES_FILEPATH.name)
-    )
-    # Copy in the locations file.
-    shutil.copy(
-        Path(TEST_STUDY_DATA_DIR, "geo", "gages.parquet"),
-        Path(eval.locations_dir, "gages.parquet")
-    )
+    eval = setup_v0_3_study(tmpdir)
 
     # Define some metrics.
     kge = Metrics.KlingGuptaEfficiency()
@@ -89,13 +62,12 @@ def test_metrics_filter_and_geometry(tmpdir):
         )
     ]
 
-    metrics_df = eval.query.get_metrics(
+    metrics_df = eval.metrics.query(
         include_metrics=include_metrics,
         group_by=[flds.primary_location_id],
         order_by=[flds.primary_location_id],
         filters=filters,
-        include_geometry=True
-    )
+    ).to_geopandas()
 
     assert isinstance(metrics_df, gpd.GeoDataFrame)
     assert metrics_df.index.size == 1
@@ -105,19 +77,7 @@ def test_metrics_filter_and_geometry(tmpdir):
 def test_circularblock_bootstrapping(tmpdir):
     """Test get_metrics method circular block bootstrapping."""
     # Define the evaluation object.
-    eval = Evaluation(dir_path=tmpdir)
-    eval.clone_template()
-
-    # Copy in joined timeseries file.
-    shutil.copy(
-        JOINED_TIMESERIES_FILEPATH,
-        Path(eval.joined_timeseries_dir, JOINED_TIMESERIES_FILEPATH.name)
-    )
-    # Copy in the locations file.
-    shutil.copy(
-        Path(TEST_STUDY_DATA_DIR, "geo", "gages.parquet"),
-        Path(eval.locations_dir, "gages.parquet")
-    )
+    eval = setup_v0_3_study(tmpdir)
 
     # Define a bootstrapper.
     boot = Bootstrappers.CircularBlock(
@@ -129,7 +89,7 @@ def test_circularblock_bootstrapping(tmpdir):
     kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
 
     # Manual bootstrapping.
-    df = pd.read_parquet(JOINED_TIMESERIES_FILEPATH)
+    df = eval.joined_timeseries.to_pandas()
     df_gageA = df.groupby("primary_location_id").get_group("gage-A")
 
     p = df_gageA.primary_value
@@ -158,15 +118,16 @@ def test_circularblock_bootstrapping(tmpdir):
         )
     ]
 
-    metrics_df = eval.query.get_metrics(
+    metrics_df = eval.metrics.query(
         include_metrics=[kge],
         filters=filters,
         group_by=[flds.primary_location_id],
-        include_geometry=False
-    )
+    ).to_pandas()
 
     # Unpack and compare the results.
-    teehr_results = np.sort(np.array(metrics_df.KGE.values[0]))
+    teehr_results = np.sort(
+        np.array(metrics_df.kling_gupta_efficiency.values[0])
+    )
     manual_results = np.sort(results.ravel())
 
     assert (teehr_results == manual_results).all()
@@ -178,19 +139,7 @@ def test_circularblock_bootstrapping(tmpdir):
 def test_stationary_bootstrapping(tmpdir):
     """Test get_metrics method stationary bootstrapping."""
     # Define the evaluation object.
-    eval = Evaluation(dir_path=tmpdir)
-    eval.clone_template()
-
-    # Copy in joined timeseries file.
-    shutil.copy(
-        JOINED_TIMESERIES_FILEPATH,
-        Path(eval.joined_timeseries_dir, JOINED_TIMESERIES_FILEPATH.name)
-    )
-    # Copy in the locations file.
-    shutil.copy(
-        Path(TEST_STUDY_DATA_DIR, "geo", "gages.parquet"),
-        Path(eval.locations_dir, "gages.parquet")
-    )
+    eval = setup_v0_3_study(tmpdir)
 
     # Define a bootstrapper.
     boot = Bootstrappers.Stationary(
@@ -202,7 +151,7 @@ def test_stationary_bootstrapping(tmpdir):
     kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
 
     # Manual bootstrapping.
-    df = pd.read_parquet(JOINED_TIMESERIES_FILEPATH)
+    df = eval.joined_timeseries.to_pandas()
     df_gageA = df.groupby("primary_location_id").get_group("gage-A")
 
     p = df_gageA.primary_value
@@ -231,15 +180,16 @@ def test_stationary_bootstrapping(tmpdir):
         )
     ]
 
-    metrics_df = eval.query.get_metrics(
+    metrics_df = eval.metrics.query(
         include_metrics=[kge],
         filters=filters,
-        group_by=[flds.primary_location_id],
-        include_geometry=False
-    )
+        group_by=[flds.primary_location_id]
+    ).to_pandas()
 
     # Unpack and compare the results.
-    teehr_results = np.sort(np.array(metrics_df.KGE.values[0]))
+    teehr_results = np.sort(
+        np.array(metrics_df.kling_gupta_efficiency.values[0])
+    )
     manual_results = np.sort(results.ravel())
 
     assert (teehr_results == manual_results).all()

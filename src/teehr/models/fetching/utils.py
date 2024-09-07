@@ -1,5 +1,5 @@
 """Module for NWM fetching models."""
-from teehr.models.enums import StrEnum
+from teehr.models.str_enum import StrEnum
 
 
 # Timeseries models.

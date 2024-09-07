@@ -1,5 +1,5 @@
 """Module describing NWM v2.2 grid configuration variables."""
-from teehr.models.enums import StrEnum
+from teehr.models.str_enum import StrEnum
 
 from typing import Optional
 

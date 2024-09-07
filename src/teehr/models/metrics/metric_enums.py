@@ -1,5 +1,5 @@
 """Enums for metrics models."""
-from teehr.models.enums import StrEnum
+from teehr.models.str_enum import StrEnum
 
 
 class Operators(StrEnum):
