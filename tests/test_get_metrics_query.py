@@ -304,11 +304,7 @@ def test_gumboot_bootstrapping(tmpdir):
         value_time=vt,
         seed=kge.bootstrap.seed,
         random_state=kge.bootstrap.random_state,
-        min_days=kge.bootstrap.min_days,
-        min_years=kge.bootstrap.min_years,
         water_year_month=kge.bootstrap.water_year_month,
-        start_year=kge.bootstrap.start_year,
-        end_year=kge.bootstrap.end_year,
         boot_year_file=kge.bootstrap.boot_year_file
     )
     results = bs.apply(

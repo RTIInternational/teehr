@@ -44,10 +44,6 @@ class GumbootModel(MetricsBasemodel):
     args: Union[ArrayLike, None] = []
     kwargs: Union[ArrayLike, None] = None
     water_year_month: int = 10
-    start_year: Union[int, None] = None
-    end_year: Union[int, None] = None
-    min_days: int = 100
-    min_years: int = 10
     include_value_time: bool = True
 
 
