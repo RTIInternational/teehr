@@ -40,6 +40,7 @@ eval.load.import_location_crosswalks(
 )
 
 # =====>>> This is where USGS -> NGEN crosswalk will be loaded. <<<=====
+# eval.load.import_location_crosswalks()
 
 # Load the USGS observations
 # Note, dates are hard coded and will be provided by NGEN
@@ -57,6 +58,7 @@ eval.fetch.nwm_retrospective_points(
 )
 
 # =====>>> This is where NGEN simulation output will be loaded. <<<=====
+# eval.load.import_secondary_timeseries()
 
 # Create the joined timeseries
 eval.create_joined_timeseries(execute_udf=False)

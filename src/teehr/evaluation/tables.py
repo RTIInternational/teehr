@@ -601,8 +601,8 @@ class JoinedTimeseriesTable(BaseTable):
 
         self.df = (
             self.spark.read.format("parquet")
-            .option("recursiveFileLookup", "true")
-            .option("mergeSchema", "true")
+            # .option("recursiveFileLookup", "true")
+            # .option("mergeSchema", "true")
             .option("header", True)
             .load(str(self.dir))
         )
