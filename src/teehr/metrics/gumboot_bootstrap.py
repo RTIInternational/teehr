@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class GumbootBootstrap(IIDBootstrap):
-    """Python implementation the Gumboot R package."""
+    """Python implementation of the Gumboot R package."""
 
     def __init__(
         self,
@@ -50,7 +50,6 @@ class GumbootBootstrap(IIDBootstrap):
         self.unique_water_years = np.unique(water_years)
         self.num_water_years = self.unique_water_years.size
         self.water_year_array = water_years
-        self.all_value_indices = np.arange(len(self._args[0]))
 
         if boot_year_file:
             self.user_defined_boot_years = True
@@ -85,7 +84,7 @@ class GumbootBootstrap(IIDBootstrap):
         logger.debug(f"Resampling the Gumboot water years. rep: {rep}")
 
         if rep == 0:
-            jx_valid = self.all_value_indices
+            jx_valid = np.arange(len(self._args[0]))
         else:
             if self.user_defined_boot_years:
                 years = self.boot_year_array[:, rep - 1]
