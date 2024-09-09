@@ -19,6 +19,20 @@ JOINED_TIMESERIES_FILEPATH = Path(
     "timeseries",
     "test_joined_timeseries_part1.parquet"
 )
+BOOT_YEAR_FILE = Path(
+    "tests",
+    "data",
+    "test_study",
+    "bootstrap",
+    "boot_year_file_R.csv"
+)
+R_BENCHMARK_RESULTS = Path(
+    "tests",
+    "data",
+    "test_study",
+    "bootstrap",
+    "r_benchmark_results.csv"
+)
 
 
 def test_get_all_metrics(tmpdir):
@@ -283,7 +297,7 @@ def test_gumboot_bootstrapping(tmpdir):
         seed=40,
         quantiles=quantiles,
         reps=500,
-        boot_year_file="/home/sam/temp/boot_year_file_R.csv",
+        boot_year_file=BOOT_YEAR_FILE,
         min_days=100,
         min_years=10
     )
@@ -333,13 +347,12 @@ def test_gumboot_bootstrapping(tmpdir):
     # Unpack and compare the results.
     teehr_results = np.sort(np.array(metrics_df.kling_gupta_efficiency.values[0]))
     manual_results = np.sort(results.ravel())
-
     assert (teehr_results == manual_results).all()
     assert isinstance(metrics_df, pd.DataFrame)
 
-    r_df = pd.read_csv("/home/sam/temp/stats_boot_R_500.csv")
+    # Also compare to R benchmark results.
+    r_df = pd.read_csv(R_BENCHMARK_RESULTS)
     r_kge_vals = np.sort(r_df.KGE.values)
-
     assert np.allclose(teehr_results, r_kge_vals, rtol=1e-08)
 
     pass

@@ -91,7 +91,7 @@ class GumbootBootstrap(IIDBootstrap):
     def apply(
         self,
         func: Callable[..., ArrayLike],
-        reps: int = 1000,
+        reps: int,
         extra_kwargs: dict[str, Any] | None = None,
     ) -> Float64Array:  # type: ignore
         """
