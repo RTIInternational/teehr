@@ -29,7 +29,7 @@ def apply_aggregation_metrics(
     func_list = []
     for model in include_metrics:
 
-        alias = model.attrs["short_name"]
+        alias = model.output_field_name
 
         if "bootstrap" in model.model_dump() and model.bootstrap is not None:
             logger.debug(

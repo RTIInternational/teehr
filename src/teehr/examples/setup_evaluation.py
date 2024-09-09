@@ -7,7 +7,7 @@ class.
 """
 from teehr import Evaluation
 from pathlib import Path
-from teehr.models.dataset.table_models import (
+from teehr.models.tables import (
     Attribute,
 )
 

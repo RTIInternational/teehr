@@ -1,15 +1,5 @@
 """Metric Query Models."""
-from typing import List, Dict, Callable
-try:
-    # breaking change introduced in python 3.11
-    from enum import StrEnum
-except ImportError:  # pragma: no cover
-    from enum import Enum  # pragma: no cover
-
-    class StrEnum(str, Enum):  # pragma: no cover
-        """Enum with string values."""
-
-        pass  # pragma: no cover
+from typing import List, Dict, Callable, Union
 
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import Field, ConfigDict
@@ -18,7 +8,7 @@ from teehr.models.metrics.metric_enums import (
     TransformEnum
 )
 from teehr.metrics import metric_funcs as metric_funcs
-from teehr.models.dataset.table_enums import (
+from teehr.models.table_enums import (
     JoinedTimeseriesFields
 )
 

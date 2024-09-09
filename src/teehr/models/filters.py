@@ -5,19 +5,8 @@ from pydantic import BaseModel as BaseModel
 from pydantic import FieldValidationInfo, field_validator
 from datetime import datetime
 import logging
-from teehr.models.enums import StrEnum
-# from teehr.querying.field_enums import (
-#     get_unit_fields,
-#     get_variable_fields,
-#     get_attribute_fields,
-#     get_configuration_fields,
-#     get_location_fields,
-#     get_location_attribute_fields,
-#     get_location_crosswalk_fields,
-#     get_timeseries_fields,
-#     get_joined_timeseries_fields,
-# )
-from teehr.models.dataset.table_enums import (
+from teehr.models.str_enum import StrEnum
+from teehr.models.table_enums import (
     ConfigurationFields,
     UnitFields,
     VariableFields,
@@ -28,7 +17,7 @@ from teehr.models.dataset.table_enums import (
     TimeseriesFields,
     JoinedTimeseriesFields
 )
-from teehr.models.dataset.table_models import (
+from teehr.models.tables import (
     TableBaseModel
 )
 
