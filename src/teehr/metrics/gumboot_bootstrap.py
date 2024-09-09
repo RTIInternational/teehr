@@ -2,6 +2,7 @@
 from typing import Any, Callable, cast, Union
 from collections.abc import Generator as PyGenerator
 from pathlib import Path
+import logging
 
 from arch.bootstrap import IIDBootstrap
 from arch.bootstrap.base import (
@@ -12,6 +13,8 @@ from arch.typing import ArrayLike, Int64Array, Float64Array, NDArray
 from numpy.random import Generator, RandomState
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 # FILL_VALUE = -9999  # JAB
 
@@ -35,6 +38,8 @@ class GumbootBootstrap(IIDBootstrap):
         # JAB
         # self.boot_year_array: Union[np.array, None] = None
 
+        logger.debug("Initializing the Gumboot water years.")
+
         value_time = pd.to_datetime(value_time)
         water_years = np.where(
             value_time.dt.month >= water_year_month,
@@ -52,6 +57,14 @@ class GumbootBootstrap(IIDBootstrap):
             self.boot_year_array = np.genfromtxt(
                 boot_year_file, delimiter=",", dtype=int
             )
+            if np.in1d(
+                np.unique(self.boot_year_array),
+                self.unique_water_years
+            ).all() is False:
+                logger.error(
+                    "Invalid boot year file: The provided boot year file contains"
+                     " years outside of the range of the timeseries data."
+                )
         else:
             self.user_defined_boot_years = False
 
@@ -68,6 +81,8 @@ class GumbootBootstrap(IIDBootstrap):
         water year (time).
         """
         rng = np.random.default_rng()
+
+        logger.debug(f"Resampling the Gumboot water years. rep: {rep}")
 
         if rep == 0:
             jx_valid = self.all_value_indices
@@ -118,6 +133,8 @@ class GumbootBootstrap(IIDBootstrap):
         #     self.boot_year_array = np.full(
         #         (self.num_water_years, reps), FILL_VALUE, np.int32
         #     )
+
+        logger.debug(f"Apply the Gumboot bootstrap method over {reps} reps.")
 
         reps = reps + 1
 
