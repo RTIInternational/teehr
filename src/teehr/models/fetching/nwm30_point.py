@@ -1,5 +1,5 @@
 """Module describing NWM v3.0 point configuration variables."""
-from teehr.models.enums import StrEnum
+from teehr.models.str_enum import StrEnum
 
 from typing import Optional
 

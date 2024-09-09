@@ -16,9 +16,9 @@ from teehr.loading.joined_timeseries import (
 import teehr.const as const
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.load import Load
-from teehr.evaluation.query import Query
+from teehr.evaluation.metrics import Metrics
 # from teehr.evaluation.fields import Fields
-from teehr.evaluation.tables.tables import (
+from teehr.evaluation.tables import (
     UnitTable,
     VariableTable,
     AttributeTable,
@@ -111,14 +111,9 @@ class Evaluation:
         return Load(self)
 
     @property
-    def query(self) -> Query:
+    def metrics(self) -> Metrics:
         """The load component class."""
-        return Query(self)
-
-    # @property
-    # def fields(self) -> Fields:
-    #     """The load component class."""
-    #     return Fields(self)
+        return Metrics(self)
 
     @property
     def units(self) -> UnitTable:

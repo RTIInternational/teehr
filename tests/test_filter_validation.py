@@ -1,11 +1,11 @@
 """This module tests the filter validation function."""
 from datetime import datetime
-from teehr.models.dataset.filters import (
+from teehr.models.filters import (
     TimeseriesFilter,
     FilterOperators
 )
 import pandas as pd
-from teehr.models.dataset.table_models import Timeseries
+from teehr.models.tables import Timeseries
 from teehr.querying.filter_format import validate_filter
 
 import tempfile

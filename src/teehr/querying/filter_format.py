@@ -7,10 +7,10 @@ from datetime import datetime
 from typing import List, Union
 import logging
 from pyspark.sql import DataFrame
-from teehr.models.enums import StrEnum
+from teehr.models.str_enum import StrEnum
 
-from teehr.models.dataset.filters import FilterBaseModel
-from teehr.models.dataset.table_models import TableBaseModel
+from teehr.models.filters import FilterBaseModel
+from teehr.models.tables import TableBaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -141,48 +141,6 @@ def validate_filter(
     return filter
 
 
-# def validate_filter_values(
-#     filters: Union[FilterBaseModel, List[FilterBaseModel]],
-#     model: TableBaseModel
-# ):
-#     """Validate list filter values."""
-#     filter_was_iterable = True
-#     if not isinstance(filters, List):
-#         filters = [filters]
-#         filter_was_iterable = False
-
-#     validated_filters = []
-#     for filter in filters:
-#         validated_filters.append(validate_filter(filter, model))
-
-#     if filter_was_iterable:
-#         return validated_filters
-#     else:
-#         return validated_filters[0]
-
-
-# def apply_filters(df, filters):
-#     """Apply filters to a DataFrame."""
-#     if not isinstance(filters, List):
-#         filters = [filters]
-
-#     for filter in filters:
-#         filter_str = format_filter(filter)
-#         df = df.filter(filter_str)
-#     return df
-
-
-# def is_iterable_not_str(obj):
-#     """Check if is type Iterable and not str.
-
-#     We should not have the case where a string is provided, but doesn't
-#     hurt to check.
-#     """
-#     if isinstance(obj, Iterable) and not isinstance(obj, str):
-#         return True
-#     return False
-
-
 def validate_and_apply_filters(
     sdf: DataFrame,
     filters: Union[str, dict, List[dict]],
@@ -209,6 +167,7 @@ def validate_and_apply_filters(
                 filter,
                 context={"fields_enum": fields_enum}
             )
+            logger.debug(f"Filter: {filter.model_dump_json()}")
             if validate:
                 filter = validate_filter(filter, table_model)
             filter = format_filter(filter)

@@ -2,7 +2,8 @@
 import geopandas as gpd
 import pandas as pd
 from typing import List, Union
-from teehr.models.enums import StrEnum
+from teehr.models.str_enum import StrEnum
+import pyspark.sql as ps
 
 import logging
 
@@ -62,35 +63,21 @@ def group_df(df, group_by: Union[str, StrEnum, List[Union[str, StrEnum]]]):
     return df.groupBy(*group_by_strings)
 
 
-def join_locations_geometry(
-    spark,
-    df,
-    group_by,
-    locations_dirpath
+def join_geometry(
+    target_df: ps.DataFrame,
+    location_df: ps.DataFrame,
+    target_location_id: str = "location_id",
 ):
     """Join geometry."""
     logger.debug("Joining locations geometry.")
-    if "primary_location_id" not in group_by:
-        logger.warning(
-            "The primary_location_id field must be "
-            "included in the group_by to include geometry."
-        )
-        return df.toPandas()
 
-    locations_df = (
-        spark.read.format("parquet")
-        .option("recursiveFileLookup", "true")
-        .option("mergeSchema", "true")
-        .load(str(locations_dirpath))
-    )
-
-    joined_df = df.join(
-        locations_df.withColumnRenamed(
+    joined_df = target_df.join(
+        location_df.withColumnRenamed(
             "id",
-            "primary_location_id"
+            target_location_id
         ).select(
-            "primary_location_id",
+            target_location_id,
             "geometry"
-        ), on="primary_location_id"
+        ), on=target_location_id
     )
     return df_to_gdf(joined_df.toPandas())

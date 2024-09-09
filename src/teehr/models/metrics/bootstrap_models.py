@@ -7,7 +7,7 @@ from numpy.random import RandomState
 from pydantic import Field
 
 import teehr.metrics.bootstrap_funcs as bootstrap_funcs
-from teehr.models.dataset.table_enums import (
+from teehr.models.table_enums import (
     JoinedTimeseriesFields
 )
 from teehr.models.metrics.metric_models import MetricsBasemodel

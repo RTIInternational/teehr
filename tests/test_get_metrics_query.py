@@ -1,15 +1,13 @@
 """Test evaluation class."""
-from teehr import Evaluation, Metrics
+from teehr import Metrics
 from teehr import Operators as ops
-from pathlib import Path
-import shutil
 import tempfile
 import pandas as pd
 import geopandas as gpd
 import numpy as np
 from arch.bootstrap import CircularBlockBootstrap, StationaryBootstrap
 
-from teehr.models.dataset.filters import JoinedTimeseriesFilter
+from teehr.models.filters import JoinedTimeseriesFilter
 from teehr.models.metrics.bootstrap_models import Bootstrappers
 from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 
@@ -45,12 +43,11 @@ def test_get_all_metrics(tmpdir):
     # Get the currently available fields to use in the query.
     flds = eval.joined_timeseries.field_enum()
 
-    metrics_df = eval.query.get_metrics(
+    metrics_df = eval.metrics.query(
         include_metrics=include_all_metrics,
         group_by=[flds.primary_location_id],
         order_by=[flds.primary_location_id],
-        include_geometry=False
-    )
+    ).to_pandas()
 
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
@@ -82,13 +79,12 @@ def test_metrics_filter_and_geometry(tmpdir):
         )
     ]
 
-    metrics_df = eval.query.get_metrics(
+    metrics_df = eval.metrics.query(
         include_metrics=include_metrics,
         group_by=[flds.primary_location_id],
         order_by=[flds.primary_location_id],
         filters=filters,
-        include_geometry=True
-    )
+    ).to_geopandas()
 
     assert isinstance(metrics_df, gpd.GeoDataFrame)
     assert metrics_df.index.size == 1
@@ -139,15 +135,16 @@ def test_circularblock_bootstrapping(tmpdir):
         )
     ]
 
-    metrics_df = eval.query.get_metrics(
+    metrics_df = eval.metrics.query(
         include_metrics=[kge],
         filters=filters,
         group_by=[flds.primary_location_id],
-        include_geometry=False
-    )
+    ).to_pandas()
 
     # Unpack and compare the results.
-    teehr_results = np.sort(np.array(metrics_df.KGE.values[0]))
+    teehr_results = np.sort(
+        np.array(metrics_df.kling_gupta_efficiency.values[0])
+    )
     manual_results = np.sort(results.ravel())
 
     assert (teehr_results == manual_results).all()
@@ -200,15 +197,16 @@ def test_stationary_bootstrapping(tmpdir):
         )
     ]
 
-    metrics_df = eval.query.get_metrics(
+    metrics_df = eval.metrics.query(
         include_metrics=[kge],
         filters=filters,
-        group_by=[flds.primary_location_id],
-        include_geometry=False
-    )
+        group_by=[flds.primary_location_id]
+    ).to_pandas()
 
     # Unpack and compare the results.
-    teehr_results = np.sort(np.array(metrics_df.KGE.values[0]))
+    teehr_results = np.sort(
+        np.array(metrics_df.kling_gupta_efficiency.values[0])
+    )
     manual_results = np.sort(results.ravel())
 
     assert (teehr_results == manual_results).all()

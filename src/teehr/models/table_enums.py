@@ -1,5 +1,5 @@
 """Field enums for each table in the dataset."""
-from teehr.models.enums import StrEnum
+from teehr.models.str_enum import StrEnum
 
 
 class ConfigurationFields(StrEnum):

@@ -1,5 +1,5 @@
 import tempfile
-from teehr.models.dataset.table_enums import (
+from teehr.models.table_enums import (
     ConfigurationFields,
     UnitFields,
     VariableFields,
