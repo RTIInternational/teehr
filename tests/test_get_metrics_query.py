@@ -13,12 +13,9 @@ from teehr.models.dataset.filters import JoinedTimeseriesFilter
 from teehr.models.metrics.bootstrap_models import Bootstrappers
 from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 
-TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
-JOINED_TIMESERIES_FILEPATH = Path(
-    TEST_STUDY_DATA_DIR,
-    "timeseries",
-    "test_joined_timeseries_part1.parquet"
-)
+from setup_v0_3_study import setup_v0_3_study
+
+
 BOOT_YEAR_FILE = Path(
     "tests",
     "data",
@@ -38,14 +35,7 @@ R_BENCHMARK_RESULTS = Path(
 def test_get_all_metrics(tmpdir):
     """Test get_metrics method."""
     # Define the evaluation object.
-    eval = Evaluation(dir_path=tmpdir)
-    eval.clone_template()
-
-    # Copy in joined timeseries file.
-    shutil.copy(
-        JOINED_TIMESERIES_FILEPATH,
-        Path(eval.joined_timeseries_dir, JOINED_TIMESERIES_FILEPATH.name)
-    )
+    eval = setup_v0_3_study(tmpdir)
 
     # Test all the metrics.
     include_all_metrics = [
@@ -63,26 +53,14 @@ def test_get_all_metrics(tmpdir):
     )
 
     assert isinstance(metrics_df, pd.DataFrame)
-    assert metrics_df.index.size == 2
+    assert metrics_df.index.size == 3
     assert metrics_df.columns.size == 33
 
 
 def test_metrics_filter_and_geometry(tmpdir):
     """Test get_metrics method with filter and geometry."""
     # Define the evaluation object.
-    eval = Evaluation(dir_path=tmpdir)
-    eval.clone_template()
-
-    # Copy in joined timeseries file.
-    shutil.copy(
-        JOINED_TIMESERIES_FILEPATH,
-        Path(eval.joined_timeseries_dir, JOINED_TIMESERIES_FILEPATH.name)
-    )
-    # Copy in the locations file.
-    shutil.copy(
-        Path(TEST_STUDY_DATA_DIR, "geo", "gages.parquet"),
-        Path(eval.locations_dir, "gages.parquet")
-    )
+    eval = setup_v0_3_study(tmpdir)
 
     # Define some metrics.
     kge = Metrics.KlingGuptaEfficiency()
@@ -120,19 +98,7 @@ def test_metrics_filter_and_geometry(tmpdir):
 def test_circularblock_bootstrapping(tmpdir):
     """Test get_metrics method circular block bootstrapping."""
     # Define the evaluation object.
-    eval = Evaluation(dir_path=tmpdir)
-    eval.clone_template()
-
-    # Copy in joined timeseries file.
-    shutil.copy(
-        JOINED_TIMESERIES_FILEPATH,
-        Path(eval.joined_timeseries_dir, JOINED_TIMESERIES_FILEPATH.name)
-    )
-    # Copy in the locations file.
-    shutil.copy(
-        Path(TEST_STUDY_DATA_DIR, "geo", "gages.parquet"),
-        Path(eval.locations_dir, "gages.parquet")
-    )
+    eval = setup_v0_3_study(tmpdir)
 
     # Define a bootstrapper.
     boot = Bootstrappers.CircularBlock(
@@ -144,7 +110,7 @@ def test_circularblock_bootstrapping(tmpdir):
     kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
 
     # Manual bootstrapping.
-    df = pd.read_parquet(JOINED_TIMESERIES_FILEPATH)
+    df = eval.joined_timeseries.to_pandas()
     df_gageA = df.groupby("primary_location_id").get_group("gage-A")
 
     p = df_gageA.primary_value
@@ -193,19 +159,7 @@ def test_circularblock_bootstrapping(tmpdir):
 def test_stationary_bootstrapping(tmpdir):
     """Test get_metrics method stationary bootstrapping."""
     # Define the evaluation object.
-    eval = Evaluation(dir_path=tmpdir)
-    eval.clone_template()
-
-    # Copy in joined timeseries file.
-    shutil.copy(
-        JOINED_TIMESERIES_FILEPATH,
-        Path(eval.joined_timeseries_dir, JOINED_TIMESERIES_FILEPATH.name)
-    )
-    # Copy in the locations file.
-    shutil.copy(
-        Path(TEST_STUDY_DATA_DIR, "geo", "gages.parquet"),
-        Path(eval.locations_dir, "gages.parquet")
-    )
+    eval = setup_v0_3_study(tmpdir)
 
     # Define a bootstrapper.
     boot = Bootstrappers.Stationary(
@@ -217,7 +171,7 @@ def test_stationary_bootstrapping(tmpdir):
     kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
 
     # Manual bootstrapping.
-    df = pd.read_parquet(JOINED_TIMESERIES_FILEPATH)
+    df = eval.joined_timeseries.to_pandas()
     df_gageA = df.groupby("primary_location_id").get_group("gage-A")
 
     p = df_gageA.primary_value
@@ -266,28 +220,7 @@ def test_stationary_bootstrapping(tmpdir):
 def test_gumboot_bootstrapping(tmpdir):
     """Test get_metrics method gumboot bootstrapping."""
     # Define the evaluation object.
-    eval = Evaluation(dir_path=tmpdir)
-    eval.clone_template()
-
-    # TODO:
-    JOINED_TIMESERIES_FILEPATH = Path(
-        "tests",
-        "data",
-        "test_study",
-        "timeseries",
-        "flows_1030500.parquet"
-    )
-
-    # Copy in joined timeseries file.
-    shutil.copy(
-        JOINED_TIMESERIES_FILEPATH,
-        Path(eval.joined_timeseries_dir, JOINED_TIMESERIES_FILEPATH.name)
-    )
-    # Copy in the locations file.
-    shutil.copy(
-        Path(TEST_STUDY_DATA_DIR, "geo", "gages.parquet"),
-        Path(eval.locations_dir, "gages.parquet")
-    )
+    eval = setup_v0_3_study(tmpdir)
 
     # quantiles = [0.05, 0.5, 0.95]
     quantiles = None
@@ -305,7 +238,7 @@ def test_gumboot_bootstrapping(tmpdir):
     nse = Metrics.NashSutcliffeEfficiency(bootstrap=boot)
 
     # Manually calling Gumboot.
-    df = pd.read_parquet(JOINED_TIMESERIES_FILEPATH)
+    df = eval.joined_timeseries.to_pandas()
     df_gageA = df.groupby("primary_location_id").get_group("gage-A")
 
     p = df_gageA.primary_value
