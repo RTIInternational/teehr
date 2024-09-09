@@ -2,14 +2,17 @@
 from teehr import Metrics
 from teehr import Operators as ops
 import tempfile
+import shutil
 import pandas as pd
 import geopandas as gpd
+from pathlib import Path
 import numpy as np
 from arch.bootstrap import CircularBlockBootstrap, StationaryBootstrap
 
 from teehr.models.filters import JoinedTimeseriesFilter
 from teehr.models.metrics.bootstrap_models import Bootstrappers
 from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
+from teehr.evaluation.evaluation import Evaluation
 
 from setup_v0_3_study import setup_v0_3_study
 
@@ -217,8 +220,28 @@ def test_stationary_bootstrapping(tmpdir):
 
 def test_gumboot_bootstrapping(tmpdir):
     """Test get_metrics method gumboot bootstrapping."""
-    # Define the evaluation object.
-    eval = setup_v0_3_study(tmpdir)
+    # Manually create an evaluation using timseries from the R
+    # Gumboot package vignette.
+    eval = Evaluation(dir_path=tmpdir)
+    eval.clone_template()
+    joined_timeseries_filepath = Path(
+        "tests",
+        "data",
+        "test_study",
+        "timeseries",
+        "flows_1030500.parquet"
+    )
+    # Copy in joined timeseries file.
+    shutil.copy(
+        joined_timeseries_filepath,
+        Path(eval.joined_timeseries_dir, joined_timeseries_filepath.name)
+    )
+    # Copy in the locations file.
+    test_study_data_dir = Path("tests", "data", "v0_3_test_study")
+    shutil.copy(
+        Path(test_study_data_dir, "geo", "gages.parquet"),
+        Path(eval.locations_dir, "gages.parquet")
+    )
 
     # quantiles = [0.05, 0.5, 0.95]
     quantiles = None
@@ -228,9 +251,7 @@ def test_gumboot_bootstrapping(tmpdir):
         seed=40,
         quantiles=quantiles,
         reps=500,
-        boot_year_file=BOOT_YEAR_FILE,
-        min_days=100,
-        min_years=10
+        boot_year_file=BOOT_YEAR_FILE
     )
     kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
     nse = Metrics.NashSutcliffeEfficiency(bootstrap=boot)
@@ -268,12 +289,11 @@ def test_gumboot_bootstrapping(tmpdir):
         )
     ]
 
-    metrics_df = eval.query.get_metrics(
+    metrics_df = eval.metrics.query(
         include_metrics=[kge, nse],
         filters=filters,
-        group_by=[flds.primary_location_id],
-        include_geometry=False
-    )
+        group_by=[flds.primary_location_id]
+    ).to_pandas()
 
     # Unpack and compare the results.
     teehr_results = np.sort(np.array(metrics_df.kling_gupta_efficiency.values[0]))
