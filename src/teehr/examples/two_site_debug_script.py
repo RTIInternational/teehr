@@ -1,7 +1,7 @@
+"""Test script for debugging evaluation data."""
 from teehr import Evaluation
 from pathlib import Path
 from teehr import Metrics as metrics
-from teehr.models.str_enum import StrEnum
 from teehr.models.table_enums import (
     JoinedTimeseriesFields
 )
