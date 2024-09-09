@@ -363,30 +363,30 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        # test_get_all_metrics(
-        #     tempfile.mkdtemp(
-        #         prefix="1-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_metrics_filter_and_geometry(
-        #     tempfile.mkdtemp(
-        #         prefix="2-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_circularblock_bootstrapping(
-        #     tempfile.mkdtemp(
-        #         prefix="3-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_stationary_bootstrapping(
-        #     tempfile.mkdtemp(
-        #         prefix="4-",
-        #         dir=tempdir
-        #     )
-        # )
+        test_get_all_metrics(
+            tempfile.mkdtemp(
+                prefix="1-",
+                dir=tempdir
+            )
+        )
+        test_metrics_filter_and_geometry(
+            tempfile.mkdtemp(
+                prefix="2-",
+                dir=tempdir
+            )
+        )
+        test_circularblock_bootstrapping(
+            tempfile.mkdtemp(
+                prefix="3-",
+                dir=tempdir
+            )
+        )
+        test_stationary_bootstrapping(
+            tempfile.mkdtemp(
+                prefix="4-",
+                dir=tempdir
+            )
+        )
         test_gumboot_bootstrapping(
             tempfile.mkdtemp(
                 prefix="5-",
