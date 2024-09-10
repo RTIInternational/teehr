@@ -40,10 +40,14 @@ def apply_aggregation_metrics(
                 return_type = ARRAY_TYPE
             else:
                 return_type = DICT_TYPE
+
             func_pd = pandas_udf(
                 model.bootstrap.func(model),
                 return_type
             )
+            if (model.bootstrap.include_value_time) and \
+                ("value_time" not in model.input_field_names):
+                model.input_field_names.append("value_time")
         else:
             logger.debug(f"Applying metric: {alias}")
             func_pd = pandas_udf(model.func, model.attrs["return_type"])
