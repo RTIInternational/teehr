@@ -1,5 +1,5 @@
 """Bootstrap classes."""
-from typing import Any, Callable, cast, Union
+from typing import Any, Callable, Union
 from collections.abc import Generator as PyGenerator
 from pathlib import Path
 import logging
@@ -9,7 +9,7 @@ from arch.bootstrap.base import (
     # _loo_jackknife, # leave one out jackknife
     _add_extra_kwargs
 )
-from arch.typing import ArrayLike, Int64Array, Float64Array, NDArray
+from arch.typing import ArrayLike, Int64Array, Float64Array
 from numpy.random import Generator, RandomState
 import numpy as np
 import pandas as pd
@@ -45,7 +45,7 @@ class GumbootBootstrap(IIDBootstrap):
             value_time.dt.month >= water_year_month,
             value_time.dt.year + 1,
             value_time.dt.year
-        ) # (iyWater)
+        )  # (iyWater)
 
         self.unique_water_years = np.unique(water_years)
         self.num_water_years = self.unique_water_years.size
@@ -61,8 +61,9 @@ class GumbootBootstrap(IIDBootstrap):
                 self.unique_water_years
             ).all() is False:
                 logger.error(
-                    "Invalid boot year file: The provided boot year file contains"
-                     " years outside of the range of the timeseries data."
+                    "Invalid boot year file: The provided boot year file "
+                    "contains years outside of the range of the timeseries "
+                    "data."
                 )
         else:
             self.user_defined_boot_years = False
@@ -72,7 +73,7 @@ class GumbootBootstrap(IIDBootstrap):
         rep: int
     ) -> Int64Array:  # type: ignore
         """
-        The Gumboot resampling implementation.
+        Gumboot resampling implementation.
 
         Notes
         -----
@@ -97,7 +98,9 @@ class GumbootBootstrap(IIDBootstrap):
 
             # Get the indexes of values corresponding to the specified
             # water years, including duplicate indexes for repeating years.
-            inds = [np.where(self.water_year_array == year)[0] for year in years]
+            inds = [
+                np.where(self.water_year_array == year)[0] for year in years
+            ]
             jx_valid = np.hstack(inds)
 
         return jx_valid
