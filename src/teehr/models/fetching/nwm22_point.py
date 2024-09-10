@@ -1,12 +1,5 @@
 """Module describing NWM v2.2 point data configuration variables."""
-try:
-    # breaking change introduced in python 3.11
-    from enum import StrEnum
-except ImportError:  # pragma: no cover
-    from enum import Enum  # pragma: no cover
-
-    class StrEnum(str, Enum):  # pragma: no cover
-        pass  # pragma: no cover
+from teehr.models.str_enum import StrEnum
 
 from typing import Optional
 

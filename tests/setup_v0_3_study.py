@@ -1,10 +1,10 @@
-"""Test the import_timeseries function in the Evaluation class."""
+"""Fixtures for v0.3 study tests."""
 from pathlib import Path
 from teehr import Evaluation
+
 from teehr.models.tables import (
     Attribute
 )
-import tempfile
 
 TEST_DATA_DIR = Path("tests", "v0_3", "data", "test_study")
 GEOJSON_GAGES_FILEPATH = Path(TEST_DATA_DIR, "geo", "gages.geojson")
@@ -18,8 +18,8 @@ SECONDARY_TIMESERIES_FILEPATH = Path(
 GEO_FILEPATH = Path(TEST_DATA_DIR, "geo")
 
 
-def test_create_joined_timeseries(tmpdir):
-    """Test the validate_locations function."""
+def setup_v0_3_study(tmpdir):
+    """Set up a v0.3 study."""
     eval = Evaluation(dir_path=tmpdir)
 
     # Enable logging
@@ -105,16 +105,4 @@ def test_create_joined_timeseries(tmpdir):
     # Create the joined timeseries
     eval.create_joined_timeseries(execute_udf=True)
 
-    assert True
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_create_joined_timeseries(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
+    return eval

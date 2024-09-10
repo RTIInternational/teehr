@@ -1,8 +1,8 @@
 """Evaluation module."""
-import pandas as pd
-import geopandas as gpd
-from typing import Union, List
-from enum import Enum
+# import pandas as pd
+# import geopandas as gpd
+from typing import Union
+# from enum import Enum
 from pathlib import Path
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
@@ -14,11 +14,22 @@ from teehr.loading.joined_timeseries import (
     create_joined_timeseries_dataset,
 )
 import teehr.const as const
-from teehr.models.metrics.metrics import MetricsBasemodel
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.load import Load
-from teehr.evaluation.query import Query
-from teehr.evaluation.fields import Fields
+from teehr.evaluation.metrics import Metrics
+# from teehr.evaluation.fields import Fields
+from teehr.evaluation.tables import (
+    UnitTable,
+    VariableTable,
+    AttributeTable,
+    ConfigurationTable,
+    LocationTable,
+    LocationAttributeTable,
+    LocationCrosswalkTable,
+    PrimaryTimeseriesTable,
+    SecondaryTimeseriesTable,
+    JoinedTimeseriesTable,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -100,14 +111,59 @@ class Evaluation:
         return Load(self)
 
     @property
-    def query(self) -> Query:
+    def metrics(self) -> Metrics:
         """The load component class."""
-        return Query(self)
+        return Metrics(self)
 
     @property
-    def fields(self) -> Fields:
-        """The load component class."""
-        return Fields(self)
+    def units(self) -> UnitTable:
+        """Access the units table."""
+        return UnitTable(self)
+
+    @property
+    def variables(self) -> VariableTable:
+        """Access the variables table."""
+        return VariableTable(self)
+
+    @property
+    def attributes(self) -> AttributeTable:
+        """Access the attributes table."""
+        return AttributeTable(self)
+
+    @property
+    def configurations(self) -> ConfigurationTable:
+        """Access the configurations table."""
+        return ConfigurationTable(self)
+
+    @property
+    def locations(self) -> LocationTable:
+        """Access the locations table."""
+        return LocationTable(self)
+
+    @property
+    def location_attributes(self) -> LocationAttributeTable:
+        """Access the location attributes table."""
+        return LocationAttributeTable(self)
+
+    @property
+    def location_crosswalks(self) -> LocationCrosswalkTable:
+        """Access the location crosswalks table."""
+        return LocationCrosswalkTable(self)
+
+    @property
+    def primary_timeseries(self) -> PrimaryTimeseriesTable:
+        """Access the primary timeseries table."""
+        return PrimaryTimeseriesTable(self)
+
+    @property
+    def secondary_timeseries(self) -> SecondaryTimeseriesTable:
+        """Access the secondary timeseries table."""
+        return SecondaryTimeseriesTable(self)
+
+    @property
+    def joined_timeseries(self) -> JoinedTimeseriesTable:
+        """Access the joined timeseries table."""
+        return JoinedTimeseriesTable(self)
 
     def enable_logging(self):
         """Enable logging."""
@@ -149,13 +205,6 @@ class Evaluation:
         """
         pass
 
-    def get_timeseries() -> pd.DataFrame:
-        """Get timeseries data.
-
-        Includes retrieving data and metadata.
-        """
-        pass
-
     def create_joined_timeseries(self, execute_udf: bool = False):
         """Create joined timeseries.
 
@@ -170,26 +219,3 @@ class Evaluation:
             self.scripts_dir,
             execute_udf,
         )
-
-    def get_metrics(
-        self,
-        group_by: List[Union[str, Enum]],
-        order_by: List[Union[str, Enum]],
-        include_metrics: Union[List[MetricsBasemodel], str],
-        filters: Union[List[dict], None] = None,
-        include_geometry: bool = False,
-        return_query: bool = False,
-    ) -> Union[str, pd.DataFrame, gpd.GeoDataFrame]:
-        """Get metrics data.
-
-        Includes retrieving data and metadata.
-        """
-        logger.info("Calculating performance metrics.")
-        pass
-
-    def get_timeseries_chars():
-        """Get timeseries characteristics.
-
-        Includes retrieving data and metadata.
-        """
-        pass

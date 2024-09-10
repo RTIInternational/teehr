@@ -1,7 +1,7 @@
 """Test the import_timeseries function in the Evaluation class."""
 from pathlib import Path
 from teehr import Evaluation
-from teehr.models.dataset.table_models import (
+from teehr.models.tables import (
     Configuration,
     # Unit,
     Variable

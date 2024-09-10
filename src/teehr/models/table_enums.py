@@ -1,14 +1,5 @@
 """Field enums for each table in the dataset."""
-try:
-    # breaking change introduced in python 3.11
-    from enum import StrEnum
-except ImportError:  # pragma: no cover
-    from enum import Enum  # pragma: no cover
-
-    class StrEnum(str, Enum):  # pragma: no cover
-        """Enum with string values."""
-
-        pass  # pragma: no cover
+from teehr.models.str_enum import StrEnum
 
 
 class ConfigurationFields(StrEnum):

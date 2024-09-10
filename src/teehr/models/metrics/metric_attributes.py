@@ -1,10 +1,13 @@
 """Dictionaries defining static metric attributes."""
+
+
 ME_ATTRS = {
     "short_name": "ME",
     "display_name": "Mean Error",
     "category": "Deterministic",
     "value_range": None,
-    "optimal_value": 0.0
+    "optimal_value": 0.0,
+    "return_type": "float"
 }
 
 RBIAS_ATTRS = {
@@ -12,7 +15,8 @@ RBIAS_ATTRS = {
     "display_name": "Relative Bias",
     "category": "Deterministic",
     "value_range": None,
-    "optimal_value": 0.0
+    "optimal_value": 0.0,
+    "return_type": "float"
 }
 
 MULTBIAS_ATTRS = {
@@ -20,7 +24,8 @@ MULTBIAS_ATTRS = {
     "display_name": "Multiplicative Bias",
     "category": "Deterministic",
     "value_range": None,
-    "optimal_value": 1.0
+    "optimal_value": 1.0,
+    "return_type": "float"
 }
 
 MSE_ATTRS = {
@@ -28,7 +33,8 @@ MSE_ATTRS = {
     "display_name": "Mean Square Error",
     "category": "Deterministic",
     "value_range": None,
-    "optimal_value": 0.0
+    "optimal_value": 0.0,
+    "return_type": "float"
 }
 
 RMSE_ATTRS = {
@@ -36,7 +42,8 @@ RMSE_ATTRS = {
     "display_name": "Root Mean Square Error",
     "category": "Deterministic",
     "value_range": None,
-    "optimal_value": 0.0
+    "optimal_value": 0.0,
+    "return_type": "float"
 }
 
 MAE_ATTRS = {
@@ -44,7 +51,8 @@ MAE_ATTRS = {
     "display_name": "Mean Absolute Error",
     "category": "Deterministic",
     "value_range": None,
-    "optimal_value": 0.0
+    "optimal_value": 0.0,
+    "return_type": "float"
 }
 
 RMAE_ATTRS = {
@@ -52,7 +60,8 @@ RMAE_ATTRS = {
     "display_name": "Mean Absolute Relative Error",
     "category": "Deterministic",
     "value_range": None,
-    "optimal_value": 0.0
+    "optimal_value": 0.0,
+    "return_type": "float"
 }
 
 PEARSON_ATTRS = {
@@ -60,7 +69,8 @@ PEARSON_ATTRS = {
     "display_name": "Pearson Correlation",
     "category": "Deterministic",
     "value_range": [-1.0, 1.0],
-    "optimal_value": 1.0
+    "optimal_value": 1.0,
+    "return_type": "float"
 }
 
 R2_ATTRS = {
@@ -68,7 +78,8 @@ R2_ATTRS = {
     "display_name": "Coefficient of Determination",
     "category": "Deterministic",
     "value_range": [0.0, 1.0],
-    "optimal_value": 1.0
+    "optimal_value": 1.0,
+    "return_type": "float"
 }
 
 NSE_ATTRS = {
@@ -76,7 +87,8 @@ NSE_ATTRS = {
     "display_name": "Nash-Sutcliffe Efficiency",
     "category": "Deterministic",
     "value_range": [None, 1.0],
-    "optimal_value": 1.0
+    "optimal_value": 1.0,
+    "return_type": "float"
 }
 
 NNSE_ATTRS = {
@@ -84,7 +96,8 @@ NNSE_ATTRS = {
     "display_name": "Normalized Nash-Sutcliffe Efficiency",
     "category": "Deterministic",
     "value_range": [0.0, 1.0],
-    "optimal_value": 1.0
+    "optimal_value": 1.0,
+    "return_type": "float"
 }
 
 KGE_ATTRS = {
@@ -92,7 +105,8 @@ KGE_ATTRS = {
     "display_name": "Kling-Gupta Efficiency - original",
     "category": "Deterministic",
     "value_range": [0.0, 1.0],
-    "optimal_value": 1.0
+    "optimal_value": 1.0,
+    "return_type": "float"
 }
 
 KGE1_ATTRS = {
@@ -100,7 +114,8 @@ KGE1_ATTRS = {
     "display_name": "Kling-Gupta Efficiency - modified 1 (2012)",
     "category": "Deterministic",
     "value_range": [0.0, 1.0],
-    "optimal_value": 1.0
+    "optimal_value": 1.0,
+    "return_type": "float"
 }
 
 KGE2_ATTRS = {
@@ -108,7 +123,8 @@ KGE2_ATTRS = {
     "display_name": "Kling-Gupta Efficiency - modified 2 (2021)",
     "category": "Deterministic",
     "value_range": [0.0, 1.0],
-    "optimal_value": 1.0
+    "optimal_value": 1.0,
+    "return_type": "float"
 }
 
 PRIMARY_COUNT_ATTRS = {
@@ -116,7 +132,8 @@ PRIMARY_COUNT_ATTRS = {
     "display_name": "Primary Count",
     "category": "Simple",
     "value_range": None,
-    "optimal_value": None
+    "optimal_value": None,
+    "return_type": "float"
 }
 
 SECONDARY_COUNT_ATTRS = {
@@ -124,7 +141,8 @@ SECONDARY_COUNT_ATTRS = {
     "display_name": "Secondary Count",
     "category": "Simple",
     "value_range": None,
-    "optimal_value": None
+    "optimal_value": None,
+    "return_type": "float"
 }
 
 PRIMARY_MINIMUM_ATTRS = {
@@ -132,7 +150,8 @@ PRIMARY_MINIMUM_ATTRS = {
     "display_name": "Primary Minimum",
     "category": "Simple",
     "value_range": None,
-    "optimal_value": None
+    "optimal_value": None,
+    "return_type": "float"
 }
 
 SECONDARY_MINIMUM_ATTRS = {
@@ -140,7 +159,8 @@ SECONDARY_MINIMUM_ATTRS = {
     "display_name": "Secondary Count",
     "category": "Simple",
     "value_range": None,
-    "optimal_value": None
+    "optimal_value": None,
+    "return_type": "float"
 }
 
 PRIMARY_MAXIMUM_ATTRS = {
@@ -148,7 +168,8 @@ PRIMARY_MAXIMUM_ATTRS = {
     "display_name": "Primary Maximum",
     "category": "Simple",
     "value_range": None,
-    "optimal_value": None
+    "optimal_value": None,
+    "return_type": "float"
 }
 
 SECONDARY_MAXIMUM_ATTRS = {
@@ -156,7 +177,8 @@ SECONDARY_MAXIMUM_ATTRS = {
     "display_name": "Secondary Maximum",
     "category": "Simple",
     "value_range": None,
-    "optimal_value": None
+    "optimal_value": None,
+    "return_type": "float"
 }
 
 PRIMARY_AVERAGE_ATTRS = {
@@ -164,7 +186,8 @@ PRIMARY_AVERAGE_ATTRS = {
     "display_name": "Primary Average",
     "category": "Simple",
     "value_range": None,
-    "optimal_value": None
+    "optimal_value": None,
+    "return_type": "float"
 }
 
 SECONDARY_AVERAGE_ATTRS = {
@@ -172,7 +195,8 @@ SECONDARY_AVERAGE_ATTRS = {
     "display_name": "Secondary Average",
     "category": "Simple",
     "value_range": None,
-    "optimal_value": None
+    "optimal_value": None,
+    "return_type": "float"
 }
 
 PRIMARY_SUM_ATTRS = {
@@ -180,7 +204,8 @@ PRIMARY_SUM_ATTRS = {
     "display_name": "Primary Sum",
     "category": "Simple",
     "value_range": None,
-    "optimal_value": None
+    "optimal_value": None,
+    "return_type": "float"
 }
 
 SECONDARY_SUM_ATTRS = {
@@ -188,7 +213,8 @@ SECONDARY_SUM_ATTRS = {
     "display_name": "Secondary Sum",
     "category": "Simple",
     "value_range": None,
-    "optimal_value": None
+    "optimal_value": None,
+    "return_type": "float"
 }
 
 PRIMARY_VARIANCE_ATTRS = {
@@ -196,7 +222,8 @@ PRIMARY_VARIANCE_ATTRS = {
     "display_name": "Primary Variance",
     "category": "Simple",
     "value_range": None,
-    "optimal_value": None
+    "optimal_value": None,
+    "return_type": "float"
 }
 
 SECONDARY_VARIANCE_ATTRS = {
@@ -204,7 +231,8 @@ SECONDARY_VARIANCE_ATTRS = {
     "display_name": "Secondary Variance",
     "category": "Simple",
     "value_range": None,
-    "optimal_value": None
+    "optimal_value": None,
+    "return_type": "float"
 }
 
 MAX_VALUE_DELTA_ATTRS = {
@@ -212,7 +240,8 @@ MAX_VALUE_DELTA_ATTRS = {
     "display_name": "Max Value Delta",
     "category": "Simple",
     "value_range": None,
-    "optimal_value": None
+    "optimal_value": None,
+    "return_type": "float"
 }
 
 PRIMARY_MAX_VAL_TIME_ATTRS = {
@@ -220,7 +249,8 @@ PRIMARY_MAX_VAL_TIME_ATTRS = {
     "display_name": "Primary Max Value Time",
     "category": "Simple",
     "value_range": None,
-    "optimal_value": None
+    "optimal_value": None,
+    "return_type": "timestamp"
 }
 
 SECONDARY_MAX_VAL_TIME_ATTRS = {
@@ -228,7 +258,8 @@ SECONDARY_MAX_VAL_TIME_ATTRS = {
     "display_name": "Secondary Max Value Time",
     "category": "Simple",
     "value_range": None,
-    "optimal_value": None
+    "optimal_value": None,
+    "return_type": "timestamp"
 }
 
 MAX_VALUE_TIMEDELTA_ATTRS = {
@@ -236,7 +267,9 @@ MAX_VALUE_TIMEDELTA_ATTRS = {
     "display_name": "Max Value Time Delta",
     "category": "Simple",
     "value_range": None,
-    "optimal_value": None
+    "optimal_value": None,
+    "return_type": "float",
+    "units": "seconds"
 }
 
 ANNUAL_PEAK_RBIAS_ATTRS = {
@@ -244,7 +277,8 @@ ANNUAL_PEAK_RBIAS_ATTRS = {
     "display_name": "Annual Peak Relative Bias",
     "category": "Simple",
     "value_range": None,
-    "optimal_value": None
+    "optimal_value": None,
+    "return_type": "float"
 }
 
 SPEARMAN_R_ATTRS = {
@@ -252,5 +286,6 @@ SPEARMAN_R_ATTRS = {
     "display_name": "Spearman Rank Correlation Coefficient",
     "category": "Deterministic",
     "value_range": [-1.0, 1.0],
-    "optimal_value": 1.0
+    "optimal_value": 1.0,
+    "return_type": "float"
 }

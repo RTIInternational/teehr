@@ -10,7 +10,7 @@ from teehr.loading.duckdb_sql import (
 from teehr.loading.utils import (
     validate_dataset_structure,
 )
-from teehr.models.dataset.table_models import Location
+from teehr.models.tables import Location
 from teehr.loading.utils import merge_field_mappings
 import teehr.const as const
 

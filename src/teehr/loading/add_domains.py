@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Union, List
 import duckdb
 import pandas as pd
-from teehr.models.dataset.table_models import (
+from teehr.models.tables import (
     Configuration,
     Unit,
     Variable,
