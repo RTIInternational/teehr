@@ -295,6 +295,12 @@ def test_gumboot_bootstrapping(tmpdir):
         group_by=[flds.primary_location_id]
     ).to_pandas()
 
+    _ = eval.metrics.query(
+        include_metrics=[kge, nse],
+        filters=filters,
+        group_by=[flds.primary_location_id]
+    ).to_sdf()
+
     # Unpack and compare the results.
     teehr_results = np.sort(np.array(metrics_df.kling_gupta_efficiency.values[0]))
     manual_results = np.sort(results.ravel())

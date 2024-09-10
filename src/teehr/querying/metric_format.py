@@ -45,7 +45,8 @@ def apply_aggregation_metrics(
                 model.bootstrap.func(model),
                 return_type
             )
-            if model.bootstrap.include_value_time:
+            if (model.bootstrap.include_value_time) and \
+                ("value_time" not in model.input_field_names):
                 model.input_field_names.append("value_time")
         else:
             logger.debug(f"Applying metric: {alias}")
