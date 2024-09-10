@@ -7,7 +7,6 @@ from numpy.random import RandomState
 from pydantic import Field
 
 import teehr.metrics.bootstrap_funcs as bootstrap_funcs
-
 from teehr.models.metrics.metric_models import MetricsBasemodel
 
 
@@ -15,6 +14,19 @@ from teehr.models.metrics.metric_models import MetricsBasemodel
 # that the necessary fields are included?  For Metrics too?
 class GumbootModel(MetricsBasemodel):
     """Gumboot bootstrapping.
+
+    This is a partial implementation of the Gumboot R package, a non-overlapping
+    bootstrap method where blocks are defined by water years. Synthetic timeseries
+    are constructed by randomly resampling water years from the input timeseries
+    with replacement. The specified performance metric is calculated for each
+    synthetic timeseries for a number of bootstrap replications (reps). The
+    quantiles of the bootstrap metric results are calculated and returned.
+
+    See Also:  Clark et al. (2021), "The abuse of popular performance metrics
+      in hydrologic modeling", Water Resources Research,
+      <doi:10.1029/2020WR029001>
+
+      https://cran.r-project.org/web/packages/gumboot/gumboot.pdf
 
     Parameters
     ----------
@@ -52,7 +64,7 @@ class GumbootModel(MetricsBasemodel):
 
 
 class CircularBlockModel(MetricsBasemodel):
-    """CircularBlock bootstrapping from the arch package.
+    """CircularBlock bootstrapping from the arch python package.
 
     Parameters
     ----------
@@ -89,7 +101,7 @@ class CircularBlockModel(MetricsBasemodel):
     )
 
 class StationaryModel(MetricsBasemodel):
-    """Stationary bootstrapping from the arch package.
+    """Stationary bootstrapping from the arch python package.
 
     Parameters
     ----------

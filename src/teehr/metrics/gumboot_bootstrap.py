@@ -26,16 +26,16 @@ class GumbootBootstrap(IIDBootstrap):
         self,
         *args: ArrayLike,
         value_time: pd.Series,
-        water_year_month: Union[int, None] = None,
-        boot_year_file: Union[str, Path, None] = None,
-        seed: Union[int, Generator, RandomState, None] = None,
+        water_year_month: Union[int, None],
+        boot_year_file: Union[str, Path, None],
+        seed: Union[int, Generator, RandomState, None],
         **kwargs: ArrayLike,
     ) -> None:
         """Initialize the Gumboot class, inheriting from IIDBootstrap."""
         super().__init__(*args, **kwargs)
 
         # JAB
-        # self.boot_year_array: Union[np.array, None] = None
+        # self.boot_year_array: Union[np.array, None]
 
         logger.debug("Initializing the Gumboot water years.")
 
