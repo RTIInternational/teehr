@@ -93,7 +93,6 @@ class GumbootBootstrap(IIDBootstrap):
                 year_indexes = rng.integers(
                     self.num_water_years, size=self.num_water_years
                 )
-                print(year_indexes)
                 years = np.array(self.unique_water_years)[year_indexes]
                 # self.boot_year_array[:, rep - 1] = years  # JAB
 
