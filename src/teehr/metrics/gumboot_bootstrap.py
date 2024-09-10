@@ -32,7 +32,7 @@ class GumbootBootstrap(IIDBootstrap):
         **kwargs: ArrayLike,
     ) -> None:
         """Initialize the Gumboot class, inheriting from IIDBootstrap."""
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, seed=seed, **kwargs)
 
         # JAB
         # self.boot_year_array: Union[np.array, None]
@@ -49,7 +49,6 @@ class GumbootBootstrap(IIDBootstrap):
         self.unique_water_years = np.unique(water_years)
         self.num_water_years = self.unique_water_years.size
         self.water_year_array = water_years
-        self.seed = seed
 
         if boot_year_file:
             self.user_defined_boot_years = True
@@ -89,8 +88,7 @@ class GumbootBootstrap(IIDBootstrap):
             if self.user_defined_boot_years:
                 years = self.boot_year_array[:, rep - 1]
             else:
-                rng = np.random.default_rng(seed=self.seed)
-                year_indexes = rng.integers(
+                year_indexes = self._generator.integers(
                     self.num_water_years, size=self.num_water_years
                 )
                 years = np.array(self.unique_water_years)[year_indexes]

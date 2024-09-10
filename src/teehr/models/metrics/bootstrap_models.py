@@ -22,6 +22,10 @@ class GumbootModel(MetricsBasemodel):
     synthetic timeseries for a number of bootstrap replications (reps). The
     quantiles of the bootstrap metric results are calculated and returned.
 
+    If the quantile values are not specified or are set to None, the array of metric
+    values is returned (dimensions: [reps, 1]). Otherwise the specified quantiles of
+    the metric values are returned as a dictionary.
+
     See Also:  Clark et al. (2021), "The abuse of popular performance metrics
       in hydrologic modeling", Water Resources Research,
       <doi:10.1029/2020WR029001>
@@ -34,9 +38,10 @@ class GumbootModel(MetricsBasemodel):
         The number of bootstrap replications. Default value is 1000.
     seed : int, optional
         The seed for the random number generator. Setting a seed value can be used
-        to provide reproducible results. Default value is 42.
+        to provide reproducible results. Default value is None.
     quantiles : List[float], optional
-        The quantiles to calculate from the bootstrap metric results.
+        The quantiles to calculate from the bootstrap metric results. The default
+        value is None.
     boot_year_file : Union[str, Path, None], optional
         The file path to the boot year csv file. The default value is None.
     water_year_month : int
@@ -54,8 +59,8 @@ class GumbootModel(MetricsBasemodel):
     """
 
     reps: int = 1000
-    seed: Union[int, None] = 42
-    quantiles: Union[List[float], None] = [0.05, 0.5, 0.95]
+    seed: Union[int, None] = None
+    quantiles: Union[List[float], None] = None
     boot_year_file: Union[str, Path, None] = None
     water_year_month: int = 10
     name: str = Field(default="Gumboot")
