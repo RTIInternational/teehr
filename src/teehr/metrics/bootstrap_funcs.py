@@ -63,7 +63,6 @@ def create_gumboot_func(model: MetricsBasemodel) -> Callable:
             s,
             value_time=vt,
             seed=model.bootstrap.seed,
-            random_state=model.bootstrap.random_state,
             water_year_month=model.bootstrap.water_year_month,
             boot_year_file=model.bootstrap.boot_year_file
         )

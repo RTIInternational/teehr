@@ -28,12 +28,11 @@ class GumbootBootstrap(IIDBootstrap):
         value_time: pd.Series,
         water_year_month: Union[int, None] = None,
         boot_year_file: Union[str, Path, None] = None,
-        random_state: Union[RandomState, None] = None,
         seed: Union[int, Generator, RandomState, None] = None,
         **kwargs: ArrayLike,
     ) -> None:
         """Initialize the Gumboot class, inheriting from IIDBootstrap."""
-        super().__init__(*args, random_state=random_state, seed=seed, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # JAB
         # self.boot_year_array: Union[np.array, None] = None
@@ -50,6 +49,7 @@ class GumbootBootstrap(IIDBootstrap):
         self.unique_water_years = np.unique(water_years)
         self.num_water_years = self.unique_water_years.size
         self.water_year_array = water_years
+        self.seed = seed
 
         if boot_year_file:
             self.user_defined_boot_years = True
@@ -80,7 +80,6 @@ class GumbootBootstrap(IIDBootstrap):
         This requires an extra field (value_time) to create indices based on
         water year (time).
         """
-        rng = np.random.default_rng()
 
         logger.debug(f"Resampling the Gumboot water years. rep: {rep}")
 
@@ -90,9 +89,11 @@ class GumbootBootstrap(IIDBootstrap):
             if self.user_defined_boot_years:
                 years = self.boot_year_array[:, rep - 1]
             else:
+                rng = np.random.default_rng(seed=self.seed)
                 year_indexes = rng.integers(
                     self.num_water_years, size=self.num_water_years
                 )
+                print(year_indexes)
                 years = np.array(self.unique_water_years)[year_indexes]
                 # self.boot_year_array[:, rep - 1] = years  # JAB
 
