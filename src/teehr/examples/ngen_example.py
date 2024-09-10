@@ -6,7 +6,7 @@ from teehr import Metrics as metrics
 
 
 # Set a path to the directory where the evaluation will be created
-TEST_STUDY_DIR = Path(Path().home(), "temp", "real_study")
+TEST_STUDY_DIR = Path(Path().home(), "temp", "ngen_example")
 shutil.rmtree(TEST_STUDY_DIR, ignore_errors=True)
 TEST_STUDY_DIR.mkdir(parents=True, exist_ok=True)
 
