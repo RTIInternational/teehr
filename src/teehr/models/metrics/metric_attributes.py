@@ -127,108 +127,54 @@ KGE2_ATTRS = {
     "return_type": "float"
 }
 
-PRIMARY_COUNT_ATTRS = {
-    "short_name": "primary_count",
-    "display_name": "Primary Count",
+COUNT_ATTRS = {
+    "short_name": "count",
+    "display_name": "Count",
     "category": "Simple",
     "value_range": None,
     "optimal_value": None,
     "return_type": "float"
 }
 
-SECONDARY_COUNT_ATTRS = {
-    "short_name": "secondary_count",
-    "display_name": "Secondary Count",
+MINIMUM_ATTRS = {
+    "short_name": "minimum",
+    "display_name": "Minimum",
     "category": "Simple",
     "value_range": None,
     "optimal_value": None,
     "return_type": "float"
 }
 
-PRIMARY_MINIMUM_ATTRS = {
-    "short_name": "primary_minimum",
-    "display_name": "Primary Minimum",
+MAXIMUM_ATTRS = {
+    "short_name": "maximum",
+    "display_name": "Maximum",
     "category": "Simple",
     "value_range": None,
     "optimal_value": None,
     "return_type": "float"
 }
 
-SECONDARY_MINIMUM_ATTRS = {
-    "short_name": "secondary_count",
-    "display_name": "Secondary Count",
+AVERAGE_ATTRS = {
+    "short_name": "average",
+    "display_name": "Average",
     "category": "Simple",
     "value_range": None,
     "optimal_value": None,
     "return_type": "float"
 }
 
-PRIMARY_MAXIMUM_ATTRS = {
-    "short_name": "primary_maximum",
-    "display_name": "Primary Maximum",
+SUM_ATTRS = {
+    "short_name": "sum",
+    "display_name": "Sum",
     "category": "Simple",
     "value_range": None,
     "optimal_value": None,
     "return_type": "float"
 }
 
-SECONDARY_MAXIMUM_ATTRS = {
-    "short_name": "secondary_maximum",
-    "display_name": "Secondary Maximum",
-    "category": "Simple",
-    "value_range": None,
-    "optimal_value": None,
-    "return_type": "float"
-}
-
-PRIMARY_AVERAGE_ATTRS = {
-    "short_name": "primary_average",
-    "display_name": "Primary Average",
-    "category": "Simple",
-    "value_range": None,
-    "optimal_value": None,
-    "return_type": "float"
-}
-
-SECONDARY_AVERAGE_ATTRS = {
-    "short_name": "secondary_average",
-    "display_name": "Secondary Average",
-    "category": "Simple",
-    "value_range": None,
-    "optimal_value": None,
-    "return_type": "float"
-}
-
-PRIMARY_SUM_ATTRS = {
-    "short_name": "primary_sum",
-    "display_name": "Primary Sum",
-    "category": "Simple",
-    "value_range": None,
-    "optimal_value": None,
-    "return_type": "float"
-}
-
-SECONDARY_SUM_ATTRS = {
-    "short_name": "secondary_sum",
-    "display_name": "Secondary Sum",
-    "category": "Simple",
-    "value_range": None,
-    "optimal_value": None,
-    "return_type": "float"
-}
-
-PRIMARY_VARIANCE_ATTRS = {
-    "short_name": "primary_variance",
-    "display_name": "Primary Variance",
-    "category": "Simple",
-    "value_range": None,
-    "optimal_value": None,
-    "return_type": "float"
-}
-
-SECONDARY_VARIANCE_ATTRS = {
-    "short_name": "secondary_variance",
-    "display_name": "Secondary Variance",
+VARIANCE_ATTRS = {
+    "short_name": "variance",
+    "display_name": "Variance",
     "category": "Simple",
     "value_range": None,
     "optimal_value": None,
@@ -244,18 +190,9 @@ MAX_VALUE_DELTA_ATTRS = {
     "return_type": "float"
 }
 
-PRIMARY_MAX_VAL_TIME_ATTRS = {
-    "short_name": "primary_max_val_time",
-    "display_name": "Primary Max Value Time",
-    "category": "Simple",
-    "value_range": None,
-    "optimal_value": None,
-    "return_type": "timestamp"
-}
-
-SECONDARY_MAX_VAL_TIME_ATTRS = {
-    "short_name": "secondary_max_val_time",
-    "display_name": "Secondary Max Value Time",
+MAX_VAL_TIME_ATTRS = {
+    "short_name": "max_val_time",
+    "display_name": "Max Value Time",
     "category": "Simple",
     "value_range": None,
     "optimal_value": None,

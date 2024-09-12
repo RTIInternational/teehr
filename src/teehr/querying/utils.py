@@ -35,31 +35,48 @@ def df_to_gdf(df: pd.DataFrame) -> gpd.GeoDataFrame:
     return gpd.GeoDataFrame(df, crs="EPSG:4326", geometry="geometry")
 
 
+def validate_fields_exist(
+        valid_fields: List[str],
+        requested_fields: List[str]
+):
+    """Validate that the requested_fields are in the valid_fields list."""
+    logger.debug("Validating requested fields.")
+    if not all(e in valid_fields for e in requested_fields):
+        error_msg = f"One of the requested fields: {requested_fields} is not" \
+                    f" a valid DataFrame field: {valid_fields}."
+        logger.error(error_msg)
+        raise ValueError(error_msg)
+
+
+def parse_fields_to_list(
+        requested_fields: Union[str, StrEnum, List[Union[str, StrEnum]]]
+) -> List[str]:
+    """Convert the requested fields to a list of strings."""
+    logger.debug("Parsing requested fields to a list of strings.")
+    if not isinstance(requested_fields, List):
+        requested_fields = [requested_fields]
+    requested_fields_strings = []
+    for field in requested_fields:
+        if isinstance(field, str):
+            requested_fields_strings.append(field)
+        else:
+            requested_fields_strings.append(field.value)
+    return requested_fields_strings
+
+
 def order_df(df, sort_by: Union[str, StrEnum, List[Union[str, StrEnum]]]):
     """Sort a DataFrame by a list of columns."""
-    if not isinstance(sort_by, List):
-        sort_by = [sort_by]
-    sort_by_strings = []
-    for field in sort_by:
-        if isinstance(field, str):
-            sort_by_strings.append(field)
-        else:
-            sort_by_strings.append(field.value)
-
+    logger.debug("Ordering DataFrame.")
+    sort_by_strings = parse_fields_to_list(sort_by)
+    validate_fields_exist(df.columns, sort_by_strings)
     return df.orderBy(*sort_by_strings)
 
 
 def group_df(df, group_by: Union[str, StrEnum, List[Union[str, StrEnum]]]):
     """Group a DataFrame by a list of columns."""
-    if not isinstance(group_by, List):
-        group_by = [group_by]
-    group_by_strings = []
-    for field in group_by:
-        if isinstance(field, str):
-            group_by_strings.append(field)
-        else:
-            group_by_strings.append(field.value)
-
+    logger.debug("Grouping DataFrame.")
+    group_by_strings = parse_fields_to_list(group_by)
+    validate_fields_exist(df.columns, group_by_strings)
     return df.groupBy(*group_by_strings)
 
 

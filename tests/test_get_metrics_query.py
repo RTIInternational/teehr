@@ -54,7 +54,7 @@ def test_get_all_metrics(tmpdir):
 
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
-    assert metrics_df.columns.size == 33
+    assert metrics_df.columns.size == 26
 
 
 def test_metrics_filter_and_geometry(tmpdir):
@@ -64,9 +64,9 @@ def test_metrics_filter_and_geometry(tmpdir):
 
     # Define some metrics.
     kge = Metrics.KlingGuptaEfficiency()
-    primary_avg = Metrics.PrimaryAverage()
+    primary_avg = Metrics.Average()
     mvtd = Metrics.MaxValueTimeDelta()
-    pmvt = Metrics.PrimaryMaxValueTime()
+    pmvt = Metrics.MaxValueTime()
 
     include_metrics = [pmvt, mvtd, primary_avg, kge]
 
@@ -311,8 +311,37 @@ def test_gumboot_bootstrapping(tmpdir):
     r_kge_vals = np.sort(r_df.KGE.values)
     assert np.allclose(teehr_results, r_kge_vals, rtol=1e-08)
 
-    pass
 
+def test_metric_chaining(tmpdir):
+    """Test get_metrics method with chaining."""
+    # Define the evaluation object.
+    eval = setup_v0_3_study(tmpdir)
+
+    # Test chaining.
+    metrics_df = eval.metrics.query(
+        order_by=["primary_location_id", "month"],
+        group_by=["primary_location_id", "month"],
+        include_metrics=[
+            Metrics.KlingGuptaEfficiency(),
+            Metrics.NashSutcliffeEfficiency(),
+            Metrics.RelativeBias()
+        ]
+    ).query(
+        order_by=["primary_location_id"],
+        group_by=["primary_location_id"],
+        include_metrics=[
+            Metrics.Average(
+                input_field_names=["relative_bias"],
+                output_field_name="primary_average"
+            )
+        ]
+    ).to_pandas()
+
+    assert isinstance(metrics_df, pd.DataFrame)
+    assert metrics_df.index.size == 3
+    assert all(
+        metrics_df.columns == ["primary_location_id", "primary_average"]
+    )
 
 
 if __name__ == "__main__":
@@ -346,6 +375,12 @@ if __name__ == "__main__":
         test_gumboot_bootstrapping(
             tempfile.mkdtemp(
                 prefix="5-",
+                dir=tempdir
+            )
+        )
+        test_metric_chaining(
+            tempfile.mkdtemp(
+                prefix="6-",
                 dir=tempdir
             )
         )

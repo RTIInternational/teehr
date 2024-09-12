@@ -8,6 +8,7 @@ from pyspark.sql.functions import pandas_udf
 from pyspark.sql import types as T
 
 from teehr.models.metrics.metric_models import MetricsBasemodel
+from teehr.querying.utils import validate_fields_exist
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +17,7 @@ DICT_TYPE = T.MapType(T.StringType(), T.FloatType())  # Quantile results.
 
 
 def apply_aggregation_metrics(
-    df: GroupedData,
+    gp: GroupedData,
     include_metrics: Union[
         List[MetricsBasemodel],
         str
@@ -28,6 +29,8 @@ def apply_aggregation_metrics(
 
     func_list = []
     for model in include_metrics:
+
+        validate_fields_exist(gp._df.columns, model.input_field_names)
 
         alias = model.output_field_name
 
@@ -46,7 +49,7 @@ def apply_aggregation_metrics(
                 return_type
             )
             if (model.bootstrap.include_value_time) and \
-                ("value_time" not in model.input_field_names):
+               ("value_time" not in model.input_field_names):
                 model.input_field_names.append("value_time")
         else:
             logger.debug(f"Applying metric: {alias}")
@@ -58,6 +61,6 @@ def apply_aggregation_metrics(
 
         # Collect the metric attributes here and attach them to the DataFrame?
 
-    df = df.agg(*func_list)
+    df = gp.agg(*func_list)
 
     return df
