@@ -35,31 +35,39 @@ def df_to_gdf(df: pd.DataFrame) -> gpd.GeoDataFrame:
     return gpd.GeoDataFrame(df, crs="EPSG:4326", geometry="geometry")
 
 
+def _parse_fields_to_list(
+        valid_fields: List[str],
+        requested_fields: Union[str, StrEnum, List[Union[str, StrEnum]]]
+) -> List[str]:
+    """Convert the requested fields to a list of strings.
+
+    Additionally validate that the requested fields are in the DataFrame.
+    """
+    if not isinstance(requested_fields, List):
+        requested_fields = [requested_fields]
+    requested_fields_strings = []
+    for field in requested_fields:
+        if isinstance(field, str):
+            requested_fields_strings.append(field)
+        else:
+            requested_fields_strings.append(field.value)
+    if not all(e in valid_fields for e in requested_fields):
+        raise ValueError(
+            f"One of the requested fields: {requested_fields} does not exist"
+            f" in the DataFrame: {valid_fields}."
+        )
+    return requested_fields_strings
+
+
 def order_df(df, sort_by: Union[str, StrEnum, List[Union[str, StrEnum]]]):
     """Sort a DataFrame by a list of columns."""
-    if not isinstance(sort_by, List):
-        sort_by = [sort_by]
-    sort_by_strings = []
-    for field in sort_by:
-        if isinstance(field, str):
-            sort_by_strings.append(field)
-        else:
-            sort_by_strings.append(field.value)
-
+    sort_by_strings = _parse_fields_to_list(df.columns, sort_by)
     return df.orderBy(*sort_by_strings)
 
 
 def group_df(df, group_by: Union[str, StrEnum, List[Union[str, StrEnum]]]):
     """Group a DataFrame by a list of columns."""
-    if not isinstance(group_by, List):
-        group_by = [group_by]
-    group_by_strings = []
-    for field in group_by:
-        if isinstance(field, str):
-            group_by_strings.append(field)
-        else:
-            group_by_strings.append(field.value)
-
+    group_by_strings = _parse_fields_to_list(df.columns, group_by)
     return df.groupBy(*group_by_strings)
 
 
