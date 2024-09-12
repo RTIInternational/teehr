@@ -33,7 +33,7 @@ class Metrics:
         self.dataset_dir = eval.dataset_dir
         self.locations = eval.locations
         self.joined_timeseries = eval.joined_timeseries
-        self.df: ps.DataFrame = None
+        self.df = self.joined_timeseries.to_sdf()
 
     def query(
         self,
@@ -56,7 +56,6 @@ class Metrics:
     ):
         """Get the metrics in the dataset."""
         logger.info("Calculating performance metrics.")
-        self.df = self.joined_timeseries.to_sdf()
         if filters is not None:
             logger.debug("Applying filters to the metrics query.")
             self.df = validate_and_apply_filters(
