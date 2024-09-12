@@ -344,7 +344,6 @@ def test_metric_chaining(tmpdir):
     )
 
 
-
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
