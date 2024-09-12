@@ -40,17 +40,19 @@ def validate_fields_exist(
         requested_fields: List[str]
 ):
     """Validate that the requested_fields are in the valid_fields list."""
+    logger.debug("Validating requested fields.")
     if not all(e in valid_fields for e in requested_fields):
-        raise ValueError(
-            f"One of the requested fields: {requested_fields} is not a valid"
-            f" DataFrame field: {valid_fields}."
-        )
+        error_msg = f"One of the requested fields: {requested_fields} is not" \
+                    f" a valid DataFrame field: {valid_fields}."
+        logger.error(error_msg)
+        raise ValueError(error_msg)
 
 
 def parse_fields_to_list(
         requested_fields: Union[str, StrEnum, List[Union[str, StrEnum]]]
 ) -> List[str]:
     """Convert the requested fields to a list of strings."""
+    logger.debug("Parsing requested fields to a list of strings.")
     if not isinstance(requested_fields, List):
         requested_fields = [requested_fields]
     requested_fields_strings = []
@@ -64,6 +66,7 @@ def parse_fields_to_list(
 
 def order_df(df, sort_by: Union[str, StrEnum, List[Union[str, StrEnum]]]):
     """Sort a DataFrame by a list of columns."""
+    logger.debug("Ordering DataFrame.")
     sort_by_strings = parse_fields_to_list(sort_by)
     validate_fields_exist(df.columns, sort_by_strings)
     return df.orderBy(*sort_by_strings)
@@ -71,6 +74,7 @@ def order_df(df, sort_by: Union[str, StrEnum, List[Union[str, StrEnum]]]):
 
 def group_df(df, group_by: Union[str, StrEnum, List[Union[str, StrEnum]]]):
     """Group a DataFrame by a list of columns."""
+    logger.debug("Grouping DataFrame.")
     group_by_strings = parse_fields_to_list(group_by)
     validate_fields_exist(df.columns, group_by_strings)
     return df.groupBy(*group_by_strings)

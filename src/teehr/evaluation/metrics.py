@@ -87,10 +87,10 @@ class Metrics:
     def to_geopandas(self) -> gpd.GeoDataFrame:
         """Convert the DataFrame to a GeoPandas DataFrame."""
         if "primary_location_id" not in self.df.columns:
-            raise ValueError(
-                "The primary_location_id field must be included in the "
-                "group_by to include geometry."
-            )
+            err_msg = "The primary_location_id field must be included in " \
+                      "the group_by to include geometry."
+            logger.error(err_msg)
+            raise ValueError(err_msg)
         return join_geometry(
             self.df,
             self.locations.to_sdf(),
