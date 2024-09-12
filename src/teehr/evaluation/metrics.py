@@ -75,7 +75,6 @@ class Metrics:
         )
 
         if order_by is not None:
-            # ToDo: validate order_by fields
             logger.debug(f"Ordering the metrics by: {order_by}.")
             self.df = order_df(self.df, order_by)
 
