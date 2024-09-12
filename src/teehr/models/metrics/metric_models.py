@@ -486,8 +486,8 @@ class SPEARMAN_R(MetricsBasemodel):
     attrs: Dict = Field(default=tma.SPEARMAN_R_ATTRS, frozen=True)
 
 
-class PRIMARY_COUNT(MetricsBasemodel):
-    """Primary Count.
+class COUNT(MetricsBasemodel):
+    """Count.
 
     Parameters
     ----------
@@ -499,51 +499,23 @@ class PRIMARY_COUNT(MetricsBasemodel):
         The output field name, by default "primary_count".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.primary_count.
+        metric_funcs.count.
     input_field_names : Union[List[str], List[JoinedTimeseriesFields]]
         The input field names, by default ["primary_value"].
     attrs : Dict
         The static attributes for the metric.
     """
 
-    output_field_name: str = Field(default="primary_count")
-    func: Callable = metric_funcs.primary_count
+    output_field_name: str = Field(default="count")
+    func: Callable = metric_funcs.count
     input_field_names: Union[List[str], List[JoinedTimeseriesFields]] = Field(
         default=["primary_value"]
     )
-    attrs: Dict = Field(default=tma.PRIMARY_COUNT_ATTRS, frozen=True)
+    attrs: Dict = Field(default=tma.COUNT_ATTRS, frozen=True)
 
 
-class SECONDARY_COUNT(MetricsBasemodel):
-    """Secondary Count.
-
-    Parameters
-    ----------
-    bootstrap : MetricsBasemodel
-        The bootstrap model, by default None.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "secondary_count".
-    func : Callable
-        The function to apply to the data, by default
-        metric_funcs.secondary_count.
-    input_field_names : Union[List[str], List[JoinedTimeseriesFields]]
-        The input field names, by default ["secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    """
-
-    output_field_name: str = Field(default="secondary_count")
-    func: Callable = metric_funcs.secondary_count
-    input_field_names: Union[List[str], List[JoinedTimeseriesFields]] = Field(
-        default=["secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.SECONDARY_COUNT_ATTRS, frozen=True)
-
-
-class PRIMARY_MINIMUM(MetricsBasemodel):
-    """Primary Minimum.
+class MINIMUM(MetricsBasemodel):
+    """Minimum.
 
     Parameters
     ----------
@@ -555,7 +527,7 @@ class PRIMARY_MINIMUM(MetricsBasemodel):
         The output field name, by default "primary_minimum".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.primary_minimum.
+        metric_funcs.minimum.
     input_field_names : Union[List[str], List[JoinedTimeseriesFields]]
         The input field names, by default ["primary_value"].
     attrs : Dict
@@ -563,45 +535,16 @@ class PRIMARY_MINIMUM(MetricsBasemodel):
     """
 
     transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="primary_minimum")
-    func: Callable = metric_funcs.primary_minimum
+    output_field_name: str = Field(default="minimum")
+    func: Callable = metric_funcs.minimum
     input_field_names: Union[List[str], List[JoinedTimeseriesFields]] = Field(
         default=["primary_value"]
     )
-    attrs: Dict = Field(default=tma.PRIMARY_MINIMUM_ATTRS, frozen=True)
+    attrs: Dict = Field(default=tma.MINIMUM_ATTRS, frozen=True)
 
 
-class SECONDARY_MINIMUM(MetricsBasemodel):
-    """Secondary Minimum.
-
-    Parameters
-    ----------
-    bootstrap : MetricsBasemodel
-        The bootstrap model, by default None.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "secondary_minimum".
-    func : Callable
-        The function to apply to the data, by default
-        metric_funcs.secondary_minimum.
-    input_field_names : Union[List[str], List[JoinedTimeseriesFields]]
-        The input field names, by default ["secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    """
-
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="secondary_minimum")
-    func: Callable = metric_funcs.secondary_minimum
-    input_field_names: Union[List[str], List[JoinedTimeseriesFields]] = Field(
-        default=["secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.SECONDARY_MINIMUM_ATTRS, frozen=True)
-
-
-class PRIMARY_MAXIMUM(MetricsBasemodel):
-    """Primary Maximum.
+class MAXIMUM(MetricsBasemodel):
+    """Maximum.
 
     Parameters
     ----------
@@ -610,10 +553,10 @@ class PRIMARY_MAXIMUM(MetricsBasemodel):
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
-        The output field name, by default "primary_maximum".
+        The output field name, by default "maximum".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.primary_maximum.
+        metric_funcs.maximum.
     input_field_names : Union[List[str], List[JoinedTimeseriesFields]]
         The input field names, by default ["primary_value"].
     attrs : Dict
@@ -621,45 +564,16 @@ class PRIMARY_MAXIMUM(MetricsBasemodel):
     """
 
     transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="primary_maximum")
-    func: Callable = metric_funcs.primary_maximum
+    output_field_name: str = Field(default="maximum")
+    func: Callable = metric_funcs.maximum
     input_field_names: Union[List[str], List[JoinedTimeseriesFields]] = Field(
         default=["primary_value"]
     )
-    attrs: Dict = Field(default=tma.PRIMARY_MAXIMUM_ATTRS, frozen=True)
+    attrs: Dict = Field(default=tma.MAXIMUM_ATTRS, frozen=True)
 
 
-class SECONDARY_MAXIMUM(MetricsBasemodel):
-    """Secondary Maximum.
-
-    Parameters
-    ----------
-    bootstrap : MetricsBasemodel
-        The bootstrap model, by default None.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "secondary_maximum".
-    func : Callable
-        The function to apply to the data, by default
-        metric_funcs.secondary_maximum.
-    input_field_names : Union[List[str], List[JoinedTimeseriesFields]]
-        The input field names, by default ["secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    """
-
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="secondary_maximum")
-    func: Callable = metric_funcs.secondary_maximum
-    input_field_names: Union[List[str], List[JoinedTimeseriesFields]] = Field(
-        default=["secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.SECONDARY_MAXIMUM_ATTRS, frozen=True)
-
-
-class PRIMARY_AVERAGE(MetricsBasemodel):
-    """Primary Average.
+class AVERAGE(MetricsBasemodel):
+    """Average.
 
     Parameters
     ----------
@@ -668,10 +582,10 @@ class PRIMARY_AVERAGE(MetricsBasemodel):
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
-        The output field name, by default "primary_average".
+        The output field name, by default "average".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.primary_average.
+        metric_funcs.average.
     input_field_names : Union[List[str], List[JoinedTimeseriesFields]]
         The input field names, by default ["primary_value"].
     attrs : Dict
@@ -679,45 +593,16 @@ class PRIMARY_AVERAGE(MetricsBasemodel):
     """
 
     transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="primary_average")
-    func: Callable = metric_funcs.primary_average
+    output_field_name: str = Field(default="average")
+    func: Callable = metric_funcs.average
     input_field_names: Union[List[str], List[JoinedTimeseriesFields]] = Field(
         default=["primary_value"]
     )
-    attrs: Dict = Field(default=tma.PRIMARY_AVERAGE_ATTRS, frozen=True)
+    attrs: Dict = Field(default=tma.AVERAGE_ATTRS, frozen=True)
 
 
-class SECONDARY_AVERAGE(MetricsBasemodel):
-    """Secondary Average.
-
-    Parameters
-    ----------
-    bootstrap : MetricsBasemodel
-        The bootstrap model, by default None.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "secondary_average".
-    func : Callable
-        The function to apply to the data, by default
-        metric_funcs.secondary_average.
-    input_field_names : Union[List[str], List[JoinedTimeseriesFields]]
-        The input field names, by default ["secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    """
-
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="secondary_average")
-    func: Callable = metric_funcs.secondary_average
-    input_field_names: Union[List[str], List[JoinedTimeseriesFields]] = Field(
-        default=["secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.SECONDARY_AVERAGE_ATTRS, frozen=True)
-
-
-class PRIMARY_SUM(MetricsBasemodel):
-    """Primary Sum.
+class SUM(MetricsBasemodel):
+    """Sum.
 
     Parameters
     ----------
@@ -726,10 +611,10 @@ class PRIMARY_SUM(MetricsBasemodel):
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
-        The output field name, by default "primary_sum".
+        The output field name, by default "sum".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.primary_sum.
+        metric_funcs.sum.
     input_field_names : Union[List[str], List[JoinedTimeseriesFields]]
         The input field names, by default ["primary_value"].
     attrs : Dict
@@ -737,45 +622,16 @@ class PRIMARY_SUM(MetricsBasemodel):
     """
 
     transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="primary_sum")
-    func: Callable = metric_funcs.primary_sum
+    output_field_name: str = Field(default="sum")
+    func: Callable = metric_funcs.sum
     input_field_names: Union[List[str], List[JoinedTimeseriesFields]] = Field(
         default=["primary_value"]
     )
-    attrs: Dict = Field(default=tma.PRIMARY_SUM_ATTRS, frozen=True)
+    attrs: Dict = Field(default=tma.SUM_ATTRS, frozen=True)
 
 
-class SECONDARY_SUM(MetricsBasemodel):
-    """Secondary Sum.
-
-    Parameters
-    ----------
-    bootstrap : MetricsBasemodel
-        The bootstrap model, by default None.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "secondary_sum".
-    func : Callable
-        The function to apply to the data, by default
-        metric_funcs.secondary_sum.
-    input_field_names : Union[List[str], List[JoinedTimeseriesFields]]
-        The input field names, by default ["secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    """
-
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="secondary_sum")
-    func: Callable = metric_funcs.secondary_sum
-    input_field_names: Union[List[str], List[JoinedTimeseriesFields]] = Field(
-        default=["secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.SECONDARY_SUM_ATTRS, frozen=True)
-
-
-class PRIMARY_VARIANCE(MetricsBasemodel):
-    """Primary Variance.
+class VARIANCE(MetricsBasemodel):
+    """Variance.
 
     Parameters
     ----------
@@ -784,10 +640,10 @@ class PRIMARY_VARIANCE(MetricsBasemodel):
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
-        The output field name, by default "primary_variance".
+        The output field name, by default "variance".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.primary_variance.
+        metric_funcs.variance.
     input_field_names : Union[List[str], List[JoinedTimeseriesFields]]
         The input field names, by default ["primary_value"].
     attrs : Dict
@@ -796,42 +652,12 @@ class PRIMARY_VARIANCE(MetricsBasemodel):
 
     bootstrap: MetricsBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="primary_variance")
-    func: Callable = metric_funcs.primary_variance
+    output_field_name: str = Field(default="variance")
+    func: Callable = metric_funcs.variance
     input_field_names: Union[List[str], List[JoinedTimeseriesFields]] = Field(
         default=["primary_value"]
     )
-    attrs: Dict = Field(default=tma.PRIMARY_VARIANCE_ATTRS, frozen=True)
-
-
-class SECONDARY_VARIANCE(MetricsBasemodel):
-    """Secondary Variance.
-
-    Parameters
-    ----------
-    bootstrap : MetricsBasemodel
-        The bootstrap model, by default None.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "secondary_variance".
-    func : Callable
-        The function to apply to the data, by default
-        metric_funcs.secondary_variance.
-    input_field_names : Union[List[str], List[JoinedTimeseriesFields]]
-        The input field names, by default ["secondary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    """
-
-    bootstrap: MetricsBasemodel = Field(default=None)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="secondary_variance")
-    func: Callable = metric_funcs.secondary_variance
-    input_field_names: Union[List[str], List[JoinedTimeseriesFields]] = Field(
-        default=["secondary_value"]
-    )
-    attrs: Dict = Field(default=tma.SECONDARY_VARIANCE_ATTRS, frozen=True)
+    attrs: Dict = Field(default=tma.VARIANCE_ATTRS, frozen=True)
 
 
 class MAX_VALUE_DELTA(MetricsBasemodel):
@@ -893,8 +719,8 @@ class MAX_VALUE_TIME_DELTA(MetricsBasemodel):
     attrs: Dict = Field(default=tma.MAX_VALUE_TIMEDELTA_ATTRS, frozen=True)
 
 
-class PRIMARY_MAX_VALUE_TIME(MetricsBasemodel):
-    """Primary Max Value Time.
+class MAX_VALUE_TIME(MetricsBasemodel):
+    """Max Value Time.
 
     Parameters
     ----------
@@ -903,52 +729,23 @@ class PRIMARY_MAX_VALUE_TIME(MetricsBasemodel):
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
-        The output field name, by default "primary_max_value_time".
+        The output field name, by default "max_value_time".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.primary_max_value_time.
+        metric_funcs.max_value_time.
     input_field_names : Union[List[str], List[JoinedTimeseriesFields]]
-        The input field names, by default ["primary_value", "secondary_value"].
+        The input field names, by default ["primary_value"].
     attrs : Dict
         The static attributes for the metric.
     """
 
     transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="primary_max_value_time")
-    func: Callable = metric_funcs.primary_max_value_time
+    output_field_name: str = Field(default="max_value_time")
+    func: Callable = metric_funcs.max_value_time
     input_field_names: Union[List[str], List[JoinedTimeseriesFields]] = Field(
         default=["primary_value", "value_time"]
     )
-    attrs: Dict = Field(default=tma.PRIMARY_MAX_VAL_TIME_ATTRS, frozen=True)
-
-
-class SECONDARY_MAX_VALUE_TIME(MetricsBasemodel):
-    """Secondary Max Value Time.
-
-    Parameters
-    ----------
-    bootstrap : MetricsBasemodel
-        The bootstrap model, by default None.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "secondary_max_value_time".
-    func : Callable
-        The function to apply to the data, by default
-        metric_funcs.secondary_max_value_time.
-    input_field_names : Union[List[str], List[JoinedTimeseriesFields]]
-        The input field names, by default ["secondary_value", "value_time"].
-    attrs : Dict
-        The static attributes for the metric.
-    """
-
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="secondary_max_value_time")
-    func: Callable = metric_funcs.secondary_max_value_time
-    input_field_names: Union[List[str], List[JoinedTimeseriesFields]] = Field(
-        default=["secondary_value", "value_time"]
-    )
-    attrs: Dict = Field(default=tma.SECONDARY_MAX_VAL_TIME_ATTRS, frozen=True)
+    attrs: Dict = Field(default=tma.MAX_VAL_TIME_ATTRS, frozen=True)
 
 
 class ANNUAL_PEAK_RBIAS(MetricsBasemodel):
@@ -997,23 +794,16 @@ class Metrics():
     MeanSquareError = MSE
     MultiplicativeBias = MULT_BIAS
     PearsonCorrelation = PEARSON_R
-    PrimaryAverage = PRIMARY_AVERAGE
-    PrimaryCount = PRIMARY_COUNT
-    PrimaryMaxValueTime = PRIMARY_MAX_VALUE_TIME
-    PrimaryMaximum = PRIMARY_MAXIMUM
-    PrimaryMinimum = PRIMARY_MINIMUM
-    PrimarySum = PRIMARY_SUM
-    PrimaryVariance = PRIMARY_VARIANCE
+    Average = AVERAGE
+    Count = COUNT
+    MaxValueTime = MAX_VALUE_TIME
+    Maximum = MAXIMUM
+    Minimum = MINIMUM
+    Sum = SUM
+    Variance = VARIANCE
     NashSutcliffeEfficiency = NSE
     NormalizedNashSutcliffeEfficiency = NNSE
     RelativeBias = REL_BIAS
     RootMeanSquareError = RMSE
     Rsquared = R2
-    SecondaryAverage = SECONDARY_AVERAGE
-    SecondaryCount = SECONDARY_COUNT
-    SecondaryMaximum = SECONDARY_MAXIMUM
-    SecondaryMaxValueTime = SECONDARY_MAX_VALUE_TIME
-    SecondaryMinimum = SECONDARY_MINIMUM
-    SecondarySum = SECONDARY_SUM
-    SecondaryVariance = SECONDARY_VARIANCE
     SpearmanCorrelation = SPEARMAN_R
