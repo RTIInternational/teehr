@@ -18,10 +18,7 @@ DICT_TYPE = T.MapType(T.StringType(), T.FloatType())  # Quantile results.
 
 def apply_aggregation_metrics(
     gp: GroupedData,
-    include_metrics: Union[
-        List[MetricsBasemodel],
-        str
-    ] = None
+    include_metrics: List[MetricsBasemodel] = None
 ) -> pd.DataFrame:
     """Apply metrics to a PySpark DataFrame."""
     if not isinstance(include_metrics, List):
