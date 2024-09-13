@@ -18,6 +18,7 @@ API will be called for each unique location_id in the provided list.
 import pandas as pd
 import logging
 
+import numpy as np
 from typing import List, Union, Optional, Dict
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -96,7 +97,7 @@ def _format_df_column_names(
     )
     df[LOCATION_ID] = "usgs-" + df[LOCATION_ID].astype(str)
     df[CONFIGURATION_NAME] = USGS_CONFIGURATION_NAME
-    df[REFERENCE_TIME] = df[VALUE_TIME]
+    df[REFERENCE_TIME] = np.nan
     df[UNIT_NAME] = unit_name
     df[VARIABLE_NAME] = variable_name
     return df[[
