@@ -31,7 +31,6 @@ from teehr.fetching.const import (
     TIMESERIES_DATA_TYPES,
     VALUE,
     VALUE_TIME,
-    REFERENCE_TIME,
     LOCATION_ID,
     UNIT_NAME,
     VARIABLE_NAME,
