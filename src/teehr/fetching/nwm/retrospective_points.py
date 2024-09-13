@@ -32,6 +32,7 @@ import pandas as pd
 import xarray as xr
 import fsspec
 from pydantic import validate_call
+import numpy as np
 
 from datetime import datetime
 
@@ -135,7 +136,7 @@ def da_to_df(
             da.name, da.name
         )
     df[CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
-    df[REFERENCE_TIME] = df["time"]
+    df[REFERENCE_TIME] = np.nan
     df.rename(
         columns={
             "time": VALUE_TIME,
