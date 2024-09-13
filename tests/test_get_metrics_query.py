@@ -331,7 +331,7 @@ def test_metric_chaining(tmpdir):
         group_by=["primary_location_id"],
         include_metrics=[
             Metrics.Average(
-                input_field_names=["relative_bias"],
+                input_field_names="relative_bias",
                 output_field_name="primary_average"
             )
         ]
