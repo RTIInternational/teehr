@@ -79,7 +79,6 @@ class GumbootBootstrap(IIDBootstrap):
         This requires an extra field (value_time) to create indices based on
         water year (time).
         """
-
         logger.debug(f"Resampling the Gumboot water years. rep: {rep}")
 
         if rep == 0:
