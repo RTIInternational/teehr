@@ -38,6 +38,7 @@ pyspark = "^3.5.1"
 dataretrieval = "^1.0.9"
 numba = "^0.60.0"
 arch = "^7.0.0"
+netcdf4 = "1.6.5"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"

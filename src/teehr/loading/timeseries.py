@@ -3,6 +3,7 @@ from typing import Union
 from pathlib import Path
 import duckdb
 import pandas as pd
+import xarray as xr
 from teehr.loading.utils import (
     validate_dataset_structure,
     merge_field_mappings,
@@ -67,6 +68,9 @@ def convert_single_timeseries(
     elif in_filepath.suffix == ".csv":
         # read and convert csv file
         timeseries = pd.read_csv(in_filepath, **kwargs)
+    elif in_filepath.suffix == ".nc":
+        # read and convert netcdf file
+        timeseries = xr.open_dataset(in_filepath, **kwargs)
     else:
         raise ValueError("Unsupported file type.")
 
