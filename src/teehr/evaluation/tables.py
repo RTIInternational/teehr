@@ -282,9 +282,13 @@ class BaseTable():
         self.df = order_df(self.df, fields)
         return self
 
-    def fields(self):
+    def fields(self) -> List[str]:
         """Return table columns as a list."""
         return self.df.columns
+
+    def distinct_values(self, column: str) -> List[str]:
+        """Return distinct values for a column."""
+        return self.df.select(column).distinct().rdd.flatMap(lambda x: x).collect()
 
     def field_enum(self) -> StrEnum:
         """Get the fields enum."""
@@ -538,8 +542,8 @@ class PrimaryTimeseriesTable(BaseTable):
 
         self.df = (
             self.spark.read.format("parquet")
-            .option("recursiveFileLookup", "true")
-            .option("mergeSchema", "true")
+            # .option("recursiveFileLookup", "true")
+            # .option("mergeSchema", "true")
             .option("header", True)
             .load(str(self.dir))
         )
@@ -569,8 +573,8 @@ class SecondaryTimeseriesTable(BaseTable):
 
         self.df = (
             self.spark.read.format("parquet")
-            .option("recursiveFileLookup", "true")
-            .option("mergeSchema", "true")
+            # .option("recursiveFileLookup", "true")
+            # .option("mergeSchema", "true")
             .option("header", True)
             .load(str(self.dir))
         )

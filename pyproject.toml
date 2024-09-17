@@ -34,10 +34,11 @@ uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
 httpx = "^0.25.1"
 pandas = "^2.2.0"
 pydata-sphinx-theme = "^0.15.4"
-pyspark = "^3.5.1"
+pyspark = {extras = ["pandas-on-spark"], version = "^3.5.2"}
 dataretrieval = "^1.0.9"
 numba = "^0.60.0"
 arch = "^7.0.0"
+pandera = {extras = ["pyspark"], version = "^0.20.4"}
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"

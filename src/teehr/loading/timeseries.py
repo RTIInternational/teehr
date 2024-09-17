@@ -1,23 +1,26 @@
 """Convert and insert timeseries data into the dataset."""
 from typing import Union
 from pathlib import Path
-import duckdb
+# import duckdb
 import pandas as pd
 from teehr.loading.utils import (
     validate_dataset_structure,
     merge_field_mappings,
     validate_constant_values_dict
 )
-from teehr.loading.duckdb_sql import (
-    create_database_tables,
-    load_configurations_from_dataset,
-    load_units_from_dataset,
-    load_variables_from_dataset,
-    insert_locations,
-    insert_location_crosswalks,
-)
+# from teehr.loading.duckdb_sql import (
+#     create_database_tables,
+#     load_configurations_from_dataset,
+#     load_units_from_dataset,
+#     load_variables_from_dataset,
+#     insert_locations,
+#     insert_location_crosswalks,
+# )
 from teehr.models.tables import Timeseries
-import teehr.const as const
+# import teehr.const as const
+
+import pandera.pyspark as pa
+import pyspark.sql.types as T
 
 import logging
 
@@ -169,47 +172,9 @@ def convert_timeseries(
     logger.info(f"Converted {files_converted} files.")
 
 
-def validate_and_insert_single_timeseries(
-    conn: duckdb.DuckDBPyConnection,
-    in_filepath: Union[str, Path],
-    out_filepath: Union[str, Path],
-    timeseries_type: str,
-):
-    """Read a file and insert into the primary_timeseries table."""
-    logger.info(f"Reading and inserting timeseries data from {in_filepath}")
-    if timeseries_type == "primary":
-        table = "primary_timeseries"
-    elif timeseries_type == "secondary":
-        table = "secondary_timeseries"
-    else:
-        raise ValueError("Invalid timeseries type.")
-
-    out_filepath = Path(out_filepath)
-    if not out_filepath.parent.exists():
-        out_filepath.parent.mkdir(parents=True)
-
-    conn.sql(f"""
-        INSERT INTO
-                {table}
-        SELECT
-            reference_time::DATETIME as reference_time,
-            value_time::DATETIME as value_time,
-            configuration_name::VARCHAR as configuration_name,
-            unit_name::VARCHAR as unit_name,
-            variable_name::VARCHAR as variable_name,
-            value::FLOAT as value,
-            location_id::VARCHAR as location_id
-        FROM read_parquet('{in_filepath}');
-    """)
-    conn.sql(f"""
-        COPY {table} TO '{out_filepath}';
-    """)
-    conn.sql(f"TRUNCATE TABLE {table};")
-
-
 def validate_and_insert_timeseries(
+    ev,
     in_path: Union[str, Path],
-    dataset_path: Union[str, Path],
     timeseries_type: str,
     pattern: str = "**/*.parquet",
 ):
@@ -217,10 +182,10 @@ def validate_and_insert_timeseries(
 
     Parameters
     ----------
+    ev : Evaluation
+        The Evaluation object.
     in_path : Union[str, Path]
         Directory path or file path to the primary timeseries data.
-    dataset_path : Union[str, Path]
-        Path to the dataset.
     timeseries_type : str
         The type of timeseries data.
         Valid values: "primary", "secondary"
@@ -230,57 +195,86 @@ def validate_and_insert_timeseries(
     in_path = Path(in_path)
     logger.info(f"Validating and inserting timeseries data from {in_path}")
 
-    if not validate_dataset_structure(dataset_path):
+    if not validate_dataset_structure(ev.dataset_dir):
         raise ValueError("Database structure is not valid.")
 
-    # setup validation database
-    conn = duckdb.connect()
+    unit_names = ev.units.distinct_values("name")
+    variable_names = ev.variables.distinct_values("name")
+    configuration_names = ev.configurations.distinct_values("name")
 
-    # create tables if they do not exist
-    create_database_tables(conn)
+    if in_path.is_dir():
+        files = [str(f) for f in in_path.glob(f"{pattern}")]
+    else:
+        files = [str(in_path)]
 
-    # insert domains
-    load_units_from_dataset(conn, dataset_path)
-    load_configurations_from_dataset(conn, dataset_path)
-    load_variables_from_dataset(conn, dataset_path)
-
-    # insert locations
-    insert_locations(
-        conn,
-        Path(dataset_path, const.LOCATIONS_DIR)
-    )
+    timeseries = (ev.spark.read.format("parquet").load(files))
 
     if timeseries_type == "primary":
-        timeseries_dir = Path(dataset_path, const.PRIMARY_TIMESERIES_DIR)
+        allowed_location_ids = ev.locations.distinct_values("id")
+        timeseries_dir = ev.primary_timeseries_dir
+
     elif timeseries_type == "secondary":
-        timeseries_dir = Path(dataset_path, const.SECONDARY_TIMESERIES_DIR)
-        insert_location_crosswalks(
-            conn,
-            Path(dataset_path, const.LOCATION_CROSSWALKS_DIR)
+        allowed_location_ids = (
+            ev.location_crosswalks
+            .distinct_values("secondary_location_id")
         )
+        timeseries_dir = ev.secondary_timeseries_dir
     else:
         raise ValueError("Invalid timeseries type.")
 
-    if in_path.is_dir():
-        # recursively convert all files in directory
-        logger.info(
-            "Recursively validating and inserting all files "
-            f"in {in_path}/{pattern}"
-        )
-        for in_filepath in in_path.glob(f"{pattern}"):
-            relative_path = in_filepath.relative_to(in_path)
-            out_filepath = Path(timeseries_dir, relative_path)
-            validate_and_insert_single_timeseries(
-                conn,
-                in_filepath,
-                out_filepath,
-                timeseries_type
+    # define schema
+    schema = pa.DataFrameSchema(
+        {
+            "reference_time": pa.Column(
+                T.TimestampNTZType,
+                coerce=True,
+                nullable=True
+            ),
+            "value_time": pa.Column(
+                T.TimestampNTZType,
+                coerce=True
+            ),
+            "value": pa.Column(
+                T.FloatType,
+                coerce=True
+            ),
+            "variable_name": pa.Column(
+                T.StringType,
+                pa.Check.isin(variable_names),
+                coerce=True
+            ),
+            "configuration_name": pa.Column(
+                T.StringType,
+                pa.Check.isin(configuration_names),
+                coerce=True
+            ),
+            "unit_name": pa.Column(
+                T.StringType,
+                pa.Check.isin(unit_names),
+                coerce=True
+            ),
+            "location_id": pa.Column(
+                T.StringType,
+                pa.Check.isin(allowed_location_ids),
+                coerce=True
             )
-    else:
-        out_filepath = Path(timeseries_dir, in_path.name)
-        validate_and_insert_single_timeseries(
-            conn,
-            in_path,
-            out_filepath,
-            timeseries_type,
-        )
+        },
+    )
+    validated_timeseries = schema(timeseries)
+
+    df_out_errors = validated_timeseries.pandera.errors
+
+    if len(df_out_errors) > 0:
+        raise ValueError(f"Validation errors: {df_out_errors}")
+
+    timeseries_dir.mkdir(parents=True, exist_ok=True)
+
+    (
+        validated_timeseries
+        .select(list(schema.columns.keys()))
+        .write
+        .partitionBy("configuration_name", "variable_name")
+        .format("parquet")
+        .mode("overwrite")
+        .save(str(timeseries_dir))
+    )
