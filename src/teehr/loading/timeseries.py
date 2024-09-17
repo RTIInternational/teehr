@@ -3,11 +3,11 @@ from typing import Union
 from pathlib import Path
 import duckdb
 import pandas as pd
-import xarray as xr
 from teehr.loading.utils import (
     validate_dataset_structure,
     merge_field_mappings,
-    validate_constant_values_dict
+    validate_constant_values_dict,
+    read_and_convert_netcdf
 )
 from teehr.loading.duckdb_sql import (
     create_database_tables,
@@ -48,7 +48,7 @@ def convert_single_timeseries(
         format: {field_name: value}
     **kwargs
         Additional keyword arguments are passed to
-            pd.read_csv() or pd.read_parquet().
+            pd.read_csv(), pd.read_parquet(), or xr.open_dataset().
 
     Steps:
     1. Read the file
@@ -70,7 +70,11 @@ def convert_single_timeseries(
         timeseries = pd.read_csv(in_filepath, **kwargs)
     elif in_filepath.suffix == ".nc":
         # read and convert netcdf file
-        timeseries = xr.open_dataset(in_filepath, **kwargs)
+        timeseries = read_and_convert_netcdf(
+            in_filepath,
+            field_mapping,
+            **kwargs
+        )
     else:
         raise ValueError("Unsupported file type.")
 

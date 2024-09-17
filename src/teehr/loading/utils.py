@@ -1,5 +1,7 @@
 """Utility functions for the preprocessing."""
 import geopandas as gpd
+import pandas as pd
+import xarray as xr
 from pathlib import Path
 from typing import Union, List
 import logging
@@ -151,3 +153,18 @@ def copy_template_to(
 
     gitignore_text = Path(destination_dir, "gitignore_template")
     gitignore_text.rename(Path(destination_dir, ".gitignore"))
+
+
+def read_and_convert_netcdf(
+        in_filepath: Union[str, Path],
+        field_mapping: dict,
+        **kwargs
+) -> pd.DataFrame:
+    """Read a netcdf file and convert to pandas dataframe."""
+    logger.debug(f"Reading and converting netcdf file {in_filepath}")
+    with xr.open_dataset(in_filepath, **kwargs) as ds:
+        # Get only the fields that are included in the field mapping.
+        field_list = [field for field in field_mapping if field in ds]
+        timeseries = ds[field_list].to_dataframe()
+    timeseries.reset_index(inplace=True)
+    return timeseries
