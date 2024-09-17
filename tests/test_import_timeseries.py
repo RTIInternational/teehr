@@ -18,17 +18,18 @@ CROSSWALK_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "crosswalk.csv")
 SECONDARY_TIMESERIES_FILEPATH = Path(
     TEST_STUDY_DATA_DIR, "timeseries", "test_short_fcast.parquet"
 )
+TEST_STUDY_DATA_DIR_v0_4 = Path("tests", "data", "test_study")
 SUMMA_TIMESERIES_FILEPATH_NC = Path(
-    "/mnt/data/ciroh/eval_system/sample_netcdf_files/summa.example.nc"
+    TEST_STUDY_DATA_DIR_v0_4, "timeseries", "summa.example.nc"
 )
 SUMMA_LOCATIONS = Path(
-    "/mnt/data/ciroh/eval_system/sample_netcdf_files/summa_locations.parquet"
+    TEST_STUDY_DATA_DIR_v0_4, "geo", "summa_locations.parquet"
 )
 MIZU_TIMESERIES_FILEPATH_NC = Path(
-    "/mnt/data/ciroh/eval_system/sample_netcdf_files/mizuroute.example.nc"
+    TEST_STUDY_DATA_DIR_v0_4, "timeseries", "mizuroute.example.nc"
 )
 MIZU_LOCATIONS = Path(
-    "/mnt/data/ciroh/eval_system/sample_netcdf_files/mizu_locations.parquet"
+    TEST_STUDY_DATA_DIR_v0_4, "geo", "mizu_locations.parquet"
 )
 
 
