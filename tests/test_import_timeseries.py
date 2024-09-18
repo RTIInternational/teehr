@@ -7,6 +7,7 @@ from teehr.models.tables import (
     Variable
 )
 import tempfile
+import xarray as xr
 
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
@@ -201,7 +202,17 @@ def test_validate_and_insert_summa_nc_timeseries(tmpdir):
         constant_field_values=summa_constant_field_values
     )
 
-    assert True
+    # Compare loaded values with the values in the netcdf file.
+    primary_df = eval.primary_timeseries.to_pandas()
+    primary_df.set_index("location_id", inplace=True)
+    teehr_values = primary_df.loc["170300010101"].value.values
+
+    summa_ds = xr.open_dataset(SUMMA_TIMESERIES_FILEPATH_NC)
+    nc_values = summa_ds[
+        "averageRoutedRunoff_mean"
+    ].sel(gru=170300010101).values
+
+    assert (teehr_values == nc_values).all()
 
 
 def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
@@ -247,7 +258,17 @@ def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
         constant_field_values=mizu_constant_field_values
     )
 
-    assert True
+    # Compare loaded values with the values in the netcdf file.
+    primary_df = eval.primary_timeseries.to_pandas()
+    primary_df.set_index("location_id", inplace=True)
+    teehr_values = primary_df.loc["77000002"].value.values
+
+    mizu_ds = xr.open_dataset(MIZU_TIMESERIES_FILEPATH_NC)
+    nc_values = mizu_ds.where(
+        mizu_ds.reachID == 77000002, drop=True
+    ).KWroutedRunoff.values.ravel()
+
+    assert (teehr_values == nc_values).all()
 
 
 if __name__ == "__main__":
