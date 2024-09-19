@@ -7,7 +7,7 @@ from teehr.loading.utils import (
     validate_dataset_structure,
     merge_field_mappings,
     validate_constant_values_dict,
-    read_and_convert_netcdf
+    read_and_convert_netcdf_to_df
 )
 from teehr.loading.duckdb_sql import (
     create_database_tables,
@@ -70,7 +70,7 @@ def convert_single_timeseries(
         timeseries = pd.read_csv(in_filepath, **kwargs)
     elif in_filepath.suffix == ".nc":
         # read and convert netcdf file
-        timeseries = read_and_convert_netcdf(
+        timeseries = read_and_convert_netcdf_to_df(
             in_filepath,
             field_mapping,
             **kwargs

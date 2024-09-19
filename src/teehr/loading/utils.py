@@ -155,7 +155,7 @@ def copy_template_to(
     gitignore_text.rename(Path(destination_dir, ".gitignore"))
 
 
-def read_and_convert_netcdf(
+def read_and_convert_netcdf_to_df(
         in_filepath: Union[str, Path],
         field_mapping: dict,
         **kwargs
@@ -165,6 +165,6 @@ def read_and_convert_netcdf(
     with xr.open_dataset(in_filepath, **kwargs) as ds:
         # Get only the fields that are included in the field mapping.
         field_list = [field for field in field_mapping if field in ds]
-        timeseries = ds[field_list].to_dataframe()
-    timeseries.reset_index(inplace=True)
-    return timeseries
+        df = ds[field_list].to_dataframe()
+    df.reset_index(inplace=True)
+    return df
