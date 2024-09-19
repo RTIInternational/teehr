@@ -31,7 +31,6 @@ from teehr.fetching.const import (
     TIMESERIES_DATA_TYPES,
     VALUE,
     VALUE_TIME,
-    REFERENCE_TIME,
     LOCATION_ID,
     UNIT_NAME,
     VARIABLE_NAME,
@@ -57,14 +56,10 @@ def format_timeseries_data_types(df: pd.DataFrame) -> pd.DataFrame:
     # Convert to UTC if not already in UTC.
     if df[VALUE_TIME].dt.tz is not None:
         df[VALUE_TIME] = df[VALUE_TIME].dt.tz_convert("UTC")
-    if df[REFERENCE_TIME].dt.tz is not None:
-        df[REFERENCE_TIME] = df[REFERENCE_TIME].dt.tz_convert("UTC")
     # Drop timezone information.
     df[VALUE_TIME] = df[VALUE_TIME].dt.tz_localize(None)
-    df[REFERENCE_TIME] = df[REFERENCE_TIME].dt.tz_localize(None)
     # Convert to datetime64[ms].
     df[VALUE_TIME] = df[VALUE_TIME].astype(TIMESERIES_DATA_TYPES[VALUE_TIME])  # noqa
-    df[REFERENCE_TIME] = df[REFERENCE_TIME].astype(TIMESERIES_DATA_TYPES[REFERENCE_TIME])  # noqa
     # Convert remaining fields.
     df[VALUE] = df[VALUE].astype(TIMESERIES_DATA_TYPES[VALUE])
     df[UNIT_NAME] = df[UNIT_NAME].astype(TIMESERIES_DATA_TYPES[UNIT_NAME])  # noqa
