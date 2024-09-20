@@ -1,26 +1,15 @@
 """Convert and insert timeseries data into the dataset."""
 from typing import Union
 from pathlib import Path
-# import duckdb
 import pandas as pd
+import pandera.pyspark as pa
+import pyspark.sql.types as T
 from teehr.loading.utils import (
     validate_dataset_structure,
     merge_field_mappings,
     validate_constant_values_dict
 )
-# from teehr.loading.duckdb_sql import (
-#     create_database_tables,
-#     load_configurations_from_dataset,
-#     load_units_from_dataset,
-#     load_variables_from_dataset,
-#     insert_locations,
-#     insert_location_crosswalks,
-# )
 from teehr.models.tables import Timeseries
-# import teehr.const as const
-
-import pandera.pyspark as pa
-import pyspark.sql.types as T
 
 import logging
 
