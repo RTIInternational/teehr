@@ -195,8 +195,9 @@ class Load:
             **kwargs
         )
         validate_and_insert_locations(
-            self.locations_cache_dir,
-            self.dataset_dir
+            ev=self.eval,
+            in_path=self.locations_cache_dir
+            # self.dataset_dir
         )
 
     def import_location_crosswalks(
@@ -231,7 +232,8 @@ class Load:
             **kwargs
         )
         validate_and_insert_location_crosswalks(
-            self.crosswalk_cache_dir, self.dataset_dir
+            self.eval,
+            self.crosswalk_cache_dir,
         )
 
     def import_location_attributes(
@@ -266,7 +268,8 @@ class Load:
             **kwargs
         )
         validate_and_insert_location_attributes(
-            self.attributes_cache_dir, self.dataset_dir
+            self.eval,
+            self.attributes_cache_dir,
         )
 
     def import_secondary_timeseries(
@@ -314,8 +317,8 @@ class Load:
 
         validate_and_insert_timeseries(
             ev=self.eval,
-            # in_path=self.secondary_cache_dir,
-            dataset_path=self.dataset_dir,
+            in_path=self.secondary_cache_dir,
+            # dataset_path=self.dataset_dir,
             timeseries_type="secondary",
             pattern=pattern,
         )

@@ -1,20 +1,23 @@
 """Module for importing location crosswalks from a file."""
 from typing import Union
 from pathlib import Path
-from teehr.loading.duckdb_sql import (
-    create_database_tables,
-    insert_locations,
-    insert_location_crosswalks,
-)
+# from teehr.loading.duckdb_sql import (
+#     create_database_tables,
+#     insert_locations,
+#     insert_location_crosswalks,
+# )
 from teehr.loading.utils import (
     validate_dataset_structure,
 )
 from teehr.models.tables import LocationCrosswalk
 from teehr.loading.utils import merge_field_mappings
-import teehr.const as const
-import duckdb
+# import teehr.const as const
+# import duckdb
 import logging
 import pandas as pd
+
+import pandera.pyspark as pa
+import pyspark.sql.types as T
 
 logger = logging.getLogger(__name__)
 
@@ -136,28 +139,10 @@ def convert_location_crosswalks(
     logger.info(f"Converted {files_converted} files.")
 
 
-def validate_and_insert_single_location_crosswalks(
-    conn: duckdb.DuckDBPyConnection,
-    in_filepath: Union[str, Path],
-    out_filepath: Union[str, Path],
-):
-    """Validate and insert location crosswalk data."""
-    logger.info(f"Validating and inserting crosswalk data from {in_filepath}")
-
-    # read and insert provided crosswalk data
-    insert_location_crosswalks(
-        conn,
-        in_filepath
-    )
-
-    conn.sql(f"COPY location_crosswalks TO '{out_filepath}';")
-
-    conn.sql("TRUNCATE location_crosswalks;")
-
-
 def validate_and_insert_location_crosswalks(
+    ev,
     in_path: Union[str, Path],
-    dataset_dir: Union[str, Path],
+    # dataset_dir: Union[str, Path],
     pattern: str = "**/*.parquet",
 ):
     """Validate and insert location crosswalks data."""
@@ -165,39 +150,51 @@ def validate_and_insert_location_crosswalks(
         f"Validating and inserting location crosswalks data from {in_path}"
     )
 
-    if not validate_dataset_structure(dataset_dir):
+    if not validate_dataset_structure(ev.dataset_dir):
         raise ValueError("Database structure is not valid.")
 
-    # setup validation database
-    conn = duckdb.connect()
-    create_database_tables(conn)
+    if not validate_dataset_structure(ev.dataset_dir):
+        raise ValueError("Database structure is not valid.")
 
-    # read and insert location data from dataset
-    insert_locations(
-        conn,
-        Path(dataset_dir, const.LOCATIONS_DIR)
-    )
-
-    location_crosswalks_dir = Path(dataset_dir, const.LOCATION_CROSSWALKS_DIR)
+    location_ids = ev.locations.distinct_values("id")
 
     if in_path.is_dir():
-        # recursively convert all files in directory
-        logger.info(
-            "Recursively validating and inserting "
-            f"all files in: {in_path}/{pattern}"
-        )
-        for in_filepath in in_path.glob(f"{pattern}"):
-            relative_path = in_filepath.relative_to(in_path)
-            out_filepath = Path(location_crosswalks_dir, relative_path)
-            validate_and_insert_single_location_crosswalks(
-                conn,
-                in_filepath,
-                out_filepath,
-            )
+        files = [str(f) for f in in_path.glob(f"{pattern}")]
     else:
-        out_filepath = Path(location_crosswalks_dir, in_path.name)
-        validate_and_insert_single_location_crosswalks(
-            conn,
-            in_path,
-            out_filepath
-        )
+        files = [str(in_path)]
+
+    loc_xwalks = (ev.spark.read.format("parquet").load(files))
+
+    # define schema
+    schema = pa.DataFrameSchema(
+        {
+            "primary_location_id": pa.Column(
+                T.StringType,
+                pa.Check.isin(location_ids),
+                coerce=True
+            ),
+            "secondary_location_id": pa.Column(
+                T.StringType,
+                coerce=True
+            )
+        },
+    )
+    validated_loc_xwalks = schema(loc_xwalks)
+
+    errors = validated_loc_xwalks.pandera.errors
+
+    if len(errors) > 0:
+        raise ValueError(f"Validation errors: {errors}")
+
+    loc_xwalks_dir = ev.location_crosswalks_dir
+    loc_xwalks_dir.mkdir(parents=True, exist_ok=True)
+
+    (
+        validated_loc_xwalks
+        .select(list(schema.columns.keys()))
+        .write
+        # .partitionBy("configuration_name", "variable_name")
+        .format("parquet")
+        .mode("overwrite")
+        .save(str(loc_xwalks_dir))
+    )

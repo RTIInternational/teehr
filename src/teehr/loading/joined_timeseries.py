@@ -115,8 +115,12 @@ def add_attr_to_joined_df(
         Joined timeseries DataFrame with attributes
     """
     dataset_dir = Path(dataset_dir)
-    if len(list(Path(dataset_dir, const.LOCATION_ATTRIBUTES_DIR).glob("**/*.parquet"))) == 0:
-        logger.info(f"No parquet files in {dataset_dir}.  Skipping add attributes.")
+    if len(list(
+        Path(dataset_dir, const.LOCATION_ATTRIBUTES_DIR).glob("**/*.parquet")
+    )) == 0:
+        logger.info(
+            f"No parquet files in {dataset_dir}.  Skipping add attributes."
+        )
         return joined_df
     else:
         logger.info("Adding attributes")
