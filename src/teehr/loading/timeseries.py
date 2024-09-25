@@ -6,7 +6,8 @@ import pandas as pd
 from teehr.loading.utils import (
     validate_dataset_structure,
     merge_field_mappings,
-    validate_constant_values_dict
+    validate_constant_values_dict,
+    read_and_convert_netcdf_to_df
 )
 from teehr.loading.duckdb_sql import (
     create_database_tables,
@@ -47,7 +48,7 @@ def convert_single_timeseries(
         format: {field_name: value}
     **kwargs
         Additional keyword arguments are passed to
-            pd.read_csv() or pd.read_parquet().
+            pd.read_csv(), pd.read_parquet(), or xr.open_dataset().
 
     Steps:
     1. Read the file
@@ -67,6 +68,13 @@ def convert_single_timeseries(
     elif in_filepath.suffix == ".csv":
         # read and convert csv file
         timeseries = pd.read_csv(in_filepath, **kwargs)
+    elif in_filepath.suffix == ".nc":
+        # read and convert netcdf file
+        timeseries = read_and_convert_netcdf_to_df(
+            in_filepath,
+            field_mapping,
+            **kwargs
+        )
     else:
         raise ValueError("Unsupported file type.")
 
