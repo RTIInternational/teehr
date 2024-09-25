@@ -186,6 +186,11 @@ class Load:
 
         File is first read by GeoPandas, field names renamed and
         then validated and inserted into the dataset.
+
+        The TEEHR Location Crosswalk table schema includes fields:
+        - id
+        - name
+        - geometry
         """
         convert_locations(
             in_path,
@@ -223,6 +228,10 @@ class Load:
         **kwargs
             Additional keyword arguments are passed to pd.read_csv()
             or pd.read_parquet().
+
+        The TEEHR Location Crosswalk table schema includes fields:
+        - primary_location_id
+        - secondary_location_id
         """
         convert_location_crosswalks(
             in_path,
@@ -259,6 +268,11 @@ class Load:
         **kwargs
             Additional keyword arguments are passed to pd.read_csv()
             or pd.read_parquet().
+
+        The TEEHR Location Attribute table schema includes fields:
+        - location_id
+        - attribute_name
+        - value
         """
         convert_location_attributes(
             in_path,
@@ -300,6 +314,15 @@ class Load:
             or pd.read_parquet().
 
         Includes validation and importing data to database.
+
+        The TEEHR Timeseries table schema includes fields:
+        - reference_time
+        - value_time
+        - configuration_name
+        - unit_name
+        - variable_name
+        - value
+        - location_id
         """
         self.secondary_cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -351,6 +374,15 @@ class Load:
             or pd.read_parquet().
 
         Includes validation and importing data to database.
+
+        The TEEHR Timeseries table schema includes fields:
+        - reference_time
+        - value_time
+        - configuration_name
+        - unit_name
+        - variable_name
+        - value
+        - location_id
         """
         self.primary_cache_dir.mkdir(parents=True, exist_ok=True)
 

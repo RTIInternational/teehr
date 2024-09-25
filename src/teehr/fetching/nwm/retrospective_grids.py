@@ -34,6 +34,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Union, Optional, Tuple, Dict
 import logging
+import numpy as np
 
 import pandas as pd
 import xarray as xr
@@ -142,7 +143,7 @@ def process_nwm30_retro_group(
         chunk_df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
             get(variable_name, variable_name)
 
-    chunk_df.loc[:, REFERENCE_TIME] = chunk_df.value_time
+    chunk_df.loc[:, REFERENCE_TIME] = np.nan
     chunk_df.loc[:, CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
 
     if location_id_prefix:
@@ -234,7 +235,7 @@ def process_single_nwm21_retro_grid_file(
             get(variable_name, variable_name)
 
     df.loc[:, VALUE_TIME] = value_time
-    df.loc[:, REFERENCE_TIME] = value_time
+    df.loc[:, REFERENCE_TIME] = np.nan
     df.loc[:, CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
 
     if location_id_prefix:

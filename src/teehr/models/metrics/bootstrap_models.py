@@ -2,7 +2,6 @@
 from typing import Callable, List, Union
 from pathlib import Path
 
-from arch.typing import ArrayLike
 from numpy.random import RandomState
 from pydantic import Field
 
@@ -15,16 +14,17 @@ from teehr.models.metrics.metric_models import MetricsBasemodel
 class GumbootModel(MetricsBasemodel):
     """Gumboot bootstrapping.
 
-    This is a partial implementation of the Gumboot R package, a non-overlapping
-    bootstrap method where blocks are defined by water years. Synthetic timeseries
-    are constructed by randomly resampling water years from the input timeseries
-    with replacement. The specified performance metric is calculated for each
-    synthetic timeseries for a number of bootstrap replications (reps). The
-    quantiles of the bootstrap metric results are calculated and returned.
+    This is a partial implementation of the Gumboot R package, a
+    non-overlapping bootstrap method where blocks are defined by water
+    years. Synthetic timeseries are constructed by randomly resampling water
+    years from the input timeseries with replacement. The specified performance
+    metric is calculated for each synthetic timeseries for a number of
+    bootstrap replications (reps). The quantiles of the bootstrap metric
+    results are calculated and returned.
 
-    If the quantile values are not specified or are set to None, the array of metric
-    values is returned (dimensions: [reps, 1]). Otherwise the specified quantiles of
-    the metric values are returned as a dictionary.
+    If the quantile values are not specified or are set to None, the array
+    of metric values is returned (dimensions: [reps, 1]). Otherwise the
+    specified quantiles of the metric values are returned as a dictionary.
 
     See Also:  Clark et al. (2021), "The abuse of popular performance metrics
       in hydrologic modeling", Water Resources Research,
@@ -36,13 +36,13 @@ class GumbootModel(MetricsBasemodel):
     ----------
     reps : int
         The number of bootstrap replications. Default value is 1000.
-    seed : int, optional
-        The seed for the random number generator. Setting a seed value can be used
-        to provide reproducible results. Default value is None.
-    quantiles : List[float], optional
-        The quantiles to calculate from the bootstrap metric results. The default
-        value is None.
-    boot_year_file : Union[str, Path, None], optional
+    seed : Union[int, None]
+        The seed for the random number generator. Setting a seed value can be
+        used to provide reproducible results. Default value is None.
+    quantiles : Union[List[float], None]
+        The quantiles to calculate from the bootstrap metric results. The
+        default value is None.
+    boot_year_file : Union[str, Path, None]
         The file path to the boot year csv file. The default value is None.
     water_year_month : int
         The month specifying the start of the water year. Default value is 10.
@@ -73,8 +73,8 @@ class CircularBlockModel(MetricsBasemodel):
 
     Parameters
     ----------
-    seed : int
-        The seed for the random number generator.
+    seed : Union[int, None]
+        The seed for the random number generator. Default value is None.
     random_state : RandomState, optional
         The random state for the random number generator.
     reps : int
@@ -82,7 +82,8 @@ class CircularBlockModel(MetricsBasemodel):
     block_size : int
         The block size for the CircularBlockBootstrap.
     quantiles : List[float]
-        The quantiles to calculate from the bootstrap results
+        The quantiles to calculate from the bootstrap results. Default
+        value is None.
     name : str
         The name of the bootstrap method. Currently only used in
         logging. Default value is "CircularBlock".
@@ -93,11 +94,11 @@ class CircularBlockModel(MetricsBasemodel):
         The wrapper to generate the bootstrapping function.
     """
 
-    seed: int = 42
+    seed: Union[int, None] = None
     random_state: Union[RandomState, None] = None
     reps: int = 1000
     block_size: int = 365
-    quantiles: Union[List[float], None] = [0.05, 0.5, 0.95]
+    quantiles: Union[List[float], None] = None
     name: str = Field(default="CircularBlock")
     include_value_time: bool = Field(False, frozen=True)
     func: Callable = Field(
@@ -105,13 +106,14 @@ class CircularBlockModel(MetricsBasemodel):
         frozen=True
     )
 
+
 class StationaryModel(MetricsBasemodel):
     """Stationary bootstrapping from the arch python package.
 
     Parameters
     ----------
-    seed : int
-        The seed for the random number generator.
+    seed : Union[int, None]
+        The seed for the random number generator. Default value is 42.
     random_state : RandomState, optional
         The random state for the random number generator.
     reps : int
@@ -119,7 +121,8 @@ class StationaryModel(MetricsBasemodel):
     block_size : int
         The block size for the StationaryBootstrap.
     quantiles : List[float]
-        The quantiles to calculate from the bootstrap results
+        The quantiles to calculate from the bootstrap results. Default
+        value is None.
     name : str
         The name of the bootstrap method. Currently only used in
         logging. Default value is "Stationary".
@@ -130,11 +133,11 @@ class StationaryModel(MetricsBasemodel):
         The wrapper to generate the bootstrapping function.
     """
 
-    seed: int = 42
+    seed: Union[int, None] = None
     random_state: Union[RandomState, None] = None
     reps: int = 1000
     block_size: int = 365
-    quantiles: Union[List[float], None] = [0.05, 0.5, 0.95]
+    quantiles: Union[List[float], None] = None
     name: str = Field(default="Stationary")
     include_value_time: bool = Field(False, frozen=True)
     func: Callable = Field(

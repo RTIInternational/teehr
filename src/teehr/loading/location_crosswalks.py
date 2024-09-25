@@ -3,6 +3,7 @@ from typing import Union
 from pathlib import Path
 from teehr.loading.utils import (
     validate_dataset_structure,
+    read_and_convert_netcdf_to_df
 )
 from teehr.models.tables import LocationCrosswalk
 from teehr.loading.utils import merge_field_mappings
@@ -47,6 +48,13 @@ def convert_single_location_crosswalks(
     elif in_filepath.suffix == ".csv":
         # read and convert csv file
         location_crosswalks = pd.read_csv(in_filepath, **kwargs)
+    elif in_filepath.suffix == ".nc":
+        # read and convert netcdf file
+        location_crosswalks = read_and_convert_netcdf_to_df(
+            in_filepath,
+            field_mapping,
+            **kwargs
+        )
     else:
         raise ValueError("Unsupported file type.")
 

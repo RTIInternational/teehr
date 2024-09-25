@@ -7,6 +7,7 @@ from teehr.models.tables import (
     Variable
 )
 import tempfile
+import xarray as xr
 
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
@@ -17,6 +18,19 @@ PRIMARY_TIMESERIES_FILEPATH = Path(
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "crosswalk.csv")
 SECONDARY_TIMESERIES_FILEPATH = Path(
     TEST_STUDY_DATA_DIR, "timeseries", "test_short_fcast.parquet"
+)
+TEST_STUDY_DATA_DIR_v0_4 = Path("tests", "data", "test_study")
+SUMMA_TIMESERIES_FILEPATH_NC = Path(
+    TEST_STUDY_DATA_DIR_v0_4, "timeseries", "summa.example.nc"
+)
+SUMMA_LOCATIONS = Path(
+    TEST_STUDY_DATA_DIR_v0_4, "geo", "summa_locations.parquet"
+)
+MIZU_TIMESERIES_FILEPATH_NC = Path(
+    TEST_STUDY_DATA_DIR_v0_4, "timeseries", "mizuroute.example.nc"
+)
+MIZU_LOCATIONS = Path(
+    TEST_STUDY_DATA_DIR_v0_4, "geo", "mizu_locations.parquet"
 )
 
 
@@ -138,6 +152,118 @@ def test_validate_and_insert_timeseries_set_const(tmpdir):
     assert True
 
 
+def test_validate_and_insert_summa_nc_timeseries(tmpdir):
+    """Test the validate_locations function."""
+    eval = Evaluation(dir_path=tmpdir)
+
+    eval.enable_logging()
+
+    eval.clone_template()
+
+    eval.load.import_locations(in_path=SUMMA_LOCATIONS)
+
+    eval.load.add_configuration(
+        Configuration(
+            name="summa",
+            type="primary",
+            description="Summa Runoff Data"
+        )
+    )
+
+    eval.load.add_variable(
+        Variable(
+            name="runoff",
+            long_name="runoff"
+        )
+    )
+
+    summa_field_mapping = {
+        "time": "value_time",
+        "averageRoutedRunoff_mean": "value",
+        "gru": "location_id"
+    }
+    summa_constant_field_values = {
+        "unit_name": "m^3/s",
+        "variable_name": "runoff",
+        "configuration_name": "summa",
+        "reference_time": None
+    }
+
+    eval.load.import_primary_timeseries(
+        in_path=SUMMA_TIMESERIES_FILEPATH_NC,
+        field_mapping=summa_field_mapping,
+        constant_field_values=summa_constant_field_values
+    )
+
+    # Compare loaded values with the values in the netcdf file.
+    primary_df = eval.primary_timeseries.to_pandas()
+    primary_df.set_index("location_id", inplace=True)
+    teehr_values = primary_df.loc["170300010101"].value.values
+
+    summa_ds = xr.open_dataset(SUMMA_TIMESERIES_FILEPATH_NC)
+    nc_values = summa_ds[
+        "averageRoutedRunoff_mean"
+    ].sel(gru=170300010101).values
+
+    assert (teehr_values == nc_values).all()
+
+
+def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
+    """Test the validate_locations function."""
+    eval = Evaluation(dir_path=tmpdir)
+
+    eval.enable_logging()
+
+    eval.clone_template()
+
+    eval.load.import_locations(in_path=MIZU_LOCATIONS)
+
+    eval.load.add_configuration(
+        Configuration(
+            name="mizuroute",
+            type="primary",
+            description="Mizuroute Runoff Data"
+        )
+    )
+
+    eval.load.add_variable(
+        Variable(
+            name="runoff",
+            long_name="runoff"
+        )
+    )
+
+    mizu_field_mapping = {
+        "time": "value_time",
+        "KWroutedRunoff": "value",
+        "reachID": "location_id"
+    }
+    mizu_constant_field_values = {
+        "unit_name": "mm/s",
+        "variable_name": "runoff",
+        "configuration_name": "mizuroute",
+        "reference_time": None
+    }
+
+    eval.load.import_primary_timeseries(
+        in_path=MIZU_TIMESERIES_FILEPATH_NC,
+        field_mapping=mizu_field_mapping,
+        constant_field_values=mizu_constant_field_values
+    )
+
+    # Compare loaded values with the values in the netcdf file.
+    primary_df = eval.primary_timeseries.to_pandas()
+    primary_df.set_index("location_id", inplace=True)
+    teehr_values = primary_df.loc["77000002"].value.values
+
+    mizu_ds = xr.open_dataset(MIZU_TIMESERIES_FILEPATH_NC)
+    nc_values = mizu_ds.where(
+        mizu_ds.reachID == 77000002, drop=True
+    ).KWroutedRunoff.values.ravel()
+
+    assert (teehr_values == nc_values).all()
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
@@ -151,6 +277,18 @@ if __name__ == "__main__":
         test_validate_and_insert_timeseries_set_const(
             tempfile.mkdtemp(
                 prefix="2-",
+                dir=tempdir
+            )
+        )
+        test_validate_and_insert_summa_nc_timeseries(
+            tempfile.mkdtemp(
+                prefix="3-",
+                dir=tempdir
+            )
+        )
+        test_validate_and_insert_mizu_nc_timeseries(
+            tempfile.mkdtemp(
+                prefix="4-",
                 dir=tempdir
             )
         )
