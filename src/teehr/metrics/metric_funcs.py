@@ -4,64 +4,34 @@ import numpy.typing as npt
 import pandas as pd
 
 
-def primary_count(p: pd.Series) -> float:
-    """Primary count."""
+def count(p: pd.Series) -> float:
+    """Count."""
     return len(p)
 
 
-def secondary_count(s: pd.Series) -> float:
-    """Secondary count."""
-    return len(s)
-
-
-def primary_minimum(p: pd.Series) -> float:
-    """Primary minimum."""
+def minimum(p: pd.Series) -> float:
+    """Minimum."""
     return np.min(p)
 
 
-def secondary_minimum(s: pd.Series) -> float:
-    """Secondary minimum."""
-    return np.min(s)
-
-
-def primary_maximum(p: pd.Series) -> float:
-    """Primary maximum."""
+def maximum(p: pd.Series) -> float:
+    """Maximum."""
     return np.max(p)
 
 
-def secondary_maximum(s: pd.Series) -> float:
-    """Secondary maximum."""
-    return np.max(s)
-
-
-def primary_average(p: pd.Series) -> float:
-    """Primary average."""
+def average(p: pd.Series) -> float:
+    """Average."""
     return np.mean(p)
 
 
-def secondary_average(s: pd.Series) -> float:
-    """Secondary average."""
-    return np.mean(s)
-
-
-def primary_sum(p: pd.Series) -> float:
-    """Primary sum."""
+def sum(p: pd.Series) -> float:
+    """Sum."""
     return np.sum(p)
 
 
-def secondary_sum(s: pd.Series) -> float:
-    """Secondary sum."""
-    return np.sum(s)
-
-
-def primary_variance(p: pd.Series) -> float:
-    """Primary variance."""
+def variance(p: pd.Series) -> float:
+    """Variance."""
     return np.var(p)
-
-
-def secondary_variance(s: pd.Series) -> float:
-    """Secondary variance."""
-    return np.var(s)
 
 
 def mean_error(p: pd.Series, s: pd.Series) -> float:
@@ -308,17 +278,17 @@ def max_value_timedelta(
     return td.total_seconds()
 
 
-def primary_max_value_time(
+def max_value_time(
     p: pd.Series,
     value_time: pd.Series
 ) -> pd.Timestamp:
-    """Primary max value time."""
+    """Max value time."""
     return value_time[p.idxmax()]
 
 
-def secondary_max_value_time(
-    s: pd.Series,
-    value_time: pd.Series
-) -> pd.Timestamp:
-    """Secondary max value time."""
-    return value_time[s.idxmax()]
+# def secondary_max_value_time(
+#     s: pd.Series,
+#     value_time: pd.Series
+# ) -> pd.Timestamp:
+#     """Secondary max value time."""
+#     return value_time[s.idxmax()]

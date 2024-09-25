@@ -33,7 +33,7 @@ class Metrics:
         self.dataset_dir = eval.dataset_dir
         self.locations = eval.locations
         self.joined_timeseries = eval.joined_timeseries
-        self.df: ps.DataFrame = None
+        self.df = self.joined_timeseries.to_sdf()
 
     def query(
         self,
@@ -56,7 +56,6 @@ class Metrics:
     ):
         """Get the metrics in the dataset."""
         logger.info("Calculating performance metrics.")
-        self.df = self.joined_timeseries.to_sdf()
         if filters is not None:
             logger.debug("Applying filters to the metrics query.")
             self.df = validate_and_apply_filters(
@@ -76,7 +75,6 @@ class Metrics:
         )
 
         if order_by is not None:
-            # ToDo: validate order_by fields
             logger.debug(f"Ordering the metrics by: {order_by}.")
             self.df = order_df(self.df, order_by)
 
@@ -89,10 +87,10 @@ class Metrics:
     def to_geopandas(self) -> gpd.GeoDataFrame:
         """Convert the DataFrame to a GeoPandas DataFrame."""
         if "primary_location_id" not in self.df.columns:
-            raise ValueError(
-                "The primary_location_id field must be included in the "
-                "group_by to include geometry."
-            )
+            err_msg = "The primary_location_id field must be included in " \
+                      "the group_by to include geometry."
+            logger.error(err_msg)
+            raise ValueError(err_msg)
         return join_geometry(
             self.df,
             self.locations.to_sdf(),
