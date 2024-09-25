@@ -1,11 +1,16 @@
-"""Provides the teehr accessor extending pandas DataFrames"""
+"""Provides the teehr accessor extending pandas DataFrames."""
 import itertools
 from math import pi
 import random
 import pandas as pd
+import logging
+from pathlib import Path
 
-from bokeh.plotting import figure, save, show
+from bokeh.plotting import figure, save, output_file, show
 from bokeh.palettes import Turbo256
+
+logger = logging.getLogger(__name__)
+
 
 @pd.api.extensions.register_dataframe_accessor("teehr")
 class TEEHRDataFrameAccessor:
@@ -34,25 +39,27 @@ class TEEHRDataFrameAccessor:
         if obj.index.size == 0:
             raise AttributeError("DataFrame must have data.")
 
-    def timeseries_unique_values(
+    def _timeseries_unique_values(
             self,
             variable_df: pd.DataFrame,
     ) -> dict:
         """Get dictionary of all unique values of each column."""
+        logger.info("Retrieving unique values from DataFrame.")
         columns = variable_df.columns.to_list()
         Dict = {}
         for column in columns:
-            Dict[column] =variable_df[column].unique().tolist()
+            Dict[column] = variable_df[column].unique().tolist()
 
         return Dict
 
-    def timeseries_default_schema(self) -> dict:
-        """ Get dictionary that defines plotting schema."""
+    def _timeseries_default_schema(self) -> dict:
+        """Get dictionary that defines plotting schema."""
+        logger.info("Retrieving default plotting schema.")
         unique_variables = self._df['variable_name'].unique().tolist()
         schema = {}
         for variable in unique_variables:
             variable_df = self._df[self._df['variable_name'] == variable]
-            unique_column_vals = self.timeseries_unique_values(variable_df)
+            unique_column_vals = self._timeseries_unique_values(variable_df)
             all_list = [unique_column_vals['configuration_name'],
                         unique_column_vals['location_id']]
             res = list(itertools.product(*all_list))
@@ -60,34 +67,38 @@ class TEEHRDataFrameAccessor:
 
         return schema
 
-    def timeseries_generate_plot(self,
-                                 schema: dict,
-                                 df: pd.DataFrame,
-                                 variable: str,
-        ) -> figure:
-        """Generates a single timeseries plot."""
+    def _timeseries_generate_plot(self,
+                                  schema: dict,
+                                  df: pd.DataFrame,
+                                  variable: str,
+                                  output_dir: None,
+                                  ) -> figure:
+        """Generate a single timeseries plot."""
+        logger.info("Generating timeseries plot.")
+
         unique_units = df['unit_name'].unique().tolist()
 
         numColors = len(schema[variable])
-        sampled_colors = random.sample(range(0,len(Turbo256)-1),numColors)
+        sampled_colors = random.sample(range(0, len(Turbo256)-1), numColors)
         palette = Turbo256
         palette_count = 0
 
         p = figure(title="Click legend entry to toggle display of timeseries",
-            y_axis_label="{} [{}]".format(variable,unique_units[0]),
-            x_axis_label="Datetime",
-            x_axis_type='datetime',
-            sizing_mode="stretch_width",
-            tools=['xwheel_zoom','reset'],
-            height = 800)
+                   y_axis_label=f"{variable} [{unique_units[0]}]",
+                   x_axis_label="Datetime",
+                   x_axis_type='datetime',
+                   sizing_mode="stretch_width",
+                   tools=['xwheel_zoom', 'reset'],
+                   height=800)
 
         for combo in schema[variable]:
-            temp = df[(df['configuration_name'] == combo[0]) & (df['location_id'] == combo[1])]
+            temp = df[(df['configuration_name'] == combo[0]) &
+                      (df['location_id'] == combo[1])]
             p.line(temp.value_time,
-                    temp.value,
-                    legend_label="{} - {}".format(combo[0],combo[1]),
-                    line_width=1,
-                    color=palette[sampled_colors[palette_count]])
+                   temp.value,
+                   legend_label=f"{combo[0]} - {combo[1]}",
+                   line_width=1,
+                   color=palette[sampled_colors[palette_count]])
             palette_count += 1
 
         p.xaxis.major_label_orientation = pi/4
@@ -110,13 +121,37 @@ class TEEHRDataFrameAccessor:
         p.legend.background_fill_alpha = 1.0
         p.legend.click_policy = 'hide'
 
-        show(p)
+        if output_dir:
+            fname = Path(output_dir, f'timeseries_plot_{variable}.html')
+            output_file(filename=fname, title=f'Timeseries Plot [{variable}]')
+            logger.info(f'Saving timeseries plot at {output_dir}')
+            save(p)
+        else:
+            show(p)
 
         return
 
-    def timeseries_plot(self):
-        """Calls workflow to generate plot(s) based on number of unique values in self._df['variable_name'] column."""
-        schema = self.timeseries_default_schema()
+    def timeseries_plot(self,
+                        output_dir=None):
+        """Call workflow to generate plot(s).
+
+        Based on number of unique values
+        in self._df['variable_name'] column.
+        """
+        if output_dir:
+            if output_dir.exists():
+                logger.info('Specified save directory is valid.')
+            else:
+                logger.info('Specified directory does not exist. Creating new'
+                            ' directory to store figure.')
+                Path(output_dir).mkdir(parents=True, exist_ok=True)
+
+        # TO-DO: check here for timeseries_df fields
+
+        schema = self._timeseries_default_schema()
         for variable in schema.keys():
             df_variable = self._df[self._df['variable_name'] == variable]
-            self.timeseries_generate_plot(schema=schema, df=df_variable, variable=variable)
+            self._timeseries_generate_plot(schema=schema,
+                                           df=df_variable,
+                                           variable=variable,
+                                           output_dir=output_dir)
