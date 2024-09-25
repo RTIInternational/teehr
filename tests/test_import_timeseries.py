@@ -3,7 +3,7 @@ from pathlib import Path
 from teehr import Evaluation
 from teehr.models.tables import (
     Configuration,
-    # Unit,
+    Unit,
     Variable
 )
 import tempfile
@@ -42,9 +42,9 @@ def test_validate_and_insert_timeseries(tmpdir):
 
     eval.clone_template()
 
-    eval.load.import_locations(in_path=GEOJSON_GAGES_FILEPATH)
+    eval.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
 
-    eval.load.add_configuration(
+    eval.configurations.add(
         Configuration(
             name="test_obs",
             type="primary",
@@ -52,21 +52,21 @@ def test_validate_and_insert_timeseries(tmpdir):
         )
     )
 
-    # eval.add_unit(
-    #     Unit(
-    #         name="m^3/s",
-    #         long_name="Cubic Meters per Second"
-    #     )
-    # )
+    eval.units.add(
+        Unit(
+            name="cfd",
+            long_name="Cubic Feet per Day"
+        )
+    )
 
-    eval.load.add_variable(
+    eval.variables.add(
         Variable(
             name="streamflow",
             long_name="Streamflow"
         )
     )
 
-    eval.load.import_primary_timeseries(
+    eval.primary_timeseries.load_parquet(
         in_path=PRIMARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
@@ -76,13 +76,14 @@ def test_validate_and_insert_timeseries(tmpdir):
             "variable_name": "variable_name",
             "value": "value",
             "location_id": "location_id"
-        })
+        }
+    )
 
-    eval.load.import_location_crosswalks(
+    eval.location_crosswalks.load_parquet(
         in_path=CROSSWALK_FILEPATH
     )
 
-    eval.load.add_configuration(
+    eval.configurations.add(
         Configuration(
             name="test_short",
             type="secondary",
@@ -90,7 +91,7 @@ def test_validate_and_insert_timeseries(tmpdir):
         )
     )
 
-    eval.load.import_secondary_timeseries(
+    eval.secondary_timeseries.load_parquet(
         in_path=SECONDARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
@@ -114,9 +115,9 @@ def test_validate_and_insert_timeseries_set_const(tmpdir):
 
     eval.clone_template()
 
-    eval.load.import_locations(in_path=GEOJSON_GAGES_FILEPATH)
+    eval.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
 
-    eval.load.import_primary_timeseries(
+    eval.primary_timeseries.load_parquet(
         in_path=PRIMARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
@@ -134,11 +135,11 @@ def test_validate_and_insert_timeseries_set_const(tmpdir):
         }
     )
 
-    eval.load.import_location_crosswalks(
+    eval.location_crosswalks.load_parquet(
         in_path=CROSSWALK_FILEPATH
     )
 
-    eval.load.import_secondary_timeseries(
+    eval.secondary_timeseries.load_parquet(
         in_path=SECONDARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
@@ -167,9 +168,9 @@ def test_validate_and_insert_summa_nc_timeseries(tmpdir):
 
     eval.clone_template()
 
-    eval.load.import_locations(in_path=SUMMA_LOCATIONS)
+    eval.locations.load_spatial(in_path=SUMMA_LOCATIONS)
 
-    eval.load.add_configuration(
+    eval.configurations.add(
         Configuration(
             name="summa",
             type="primary",
@@ -177,7 +178,7 @@ def test_validate_and_insert_summa_nc_timeseries(tmpdir):
         )
     )
 
-    eval.load.add_variable(
+    eval.variables.add(
         Variable(
             name="runoff",
             long_name="runoff"
@@ -196,7 +197,7 @@ def test_validate_and_insert_summa_nc_timeseries(tmpdir):
         "reference_time": None
     }
 
-    eval.load.import_primary_timeseries(
+    eval.primary_timeseries.load_netcdf(
         in_path=SUMMA_TIMESERIES_FILEPATH_NC,
         field_mapping=summa_field_mapping,
         constant_field_values=summa_constant_field_values
@@ -223,9 +224,9 @@ def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
 
     eval.clone_template()
 
-    eval.load.import_locations(in_path=MIZU_LOCATIONS)
+    eval.locations.load_spatial(in_path=MIZU_LOCATIONS)
 
-    eval.load.add_configuration(
+    eval.configurations.add(
         Configuration(
             name="mizuroute",
             type="primary",
@@ -233,7 +234,7 @@ def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
         )
     )
 
-    eval.load.add_variable(
+    eval.variables.add(
         Variable(
             name="runoff",
             long_name="runoff"
@@ -252,7 +253,7 @@ def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
         "reference_time": None
     }
 
-    eval.load.import_primary_timeseries(
+    eval.primary_timeseries.load_parquet(
         in_path=MIZU_TIMESERIES_FILEPATH_NC,
         field_mapping=mizu_field_mapping,
         constant_field_values=mizu_constant_field_values
@@ -293,9 +294,9 @@ if __name__ == "__main__":
                 dir=tempdir
             )
         )
-        test_validate_and_insert_mizu_nc_timeseries(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
+        # test_validate_and_insert_mizu_nc_timeseries(
+        #     tempfile.mkdtemp(
+        #         prefix="4-",
+        #         dir=tempdir
+        #     )
+        # )
