@@ -133,10 +133,29 @@ class TEEHRDataFrameAccessor:
 
     def timeseries_plot(self,
                         output_dir=None):
-        """Call workflow to generate plot(s).
+        """
+        Generate and save TS plots for each unique variable in theDataFrame.
 
-        Based on number of unique values
-        in self._df['variable_name'] column.
+        This method generates timeseries plots for each unique variable in the
+        DataFrame's 'variable_name' column. The plots are saved to the
+        specified output directory if provided. If the output directory does
+        not exist, it will be created.
+
+        Parameters
+        ----------
+        output_dir : pathlib.Path or None, optional
+            The directory where the plots will be saved. If None, the plots
+            will be displayed interactively. Default is None.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        This method calls `_timeseries_default_schema` to get the plotting
+        schema and `_timeseries_generate_plot` to generate each plot. It
+        ensures the output directory exists before saving the plots.
         """
         if output_dir:
             if output_dir.exists():
