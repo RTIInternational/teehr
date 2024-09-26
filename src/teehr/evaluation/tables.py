@@ -131,10 +131,10 @@ class BaseTable():
         """
         return len(list(self.dir.rglob(extension_wildcard))) == 0
 
-    def _read_spark_df(self):
-        """Read data from directory."""
+    def _read_spark_df(self, format: str = "parquet"):
+        """Read data from directory as a spark dataframe."""
         self.df = (
-            self.spark.read.format("parquet")
+            self.spark.read.format(format)
             .option("recursiveFileLookup", "true")
             .option("mergeSchema", "true")
             .option("header", True)
@@ -167,8 +167,8 @@ class BaseTable():
             pattern = pattern.replace(".nc", ".parquet")
 
         validate_and_insert_timeseries(
+            ev=self.eval,
             in_path=cache_path,
-            dataset_path=self.dataset_dir,
             timeseries_type=timeseries_type,
             pattern=pattern
         )
@@ -191,7 +191,9 @@ class BaseTable():
             **kwargs
         )
         validate_and_insert_location_attributes(
-            self.attributes_cache_dir, self.dataset_dir
+            ev=self.eval,
+            in_path=self.attributes_cache_dir,
+            pattern=pattern
         )
         self._read_spark_df()
         return self
@@ -212,7 +214,9 @@ class BaseTable():
             **kwargs
         )
         validate_and_insert_location_crosswalks(
-            self.crosswalk_cache_dir, self.dataset_dir
+            ev=self.eval,
+            in_path=self.crosswalk_cache_dir,
+            pattern=pattern
         )
         self._read_spark_df()
         return self
@@ -507,8 +511,8 @@ class UnitTable(BaseTable):
         self.dir = eval.units_dir
         self.table_model = Unit
         self.filter_model = UnitFilter
-        if not self._dir_is_emtpy():
-            self._read_spark_df()
+        if not self._dir_is_emtpy(extension_wildcard="*.csv"):
+            self._read_spark_df(format="csv")
 
     def field_enum(self) -> UnitFields:
         """Get the unit fields enum."""
@@ -550,8 +554,8 @@ class VariableTable(BaseTable):
         self.dir = eval.variables_dir
         self.table_model = Variable
         self.filter_model = VariableFilter
-        if not self._dir_is_emtpy():
-            self._read_spark_df()
+        if not self._dir_is_emtpy(extension_wildcard="*.csv"):
+            self._read_spark_df(format="csv")
 
     def field_enum(self) -> VariableFields:
         """Get the variable fields enum."""
@@ -593,8 +597,8 @@ class AttributeTable(BaseTable):
         self.dir = eval.attributes_dir
         self.table_model = Attribute
         self.filter_model = AttributeFilter
-        if not self._dir_is_emtpy():
-            self._read_spark_df()
+        if not self._dir_is_emtpy(extension_wildcard="*.csv"):
+            self._read_spark_df(format="csv")
 
     def field_enum(self) -> AttributeFields:
         """Get the attribute fields enum."""
@@ -637,8 +641,8 @@ class ConfigurationTable(BaseTable):
         self.dir = eval.configurations_dir
         self.table_model = Configuration
         self.filter_model = ConfigurationFilter
-        if not self._dir_is_emtpy():
-            self._read_spark_df()
+        if not self._dir_is_emtpy(extension_wildcard="*.csv"):
+            self._read_spark_df(format="csv")
 
     def field_enum(self) -> ConfigurationFields:
         """Get the configuration fields enum."""
@@ -742,8 +746,9 @@ class LocationTable(BaseTable):
             **kwargs
         )
         validate_and_insert_locations(
+            self.eval,
             self.locations_cache_dir,
-            self.dataset_dir
+            pattern=pattern
         )
         self._read_spark_df()
         return self

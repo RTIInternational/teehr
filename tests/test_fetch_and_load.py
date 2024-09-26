@@ -64,12 +64,9 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
             "value_time",
             "value",
             "unit_name",
-            "location_id",
-            "configuration_name",
-            "variable_name",
+            "location_id"
             ]
     assert ts_df.unit_name.iloc[0] == "m^3/s"
-    assert ts_df.variable_name.iloc[0] == "streamflow_hourly_inst"
     assert ts_df.value.sum() == np.float32(7319.99)
     assert ts_df.value_time.min() == pd.Timestamp("2022-02-22 00:00:00")
     assert ts_df.value_time.max() == pd.Timestamp("2022-02-23 23:00:00")
@@ -100,12 +97,9 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
             "value_time",
             "value",
             "unit_name",
-            "location_id",
-            "configuration_name",
-            "variable_name",
+            "location_id"
             ]
     assert ts_df.unit_name.iloc[0] == "mm/s"
-    assert ts_df.variable_name.iloc[0] == "rainfall_hourly_rate"
     assert ts_df.value.sum() == np.float32(0.00028747512)
     assert ts_df.value_time.min() == pd.Timestamp("2008-05-23 09:00:00")
     assert ts_df.value_time.max() == pd.Timestamp("2008-05-23 23:00:00")
@@ -142,12 +136,9 @@ def test_fetch_and_load_nwm_forecast_points(tmpdir):
             "value_time",
             "value",
             "unit_name",
-            "location_id",
-            "configuration_name",
-            "variable_name",
+            "location_id"
             ]
     assert ts_df.unit_name.iloc[0] == "m^3/s"
-    assert ts_df.variable_name.iloc[0] == "streamflow_hourly_inst"
     assert ts_df.value.sum() == np.float32(658.14)
     assert ts_df.value_time.min() == pd.Timestamp("2024-02-22 00:00:00")
     assert ts_df.value_time.max() == pd.Timestamp("2024-02-22 23:00:00")
@@ -182,12 +173,9 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
             "value_time",
             "value",
             "unit_name",
-            "location_id",
-            "configuration_name",
-            "variable_name",
+            "location_id"
             ]
     assert ts_df.unit_name.iloc[0] == "mm/s"
-    assert ts_df.variable_name.iloc[0] == "rainfall_hourly_rate"
     assert ts_df.value.sum() == np.float32(0.0)
     assert ts_df.value_time.min() == pd.Timestamp("2024-02-22 00:00:00")
     assert ts_df.value_time.max() == pd.Timestamp("2024-02-22 00:00:00")
