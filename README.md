@@ -47,7 +47,7 @@ $ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.3.28 jupyter la
 ```
 
 ## Examples
-For examples of how to use TEEHR, see the [examples](examples).  We will maintain a basic set of example Jupyter Notebooks demonstrating how to use the TEEHR tools.
+For examples of how to use TEEHR, see the [examples](src/teehr/examples).  We will maintain a basic set of example Jupyter Notebooks demonstrating how to use the TEEHR tools.
 
 
 ## Resources
