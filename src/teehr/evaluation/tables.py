@@ -84,7 +84,6 @@ class BaseTable():
         self.filter_model: FilterBaseModel = None
         self.validate_filter_field_types = True
         self.df: ps.DataFrame = None
-        # For table-based class methods
         self.cache_dir = eval.cache_dir
         self.dataset_dir = eval.dataset_dir
         self.scripts_dir = eval.scripts_dir
@@ -113,8 +112,8 @@ class BaseTable():
             const.LOADING_CACHE_DIR,
             const.PRIMARY_TIMESERIES_DIR
         )
-        # End table-based class methods
 
+    @staticmethod
     def _raise_missing_table_error():
         """Raise an error if the table does not exist."""
         err_msg = (
@@ -125,8 +124,12 @@ class BaseTable():
         raise ValueError(err_msg)
 
     def _dir_is_emtpy(self, extension_wildcard: str = "*.parquet") -> bool:
-        """Check if the directory contains files of specified extension."""
-        return len(list(self.dir.glob(extension_wildcard))) == 0
+        """
+        Check if the directory contains files of specified extension.
+
+        Searches subdirectories (hive partitions) recursively using rglob.
+        """
+        return len(list(self.dir.rglob(extension_wildcard))) == 0
 
     def _read_spark_df(self):
         """Read data from directory."""
@@ -169,9 +172,7 @@ class BaseTable():
             timeseries_type=timeseries_type,
             pattern=pattern
         )
-
         self._read_spark_df()
-
         return self
 
     def _load_locations_attributes(
@@ -192,6 +193,8 @@ class BaseTable():
         validate_and_insert_location_attributes(
             self.attributes_cache_dir, self.dataset_dir
         )
+        self._read_spark_df()
+        return self
 
     def _load_location_crosswalks(
         self,
@@ -211,6 +214,8 @@ class BaseTable():
         validate_and_insert_location_crosswalks(
             self.crosswalk_cache_dir, self.dataset_dir
         )
+        self._read_spark_df()
+        return self
 
     def query(
         self,
@@ -499,13 +504,7 @@ class UnitTable(BaseTable):
         self.table_model = Unit
         self.filter_model = UnitFilter
         if not self._dir_is_emtpy():
-            self.df = (
-                self.spark.read.format("parquet")
-                .option("recursiveFileLookup", "true")
-                .option("mergeSchema", "true")
-                .option("header", True)
-                .load(str(self.dir))
-            )
+            self._read_spark_df()
 
     def field_enum(self) -> UnitFields:
         """Get the unit fields enum."""
@@ -548,13 +547,7 @@ class VariableTable(BaseTable):
         self.table_model = Variable
         self.filter_model = VariableFilter
         if not self._dir_is_emtpy():
-            self.df = (
-                self.spark.read.format("parquet")
-                .option("recursiveFileLookup", "true")
-                .option("mergeSchema", "true")
-                .option("header", True)
-                .load(str(self.dir))
-            )
+            self._read_spark_df()
 
     def field_enum(self) -> VariableFields:
         """Get the variable fields enum."""
@@ -597,13 +590,7 @@ class AttributeTable(BaseTable):
         self.table_model = Attribute
         self.filter_model = AttributeFilter
         if not self._dir_is_emtpy():
-            self.df = (
-                self.spark.read.format("parquet")
-                .option("recursiveFileLookup", "true")
-                .option("mergeSchema", "true")
-                .option("header", True)
-                .load(str(self.dir))
-            )
+            self._read_spark_df()
 
     def field_enum(self) -> AttributeFields:
         """Get the attribute fields enum."""
@@ -613,7 +600,7 @@ class AttributeTable(BaseTable):
             {field: field for field in fields_list}
         )
 
-    def add_attribute(
+    def add(
         self,
         attribute: Union[Attribute, List[Attribute]]
     ):
@@ -647,13 +634,7 @@ class ConfigurationTable(BaseTable):
         self.table_model = Configuration
         self.filter_model = ConfigurationFilter
         if not self._dir_is_emtpy():
-            self.df = (
-                self.spark.read.format("parquet")
-                .option("recursiveFileLookup", "true")
-                .option("mergeSchema", "true")
-                .option("header", True)
-                .load(str(self.dir))
-            )
+            self._read_spark_df()
 
     def field_enum(self) -> ConfigurationFields:
         """Get the configuration fields enum."""
@@ -698,13 +679,7 @@ class LocationTable(BaseTable):
         self.table_model = Location
         self.filter_model = LocationFilter
         if not self._dir_is_emtpy():
-            self.df = (
-                self.spark.read.format("parquet")
-                .option("recursiveFileLookup", "true")
-                .option("mergeSchema", "true")
-                .option("header", True)
-                .load(str(self.dir))
-            )
+            self._read_spark_df()
 
     def field_enum(self) -> LocationFields:
         """Get the location fields enum."""
@@ -766,6 +741,8 @@ class LocationTable(BaseTable):
             self.locations_cache_dir,
             self.dataset_dir
         )
+        self._read_spark_df()
+        return self
 
 
 class LocationAttributeTable(BaseTable):
@@ -778,13 +755,7 @@ class LocationAttributeTable(BaseTable):
         self.table_model = LocationAttribute
         self.filter_model = LocationAttributeFilter
         if not self._dir_is_emtpy():
-            self.df = (
-                self.spark.read.format("parquet")
-                .option("recursiveFileLookup", "true")
-                .option("mergeSchema", "true")
-                .option("header", True)
-                .load(str(self.dir))
-            )
+            self._read_spark_df()
 
     def field_enum(self) -> LocationAttributeFields:
         """Get the location attribute fields enum."""
@@ -809,6 +780,7 @@ class LocationAttributeTable(BaseTable):
     def load_parquet(
         self,
         in_path: Union[Path, str],
+        pattern: str = "**/*.parquet",
         field_mapping: dict = None,
         **kwargs
     ):
@@ -830,7 +802,9 @@ class LocationAttributeTable(BaseTable):
         - attribute_name
         - value
         """
-        pattern = "**/*.parquet"
+        if not Path(pattern).suffix.endswith(".parquet"):
+            logger.error("Pattern must be a parquet file.")
+            raise ValueError("Pattern must be a parquet file.")
         self._load_locations_attributes(
             in_path=in_path,
             pattern=pattern,
@@ -841,6 +815,7 @@ class LocationAttributeTable(BaseTable):
     def load_csv(
         self,
         in_path: Union[Path, str],
+        pattern: str = "**/*.csv",
         field_mapping: dict = None,
         **kwargs
     ):
@@ -862,7 +837,9 @@ class LocationAttributeTable(BaseTable):
         - attribute_name
         - value
         """
-        pattern = "**/*.csv"
+        if not Path(pattern).suffix.endswith(".csv"):
+            logger.error("Pattern must be a CSV file.")
+            raise ValueError("Pattern must be a CSV file.")
         self._load_locations_attributes(
             in_path=in_path,
             pattern=pattern,
@@ -881,13 +858,7 @@ class LocationCrosswalkTable(BaseTable):
         self.table_model = LocationCrosswalk
         self.filter_model = LocationCrosswalkFilter
         if not self._dir_is_emtpy():
-            self.df = (
-                self.spark.read.format("parquet")
-                .option("recursiveFileLookup", "true")
-                .option("mergeSchema", "true")
-                .option("header", True)
-                .load(str(self.dir))
-            )
+            self._read_spark_df()
 
     def field_enum(self) -> LocationCrosswalkFields:
         """Get the location crosswalk fields enum."""
@@ -914,6 +885,7 @@ class LocationCrosswalkTable(BaseTable):
     def load_parquet(
         self,
         in_path: Union[Path, str],
+        pattern: str = "**/*.parquet",
         field_mapping: dict = None,
         **kwargs
     ):
@@ -935,6 +907,9 @@ class LocationCrosswalkTable(BaseTable):
         - primary_location_id
         - secondary_location_id
         """
+        if not Path(pattern).suffix.endswith(".parquet"):
+            logger.error("Pattern must be a parquet file.")
+            raise ValueError("Pattern must be a parquet file.")
         self._load_location_crosswalks(
             in_path=in_path,
             field_mapping=field_mapping,
@@ -945,6 +920,7 @@ class LocationCrosswalkTable(BaseTable):
     def load_csv(
         self,
         in_path: Union[Path, str],
+        pattern: str = "**/*.csv",
         field_mapping: dict = None,
         **kwargs
     ):
@@ -966,10 +942,13 @@ class LocationCrosswalkTable(BaseTable):
         - primary_location_id
         - secondary_location_id
         """
+        if not Path(pattern).suffix.endswith(".csv"):
+            logger.error("Pattern must be a CSV file.")
+            raise ValueError("Pattern must be a CSV file.")
         self._load_location_crosswalks(
             in_path=in_path,
             field_mapping=field_mapping,
-            pattern="**/*.parquet",
+            pattern=pattern,
             **kwargs
         )
 
@@ -984,13 +963,7 @@ class PrimaryTimeseriesTable(BaseTable):
         self.table_model = Timeseries
         self.filter_model = TimeseriesFilter
         if not self._dir_is_emtpy():
-            self.df = (
-                self.spark.read.format("parquet")
-                .option("recursiveFileLookup", "true")
-                .option("mergeSchema", "true")
-                .option("header", True)
-                .load(str(self.dir))
-            )
+            self._read_spark_df()
 
     def field_enum(self) -> TimeseriesFields:
         """Get the timeseries fields enum."""
@@ -1015,6 +988,7 @@ class PrimaryTimeseriesTable(BaseTable):
     def load_parquet(
         self,
         in_path: Union[Path, str],
+        pattern: str = "**/*.parquet",
         field_mapping: dict = None,
         constant_field_values: dict = None,
         **kwargs
@@ -1047,8 +1021,9 @@ class PrimaryTimeseriesTable(BaseTable):
         - location_id
         """
         logger.info(f"Loading primary timeseries parquet data: {in_path}")
-
-        pattern = "**/*.parquet"
+        if not Path(pattern).suffix.endswith(".parquet"):
+            logger.error("Pattern must be a parquet file.")
+            raise ValueError("Pattern must be a parquet file.")
 
         self.primary_cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1067,6 +1042,7 @@ class PrimaryTimeseriesTable(BaseTable):
     def load_csv(
         self,
         in_path: Union[Path, str],
+        pattern: str = "**/*.csv",
         field_mapping: dict = None,
         constant_field_values: dict = None,
         **kwargs
@@ -1099,8 +1075,9 @@ class PrimaryTimeseriesTable(BaseTable):
         - location_id
         """
         logger.info(f"Loading primary timeseries csv data: {in_path}")
-
-        pattern = "**/*.csv"
+        if not Path(pattern).suffix.endswith(".csv"):
+            logger.error("Pattern must be a CSV file.")
+            raise ValueError("Pattern must be a CSV file.")
 
         self.primary_cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1119,6 +1096,7 @@ class PrimaryTimeseriesTable(BaseTable):
     def load_netcdf(
         self,
         in_path: Union[Path, str],
+        pattern: str = "**/*.nc",
         field_mapping: dict = None,
         constant_field_values: dict = None,
         **kwargs
@@ -1151,8 +1129,9 @@ class PrimaryTimeseriesTable(BaseTable):
         - location_id
         """
         logger.info(f"Loading primary timeseries netcdf data: {in_path}")
-
-        pattern = "**/*.nc"
+        if not Path(pattern).suffix.endswith(".nc"):
+            logger.error("Pattern must be a netcdf file.")
+            raise ValueError("Pattern must be a netcdf file.")
 
         self.primary_cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1179,13 +1158,7 @@ class SecondaryTimeseriesTable(BaseTable):
         self.table_model = Timeseries
         self.filter_model = TimeseriesFilter
         if not self._dir_is_emtpy():
-            self.df = (
-                self.spark.read.format("parquet")
-                .option("recursiveFileLookup", "true")
-                .option("mergeSchema", "true")
-                .option("header", True)
-                .load(str(self.dir))
-            )
+            self._read_spark_df()
 
     def field_enum(self) -> TimeseriesFields:
         """Get the timeseries fields enum."""
@@ -1210,6 +1183,7 @@ class SecondaryTimeseriesTable(BaseTable):
     def load_parquet(
         self,
         in_path: Union[Path, str],
+        pattern: str = "**/*.parquet",
         field_mapping: dict = None,
         constant_field_values: dict = None,
         **kwargs
@@ -1242,8 +1216,9 @@ class SecondaryTimeseriesTable(BaseTable):
         - location_id
         """
         logger.info(f"Loading secondary timeseries parquet data: {in_path}")
-
-        pattern = "**/*.parquet"
+        if not Path(pattern).suffix.endswith(".parquet"):
+            logger.error("Pattern must be a parquet file.")
+            raise ValueError("Pattern must be a parquet file.")
 
         self.secondary_cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1262,6 +1237,7 @@ class SecondaryTimeseriesTable(BaseTable):
     def load_csv(
         self,
         in_path: Union[Path, str],
+        pattern: str = "**/*.csv",
         field_mapping: dict = None,
         constant_field_values: dict = None,
         **kwargs
@@ -1294,8 +1270,9 @@ class SecondaryTimeseriesTable(BaseTable):
         - location_id
         """
         logger.info(f"Loading secondary timeseries csv data: {in_path}")
-
-        pattern = "**/*.csv"
+        if not Path(pattern).suffix.endswith(".csv"):
+            logger.error("Pattern must be a CSV file.")
+            raise ValueError("Pattern must be a CSV file.")
 
         self.secondary_cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1314,6 +1291,7 @@ class SecondaryTimeseriesTable(BaseTable):
     def load_netcdf(
         self,
         in_path: Union[Path, str],
+        pattern: str = "**/*.nc",
         field_mapping: dict = None,
         constant_field_values: dict = None,
         **kwargs
@@ -1345,7 +1323,9 @@ class SecondaryTimeseriesTable(BaseTable):
         - value
         - location_id
         """
-        pattern = "**/*.nc"
+        if not Path(pattern).suffix.endswith(".nc"):
+            logger.error("Pattern must be a netcdf file.")
+            raise ValueError("Pattern must be a netcdf file.")
 
         self.secondary_cache_dir.mkdir(parents=True, exist_ok=True)
 

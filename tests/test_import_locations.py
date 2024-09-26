@@ -25,7 +25,7 @@ def test_validate_and_insert_locations(tmpdir):
     eval = Evaluation(dir_path=tmpdir)
     eval.clone_template()
 
-    eval.load.import_locations(in_path=GEOJSON_GAGES_FILEPATH)
+    eval.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
 
     assert Path(eval.locations_dir, "gages.parquet").is_file()
 

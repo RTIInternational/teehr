@@ -36,14 +36,16 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
     eval.enable_logging()
     eval.clone_template()
 
-    eval.load.import_locations(in_path=GEO_GAGES_FILEPATH)
+    _ = eval.locations.load_spatial(in_path=GEO_GAGES_FILEPATH).to_geopandas()
 
     eval.fetch.usgs_streamflow(
         start_date=datetime(2022, 2, 22),
         end_date=datetime(2022, 2, 23)
     )
 
-    eval.load.import_location_crosswalks(
+    _ = eval.primary_timeseries.to_pandas()
+
+    eval.location_crosswalks.load_parquet(
         in_path=CROSSWALK_FILEPATH
     )
 
@@ -53,18 +55,9 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
         start_date=datetime(2022, 2, 22),
         end_date=datetime(2022, 2, 23)
     )
-    # TODO: This could be eval.query.timeseries() or something similar.
-    ts_df = pd.read_parquet(
-        Path
-        (
-            tmpdir,
-            "dataset",
-            "secondary_timeseries",
-            "nwm30_retrospective",
-            "streamflow_hourly_inst",
-            "20220222_20220223.parquet"
-        )
-    )
+
+    ts_df = eval.secondary_timeseries.to_pandas()
+
     assert isinstance(ts_df, pd.DataFrame)
     assert ts_df.columns.tolist() == [
             "reference_time",
@@ -89,7 +82,7 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
     eval.clone_template()
 
     # Add locations corresponding to weights file.
-    eval.load.import_locations(in_path=ZONAL_LOCATIONS)
+    eval.locations.load_spatial(in_path=ZONAL_LOCATIONS)
 
     eval.fetch.nwm_retrospective_grids(
         nwm_version="nwm30",
@@ -99,17 +92,8 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
         end_date="2008-05-23 10:00",
         location_id_prefix="huc10"
     )
-    # TODO: This could be eval.query.timeseries() or something similar.
-    ts_df = pd.read_parquet(
-        Path(
-            tmpdir,
-            "dataset",
-            "primary_timeseries",
-            "nwm30_retrospective",
-            "rainfall_hourly_rate",
-            "20080523.parquet"
-        )
-    )
+    ts_df = eval.primary_timeseries.to_pandas()
+
     assert isinstance(ts_df, pd.DataFrame)
     assert ts_df.columns.tolist() == [
             "reference_time",
@@ -133,9 +117,9 @@ def test_fetch_and_load_nwm_forecast_points(tmpdir):
     eval.enable_logging()
     eval.clone_template()
 
-    eval.load.import_locations(in_path=GEO_GAGES_FILEPATH)
+    eval.locations.load_spatial(in_path=GEO_GAGES_FILEPATH)
 
-    eval.load.import_location_crosswalks(
+    eval.location_crosswalks.load_parquet(
         in_path=CROSSWALK_FILEPATH
     )
 
@@ -149,17 +133,9 @@ def test_fetch_and_load_nwm_forecast_points(tmpdir):
         t_minus_hours=[0],
         process_by_z_hour=False
     )
-    # TODO: This could be eval.query.timeseries() or something similar.
-    ts_df = pd.read_parquet(
-        Path(
-            tmpdir,
-            "dataset",
-            "secondary_timeseries",
-            "nwm30_analysis_assim",
-            "streamflow_hourly_inst",
-            "20240222T00Fm00_20240222T23Fm00.parquet"
-        )
-    )
+
+    ts_df = eval.secondary_timeseries.to_pandas()
+
     assert isinstance(ts_df, pd.DataFrame)
     assert ts_df.columns.tolist() == [
             "reference_time",
@@ -184,7 +160,7 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
     eval.enable_logging()
     eval.clone_template()
 
-    eval.load.import_locations(in_path=ZONAL_LOCATIONS)
+    eval.locations.load_spatial(in_path=ZONAL_LOCATIONS)
 
     eval.fetch.nwm_forecast_grids(
         configuration="forcing_analysis_assim",
@@ -198,17 +174,8 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
         location_id_prefix="huc10"
     )
 
-    # TODO: This could be eval.query.timeseries() or something similar.
-    ts_df = pd.read_parquet(
-        Path(
-            tmpdir,
-            "dataset",
-            "primary_timeseries",
-            "nwm30_forcing_analysis_assim",
-            "rainfall_hourly_rate",
-            "20240222T00.parquet"
-        )
-    )
+    ts_df = eval.primary_timeseries.to_pandas()
+
     assert isinstance(ts_df, pd.DataFrame)
     assert ts_df.columns.tolist() == [
             "reference_time",
