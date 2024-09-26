@@ -62,11 +62,11 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
     assert ts_df.columns.tolist() == [
             "reference_time",
             "value_time",
-            "configuration_name",
-            "unit_name",
-            "variable_name",
             "value",
-            "location_id"
+            "unit_name",
+            "location_id",
+            "configuration_name",
+            "variable_name",
             ]
     assert ts_df.unit_name.iloc[0] == "m^3/s"
     assert ts_df.variable_name.iloc[0] == "streamflow_hourly_inst"
@@ -98,11 +98,11 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
     assert ts_df.columns.tolist() == [
             "reference_time",
             "value_time",
-            "configuration_name",
-            "unit_name",
-            "variable_name",
             "value",
-            "location_id"
+            "unit_name",
+            "location_id",
+            "configuration_name",
+            "variable_name",
             ]
     assert ts_df.unit_name.iloc[0] == "mm/s"
     assert ts_df.variable_name.iloc[0] == "rainfall_hourly_rate"
@@ -140,11 +140,11 @@ def test_fetch_and_load_nwm_forecast_points(tmpdir):
     assert ts_df.columns.tolist() == [
             "reference_time",
             "value_time",
-            "configuration_name",
-            "unit_name",
-            "variable_name",
             "value",
-            "location_id"
+            "unit_name",
+            "location_id",
+            "configuration_name",
+            "variable_name",
             ]
     assert ts_df.unit_name.iloc[0] == "m^3/s"
     assert ts_df.variable_name.iloc[0] == "streamflow_hourly_inst"
@@ -180,11 +180,11 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
     assert ts_df.columns.tolist() == [
             "reference_time",
             "value_time",
-            "configuration_name",
-            "unit_name",
-            "variable_name",
             "value",
-            "location_id"
+            "unit_name",
+            "location_id",
+            "configuration_name",
+            "variable_name",
             ]
     assert ts_df.unit_name.iloc[0] == "mm/s"
     assert ts_df.variable_name.iloc[0] == "rainfall_hourly_rate"
