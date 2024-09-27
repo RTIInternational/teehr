@@ -52,13 +52,6 @@ def test_validate_and_insert_timeseries(tmpdir):
         )
     )
 
-    # eval.add_unit(
-    #     Unit(
-    #         name="m^3/s",
-    #         long_name="Cubic Meters per Second"
-    #     )
-    # )
-
     eval.load.add_variable(
         Variable(
             name="streamflow",

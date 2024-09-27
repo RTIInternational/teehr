@@ -1,22 +1,17 @@
 """Module for importing location attributes from a file."""
 from typing import Union
 from pathlib import Path
-from teehr.loading.duckdb_sql import (
-    create_database_tables,
-    insert_locations,
-    insert_location_attributes,
-    load_attributes_from_dataset
-)
 from teehr.loading.utils import (
     validate_dataset_structure,
     read_and_convert_netcdf_to_df
 )
 from teehr.models.tables import LocationAttribute
 from teehr.loading.utils import merge_field_mappings
-import teehr.const as const
-import duckdb
 import logging
 import pandas as pd
+
+import pandera.pyspark as pa
+import pyspark.sql.types as T
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +63,8 @@ def convert_single_location_attributes(
 
     # make sure dataframe only contains required fields
     location_attributes = location_attributes[field_mapping.values()]
+
+    location_attributes = location_attributes.astype(str)
 
     # write to parquet
     out_filepath.parent.mkdir(parents=True, exist_ok=True)
@@ -145,69 +142,79 @@ def convert_location_attributes(
     logger.info(f"Converted {files_converted} files.")
 
 
-def validate_and_insert_single_location_attributes(
-    conn: duckdb.DuckDBPyConnection,
-    in_filepath: Union[str, Path],
-    out_filepath: Union[str, Path],
-):
-    """Validate and insert location crosswalk data."""
-    logger.info(f"Validating and inserting crosswalk data from {in_filepath}")
-
-    # read and insert provided crosswalk data
-    insert_location_attributes(
-        conn,
-        in_filepath
-    )
-
-    conn.sql(f"COPY location_attributes TO '{out_filepath}';")
-
-    conn.sql("TRUNCATE location_attributes;")
-
-
 def validate_and_insert_location_attributes(
+    ev,
     in_path: Union[str, Path],
-    dataset_dir: Union[str, Path],
+    # dataset_dir: Union[str, Path],
     pattern: str = "**/*.parquet",
 ):
-    """Validate and insert location attributes data."""
+    """Validate and insert location attributes data.
+
+    Parameters
+    ----------
+    ev : Evaluation
+        Evaluation object
+    in_path : Union[str, Path]
+        The input file or directory path.
+    pattern : str, optional (default: "**/*.parquet")
+        The pattern to match files.
+
+    Returns
+    -------
+    None
+    """
     logger.info(
         f"Validating and inserting location attributes data from {in_path}"
     )
 
-    if not validate_dataset_structure(dataset_dir):
+    if not validate_dataset_structure(ev.dataset_dir):
         raise ValueError("Database structure is not valid.")
 
-    # setup validation database
-    conn = duckdb.connect()
-    create_database_tables(conn)
-
-    insert_locations(
-        conn,
-        Path(dataset_dir, const.LOCATIONS_DIR)
-    )
-
-    load_attributes_from_dataset(conn, dataset_dir)
-
-    location_attributes_dir = Path(dataset_dir, const.LOCATION_ATTRIBUTES_DIR)
+    location_ids = ev.locations.distinct_values("id")
+    attr_names = ev.attributes.distinct_values("name")
 
     if in_path.is_dir():
-        # recursively convert all files in directory
-        logger.info(
-            "Recursively validating and inserting "
-            f"all files in: {in_path}/{pattern}"
-        )
-        for in_filepath in in_path.glob(f"{pattern}"):
-            relative_path = in_filepath.relative_to(in_path)
-            out_filepath = Path(location_attributes_dir, relative_path)
-            validate_and_insert_single_location_attributes(
-                conn,
-                in_filepath,
-                out_filepath,
-            )
+        files = [str(f) for f in in_path.glob(f"{pattern}")]
     else:
-        out_filepath = Path(location_attributes_dir, in_path.name)
-        validate_and_insert_single_location_attributes(
-            conn,
-            in_path,
-            out_filepath
-        )
+        files = [str(in_path)]
+
+    loc_attrs = (ev.spark.read.format("parquet").load(files))
+
+    # define schema
+    schema = pa.DataFrameSchema(
+        {
+            "location_id": pa.Column(
+                T.StringType,
+                pa.Check.isin(location_ids),
+                coerce=True
+            ),
+            "attribute_name": pa.Column(
+                T.StringType,
+                pa.Check.isin(attr_names),
+                coerce=True
+            ),
+            "value": pa.Column(
+                T.StringType,
+                coerce=True
+            )
+        },
+    )
+    validated_loc_attrs = schema(loc_attrs)
+
+    df_out_errors = validated_loc_attrs.pandera.errors
+
+    if len(df_out_errors) > 0:
+        raise ValueError(f"Validation errors: {df_out_errors}")
+
+    loc_attrs_dir = ev.location_attributes_dir
+    loc_attrs_dir.mkdir(parents=True, exist_ok=True)
+
+    (
+        validated_loc_attrs
+        .select(list(schema.columns.keys()))
+        .write
+        # .partitionBy("configuration_name", "variable_name")
+        .format("parquet")
+        .mode("overwrite")
+        .save(str(loc_attrs_dir))
+    )
