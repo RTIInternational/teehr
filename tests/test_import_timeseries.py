@@ -294,9 +294,9 @@ if __name__ == "__main__":
                 dir=tempdir
             )
         )
-        # test_validate_and_insert_mizu_nc_timeseries(
-        #     tempfile.mkdtemp(
-        #         prefix="4-",
-        #         dir=tempdir
-        #     )
-        # )
+        test_validate_and_insert_mizu_nc_timeseries(
+            tempfile.mkdtemp(
+                prefix="4-",
+                dir=tempdir
+            )
+        )
