@@ -2,17 +2,13 @@
 from typing import Union
 from pathlib import Path
 import teehr.loading.utils as tpu
-import duckdb
-from teehr.loading.duckdb_sql import (
-    create_database_tables,
-    insert_locations,
-)
+import geopandas as gpd
+import pandera as pa
 from teehr.loading.utils import (
     validate_dataset_structure,
 )
 from teehr.models.tables import Location
 from teehr.loading.utils import merge_field_mappings
-import teehr.const as const
 
 import logging
 
@@ -151,40 +147,37 @@ def convert_locations(
 
 
 def validate_and_insert_single_locations(
-    conn: duckdb.DuckDBPyConnection,
     input_filepath: Union[str, Path],
     output_filepath: Union[str, Path],
 ):
     """Validate locations and copy to database."""
     logger.info(f"Validating and inserting locations from {input_filepath}")
 
-    insert_locations(conn, input_filepath)
+    gdf = gpd.read_parquet(input_filepath)
 
-    conn.sql(f"""
-        COPY (
-            SELECT id, name, ST_AsWKB(geometry) as geometry FROM locations
-        ) TO '{output_filepath}';
-    """)
-    conn.sql("""
-        TRUNCATE locations;
-    """)
-    logger.info(f"Locations copied to {output_filepath}.")
+    schema = pa.DataFrameSchema({
+        "id": pa.Column(str, coerce=True),
+        "name": pa.Column(str, coerce=True),
+        "geometry": pa.Column("geometry")
+    })
+
+    validated_gdf = schema.validate(gdf)
+
+    validated_gdf.to_parquet(output_filepath)
+
+    logger.info(f"Validated locations saved to {output_filepath}.")
 
 
 def validate_and_insert_locations(
+    ev,
     in_path: Union[str, Path],
-    dataset_dir: Union[str, Path],
     pattern: str = "**/*.parquet",
 ):
     """Validate and insert locations."""
-    if not validate_dataset_structure(dataset_dir):
+    if not validate_dataset_structure(ev.dataset_dir):
         raise ValueError("Database structure is not valid.")
 
-    conn = duckdb.connect()
-
-    create_database_tables(conn)
-
-    locations_dir = Path(dataset_dir, const.LOCATIONS_DIR)
+    locations_dir = ev.locations_dir
 
     if in_path.is_dir():
         # recursively convert all files in directory
@@ -196,7 +189,6 @@ def validate_and_insert_locations(
             relative_path = in_filepath.relative_to(in_path)
             out_filepath = Path(locations_dir, relative_path)
             validate_and_insert_single_locations(
-                conn,
                 in_filepath,
                 out_filepath,
             )
@@ -204,7 +196,6 @@ def validate_and_insert_locations(
         logger.info(f"Validate and insert locations from: {in_path}")
         out_filepath = Path(locations_dir, in_path.name)
         validate_and_insert_single_locations(
-            conn,
             in_path,
             out_filepath
         )

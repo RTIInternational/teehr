@@ -132,10 +132,11 @@ class Fetch:
         )
 
         validate_and_insert_timeseries(
+            ev=self.eval,
             in_path=Path(
                 self.usgs_cache_dir
             ),
-            dataset_path=self.eval.dataset_dir,
+            # dataset_path=self.eval.dataset_dir,
             timeseries_type=timeseries_type,
         )
 
@@ -181,10 +182,11 @@ class Fetch:
         )
 
         validate_and_insert_timeseries(
+            ev=self.eval,
             in_path=Path(
                 self.nwm_cache_dir
             ),
-            dataset_path=self.eval.dataset_dir,
+            # dataset_path=self.eval.dataset_dir,
             timeseries_type=timeseries_type,
         )
 
@@ -226,10 +228,11 @@ class Fetch:
         )
 
         validate_and_insert_timeseries(
+            ev=self.eval,
             in_path=Path(
                 self.nwm_cache_dir
             ),
-            dataset_path=self.eval.dataset_dir,
+            # dataset_path=self.eval.dataset_dir,
             timeseries_type=timeseries_type,
         )
 
@@ -287,10 +290,11 @@ class Fetch:
         )
 
         validate_and_insert_timeseries(
+            ev=self.eval,
             in_path=Path(
                 self.nwm_cache_dir
             ),
-            dataset_path=self.eval.dataset_dir,
+            # dataset_path=self.eval.dataset_dir,
             timeseries_type=timeseries_type,
         )
 
@@ -347,9 +351,10 @@ class Fetch:
         pass
 
         validate_and_insert_timeseries(
+            ev=self.eval,
             in_path=Path(
                 self.nwm_cache_dir
             ),
-            dataset_path=self.eval.dataset_dir,
+            # dataset_path=self.eval.dataset_dir,
             timeseries_type=timeseries_type,
         )

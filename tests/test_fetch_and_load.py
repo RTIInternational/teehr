@@ -54,26 +54,27 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
         end_date=datetime(2022, 2, 23)
     )
     # TODO: This could be eval.query.timeseries() or something similar.
-    ts_df = pd.read_parquet(
-        Path
-        (
-            tmpdir,
-            "dataset",
-            "secondary_timeseries",
-            "nwm30_retrospective",
-            "streamflow_hourly_inst",
-            "20220222_20220223.parquet"
-        )
-    )
+    # ts_df = pd.read_parquet(
+    #     Path
+    #     (
+    #         tmpdir,
+    #         "dataset",
+    #         "secondary_timeseries",
+    #         "nwm30_retrospective",
+    #         "streamflow_hourly_inst",
+    #         "20220222_20220223.parquet"
+    #     )
+    # )
+    ts_df = eval.secondary_timeseries.to_pandas()
     assert isinstance(ts_df, pd.DataFrame)
     assert ts_df.columns.tolist() == [
             "reference_time",
             "value_time",
-            "configuration_name",
-            "unit_name",
-            "variable_name",
             "value",
-            "location_id"
+            "unit_name",
+            "location_id",
+            "configuration_name",
+            "variable_name",
             ]
     assert ts_df.unit_name.iloc[0] == "m^3/s"
     assert ts_df.variable_name.iloc[0] == "streamflow_hourly_inst"
@@ -100,25 +101,26 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
         location_id_prefix="huc10"
     )
     # TODO: This could be eval.query.timeseries() or something similar.
-    ts_df = pd.read_parquet(
-        Path(
-            tmpdir,
-            "dataset",
-            "primary_timeseries",
-            "nwm30_retrospective",
-            "rainfall_hourly_rate",
-            "20080523.parquet"
-        )
-    )
+    # ts_df = pd.read_parquet(
+    #     Path(
+    #         tmpdir,
+    #         "dataset",
+    #         "primary_timeseries",
+    #         "nwm30_retrospective",
+    #         "rainfall_hourly_rate",
+    #         "20080523.parquet"
+    #     )
+    # )
+    ts_df = eval.primary_timeseries.to_pandas()
     assert isinstance(ts_df, pd.DataFrame)
     assert ts_df.columns.tolist() == [
             "reference_time",
             "value_time",
-            "configuration_name",
-            "unit_name",
-            "variable_name",
             "value",
-            "location_id"
+            "unit_name",
+            "location_id",
+            "configuration_name",
+            "variable_name",
             ]
     assert ts_df.unit_name.iloc[0] == "mm/s"
     assert ts_df.variable_name.iloc[0] == "rainfall_hourly_rate"
@@ -150,25 +152,26 @@ def test_fetch_and_load_nwm_forecast_points(tmpdir):
         process_by_z_hour=False
     )
     # TODO: This could be eval.query.timeseries() or something similar.
-    ts_df = pd.read_parquet(
-        Path(
-            tmpdir,
-            "dataset",
-            "secondary_timeseries",
-            "nwm30_analysis_assim",
-            "streamflow_hourly_inst",
-            "20240222T00Fm00_20240222T23Fm00.parquet"
-        )
-    )
+    # ts_df = pd.read_parquet(
+    #     Path(
+    #         tmpdir,
+    #         "dataset",
+    #         "secondary_timeseries",
+    #         "nwm30_analysis_assim",
+    #         "streamflow_hourly_inst",
+    #         "20240222T00Fm00_20240222T23Fm00.parquet"
+    #     )
+    # )
+    ts_df = eval.secondary_timeseries.to_pandas()
     assert isinstance(ts_df, pd.DataFrame)
     assert ts_df.columns.tolist() == [
             "reference_time",
             "value_time",
-            "configuration_name",
-            "unit_name",
-            "variable_name",
             "value",
-            "location_id"
+            "unit_name",
+            "location_id",
+            "configuration_name",
+            "variable_name",
             ]
     assert ts_df.unit_name.iloc[0] == "m^3/s"
     assert ts_df.variable_name.iloc[0] == "streamflow_hourly_inst"
@@ -199,25 +202,26 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
     )
 
     # TODO: This could be eval.query.timeseries() or something similar.
-    ts_df = pd.read_parquet(
-        Path(
-            tmpdir,
-            "dataset",
-            "primary_timeseries",
-            "nwm30_forcing_analysis_assim",
-            "rainfall_hourly_rate",
-            "20240222T00.parquet"
-        )
-    )
+    # ts_df = pd.read_parquet(
+    #     Path(
+    #         tmpdir,
+    #         "dataset",
+    #         "primary_timeseries",
+    #         "nwm30_forcing_analysis_assim",
+    #         "rainfall_hourly_rate",
+    #         "20240222T00.parquet"
+    #     )
+    # )
+    ts_df = eval.primary_timeseries.to_pandas()
     assert isinstance(ts_df, pd.DataFrame)
     assert ts_df.columns.tolist() == [
             "reference_time",
             "value_time",
-            "configuration_name",
-            "unit_name",
-            "variable_name",
             "value",
-            "location_id"
+            "unit_name",
+            "location_id",
+            "configuration_name",
+            "variable_name",
             ]
     assert ts_df.unit_name.iloc[0] == "mm/s"
     assert ts_df.variable_name.iloc[0] == "rainfall_hourly_rate"

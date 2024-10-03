@@ -17,7 +17,7 @@ from teehr.loading.location_attributes import (
 )
 from teehr.loading.timeseries import (
     convert_timeseries,
-    validate_and_insert_timeseries,
+    validate_and_insert_timeseries
 )
 from teehr.models.tables import (
     Configuration,
@@ -41,6 +41,7 @@ class Load:
 
     def __init__(self, eval) -> None:
         """Initialize the Load class."""
+        self.eval = eval
         self.cache_dir = eval.cache_dir
         self.dataset_dir = eval.dataset_dir
         self.locations_cache_dir = Path(
@@ -199,8 +200,9 @@ class Load:
             **kwargs
         )
         validate_and_insert_locations(
-            self.locations_cache_dir,
-            self.dataset_dir
+            ev=self.eval,
+            in_path=self.locations_cache_dir
+            # self.dataset_dir
         )
 
     def import_location_crosswalks(
@@ -239,7 +241,8 @@ class Load:
             **kwargs
         )
         validate_and_insert_location_crosswalks(
-            self.crosswalk_cache_dir, self.dataset_dir
+            self.eval,
+            self.crosswalk_cache_dir,
         )
 
     def import_location_attributes(
@@ -279,7 +282,8 @@ class Load:
             **kwargs
         )
         validate_and_insert_location_attributes(
-            self.attributes_cache_dir, self.dataset_dir
+            self.eval,
+            self.attributes_cache_dir,
         )
 
     def import_secondary_timeseries(
@@ -335,8 +339,9 @@ class Load:
             pattern = pattern.replace(".csv", ".parquet")
 
         validate_and_insert_timeseries(
+            ev=self.eval,
             in_path=self.secondary_cache_dir,
-            dataset_path=self.dataset_dir,
+            # dataset_path=self.dataset_dir,
             timeseries_type="secondary",
             pattern=pattern,
         )
@@ -394,8 +399,9 @@ class Load:
             pattern = pattern.replace(".csv", ".parquet")
 
         validate_and_insert_timeseries(
+            ev=self.eval,
+            # dataset_path=self.dataset_dir,
             in_path=self.primary_cache_dir,
-            dataset_path=self.dataset_dir,
             timeseries_type="primary",
             pattern=pattern
         )

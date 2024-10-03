@@ -86,7 +86,7 @@ def test_chain_filter_list_str(tmpdir):
     eval = setup_v0_3_study(tmpdir)
     df = eval.primary_timeseries.filter([
         "location_id = 'gage-A'",
-        "value_time > '2022-01-01T12:00:00Z'"
+        "value_time > '2022-01-01T12:00:00'"
     ]).to_pandas()
     assert len(df) == 13
 
@@ -178,7 +178,7 @@ def test_query_list_str(tmpdir):
     df = eval.primary_timeseries.query(
         filters=[
             "location_id = 'gage-A'",
-            "value_time > '2022-01-01T12:00:00Z'"
+            "value_time > '2022-01-01T12:00:00'"
         ]
     ).to_pandas()
     assert len(df) == 13
