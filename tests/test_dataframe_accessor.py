@@ -3,6 +3,12 @@ import pandas as pd
 from unittest.mock import patch
 from pathlib import Path
 from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor
+import logging
+import os
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class TestTEEHRDataFrameAccessor(unittest.TestCase):
@@ -39,10 +45,10 @@ class TestTEEHRDataFrameAccessor(unittest.TestCase):
             df_empty = pd.DataFrame(columns=self.df.columns)
             df_empty.teehr
 
-    def test_timeseries_unique_values(self):
+    def test_get_unique_values(self):
         """Test unique values method."""
         accessor = self.df.teehr
-        unique_values = accessor._timeseries_unique_values(self.df)
+        unique_values = accessor._get_unique_values(self.df)
         expected_values = {
             'location_id': [1, 2],
             'variable_name': ['var1', 'var2'],
@@ -53,37 +59,56 @@ class TestTEEHRDataFrameAccessor(unittest.TestCase):
         }
         self.assertEqual(unique_values, expected_values)
 
-    def test_timeseries_default_schema(self):
+    def test_timeseries_schema(self):
         """Test generation of default schema."""
         accessor = self.df.teehr
-        schema = accessor._timeseries_default_schema()
+        schema = accessor._timeseries_schema()
         expected_schema = {
-            'var1': [('config1', 1), ('config1', 2),
-                     ('config2', 1), ('config2', 2)],
-            'var2': [('config1', 1), ('config1', 2),
-                     ('config2', 1), ('config2', 2)]
+            'var1': [('config1', 1), ('config2', 2)],
+            'var2': [('config1', 1), ('config2', 2)]
         }
         self.assertEqual(schema, expected_schema)
 
-    @patch('bokeh.plotting.show')
-    def test_timeseries_generate_plot(self, mock_show):
+    def test_timeseries_generate_plot(self):
         """Test plot generation."""
         accessor = self.df.teehr
-        schema = accessor._timeseries_default_schema()
+        schema = accessor._timeseries_schema()
+        # Generate the plot and save it to the current directory
+        # (triggers the shown condition)
         accessor._timeseries_generate_plot(schema, self.df, 'var1', None)
-        mock_show.assert_called_once()
 
-    @patch('bokeh.plotting.save')
-    @patch('pathlib.Path.exists', return_value=False)
+        # Check if the file exists in the current directory
+        current_dir = Path(__file__).parent
+        plot_file = current_dir / 'test_dataframe_accessor.html'
+        logger.info(f"Checking if {plot_file} exists.")
+        self.assertTrue(plot_file.exists())
+
+        # Clean up the file
+        plot_file.unlink()
+
     @patch('pathlib.Path.mkdir')
-    def test_timeseries_plot(self, mock_mkdir, mock_exists, mock_save):
-        """Test timeseries plot."""
+    @patch('pathlib.Path.exists', return_value=False)
+    def test_timeseries_plot(self, mock_exists, mock_mkdir):
+        """Test timeseries plot with a custom output directory."""
         accessor = self.df.teehr
-        output_dir = Path(Path().home(), "temp", "test_fig")
-        output_dir.mkdir(parents=True, exist_ok=True)
+        output_dir = Path(__file__).parent
+        mock_exists.return_value = False  # Ensure the directory does not exist
         accessor.timeseries_plot(output_dir=output_dir)
         mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
-        mock_save.assert_called()
+
+        # Check if the files exist
+        var1_file = output_dir / "timeseries_plot_var1.html"
+        var2_file = output_dir / "timeseries_plot_var2.html"
+        logger.info(f"Checking if {var1_file} exists.")
+        if not os.path.isfile(var1_file):
+            raise AssertionError(f"File {var1_file} does not exist.")
+        logger.info(f"Checking if {var2_file} exists.")
+        if not os.path.isfile(var2_file):
+            raise AssertionError(f"File {var2_file} does not exist.")
+
+        # Clean up the files
+        var1_file.unlink()
+        var2_file.unlink()
 
 
 if __name__ == '__main__':

@@ -39,33 +39,53 @@ class TEEHRDataFrameAccessor:
         if obj.index.size == 0:
             raise AttributeError("DataFrame must have data.")
 
-    def _timeseries_unique_values(
+    def _get_unique_values(
             self,
             variable_df: pd.DataFrame,
     ) -> dict:
         """Get dictionary of all unique values of each column."""
         logger.info("Retrieving unique values from DataFrame.")
         columns = variable_df.columns.to_list()
-        Dict = {}
+        unique_dict = {}
         for column in columns:
-            Dict[column] = variable_df[column].unique().tolist()
+            unique_dict[column] = variable_df[column].unique().tolist()
 
-        return Dict
+        return unique_dict
 
-    def _timeseries_default_schema(self) -> dict:
+    def _timeseries_schema(self) -> dict:
         """Get dictionary that defines plotting schema."""
         logger.info("Retrieving default plotting schema.")
         unique_variables = self._df['variable_name'].unique().tolist()
-        schema = {}
+        raw_schema = {}
+        filtered_schema = {}
+
+        # get all unique combinations
         for variable in unique_variables:
             variable_df = self._df[self._df['variable_name'] == variable]
-            unique_column_vals = self._timeseries_unique_values(variable_df)
+            unique_column_vals = self._get_unique_values(variable_df)
             all_list = [unique_column_vals['configuration_name'],
                         unique_column_vals['location_id']]
             res = list(itertools.product(*all_list))
-            schema[variable] = res
+            raw_schema[variable] = res
 
-        return schema
+        # filter out invalid unique combinations
+        for variable in unique_variables:
+            valid_combos = []
+            invalid_combos_count = 0
+            var_df = self._df[self._df['variable_name'] == variable]
+            for combo in raw_schema[variable]:
+                temp = var_df[(var_df['configuration_name'] == combo[0]) &
+                              (var_df['location_id'] == combo[1])]
+                if not temp.empty:
+                    valid_combos.append(combo)
+                else:
+                    invalid_combos_count += 1
+            filtered_schema[variable] = valid_combos
+            if invalid_combos_count > 0:
+                logger.info(f'Removed {invalid_combos_count} invalid '
+                            'combinations from the timeseries schema')
+
+        return filtered_schema
 
     def _timeseries_generate_plot(self,
                                   schema: dict,
@@ -92,14 +112,19 @@ class TEEHRDataFrameAccessor:
                    height=800)
 
         for combo in schema[variable]:
+            logger.info(f'Processing combination: {combo}')
             temp = df[(df['configuration_name'] == combo[0]) &
                       (df['location_id'] == combo[1])]
-            p.line(temp.value_time,
-                   temp.value,
-                   legend_label=f"{combo[0]} - {combo[1]}",
-                   line_width=1,
-                   color=palette[sampled_colors[palette_count]])
-            palette_count += 1
+            if not temp.empty:
+                logger.info(f'Plotting data for combination: {combo}')
+                p.line(temp.value_time,
+                       temp.value,
+                       legend_label=f"{combo[0]} - {combo[1]}",
+                       line_width=1,
+                       color=palette[sampled_colors[palette_count]])
+                palette_count += 1
+            else:
+                logger.warning(f"No data for combination: {combo}")
 
         p.xaxis.major_label_orientation = pi/4
         p.xaxis.axis_label_text_font_size = '14pt'
@@ -121,12 +146,15 @@ class TEEHRDataFrameAccessor:
         p.legend.background_fill_alpha = 1.0
         p.legend.click_policy = 'hide'
 
-        if output_dir:
+        if output_dir is not None:
             fname = Path(output_dir, f'timeseries_plot_{variable}.html')
             output_file(filename=fname, title=f'Timeseries Plot [{variable}]')
             logger.info(f'Saving timeseries plot at {output_dir}')
+            # print('im saving')
             save(p)
         else:
+            logger.info('No output directory specified, displaying plot.')
+            # print('im showing')
             show(p)
 
         return
@@ -153,11 +181,11 @@ class TEEHRDataFrameAccessor:
 
         Notes
         -----
-        This method calls `_timeseries_default_schema` to get the plotting
+        This method calls `_timeseries_schema` to get the plotting
         schema and `_timeseries_generate_plot` to generate each plot. It
         ensures the output directory exists before saving the plots.
         """
-        if output_dir:
+        if output_dir is not None:
             if output_dir.exists():
                 logger.info('Specified save directory is valid.')
             else:
@@ -167,7 +195,7 @@ class TEEHRDataFrameAccessor:
 
         # TO-DO: check here for timeseries_df fields
 
-        schema = self._timeseries_default_schema()
+        schema = self._timeseries_schema()
         for variable in schema.keys():
             df_variable = self._df[self._df['variable_name'] == variable]
             self._timeseries_generate_plot(schema=schema,
