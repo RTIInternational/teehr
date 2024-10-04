@@ -3,6 +3,7 @@ import pandas as pd
 from pathlib import Path
 from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor
 import logging
+import tempfile
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -73,38 +74,41 @@ def test_timeseries_generate_plot(sample_dataframe):
     """Test plot generation."""
     accessor = sample_dataframe.teehr
     schema = accessor._timeseries_schema()
-    # Generate the plot and save it to the current directory
-    accessor._timeseries_generate_plot(schema, sample_dataframe, 'var1', None)
 
-    # Check if the file exists in the current directory
-    current_dir = Path(__file__).parent
-    plot_file = current_dir / 'test_dataframe_accessor.html'
-    logger.info(f"Checking if {plot_file} exists.")
-    assert plot_file.exists()
+    # Create a temporary directory
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        output_dir = Path(tmpdirname)
+        accessor._timeseries_generate_plot(schema,
+                                           sample_dataframe,
+                                           'var1',
+                                           output_dir)
 
-    # Clean up the file
-    plot_file.unlink()
+        # Check if the file exists in the temporary directory
+        plot_file = output_dir / 'timeseries_plot_var1.html'
+        logger.info(f"Checking if {plot_file} exists.")
+        assert plot_file.exists()
+
+        # Clean up the file
+        plot_file.unlink()
 
 
-def test_timeseries_plot(mocker, sample_dataframe):
+def test_timeseries_plot(sample_dataframe):
     """Test timeseries plot with a custom output directory."""
     accessor = sample_dataframe.teehr
-    # Mock the Path.mkdir method
-    mock_mkdir = mocker.patch('pathlib.Path.mkdir')
 
-    # Call with specified directory to trigger the save() condition
-    output_dir = Path(__file__).parent
-    accessor.timeseries_plot(output_dir=output_dir)
-    mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
+    # Create a temporary directory
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        output_dir = Path(tmpdirname)
+        accessor.timeseries_plot(output_dir=output_dir)
 
-    # Check if the files exist
-    var1_file = output_dir / "timeseries_plot_var1.html"
-    var2_file = output_dir / "timeseries_plot_var2.html"
-    logger.info(f"Checking if {var1_file} exists.")
-    assert var1_file.exists()
-    logger.info(f"Checking if {var2_file} exists.")
-    assert var2_file.exists()
+        # Check if the files exist
+        var1_file = output_dir / "timeseries_plot_var1.html"
+        var2_file = output_dir / "timeseries_plot_var2.html"
+        logger.info(f"Checking if {var1_file} exists.")
+        assert var1_file.exists()
+        logger.info(f"Checking if {var2_file} exists.")
+        assert var2_file.exists()
 
-    # Clean up the files
-    var1_file.unlink()
-    var2_file.unlink()
+        # Clean up the files
+        var1_file.unlink()
+        var2_file.unlink()
