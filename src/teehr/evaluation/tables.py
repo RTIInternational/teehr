@@ -65,6 +65,11 @@ from teehr.loading.location_attributes import (
 from teehr.loading.joined_timeseries import (
     create_joined_timeseries_dataset
 )
+from teehr.loading.utils import (
+    validate_input_is_parquet,
+    validate_input_is_csv,
+    validate_input_is_netcdf
+)
 import teehr.const as const
 
 import logging
@@ -170,7 +175,7 @@ class BaseTable():
             ev=self.eval,
             in_path=cache_path,
             timeseries_type=timeseries_type,
-            pattern=pattern
+            pattern="**/*.parquet"
         )
         self._read_spark_df()
         return self
@@ -193,7 +198,7 @@ class BaseTable():
         validate_and_insert_location_attributes(
             ev=self.eval,
             in_path=self.attributes_cache_dir,
-            pattern=pattern
+            pattern="**/*.parquet"
         )
         self._read_spark_df()
         return self
@@ -216,7 +221,7 @@ class BaseTable():
         validate_and_insert_location_crosswalks(
             ev=self.eval,
             in_path=self.crosswalk_cache_dir,
-            pattern=pattern
+            pattern="**/*.parquet"
         )
         self._read_spark_df()
         return self
@@ -811,15 +816,15 @@ class LocationAttributeTable(BaseTable):
         - attribute_name
         - value
         """
-        if not Path(pattern).suffix.endswith(".parquet"):
-            logger.error("Pattern must be a parquet file.")
-            raise ValueError("Pattern must be a parquet file.")
+        validate_input_is_parquet(in_path)
         self._load_locations_attributes(
             in_path=in_path,
             pattern=pattern,
             field_mapping=field_mapping,
             **kwargs
         )
+        self._read_spark_df()
+        return self
 
     def load_csv(
         self,
@@ -846,15 +851,15 @@ class LocationAttributeTable(BaseTable):
         - attribute_name
         - value
         """
-        if not Path(pattern).suffix.endswith(".csv"):
-            logger.error("Pattern must be a CSV file.")
-            raise ValueError("Pattern must be a CSV file.")
+        validate_input_is_csv(in_path)
         self._load_locations_attributes(
             in_path=in_path,
             pattern=pattern,
             field_mapping=field_mapping,
             **kwargs
         )
+        self._read_spark_df()
+        return self
 
 
 class LocationCrosswalkTable(BaseTable):
@@ -916,15 +921,15 @@ class LocationCrosswalkTable(BaseTable):
         - primary_location_id
         - secondary_location_id
         """
-        if not Path(pattern).suffix.endswith(".parquet"):
-            logger.error("Pattern must be a parquet file.")
-            raise ValueError("Pattern must be a parquet file.")
+        validate_input_is_parquet(in_path)
         self._load_location_crosswalks(
             in_path=in_path,
             field_mapping=field_mapping,
-            pattern="**/*.parquet",
+            pattern=pattern,
             **kwargs
         )
+        self._read_spark_df()
+        return self
 
     def load_csv(
         self,
@@ -951,15 +956,15 @@ class LocationCrosswalkTable(BaseTable):
         - primary_location_id
         - secondary_location_id
         """
-        if not Path(pattern).suffix.endswith(".csv"):
-            logger.error("Pattern must be a CSV file.")
-            raise ValueError("Pattern must be a CSV file.")
+        validate_input_is_csv(in_path)
         self._load_location_crosswalks(
             in_path=in_path,
             field_mapping=field_mapping,
             pattern=pattern,
             **kwargs
         )
+        self._read_spark_df()
+        return self
 
 
 class PrimaryTimeseriesTable(BaseTable):
@@ -1030,12 +1035,9 @@ class PrimaryTimeseriesTable(BaseTable):
         - location_id
         """
         logger.info(f"Loading primary timeseries parquet data: {in_path}")
-        if not Path(pattern).suffix.endswith(".parquet"):
-            logger.error("Pattern must be a parquet file.")
-            raise ValueError("Pattern must be a parquet file.")
-
         self.primary_cache_dir.mkdir(parents=True, exist_ok=True)
 
+        validate_input_is_parquet(in_path)
         self._load_timeseries(
             in_path=in_path,
             cache_path=self.primary_cache_dir,
@@ -1045,7 +1047,7 @@ class PrimaryTimeseriesTable(BaseTable):
             constant_field_values=constant_field_values,
             **kwargs
         )
-
+        self._read_spark_df()
         return self
 
     def load_csv(
@@ -1084,12 +1086,9 @@ class PrimaryTimeseriesTable(BaseTable):
         - location_id
         """
         logger.info(f"Loading primary timeseries csv data: {in_path}")
-        if not Path(pattern).suffix.endswith(".csv"):
-            logger.error("Pattern must be a CSV file.")
-            raise ValueError("Pattern must be a CSV file.")
-
         self.primary_cache_dir.mkdir(parents=True, exist_ok=True)
 
+        validate_input_is_csv(in_path)
         self._load_timeseries(
             in_path=in_path,
             cache_path=self.primary_cache_dir,
@@ -1099,7 +1098,7 @@ class PrimaryTimeseriesTable(BaseTable):
             constant_field_values=constant_field_values,
             **kwargs
         )
-
+        self._read_spark_df()
         return self
 
     def load_netcdf(
@@ -1138,12 +1137,9 @@ class PrimaryTimeseriesTable(BaseTable):
         - location_id
         """
         logger.info(f"Loading primary timeseries netcdf data: {in_path}")
-        if not Path(pattern).suffix.endswith(".nc"):
-            logger.error("Pattern must be a netcdf file.")
-            raise ValueError("Pattern must be a netcdf file.")
-
         self.primary_cache_dir.mkdir(parents=True, exist_ok=True)
 
+        validate_input_is_netcdf(in_path)
         self._load_timeseries(
             in_path=in_path,
             cache_path=self.primary_cache_dir,
@@ -1153,7 +1149,7 @@ class PrimaryTimeseriesTable(BaseTable):
             constant_field_values=constant_field_values,
             **kwargs
         )
-
+        self._read_spark_df()
         return self
 
 
@@ -1187,6 +1183,7 @@ class SecondaryTimeseriesTable(BaseTable):
             )
             logger.error(err_msg)
             raise ValueError(err_msg)
+        # TODO: Need to access the crosswalk table here
         return join_geometry(self.df, self.eval.locations.to_sdf())
 
     def load_parquet(
@@ -1225,12 +1222,9 @@ class SecondaryTimeseriesTable(BaseTable):
         - location_id
         """
         logger.info(f"Loading secondary timeseries parquet data: {in_path}")
-        if not Path(pattern).suffix.endswith(".parquet"):
-            logger.error("Pattern must be a parquet file.")
-            raise ValueError("Pattern must be a parquet file.")
-
         self.secondary_cache_dir.mkdir(parents=True, exist_ok=True)
 
+        validate_input_is_parquet(in_path)
         self._load_timeseries(
             in_path=in_path,
             cache_path=self.secondary_cache_dir,
@@ -1240,7 +1234,7 @@ class SecondaryTimeseriesTable(BaseTable):
             constant_field_values=constant_field_values,
             **kwargs
         )
-
+        self._read_spark_df()
         return self
 
     def load_csv(
@@ -1279,12 +1273,9 @@ class SecondaryTimeseriesTable(BaseTable):
         - location_id
         """
         logger.info(f"Loading secondary timeseries csv data: {in_path}")
-        if not Path(pattern).suffix.endswith(".csv"):
-            logger.error("Pattern must be a CSV file.")
-            raise ValueError("Pattern must be a CSV file.")
-
         self.secondary_cache_dir.mkdir(parents=True, exist_ok=True)
 
+        validate_input_is_csv(in_path)
         self._load_timeseries(
             in_path=in_path,
             cache_path=self.secondary_cache_dir,
@@ -1294,7 +1285,7 @@ class SecondaryTimeseriesTable(BaseTable):
             constant_field_values=constant_field_values,
             **kwargs
         )
-
+        self._read_spark_df()
         return self
 
     def load_netcdf(
@@ -1332,12 +1323,10 @@ class SecondaryTimeseriesTable(BaseTable):
         - value
         - location_id
         """
-        if not Path(pattern).suffix.endswith(".nc"):
-            logger.error("Pattern must be a netcdf file.")
-            raise ValueError("Pattern must be a netcdf file.")
-
+        logger.info(f"Loading secondary timeseries netcdf data: {in_path}")
         self.secondary_cache_dir.mkdir(parents=True, exist_ok=True)
 
+        validate_input_is_netcdf(in_path)
         self._load_timeseries(
             in_path=in_path,
             cache_path=self.secondary_cache_dir,
@@ -1347,7 +1336,7 @@ class SecondaryTimeseriesTable(BaseTable):
             constant_field_values=constant_field_values,
             **kwargs
         )
-
+        self._read_spark_df()
         return self
 
 
@@ -1406,3 +1395,4 @@ class JoinedTimeseriesTable(BaseTable):
             self.scripts_dir,
             execute_udf,
         )
+        return self

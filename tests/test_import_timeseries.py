@@ -79,7 +79,7 @@ def test_validate_and_insert_timeseries(tmpdir):
         }
     )
 
-    eval.location_crosswalks.load_parquet(
+    eval.location_crosswalks.load_csv(
         in_path=CROSSWALK_FILEPATH
     )
 
@@ -135,7 +135,7 @@ def test_validate_and_insert_timeseries_set_const(tmpdir):
         }
     )
 
-    eval.location_crosswalks.load_parquet(
+    eval.location_crosswalks.load_csv(
         in_path=CROSSWALK_FILEPATH
     )
 
@@ -253,7 +253,7 @@ def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
         "reference_time": None
     }
 
-    eval.primary_timeseries.load_parquet(
+    eval.primary_timeseries.load_netcdf(
         in_path=MIZU_TIMESERIES_FILEPATH_NC,
         field_mapping=mizu_field_mapping,
         constant_field_values=mizu_constant_field_values

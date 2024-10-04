@@ -51,7 +51,7 @@ def test_create_joined_timeseries(tmpdir):
     )
 
     # Load the crosswalk data
-    eval.location_crosswalks.load_parquet(
+    eval.location_crosswalks.load_csv(
         in_path=CROSSWALK_FILEPATH
     )
 

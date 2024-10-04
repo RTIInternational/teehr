@@ -51,7 +51,7 @@ def setup_v0_3_study(tmpdir):
     )
 
     # Load the crosswalk data
-    eval.location_crosswalks.load_parquet(
+    eval.location_crosswalks.load_csv(
         in_path=CROSSWALK_FILEPATH
     )
 

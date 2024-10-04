@@ -33,7 +33,7 @@ def test_validate_and_insert_crosswalks(tmpdir):
         in_path=GEOJSON_GAGES_FILEPATH
     )
 
-    eval.location_crosswalks.load_parquet(
+    eval.location_crosswalks.load_csv(
         in_path=CROSSWALK_FILEPATH
     )
 
