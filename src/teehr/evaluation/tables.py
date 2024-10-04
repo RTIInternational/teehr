@@ -128,13 +128,9 @@ class BaseTable():
         logger.error(err_msg)
         raise ValueError(err_msg)
 
-    def _dir_is_emtpy(self, extension_wildcard: str = "*.parquet") -> bool:
-        """
-        Check if the directory contains files of specified extension.
-
-        Searches subdirectories (hive partitions) recursively using rglob.
-        """
-        return len(list(self.dir.rglob(extension_wildcard))) == 0
+    def _dir_is_emtpy(self, pattern: str = "**/*.parquet") -> bool:
+        """Check if the directory contains files of specified pattern."""
+        return len(list(self.dir.glob(pattern))) == 0
 
     def _read_spark_df(self, format: str = "parquet"):
         """Read data from directory as a spark dataframe."""
@@ -146,85 +142,13 @@ class BaseTable():
             .load(str(self.dir))
         )
 
-    def _load_timeseries(
-        self,
-        in_path: Union[Path, str],
-        cache_path: Path,
-        pattern="**/*.parquet",
-        timeseries_type: str = None,
-        field_mapping: dict = None,
-        constant_field_values: dict = None,
-        **kwargs
-    ):
-        """Import timeseries helper."""
-        convert_timeseries(
-            in_path=in_path,
-            out_path=cache_path,
-            field_mapping=field_mapping,
-            constant_field_values=constant_field_values,
-            pattern=pattern,
-            **kwargs
-        )
+    def _load(self):
+        """Load data into the dataset."""
+        raise NotImplementedError("_load method must be implemented.")
 
-        if pattern.endswith(".csv"):
-            pattern = pattern.replace(".csv", ".parquet")
-        elif pattern.endswith(".nc"):
-            pattern = pattern.replace(".nc", ".parquet")
-
-        validate_and_insert_timeseries(
-            ev=self.eval,
-            in_path=cache_path,
-            timeseries_type=timeseries_type,
-            pattern="**/*.parquet"
-        )
-        self._read_spark_df()
-        return self
-
-    def _load_locations_attributes(
-        self,
-        in_path: Union[Path, str],
-        pattern: str = None,
-        field_mapping: dict = None,
-        **kwargs
-    ):
-        """Load location attributes helper."""
-        convert_location_attributes(
-            in_path,
-            self.attributes_cache_dir,
-            pattern=pattern,
-            field_mapping=field_mapping,
-            **kwargs
-        )
-        validate_and_insert_location_attributes(
-            ev=self.eval,
-            in_path=self.attributes_cache_dir,
-            pattern="**/*.parquet"
-        )
-        self._read_spark_df()
-        return self
-
-    def _load_location_crosswalks(
-        self,
-        in_path: Union[Path, str],
-        field_mapping: dict = None,
-        pattern: str = None,
-        **kwargs
-    ):
-        """Load location crosswalks helper."""
-        convert_location_crosswalks(
-            in_path,
-            self.crosswalk_cache_dir,
-            field_mapping=field_mapping,
-            pattern=pattern,
-            **kwargs
-        )
-        validate_and_insert_location_crosswalks(
-            ev=self.eval,
-            in_path=self.crosswalk_cache_dir,
-            pattern="**/*.parquet"
-        )
-        self._read_spark_df()
-        return self
+    def add(self):
+        """Add domain variables."""
+        raise NotImplementedError("add method must be implemented.")
 
     def query(
         self,
@@ -516,7 +440,7 @@ class UnitTable(BaseTable):
         self.dir = eval.units_dir
         self.table_model = Unit
         self.filter_model = UnitFilter
-        if not self._dir_is_emtpy(extension_wildcard="*.csv"):
+        if not self._dir_is_emtpy(pattern="**/*.csv"):
             self._read_spark_df(format="csv")
 
     def field_enum(self) -> UnitFields:
@@ -559,7 +483,7 @@ class VariableTable(BaseTable):
         self.dir = eval.variables_dir
         self.table_model = Variable
         self.filter_model = VariableFilter
-        if not self._dir_is_emtpy(extension_wildcard="*.csv"):
+        if not self._dir_is_emtpy(pattern="**/*.csv"):
             self._read_spark_df(format="csv")
 
     def field_enum(self) -> VariableFields:
@@ -602,7 +526,7 @@ class AttributeTable(BaseTable):
         self.dir = eval.attributes_dir
         self.table_model = Attribute
         self.filter_model = AttributeFilter
-        if not self._dir_is_emtpy(extension_wildcard="*.csv"):
+        if not self._dir_is_emtpy(pattern="**/*.csv"):
             self._read_spark_df(format="csv")
 
     def field_enum(self) -> AttributeFields:
@@ -646,7 +570,7 @@ class ConfigurationTable(BaseTable):
         self.dir = eval.configurations_dir
         self.table_model = Configuration
         self.filter_model = ConfigurationFilter
-        if not self._dir_is_emtpy(extension_wildcard="*.csv"):
+        if not self._dir_is_emtpy(pattern="**/*.csv"):
             self._read_spark_df(format="csv")
 
     def field_enum(self) -> ConfigurationFields:
@@ -771,6 +695,29 @@ class LocationAttributeTable(BaseTable):
         if not self._dir_is_emtpy():
             self._read_spark_df()
 
+    def _load(
+        self,
+        in_path: Union[Path, str],
+        pattern: str = None,
+        field_mapping: dict = None,
+        **kwargs
+    ):
+        """Load location attributes helper."""
+        convert_location_attributes(
+            in_path,
+            self.attributes_cache_dir,
+            pattern=pattern,
+            field_mapping=field_mapping,
+            **kwargs
+        )
+        validate_and_insert_location_attributes(
+            ev=self.eval,
+            in_path=self.attributes_cache_dir,
+            pattern="**/*.parquet"
+        )
+        self._read_spark_df()
+        return self
+
     def field_enum(self) -> LocationAttributeFields:
         """Get the location attribute fields enum."""
         fields_list = LocationAttribute.get_field_names()
@@ -817,7 +764,7 @@ class LocationAttributeTable(BaseTable):
         - value
         """
         validate_input_is_parquet(in_path)
-        self._load_locations_attributes(
+        self._load(
             in_path=in_path,
             pattern=pattern,
             field_mapping=field_mapping,
@@ -852,7 +799,7 @@ class LocationAttributeTable(BaseTable):
         - value
         """
         validate_input_is_csv(in_path)
-        self._load_locations_attributes(
+        self._load(
             in_path=in_path,
             pattern=pattern,
             field_mapping=field_mapping,
@@ -873,6 +820,29 @@ class LocationCrosswalkTable(BaseTable):
         self.filter_model = LocationCrosswalkFilter
         if not self._dir_is_emtpy():
             self._read_spark_df()
+
+    def _load(
+        self,
+        in_path: Union[Path, str],
+        field_mapping: dict = None,
+        pattern: str = None,
+        **kwargs
+    ):
+        """Load location crosswalks helper."""
+        convert_location_crosswalks(
+            in_path,
+            self.crosswalk_cache_dir,
+            field_mapping=field_mapping,
+            pattern=pattern,
+            **kwargs
+        )
+        validate_and_insert_location_crosswalks(
+            ev=self.eval,
+            in_path=self.crosswalk_cache_dir,
+            pattern="**/*.parquet"
+        )
+        self._read_spark_df()
+        return self
 
     def field_enum(self) -> LocationCrosswalkFields:
         """Get the location crosswalk fields enum."""
@@ -922,7 +892,7 @@ class LocationCrosswalkTable(BaseTable):
         - secondary_location_id
         """
         validate_input_is_parquet(in_path)
-        self._load_location_crosswalks(
+        self._load(
             in_path=in_path,
             field_mapping=field_mapping,
             pattern=pattern,
@@ -957,7 +927,7 @@ class LocationCrosswalkTable(BaseTable):
         - secondary_location_id
         """
         validate_input_is_csv(in_path)
-        self._load_location_crosswalks(
+        self._load(
             in_path=in_path,
             field_mapping=field_mapping,
             pattern=pattern,
@@ -978,6 +948,40 @@ class PrimaryTimeseriesTable(BaseTable):
         self.filter_model = TimeseriesFilter
         if not self._dir_is_emtpy():
             self._read_spark_df()
+
+    def _load(
+        self,
+        in_path: Union[Path, str],
+        cache_path: Path,
+        pattern="**/*.parquet",
+        timeseries_type: str = None,
+        field_mapping: dict = None,
+        constant_field_values: dict = None,
+        **kwargs
+    ):
+        """Import timeseries helper."""
+        convert_timeseries(
+            in_path=in_path,
+            out_path=cache_path,
+            field_mapping=field_mapping,
+            constant_field_values=constant_field_values,
+            pattern=pattern,
+            **kwargs
+        )
+
+        if pattern.endswith(".csv"):
+            pattern = pattern.replace(".csv", ".parquet")
+        elif pattern.endswith(".nc"):
+            pattern = pattern.replace(".nc", ".parquet")
+
+        validate_and_insert_timeseries(
+            ev=self.eval,
+            in_path=cache_path,
+            timeseries_type=timeseries_type,
+            pattern="**/*.parquet"
+        )
+        self._read_spark_df()
+        return self
 
     def field_enum(self) -> TimeseriesFields:
         """Get the timeseries fields enum."""
@@ -1038,7 +1042,7 @@ class PrimaryTimeseriesTable(BaseTable):
         self.primary_cache_dir.mkdir(parents=True, exist_ok=True)
 
         validate_input_is_parquet(in_path)
-        self._load_timeseries(
+        self._load(
             in_path=in_path,
             cache_path=self.primary_cache_dir,
             pattern=pattern,
@@ -1089,7 +1093,7 @@ class PrimaryTimeseriesTable(BaseTable):
         self.primary_cache_dir.mkdir(parents=True, exist_ok=True)
 
         validate_input_is_csv(in_path)
-        self._load_timeseries(
+        self._load(
             in_path=in_path,
             cache_path=self.primary_cache_dir,
             pattern=pattern,
@@ -1140,7 +1144,7 @@ class PrimaryTimeseriesTable(BaseTable):
         self.primary_cache_dir.mkdir(parents=True, exist_ok=True)
 
         validate_input_is_netcdf(in_path)
-        self._load_timeseries(
+        self._load(
             in_path=in_path,
             cache_path=self.primary_cache_dir,
             pattern=pattern,
@@ -1165,6 +1169,40 @@ class SecondaryTimeseriesTable(BaseTable):
         if not self._dir_is_emtpy():
             self._read_spark_df()
 
+    def _load(
+        self,
+        in_path: Union[Path, str],
+        cache_path: Path,
+        pattern="**/*.parquet",
+        timeseries_type: str = None,
+        field_mapping: dict = None,
+        constant_field_values: dict = None,
+        **kwargs
+    ):
+        """Import timeseries helper."""
+        convert_timeseries(
+            in_path=in_path,
+            out_path=cache_path,
+            field_mapping=field_mapping,
+            constant_field_values=constant_field_values,
+            pattern=pattern,
+            **kwargs
+        )
+
+        if pattern.endswith(".csv"):
+            pattern = pattern.replace(".csv", ".parquet")
+        elif pattern.endswith(".nc"):
+            pattern = pattern.replace(".nc", ".parquet")
+
+        validate_and_insert_timeseries(
+            ev=self.eval,
+            in_path=cache_path,
+            timeseries_type=timeseries_type,
+            pattern="**/*.parquet"
+        )
+        self._read_spark_df()
+        return self
+
     def field_enum(self) -> TimeseriesFields:
         """Get the timeseries fields enum."""
         fields_list = Timeseries.get_field_names()
@@ -1183,7 +1221,7 @@ class SecondaryTimeseriesTable(BaseTable):
             )
             logger.error(err_msg)
             raise ValueError(err_msg)
-        # TODO: Need to access the crosswalk table here
+        # TODO: Need to access the crosswalk table here?
         return join_geometry(self.df, self.eval.locations.to_sdf())
 
     def load_parquet(
@@ -1225,7 +1263,7 @@ class SecondaryTimeseriesTable(BaseTable):
         self.secondary_cache_dir.mkdir(parents=True, exist_ok=True)
 
         validate_input_is_parquet(in_path)
-        self._load_timeseries(
+        self._load(
             in_path=in_path,
             cache_path=self.secondary_cache_dir,
             pattern=pattern,
@@ -1276,7 +1314,7 @@ class SecondaryTimeseriesTable(BaseTable):
         self.secondary_cache_dir.mkdir(parents=True, exist_ok=True)
 
         validate_input_is_csv(in_path)
-        self._load_timeseries(
+        self._load(
             in_path=in_path,
             cache_path=self.secondary_cache_dir,
             pattern=pattern,
@@ -1327,7 +1365,7 @@ class SecondaryTimeseriesTable(BaseTable):
         self.secondary_cache_dir.mkdir(parents=True, exist_ok=True)
 
         validate_input_is_netcdf(in_path)
-        self._load_timeseries(
+        self._load(
             in_path=in_path,
             cache_path=self.secondary_cache_dir,
             pattern=pattern,
@@ -1351,13 +1389,15 @@ class JoinedTimeseriesTable(BaseTable):
         self.table_model = JoinedTimeseriesTable
         self.validate_filter_field_types = False
         if not self._dir_is_emtpy():
-            self.df = (
-                self.spark.read.format("parquet")
-                # .option("recursiveFileLookup", "true")
-                # .option("mergeSchema", "true")
-                .option("header", True)
-                .load(str(self.dir))
-            )
+            self._read_spark_df()
+
+    def _read_spark_df(self, format: str = "parquet"):
+        """Read data from directory as a spark dataframe."""
+        self.df = (
+            self.spark.read.format(format)
+            .option("header", True)
+            .load(str(self.dir))
+        )
 
     def field_enum(self) -> JoinedTimeseriesFields:
         """Get the joined timeseries fields enum."""
