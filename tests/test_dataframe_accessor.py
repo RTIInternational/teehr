@@ -1,90 +1,114 @@
-import unittest
+import pytest
 import pandas as pd
-from unittest.mock import patch
 from pathlib import Path
 from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor
+import logging
+import tempfile
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
-class TestTEEHRDataFrameAccessor(unittest.TestCase):
-    """Test class created to evaluate the dataframe_accessor methods."""
+@pytest.fixture
+def sample_dataframe():
+    """Create sample data for test object."""
+    data = {
+        'location_id': [1, 2, 1, 2],
+        'variable_name': ['var1', 'var1', 'var2', 'var2'],
+        'configuration_name': ['config1', 'config2', 'config1', 'config2'],
+        'unit_name': ['unit1', 'unit1', 'unit2', 'unit2'],
+        'value_time': pd.date_range(start='1/1/2022', periods=4, freq='D'),
+        'value': [10, 20, 30, 40]
+    }
+    return pd.DataFrame(data)
 
-    def setUp(self):
-        """Create sample data for test object."""
-        # Create a sample DataFrame for testing
-        data = {
-            'location_id': [1, 2, 1, 2],
-            'variable_name': ['var1', 'var1', 'var2', 'var2'],
-            'configuration_name': ['config1', 'config2', 'config1', 'config2'],
-            'unit_name': ['unit1', 'unit1', 'unit2', 'unit2'],
-            'value_time': pd.date_range(start='1/1/2022', periods=4, freq='D'),
-            'value': [10, 20, 30, 40]
-        }
-        self.df = pd.DataFrame(data)
 
-    def test_initialization(self):
-        """Initialize test object."""
-        # Test that the accessor initializes correctly
-        accessor = self.df.teehr
-        self.assertIsInstance(accessor, TEEHRDataFrameAccessor)
+def test_initialization(sample_dataframe):
+    """Initialize test object."""
+    # Test that the accessor initializes correctly
+    accessor = sample_dataframe.teehr
+    assert isinstance(accessor, TEEHRDataFrameAccessor)
 
-    def test_validation(self):
-        """Test validation method."""
-        # Test that validation raises an error for missing 'location_id'
-        with self.assertRaises(AttributeError):
-            df_invalid = self.df.drop(columns=['location_id'])
-            df_invalid.teehr
 
-        # Test that validation raises an error for empty DataFrame
-        with self.assertRaises(AttributeError):
-            df_empty = pd.DataFrame(columns=self.df.columns)
-            df_empty.teehr
+def test_validation(sample_dataframe):
+    """Test validation method."""
+    # Test that validation raises an error for missing 'location_id'
+    with pytest.raises(AttributeError):
+        df_invalid = sample_dataframe.drop(columns=['location_id'])
+        df_invalid.teehr
 
-    def test_timeseries_unique_values(self):
-        """Test unique values method."""
-        accessor = self.df.teehr
-        unique_values = accessor._timeseries_unique_values(self.df)
-        expected_values = {
-            'location_id': [1, 2],
-            'variable_name': ['var1', 'var2'],
-            'configuration_name': ['config1', 'config2'],
-            'unit_name': ['unit1', 'unit2'],
-            'value_time': list(self.df['value_time'].unique()),
-            'value': [10, 20, 30, 40]
-        }
-        self.assertEqual(unique_values, expected_values)
+    # Test that validation raises an error for empty DataFrame
+    with pytest.raises(AttributeError):
+        df_empty = pd.DataFrame(columns=sample_dataframe.columns)
+        df_empty.teehr
 
-    def test_timeseries_default_schema(self):
-        """Test generation of default schema."""
-        accessor = self.df.teehr
-        schema = accessor._timeseries_default_schema()
-        expected_schema = {
-            'var1': [('config1', 1), ('config1', 2),
-                     ('config2', 1), ('config2', 2)],
-            'var2': [('config1', 1), ('config1', 2),
-                     ('config2', 1), ('config2', 2)]
-        }
-        self.assertEqual(schema, expected_schema)
 
-    @patch('bokeh.plotting.show')
-    def test_timeseries_generate_plot(self, mock_show):
-        """Test plot generation."""
-        accessor = self.df.teehr
-        schema = accessor._timeseries_default_schema()
-        accessor._timeseries_generate_plot(schema, self.df, 'var1', None)
-        mock_show.assert_called_once()
+def test_get_unique_values(sample_dataframe):
+    """Test unique values method."""
+    accessor = sample_dataframe.teehr
+    unique_values = accessor._get_unique_values(sample_dataframe)
+    expected_values = {
+        'location_id': [1, 2],
+        'variable_name': ['var1', 'var2'],
+        'configuration_name': ['config1', 'config2'],
+        'unit_name': ['unit1', 'unit2'],
+        'value_time': list(sample_dataframe['value_time'].unique()),
+        'value': [10, 20, 30, 40]
+    }
+    assert unique_values == expected_values
 
-    @patch('bokeh.plotting.save')
-    @patch('pathlib.Path.exists', return_value=False)
-    @patch('pathlib.Path.mkdir')
-    def test_timeseries_plot(self, mock_mkdir, mock_exists, mock_save):
-        """Test timeseries plot."""
-        accessor = self.df.teehr
-        output_dir = Path(Path().home(), "temp", "test_fig")
-        output_dir.mkdir(parents=True, exist_ok=True)
+
+def test_timeseries_schema(sample_dataframe):
+    """Test generation of default schema."""
+    accessor = sample_dataframe.teehr
+    schema = accessor._timeseries_schema()
+    expected_schema = {
+        'var1': [('config1', 1), ('config2', 2)],
+        'var2': [('config1', 1), ('config2', 2)]
+    }
+    assert schema == expected_schema
+
+
+def test_timeseries_generate_plot(sample_dataframe):
+    """Test plot generation."""
+    accessor = sample_dataframe.teehr
+    schema = accessor._timeseries_schema()
+
+    # Create a temporary directory
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        output_dir = Path(tmpdirname)
+        accessor._timeseries_generate_plot(schema,
+                                           sample_dataframe,
+                                           'var1',
+                                           output_dir)
+
+        # Check if the file exists in the temporary directory
+        plot_file = output_dir / 'timeseries_plot_var1.html'
+        logger.info(f"Checking if {plot_file} exists.")
+        assert plot_file.exists()
+
+        # Clean up the file
+        plot_file.unlink()
+
+
+def test_timeseries_plot(sample_dataframe):
+    """Test timeseries plot with a custom output directory."""
+    accessor = sample_dataframe.teehr
+
+    # Create a temporary directory
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        output_dir = Path(tmpdirname)
         accessor.timeseries_plot(output_dir=output_dir)
-        mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
-        mock_save.assert_called()
 
+        # Check if the files exist
+        var1_file = output_dir / "timeseries_plot_var1.html"
+        var2_file = output_dir / "timeseries_plot_var2.html"
+        logger.info(f"Checking if {var1_file} exists.")
+        assert var1_file.exists()
+        logger.info(f"Checking if {var2_file} exists.")
+        assert var2_file.exists()
 
-if __name__ == '__main__':
-    unittest.main()
+        # Clean up the files
+        var1_file.unlink()
+        var2_file.unlink()
