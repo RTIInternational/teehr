@@ -155,6 +155,16 @@ def copy_template_to(
     gitignore_text.rename(Path(destination_dir, ".gitignore"))
 
 
+def convert_datetime_ns_to_ms(
+    df: pd.DataFrame
+) -> pd.DataFrame:
+    """Convert datetime columns from nanoseconds to milliseconds."""
+    for column in df.columns:
+        if df[column].dtype == "datetime64[ns]":
+            df[column] = df[column].astype("datetime64[ms]")
+    return df
+
+
 def read_and_convert_netcdf_to_df(
         in_filepath: Union[str, Path],
         field_mapping: dict,
@@ -168,3 +178,60 @@ def read_and_convert_netcdf_to_df(
         df = ds[field_list].to_dataframe()
     df.reset_index(inplace=True)
     return df
+
+
+def validate_input_is_parquet(
+        in_path: Union[str, Path]
+) -> None:
+    """
+    Validate that the input is parquet format.
+
+    Check that either the file is a parquet file or the directory
+    contains parquet files.
+    """
+    if Path(in_path).is_dir():
+        if len(list(in_path.glob("**/*.parquet"))) == 0:
+            logger.error("No parquet files found in the directory.")
+            raise ValueError("No parquet files found in the directory.")
+    else:
+        if not Path(in_path).suffix.endswith(".parquet"):
+            logger.error("Input file must be a parquet file.")
+            raise ValueError("Input file must be a parquet file.")
+
+
+def validate_input_is_csv(
+        in_path: Union[str, Path]
+) -> None:
+    """
+    Validate that the input is csv format.
+
+    Check that either the file is a csv file or the directory
+    contains csv files.
+    """
+    if Path(in_path).is_dir():
+        if len(list(in_path.glob("**/*.csv"))) == 0:
+            logger.error("No csv files found in the directory.")
+            raise ValueError("No csv files found in the directory.")
+    else:
+        if not Path(in_path).suffix.endswith(".csv"):
+            logger.error("Input file must be a csv file.")
+            raise ValueError("Input file must be a csv file.")
+
+
+def validate_input_is_netcdf(
+        in_path: Union[str, Path]
+) -> None:
+    """
+    Validate that the input is netcdf format.
+
+    Check that either the file is a netcdf file or the directory
+    contains netcdf files.
+    """
+    if Path(in_path).is_dir():
+        if len(list(in_path.glob("**/*.nc"))) == 0:
+            logger.error("No netcdf files found in the directory.")
+            raise ValueError("No netcdf files found in the directory.")
+    else:
+        if not Path(in_path).suffix.endswith(".nc"):
+            logger.error("Input file must be a netcdf file.")
+            raise ValueError("Input file must be a netcdf file.")
