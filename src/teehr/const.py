@@ -1,4 +1,5 @@
-"""This module contains constants used throughout the package."""
+"""This module contains constants
+ used throughout the package."""
 
 
 # Primary evaluation directories
