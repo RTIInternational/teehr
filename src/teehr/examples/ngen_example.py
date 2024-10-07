@@ -30,12 +30,12 @@ eval.clone_template()
 # Load the location data (observations)
 # This is a geoparquet file, but any format
 # GeoPandas supports is supported.
-eval.load.import_locations(in_path=LOCATIONS)
+eval.locations.load_spatial(in_path=LOCATIONS)
 
 # Load the crosswalk data for USGS to NWM3.0
 # Crosswalks are needed for each "simulation source"
 # i.e. USGS -> NWM3.0, USGS -> NGEN, etc.
-eval.load.import_location_crosswalks(
+eval.location_crosswalks.load_parquet(
     in_path=LOCATION_XWALKS
 )
 
@@ -61,7 +61,7 @@ eval.fetch.nwm_retrospective_points(
 # eval.load.import_secondary_timeseries()
 
 # Create the joined timeseries
-eval.create_joined_timeseries(execute_udf=False)
+eval.joined_timeseries.create(execute_udf=False)
 
 df = eval.metrics.query(
     order_by=["primary_location_id", "configuration_name"],

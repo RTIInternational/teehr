@@ -81,7 +81,7 @@ def test_get_timeseries_fields(tmpdir):
 def test_get_joined_timeseries_fields(tmpdir):
     """Test the validate location_attributes."""
     eval = setup_v0_3_study(tmpdir)
-    eval.create_joined_timeseries()
+    eval.joined_timeseries.create()
     fields = eval.joined_timeseries.field_enum()
     for field in fields:
         assert isinstance(field, JoinedTimeseriesFields)
