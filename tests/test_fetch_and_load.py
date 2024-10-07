@@ -53,18 +53,6 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
         start_date=datetime(2022, 2, 22),
         end_date=datetime(2022, 2, 23)
     )
-    # TODO: This could be eval.query.timeseries() or something similar.
-    # ts_df = pd.read_parquet(
-    #     Path
-    #     (
-    #         tmpdir,
-    #         "dataset",
-    #         "secondary_timeseries",
-    #         "nwm30_retrospective",
-    #         "streamflow_hourly_inst",
-    #         "20220222_20220223.parquet"
-    #     )
-    # )
     ts_df = eval.secondary_timeseries.to_pandas()
     assert isinstance(ts_df, pd.DataFrame)
     assert ts_df.columns.tolist() == [
@@ -100,17 +88,6 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
         end_date="2008-05-23 10:00",
         location_id_prefix="huc10"
     )
-    # TODO: This could be eval.query.timeseries() or something similar.
-    # ts_df = pd.read_parquet(
-    #     Path(
-    #         tmpdir,
-    #         "dataset",
-    #         "primary_timeseries",
-    #         "nwm30_retrospective",
-    #         "rainfall_hourly_rate",
-    #         "20080523.parquet"
-    #     )
-    # )
     ts_df = eval.primary_timeseries.to_pandas()
     assert isinstance(ts_df, pd.DataFrame)
     assert ts_df.columns.tolist() == [
@@ -148,20 +125,10 @@ def test_fetch_and_load_nwm_forecast_points(tmpdir):
         start_date=datetime(2024, 2, 22),
         ingest_days=1,
         nwm_version="nwm30",
+        prioritize_analysis_valid_time=True,
         t_minus_hours=[0],
         process_by_z_hour=False
     )
-    # TODO: This could be eval.query.timeseries() or something similar.
-    # ts_df = pd.read_parquet(
-    #     Path(
-    #         tmpdir,
-    #         "dataset",
-    #         "secondary_timeseries",
-    #         "nwm30_analysis_assim",
-    #         "streamflow_hourly_inst",
-    #         "20240222T00Fm00_20240222T23Fm00.parquet"
-    #     )
-    # )
     ts_df = eval.secondary_timeseries.to_pandas()
     assert isinstance(ts_df, pd.DataFrame)
     assert ts_df.columns.tolist() == [
@@ -197,21 +164,10 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
         ingest_days=1,
         zonal_weights_filepath=ZONAL_WEIGHTS,
         nwm_version="nwm30",
+        prioritzie_analysis_valid_time=True,
         t_minus_hours=[0],
         location_id_prefix="huc10"
     )
-
-    # TODO: This could be eval.query.timeseries() or something similar.
-    # ts_df = pd.read_parquet(
-    #     Path(
-    #         tmpdir,
-    #         "dataset",
-    #         "primary_timeseries",
-    #         "nwm30_forcing_analysis_assim",
-    #         "rainfall_hourly_rate",
-    #         "20240222T00.parquet"
-    #     )
-    # )
     ts_df = eval.primary_timeseries.to_pandas()
     assert isinstance(ts_df, pd.DataFrame)
     assert ts_df.columns.tolist() == [

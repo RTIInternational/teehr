@@ -62,52 +62,34 @@ def test_dates_and_nwm_version():
 
 def test_building_nwm30_gcs_paths():
     """Test building NWM30 GCS paths."""
-    configuration = "analysis_assim_extend"
-    output_type = "channel_rt"
-    start_date = "2023-11-28"
-    ingest_days = 1
-    analysis_config_dict = NWM30_ANALYSIS_CONFIG
-    t_minus_hours = [0]
-    ignore_missing_file = False
-
-    # Build paths to netcdf files on GCS
     gcs_component_paths = build_remote_nwm_filelist(
-        configuration,
-        output_type,
-        start_date,
-        ingest_days,
-        analysis_config_dict,
-        t_minus_hours,
-        ignore_missing_file,
+        configuration="forcing_analysis_assim_extend",
+        output_type="forcing",
+        start_dt="2023-11-28",
+        ingest_days=1,
+        analysis_config_dict=NWM30_ANALYSIS_CONFIG,
+        t_minus_hours=[0],
+        ignore_missing_file=False,
+        prioritize_analysis_valid_time=False
     )
-
-    assert (
-        gcs_component_paths == \
-            ['gcs://national-water-model/nwm.20231128/analysis_assim_extend/nwm.t16z.analysis_assim_extend.channel_rt.tm00.conus.nc'] # noqa
+    assert len(gcs_component_paths) == 28
+    assert all(
+        ["nwm.20231128/forcing_analysis_assim_extend/nwm.t16z.analysis_assim_extend.forcing" in path for path in gcs_component_paths]  # noqa
     )
 
 
 def test_building_nwm22_gcs_paths():
     """Test building NWM22 GCS paths."""
-    configuration = "analysis_assim_extend"
-    output_type = "channel_rt"
-    start_date = "2019-01-12"
-    ingest_days = 1
-    analysis_config_dict = NWM22_ANALYSIS_CONFIG
-    t_minus_hours = [0]
-    ignore_missing_file = False
-
-    # Build paths to netcdf files on GCS
     gcs_component_paths = build_remote_nwm_filelist(
-        configuration,
-        output_type,
-        start_date,
-        ingest_days,
-        analysis_config_dict,
-        t_minus_hours,
-        ignore_missing_file,
+        configuration="analysis_assim_extend",
+        output_type="channel_rt",
+        start_dt="2019-01-12",
+        ingest_days=1,
+        analysis_config_dict=NWM22_ANALYSIS_CONFIG,
+        t_minus_hours=[0],
+        ignore_missing_file=False,
+        prioritize_analysis_valid_time=True
     )
-
     assert (
         gcs_component_paths == \
             ['gcs://national-water-model/nwm.20190112/analysis_assim_extend/nwm.t16z.analysis_assim_extend.channel_rt.tm00.conus.nc'] # noqa
