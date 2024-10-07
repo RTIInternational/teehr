@@ -25,6 +25,7 @@ from teehr.evaluation.tables import (
     SecondaryTimeseriesTable,
     JoinedTimeseriesTable,
 )
+from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor
 
 
 logger = logging.getLogger(__name__)
