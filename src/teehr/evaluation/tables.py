@@ -949,6 +949,14 @@ class PrimaryTimeseriesTable(BaseTable):
         if not self._dir_is_emtpy():
             self._read_spark_df()
 
+    def _read_spark_df(self, format: str = "parquet"):
+        """Read data from directory as a spark dataframe."""
+        self.df = (
+            self.spark.read.format(format)
+            .option("header", True)
+            .load(str(self.dir))
+        )
+
     def _load(
         self,
         in_path: Union[Path, str],
@@ -1168,6 +1176,14 @@ class SecondaryTimeseriesTable(BaseTable):
         self.filter_model = TimeseriesFilter
         if not self._dir_is_emtpy():
             self._read_spark_df()
+
+    def _read_spark_df(self, format: str = "parquet"):
+        """Read data from directory as a spark dataframe."""
+        self.df = (
+            self.spark.read.format(format)
+            .option("header", True)
+            .load(str(self.dir))
+        )
 
     def _load(
         self,
