@@ -39,11 +39,11 @@ logger = logging.getLogger(__name__)
 class Load:
     """Component class for loading data into the dataset."""
 
-    def __init__(self, eval) -> None:
+    def __init__(self, ev) -> None:
         """Initialize the Load class."""
-        self.eval = eval
-        self.cache_dir = eval.cache_dir
-        self.dataset_dir = eval.dataset_dir
+        self.ev = ev
+        self.cache_dir = ev.cache_dir
+        self.dataset_dir = ev.dataset_dir
         self.locations_cache_dir = Path(
             self.cache_dir,
             const.LOADING_CACHE_DIR,
@@ -89,7 +89,7 @@ class Load:
         >>>     type="primary",
         >>>     description="USGS observations",
         >>> )
-        >>> eval.load.add_configuration(configuration)
+        >>> ev.load.add_configuration(configuration)
 
         """
         add_configuration(self.dataset_dir, configuration)
@@ -112,7 +112,7 @@ class Load:
         >>>     name="m^3/s",
         >>>     long_name="Cubic meters per second"
         >>> )
-        >>> eval.load.add_unit(unit)
+        >>> ev.load.add_unit(unit)
         """
         add_unit(self.dataset_dir, unit)
 
@@ -134,7 +134,7 @@ class Load:
         >>>     name="streamflow_hourly_inst",
         >>>     long_name="Instantaneous streamflow"
         >>> )
-        >>> eval.load.add_variable(variable)
+        >>> ev.load.add_variable(variable)
         """
         add_variable(self.dataset_dir, variable)
 
@@ -157,7 +157,7 @@ class Load:
         >>>     type="continuous",
         >>>     description="Drainage area in square kilometers"
         >>> )
-        >>> eval.load.add_attribute(attribute)
+        >>> ev.load.add_attribute(attribute)
         """
         add_attribute(self.dataset_dir, attribute)
 
@@ -200,7 +200,7 @@ class Load:
             **kwargs
         )
         validate_and_insert_locations(
-            ev=self.eval,
+            ev=self.ev,
             in_path=self.locations_cache_dir
             # self.dataset_dir
         )
@@ -241,7 +241,7 @@ class Load:
             **kwargs
         )
         validate_and_insert_location_crosswalks(
-            self.eval,
+            self.ev,
             self.crosswalk_cache_dir,
         )
 
@@ -282,7 +282,7 @@ class Load:
             **kwargs
         )
         validate_and_insert_location_attributes(
-            self.eval,
+            self.ev,
             self.attributes_cache_dir,
         )
 
@@ -339,7 +339,7 @@ class Load:
             pattern = pattern.replace(".csv", ".parquet")
 
         validate_and_insert_timeseries(
-            ev=self.eval,
+            ev=self.ev,
             in_path=self.secondary_cache_dir,
             # dataset_path=self.dataset_dir,
             timeseries_type="secondary",
@@ -399,7 +399,7 @@ class Load:
             pattern = pattern.replace(".csv", ".parquet")
 
         validate_and_insert_timeseries(
-            ev=self.eval,
+            ev=self.ev,
             # dataset_path=self.dataset_dir,
             in_path=self.primary_cache_dir,
             timeseries_type="primary",
