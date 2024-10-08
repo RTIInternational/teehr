@@ -189,12 +189,13 @@ def validate_input_is_parquet(
     Check that either the file is a parquet file or the directory
     contains parquet files.
     """
-    if Path(in_path).is_dir():
+    in_path = Path(in_path)
+    if in_path.is_dir():
         if len(list(in_path.glob("**/*.parquet"))) == 0:
             logger.error("No parquet files found in the directory.")
             raise ValueError("No parquet files found in the directory.")
     else:
-        if not Path(in_path).suffix.endswith(".parquet"):
+        if not in_path.suffix.endswith(".parquet"):
             logger.error("Input file must be a parquet file.")
             raise ValueError("Input file must be a parquet file.")
 
@@ -208,12 +209,13 @@ def validate_input_is_csv(
     Check that either the file is a csv file or the directory
     contains csv files.
     """
-    if Path(in_path).is_dir():
+    in_path = Path(in_path)
+    if in_path.is_dir():
         if len(list(in_path.glob("**/*.csv"))) == 0:
             logger.error("No csv files found in the directory.")
             raise ValueError("No csv files found in the directory.")
     else:
-        if not Path(in_path).suffix.endswith(".csv"):
+        if not in_path.suffix.endswith(".csv"):
             logger.error("Input file must be a csv file.")
             raise ValueError("Input file must be a csv file.")
 
@@ -227,11 +229,12 @@ def validate_input_is_netcdf(
     Check that either the file is a netcdf file or the directory
     contains netcdf files.
     """
-    if Path(in_path).is_dir():
+    in_path = Path(in_path)
+    if in_path.is_dir():
         if len(list(in_path.glob("**/*.nc"))) == 0:
             logger.error("No netcdf files found in the directory.")
             raise ValueError("No netcdf files found in the directory.")
     else:
-        if not Path(in_path).suffix.endswith(".nc"):
+        if not in_path.suffix.endswith(".nc"):
             logger.error("Input file must be a netcdf file.")
             raise ValueError("Input file must be a netcdf file.")
