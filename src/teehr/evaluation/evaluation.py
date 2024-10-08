@@ -93,7 +93,7 @@ class Evaluation:
         # Create a local Spark Session if one is not provided.
         if not self.spark:
             logger.info("Creating a new Spark session.")
-            conf = SparkConf().setAppName("TEEHR").setMaster("local")
+            conf = SparkConf().setAppName("TEEHR").setMaster("local[*]")
             self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
 
     @property
