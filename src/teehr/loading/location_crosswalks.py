@@ -143,7 +143,6 @@ def convert_location_crosswalks(
 def validate_and_insert_location_crosswalks(
     ev,
     in_path: Union[str, Path],
-    # dataset_dir: Union[str, Path],
     pattern: str = "**/*.parquet",
 ):
     """Validate and insert location crosswalks data."""

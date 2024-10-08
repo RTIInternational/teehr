@@ -1,5 +1,5 @@
 # Build TEEHR
-FROM python:3.11 AS builder
+FROM python:3.12 AS builder
 
 WORKDIR /teehr
 
@@ -12,11 +12,11 @@ RUN TEEHR_VERSION=$(cat /teehr/version.txt) && \
     mv dist/teehr-${TEEHR_VERSION}.tar.gz dist/teehr-build.tar.gz
 
 # Install TEEHR in the Pangeo Image
-FROM pangeo/pangeo-notebook:2024.03.13
+FROM pangeo/pangeo-notebook:2024.10.01
 
 USER root
 ENV DEBIAN_FRONTEND=noninteractive
-ENV PATH ${NB_PYTHON_PREFIX}/bin:$PATH
+ENV PATH=${NB_PYTHON_PREFIX}/bin:$PATH
 
 # Needed for apt-key to work -- Is this part needed?
 RUN apt-get update -qq --yes > /dev/null && \
@@ -30,7 +30,7 @@ RUN apt-get update \
 RUN mamba install -n ${CONDA_ENV} -y -c conda-forge nodejs selenium geckodriver pyspark
 
 # Set up the environment for pyspark
-ENV SPARK_HOME ${NB_PYTHON_PREFIX}/lib/python3.11/site-packages/pyspark
+ENV SPARK_HOME=${NB_PYTHON_PREFIX}/lib/python3.12/site-packages/pyspark
 RUN curl -s https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.262/aws-java-sdk-bundle-1.12.262.jar -Lo ${SPARK_HOME}/jars/aws-java-sdk-bundle-1.12.262.jar
 RUN curl -s https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar -Lo ${SPARK_HOME}/jars/hadoop-aws-3.3.4.jar
 
