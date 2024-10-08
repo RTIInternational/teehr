@@ -178,7 +178,7 @@ def create_joined_timeseries_dataset(
     spark: SparkSession
         SparkSession object
     eval_path: Union[str, Path]
-        Eval directory path
+        ev directory path
 
     Returns
     -------

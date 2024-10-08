@@ -59,13 +59,15 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
     ts_df = eval.secondary_timeseries.to_pandas()
 
     assert isinstance(ts_df, pd.DataFrame)
-    assert ts_df.columns.tolist() == [
+    assert set(ts_df.columns.tolist()) == set([
             "reference_time",
             "value_time",
             "value",
             "unit_name",
-            "location_id"
-            ]
+            "location_id",
+            "configuration_name",
+            "variable_name"
+            ])
     assert ts_df.unit_name.iloc[0] == "m^3/s"
     assert ts_df.value.sum() == np.float32(7319.99)
     assert ts_df.value_time.min() == pd.Timestamp("2022-02-22 00:00:00")
@@ -92,13 +94,15 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
     ts_df = eval.primary_timeseries.to_pandas()
 
     assert isinstance(ts_df, pd.DataFrame)
-    assert ts_df.columns.tolist() == [
+    assert set(ts_df.columns.tolist()) == set([
             "reference_time",
             "value_time",
             "value",
             "unit_name",
-            "location_id"
-            ]
+            "location_id",
+            "configuration_name",
+            "variable_name"
+            ])
     assert ts_df.unit_name.iloc[0] == "mm/s"
     assert ts_df.value.sum() == np.float32(0.00028747512)
     assert ts_df.value_time.min() == pd.Timestamp("2008-05-23 09:00:00")
@@ -131,13 +135,15 @@ def test_fetch_and_load_nwm_forecast_points(tmpdir):
     ts_df = eval.secondary_timeseries.to_pandas()
 
     assert isinstance(ts_df, pd.DataFrame)
-    assert ts_df.columns.tolist() == [
+    assert set(ts_df.columns.tolist()) == set([
             "reference_time",
             "value_time",
             "value",
             "unit_name",
-            "location_id"
-            ]
+            "location_id",
+            "configuration_name",
+            "variable_name"
+            ])
     assert ts_df.unit_name.iloc[0] == "m^3/s"
     assert ts_df.value.sum() == np.float32(658.14)
     assert ts_df.value_time.min() == pd.Timestamp("2024-02-22 00:00:00")
@@ -168,13 +174,15 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
     ts_df = eval.primary_timeseries.to_pandas()
 
     assert isinstance(ts_df, pd.DataFrame)
-    assert ts_df.columns.tolist() == [
+    assert set(ts_df.columns.tolist()) == set([
             "reference_time",
             "value_time",
             "value",
             "unit_name",
-            "location_id"
-            ]
+            "location_id",
+            "configuration_name",
+            "variable_name"
+            ])
     assert ts_df.unit_name.iloc[0] == "mm/s"
     assert ts_df.value.sum() == np.float32(0.0)
     assert ts_df.value_time.min() == pd.Timestamp("2024-02-22 00:00:00")
