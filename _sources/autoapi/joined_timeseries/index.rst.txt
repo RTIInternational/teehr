@@ -1,0 +1,145 @@
+:py:mod:`joined_timeseries`
+===========================
+
+.. py:module:: joined_timeseries
+
+.. autoapi-nested-parse::
+
+   Functions to create joined timeseries.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   joined_timeseries.create_joined_df
+   joined_timeseries.add_attr_to_joined_df
+   joined_timeseries.create_joined_timeseries_dataset
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   joined_timeseries.logger
+
+
+.. py:data:: logger
+
+   
+
+.. py:function:: create_joined_df(spark: pyspark.sql.SparkSession, dataset_dir: Union[str, pathlib.Path]) -> pyspark.sql.DataFrame
+
+   
+   Create an initial joined timeseries dataframe.
+
+
+   :Parameters:
+
+       **spark: SparkSession**
+           SparkSession object
+
+       **dataset_dir: Union[str, Path]**
+           Dataset directory path
+
+
+
+   :Returns:
+
+       DataFrame
+           DataFrame with joined timeseries.
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: add_attr_to_joined_df(spark: pyspark.sql.SparkSession, joined_df: pyspark.sql.DataFrame, dataset_dir: Union[str, pathlib.Path]) -> pyspark.sql.DataFrame
+
+   
+   Add attributes to the joined timeseries dataframe.
+
+
+   :Parameters:
+
+       **spark: SparkSession**
+           SparkSession object
+
+       **joined_df: DataFrame**
+           Joined timeseries DataFrame
+
+       **dataset_dir: Union[str, Path]**
+           Dataset directory path
+
+
+
+   :Returns:
+
+       DataFrame
+           Joined timeseries DataFrame with attributes
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: create_joined_timeseries_dataset(spark: pyspark.sql.SparkSession, dataset_dir: Union[str, pathlib.Path], scripts_dir: Union[str, pathlib.Path], execute_udf: bool = False)
+
+   
+   Create joined timeseries.
+
+
+   :Parameters:
+
+       **spark: SparkSession**
+           SparkSession object
+
+       **eval_path: Union[str, Path]**
+           ev directory path
+
+
+
+   :Returns:
+
+       None
+           ..
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

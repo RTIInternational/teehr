@@ -1,0 +1,116 @@
+:py:mod:`metric_attributes`
+===========================
+
+.. py:module:: metric_attributes
+
+.. autoapi-nested-parse::
+
+   Dictionaries defining static metric attributes.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+.. py:data:: ME_ATTRS
+
+   
+
+.. py:data:: RBIAS_ATTRS
+
+   
+
+.. py:data:: MULTBIAS_ATTRS
+
+   
+
+.. py:data:: MSE_ATTRS
+
+   
+
+.. py:data:: RMSE_ATTRS
+
+   
+
+.. py:data:: MAE_ATTRS
+
+   
+
+.. py:data:: RMAE_ATTRS
+
+   
+
+.. py:data:: PEARSON_ATTRS
+
+   
+
+.. py:data:: R2_ATTRS
+
+   
+
+.. py:data:: NSE_ATTRS
+
+   
+
+.. py:data:: NNSE_ATTRS
+
+   
+
+.. py:data:: KGE_ATTRS
+
+   
+
+.. py:data:: KGE1_ATTRS
+
+   
+
+.. py:data:: KGE2_ATTRS
+
+   
+
+.. py:data:: COUNT_ATTRS
+
+   
+
+.. py:data:: MINIMUM_ATTRS
+
+   
+
+.. py:data:: MAXIMUM_ATTRS
+
+   
+
+.. py:data:: AVERAGE_ATTRS
+
+   
+
+.. py:data:: SUM_ATTRS
+
+   
+
+.. py:data:: VARIANCE_ATTRS
+
+   
+
+.. py:data:: MAX_VALUE_DELTA_ATTRS
+
+   
+
+.. py:data:: MAX_VAL_TIME_ATTRS
+
+   
+
+.. py:data:: MAX_VALUE_TIMEDELTA_ATTRS
+
+   
+
+.. py:data:: ANNUAL_PEAK_RBIAS_ATTRS
+
+   
+
+.. py:data:: SPEARMAN_R_ATTRS
+
+   
+

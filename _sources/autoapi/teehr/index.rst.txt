@@ -1,0 +1,24 @@
+:py:mod:`teehr`
+===============
+
+.. py:module:: teehr
+
+
+Subpackages
+-----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   utilities/index.rst
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   const/index.rst
+
+

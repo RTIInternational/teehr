@@ -1,0 +1,268 @@
+:py:mod:`table_enums`
+=====================
+
+.. py:module:: table_enums
+
+.. autoapi-nested-parse::
+
+   Field enums for each table in the dataset.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   table_enums.ConfigurationFields
+   table_enums.UnitFields
+   table_enums.VariableFields
+   table_enums.AttributeFields
+   table_enums.LocationFields
+   table_enums.LocationAttributeFields
+   table_enums.LocationCrosswalkFields
+   table_enums.TimeseriesFields
+   table_enums.JoinedTimeseriesFields
+
+
+
+
+.. py:class:: ConfigurationFields
+
+
+   Bases: :py:obj:`teehr.models.str_enum.StrEnum`
+
+   
+   Empty class for ConfigurationFieldEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:class:: UnitFields
+
+
+   Bases: :py:obj:`teehr.models.str_enum.StrEnum`
+
+   
+   Empty class for UnitFieldEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:class:: VariableFields
+
+
+   Bases: :py:obj:`teehr.models.str_enum.StrEnum`
+
+   
+   Empty class for VariableFieldEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:class:: AttributeFields
+
+
+   Bases: :py:obj:`teehr.models.str_enum.StrEnum`
+
+   
+   Empty class for AttributeFieldEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:class:: LocationFields
+
+
+   Bases: :py:obj:`teehr.models.str_enum.StrEnum`
+
+   
+   Empty class for LocationFieldEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:class:: LocationAttributeFields
+
+
+   Bases: :py:obj:`teehr.models.str_enum.StrEnum`
+
+   
+   Empty class for LocationAttributeFieldEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:class:: LocationCrosswalkFields
+
+
+   Bases: :py:obj:`teehr.models.str_enum.StrEnum`
+
+   
+   Empty class for LocationCrosswalkFieldEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:class:: TimeseriesFields
+
+
+   Bases: :py:obj:`teehr.models.str_enum.StrEnum`
+
+   
+   Empty class for TimeseriesFieldEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:class:: JoinedTimeseriesFields
+
+
+   Bases: :py:obj:`teehr.models.str_enum.StrEnum`
+
+   
+   Empty class for JoinedTimeseriesFieldEnum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

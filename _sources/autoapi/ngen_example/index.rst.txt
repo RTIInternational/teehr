@@ -1,0 +1,51 @@
+:py:mod:`ngen_example`
+======================
+
+.. py:module:: ngen_example
+
+.. autoapi-nested-parse::
+
+   This is an example of how to use TEEHR in NGEN.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+.. py:data:: TEST_STUDY_DIR
+
+   
+
+.. py:data:: TEST_DATA
+   :value: '/home/matt/repos/teehr/tests/data/two_locations/'
+
+   
+
+.. py:data:: LOCATIONS
+
+   
+
+.. py:data:: LOCATION_XWALKS
+
+   
+
+.. py:data:: STARTDATE
+   :value: '2010-10-01'
+
+   
+
+.. py:data:: ENDDATE
+   :value: '2020-09-30'
+
+   
+
+.. py:data:: ev
+
+   
+
+.. py:data:: df
+
+   
+

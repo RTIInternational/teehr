@@ -1,0 +1,202 @@
+:py:mod:`fetch`
+===============
+
+.. py:module:: fetch
+
+.. autoapi-nested-parse::
+
+   Component class for fetching data from external sources.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   fetch.Fetch
+
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   fetch.logger
+
+
+.. py:data:: logger
+
+   
+
+.. py:class:: Fetch(ev)
+
+
+   
+   Component class for fetching data from external sources.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:method:: _get_secondary_location_ids(prefix: str) -> List[str]
+
+      
+      Get the secondary location IDs corresponding to primary IDs.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: usgs_streamflow(start_date: Union[str, datetime.datetime, pandas.Timestamp], end_date: Union[str, datetime.datetime, pandas.Timestamp], sites: Optional[List[str]] = None, chunk_by: Union[teehr.models.fetching.utils.USGSChunkByEnum, None] = None, service: teehr.models.fetching.utils.USGSServiceEnum = 'iv', filter_to_hourly: bool = True, filter_no_data: bool = True, convert_to_si: bool = True, overwrite_output: Optional[bool] = False, timeseries_type: teehr.models.fetching.utils.TimeseriesTypeEnum = 'primary')
+
+      
+      Fetch USGS gage data and save as a Parquet file.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: nwm_retrospective_points(nwm_version: teehr.models.fetching.utils.SupportedNWMRetroVersionsEnum, variable_name: teehr.models.fetching.utils.ChannelRtRetroVariableEnum, start_date: Union[str, datetime.datetime, pandas.Timestamp], end_date: Union[str, datetime.datetime, pandas.Timestamp], location_ids: Optional[List[int]] = None, chunk_by: Union[teehr.models.fetching.utils.NWMChunkByEnum, None] = None, overwrite_output: Optional[bool] = False, domain: Optional[teehr.models.fetching.utils.SupportedNWMRetroDomainsEnum] = 'CONUS', timeseries_type: teehr.models.fetching.utils.TimeseriesTypeEnum = 'secondary')
+
+      
+      Fetch NWM retrospective at NWM COMIDs and store as Parquet file.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: nwm_retrospective_grids(nwm_version: teehr.models.fetching.utils.SupportedNWMRetroVersionsEnum, variable_name: teehr.models.fetching.nwm22_grid.ForcingVariablesEnum, zonal_weights_filepath: Union[str, pathlib.Path], start_date: Union[str, datetime.datetime, pandas.Timestamp], end_date: Union[str, datetime.datetime, pandas.Timestamp], chunk_by: Union[teehr.models.fetching.utils.NWMChunkByEnum, None] = None, overwrite_output: Optional[bool] = False, domain: Optional[teehr.models.fetching.utils.SupportedNWMRetroDomainsEnum] = 'CONUS', location_id_prefix: Optional[Union[str, None]] = None, timeseries_type: teehr.models.fetching.utils.TimeseriesTypeEnum = 'primary')
+
+      
+      Compute the weighted average for NWM gridded data.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: nwm_forecast_points(configuration: str, output_type: str, variable_name: str, start_date: Union[str, datetime.datetime], ingest_days: int, nwm_version: teehr.models.fetching.utils.SupportedNWMOperationalVersionsEnum, location_ids: Optional[List[int]] = None, data_source: Optional[teehr.models.fetching.utils.SupportedNWMDataSourcesEnum] = 'GCS', kerchunk_method: Optional[teehr.models.fetching.utils.SupportedKerchunkMethod] = 'local', t_minus_hours: Optional[List[int]] = None, process_by_z_hour: Optional[bool] = True, stepsize: Optional[int] = 100, ignore_missing_file: Optional[bool] = True, overwrite_output: Optional[bool] = False, timeseries_type: teehr.models.fetching.utils.TimeseriesTypeEnum = 'secondary')
+
+      
+      Fetch NWM point data and save as a Parquet file in TEEHR format.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: nwm_forecast_grids(configuration: str, output_type: str, variable_name: str, start_date: Union[str, datetime.datetime], ingest_days: int, zonal_weights_filepath: Union[pathlib.Path, str], nwm_version: teehr.models.fetching.utils.SupportedNWMOperationalVersionsEnum, data_source: Optional[teehr.models.fetching.utils.SupportedNWMDataSourcesEnum] = 'GCS', kerchunk_method: Optional[teehr.models.fetching.utils.SupportedKerchunkMethod] = 'local', t_minus_hours: Optional[List[int]] = None, ignore_missing_file: Optional[bool] = True, overwrite_output: Optional[bool] = False, location_id_prefix: Optional[Union[str, None]] = None, timeseries_type: teehr.models.fetching.utils.TimeseriesTypeEnum = 'primary')
+
+      
+      Fetch NWM gridded data, calculate zonal statistics (currently only
+      mean is available) of selected variable for given zones, convert
+      and save to TEEHR tabular format.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+

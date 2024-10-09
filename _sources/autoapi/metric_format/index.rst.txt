@@ -1,0 +1,71 @@
+:py:mod:`metric_format`
+=======================
+
+.. py:module:: metric_format
+
+.. autoapi-nested-parse::
+
+   Functions for formatting metrics for querying.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   metric_format.apply_aggregation_metrics
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   metric_format.logger
+   metric_format.ARRAY_TYPE
+   metric_format.DICT_TYPE
+
+
+.. py:data:: logger
+
+   
+
+.. py:data:: ARRAY_TYPE
+
+   
+
+.. py:data:: DICT_TYPE
+
+   
+
+.. py:function:: apply_aggregation_metrics(gp: pyspark.sql.GroupedData, include_metrics: List[teehr.models.metrics.metric_models.MetricsBasemodel] = None) -> pandas.DataFrame
+
+   
+   Apply metrics to a PySpark DataFrame.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

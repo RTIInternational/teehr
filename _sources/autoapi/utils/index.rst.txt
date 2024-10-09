@@ -1,0 +1,299 @@
+:py:mod:`utils`
+===============
+
+.. py:module:: utils
+
+.. autoapi-nested-parse::
+
+   Utility functions for the preprocessing.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   utils.read_spatial_file
+   utils.validate_dataset_structure
+   utils.validate_constant_values_dict
+   utils.merge_field_mappings
+   utils.copy_template_to
+   utils.convert_datetime_ns_to_ms
+   utils.read_and_convert_netcdf_to_df
+   utils.validate_input_is_parquet
+   utils.validate_input_is_csv
+   utils.validate_input_is_netcdf
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   utils.logger
+
+
+.. py:data:: logger
+
+   
+
+.. py:function:: read_spatial_file(filepath: Union[str, pathlib.Path], **kwargs: str) -> geopandas.GeoDataFrame
+
+   
+   Load any supported geospatial file type into a gdf using GeoPandas.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: validate_dataset_structure(dataset_filepath: Union[str, pathlib.Path]) -> bool
+
+   
+   Validate the database structure.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: validate_constant_values_dict(constant_values_dict: dict, fields: List[str])
+
+   
+   Validate the values of the constants.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: merge_field_mappings(default_mapping: dict, custom_mapping: dict) -> dict
+
+   
+   Merge the default mapping with the custom mapping.
+
+
+   :Parameters:
+
+       **default_mapping** : dict
+           The default mapping.
+           Format: {input_field: output_field}
+
+       **custom_mapping** : dict
+           The custom mapping.
+           Format: {input_field: output_field}
+
+
+
+   :Returns:
+
+       dict
+           The merged mapping.
+
+       Merges based on output field names.
+           ..
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: copy_template_to(template_dir: Union[str, pathlib.Path], destination_dir: Union[str, pathlib.Path])
+
+   
+   Copy the template directory to the destination directory.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: convert_datetime_ns_to_ms(df: pandas.DataFrame) -> pandas.DataFrame
+
+   
+   Convert datetime columns from nanoseconds to milliseconds.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: read_and_convert_netcdf_to_df(in_filepath: Union[str, pathlib.Path], field_mapping: dict, **kwargs) -> pandas.DataFrame
+
+   
+   Read a netcdf file and convert to pandas dataframe.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: validate_input_is_parquet(in_path: Union[str, pathlib.Path]) -> None
+
+   
+   Validate that the input is parquet format.
+
+   Check that either the file is a parquet file or the directory
+   contains parquet files.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: validate_input_is_csv(in_path: Union[str, pathlib.Path]) -> None
+
+   
+   Validate that the input is csv format.
+
+   Check that either the file is a csv file or the directory
+   contains csv files.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: validate_input_is_netcdf(in_path: Union[str, pathlib.Path]) -> None
+
+   
+   Validate that the input is netcdf format.
+
+   Check that either the file is a netcdf file or the directory
+   contains netcdf files.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

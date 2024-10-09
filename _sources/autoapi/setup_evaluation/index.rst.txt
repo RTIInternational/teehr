@@ -1,0 +1,52 @@
+:py:mod:`setup_evaluation`
+==========================
+
+.. py:module:: setup_evaluation
+
+.. autoapi-nested-parse::
+
+   Example script for setting up a new evaluation.
+
+   This script demonstrates how to set up a new evaluation using the Evaluation
+   class.
+
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+.. py:data:: TEST_STUDY_DIR
+
+   
+
+.. py:data:: TEST_DATA_DIR
+
+   
+
+.. py:data:: GEOJSON_GAGES_FILEPATH
+
+   
+
+.. py:data:: PRIMARY_TIMESERIES_FILEPATH
+
+   
+
+.. py:data:: CROSSWALK_FILEPATH
+
+   
+
+.. py:data:: SECONDARY_TIMESERIES_FILEPATH
+
+   
+
+.. py:data:: GEO_FILEPATH
+
+   
+
+.. py:data:: ev
+
+   
+

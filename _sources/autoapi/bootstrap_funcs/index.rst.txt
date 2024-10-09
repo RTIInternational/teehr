@@ -1,0 +1,133 @@
+:py:mod:`bootstrap_funcs`
+=========================
+
+.. py:module:: bootstrap_funcs
+
+.. autoapi-nested-parse::
+
+   Contains functions for bootstrap calculations for use in Spark queries.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   bootstrap_funcs._calculate_quantiles
+   bootstrap_funcs.create_circularblock_func
+   bootstrap_funcs.create_gumboot_func
+   bootstrap_funcs.create_stationary_func
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   bootstrap_funcs.logger
+
+
+.. py:data:: logger
+
+   
+
+.. py:function:: _calculate_quantiles(output_field_name: str, results: numpy.ndarray, quantiles: list) -> Dict
+
+   
+   Calculate quantile values of the bootstrap results.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: create_circularblock_func(model: teehr.models.metrics.metric_models.MetricsBasemodel) -> Callable
+
+   
+   Create the CircularBlock bootstrap function.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: create_gumboot_func(model: teehr.models.metrics.metric_models.MetricsBasemodel) -> Callable
+
+   
+   Create the Gumboot bootstrap function.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: create_stationary_func(model: teehr.models.metrics.metric_models.MetricsBasemodel) -> Callable
+
+   
+   Create the Stationary bootstrap function.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

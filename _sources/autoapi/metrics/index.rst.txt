@@ -1,0 +1,154 @@
+:py:mod:`metrics`
+=================
+
+.. py:module:: metrics
+
+.. autoapi-nested-parse::
+
+   Module for generating metrics.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   metrics.Metrics
+
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   metrics.logger
+
+
+.. py:data:: logger
+
+   
+
+.. py:class:: Metrics(ev)
+
+
+   
+   Component class for calculating metrics.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:method:: query(filters: Union[str, dict, teehr.models.filters.JoinedTimeseriesFilter, List[Union[str, dict, teehr.models.filters.JoinedTimeseriesFilter]]] = None, order_by: Union[str, teehr.models.table_enums.JoinedTimeseriesFields, List[Union[str, teehr.models.table_enums.JoinedTimeseriesFields]]] = None, group_by: Union[str, teehr.models.table_enums.JoinedTimeseriesFields, List[Union[str, teehr.models.table_enums.JoinedTimeseriesFields]]] = None, include_metrics: Union[List[teehr.models.metrics.metric_models.MetricsBasemodel], str] = None)
+
+      
+      Get the metrics in the dataset.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: to_pandas() -> pandas.DataFrame
+
+      
+      Convert the DataFrame to a Pandas DataFrame.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: to_geopandas() -> geopandas.GeoDataFrame
+
+      
+      Convert the DataFrame to a GeoPandas DataFrame.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: to_sdf() -> pyspark.sql.DataFrame
+
+      
+      Return the Spark DataFrame.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+

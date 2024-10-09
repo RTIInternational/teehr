@@ -1,0 +1,166 @@
+:py:mod:`gumboot_bootstrap`
+===========================
+
+.. py:module:: gumboot_bootstrap
+
+.. autoapi-nested-parse::
+
+   Bootstrap classes.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   gumboot_bootstrap.GumbootBootstrap
+
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   gumboot_bootstrap.logger
+
+
+.. py:data:: logger
+
+   
+
+.. py:class:: GumbootBootstrap(*args: arch.typing.ArrayLike, value_time: pandas.Series, water_year_month: Union[int, None], boot_year_file: Union[str, pathlib.Path, None], seed: Union[int, numpy.random.Generator, numpy.random.RandomState, None], **kwargs: arch.typing.ArrayLike)
+
+
+   Bases: :py:obj:`arch.bootstrap.IIDBootstrap`
+
+   
+   Python implementation of the Gumboot R package.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:method:: update_indices(rep: int) -> arch.typing.Int64Array
+
+      
+      Gumboot resampling implementation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+      .. rubric:: Notes
+
+      This requires an extra field (value_time) to create indices based on
+      water year (time).
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: apply(func: Callable[Ellipsis, arch.typing.ArrayLike], reps: int, extra_kwargs: dict[str, Any] | None = None) -> arch.typing.Float64Array
+
+      
+      Apply a function to bootstrap replicated data.
+
+
+      :Parameters:
+
+          **func** : callable
+              Function the computes parameter values.  See Notes for requirements
+
+          **reps** : int, default 1000
+              Number of bootstrap replications
+
+          **extra_kwargs** : dict, default None
+              Extra keyword arguments to use when calling func.  Must not
+              conflict with keyword arguments used to initialize bootstrap
+
+
+
+      :Returns:
+
+          ndarray
+              reps by nparam array of computed function values where each row
+              corresponds to a bootstrap iteration
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: bootstrap(reps: int) -> collections.abc.Generator[tuple[tuple[arch.typing.ArrayLike, Ellipsis], dict[str, arch.typing.ArrayLike]], None, None]
+
+      
+      Create iterator for use when bootstrapping.
+
+
+      :Parameters:
+
+          **reps** : int
+              Number of bootstrap replications
+
+
+
+      :Returns:
+
+          generator
+              Generator to iterate over in bootstrap calculations
+
+
+
+
+
+
+
+
+      .. rubric:: Notes
+
+      The iterator returns a tuple containing the data entered in positional
+      arguments as a tuple and the data entered using keywords as a
+      dictionary
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+

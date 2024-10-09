@@ -1,0 +1,191 @@
+:py:mod:`add_domains`
+=====================
+
+.. py:module:: add_domains
+
+.. autoapi-nested-parse::
+
+   Functions to add domain data to the dataset.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   add_domains.add_configuration
+   add_domains.add_unit
+   add_domains.add_variable
+   add_domains.add_attribute
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   add_domains.logger
+
+
+.. py:data:: logger
+
+   
+
+.. py:function:: add_configuration(dataset_path: Union[pathlib.Path, str], configuration: Union[teehr.models.tables.Configuration, List[teehr.models.tables.Configuration]])
+
+   
+   Insert a configuration into the dataset.
+
+   The function reads the existing configurations from the dataset, validates
+   the new configurations, and appends them to the dataset. The combined
+   configurations are then validated against a predefined schema and saved
+   back to the dataset.
+
+   :Parameters:
+
+       **dataset_path** : Union[Path, str]
+           Path to the dataset directory.
+
+       **configuration** : Union[Configuration, List[Configuration]]
+           Configuration object or list of Configuration objects to add to the
+
+
+
+   :Returns:
+
+       None
+           ..
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: add_unit(dataset_path: Union[pathlib.Path, str], unit: Union[teehr.models.tables.Unit, List[teehr.models.tables.Unit]])
+
+   
+   Insert a unit into the dataset.
+
+   The function reads the existing units from the dataset, validates the new
+   units, and appends them to the dataset. The combined units are then
+   validated against a predefined schema and saved back to the dataset.
+
+   :Parameters:
+
+       **dataset_path** : Union[Path, str]
+           Path to the dataset directory.
+
+       **unit** : Union[Unit, List[Unit]]
+           Unit object or list of Unit objects to add to the dataset.
+
+
+
+   :Returns:
+
+       None
+           ..
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: add_variable(dataset_path: Union[pathlib.Path, str], variable: Union[teehr.models.tables.Variable, List[teehr.models.tables.Variable]])
+
+   
+   Insert a variable into the dataset.
+
+   The function reads the existing variables from the dataset, validates the
+   new variables, and appends them to the dataset. The combined variables are
+   then validated against a predefined schema and saved back to the dataset.
+
+   :Parameters:
+
+       **dataset_path** : Union[Path, str]
+           Path to the dataset directory.
+
+       **variable** : Union[Variable, List[Variable]]
+           Variable object or list of Variable objects to add to the dataset.
+
+
+
+   :Returns:
+
+       None
+           ..
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: add_attribute(dataset_path: Union[pathlib.Path, str], attribute: Union[teehr.models.tables.Attribute, List[teehr.models.tables.Attribute]])
+
+   
+   Insert an attribute into the dataset.
+
+   The function reads the existing attributes from the dataset, validates the
+   new attributes, and appends them to the dataset. The combined attributes
+   are then validated against a predefined schema and saved back to the
+   dataset.
+
+   :Parameters:
+
+       **dataset_path** : Union[Path, str]
+           Path to the dataset directory.
+
+       **attribute** : Union[Attribute, List[Attribute]]
+           Attribute object or list of Attribute objects to add to the dataset.
+
+
+
+   :Returns:
+
+       None
+           ..
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

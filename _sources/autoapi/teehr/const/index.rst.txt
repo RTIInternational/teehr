@@ -1,0 +1,132 @@
+:py:mod:`teehr.const`
+=====================
+
+.. py:module:: teehr.const
+
+.. autoapi-nested-parse::
+
+   This module contains constants
+   used throughout the package.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+.. py:data:: DATASET_DIR
+   :value: 'dataset'
+
+   
+
+.. py:data:: CACHE_DIR
+   :value: 'cache'
+
+   
+
+.. py:data:: SCRIPTS_DIR
+   :value: 'scripts'
+
+   
+
+.. py:data:: LOCATIONS_DIR
+   :value: 'locations'
+
+   
+
+.. py:data:: PRIMARY_TIMESERIES_DIR
+   :value: 'primary_timeseries'
+
+   
+
+.. py:data:: LOCATION_CROSSWALKS_DIR
+   :value: 'location_crosswalks'
+
+   
+
+.. py:data:: LOCATION_ATTRIBUTES_DIR
+   :value: 'location_attributes'
+
+   
+
+.. py:data:: SECONDARY_TIMESERIES_DIR
+   :value: 'secondary_timeseries'
+
+   
+
+.. py:data:: JOINED_TIMESERIES_DIR
+   :value: 'joined_timeseries'
+
+   
+
+.. py:data:: VARIABLES_DIR
+   :value: 'variables'
+
+   
+
+.. py:data:: CONFIGURATIONS_DIR
+   :value: 'configurations'
+
+   
+
+.. py:data:: UNITS_DIR
+   :value: 'units'
+
+   
+
+.. py:data:: ATTRIBUTES_DIR
+   :value: 'attributes'
+
+   
+
+.. py:data:: VARIABLES_FILE
+   :value: 'variables.csv'
+
+   
+
+.. py:data:: CONFIGURATIONS_FILE
+   :value: 'configurations.csv'
+
+   
+
+.. py:data:: UNITS_FILE
+   :value: 'units.csv'
+
+   
+
+.. py:data:: ATTRIBUTES_FILE
+   :value: 'attributes.csv'
+
+   
+
+.. py:data:: FETCHING_CACHE_DIR
+   :value: 'fetching'
+
+   
+
+.. py:data:: USGS_CACHE_DIR
+   :value: 'usgs'
+
+   
+
+.. py:data:: NWM_CACHE_DIR
+   :value: 'nwm'
+
+   
+
+.. py:data:: KERCHUNK_DIR
+   :value: 'kerchunk'
+
+   
+
+.. py:data:: WEIGHTS_DIR
+   :value: 'weights'
+
+   
+
+.. py:data:: LOADING_CACHE_DIR
+   :value: 'loading'
+
+   
+

@@ -1,0 +1,183 @@
+:py:mod:`filter_format`
+=======================
+
+.. py:module:: filter_format
+
+.. autoapi-nested-parse::
+
+   Functions for formatting filters for querying.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   filter_format.get_datetime_list_string
+   filter_format.format_iterable_value
+   filter_format.format_filter
+   filter_format.validate_filter
+   filter_format.validate_and_apply_filters
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   filter_format.logger
+   filter_format.SQL_DATETIME_STR_FORMAT
+
+
+.. py:data:: logger
+
+   
+
+.. py:data:: SQL_DATETIME_STR_FORMAT
+   :value: '%Y-%m-%d %H:%M:%S'
+
+   
+
+.. py:function:: get_datetime_list_string(values)
+
+   
+   Get a datetime list as a list of strings.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: format_iterable_value(values: collections.abc.Iterable[Union[str, int, float, datetime.datetime]]) -> str
+
+   
+   Return an SQL formatted string from list of values.
+
+
+   :Parameters:
+
+       **values** : Iterable
+           Contains values to be formatted as a string for SQL. Only one type of
+           value (str, int, float, datetime) should be used. First value in list
+           is used to determine value type. Values are not checked for type
+           consistency.
+
+
+
+   :Returns:
+
+       str
+           An SQL formatted string from list of values.
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: format_filter(filter: teehr.models.filters.FilterBaseModel) -> str
+
+   
+   Return an SQL formatted string for single filter object.
+
+
+   :Parameters:
+
+       **filter** : str or FilterBaseModel
+           A single FilterBaseModel object or a subclass
+           of FilterBaseModel.
+
+
+
+   :Returns:
+
+       str
+           An SQL formatted string for single filter object.
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: validate_filter(filter: teehr.models.filters.FilterBaseModel, model: teehr.models.tables.TableBaseModel)
+
+   
+   Validate a single model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: validate_and_apply_filters(sdf: pyspark.sql.DataFrame, filters: Union[str, dict, List[dict]], filter_model: teehr.models.filters.FilterBaseModel, fields_enum: teehr.models.str_enum.StrEnum, table_model: teehr.models.tables.TableBaseModel = None, validate: bool = True)
+
+   
+   Validate and apply filters.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

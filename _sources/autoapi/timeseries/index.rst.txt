@@ -1,0 +1,185 @@
+:py:mod:`timeseries`
+====================
+
+.. py:module:: timeseries
+
+.. autoapi-nested-parse::
+
+   Convert and insert timeseries data into the dataset.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   timeseries.convert_single_timeseries
+   timeseries.convert_timeseries
+   timeseries.validate_and_insert_timeseries
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   timeseries.logger
+
+
+.. py:data:: logger
+
+   
+
+.. py:function:: convert_single_timeseries(in_filepath: Union[str, pathlib.Path], out_filepath: Union[str, pathlib.Path], field_mapping: dict, constant_field_values: dict = None, **kwargs)
+
+   
+   Convert timeseries data to parquet format.
+
+
+   :Parameters:
+
+       **in_filepath** : Union[str, Path]
+           The input file path.
+
+       **out_filepath** : Union[str, Path]
+           The output file path.
+
+       **field_mapping** : dict
+           A dictionary mapping input fields to output fields.
+           format: {input_field: output_field}
+
+       **constant_field_values** : dict, optional
+           A dictionary mapping field names to constant values.
+           format: {field_name: value}
+
+       **\*\*kwargs**
+           Additional keyword arguments are passed to
+               pd.read_csv(), pd.read_parquet(), or xr.open_dataset().
+
+       **Steps:**
+           ..
+
+       **1. Read the file**
+           ..
+
+       **2. Rename the columns based on the field_mapping**
+           ..
+
+       **3. Add constant field values to dataframe,**
+           this may result in too many columns.
+
+       **4. Subset only the columns in the field_mapping**
+           ..
+
+       **5. Write the dataframe to parquet format**
+           ..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: convert_timeseries(in_path: Union[str, pathlib.Path], out_path: Union[str, pathlib.Path], field_mapping: dict = None, constant_field_values: dict = None, pattern: str = '**/*.parquet', **kwargs)
+
+   
+   Convert timeseries data to parquet format.
+
+
+   :Parameters:
+
+       **in_path** : Union[str, Path]
+           The input file path.
+
+       **out_path** : Union[str, Path]
+           The output file path.
+
+       **field_mapping** : dict, optional
+           A dictionary mapping input fields to output fields.
+           format: {input_field: output_field}
+
+       **constant_field_values** : dict, optional
+           A dictionary mapping field names to constant values.
+           format: {field_name: value}
+
+       **pattern** : str, optional (default: "**/*.parquet")
+           The pattern to match files.
+
+       **\*\*kwargs**
+           Additional keyword arguments are passed to
+               pd.read_csv() or pd.read_parquet().
+
+       **Can convert CSV or Parquet files.**
+           ..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: validate_and_insert_timeseries(ev, in_path: Union[str, pathlib.Path], timeseries_type: str, pattern: str = '**/*.parquet')
+
+   
+   Validate and insert primary timeseries data.
+
+
+   :Parameters:
+
+       **ev** : Evaluation
+           The Evaluation object.
+
+       **in_path** : Union[str, Path]
+           Directory path or file path to the primary timeseries data.
+
+       **timeseries_type** : str
+           The type of timeseries data.
+           Valid values: "primary", "secondary"
+
+       **pattern** : str, optional (default: "**/*.parquet")
+           The pattern to match files.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

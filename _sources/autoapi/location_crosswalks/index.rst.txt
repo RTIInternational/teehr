@@ -1,0 +1,142 @@
+:py:mod:`location_crosswalks`
+=============================
+
+.. py:module:: location_crosswalks
+
+.. autoapi-nested-parse::
+
+   Module for importing location crosswalks from a file.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   location_crosswalks.convert_single_location_crosswalks
+   location_crosswalks.convert_location_crosswalks
+   location_crosswalks.validate_and_insert_location_crosswalks
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   location_crosswalks.logger
+
+
+.. py:data:: logger
+
+   
+
+.. py:function:: convert_single_location_crosswalks(in_filepath: Union[str, pathlib.Path], out_filepath: Union[str, pathlib.Path], field_mapping: dict, **kwargs)
+
+   
+   Convert location_crosswalks data to parquet format.
+
+
+   :Parameters:
+
+       **in_filepath** : Union[str, Path]
+           The input file path.
+
+       **out_filepath** : Union[str, Path]
+           The output file path.
+
+       **field_mapping** : dict
+           A dictionary mapping input fields to output fields.
+           format: {input_field: output_field}
+
+       **\*\*kwargs**
+           Additional keyword arguments are passed to
+               pd.read_csv() or pd.read_parquet().
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: convert_location_crosswalks(in_path: Union[str, pathlib.Path], out_dirpath: Union[str, pathlib.Path], field_mapping: dict = None, pattern: str = '**/*.parquet', **kwargs)
+
+   
+   Convert crosswalk data to parquet format.
+
+
+   :Parameters:
+
+       **in_path** : Union[str, Path]
+           The input file or directory path.
+
+       **out_dirpath** : Union[str, Path]
+           The output directory path.
+
+       **field_mapping** : dict, optional
+           A dictionary mapping input fields to output fields.
+           format: {input_field: output_field}
+
+       **pattern** : str, optional (default: "**/*.parquet")
+           The pattern to match files.
+
+       **\*\*kwargs**
+           Additional keyword arguments are passed to
+               pd.read_csv() or pd.read_parquet().
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: validate_and_insert_location_crosswalks(ev, in_path: Union[str, pathlib.Path], pattern: str = '**/*.parquet')
+
+   
+   Validate and insert location crosswalks data.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

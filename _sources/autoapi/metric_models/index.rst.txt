@@ -1,0 +1,2074 @@
+:py:mod:`metric_models`
+=======================
+
+.. py:module:: metric_models
+
+.. autoapi-nested-parse::
+
+   Metric Query Models.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   metric_models.MetricsBasemodel
+   metric_models.ME
+   metric_models.REL_BIAS
+   metric_models.MULT_BIAS
+   metric_models.MSE
+   metric_models.RMSE
+   metric_models.MAE
+   metric_models.REL_MAE
+   metric_models.PEARSON_R
+   metric_models.R2
+   metric_models.NSE
+   metric_models.NNSE
+   metric_models.KGE
+   metric_models.KGE_Mod1
+   metric_models.KGE_Mod2
+   metric_models.SPEARMAN_R
+   metric_models.COUNT
+   metric_models.MINIMUM
+   metric_models.MAXIMUM
+   metric_models.AVERAGE
+   metric_models.SUM
+   metric_models.VARIANCE
+   metric_models.MAX_VALUE_DELTA
+   metric_models.MAX_VALUE_TIME_DELTA
+   metric_models.MAX_VALUE_TIME
+   metric_models.ANNUAL_PEAK_RBIAS
+   metric_models.Metrics
+
+
+
+
+.. py:class:: MetricsBasemodel(/, **data: Any)
+
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+   
+   Metrics Basemodel configuration.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: model_config
+
+      
+
+
+.. py:class:: ME(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Mean Error.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default
+           "mean_error".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.mean_error.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value", "secondary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: bootstrap
+      :type: MetricsBasemodel
+
+      
+
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: REL_BIAS(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Relative Bias.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default
+           "relative_bias".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.relative_bias.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value", "secondary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: bootstrap
+      :type: MetricsBasemodel
+
+      
+
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: MULT_BIAS(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Multiplicative Bias.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default
+           "multiplicative_bias".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.multiplicative_bias.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value", "secondary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: bootstrap
+      :type: MetricsBasemodel
+
+      
+
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: MSE(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Mean Square Error.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default
+           "mean_squared_error".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.mean_squared_error.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value", "secondary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: bootstrap
+      :type: MetricsBasemodel
+
+      
+
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: RMSE(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Root Mean Squared Error.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default
+           "root_mean_square_error".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.root_mean_square_error.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value", "secondary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: bootstrap
+      :type: MetricsBasemodel
+
+      
+
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: MAE(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Mean Absolute Error.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default
+           "mean_absolute_error".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.mean_absolute_error.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value", "secondary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: bootstrap
+      :type: MetricsBasemodel
+
+      
+
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: REL_MAE(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Relative Mean Absolute Error.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default
+           "mean_absolute_relative_error".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.mean_absolute_relative_error.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value", "secondary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: bootstrap
+      :type: MetricsBasemodel
+
+      
+
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: PEARSON_R(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Pearson Correlation.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default
+           "pearson_correlation".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.pearson_correlation.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value", "secondary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: bootstrap
+      :type: MetricsBasemodel
+
+      
+
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: R2(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Coefficient of Determination.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default
+           "r_squared".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.r_squared.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value", "secondary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: bootstrap
+      :type: MetricsBasemodel
+
+      
+
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: NSE(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Nash-Sutcliffe Efficiency.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default
+           "nash_sutcliffe_efficiency".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.nash_sutcliffe_efficiency.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value", "secondary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: bootstrap
+      :type: MetricsBasemodel
+
+      
+
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: NNSE(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Normalized Nash-Sutcliffe Efficiency.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default
+           "nash_sutcliffe_efficiency_normalized".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.nash_sutcliffe_efficiency_normalized.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value", "secondary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: bootstrap
+      :type: MetricsBasemodel
+
+      
+
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: KGE(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Kling-Gupta Efficiency.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default "kling_gupta_efficiency".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.kling_gupta_efficiency.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value", "secondary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: bootstrap
+      :type: MetricsBasemodel
+
+      
+
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: KGE_Mod1(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Kling-Gupta Efficiency - modified 1 (2012).
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default "kling_gupta_efficiency_mod1".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.kling_gupta_efficiency_mod1.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value", "secondary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: bootstrap
+      :type: MetricsBasemodel
+
+      
+
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: KGE_Mod2(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Kling-Gupta Efficiency - modified 2 (2021).
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default "kling_gupta_efficiency_mod2".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.kling_gupta_efficiency_mod2.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value", "secondary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: bootstrap
+      :type: MetricsBasemodel
+
+      
+
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: SPEARMAN_R(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Spearman Rank Correlation Coefficient.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default "spearman_correlation".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.spearman_correlation.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value", "secondary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: bootstrap
+      :type: MetricsBasemodel
+
+      
+
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: COUNT(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Count.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default "primary_count".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.count.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: MINIMUM(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Minimum.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default "primary_minimum".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.minimum.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: MAXIMUM(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Maximum.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default "maximum".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.maximum.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: AVERAGE(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Average.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default "average".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.average.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: SUM(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Sum.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default "sum".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.sum.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: VARIANCE(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Variance.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default "variance".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.variance.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: bootstrap
+      :type: MetricsBasemodel
+
+      
+
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: MAX_VALUE_DELTA(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Max Value Delta.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default "max_value_delta".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.max_value_delta.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value", "secondary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: MAX_VALUE_TIME_DELTA(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Max Value Time Delta.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default "max_value_timedelta".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.max_value_timedelta.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default
+           ["primary_value", "secondary_value", "value_time"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: MAX_VALUE_TIME(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Max Value Time.
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default "max_value_time".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.max_value_time.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default ["primary_value"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: ANNUAL_PEAK_RBIAS(/, **data: Any)
+
+
+   Bases: :py:obj:`MetricsBasemodel`
+
+   
+   Annual Peak Relative Bias..
+
+
+   :Parameters:
+
+       **bootstrap** : MetricsBasemodel
+           The bootstrap model, by default None.
+
+       **transform** : TransformEnum
+           The transformation to apply to the data, by default None.
+
+       **output_field_name** : str
+           The output field name, by default "annual_peak_relative_bias".
+
+       **func** : Callable
+           The function to apply to the data, by default
+           metric_funcs.annual_peak_relative_bias.
+
+       **input_field_names** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+           The input field names, by default
+           ["primary_value", "secondary_value", "value_time"].
+
+       **attrs** : Dict
+           The static attributes for the metric.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: bootstrap
+      :type: MetricsBasemodel
+
+      
+
+   .. py:attribute:: transform
+      :type: teehr.models.metrics.metric_enums.TransformEnum
+
+      
+
+   .. py:attribute:: output_field_name
+      :type: str
+
+      
+
+   .. py:attribute:: func
+      :type: Callable
+
+      
+
+   .. py:attribute:: input_field_names
+      :type: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]]
+
+      
+
+   .. py:attribute:: attrs
+      :type: Dict
+
+      
+
+
+.. py:class:: Metrics
+
+
+   
+   Define and customize performance metrics.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: AnnualPeakRelativeBias
+
+      
+
+   .. py:attribute:: KlingGuptaEfficiency
+
+      
+
+   .. py:attribute:: KlingGuptaEfficiencyMod1
+
+      
+
+   .. py:attribute:: KlingGuptaEfficiencyMod2
+
+      
+
+   .. py:attribute:: MaxValueDelta
+
+      
+
+   .. py:attribute:: MaxValueTimeDelta
+
+      
+
+   .. py:attribute:: MeanError
+
+      
+
+   .. py:attribute:: MeanAbsoluteError
+
+      
+
+   .. py:attribute:: MeanAbsoluteRelativeError
+
+      
+
+   .. py:attribute:: MeanSquareError
+
+      
+
+   .. py:attribute:: MultiplicativeBias
+
+      
+
+   .. py:attribute:: PearsonCorrelation
+
+      
+
+   .. py:attribute:: Average
+
+      
+
+   .. py:attribute:: Count
+
+      
+
+   .. py:attribute:: MaxValueTime
+
+      
+
+   .. py:attribute:: Maximum
+
+      
+
+   .. py:attribute:: Minimum
+
+      
+
+   .. py:attribute:: Sum
+
+      
+
+   .. py:attribute:: Variance
+
+      
+
+   .. py:attribute:: NashSutcliffeEfficiency
+
+      
+
+   .. py:attribute:: NormalizedNashSutcliffeEfficiency
+
+      
+
+   .. py:attribute:: RelativeBias
+
+      
+
+   .. py:attribute:: RootMeanSquareError
+
+      
+
+   .. py:attribute:: Rsquared
+
+      
+
+   .. py:attribute:: SpearmanCorrelation
+
+      
+
+

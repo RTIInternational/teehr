@@ -1,0 +1,118 @@
+:py:mod:`const`
+===============
+
+.. py:module:: const
+
+.. autoapi-nested-parse::
+
+   Data types for the TEEHR schema.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+.. py:data:: VALUE
+   :value: 'value'
+
+   
+
+.. py:data:: VALUE_TIME
+   :value: 'value_time'
+
+   
+
+.. py:data:: REFERENCE_TIME
+   :value: 'reference_time'
+
+   
+
+.. py:data:: LOCATION_ID
+   :value: 'location_id'
+
+   
+
+.. py:data:: UNIT_NAME
+   :value: 'unit_name'
+
+   
+
+.. py:data:: VARIABLE_NAME
+   :value: 'variable_name'
+
+   
+
+.. py:data:: CONFIGURATION_NAME
+   :value: 'configuration_name'
+
+   
+
+.. py:data:: TIMESERIES_DATA_TYPES
+
+   
+
+.. py:data:: USGS_NODATA_VALUES
+
+   
+
+.. py:data:: USGS_CONFIGURATION_NAME
+   :value: 'usgs_observations'
+
+   
+
+.. py:data:: NWM_BUCKET
+   :value: 'national-water-model'
+
+   
+
+.. py:data:: NWM22_UNIT_LOOKUP
+
+   
+
+.. py:data:: NWM30_START_DATE
+
+   
+
+.. py:data:: NWM_S3_JSON_PATH
+   :value: 's3://ciroh-nwm-zarr-copy'
+
+   
+
+.. py:data:: USGS_VARIABLE_MAPPER
+
+   
+
+.. py:data:: NWM_VARIABLE_MAPPER
+
+   
+
+.. py:data:: NWM22_ANALYSIS_CONFIG
+
+   
+
+.. py:data:: NWM30_ANALYSIS_CONFIG
+
+   
+
+.. py:data:: CONUS_NWM_WKT
+   :value: 'PROJCS["Lambert_Conformal_Conic",GEOGCS["GCS_Sphere",DATUM["D_Sphere",SPHEROID["Sphere",6370000.0...'
+
+   
+
+.. py:data:: HI_NWM_WKT
+   :value: 'PROJCS["Lambert_Conformal_Conic",GEOGCS["GCS_Sphere",DATUM["D_Sphere",SPHEROID["Sphere",6370000.0...'
+
+   
+
+.. py:data:: PR_NWM_WKT
+   :value: 'PROJCS["Sphere_Lambert_Conformal_Conic",GEOGCS["GCS_Sphere",DATUM["D_Sphere",SPHEROID["Sphere",63...'
+
+   
+
+.. py:data:: AL_NWM_WKT
+   :value: 'PROJCS["Sphere_Stereographic",GEOGCS["Sphere",DATUM["Sphere",SPHEROID["unnamed",6370000,0]],...'
+
+   
+

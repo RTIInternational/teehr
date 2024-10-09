@@ -1,0 +1,513 @@
+:py:mod:`filters`
+=================
+
+.. py:module:: filters
+
+.. autoapi-nested-parse::
+
+   Module for parquet-based query models.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   filters.FilterOperators
+   filters.FilterBaseModel
+   filters.ConfigurationFilter
+   filters.UnitFilter
+   filters.VariableFilter
+   filters.AttributeFilter
+   filters.LocationFilter
+   filters.LocationAttributeFilter
+   filters.LocationCrosswalkFilter
+   filters.TimeseriesFilter
+   filters.JoinedTimeseriesFilter
+
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   filters.logger
+
+
+.. py:data:: logger
+
+   
+
+.. py:class:: FilterOperators
+
+
+   Bases: :py:obj:`teehr.models.str_enum.StrEnum`
+
+   
+   Filter symbols.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: eq
+      :value: '='
+
+      
+
+   .. py:attribute:: gt
+      :value: '>'
+
+      
+
+   .. py:attribute:: lt
+      :value: '<'
+
+      
+
+   .. py:attribute:: gte
+      :value: '>='
+
+      
+
+   .. py:attribute:: lte
+      :value: '<='
+
+      
+
+   .. py:attribute:: islike
+      :value: 'like'
+
+      
+
+   .. py:attribute:: isin
+      :value: 'in'
+
+      
+
+
+.. py:class:: FilterBaseModel(/, **data: Any)
+
+
+   Bases: :py:obj:`pydantic.BaseModel`
+
+   
+   Base model for filters.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: column
+      :type: teehr.models.tables.TableBaseModel
+
+      
+
+   .. py:attribute:: operator
+      :type: FilterOperators
+
+      
+
+   .. py:attribute:: value
+      :type: Union[str, List[str]]
+
+      
+
+   .. py:method:: is_iterable_not_str()
+
+      
+      Check if is type Iterable and not str.
+
+      We should not have the case where a string is provided, but doesn't
+      hurt to check.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: in_operator_must_have_iterable(v, info: pydantic.FieldValidationInfo)
+
+      
+      Ensure that an 'in' operator has an iterable type.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: coerce_column_to_enum(v, info: pydantic.FieldValidationInfo)
+
+      
+      Column name must exist in the database table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: ConfigurationFilter(/, **data: Any)
+
+
+   Bases: :py:obj:`FilterBaseModel`
+
+   
+   Configuration filter model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: column
+      :type: teehr.models.table_enums.ConfigurationFields
+
+      
+
+
+.. py:class:: UnitFilter(/, **data: Any)
+
+
+   Bases: :py:obj:`FilterBaseModel`
+
+   
+   Unit filter model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: column
+      :type: teehr.models.table_enums.UnitFields
+
+      
+
+
+.. py:class:: VariableFilter(/, **data: Any)
+
+
+   Bases: :py:obj:`FilterBaseModel`
+
+   
+   Variable filter model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: column
+      :type: teehr.models.table_enums.VariableFields
+
+      
+
+
+.. py:class:: AttributeFilter(/, **data: Any)
+
+
+   Bases: :py:obj:`FilterBaseModel`
+
+   
+   Attribute filter model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: column
+      :type: teehr.models.table_enums.AttributeFields
+
+      
+
+
+.. py:class:: LocationFilter(/, **data: Any)
+
+
+   Bases: :py:obj:`FilterBaseModel`
+
+   
+   Location filter model.
+
+   ToDo: Add a geometry filter: lat, lon, intersect, etc.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: column
+      :type: teehr.models.table_enums.LocationFields
+
+      
+
+
+.. py:class:: LocationAttributeFilter(/, **data: Any)
+
+
+   Bases: :py:obj:`FilterBaseModel`
+
+   
+   Location attribute filter model.
+
+   ToDo: How should we handle values types that are say a number stored
+   as a string?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: column
+      :type: teehr.models.table_enums.LocationAttributeFields
+
+      
+
+
+.. py:class:: LocationCrosswalkFilter(/, **data: Any)
+
+
+   Bases: :py:obj:`FilterBaseModel`
+
+   
+   Location crosswalk filter model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: column
+      :type: teehr.models.table_enums.LocationCrosswalkFields
+
+      
+
+
+.. py:class:: TimeseriesFilter(/, **data: Any)
+
+
+   Bases: :py:obj:`FilterBaseModel`
+
+   
+   Timeseries filter model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: column
+      :type: teehr.models.table_enums.TimeseriesFields
+
+      
+
+   .. py:attribute:: value
+      :type: Union[str, int, float, datetime.datetime, List[Union[str, int, float, datetime.datetime]]]
+
+      
+
+
+.. py:class:: JoinedTimeseriesFilter(/, **data: Any)
+
+
+   Bases: :py:obj:`FilterBaseModel`
+
+   
+   Joined timeseries filter model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: column
+      :type: teehr.models.table_enums.JoinedTimeseriesFields
+
+      
+
+   .. py:attribute:: value
+      :type: Union[str, int, float, datetime.datetime, List[Union[str, int, float, datetime.datetime]]]
+
+      
+
+

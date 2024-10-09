@@ -1,0 +1,52 @@
+:py:mod:`str_enum`
+==================
+
+.. py:module:: str_enum
+
+.. autoapi-nested-parse::
+
+   This is a StrEnum class to work around breaking changes in Python 3.11.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   str_enum.StrEnum
+
+
+
+
+.. py:class:: StrEnum
+
+
+   Bases: :py:obj:`str`, :py:obj:`enum.Enum`
+
+   
+   Enum with string values.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

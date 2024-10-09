@@ -1,0 +1,160 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Test Queries"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Import the required packages.\n",
+    "\n",
+    "import holoviews as hv\n",
+    "import geoviews as gv\n",
+    "import teehr.queries.duckdb as tqd\n",
+    "import hvplot.pandas\n",
+    "import cartopy.crs as ccrs\n",
+    "from holoviews import opts"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Set some notebook variables to point to the relevant study files.\n",
+    "\n",
+    "PRIMARY_FILEPATH = \"/home/matt/repos/teehr/tests/data/test_study/timeseries/*_obs.parquet\"\n",
+    "SECONDARY_FILEPATH = \"/home/matt/repos/teehr/tests/data/test_study/timeseries/*_fcast.parquet\"\n",
+    "CROSSWALK_FILEPATH = \"/home/matt/repos/teehr/tests/data/test_study/geo/crosswalk.parquet\"\n",
+    "GEOMETRY_FILEPATH = \"/home/matt/repos/teehr/tests/data/test_study/geo/gages.parquet\""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%time\n",
+    "# Query the specified study files with a simple group_by `primary_location_id`.\n",
+    "# Include geometry in the response.\n",
+    "\n",
+    "query_gdf = tqd.get_metrics(\n",
+    "        primary_filepath=PRIMARY_FILEPATH,\n",
+    "        secondary_filepath=SECONDARY_FILEPATH,\n",
+    "        crosswalk_filepath=CROSSWALK_FILEPATH,\n",
+    "        geometry_filepath=GEOMETRY_FILEPATH,\n",
+    "        group_by=[\"primary_location_id\"],\n",
+    "        order_by=[\"primary_location_id\"],\n",
+    "        return_query=False,\n",
+    "        include_geometry=True,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "query_gdf"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%time\n",
+    "query_gdf_prj = query_gdf.to_crs(\"EPSG:3857\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%time\n",
+    "query_gdf_prj = query_gdf.to_crs(\"EPSG:3857\")\n",
+    "tiles = gv.tile_sources.OSM\n",
+    "query_hvplot = query_gdf_prj.hvplot(\n",
+    "    color=\"red\",\n",
+    "    crs=ccrs.GOOGLE_MERCATOR,\n",
+    "    hover_cols=[\"bias\"]\n",
+    ")\n",
+    "(tiles * query_hvplot).opts(width=600, height=600)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "query_df = tqd.get_joined_timeseries(\n",
+    "        primary_filepath=PRIMARY_FILEPATH,\n",
+    "        secondary_filepath=SECONDARY_FILEPATH,\n",
+    "        crosswalk_filepath=CROSSWALK_FILEPATH,\n",
+    "        geometry_filepath=GEOMETRY_FILEPATH,\n",
+    "        order_by=[\"primary_location_id\"],\n",
+    "        filters=[{\n",
+    "            \"column\": \"primary_location_id\",\n",
+    "            \"operator\": \"=\",\n",
+    "            \"value\": \"gage-A\"\n",
+    "\n",
+    "        }],\n",
+    "        return_query=False,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "query_df"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "query_df.hvplot()"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "teehr",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.10"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

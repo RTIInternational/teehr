@@ -1,0 +1,204 @@
+:py:mod:`dataframe_accessor`
+============================
+
+.. py:module:: dataframe_accessor
+
+.. autoapi-nested-parse::
+
+   Provides the teehr accessor extending pandas DataFrames.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   dataframe_accessor.TEEHRDataFrameAccessor
+
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   dataframe_accessor.logger
+
+
+.. py:data:: logger
+
+   
+
+.. py:class:: TEEHRDataFrameAccessor(pandas_obj)
+
+
+   
+   Extends pandas DataFrame objects.
+
+
+
+
+
+
+
+
+
+
+
+
+
+   .. rubric:: Notes
+
+   This class contains example methods for summarizing and plotting metrics
+   as well as timeseries. This requires more validation in each method to
+   ensure the DataFrame has the appropriate data.
+
+   Methods operating on metrics data should start with 'metrics_' and methods
+   operating on timeseries data should start with 'timeseries_'.
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:method:: _validate(obj)
+      :staticmethod:
+
+      
+      Validate the DataFrame object columns.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _get_unique_values(variable_df: pandas.DataFrame) -> dict
+
+      
+      Get dictionary of all unique values of each column.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _timeseries_schema() -> dict
+
+      
+      Get dictionary that defines plotting schema.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _timeseries_generate_plot(schema: dict, df: pandas.DataFrame, variable: str, output_dir: None) -> bokeh.plotting.figure
+
+      
+      Generate a single timeseries plot.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: timeseries_plot(output_dir=None)
+
+      
+      Generate and save TS plots for each unique variable in theDataFrame.
+
+      This method generates timeseries plots for each unique variable in the
+      DataFrame's 'variable_name' column. The plots are saved to the
+      specified output directory if provided. If the output directory does
+      not exist, it will be created.
+
+      :Parameters:
+
+          **output_dir** : pathlib.Path or None, optional
+              The directory where the plots will be saved. If None, the plots
+              will be displayed interactively. Default is None.
+
+
+
+      :Returns:
+
+          None
+              ..
+
+
+
+
+
+
+
+
+      .. rubric:: Notes
+
+      This method calls `_timeseries_schema` to get the plotting
+      schema and `_timeseries_generate_plot` to generate each plot. It
+      ensures the output directory exists before saving the plots.
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+

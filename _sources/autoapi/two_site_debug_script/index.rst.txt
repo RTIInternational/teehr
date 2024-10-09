@@ -1,0 +1,36 @@
+:py:mod:`two_site_debug_script`
+===============================
+
+.. py:module:: two_site_debug_script
+
+.. autoapi-nested-parse::
+
+   Test script for debugging evaluation data.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+.. py:data:: TEST_STUDY_DIR
+
+   
+
+.. py:data:: ev
+
+   
+
+.. py:data:: fields_list
+
+   
+
+.. py:data:: jtf
+
+   
+
+.. py:data:: df
+
+   
+

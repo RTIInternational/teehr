@@ -1,0 +1,55 @@
+.. _autoapi:
+
+API Reference
+=============
+
+This page contains auto-generated API reference documentation [#f1]_.
+
+.. toctree::
+   :titlesonly:
+   :maxdepth: 3
+
+   /autoapi/teehr/index
+   /autoapi/metric_funcs/index
+   /autoapi/gumboot_bootstrap/index
+   /autoapi/bootstrap_funcs/index
+   /autoapi/str_enum/index
+   /autoapi/filters/index
+   /autoapi/tables/index
+   /autoapi/table_enums/index
+   /autoapi/metric_enums/index
+   /autoapi/metric_models/index
+   /autoapi/metric_attributes/index
+   /autoapi/bootstrap_models/index
+   /autoapi/utils/index
+   /autoapi/nwm30_point/index
+   /autoapi/nwm30_grid/index
+   /autoapi/nwm22_point/index
+   /autoapi/nwm22_grid/index
+   /autoapi/dataframe_accessor/index
+   /autoapi/evaluation/index
+   /autoapi/fetch/index
+   /autoapi/metrics/index
+   /autoapi/load/index
+   /autoapi/two_site_debug_script/index
+   /autoapi/setup_evaluation/index
+   /autoapi/ngen_example/index
+   /autoapi/filter_format/index
+   /autoapi/metric_format/index
+   /autoapi/user_defined_fields/index
+   /autoapi/const/index
+   /autoapi/usgs/index
+   /autoapi/nwm_points/index
+   /autoapi/retrospective_points/index
+   /autoapi/point_utils/index
+   /autoapi/grid_utils/index
+   /autoapi/retrospective_grids/index
+   /autoapi/nwm_grids/index
+   /autoapi/joined_timeseries/index
+   /autoapi/add_domains/index
+   /autoapi/location_crosswalks/index
+   /autoapi/location_attributes/index
+   /autoapi/locations/index
+   /autoapi/timeseries/index
+
+.. [#f1] Created with `sphinx-autoapi <https://github.com/readthedocs/sphinx-autoapi>`_

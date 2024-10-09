@@ -1,0 +1,38 @@
+:py:mod:`teehr.utilities`
+=========================
+
+.. py:module:: teehr.utilities
+
+.. autoapi-nested-parse::
+
+   
+   Utilities init.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+
+Submodules
+----------
+.. toctree::
+   :titlesonly:
+   :maxdepth: 1
+
+   generate_weights/index.rst
+
+

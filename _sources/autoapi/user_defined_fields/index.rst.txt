@@ -1,0 +1,79 @@
+:py:mod:`user_defined_fields`
+=============================
+
+.. py:module:: user_defined_fields
+
+.. autoapi-nested-parse::
+
+   Functions for adding user defined fields to joined timeseries data.
+
+   This file gets dynamically imported to the TEEHR
+   create_joined_timeseries_dataset() function and is used to add user
+   defined fields when a user runs ev.create_joined_timeseries().
+
+   Users can modify this script to add or remove user defined fields to
+   the joined timeseries data.
+
+   WARNING: Do not change the name of this file or the functions it contains.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   user_defined_fields.add_user_defined_fields
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   user_defined_fields.logger
+
+
+.. py:data:: logger
+
+   
+
+.. py:function:: add_user_defined_fields(joined_df: pyspark.sql.DataFrame)
+
+   
+   Add user defined fields to the joined timeseries data.
+
+   Do not change the name of this function.
+
+   :Parameters:
+
+       **joined_df: DataFrame**
+           The joined timeseries data.
+
+
+
+   :Returns:
+
+       DataFrame
+           The joined timeseries data with user defined fields.
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

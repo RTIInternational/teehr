@@ -1,0 +1,447 @@
+:py:mod:`evaluation`
+====================
+
+.. py:module:: evaluation
+
+.. autoapi-nested-parse::
+
+   Evaluation module.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   evaluation.Evaluation
+
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   evaluation.logger
+
+
+.. py:data:: logger
+
+   
+
+.. py:class:: Evaluation(dir_path: Union[str, pathlib.Path], spark: pyspark.sql.SparkSession = None)
+
+
+   
+   The Evaluation class.
+
+   This is the main class for the TEEHR evaluation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:property:: fetch
+      :type: teehr.evaluation.fetch.Fetch
+
+      
+      The fetch component class.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:property:: metrics
+      :type: teehr.evaluation.metrics.Metrics
+
+      
+      The load component class.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:property:: units
+      :type: teehr.evaluation.tables.UnitTable
+
+      
+      Access the units table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:property:: variables
+      :type: teehr.evaluation.tables.VariableTable
+
+      
+      Access the variables table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:property:: attributes
+      :type: teehr.evaluation.tables.AttributeTable
+
+      
+      Access the attributes table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:property:: configurations
+      :type: teehr.evaluation.tables.ConfigurationTable
+
+      
+      Access the configurations table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:property:: locations
+      :type: teehr.evaluation.tables.LocationTable
+
+      
+      Access the locations table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:property:: location_attributes
+      :type: teehr.evaluation.tables.LocationAttributeTable
+
+      
+      Access the location attributes table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:property:: location_crosswalks
+      :type: teehr.evaluation.tables.LocationCrosswalkTable
+
+      
+      Access the location crosswalks table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:property:: primary_timeseries
+      :type: teehr.evaluation.tables.PrimaryTimeseriesTable
+
+      
+      Access the primary timeseries table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:property:: secondary_timeseries
+      :type: teehr.evaluation.tables.SecondaryTimeseriesTable
+
+      
+      Access the secondary timeseries table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:property:: joined_timeseries
+      :type: teehr.evaluation.tables.JoinedTimeseriesTable
+
+      
+      Access the joined timeseries table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: enable_logging()
+
+      
+      Enable logging.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: clone_template()
+
+      
+      Create a study from the standard template.
+
+      This method mainly copies the template directory to the specified
+      evaluation directory.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: clean_cache()
+
+      
+      Clean temporary files.
+
+      Includes removing temporary files.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: clone_study()
+
+      
+      Get a study from s3.
+
+      Includes retrieving metadata and contents.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+

@@ -1,0 +1,182 @@
+:py:mod:`locations`
+===================
+
+.. py:module:: locations
+
+.. autoapi-nested-parse::
+
+   Module for importing locations from a file.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+
+Functions
+~~~~~~~~~
+
+.. autoapisummary::
+
+   locations.convert_single_locations
+   locations.convert_locations
+   locations.validate_and_insert_single_locations
+   locations.validate_and_insert_locations
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   locations.logger
+
+
+.. py:data:: logger
+
+   
+
+.. py:function:: convert_single_locations(input_filepath: Union[str, pathlib.Path], output_filepath: Union[str, pathlib.Path], field_mapping: dict, **kwargs)
+
+   
+   Import locations from a file.
+
+   This function reads a geodata file, formats for TEEHR,
+   converts to geoparquet and writes to disk..
+
+   :Parameters:
+
+       **input_filepath** : Union[str, Path]
+           The input file path.
+
+       **output_filepath** : Union[str, Path]
+           The output file path.
+
+       **field_mapping** : dict, optional
+           A dictionary mapping input fields to output fields.
+           format: {input_field: output_field}
+
+       **\*\*kwargs**
+           Additional keyword arguments are passed to GeoPandas read_file().
+
+
+
+   :Returns:
+
+       None
+           ..
+
+       field_mapping = {"id_field": "id", "name_field": "name"}
+           ..
+
+       Note, not consistent with the field_mapping in pre/timeseries.py
+           ..
+
+       Future: Add support for writing attr to attr table.
+           ..
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: convert_locations(in_path: Union[str, pathlib.Path], out_dirpath: Union[str, pathlib.Path], field_mapping: dict = None, pattern: str = '**/*.parquet', **kwargs)
+
+   
+   Convert timeseries data to parquet format.
+
+
+   :Parameters:
+
+       **in_path** : Union[str, Path]
+           The input file path.
+
+       **out_dirpath** : Union[str, Path]
+           The output file path.
+
+       **field_mapping** : dict, optional
+           A dictionary mapping input fields to output fields.
+           format: {input_field: output_field}
+
+       **pattern** : str, optional (default: "**/*.parquet")
+           The pattern to match files.
+
+       **\*\*kwargs**
+           Additional keyword arguments are passed to GeoPandas read_file().
+
+       **Can convert any file format that GeoPandas can read.**
+           ..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: validate_and_insert_single_locations(input_filepath: Union[str, pathlib.Path], output_filepath: Union[str, pathlib.Path])
+
+   
+   Validate locations and copy to database.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+
+.. py:function:: validate_and_insert_locations(ev, in_path: Union[str, pathlib.Path], pattern: str = '**/*.parquet')
+
+   
+   Validate and insert locations.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+

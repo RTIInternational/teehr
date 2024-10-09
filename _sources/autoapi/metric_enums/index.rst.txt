@@ -1,0 +1,258 @@
+:py:mod:`metric_enums`
+======================
+
+.. py:module:: metric_enums
+
+.. autoapi-nested-parse::
+
+   Enums for metrics models.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   metric_enums.Operators
+   metric_enums.ValueTypeEnum
+   metric_enums.BootstrapMethodEnum
+   metric_enums.TransformEnum
+
+
+
+
+.. py:class:: Operators
+
+
+   Bases: :py:obj:`teehr.models.str_enum.StrEnum`
+
+   
+   Operators for filters.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: eq
+      :value: '='
+
+      
+
+   .. py:attribute:: gt
+      :value: '>'
+
+      
+
+   .. py:attribute:: lt
+      :value: '<'
+
+      
+
+   .. py:attribute:: gte
+      :value: '>='
+
+      
+
+   .. py:attribute:: lte
+      :value: '<='
+
+      
+
+   .. py:attribute:: islike
+      :value: 'like'
+
+      
+
+   .. py:attribute:: isin
+      :value: 'in'
+
+      
+
+
+.. py:class:: ValueTypeEnum
+
+
+   Bases: :py:obj:`teehr.models.str_enum.StrEnum`
+
+   
+   Value types.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: Deterministic
+      :value: 'Deterministic'
+
+      
+
+   .. py:attribute:: Categorical
+      :value: 'Categorical'
+
+      
+
+   .. py:attribute:: Signature
+      :value: 'Signature'
+
+      
+
+   .. py:attribute:: Probabilistic
+      :value: 'Probabilistic'
+
+      
+
+   .. py:attribute:: Time
+      :value: 'Time'
+
+      
+
+
+.. py:class:: BootstrapMethodEnum
+
+
+   Bases: :py:obj:`teehr.models.str_enum.StrEnum`
+
+   
+   Bootstrap methods.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: percentile
+      :value: 'percentile'
+
+      
+
+   .. py:attribute:: bias_corrected
+      :value: 'bias_corrected'
+
+      
+
+   .. py:attribute:: bias_corrected_percentile
+      :value: 'bias_corrected_percentile'
+
+      
+
+   .. py:attribute:: t
+      :value: 't'
+
+      
+
+   .. py:attribute:: pivot
+      :value: 'pivot'
+
+      
+
+
+.. py:class:: TransformEnum
+
+
+   Bases: :py:obj:`teehr.models.str_enum.StrEnum`
+
+   
+   Transform methods.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:attribute:: log
+      :value: 'log'
+
+      
+
+   .. py:attribute:: sqrt
+      :value: 'sqrt'
+
+      
+
+   .. py:attribute:: square
+      :value: 'square'
+
+      
+
+   .. py:attribute:: cube
+      :value: 'cube'
+
+      
+
+   .. py:attribute:: exp
+      :value: 'exp'
+
+      
+
+   .. py:attribute:: inv
+      :value: 'inv'
+
+      
+
+   .. py:attribute:: abs
+      :value: 'abs'
+
+      
+
+   .. py:attribute:: none
+      :value: 'none'
+
+      
+
+

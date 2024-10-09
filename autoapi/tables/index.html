@@ -1,0 +1,1650 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>tables &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.4.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/teehr.css?v=1d214eac" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=6c02275b"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'autoapi/tables/index';</script>
+    <link rel="icon" href="../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="table_enums" href="../table_enums/index.html" />
+    <link rel="prev" title="filters" href="../filters/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.4.0 documentation - Home"/>
+    <script>document.write(`<img src="../../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.4.0 documentation - Home"/>`);</script>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../teehr/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr</span></code></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../teehr/utilities/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.utilities</span></code></a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../teehr/utilities/generate_weights/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.utilities.generate_weights</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../teehr/const/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">teehr.const</span></code></a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../metric_funcs/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">metric_funcs</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gumboot_bootstrap/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">gumboot_bootstrap</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bootstrap_funcs/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">bootstrap_funcs</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../str_enum/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">str_enum</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../filters/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">filters</span></code></a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tables</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../table_enums/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">table_enums</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metric_enums/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">metric_enums</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metric_models/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">metric_models</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metric_attributes/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">metric_attributes</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../bootstrap_models/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">bootstrap_models</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">utils</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nwm30_point/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">nwm30_point</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nwm30_grid/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">nwm30_grid</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nwm22_point/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">nwm22_point</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nwm22_grid/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">nwm22_grid</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dataframe_accessor/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">dataframe_accessor</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../evaluation/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">evaluation</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../fetch/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fetch</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metrics/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">metrics</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../load/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">load</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../two_site_debug_script/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">two_site_debug_script</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../setup_evaluation/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">setup_evaluation</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ngen_example/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ngen_example</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../filter_format/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">filter_format</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metric_format/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">metric_format</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_defined_fields/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">user_defined_fields</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../const/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">const</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usgs/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">usgs</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nwm_points/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">nwm_points</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../retrospective_points/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">retrospective_points</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../point_utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">point_utils</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../grid_utils/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">grid_utils</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../retrospective_grids/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">retrospective_grids</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../nwm_grids/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">nwm_grids</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../joined_timeseries/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">joined_timeseries</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../add_domains/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">add_domains</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../location_crosswalks/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">location_crosswalks</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../location_attributes/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">location_attributes</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../locations/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">locations</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../timeseries/index.html"><code class="xref py py-mod docutils literal notranslate"><span class="pre">timeseries</span></code></a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API Reference</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><code...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-tables">
+<span id="tables"></span><h1><a class="reference internal" href="#module-tables" title="tables"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tables</span></code></a><a class="headerlink" href="#module-tables" title="Link to this heading">#</a></h1>
+<p>Access methods to units table.</p>
+<section id="module-contents">
+<h2>Module Contents<a class="headerlink" href="#module-contents" title="Link to this heading">#</a></h2>
+<section id="classes">
+<h3>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tables.BaseTable" title="tables.BaseTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseTable</span></code></a></p></td>
+<td><p>Base query class.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tables.UnitTable" title="tables.UnitTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UnitTable</span></code></a></p></td>
+<td><p>Access methods to units table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tables.VariableTable" title="tables.VariableTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VariableTable</span></code></a></p></td>
+<td><p>Access methods to variables table.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tables.AttributeTable" title="tables.AttributeTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AttributeTable</span></code></a></p></td>
+<td><p>Access methods to attributes table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tables.ConfigurationTable" title="tables.ConfigurationTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConfigurationTable</span></code></a></p></td>
+<td><p>Access methods to configurations table.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tables.LocationTable" title="tables.LocationTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LocationTable</span></code></a></p></td>
+<td><p>Access methods to locations table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tables.LocationAttributeTable" title="tables.LocationAttributeTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LocationAttributeTable</span></code></a></p></td>
+<td><p>Access methods to location attributes table.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tables.LocationCrosswalkTable" title="tables.LocationCrosswalkTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LocationCrosswalkTable</span></code></a></p></td>
+<td><p>Access methods to location crosswalks table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tables.PrimaryTimeseriesTable" title="tables.PrimaryTimeseriesTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PrimaryTimeseriesTable</span></code></a></p></td>
+<td><p>Access methods to timeseries table.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#tables.SecondaryTimeseriesTable" title="tables.SecondaryTimeseriesTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SecondaryTimeseriesTable</span></code></a></p></td>
+<td><p>Access methods to timeseries table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tables.JoinedTimeseriesTable" title="tables.JoinedTimeseriesTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">JoinedTimeseriesTable</span></code></a></p></td>
+<td><p>Access methods to joined timeseries table.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">#</a></h3>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#tables.logger" title="tables.logger"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logger</span></code></a></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py data">
+<dt class="sig sig-object py" id="tables.logger">
+<span class="sig-prename descclassname"><span class="pre">tables.</span></span><span class="sig-name descname"><span class="pre">logger</span></span><a class="headerlink" href="#tables.logger" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tables.BaseTable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tables.</span></span><span class="sig-name descname"><span class="pre">BaseTable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ev</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.BaseTable" title="Link to this definition">#</a></dt>
+<dd><p>Base query class.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.BaseTable._raise_missing_table_error">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_raise_missing_table_error</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tables.BaseTable._raise_missing_table_error" title="Link to this definition">#</a></dt>
+<dd><p>Raise an error if the table does not exist.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.BaseTable._dir_is_emtpy">
+<span class="sig-name descname"><span class="pre">_dir_is_emtpy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'**/*.parquet'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#tables.BaseTable._dir_is_emtpy" title="Link to this definition">#</a></dt>
+<dd><p>Check if the directory contains files of specified pattern.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.BaseTable._read_spark_df">
+<span class="sig-name descname"><span class="pre">_read_spark_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'parquet'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.BaseTable._read_spark_df" title="Link to this definition">#</a></dt>
+<dd><p>Read data from directory as a spark dataframe.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.BaseTable._load">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_load</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tables.BaseTable._load" title="Link to this definition">#</a></dt>
+<dd><p>Load data into the dataset.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.BaseTable.add">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tables.BaseTable.add" title="Link to this definition">#</a></dt>
+<dd><p>Add domain variables.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.BaseTable.query">
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">teehr.models.filters.FilterBaseModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">teehr.models.filters.FilterBaseModel</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order_by</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">teehr.models.str_enum.StrEnum</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">teehr.models.str_enum.StrEnum</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.BaseTable.query" title="Link to this definition">#</a></dt>
+<dd><p>Run a query against the table with filters and order_by.</p>
+<p>In general a user will either use the query methods or the filter and
+order_by methods.  The query method is a convenience method that will
+apply filters and order_by in a single call.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>filters</strong><span class="classifier">Union[</span></dt><dd><blockquote>
+<div><p>str, dict, FilterBaseModel,
+List[Union[str, dict, FilterBaseModel]]</p>
+</div></blockquote>
+<p>]
+The filters to apply to the query.  The filters can be a string,
+dictionary, FilterBaseModel or a list of any of these.  The filters</p>
+</dd>
+<dt><strong>order_by</strong><span class="classifier">Union[str, List[str], StrEnum, List[StrEnum]]</span></dt><dd><p>The fields to order the query by.  The fields can be a string,
+StrEnum or a list of any of these.  The fields will be ordered in
+the order they are provided.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>self</strong><span class="classifier">BaseTable or subclass of BaseTable</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Filters as dictionary
+&gt;&gt;&gt; ts_df = ev.primary_timeseries.query(
+&gt;&gt;&gt;     filters=[
+&gt;&gt;&gt;         {
+&gt;&gt;&gt;             “column”: “value_time”,
+&gt;&gt;&gt;             “operator”: “&gt;”,
+&gt;&gt;&gt;             “value”: “2022-01-01”,
+&gt;&gt;&gt;         },
+&gt;&gt;&gt;         {
+&gt;&gt;&gt;             “column”: “value_time”,
+&gt;&gt;&gt;             “operator”: “&lt;”,
+&gt;&gt;&gt;             “value”: “2022-01-02”,
+&gt;&gt;&gt;         },
+&gt;&gt;&gt;         {
+&gt;&gt;&gt;             “column”: “location_id”,
+&gt;&gt;&gt;             “operator”: “=”,
+&gt;&gt;&gt;             “value”: “gage-C”,
+&gt;&gt;&gt;         },
+&gt;&gt;&gt;     ],
+&gt;&gt;&gt;     order_by=[“location_id”, “value_time”]
+&gt;&gt;&gt; ).to_pandas()</p>
+<p>Filters as string
+&gt;&gt;&gt; ts_df = ev.primary_timeseries.query(
+&gt;&gt;&gt;     filters=[
+&gt;&gt;&gt;         “value_time &gt; ‘2022-01-01’”,
+&gt;&gt;&gt;         “value_time &lt; ‘2022-01-02’”,
+&gt;&gt;&gt;         “location_id = ‘gage-C’”
+&gt;&gt;&gt;     ],
+&gt;&gt;&gt;     order_by=[“location_id”, “value_time”]
+&gt;&gt;&gt; ).to_pandas()</p>
+<p>Filters as FilterBaseModel
+&gt;&gt;&gt; from teehr.models.filters import TimeseriesFilter
+&gt;&gt;&gt; from teehr.models.filters import FilterOperators
+&gt;&gt;&gt;
+&gt;&gt;&gt; fields = ev.primary_timeseries.field_enum()
+&gt;&gt;&gt; ts_df = ev.primary_timeseries.query(
+&gt;&gt;&gt;     filters=[
+&gt;&gt;&gt;         TimeseriesFilter(
+&gt;&gt;&gt;             column=fields.value_time,
+&gt;&gt;&gt;             operator=FilterOperators.gt,
+&gt;&gt;&gt;             value=”2022-01-01”,
+&gt;&gt;&gt;         ),
+&gt;&gt;&gt;         TimeseriesFilter(
+&gt;&gt;&gt;             column=fields.value_time,
+&gt;&gt;&gt;             operator=FilterOperators.lt,
+&gt;&gt;&gt;             value=”2022-01-02”,
+&gt;&gt;&gt;         ),
+&gt;&gt;&gt;         TimeseriesFilter(
+&gt;&gt;&gt;             column=fields.location_id,
+&gt;&gt;&gt;             operator=FilterOperators.eq,
+&gt;&gt;&gt;             value=”gage-C”,
+&gt;&gt;&gt;         ),
+&gt;&gt;&gt; ]).to_pandas()</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.BaseTable.filter">
+<span class="sig-name descname"><span class="pre">filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">teehr.models.filters.FilterBaseModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">teehr.models.filters.FilterBaseModel</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.BaseTable.filter" title="Link to this definition">#</a></dt>
+<dd><p>Apply a filter.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>filters</strong><span class="classifier">Union[</span></dt><dd><blockquote>
+<div><p>str, dict, FilterBaseModel,
+List[Union[str, dict, FilterBaseModel]]</p>
+</div></blockquote>
+<p>]
+The filters to apply to the query.  The filters can be a string,
+dictionary, FilterBaseModel or a list of any of these.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>self</strong><span class="classifier">BaseTable or subclass of BaseTable</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Filters as dictionary
+&gt;&gt;&gt; ts_df = ev.primary_timeseries.filter(
+&gt;&gt;&gt;     filters=[
+&gt;&gt;&gt;         {
+&gt;&gt;&gt;             “column”: “value_time”,
+&gt;&gt;&gt;             “operator”: “&gt;”,
+&gt;&gt;&gt;             “value”: “2022-01-01”,
+&gt;&gt;&gt;         },
+&gt;&gt;&gt;         {
+&gt;&gt;&gt;             “column”: “value_time”,
+&gt;&gt;&gt;             “operator”: “&lt;”,
+&gt;&gt;&gt;             “value”: “2022-01-02”,
+&gt;&gt;&gt;         },
+&gt;&gt;&gt;         {
+&gt;&gt;&gt;             “column”: “location_id”,
+&gt;&gt;&gt;             “operator”: “=”,
+&gt;&gt;&gt;             “value”: “gage-C”,
+&gt;&gt;&gt;         },
+&gt;&gt;&gt;     ]
+&gt;&gt;&gt; ).to_pandas()</p>
+<p>Filters as string
+&gt;&gt;&gt; ts_df = ev.primary_timeseries.filter(
+&gt;&gt;&gt;     filters=[
+&gt;&gt;&gt;         “value_time &gt; ‘2022-01-01’”,
+&gt;&gt;&gt;         “value_time &lt; ‘2022-01-02’”,
+&gt;&gt;&gt;         “location_id = ‘gage-C’”
+&gt;&gt;&gt;     ]
+&gt;&gt;&gt; ).to_pandas()</p>
+<p>Filters as FilterBaseModel
+&gt;&gt;&gt; from teehr.models.filters import TimeseriesFilter
+&gt;&gt;&gt; from teehr.models.filters import FilterOperators
+&gt;&gt;&gt;
+&gt;&gt;&gt; fields = ev.primary_timeseries.field_enum()
+&gt;&gt;&gt; ts_df = ev.primary_timeseries.filter(
+&gt;&gt;&gt;     filters=[
+&gt;&gt;&gt;         TimeseriesFilter(
+&gt;&gt;&gt;             column=fields.value_time,
+&gt;&gt;&gt;             operator=FilterOperators.gt,
+&gt;&gt;&gt;             value=”2022-01-01”,
+&gt;&gt;&gt;         ),
+&gt;&gt;&gt;         TimeseriesFilter(
+&gt;&gt;&gt;             column=fields.value_time,
+&gt;&gt;&gt;             operator=FilterOperators.lt,
+&gt;&gt;&gt;             value=”2022-01-02”,
+&gt;&gt;&gt;         ),
+&gt;&gt;&gt;         TimeseriesFilter(
+&gt;&gt;&gt;             column=fields.location_id,
+&gt;&gt;&gt;             operator=FilterOperators.eq,
+&gt;&gt;&gt;             value=”gage-C”,
+&gt;&gt;&gt;         ),
+&gt;&gt;&gt; ]).to_pandas()</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.BaseTable.order_by">
+<span class="sig-name descname"><span class="pre">order_by</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fields</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">teehr.models.str_enum.StrEnum</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">teehr.models.str_enum.StrEnum</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.BaseTable.order_by" title="Link to this definition">#</a></dt>
+<dd><p>Apply an order_by.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fields</strong><span class="classifier">Union[str, StrEnum, List[Union[str, StrEnum]]]</span></dt><dd><p>The fields to order the query by.  The fields can be a string,
+StrEnum or a list of any of these.  The fields will be ordered in
+the order they are provided.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>self</strong><span class="classifier">BaseTable or subclass of BaseTable</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Order by string
+&gt;&gt;&gt; ts_df = ev.primary_timeseries.order_by(“value_time”).to_df()</p>
+<p>Order by StrEnum
+&gt;&gt;&gt; from teehr.querying.field_enums import TimeseriesFields
+&gt;&gt;&gt; ts_df = ev.primary_timeseries.order_by(
+&gt;&gt;&gt;     TimeseriesFields.value_time
+&gt;&gt;&gt; ).to_pandas()</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.BaseTable.fields">
+<span class="sig-name descname"><span class="pre">fields</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tables.BaseTable.fields" title="Link to this definition">#</a></dt>
+<dd><p>Return table columns as a list.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.BaseTable.distinct_values">
+<span class="sig-name descname"><span class="pre">distinct_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">column</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#tables.BaseTable.distinct_values" title="Link to this definition">#</a></dt>
+<dd><p>Return distinct values for a column.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.BaseTable.field_enum">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">field_enum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">teehr.models.str_enum.StrEnum</span></span></span><a class="headerlink" href="#tables.BaseTable.field_enum" title="Link to this definition">#</a></dt>
+<dd><p>Get the fields enum.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.BaseTable.to_pandas">
+<span class="sig-name descname"><span class="pre">to_pandas</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tables.BaseTable.to_pandas" title="Link to this definition">#</a></dt>
+<dd><p>Return Pandas DataFrame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.BaseTable.to_geopandas">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_geopandas</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tables.BaseTable.to_geopandas" title="Link to this definition">#</a></dt>
+<dd><p>Return GeoPandas DataFrame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.BaseTable.to_sdf">
+<span class="sig-name descname"><span class="pre">to_sdf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tables.BaseTable.to_sdf" title="Link to this definition">#</a></dt>
+<dd><p>Return PySpark DataFrame.</p>
+<p>The PySpark DataFrame can be further processed using PySpark. Note,
+PySpark DataFrames are lazy and will not be executed until an action
+is called.  For example, calling <cite>show()</cite>, <cite>collect()</cite> or toPandas().
+This can be useful for further processing or analysis, for example,</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ts_sdf</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">filters</span><span class="o">=</span><span class="p">[</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;value_time &gt; &#39;2022-01-01&#39;&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;value_time &lt; &#39;2022-01-02&#39;&quot;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="s2">&quot;location_id = &#39;gage-C&#39;&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span><span class="o">.</span><span class="n">to_sdf</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ts_df</span> <span class="o">=</span> <span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">ts_sdf</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">&quot;value_time&quot;</span><span class="p">,</span> <span class="s2">&quot;location_id&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="o">.</span><span class="n">orderBy</span><span class="p">(</span><span class="s2">&quot;value&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ts_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tables.UnitTable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tables.</span></span><span class="sig-name descname"><span class="pre">UnitTable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ev</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.UnitTable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tables.BaseTable" title="tables.BaseTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseTable</span></code></a></p>
+<p>Access methods to units table.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.UnitTable.field_enum">
+<span class="sig-name descname"><span class="pre">field_enum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">teehr.models.table_enums.UnitFields</span></span></span><a class="headerlink" href="#tables.UnitTable.field_enum" title="Link to this definition">#</a></dt>
+<dd><p>Get the unit fields enum.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.UnitTable.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">teehr.models.tables.Unit</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">teehr.models.tables.Unit</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.UnitTable.add" title="Link to this definition">#</a></dt>
+<dd><p>Add a unit to the evaluation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>unit</strong><span class="classifier">Union[Unit, List[Unit]]</span></dt><dd><p>The unit domain to add.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tables.VariableTable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tables.</span></span><span class="sig-name descname"><span class="pre">VariableTable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ev</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.VariableTable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tables.BaseTable" title="tables.BaseTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseTable</span></code></a></p>
+<p>Access methods to variables table.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.VariableTable.field_enum">
+<span class="sig-name descname"><span class="pre">field_enum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">teehr.models.table_enums.VariableFields</span></span></span><a class="headerlink" href="#tables.VariableTable.field_enum" title="Link to this definition">#</a></dt>
+<dd><p>Get the variable fields enum.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.VariableTable.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">teehr.models.tables.Variable</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">teehr.models.tables.Variable</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.VariableTable.add" title="Link to this definition">#</a></dt>
+<dd><p>Add a unit to the evaluation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>variable</strong><span class="classifier">Union[Variable, List[Variable]]</span></dt><dd><p>The variable domain to add.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tables.AttributeTable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tables.</span></span><span class="sig-name descname"><span class="pre">AttributeTable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ev</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.AttributeTable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tables.BaseTable" title="tables.BaseTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseTable</span></code></a></p>
+<p>Access methods to attributes table.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.AttributeTable.field_enum">
+<span class="sig-name descname"><span class="pre">field_enum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">teehr.models.table_enums.AttributeFields</span></span></span><a class="headerlink" href="#tables.AttributeTable.field_enum" title="Link to this definition">#</a></dt>
+<dd><p>Get the attribute fields enum.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.AttributeTable.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">attribute</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">teehr.models.tables.Attribute</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">teehr.models.tables.Attribute</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.AttributeTable.add" title="Link to this definition">#</a></dt>
+<dd><p>Add an attribute to the evaluation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>attribute</strong><span class="classifier">Union[Attribute, List[Attribute]]</span></dt><dd><p>The attribute domain to add.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tables.ConfigurationTable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tables.</span></span><span class="sig-name descname"><span class="pre">ConfigurationTable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ev</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.ConfigurationTable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tables.BaseTable" title="tables.BaseTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseTable</span></code></a></p>
+<p>Access methods to configurations table.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.ConfigurationTable.field_enum">
+<span class="sig-name descname"><span class="pre">field_enum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">teehr.models.table_enums.ConfigurationFields</span></span></span><a class="headerlink" href="#tables.ConfigurationTable.field_enum" title="Link to this definition">#</a></dt>
+<dd><p>Get the configuration fields enum.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.ConfigurationTable.add">
+<span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">teehr.models.tables.Configuration</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">teehr.models.tables.Configuration</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.ConfigurationTable.add" title="Link to this definition">#</a></dt>
+<dd><p>Add a configuration domain to the evaluation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>configuration</strong><span class="classifier">Union[Configuration, List[Configuration]]</span></dt><dd><p>The configuration domain to add.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tables.LocationTable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tables.</span></span><span class="sig-name descname"><span class="pre">LocationTable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ev</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.LocationTable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tables.BaseTable" title="tables.BaseTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseTable</span></code></a></p>
+<p>Access methods to locations table.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.LocationTable.field_enum">
+<span class="sig-name descname"><span class="pre">field_enum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">teehr.models.table_enums.LocationFields</span></span></span><a class="headerlink" href="#tables.LocationTable.field_enum" title="Link to this definition">#</a></dt>
+<dd><p>Get the location fields enum.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.LocationTable.to_geopandas">
+<span class="sig-name descname"><span class="pre">to_geopandas</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tables.LocationTable.to_geopandas" title="Link to this definition">#</a></dt>
+<dd><p>Return GeoPandas DataFrame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.LocationTable.load_spatial">
+<span class="sig-name descname"><span class="pre">load_spatial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'**/*.parquet'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.LocationTable.load_spatial" title="Link to this definition">#</a></dt>
+<dd><p>Import geometry data.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>in_path</strong><span class="classifier">Union[Path, str]</span></dt><dd><p>The input file or directory path.
+Any file format that can be read by GeoPandas.</p>
+</dd>
+<dt><strong>field_mapping</strong><span class="classifier">dict, optional</span></dt><dd><p>A dictionary mapping input fields to output fields.
+Format: {input_field: output_field}</p>
+</dd>
+<dt><strong>pattern</strong><span class="classifier">str, optional (default: “<a href="#id1"><span class="problematic" id="id2">**</span></a>/<a href="#id3"><span class="problematic" id="id4">*</span></a>.parquet”)</span></dt><dd><p>The pattern to match files.
+Only used when in_path is a directory.</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Additional keyword arguments are passed to GeoPandas read_file().</p>
+</dd>
+<dt><strong>File is first read by GeoPandas, field names renamed and</strong></dt><dd></dd>
+<dt><strong>then validated and inserted into the dataset.</strong></dt><dd></dd>
+<dt><strong>The TEEHR Location Crosswalk table schema includes fields:</strong></dt><dd></dd>
+<dt><strong>- id</strong></dt><dd></dd>
+<dt><strong>- name</strong></dt><dd></dd>
+<dt><strong>- geometry</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tables.LocationAttributeTable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tables.</span></span><span class="sig-name descname"><span class="pre">LocationAttributeTable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ev</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.LocationAttributeTable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tables.BaseTable" title="tables.BaseTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseTable</span></code></a></p>
+<p>Access methods to location attributes table.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.LocationAttributeTable._load">
+<span class="sig-name descname"><span class="pre">_load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.LocationAttributeTable._load" title="Link to this definition">#</a></dt>
+<dd><p>Load location attributes helper.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.LocationAttributeTable.field_enum">
+<span class="sig-name descname"><span class="pre">field_enum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">teehr.models.table_enums.LocationAttributeFields</span></span></span><a class="headerlink" href="#tables.LocationAttributeTable.field_enum" title="Link to this definition">#</a></dt>
+<dd><p>Get the location attribute fields enum.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.LocationAttributeTable.to_geopandas">
+<span class="sig-name descname"><span class="pre">to_geopandas</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tables.LocationAttributeTable.to_geopandas" title="Link to this definition">#</a></dt>
+<dd><p>Return GeoPandas DataFrame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.LocationAttributeTable.load_parquet">
+<span class="sig-name descname"><span class="pre">load_parquet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'**/*.parquet'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.LocationAttributeTable.load_parquet" title="Link to this definition">#</a></dt>
+<dd><p>Import location_attributes from parquet file format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>in_path</strong><span class="classifier">Union[Path, str]</span></dt><dd><p>The input file or directory path.
+Parquet file format.</p>
+</dd>
+<dt><strong>field_mapping</strong><span class="classifier">dict, optional</span></dt><dd><p>A dictionary mapping input fields to output fields.
+Format: {input_field: output_field}</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Additional keyword arguments are passed to pd.read_parquet().</p>
+</dd>
+<dt><strong>The TEEHR Location Attribute table schema includes fields:</strong></dt><dd></dd>
+<dt><strong>- location_id</strong></dt><dd></dd>
+<dt><strong>- attribute_name</strong></dt><dd></dd>
+<dt><strong>- value</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.LocationAttributeTable.load_csv">
+<span class="sig-name descname"><span class="pre">load_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'**/*.csv'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.LocationAttributeTable.load_csv" title="Link to this definition">#</a></dt>
+<dd><p>Import location_attributes from CSV file format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>in_path</strong><span class="classifier">Union[Path, str]</span></dt><dd><p>The input file or directory path.
+CSV file format.</p>
+</dd>
+<dt><strong>field_mapping</strong><span class="classifier">dict, optional</span></dt><dd><p>A dictionary mapping input fields to output fields.
+Format: {input_field: output_field}</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Additional keyword arguments are passed to pd.read_parquet().</p>
+</dd>
+<dt><strong>The TEEHR Location Attribute table schema includes fields:</strong></dt><dd></dd>
+<dt><strong>- location_id</strong></dt><dd></dd>
+<dt><strong>- attribute_name</strong></dt><dd></dd>
+<dt><strong>- value</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tables.LocationCrosswalkTable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tables.</span></span><span class="sig-name descname"><span class="pre">LocationCrosswalkTable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ev</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.LocationCrosswalkTable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tables.BaseTable" title="tables.BaseTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseTable</span></code></a></p>
+<p>Access methods to location crosswalks table.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.LocationCrosswalkTable._load">
+<span class="sig-name descname"><span class="pre">_load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.LocationCrosswalkTable._load" title="Link to this definition">#</a></dt>
+<dd><p>Load location crosswalks helper.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.LocationCrosswalkTable.field_enum">
+<span class="sig-name descname"><span class="pre">field_enum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">teehr.models.table_enums.LocationCrosswalkFields</span></span></span><a class="headerlink" href="#tables.LocationCrosswalkTable.field_enum" title="Link to this definition">#</a></dt>
+<dd><p>Get the location crosswalk fields enum.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.LocationCrosswalkTable.to_geopandas">
+<span class="sig-name descname"><span class="pre">to_geopandas</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tables.LocationCrosswalkTable.to_geopandas" title="Link to this definition">#</a></dt>
+<dd><p>Return GeoPandas DataFrame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.LocationCrosswalkTable.load_parquet">
+<span class="sig-name descname"><span class="pre">load_parquet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'**/*.parquet'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.LocationCrosswalkTable.load_parquet" title="Link to this definition">#</a></dt>
+<dd><p>Import location crosswalks from parquet file format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>in_path</strong><span class="classifier">Union[Path, str]</span></dt><dd><p>The input file or directory path.
+Parquet file format.</p>
+</dd>
+<dt><strong>field_mapping</strong><span class="classifier">dict, optional</span></dt><dd><p>A dictionary mapping input fields to output fields.
+Format: {input_field: output_field}</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Additional keyword arguments are passed to pd.read_csv()
+or pd.read_parquet().</p>
+</dd>
+<dt><strong>The TEEHR Location Crosswalk table schema includes fields:</strong></dt><dd></dd>
+<dt><strong>- primary_location_id</strong></dt><dd></dd>
+<dt><strong>- secondary_location_id</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.LocationCrosswalkTable.load_csv">
+<span class="sig-name descname"><span class="pre">load_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'**/*.csv'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.LocationCrosswalkTable.load_csv" title="Link to this definition">#</a></dt>
+<dd><p>Import location crosswalks from CSV file format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>in_path</strong><span class="classifier">Union[Path, str]</span></dt><dd><p>The input file or directory path.
+CSV file format.</p>
+</dd>
+<dt><strong>field_mapping</strong><span class="classifier">dict, optional</span></dt><dd><p>A dictionary mapping input fields to output fields.
+Format: {input_field: output_field}</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Additional keyword arguments are passed to pd.read_csv()
+or pd.read_parquet().</p>
+</dd>
+<dt><strong>The TEEHR Location Crosswalk table schema includes fields:</strong></dt><dd></dd>
+<dt><strong>- primary_location_id</strong></dt><dd></dd>
+<dt><strong>- secondary_location_id</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tables.PrimaryTimeseriesTable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tables.</span></span><span class="sig-name descname"><span class="pre">PrimaryTimeseriesTable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ev</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.PrimaryTimeseriesTable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tables.BaseTable" title="tables.BaseTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseTable</span></code></a></p>
+<p>Access methods to timeseries table.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.PrimaryTimeseriesTable._read_spark_df">
+<span class="sig-name descname"><span class="pre">_read_spark_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'parquet'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.PrimaryTimeseriesTable._read_spark_df" title="Link to this definition">#</a></dt>
+<dd><p>Read data from directory as a spark dataframe.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.PrimaryTimeseriesTable._load">
+<span class="sig-name descname"><span class="pre">_load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'**/*.parquet'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeseries_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_field_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.PrimaryTimeseriesTable._load" title="Link to this definition">#</a></dt>
+<dd><p>Import timeseries helper.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.PrimaryTimeseriesTable.field_enum">
+<span class="sig-name descname"><span class="pre">field_enum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">teehr.models.table_enums.TimeseriesFields</span></span></span><a class="headerlink" href="#tables.PrimaryTimeseriesTable.field_enum" title="Link to this definition">#</a></dt>
+<dd><p>Get the timeseries fields enum.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.PrimaryTimeseriesTable.to_geopandas">
+<span class="sig-name descname"><span class="pre">to_geopandas</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tables.PrimaryTimeseriesTable.to_geopandas" title="Link to this definition">#</a></dt>
+<dd><p>Return GeoPandas DataFrame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.PrimaryTimeseriesTable.load_parquet">
+<span class="sig-name descname"><span class="pre">load_parquet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'**/*.parquet'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_field_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.PrimaryTimeseriesTable.load_parquet" title="Link to this definition">#</a></dt>
+<dd><p>Import primary timeseries parquet data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>in_path</strong><span class="classifier">Union[Path, str]</span></dt><dd><p>Path to the timeseries data (file or directory) in
+parquet file format.</p>
+</dd>
+<dt><strong>field_mapping</strong><span class="classifier">dict, optional</span></dt><dd><p>A dictionary mapping input fields to output fields.
+Format: {input_field: output_field}</p>
+</dd>
+<dt><strong>constant_field_values</strong><span class="classifier">dict, optional</span></dt><dd><p>A dictionary mapping field names to constant values.
+Format: {field_name: value}</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Additional keyword arguments are passed to pd.read_parquet().</p>
+</dd>
+<dt><strong>Includes validation and importing data to database.</strong></dt><dd></dd>
+<dt><strong>The TEEHR Timeseries table schema includes fields:</strong></dt><dd></dd>
+<dt><strong>- reference_time</strong></dt><dd></dd>
+<dt><strong>- value_time</strong></dt><dd></dd>
+<dt><strong>- configuration_name</strong></dt><dd></dd>
+<dt><strong>- unit_name</strong></dt><dd></dd>
+<dt><strong>- variable_name</strong></dt><dd></dd>
+<dt><strong>- value</strong></dt><dd></dd>
+<dt><strong>- location_id</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.PrimaryTimeseriesTable.load_csv">
+<span class="sig-name descname"><span class="pre">load_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'**/*.csv'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_field_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.PrimaryTimeseriesTable.load_csv" title="Link to this definition">#</a></dt>
+<dd><p>Import primary timeseries csv data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>in_path</strong><span class="classifier">Union[Path, str]</span></dt><dd><p>Path to the timeseries data (file or directory) in
+csv file format.</p>
+</dd>
+<dt><strong>field_mapping</strong><span class="classifier">dict, optional</span></dt><dd><p>A dictionary mapping input fields to output fields.
+Format: {input_field: output_field}</p>
+</dd>
+<dt><strong>constant_field_values</strong><span class="classifier">dict, optional</span></dt><dd><p>A dictionary mapping field names to constant values.
+Format: {field_name: value}</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Additional keyword arguments are passed to pd.read_csv().</p>
+</dd>
+<dt><strong>Includes validation and importing data to database.</strong></dt><dd></dd>
+<dt><strong>The TEEHR Timeseries table schema includes fields:</strong></dt><dd></dd>
+<dt><strong>- reference_time</strong></dt><dd></dd>
+<dt><strong>- value_time</strong></dt><dd></dd>
+<dt><strong>- configuration_name</strong></dt><dd></dd>
+<dt><strong>- unit_name</strong></dt><dd></dd>
+<dt><strong>- variable_name</strong></dt><dd></dd>
+<dt><strong>- value</strong></dt><dd></dd>
+<dt><strong>- location_id</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.PrimaryTimeseriesTable.load_netcdf">
+<span class="sig-name descname"><span class="pre">load_netcdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'**/*.nc'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_field_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.PrimaryTimeseriesTable.load_netcdf" title="Link to this definition">#</a></dt>
+<dd><p>Import primary timeseries netcdf data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>in_path</strong><span class="classifier">Union[Path, str]</span></dt><dd><p>Path to the timeseries data (file or directory) in
+netcdf file format.</p>
+</dd>
+<dt><strong>field_mapping</strong><span class="classifier">dict, optional</span></dt><dd><p>A dictionary mapping input fields to output fields.
+Format: {input_field: output_field}</p>
+</dd>
+<dt><strong>constant_field_values</strong><span class="classifier">dict, optional</span></dt><dd><p>A dictionary mapping field names to constant values.
+Format: {field_name: value}</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Additional keyword arguments are passed to xr.open_dataset().</p>
+</dd>
+<dt><strong>Includes validation and importing data to database.</strong></dt><dd></dd>
+<dt><strong>The TEEHR Timeseries table schema includes fields:</strong></dt><dd></dd>
+<dt><strong>- reference_time</strong></dt><dd></dd>
+<dt><strong>- value_time</strong></dt><dd></dd>
+<dt><strong>- configuration_name</strong></dt><dd></dd>
+<dt><strong>- unit_name</strong></dt><dd></dd>
+<dt><strong>- variable_name</strong></dt><dd></dd>
+<dt><strong>- value</strong></dt><dd></dd>
+<dt><strong>- location_id</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tables.SecondaryTimeseriesTable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tables.</span></span><span class="sig-name descname"><span class="pre">SecondaryTimeseriesTable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ev</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.SecondaryTimeseriesTable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tables.BaseTable" title="tables.BaseTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseTable</span></code></a></p>
+<p>Access methods to timeseries table.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.SecondaryTimeseriesTable._read_spark_df">
+<span class="sig-name descname"><span class="pre">_read_spark_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'parquet'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.SecondaryTimeseriesTable._read_spark_df" title="Link to this definition">#</a></dt>
+<dd><p>Read data from directory as a spark dataframe.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.SecondaryTimeseriesTable._load">
+<span class="sig-name descname"><span class="pre">_load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'**/*.parquet'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeseries_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_field_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.SecondaryTimeseriesTable._load" title="Link to this definition">#</a></dt>
+<dd><p>Import timeseries helper.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.SecondaryTimeseriesTable.field_enum">
+<span class="sig-name descname"><span class="pre">field_enum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">teehr.models.table_enums.TimeseriesFields</span></span></span><a class="headerlink" href="#tables.SecondaryTimeseriesTable.field_enum" title="Link to this definition">#</a></dt>
+<dd><p>Get the timeseries fields enum.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.SecondaryTimeseriesTable.to_geopandas">
+<span class="sig-name descname"><span class="pre">to_geopandas</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tables.SecondaryTimeseriesTable.to_geopandas" title="Link to this definition">#</a></dt>
+<dd><p>Return GeoPandas DataFrame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.SecondaryTimeseriesTable.load_parquet">
+<span class="sig-name descname"><span class="pre">load_parquet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'**/*.parquet'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_field_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.SecondaryTimeseriesTable.load_parquet" title="Link to this definition">#</a></dt>
+<dd><p>Import secondary timeseries parquet data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>in_path</strong><span class="classifier">Union[Path, str]</span></dt><dd><p>Path to the timeseries data (file or directory) in
+parquet file format.</p>
+</dd>
+<dt><strong>field_mapping</strong><span class="classifier">dict, optional</span></dt><dd><p>A dictionary mapping input fields to output fields.
+Format: {input_field: output_field}</p>
+</dd>
+<dt><strong>constant_field_values</strong><span class="classifier">dict, optional</span></dt><dd><p>A dictionary mapping field names to constant values.
+Format: {field_name: value}</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Additional keyword arguments are passed to pd.read_parquet().</p>
+</dd>
+<dt><strong>Includes validation and importing data to database.</strong></dt><dd></dd>
+<dt><strong>The TEEHR Timeseries table schema includes fields:</strong></dt><dd></dd>
+<dt><strong>- reference_time</strong></dt><dd></dd>
+<dt><strong>- value_time</strong></dt><dd></dd>
+<dt><strong>- configuration_name</strong></dt><dd></dd>
+<dt><strong>- unit_name</strong></dt><dd></dd>
+<dt><strong>- variable_name</strong></dt><dd></dd>
+<dt><strong>- value</strong></dt><dd></dd>
+<dt><strong>- location_id</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.SecondaryTimeseriesTable.load_csv">
+<span class="sig-name descname"><span class="pre">load_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'**/*.csv'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_field_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.SecondaryTimeseriesTable.load_csv" title="Link to this definition">#</a></dt>
+<dd><p>Import secondary timeseries csv data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>in_path</strong><span class="classifier">Union[Path, str]</span></dt><dd><p>Path to the timeseries data (file or directory) in
+csv file format.</p>
+</dd>
+<dt><strong>field_mapping</strong><span class="classifier">dict, optional</span></dt><dd><p>A dictionary mapping input fields to output fields.
+Format: {input_field: output_field}</p>
+</dd>
+<dt><strong>constant_field_values</strong><span class="classifier">dict, optional</span></dt><dd><p>A dictionary mapping field names to constant values.
+Format: {field_name: value}</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Additional keyword arguments are passed to pd.read_csv().</p>
+</dd>
+<dt><strong>Includes validation and importing data to database.</strong></dt><dd></dd>
+<dt><strong>The TEEHR Timeseries table schema includes fields:</strong></dt><dd></dd>
+<dt><strong>- reference_time</strong></dt><dd></dd>
+<dt><strong>- value_time</strong></dt><dd></dd>
+<dt><strong>- configuration_name</strong></dt><dd></dd>
+<dt><strong>- unit_name</strong></dt><dd></dd>
+<dt><strong>- variable_name</strong></dt><dd></dd>
+<dt><strong>- value</strong></dt><dd></dd>
+<dt><strong>- location_id</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.SecondaryTimeseriesTable.load_netcdf">
+<span class="sig-name descname"><span class="pre">load_netcdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pattern</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'**/*.nc'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">constant_field_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.SecondaryTimeseriesTable.load_netcdf" title="Link to this definition">#</a></dt>
+<dd><p>Import secondary timeseries netcdf data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>in_path</strong><span class="classifier">Union[Path, str]</span></dt><dd><p>Path to the timeseries data (file or directory) in
+netcdf file format.</p>
+</dd>
+<dt><strong>field_mapping</strong><span class="classifier">dict, optional</span></dt><dd><p>A dictionary mapping input fields to output fields.
+Format: {input_field: output_field}</p>
+</dd>
+<dt><strong>constant_field_values</strong><span class="classifier">dict, optional</span></dt><dd><p>A dictionary mapping field names to constant values.
+Format: {field_name: value}</p>
+</dd>
+<dt><strong>**kwargs</strong></dt><dd><p>Additional keyword arguments are passed to xr.open_dataset().</p>
+</dd>
+<dt><strong>Includes validation and importing data to database.</strong></dt><dd></dd>
+<dt><strong>The TEEHR Timeseries table schema includes fields:</strong></dt><dd></dd>
+<dt><strong>- reference_time</strong></dt><dd></dd>
+<dt><strong>- value_time</strong></dt><dd></dd>
+<dt><strong>- configuration_name</strong></dt><dd></dd>
+<dt><strong>- unit_name</strong></dt><dd></dd>
+<dt><strong>- variable_name</strong></dt><dd></dd>
+<dt><strong>- value</strong></dt><dd></dd>
+<dt><strong>- location_id</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tables.JoinedTimeseriesTable">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tables.</span></span><span class="sig-name descname"><span class="pre">JoinedTimeseriesTable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ev</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.JoinedTimeseriesTable" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#tables.BaseTable" title="tables.BaseTable"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseTable</span></code></a></p>
+<p>Access methods to joined timeseries table.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.JoinedTimeseriesTable._read_spark_df">
+<span class="sig-name descname"><span class="pre">_read_spark_df</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'parquet'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.JoinedTimeseriesTable._read_spark_df" title="Link to this definition">#</a></dt>
+<dd><p>Read data from directory as a spark dataframe.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.JoinedTimeseriesTable.field_enum">
+<span class="sig-name descname"><span class="pre">field_enum</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">teehr.models.table_enums.JoinedTimeseriesFields</span></span></span><a class="headerlink" href="#tables.JoinedTimeseriesTable.field_enum" title="Link to this definition">#</a></dt>
+<dd><p>Get the joined timeseries fields enum.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.JoinedTimeseriesTable.to_geopandas">
+<span class="sig-name descname"><span class="pre">to_geopandas</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#tables.JoinedTimeseriesTable.to_geopandas" title="Link to this definition">#</a></dt>
+<dd><p>Return GeoPandas DataFrame.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tables.JoinedTimeseriesTable.create">
+<span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">execute_udf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tables.JoinedTimeseriesTable.create" title="Link to this definition">#</a></dt>
+<dd><p>Create joined timeseries table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>execute_udf</strong><span class="classifier">bool, optional</span></dt><dd><p>Execute UDFs, by default False</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../filters/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">filters</span></code></p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../table_enums/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title"><code class="xref py py-mod docutils literal notranslate"><span class="pre">table_enums</span></code></p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-contents">Module Contents</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.logger"><code class="docutils literal notranslate"><span class="pre">logger</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.BaseTable"><code class="docutils literal notranslate"><span class="pre">BaseTable</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.BaseTable._raise_missing_table_error"><code class="docutils literal notranslate"><span class="pre">BaseTable._raise_missing_table_error()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.BaseTable._dir_is_emtpy"><code class="docutils literal notranslate"><span class="pre">BaseTable._dir_is_emtpy()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.BaseTable._read_spark_df"><code class="docutils literal notranslate"><span class="pre">BaseTable._read_spark_df()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.BaseTable._load"><code class="docutils literal notranslate"><span class="pre">BaseTable._load()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.BaseTable.add"><code class="docutils literal notranslate"><span class="pre">BaseTable.add()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.BaseTable.query"><code class="docutils literal notranslate"><span class="pre">BaseTable.query()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.BaseTable.filter"><code class="docutils literal notranslate"><span class="pre">BaseTable.filter()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.BaseTable.order_by"><code class="docutils literal notranslate"><span class="pre">BaseTable.order_by()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.BaseTable.fields"><code class="docutils literal notranslate"><span class="pre">BaseTable.fields()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.BaseTable.distinct_values"><code class="docutils literal notranslate"><span class="pre">BaseTable.distinct_values()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.BaseTable.field_enum"><code class="docutils literal notranslate"><span class="pre">BaseTable.field_enum()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.BaseTable.to_pandas"><code class="docutils literal notranslate"><span class="pre">BaseTable.to_pandas()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.BaseTable.to_geopandas"><code class="docutils literal notranslate"><span class="pre">BaseTable.to_geopandas()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.BaseTable.to_sdf"><code class="docutils literal notranslate"><span class="pre">BaseTable.to_sdf()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.UnitTable"><code class="docutils literal notranslate"><span class="pre">UnitTable</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.UnitTable.field_enum"><code class="docutils literal notranslate"><span class="pre">UnitTable.field_enum()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.UnitTable.add"><code class="docutils literal notranslate"><span class="pre">UnitTable.add()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.VariableTable"><code class="docutils literal notranslate"><span class="pre">VariableTable</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.VariableTable.field_enum"><code class="docutils literal notranslate"><span class="pre">VariableTable.field_enum()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.VariableTable.add"><code class="docutils literal notranslate"><span class="pre">VariableTable.add()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.AttributeTable"><code class="docutils literal notranslate"><span class="pre">AttributeTable</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.AttributeTable.field_enum"><code class="docutils literal notranslate"><span class="pre">AttributeTable.field_enum()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.AttributeTable.add"><code class="docutils literal notranslate"><span class="pre">AttributeTable.add()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.ConfigurationTable"><code class="docutils literal notranslate"><span class="pre">ConfigurationTable</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.ConfigurationTable.field_enum"><code class="docutils literal notranslate"><span class="pre">ConfigurationTable.field_enum()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.ConfigurationTable.add"><code class="docutils literal notranslate"><span class="pre">ConfigurationTable.add()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.LocationTable"><code class="docutils literal notranslate"><span class="pre">LocationTable</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.LocationTable.field_enum"><code class="docutils literal notranslate"><span class="pre">LocationTable.field_enum()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.LocationTable.to_geopandas"><code class="docutils literal notranslate"><span class="pre">LocationTable.to_geopandas()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.LocationTable.load_spatial"><code class="docutils literal notranslate"><span class="pre">LocationTable.load_spatial()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.LocationAttributeTable"><code class="docutils literal notranslate"><span class="pre">LocationAttributeTable</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.LocationAttributeTable._load"><code class="docutils literal notranslate"><span class="pre">LocationAttributeTable._load()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.LocationAttributeTable.field_enum"><code class="docutils literal notranslate"><span class="pre">LocationAttributeTable.field_enum()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.LocationAttributeTable.to_geopandas"><code class="docutils literal notranslate"><span class="pre">LocationAttributeTable.to_geopandas()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.LocationAttributeTable.load_parquet"><code class="docutils literal notranslate"><span class="pre">LocationAttributeTable.load_parquet()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.LocationAttributeTable.load_csv"><code class="docutils literal notranslate"><span class="pre">LocationAttributeTable.load_csv()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.LocationCrosswalkTable"><code class="docutils literal notranslate"><span class="pre">LocationCrosswalkTable</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.LocationCrosswalkTable._load"><code class="docutils literal notranslate"><span class="pre">LocationCrosswalkTable._load()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.LocationCrosswalkTable.field_enum"><code class="docutils literal notranslate"><span class="pre">LocationCrosswalkTable.field_enum()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.LocationCrosswalkTable.to_geopandas"><code class="docutils literal notranslate"><span class="pre">LocationCrosswalkTable.to_geopandas()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.LocationCrosswalkTable.load_parquet"><code class="docutils literal notranslate"><span class="pre">LocationCrosswalkTable.load_parquet()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.LocationCrosswalkTable.load_csv"><code class="docutils literal notranslate"><span class="pre">LocationCrosswalkTable.load_csv()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.PrimaryTimeseriesTable"><code class="docutils literal notranslate"><span class="pre">PrimaryTimeseriesTable</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.PrimaryTimeseriesTable._read_spark_df"><code class="docutils literal notranslate"><span class="pre">PrimaryTimeseriesTable._read_spark_df()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.PrimaryTimeseriesTable._load"><code class="docutils literal notranslate"><span class="pre">PrimaryTimeseriesTable._load()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.PrimaryTimeseriesTable.field_enum"><code class="docutils literal notranslate"><span class="pre">PrimaryTimeseriesTable.field_enum()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.PrimaryTimeseriesTable.to_geopandas"><code class="docutils literal notranslate"><span class="pre">PrimaryTimeseriesTable.to_geopandas()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.PrimaryTimeseriesTable.load_parquet"><code class="docutils literal notranslate"><span class="pre">PrimaryTimeseriesTable.load_parquet()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.PrimaryTimeseriesTable.load_csv"><code class="docutils literal notranslate"><span class="pre">PrimaryTimeseriesTable.load_csv()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.PrimaryTimeseriesTable.load_netcdf"><code class="docutils literal notranslate"><span class="pre">PrimaryTimeseriesTable.load_netcdf()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.SecondaryTimeseriesTable"><code class="docutils literal notranslate"><span class="pre">SecondaryTimeseriesTable</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.SecondaryTimeseriesTable._read_spark_df"><code class="docutils literal notranslate"><span class="pre">SecondaryTimeseriesTable._read_spark_df()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.SecondaryTimeseriesTable._load"><code class="docutils literal notranslate"><span class="pre">SecondaryTimeseriesTable._load()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.SecondaryTimeseriesTable.field_enum"><code class="docutils literal notranslate"><span class="pre">SecondaryTimeseriesTable.field_enum()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.SecondaryTimeseriesTable.to_geopandas"><code class="docutils literal notranslate"><span class="pre">SecondaryTimeseriesTable.to_geopandas()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.SecondaryTimeseriesTable.load_parquet"><code class="docutils literal notranslate"><span class="pre">SecondaryTimeseriesTable.load_parquet()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.SecondaryTimeseriesTable.load_csv"><code class="docutils literal notranslate"><span class="pre">SecondaryTimeseriesTable.load_csv()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.SecondaryTimeseriesTable.load_netcdf"><code class="docutils literal notranslate"><span class="pre">SecondaryTimeseriesTable.load_netcdf()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.JoinedTimeseriesTable"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesTable</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.JoinedTimeseriesTable._read_spark_df"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesTable._read_spark_df()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.JoinedTimeseriesTable.field_enum"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesTable.field_enum()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.JoinedTimeseriesTable.to_geopandas"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesTable.to_geopandas()</span></code></a></li>
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#tables.JoinedTimeseriesTable.create"><code class="docutils literal notranslate"><span class="pre">JoinedTimeseriesTable.create()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/autoapi/tables/index.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><!-- This will display the version of the docs -->
+TEEHR version 0.4.0</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

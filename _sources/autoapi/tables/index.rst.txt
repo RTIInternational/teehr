@@ -1,0 +1,2141 @@
+:py:mod:`tables`
+================
+
+.. py:module:: tables
+
+.. autoapi-nested-parse::
+
+   Access methods to units table.
+
+   ..
+       !! processed by numpydoc !!
+
+
+Module Contents
+---------------
+
+Classes
+~~~~~~~
+
+.. autoapisummary::
+
+   tables.BaseTable
+   tables.UnitTable
+   tables.VariableTable
+   tables.AttributeTable
+   tables.ConfigurationTable
+   tables.LocationTable
+   tables.LocationAttributeTable
+   tables.LocationCrosswalkTable
+   tables.PrimaryTimeseriesTable
+   tables.SecondaryTimeseriesTable
+   tables.JoinedTimeseriesTable
+
+
+
+
+Attributes
+~~~~~~~~~~
+
+.. autoapisummary::
+
+   tables.logger
+
+
+.. py:data:: logger
+
+   
+
+.. py:class:: BaseTable(ev)
+
+
+   
+   Base query class.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:method:: _raise_missing_table_error()
+      :staticmethod:
+
+      
+      Raise an error if the table does not exist.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _dir_is_emtpy(pattern: str = '**/*.parquet') -> bool
+
+      
+      Check if the directory contains files of specified pattern.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _read_spark_df(format: str = 'parquet')
+
+      
+      Read data from directory as a spark dataframe.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _load()
+      :abstractmethod:
+
+      
+      Load data into the dataset.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: add()
+      :abstractmethod:
+
+      
+      Add domain variables.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: query(filters: Union[str, dict, teehr.models.filters.FilterBaseModel, List[Union[str, dict, teehr.models.filters.FilterBaseModel]]] = None, order_by: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]] = None)
+
+      
+      Run a query against the table with filters and order_by.
+
+      In general a user will either use the query methods or the filter and
+      order_by methods.  The query method is a convenience method that will
+      apply filters and order_by in a single call.
+
+      :Parameters:
+
+          **filters** : Union[
+                  str, dict, FilterBaseModel,
+                  List[Union[str, dict, FilterBaseModel]]
+              ]
+              The filters to apply to the query.  The filters can be a string,
+              dictionary, FilterBaseModel or a list of any of these.  The filters
+
+          **order_by** : Union[str, List[str], StrEnum, List[StrEnum]]
+              The fields to order the query by.  The fields can be a string,
+              StrEnum or a list of any of these.  The fields will be ordered in
+              the order they are provided.
+
+
+
+      :Returns:
+
+          **self** : BaseTable or subclass of BaseTable
+              ..
+
+
+
+
+
+
+
+
+
+
+      .. rubric:: Examples
+
+      Filters as dictionary
+      >>> ts_df = ev.primary_timeseries.query(
+      >>>     filters=[
+      >>>         {
+      >>>             "column": "value_time",
+      >>>             "operator": ">",
+      >>>             "value": "2022-01-01",
+      >>>         },
+      >>>         {
+      >>>             "column": "value_time",
+      >>>             "operator": "<",
+      >>>             "value": "2022-01-02",
+      >>>         },
+      >>>         {
+      >>>             "column": "location_id",
+      >>>             "operator": "=",
+      >>>             "value": "gage-C",
+      >>>         },
+      >>>     ],
+      >>>     order_by=["location_id", "value_time"]
+      >>> ).to_pandas()
+
+      Filters as string
+      >>> ts_df = ev.primary_timeseries.query(
+      >>>     filters=[
+      >>>         "value_time > '2022-01-01'",
+      >>>         "value_time < '2022-01-02'",
+      >>>         "location_id = 'gage-C'"
+      >>>     ],
+      >>>     order_by=["location_id", "value_time"]
+      >>> ).to_pandas()
+
+      Filters as FilterBaseModel
+      >>> from teehr.models.filters import TimeseriesFilter
+      >>> from teehr.models.filters import FilterOperators
+      >>>
+      >>> fields = ev.primary_timeseries.field_enum()
+      >>> ts_df = ev.primary_timeseries.query(
+      >>>     filters=[
+      >>>         TimeseriesFilter(
+      >>>             column=fields.value_time,
+      >>>             operator=FilterOperators.gt,
+      >>>             value="2022-01-01",
+      >>>         ),
+      >>>         TimeseriesFilter(
+      >>>             column=fields.value_time,
+      >>>             operator=FilterOperators.lt,
+      >>>             value="2022-01-02",
+      >>>         ),
+      >>>         TimeseriesFilter(
+      >>>             column=fields.location_id,
+      >>>             operator=FilterOperators.eq,
+      >>>             value="gage-C",
+      >>>         ),
+      >>> ]).to_pandas()
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: filter(filters: Union[str, dict, teehr.models.filters.FilterBaseModel, List[Union[str, dict, teehr.models.filters.FilterBaseModel]]])
+
+      
+      Apply a filter.
+
+
+      :Parameters:
+
+          **filters** : Union[
+                  str, dict, FilterBaseModel,
+                  List[Union[str, dict, FilterBaseModel]]
+              ]
+              The filters to apply to the query.  The filters can be a string,
+              dictionary, FilterBaseModel or a list of any of these.
+
+
+
+      :Returns:
+
+          **self** : BaseTable or subclass of BaseTable
+              ..
+
+
+
+
+
+
+
+
+
+
+      .. rubric:: Examples
+
+      Filters as dictionary
+      >>> ts_df = ev.primary_timeseries.filter(
+      >>>     filters=[
+      >>>         {
+      >>>             "column": "value_time",
+      >>>             "operator": ">",
+      >>>             "value": "2022-01-01",
+      >>>         },
+      >>>         {
+      >>>             "column": "value_time",
+      >>>             "operator": "<",
+      >>>             "value": "2022-01-02",
+      >>>         },
+      >>>         {
+      >>>             "column": "location_id",
+      >>>             "operator": "=",
+      >>>             "value": "gage-C",
+      >>>         },
+      >>>     ]
+      >>> ).to_pandas()
+
+      Filters as string
+      >>> ts_df = ev.primary_timeseries.filter(
+      >>>     filters=[
+      >>>         "value_time > '2022-01-01'",
+      >>>         "value_time < '2022-01-02'",
+      >>>         "location_id = 'gage-C'"
+      >>>     ]
+      >>> ).to_pandas()
+
+      Filters as FilterBaseModel
+      >>> from teehr.models.filters import TimeseriesFilter
+      >>> from teehr.models.filters import FilterOperators
+      >>>
+      >>> fields = ev.primary_timeseries.field_enum()
+      >>> ts_df = ev.primary_timeseries.filter(
+      >>>     filters=[
+      >>>         TimeseriesFilter(
+      >>>             column=fields.value_time,
+      >>>             operator=FilterOperators.gt,
+      >>>             value="2022-01-01",
+      >>>         ),
+      >>>         TimeseriesFilter(
+      >>>             column=fields.value_time,
+      >>>             operator=FilterOperators.lt,
+      >>>             value="2022-01-02",
+      >>>         ),
+      >>>         TimeseriesFilter(
+      >>>             column=fields.location_id,
+      >>>             operator=FilterOperators.eq,
+      >>>             value="gage-C",
+      >>>         ),
+      >>> ]).to_pandas()
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: order_by(fields: Union[str, teehr.models.str_enum.StrEnum, List[Union[str, teehr.models.str_enum.StrEnum]]])
+
+      
+      Apply an order_by.
+
+
+      :Parameters:
+
+          **fields** : Union[str, StrEnum, List[Union[str, StrEnum]]]
+              The fields to order the query by.  The fields can be a string,
+              StrEnum or a list of any of these.  The fields will be ordered in
+              the order they are provided.
+
+
+
+      :Returns:
+
+          **self** : BaseTable or subclass of BaseTable
+              ..
+
+
+
+
+
+
+
+
+
+
+      .. rubric:: Examples
+
+      Order by string
+      >>> ts_df = ev.primary_timeseries.order_by("value_time").to_df()
+
+      Order by StrEnum
+      >>> from teehr.querying.field_enums import TimeseriesFields
+      >>> ts_df = ev.primary_timeseries.order_by(
+      >>>     TimeseriesFields.value_time
+      >>> ).to_pandas()
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: fields() -> List[str]
+
+      
+      Return table columns as a list.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: distinct_values(column: str) -> List[str]
+
+      
+      Return distinct values for a column.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: field_enum() -> teehr.models.str_enum.StrEnum
+      :abstractmethod:
+
+      
+      Get the fields enum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: to_pandas()
+
+      
+      Return Pandas DataFrame.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: to_geopandas()
+      :abstractmethod:
+
+      
+      Return GeoPandas DataFrame.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: to_sdf()
+
+      
+      Return PySpark DataFrame.
+
+      The PySpark DataFrame can be further processed using PySpark. Note,
+      PySpark DataFrames are lazy and will not be executed until an action
+      is called.  For example, calling `show()`, `collect()` or toPandas().
+      This can be useful for further processing or analysis, for example,
+
+      >>> ts_sdf = ev.primary_timeseries.query(
+      >>>     filters=[
+      >>>         "value_time > '2022-01-01'",
+      >>>         "value_time < '2022-01-02'",
+      >>>         "location_id = 'gage-C'"
+      >>>     ]
+      >>> ).to_sdf()
+      >>> ts_df = (
+      >>>     ts_sdf.select("value_time", "location_id", "value")
+      >>>    .orderBy("value").toPandas()
+      >>> )
+      >>> ts_df.head()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: UnitTable(ev)
+
+
+   Bases: :py:obj:`BaseTable`
+
+   
+   Access methods to units table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:method:: field_enum() -> teehr.models.table_enums.UnitFields
+
+      
+      Get the unit fields enum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: add(unit: Union[teehr.models.tables.Unit, List[teehr.models.tables.Unit]])
+
+      
+      Add a unit to the evaluation.
+
+
+      :Parameters:
+
+          **unit** : Union[Unit, List[Unit]]
+              The unit domain to add.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: VariableTable(ev)
+
+
+   Bases: :py:obj:`BaseTable`
+
+   
+   Access methods to variables table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:method:: field_enum() -> teehr.models.table_enums.VariableFields
+
+      
+      Get the variable fields enum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: add(variable: Union[teehr.models.tables.Variable, List[teehr.models.tables.Variable]])
+
+      
+      Add a unit to the evaluation.
+
+
+      :Parameters:
+
+          **variable** : Union[Variable, List[Variable]]
+              The variable domain to add.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: AttributeTable(ev)
+
+
+   Bases: :py:obj:`BaseTable`
+
+   
+   Access methods to attributes table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:method:: field_enum() -> teehr.models.table_enums.AttributeFields
+
+      
+      Get the attribute fields enum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: add(attribute: Union[teehr.models.tables.Attribute, List[teehr.models.tables.Attribute]])
+
+      
+      Add an attribute to the evaluation.
+
+
+      :Parameters:
+
+          **attribute** : Union[Attribute, List[Attribute]]
+              The attribute domain to add.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: ConfigurationTable(ev)
+
+
+   Bases: :py:obj:`BaseTable`
+
+   
+   Access methods to configurations table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:method:: field_enum() -> teehr.models.table_enums.ConfigurationFields
+
+      
+      Get the configuration fields enum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: add(configuration: Union[teehr.models.tables.Configuration, List[teehr.models.tables.Configuration]])
+
+      
+      Add a configuration domain to the evaluation.
+
+
+      :Parameters:
+
+          **configuration** : Union[Configuration, List[Configuration]]
+              The configuration domain to add.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: LocationTable(ev)
+
+
+   Bases: :py:obj:`BaseTable`
+
+   
+   Access methods to locations table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:method:: field_enum() -> teehr.models.table_enums.LocationFields
+
+      
+      Get the location fields enum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: to_geopandas()
+
+      
+      Return GeoPandas DataFrame.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: load_spatial(in_path: Union[pathlib.Path, str], field_mapping: dict = None, pattern: str = '**/*.parquet', **kwargs)
+
+      
+      Import geometry data.
+
+
+      :Parameters:
+
+          **in_path** : Union[Path, str]
+              The input file or directory path.
+              Any file format that can be read by GeoPandas.
+
+          **field_mapping** : dict, optional
+              A dictionary mapping input fields to output fields.
+              Format: {input_field: output_field}
+
+          **pattern** : str, optional (default: "**/*.parquet")
+              The pattern to match files.
+              Only used when in_path is a directory.
+
+          **\*\*kwargs**
+              Additional keyword arguments are passed to GeoPandas read_file().
+
+          **File is first read by GeoPandas, field names renamed and**
+              ..
+
+          **then validated and inserted into the dataset.**
+              ..
+
+          **The TEEHR Location Crosswalk table schema includes fields:**
+              ..
+
+          **- id**
+              ..
+
+          **- name**
+              ..
+
+          **- geometry**
+              ..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: LocationAttributeTable(ev)
+
+
+   Bases: :py:obj:`BaseTable`
+
+   
+   Access methods to location attributes table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:method:: _load(in_path: Union[pathlib.Path, str], pattern: str = None, field_mapping: dict = None, **kwargs)
+
+      
+      Load location attributes helper.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: field_enum() -> teehr.models.table_enums.LocationAttributeFields
+
+      
+      Get the location attribute fields enum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: to_geopandas()
+
+      
+      Return GeoPandas DataFrame.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: load_parquet(in_path: Union[pathlib.Path, str], pattern: str = '**/*.parquet', field_mapping: dict = None, **kwargs)
+
+      
+      Import location_attributes from parquet file format.
+
+
+      :Parameters:
+
+          **in_path** : Union[Path, str]
+              The input file or directory path.
+              Parquet file format.
+
+          **field_mapping** : dict, optional
+              A dictionary mapping input fields to output fields.
+              Format: {input_field: output_field}
+
+          **\*\*kwargs**
+              Additional keyword arguments are passed to pd.read_parquet().
+
+          **The TEEHR Location Attribute table schema includes fields:**
+              ..
+
+          **- location_id**
+              ..
+
+          **- attribute_name**
+              ..
+
+          **- value**
+              ..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: load_csv(in_path: Union[pathlib.Path, str], pattern: str = '**/*.csv', field_mapping: dict = None, **kwargs)
+
+      
+      Import location_attributes from CSV file format.
+
+
+      :Parameters:
+
+          **in_path** : Union[Path, str]
+              The input file or directory path.
+              CSV file format.
+
+          **field_mapping** : dict, optional
+              A dictionary mapping input fields to output fields.
+              Format: {input_field: output_field}
+
+          **\*\*kwargs**
+              Additional keyword arguments are passed to pd.read_parquet().
+
+          **The TEEHR Location Attribute table schema includes fields:**
+              ..
+
+          **- location_id**
+              ..
+
+          **- attribute_name**
+              ..
+
+          **- value**
+              ..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: LocationCrosswalkTable(ev)
+
+
+   Bases: :py:obj:`BaseTable`
+
+   
+   Access methods to location crosswalks table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:method:: _load(in_path: Union[pathlib.Path, str], field_mapping: dict = None, pattern: str = None, **kwargs)
+
+      
+      Load location crosswalks helper.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: field_enum() -> teehr.models.table_enums.LocationCrosswalkFields
+
+      
+      Get the location crosswalk fields enum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: to_geopandas()
+
+      
+      Return GeoPandas DataFrame.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: load_parquet(in_path: Union[pathlib.Path, str], pattern: str = '**/*.parquet', field_mapping: dict = None, **kwargs)
+
+      
+      Import location crosswalks from parquet file format.
+
+
+      :Parameters:
+
+          **in_path** : Union[Path, str]
+              The input file or directory path.
+              Parquet file format.
+
+          **field_mapping** : dict, optional
+              A dictionary mapping input fields to output fields.
+              Format: {input_field: output_field}
+
+          **\*\*kwargs**
+              Additional keyword arguments are passed to pd.read_csv()
+              or pd.read_parquet().
+
+          **The TEEHR Location Crosswalk table schema includes fields:**
+              ..
+
+          **- primary_location_id**
+              ..
+
+          **- secondary_location_id**
+              ..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: load_csv(in_path: Union[pathlib.Path, str], pattern: str = '**/*.csv', field_mapping: dict = None, **kwargs)
+
+      
+      Import location crosswalks from CSV file format.
+
+
+      :Parameters:
+
+          **in_path** : Union[Path, str]
+              The input file or directory path.
+              CSV file format.
+
+          **field_mapping** : dict, optional
+              A dictionary mapping input fields to output fields.
+              Format: {input_field: output_field}
+
+          **\*\*kwargs**
+              Additional keyword arguments are passed to pd.read_csv()
+              or pd.read_parquet().
+
+          **The TEEHR Location Crosswalk table schema includes fields:**
+              ..
+
+          **- primary_location_id**
+              ..
+
+          **- secondary_location_id**
+              ..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: PrimaryTimeseriesTable(ev)
+
+
+   Bases: :py:obj:`BaseTable`
+
+   
+   Access methods to timeseries table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:method:: _read_spark_df(format: str = 'parquet')
+
+      
+      Read data from directory as a spark dataframe.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _load(in_path: Union[pathlib.Path, str], cache_path: pathlib.Path, pattern='**/*.parquet', timeseries_type: str = None, field_mapping: dict = None, constant_field_values: dict = None, **kwargs)
+
+      
+      Import timeseries helper.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: field_enum() -> teehr.models.table_enums.TimeseriesFields
+
+      
+      Get the timeseries fields enum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: to_geopandas()
+
+      
+      Return GeoPandas DataFrame.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: load_parquet(in_path: Union[pathlib.Path, str], pattern: str = '**/*.parquet', field_mapping: dict = None, constant_field_values: dict = None, **kwargs)
+
+      
+      Import primary timeseries parquet data.
+
+
+      :Parameters:
+
+          **in_path** : Union[Path, str]
+              Path to the timeseries data (file or directory) in
+              parquet file format.
+
+          **field_mapping** : dict, optional
+              A dictionary mapping input fields to output fields.
+              Format: {input_field: output_field}
+
+          **constant_field_values** : dict, optional
+              A dictionary mapping field names to constant values.
+              Format: {field_name: value}
+
+          **\*\*kwargs**
+              Additional keyword arguments are passed to pd.read_parquet().
+
+          **Includes validation and importing data to database.**
+              ..
+
+          **The TEEHR Timeseries table schema includes fields:**
+              ..
+
+          **- reference_time**
+              ..
+
+          **- value_time**
+              ..
+
+          **- configuration_name**
+              ..
+
+          **- unit_name**
+              ..
+
+          **- variable_name**
+              ..
+
+          **- value**
+              ..
+
+          **- location_id**
+              ..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: load_csv(in_path: Union[pathlib.Path, str], pattern: str = '**/*.csv', field_mapping: dict = None, constant_field_values: dict = None, **kwargs)
+
+      
+      Import primary timeseries csv data.
+
+
+      :Parameters:
+
+          **in_path** : Union[Path, str]
+              Path to the timeseries data (file or directory) in
+              csv file format.
+
+          **field_mapping** : dict, optional
+              A dictionary mapping input fields to output fields.
+              Format: {input_field: output_field}
+
+          **constant_field_values** : dict, optional
+              A dictionary mapping field names to constant values.
+              Format: {field_name: value}
+
+          **\*\*kwargs**
+              Additional keyword arguments are passed to pd.read_csv().
+
+          **Includes validation and importing data to database.**
+              ..
+
+          **The TEEHR Timeseries table schema includes fields:**
+              ..
+
+          **- reference_time**
+              ..
+
+          **- value_time**
+              ..
+
+          **- configuration_name**
+              ..
+
+          **- unit_name**
+              ..
+
+          **- variable_name**
+              ..
+
+          **- value**
+              ..
+
+          **- location_id**
+              ..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: load_netcdf(in_path: Union[pathlib.Path, str], pattern: str = '**/*.nc', field_mapping: dict = None, constant_field_values: dict = None, **kwargs)
+
+      
+      Import primary timeseries netcdf data.
+
+
+      :Parameters:
+
+          **in_path** : Union[Path, str]
+              Path to the timeseries data (file or directory) in
+              netcdf file format.
+
+          **field_mapping** : dict, optional
+              A dictionary mapping input fields to output fields.
+              Format: {input_field: output_field}
+
+          **constant_field_values** : dict, optional
+              A dictionary mapping field names to constant values.
+              Format: {field_name: value}
+
+          **\*\*kwargs**
+              Additional keyword arguments are passed to xr.open_dataset().
+
+          **Includes validation and importing data to database.**
+              ..
+
+          **The TEEHR Timeseries table schema includes fields:**
+              ..
+
+          **- reference_time**
+              ..
+
+          **- value_time**
+              ..
+
+          **- configuration_name**
+              ..
+
+          **- unit_name**
+              ..
+
+          **- variable_name**
+              ..
+
+          **- value**
+              ..
+
+          **- location_id**
+              ..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: SecondaryTimeseriesTable(ev)
+
+
+   Bases: :py:obj:`BaseTable`
+
+   
+   Access methods to timeseries table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:method:: _read_spark_df(format: str = 'parquet')
+
+      
+      Read data from directory as a spark dataframe.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: _load(in_path: Union[pathlib.Path, str], cache_path: pathlib.Path, pattern='**/*.parquet', timeseries_type: str = None, field_mapping: dict = None, constant_field_values: dict = None, **kwargs)
+
+      
+      Import timeseries helper.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: field_enum() -> teehr.models.table_enums.TimeseriesFields
+
+      
+      Get the timeseries fields enum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: to_geopandas()
+
+      
+      Return GeoPandas DataFrame.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: load_parquet(in_path: Union[pathlib.Path, str], pattern: str = '**/*.parquet', field_mapping: dict = None, constant_field_values: dict = None, **kwargs)
+
+      
+      Import secondary timeseries parquet data.
+
+
+      :Parameters:
+
+          **in_path** : Union[Path, str]
+              Path to the timeseries data (file or directory) in
+              parquet file format.
+
+          **field_mapping** : dict, optional
+              A dictionary mapping input fields to output fields.
+              Format: {input_field: output_field}
+
+          **constant_field_values** : dict, optional
+              A dictionary mapping field names to constant values.
+              Format: {field_name: value}
+
+          **\*\*kwargs**
+              Additional keyword arguments are passed to pd.read_parquet().
+
+          **Includes validation and importing data to database.**
+              ..
+
+          **The TEEHR Timeseries table schema includes fields:**
+              ..
+
+          **- reference_time**
+              ..
+
+          **- value_time**
+              ..
+
+          **- configuration_name**
+              ..
+
+          **- unit_name**
+              ..
+
+          **- variable_name**
+              ..
+
+          **- value**
+              ..
+
+          **- location_id**
+              ..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: load_csv(in_path: Union[pathlib.Path, str], pattern: str = '**/*.csv', field_mapping: dict = None, constant_field_values: dict = None, **kwargs)
+
+      
+      Import secondary timeseries csv data.
+
+
+      :Parameters:
+
+          **in_path** : Union[Path, str]
+              Path to the timeseries data (file or directory) in
+              csv file format.
+
+          **field_mapping** : dict, optional
+              A dictionary mapping input fields to output fields.
+              Format: {input_field: output_field}
+
+          **constant_field_values** : dict, optional
+              A dictionary mapping field names to constant values.
+              Format: {field_name: value}
+
+          **\*\*kwargs**
+              Additional keyword arguments are passed to pd.read_csv().
+
+          **Includes validation and importing data to database.**
+              ..
+
+          **The TEEHR Timeseries table schema includes fields:**
+              ..
+
+          **- reference_time**
+              ..
+
+          **- value_time**
+              ..
+
+          **- configuration_name**
+              ..
+
+          **- unit_name**
+              ..
+
+          **- variable_name**
+              ..
+
+          **- value**
+              ..
+
+          **- location_id**
+              ..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: load_netcdf(in_path: Union[pathlib.Path, str], pattern: str = '**/*.nc', field_mapping: dict = None, constant_field_values: dict = None, **kwargs)
+
+      
+      Import secondary timeseries netcdf data.
+
+
+      :Parameters:
+
+          **in_path** : Union[Path, str]
+              Path to the timeseries data (file or directory) in
+              netcdf file format.
+
+          **field_mapping** : dict, optional
+              A dictionary mapping input fields to output fields.
+              Format: {input_field: output_field}
+
+          **constant_field_values** : dict, optional
+              A dictionary mapping field names to constant values.
+              Format: {field_name: value}
+
+          **\*\*kwargs**
+              Additional keyword arguments are passed to xr.open_dataset().
+
+          **Includes validation and importing data to database.**
+              ..
+
+          **The TEEHR Timeseries table schema includes fields:**
+              ..
+
+          **- reference_time**
+              ..
+
+          **- value_time**
+              ..
+
+          **- configuration_name**
+              ..
+
+          **- unit_name**
+              ..
+
+          **- variable_name**
+              ..
+
+          **- value**
+              ..
+
+          **- location_id**
+              ..
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
+.. py:class:: JoinedTimeseriesTable(ev)
+
+
+   Bases: :py:obj:`BaseTable`
+
+   
+   Access methods to joined timeseries table.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   ..
+       !! processed by numpydoc !!
+   .. py:method:: _read_spark_df(format: str = 'parquet')
+
+      
+      Read data from directory as a spark dataframe.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: field_enum() -> teehr.models.table_enums.JoinedTimeseriesFields
+
+      
+      Get the joined timeseries fields enum.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: to_geopandas()
+
+      
+      Return GeoPandas DataFrame.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+   .. py:method:: create(execute_udf: bool = False)
+
+      
+      Create joined timeseries table.
+
+
+      :Parameters:
+
+          **execute_udf** : bool, optional
+              Execute UDFs, by default False
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      ..
+          !! processed by numpydoc !!
+
+
