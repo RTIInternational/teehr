@@ -136,7 +136,6 @@ class Fetch:
             in_path=Path(
                 self.usgs_cache_dir
             ),
-            # dataset_path=self.eval.dataset_dir,
             timeseries_type=timeseries_type,
         )
 

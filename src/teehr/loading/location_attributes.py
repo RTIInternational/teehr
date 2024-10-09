@@ -145,7 +145,6 @@ def convert_location_attributes(
 def validate_and_insert_location_attributes(
     ev,
     in_path: Union[str, Path],
-    # dataset_dir: Union[str, Path],
     pattern: str = "**/*.parquet",
 ):
     """Validate and insert location attributes data.
