@@ -33,11 +33,32 @@ class TEEHRDataFrameAccessor:
 
     @staticmethod
     def _validate(obj):
-        """Validate the DataFrame object columns."""
-        if "location_id" not in obj.columns:
-            raise AttributeError("Must have 'location_id'.")
-        if obj.index.size == 0:
-            raise AttributeError("DataFrame must have data.")
+        """Validate the DataFrame object."""
+        if obj.attrs['table_type']:
+            if obj.attrs['table_type'] == 'timeseries':
+
+                if "location_id" not in obj.columns:
+                    raise AttributeError("Must have 'location_id'.")
+                if obj.index.size == 0:
+                    raise AttributeError("DataFrame must have data.")
+
+            elif obj.attrs['table_type'] == 'location':
+
+                raise NotImplementedError('location methods must be'
+                                          ' implemented.')
+
+            elif obj.attrs['table_type'] == 'metrics':
+
+                raise NotImplementedError('metrics methods must be'
+                                          ' implemented.')
+
+            else:
+                table_type_string = obj.attrs['table_type']
+                raise AttributeError(f'Invalid table type:{table_type_string}')
+
+        else:
+
+            raise AttributeError("Table type was undefined.")
 
     def _get_unique_values(
             self,
@@ -192,8 +213,6 @@ class TEEHRDataFrameAccessor:
                 logger.info('Specified directory does not exist. Creating new'
                             ' directory to store figure.')
                 Path(output_dir).mkdir(parents=True, exist_ok=True)
-
-        # TO-DO: check here for timeseries_df fields
 
         schema = self._timeseries_schema()
         for variable in schema.keys():
