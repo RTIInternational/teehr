@@ -296,7 +296,9 @@ class BaseTable():
 
     def to_pandas(self):
         """Return Pandas DataFrame."""
-        return self.df.toPandas()
+        df = self.df.toPandas()
+        df.attrs['table_type'] = None
+        return df
 
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
@@ -460,6 +462,12 @@ class LocationTable(BaseTable):
             {field: field for field in fields_list}
         )
 
+    def to_pandas(self):
+        """Return Pandas DataFrame for Location Table."""
+        df = self.df.toPandas()
+        df.attrs['table_type'] = 'location'
+        return df
+
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
         return df_to_gdf(self.to_pandas())
@@ -491,6 +499,12 @@ class LocationAttributeTable(BaseTable):
             {field: field for field in fields_list}
         )
 
+    def to_pandas(self):
+        """Return Pandas DataFrame for Location Attributes."""
+        df = self.df.toPandas()
+        df.attrs['table_type'] = 'location'
+        return df
+
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
         return join_geometry(self.df, self.eval.locations.to_sdf())
@@ -521,6 +535,12 @@ class LocationCrosswalkTable(BaseTable):
             "LocationCrosswalkFields",
             {field: field for field in fields_list}
         )
+
+    def to_pandas(self):
+        """Return Pandas DataFrame for Location Crosswalk."""
+        df = self.df.toPandas()
+        df.attrs['table_type'] = 'location'
+        return df
 
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
@@ -556,6 +576,12 @@ class PrimaryTimeseriesTable(BaseTable):
             {field: field for field in fields_list}
         )
 
+    def to_pandas(self):
+        """Return Pandas DataFrame for Primary Timeseries."""
+        df = self.df.toPandas()
+        df.attrs['table_type'] = 'timeseries'
+        return df
+
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
         return join_geometry(self.df, self.eval.locations.to_sdf())
@@ -586,6 +612,12 @@ class SecondaryTimeseriesTable(BaseTable):
             "TimeseriesFields",
             {field: field for field in fields_list}
         )
+
+    def to_pandas(self):
+        """Return Pandas DataFrame for Secondary Timeseries."""
+        df = self.df.toPandas()
+        df.attrs['table_type'] = 'timeseries'
+        return df
 
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
@@ -618,6 +650,12 @@ class JoinedTimeseriesTable(BaseTable):
             "JoinedTimeseriesFields",
             {field: field for field in fields_list}
         )
+
+    def to_pandas(self):
+        """Return Pandas DataFrame for Joined Timeseries."""
+        df = self.df.toPandas()
+        df.attrs['table_type'] = 'timeseries'
+        return df
 
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
