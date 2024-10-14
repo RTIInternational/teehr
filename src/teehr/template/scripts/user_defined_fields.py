@@ -2,7 +2,7 @@
 
 This file gets dynamically imported to the TEEHR
 create_joined_timeseries_dataset() function and is used to add user
-defined fields when a user runs eval.create_joined_timeseries().
+defined fields when a user runs ev.create_joined_timeseries().
 
 Users can modify this script to add or remove user defined fields to
 the joined timeseries data.

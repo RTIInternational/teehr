@@ -80,18 +80,18 @@ logger = logging.getLogger(__name__)
 class BaseTable():
     """Base query class."""
 
-    def __init__(self, eval):
+    def __init__(self, ev):
         """Initialize class."""
         self.dir = None
-        self.eval = eval
-        self.spark = eval.spark
+        self.ev = ev
+        self.spark = ev.spark
         self.table_model: TableBaseModel = None
         self.filter_model: FilterBaseModel = None
         self.validate_filter_field_types = True
         self.df: ps.DataFrame = None
-        self.cache_dir = eval.cache_dir
-        self.dataset_dir = eval.dataset_dir
-        self.scripts_dir = eval.scripts_dir
+        self.cache_dir = ev.cache_dir
+        self.dataset_dir = ev.dataset_dir
+        self.scripts_dir = ev.scripts_dir
         self.locations_cache_dir = Path(
             self.cache_dir,
             const.LOADING_CACHE_DIR,
@@ -185,7 +185,7 @@ class BaseTable():
         Examples
         --------
         Filters as dictionary
-        >>> ts_df = eval.primary_timeseries.query(
+        >>> ts_df = ev.primary_timeseries.query(
         >>>     filters=[
         >>>         {
         >>>             "column": "value_time",
@@ -207,7 +207,7 @@ class BaseTable():
         >>> ).to_pandas()
 
         Filters as string
-        >>> ts_df = eval.primary_timeseries.query(
+        >>> ts_df = ev.primary_timeseries.query(
         >>>     filters=[
         >>>         "value_time > '2022-01-01'",
         >>>         "value_time < '2022-01-02'",
@@ -220,8 +220,8 @@ class BaseTable():
         >>> from teehr.models.filters import TimeseriesFilter
         >>> from teehr.models.filters import FilterOperators
         >>>
-        >>> fields = eval.primary_timeseries.field_enum()
-        >>> ts_df = eval.primary_timeseries.query(
+        >>> fields = ev.primary_timeseries.field_enum()
+        >>> ts_df = ev.primary_timeseries.query(
         >>>     filters=[
         >>>         TimeseriesFilter(
         >>>             column=fields.value_time,
@@ -282,7 +282,7 @@ class BaseTable():
         Examples
         --------
         Filters as dictionary
-        >>> ts_df = eval.primary_timeseries.filter(
+        >>> ts_df = ev.primary_timeseries.filter(
         >>>     filters=[
         >>>         {
         >>>             "column": "value_time",
@@ -303,7 +303,7 @@ class BaseTable():
         >>> ).to_pandas()
 
         Filters as string
-        >>> ts_df = eval.primary_timeseries.filter(
+        >>> ts_df = ev.primary_timeseries.filter(
         >>>     filters=[
         >>>         "value_time > '2022-01-01'",
         >>>         "value_time < '2022-01-02'",
@@ -315,8 +315,8 @@ class BaseTable():
         >>> from teehr.models.filters import TimeseriesFilter
         >>> from teehr.models.filters import FilterOperators
         >>>
-        >>> fields = eval.primary_timeseries.field_enum()
-        >>> ts_df = eval.primary_timeseries.filter(
+        >>> fields = ev.primary_timeseries.field_enum()
+        >>> ts_df = ev.primary_timeseries.filter(
         >>>     filters=[
         >>>         TimeseriesFilter(
         >>>             column=fields.value_time,
@@ -368,11 +368,11 @@ class BaseTable():
         Examples
         --------
         Order by string
-        >>> ts_df = eval.primary_timeseries.order_by("value_time").to_df()
+        >>> ts_df = ev.primary_timeseries.order_by("value_time").to_df()
 
         Order by StrEnum
         >>> from teehr.querying.field_enums import TimeseriesFields
-        >>> ts_df = eval.primary_timeseries.order_by(
+        >>> ts_df = ev.primary_timeseries.order_by(
         >>>     TimeseriesFields.value_time
         >>> ).to_pandas()
 
@@ -415,7 +415,7 @@ class BaseTable():
         is called.  For example, calling `show()`, `collect()` or toPandas().
         This can be useful for further processing or analysis, for example,
 
-        >>> ts_sdf = eval.primary_timeseries.query(
+        >>> ts_sdf = ev.primary_timeseries.query(
         >>>     filters=[
         >>>         "value_time > '2022-01-01'",
         >>>         "value_time < '2022-01-02'",
@@ -436,10 +436,10 @@ class BaseTable():
 class UnitTable(BaseTable):
     """Access methods to units table."""
 
-    def __init__(self, eval):
+    def __init__(self, ev):
         """Initialize class."""
-        super().__init__(eval)
-        self.dir = eval.units_dir
+        super().__init__(ev)
+        self.dir = ev.units_dir
         self.table_model = Unit
         self.filter_model = UnitFilter
         if not self._dir_is_emtpy(pattern="**/*.csv"):
@@ -471,7 +471,7 @@ class UnitTable(BaseTable):
         >>>     name="m^3/s",
         >>>     long_name="Cubic meters per second"
         >>> )
-        >>> eval.load.add_unit(unit)
+        >>> ev.load.add_unit(unit)
         """
         add_unit(self.dataset_dir, unit)
 
@@ -479,10 +479,10 @@ class UnitTable(BaseTable):
 class VariableTable(BaseTable):
     """Access methods to variables table."""
 
-    def __init__(self, eval):
+    def __init__(self, ev):
         """Initialize class."""
-        super().__init__(eval)
-        self.dir = eval.variables_dir
+        super().__init__(ev)
+        self.dir = ev.variables_dir
         self.table_model = Variable
         self.filter_model = VariableFilter
         if not self._dir_is_emtpy(pattern="**/*.csv"):
@@ -514,7 +514,7 @@ class VariableTable(BaseTable):
         >>>     name="streamflow_hourly_inst",
         >>>     long_name="Instantaneous streamflow"
         >>> )
-        >>> eval.load.add_variable(variable)
+        >>> ev.load.add_variable(variable)
         """
         add_variable(self.dataset_dir, variable)
 
@@ -522,10 +522,10 @@ class VariableTable(BaseTable):
 class AttributeTable(BaseTable):
     """Access methods to attributes table."""
 
-    def __init__(self, eval):
+    def __init__(self, ev):
         """Initialize class."""
-        super().__init__(eval)
-        self.dir = eval.attributes_dir
+        super().__init__(ev)
+        self.dir = ev.attributes_dir
         self.table_model = Attribute
         self.filter_model = AttributeFilter
         if not self._dir_is_emtpy(pattern="**/*.csv"):
@@ -558,7 +558,7 @@ class AttributeTable(BaseTable):
         >>>     type="continuous",
         >>>     description="Drainage area in square kilometers"
         >>> )
-        >>> eval.load.add_attribute(attribute)
+        >>> ev.load.add_attribute(attribute)
         """
         add_attribute(self.dataset_dir, attribute)
 
@@ -566,10 +566,10 @@ class AttributeTable(BaseTable):
 class ConfigurationTable(BaseTable):
     """Access methods to configurations table."""
 
-    def __init__(self, eval):
+    def __init__(self, ev):
         """Initialize class."""
-        super().__init__(eval)
-        self.dir = eval.configurations_dir
+        super().__init__(ev)
+        self.dir = ev.configurations_dir
         self.table_model = Configuration
         self.filter_model = ConfigurationFilter
         if not self._dir_is_emtpy(pattern="**/*.csv"):
@@ -602,7 +602,7 @@ class ConfigurationTable(BaseTable):
         >>>     type="primary",
         >>>     description="USGS observations",
         >>> )
-        >>> eval.load.add_configuration(configuration)
+        >>> ev.load.add_configuration(configuration)
 
         """
         add_configuration(self.dataset_dir, configuration)
@@ -611,10 +611,10 @@ class ConfigurationTable(BaseTable):
 class LocationTable(BaseTable):
     """Access methods to locations table."""
 
-    def __init__(self, eval):
+    def __init__(self, ev):
         """Initialize class."""
-        super().__init__(eval)
-        self.dir = eval.locations_dir
+        super().__init__(ev)
+        self.dir = ev.locations_dir
         self.table_model = Location
         self.filter_model = LocationFilter
         if not self._dir_is_emtpy():
@@ -683,7 +683,7 @@ class LocationTable(BaseTable):
             **kwargs
         )
         validate_and_insert_locations(
-            self.eval,
+            self.ev,
             self.locations_cache_dir,
             pattern=pattern
         )
@@ -694,10 +694,10 @@ class LocationTable(BaseTable):
 class LocationAttributeTable(BaseTable):
     """Access methods to location attributes table."""
 
-    def __init__(self, eval):
+    def __init__(self, ev):
         """Initialize class."""
-        super().__init__(eval)
-        self.dir = eval.location_attributes_dir
+        super().__init__(ev)
+        self.dir = ev.location_attributes_dir
         self.table_model = LocationAttribute
         self.filter_model = LocationAttributeFilter
         if not self._dir_is_emtpy():
@@ -719,7 +719,7 @@ class LocationAttributeTable(BaseTable):
             **kwargs
         )
         validate_and_insert_location_attributes(
-            ev=self.eval,
+            ev=self.ev,
             in_path=self.attributes_cache_dir,
             pattern="**/*.parquet"
         )
@@ -750,7 +750,7 @@ class LocationAttributeTable(BaseTable):
             )
             logger.error(err_msg)
             raise ValueError(err_msg)
-        return join_geometry(self.df, self.eval.locations.to_sdf())
+        return join_geometry(self.df, self.ev.locations.to_sdf())
 
     def load_parquet(
         self,
@@ -826,10 +826,10 @@ class LocationAttributeTable(BaseTable):
 class LocationCrosswalkTable(BaseTable):
     """Access methods to location crosswalks table."""
 
-    def __init__(self, eval):
+    def __init__(self, ev):
         """Initialize class."""
-        super().__init__(eval)
-        self.dir = eval.location_crosswalks_dir
+        super().__init__(ev)
+        self.dir = ev.location_crosswalks_dir
         self.table_model = LocationCrosswalk
         self.filter_model = LocationCrosswalkFilter
         if not self._dir_is_emtpy():
@@ -851,7 +851,7 @@ class LocationCrosswalkTable(BaseTable):
             **kwargs
         )
         validate_and_insert_location_crosswalks(
-            ev=self.eval,
+            ev=self.ev,
             in_path=self.crosswalk_cache_dir,
             pattern="**/*.parquet"
         )
@@ -882,7 +882,7 @@ class LocationCrosswalkTable(BaseTable):
             logger.error(err_msg)
             raise ValueError(err_msg)
         return join_geometry(
-            self.df, self.eval.locations.to_sdf(),
+            self.df, self.ev.locations.to_sdf(),
             "primary_location_id"
         )
 
@@ -960,10 +960,10 @@ class LocationCrosswalkTable(BaseTable):
 class PrimaryTimeseriesTable(BaseTable):
     """Access methods to timeseries table."""
 
-    def __init__(self, eval):
+    def __init__(self, ev):
         """Initialize class."""
-        super().__init__(eval)
-        self.dir = eval.primary_timeseries_dir
+        super().__init__(ev)
+        self.dir = ev.primary_timeseries_dir
         self.table_model = Timeseries
         self.filter_model = TimeseriesFilter
         if not self._dir_is_emtpy():
@@ -1003,7 +1003,7 @@ class PrimaryTimeseriesTable(BaseTable):
             pattern = pattern.replace(".nc", ".parquet")
 
         validate_and_insert_timeseries(
-            ev=self.eval,
+            ev=self.ev,
             in_path=cache_path,
             timeseries_type=timeseries_type,
             pattern="**/*.parquet"
@@ -1035,7 +1035,7 @@ class PrimaryTimeseriesTable(BaseTable):
             )
             logger.error(err_msg)
             raise ValueError(err_msg)
-        return join_geometry(self.df, self.eval.locations.to_sdf())
+        return join_geometry(self.df, self.ev.locations.to_sdf())
 
     def load_parquet(
         self,
@@ -1194,10 +1194,10 @@ class PrimaryTimeseriesTable(BaseTable):
 class SecondaryTimeseriesTable(BaseTable):
     """Access methods to timeseries table."""
 
-    def __init__(self, eval):
+    def __init__(self, ev):
         """Initialize class."""
-        super().__init__(eval)
-        self.dir = eval.secondary_timeseries_dir
+        super().__init__(ev)
+        self.dir = ev.secondary_timeseries_dir
         self.table_model = Timeseries
         self.filter_model = TimeseriesFilter
         if not self._dir_is_emtpy():
@@ -1237,7 +1237,7 @@ class SecondaryTimeseriesTable(BaseTable):
             pattern = pattern.replace(".nc", ".parquet")
 
         validate_and_insert_timeseries(
-            ev=self.eval,
+            ev=self.ev,
             in_path=cache_path,
             timeseries_type=timeseries_type,
             pattern="**/*.parquet"
@@ -1270,7 +1270,7 @@ class SecondaryTimeseriesTable(BaseTable):
             logger.error(err_msg)
             raise ValueError(err_msg)
         # TODO: Need to access the crosswalk table here?
-        return join_geometry(self.df, self.eval.locations.to_sdf())
+        return join_geometry(self.df, self.ev.locations.to_sdf())
 
     def load_parquet(
         self,
@@ -1429,10 +1429,10 @@ class SecondaryTimeseriesTable(BaseTable):
 class JoinedTimeseriesTable(BaseTable):
     """Access methods to joined timeseries table."""
 
-    def __init__(self, eval):
+    def __init__(self, ev):
         """Initialize class."""
-        super().__init__(eval)
-        self.dir = eval.joined_timeseries_dir
+        super().__init__(ev)
+        self.dir = ev.joined_timeseries_dir
         self.filter_model = JoinedTimeseriesFilter
         self.table_model = JoinedTimeseriesTable
         self.validate_filter_field_types = False
@@ -1471,7 +1471,7 @@ class JoinedTimeseriesTable(BaseTable):
             logger.error(err_msg)
             raise ValueError(err_msg)
         return join_geometry(
-            self.df, self.eval.locations.to_sdf(),
+            self.df, self.ev.locations.to_sdf(),
             "primary_location_id"
         )
 

@@ -11,12 +11,12 @@ TEST_STUDY_DIR = Path(Path().home(), "temp", "real_study")
 TEST_STUDY_DIR.mkdir(parents=True, exist_ok=True)
 
 # Create an Evaluation object
-eval = Evaluation(dir_path=TEST_STUDY_DIR)
+ev = Evaluation(dir_path=TEST_STUDY_DIR)
 
 # Enable logging
-eval.enable_logging()
+ev.enable_logging()
 
-fields_list = eval.joined_timeseries.fields()
+fields_list = ev.joined_timeseries.fields()
 fields_list.append("relative_bias")
 
 jtf = JoinedTimeseriesFields(
@@ -26,7 +26,7 @@ jtf = JoinedTimeseriesFields(
 
 # This does not work.
 df = (
-    eval.metrics.query(
+    ev.metrics.query(
         order_by=["primary_location_id", "month"],
         group_by=["primary_location_id", "month"],
         include_metrics=[

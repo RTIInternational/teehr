@@ -19,38 +19,38 @@ STARTDATE = "2010-10-01"
 ENDDATE = "2020-09-30"
 
 # Create an Evaluation object
-eval = Evaluation(dir_path=TEST_STUDY_DIR)
+ev = Evaluation(dir_path=TEST_STUDY_DIR)
 
 # Enable logging
-eval.enable_logging()
+ev.enable_logging()
 
 # Clone the template
-eval.clone_template()
+ev.clone_template()
 
 # Load the location data (observations)
 # This is a geoparquet file, but any format
 # GeoPandas supports is supported.
-eval.locations.load_spatial(in_path=LOCATIONS)
+ev.locations.load_spatial(in_path=LOCATIONS)
 
 # Load the crosswalk data for USGS to NWM3.0
 # Crosswalks are needed for each "simulation source"
 # i.e. USGS -> NWM3.0, USGS -> NGEN, etc.
-eval.location_crosswalks.load_parquet(
+ev.location_crosswalks.load_parquet(
     in_path=LOCATION_XWALKS
 )
 
 # =====>>> This is where USGS -> NGEN crosswalk will be loaded. <<<=====
-# eval.load.import_location_crosswalks()
+# ev.load.import_location_crosswalks()
 
 # Load the USGS observations
 # Note, dates are hard coded and will be provided by NGEN
-eval.fetch.usgs_streamflow(
+ev.fetch.usgs_streamflow(
     start_date=STARTDATE,
     end_date=ENDDATE
 )
 
 # Load the NWM retrospective data
-eval.fetch.nwm_retrospective_points(
+ev.fetch.nwm_retrospective_points(
     nwm_version="nwm30",
     variable_name="streamflow",
     start_date=STARTDATE,
@@ -58,12 +58,12 @@ eval.fetch.nwm_retrospective_points(
 )
 
 # =====>>> This is where NGEN simulation output will be loaded. <<<=====
-# eval.load.import_secondary_timeseries()
+# ev.load.import_secondary_timeseries()
 
 # Create the joined timeseries
-eval.joined_timeseries.create(execute_udf=False)
+ev.joined_timeseries.create(execute_udf=False)
 
-df = eval.metrics.query(
+df = ev.metrics.query(
     order_by=["primary_location_id", "configuration_name"],
     group_by=["primary_location_id", "configuration_name"],
     include_metrics=[
