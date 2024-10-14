@@ -9,6 +9,10 @@ from pathlib import Path
 from bokeh.plotting import figure, save, output_file, show
 from bokeh.palettes import Turbo256
 
+from teehr.models.tables import (
+    Timeseries
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -29,36 +33,60 @@ class TEEHRDataFrameAccessor:
     def __init__(self, pandas_obj):
         """Initialize the class."""
         self._df = pandas_obj
+        self._df.attrs = pandas_obj.attrs
         self._validate(pandas_obj)
 
     @staticmethod
     def _validate(obj):
         """Validate the DataFrame object."""
-        if obj.attrs['table_type']:
-            if obj.attrs['table_type'] == 'timeseries':
+        if 'table_type' not in obj.attrs:
+            raise AttributeError("Not DataFrame Attribute 'table_type'"
+                                 " defined.")
 
-                if "location_id" not in obj.columns:
-                    raise AttributeError("Must have 'location_id'.")
-                if obj.index.size == 0:
-                    raise AttributeError("DataFrame must have data.")
+        if obj.attrs['table_type'] == 'timeseries':
 
-            elif obj.attrs['table_type'] == 'location':
+            # check for expected fields
+            fields_list = Timeseries.get_field_names()
+            missing = []
+            for field in fields_list:
+                if field not in obj.columns:
+                    missing.append(field)
+            if len(missing) != 0:
+                raise AttributeError(f'''
+                                        DataFrame with table_type ==
+                                        'timeseries' is missing expected
+                                        column(s):
+                                        {missing}
+                                        ''')
+            # check for data
+            if obj.index.size == 0:
+                raise AttributeError("DataFrame must have data.")
 
-                raise NotImplementedError('location methods must be'
-                                          ' implemented.')
+        elif obj.attrs['table_type'] == 'joined_timeseries':
 
-            elif obj.attrs['table_type'] == 'metrics':
+            # TO-DO: add validation
 
-                raise NotImplementedError('metrics methods must be'
-                                          ' implemented.')
+            raise NotImplementedError('Joined_timeseries methods must be'
+                                      ' implemented.')
 
-            else:
-                table_type_string = obj.attrs['table_type']
-                raise AttributeError(f'Invalid table type:{table_type_string}')
+        elif obj.attrs['table_type'] == 'location':
+
+            # TO-DO: add validation
+
+            raise NotImplementedError('Location methods must be'
+                                      ' implemented.')
+
+        elif obj.attrs['table_type'] == 'metrics':
+
+            # TO-DO: add validation
+
+            raise NotImplementedError('Metrics methods must be'
+                                      ' implemented.')
 
         else:
-
-            raise AttributeError("Table type was undefined.")
+            table_type_str = obj.attrs['table_type']
+            raise AttributeError(f'''Invalid table type:{table_type_str}.
+                                    Visualization not supported.''')
 
     def _get_unique_values(
             self,
@@ -206,6 +234,13 @@ class TEEHRDataFrameAccessor:
         schema and `_timeseries_generate_plot` to generate each plot. It
         ensures the output directory exists before saving the plots.
         """
+        if self._df.attrs['table_type'] != 'timeseries':
+            table_type_str = self.attrs['table_type']
+            raise AttributeError(f'''
+                                 Expected table_type == "timeseries", got
+                                 table_type = {table_type_str}
+                                 ''')
+
         if output_dir is not None:
             if output_dir.exists():
                 logger.info('Specified save directory is valid.')
