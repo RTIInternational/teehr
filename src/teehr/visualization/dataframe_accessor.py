@@ -1,13 +1,12 @@
 """Provides the teehr accessor extending pandas DataFrames."""
 import itertools
 from math import pi
-import random
 import pandas as pd
 import logging
 from pathlib import Path
 
 from bokeh.plotting import figure, save, output_file, show
-from bokeh.palettes import Turbo256
+from bokeh.palettes import colorblind
 
 from teehr.models.tables import (
     Timeseries
@@ -147,10 +146,7 @@ class TEEHRDataFrameAccessor:
 
         unique_units = df['unit_name'].unique().tolist()
 
-        numColors = len(schema[variable])
-        sampled_colors = random.sample(range(0, len(Turbo256)-1), numColors)
-        palette = Turbo256
-        palette_count = 0
+        palette = itertools.cycle(colorblind['Colorblind'][8])
 
         p = figure(title="Click legend entry to toggle display of timeseries",
                    y_axis_label=f"{variable} [{unique_units[0]}]",
@@ -170,8 +166,7 @@ class TEEHRDataFrameAccessor:
                        temp.value,
                        legend_label=f"{combo[0]} - {combo[1]}",
                        line_width=1,
-                       color=palette[sampled_colors[palette_count]])
-                palette_count += 1
+                       color=next(palette))
             else:
                 logger.warning(f"No data for combination: {combo}")
 
