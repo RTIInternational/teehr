@@ -1458,7 +1458,7 @@ class JoinedTimeseriesTable(BaseTable):
     def to_pandas(self):
         """Return Pandas DataFrame for Joined Timeseries."""
         df = self.df.toPandas()
-        df.attrs['table_type'] = 'timeseries'
+        df.attrs['table_type'] = 'joined_timeseries'
         return df
 
     def to_geopandas(self):
