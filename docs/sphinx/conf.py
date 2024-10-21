@@ -11,9 +11,6 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 from datetime import datetime
 import tomli
-import os
-import sys
-sys.path.insert(0, os.path.abspath('../../src/teehr'))
 
 # -- Project information -----------------------------------------------------
 project = 'TEEHR: Tools for Exploratory Evaluation in Hydrologic Research'
@@ -50,6 +47,9 @@ extensions = [
     'IPython.sphinxext.ipython_directive'
 ]
 
+# Suppress auto-api warnings
+# suppress_warnings = ["autoapi.python_import_resolution"]
+
 # -- Options for autodoc ----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#configuration
 
@@ -63,7 +63,7 @@ extensions = [
 # autosummary_generate = True
 
 # autoapi extension configuration
-autoapi_dirs = ['../../src/teehr']
+autoapi_dirs = ["../../src/teehr"]
 autoapi_add_toctree_entry = True
 autoapi_template_dir = '_templates/autoapi'
 # autoapi_options = {'show-module-summary': True}

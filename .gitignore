@@ -75,6 +75,7 @@ docs/sphinx/_static/*.html
 docs/sphinx/generated/
 docs/sphinx/savefig/
 docs/sphinx/getting_started/test_data/temp_test.db
+docs/sphinx/jupyter_execute/
 
 # PyBuilder
 target/
@@ -135,3 +136,5 @@ dmypy.json
 
 # Tests output
 temp/
+
+d
