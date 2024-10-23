@@ -82,7 +82,9 @@ class Metrics:
 
     def to_pandas(self) -> pd.DataFrame:
         """Convert the DataFrame to a Pandas DataFrame."""
-        return self.df.toPandas()
+        df = self.df.toPandas()
+        df.attrs['table_type'] = 'metrics'
+        return df
 
     def to_geopandas(self) -> gpd.GeoDataFrame:
         """Convert the DataFrame to a GeoPandas DataFrame."""
