@@ -33,7 +33,6 @@ fastapi = "^0.103.0"
 uvicorn = {extras = ["standard"], version = "^0.24.0.post1"}
 httpx = "^0.25.1"
 pandas = "^2.2.0"
-pydata-sphinx-theme = "^0.15.4"
 pyspark = {extras = ["pandas-on-spark"], version = "^3.5.2"}
 dataretrieval = "^1.0.9"
 numba = "^0.60.0"
@@ -43,12 +42,10 @@ netcdf4 = "1.6.5"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"
-netcdf4 = "^1.6.5"
 flake8 = "^6.1.0"
 
 [tool.poetry.group.dev.dependencies]
 sphinx = "^7.2.6"
-pydata-sphinx-theme = "^0.15.2"
 sphinx-design = "^0.5.0"
 numpydoc = "^1.6.0"
 pre-commit = "^3.6.0"
@@ -58,6 +55,7 @@ myst-nb = "^1.0.0"
 nbstripout = "^0.7.1"
 pickleshare = "^0.7.5"
 sphinx-autoapi = "3.0.0"
+pydata-sphinx-theme = "^0.16.0"
 
 
 [tool.poetry.group.viz.dependencies]
