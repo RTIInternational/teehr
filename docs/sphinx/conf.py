@@ -43,8 +43,9 @@ extensions = [
     "sphinx.ext.viewcode",  # links to source code
     "sphinx.ext.githubpages",
     "myst_nb",
-    'IPython.sphinxext.ipython_console_highlighting',
-    'IPython.sphinxext.ipython_directive'
+    # 'IPython.sphinxext.ipython_console_highlighting',
+    # 'IPython.sphinxext.ipython_directive'
+    # "jupyter_sphinx",
 ]
 
 # Suppress auto-api warnings
@@ -81,7 +82,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 master_doc = 'index'
 
 # MyST-NB options
-nb_execution_mode = "off"
+nb_execution_mode = "auto"
+# jupyter_execute_notebooks = "auto"  # deprecated?
 myst_enable_extensions = [
     "html_image"
 ]
