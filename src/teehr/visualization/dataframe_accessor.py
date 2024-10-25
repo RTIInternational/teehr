@@ -8,10 +8,6 @@ from pathlib import Path
 from bokeh.plotting import figure, save, output_file, show
 from bokeh.palettes import colorblind
 
-from teehr.models.tables import (
-    Timeseries
-)
-
 logger = logging.getLogger(__name__)
 
 
@@ -32,31 +28,29 @@ class TEEHRDataFrameAccessor:
     def __init__(self, pandas_obj):
         """Initialize the class."""
         self._df = pandas_obj
-        self._df.attrs = pandas_obj.attrs
         self._validate(pandas_obj)
 
     @staticmethod
     def _validate(obj):
         """Validate the DataFrame object."""
         if 'table_type' not in obj.attrs:
-            raise AttributeError("Not DataFrame Attribute 'table_type'"
-                                 " defined.")
+            raise AttributeError(
+                "No DataFrame Attribute 'table_type' defined."
+                )
 
         if obj.attrs['table_type'] == 'timeseries':
 
             # check for expected fields
-            fields_list = Timeseries.get_field_names()
+            fields_list = obj.attrs['fields']
             missing = []
             for field in fields_list:
                 if field not in obj.columns:
                     missing.append(field)
             if len(missing) != 0:
-                raise AttributeError(f'''
-                                        DataFrame with table_type ==
-                                        'timeseries' is missing expected
-                                        column(s):
-                                        {missing}
-                                        ''')
+                raise AttributeError(f"""
+DataFrame with table_type == 'timeseries' is missing expected column(s):
+{missing}
+                    """)
             # check for data
             if obj.index.size == 0:
                 raise AttributeError("DataFrame must have data.")
@@ -65,27 +59,31 @@ class TEEHRDataFrameAccessor:
 
             # TO-DO: add validation
 
-            raise NotImplementedError('Joined_timeseries methods must be'
-                                      ' implemented.')
+            raise NotImplementedError(
+                "Joined_timeseries methods must be implemented."
+                )
 
         elif obj.attrs['table_type'] == 'location':
 
             # TO-DO: add validation
 
-            raise NotImplementedError('Location methods must be'
-                                      ' implemented.')
+            raise NotImplementedError(
+                "Location methods must be implemented."
+                )
 
         elif obj.attrs['table_type'] == 'metrics':
 
             # TO-DO: add validation
 
-            raise NotImplementedError('Metrics methods must be'
-                                      ' implemented.')
+            raise NotImplementedError(
+                "Metrics methods must be implemented."
+                )
 
         else:
             table_type_str = obj.attrs['table_type']
-            raise AttributeError(f'''Invalid table type:{table_type_str}.
-                                    Visualization not supported.''')
+            raise AttributeError(f"""
+            Invalid table type:{table_type_str}. Visualization not supported.
+                                 """)
 
     def _get_unique_values(
             self,
@@ -130,8 +128,9 @@ class TEEHRDataFrameAccessor:
                     invalid_combos_count += 1
             filtered_schema[variable] = valid_combos
             if invalid_combos_count > 0:
-                logger.info(f'Removed {invalid_combos_count} invalid '
-                            'combinations from the timeseries schema')
+                logger.info(f"""
+    Removed {invalid_combos_count} invalid combinations from the schema.
+                            """)
 
         return filtered_schema
 
@@ -157,11 +156,11 @@ class TEEHRDataFrameAccessor:
                    height=800)
 
         for combo in schema[variable]:
-            logger.info(f'Processing combination: {combo}')
+            logger.info(f"Processing combination: {combo}")
             temp = df[(df['configuration_name'] == combo[0]) &
                       (df['location_id'] == combo[1])]
             if not temp.empty:
-                logger.info(f'Plotting data for combination: {combo}')
+                logger.info(f"Plotting data for combination: {combo}")
                 p.line(temp.value_time,
                        temp.value,
                        legend_label=f"{combo[0]} - {combo[1]}",
@@ -193,11 +192,11 @@ class TEEHRDataFrameAccessor:
         if output_dir is not None:
             fname = Path(output_dir, f'timeseries_plot_{variable}.html')
             output_file(filename=fname, title=f'Timeseries Plot [{variable}]')
-            logger.info(f'Saving timeseries plot at {output_dir}')
+            logger.info(f"Saving timeseries plot at {output_dir}")
             # print('im saving')
             save(p)
         else:
-            logger.info('No output directory specified, displaying plot.')
+            logger.info("No output directory specified, displaying plot.")
             # print('im showing')
             show(p)
 
@@ -231,17 +230,17 @@ class TEEHRDataFrameAccessor:
         """
         if self._df.attrs['table_type'] != 'timeseries':
             table_type_str = self.attrs['table_type']
-            raise AttributeError(f'''
-                                 Expected table_type == "timeseries", got
-                                 table_type = {table_type_str}
-                                 ''')
+            raise AttributeError(f"""
+        Expected table_type == "timeseries", got table_type = {table_type_str}
+                                 """)
 
         if output_dir is not None:
             if output_dir.exists():
-                logger.info('Specified save directory is valid.')
+                logger.info("Specified save directory is valid.")
             else:
-                logger.info('Specified directory does not exist. Creating new'
-                            ' directory to store figure.')
+                logger.info(""""
+    Specified directory does not exist. Creating new directory to store figure.
+                            """)
                 Path(output_dir).mkdir(parents=True, exist_ok=True)
 
         schema = self._timeseries_schema()

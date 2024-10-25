@@ -24,6 +24,7 @@ def sample_dataframe():
     }
     df = pd.DataFrame(data)
     df.attrs['table_type'] = 'timeseries'
+    df.attrs['fields'] = df.columns
     return df
 
 
@@ -40,12 +41,14 @@ def test_validation(sample_dataframe):
     with pytest.raises(AttributeError):
         df_invalid = sample_dataframe.drop(columns=['location_id'])
         df_invalid.attrs['table_type'] = 'timeseries'
+        df_invalid.attrs['fields'] = sample_dataframe.columns
         df_invalid.teehr
 
     # Test for empty DataFrame in 'timeseries' table_type
     with pytest.raises(AttributeError):
         df_empty = pd.DataFrame(columns=sample_dataframe.columns)
         df_empty.attrs['table_type'] = 'timeseries'
+        df_empty.attrs['fields'] = sample_dataframe.columns
         df_empty.teehr
 
     # Test for missing 'table_type' attribute

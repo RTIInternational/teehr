@@ -401,6 +401,7 @@ class BaseTable():
             self._raise_missing_table_error()
         df = self.df.toPandas()
         df.attrs['table_type'] = None
+        df.attrs['fields'] = None
         return df
 
     def to_geopandas(self):
@@ -632,6 +633,7 @@ class LocationTable(BaseTable):
         """Return Pandas DataFrame for Location Table."""
         df = self.df.toPandas()
         df.attrs['table_type'] = 'location'
+        df.attrs['fields'] = self.fields()
         return df
 
     def to_geopandas(self):
@@ -738,6 +740,7 @@ class LocationAttributeTable(BaseTable):
         """Return Pandas DataFrame for Location Attributes."""
         df = self.df.toPandas()
         df.attrs['table_type'] = 'location'
+        df.attrs['fields'] = self.fields()
         return df
 
     def to_geopandas(self):
@@ -870,6 +873,7 @@ class LocationCrosswalkTable(BaseTable):
         """Return Pandas DataFrame for Location Crosswalk."""
         df = self.df.toPandas()
         df.attrs['table_type'] = 'location'
+        df.attrs['fields'] = self.fields()
         return df
 
     def to_geopandas(self):
@@ -1023,6 +1027,7 @@ class PrimaryTimeseriesTable(BaseTable):
         """Return Pandas DataFrame for Primary Timeseries."""
         df = self.df.toPandas()
         df.attrs['table_type'] = 'timeseries'
+        df.attrs['fields'] = self.fields()
         return df
 
     def to_geopandas(self):
@@ -1257,6 +1262,7 @@ class SecondaryTimeseriesTable(BaseTable):
         """Return Pandas DataFrame for Secondary Timeseries."""
         df = self.df.toPandas()
         df.attrs['table_type'] = 'timeseries'
+        df.attrs['fields'] = self.fields()
         return df
 
     def to_geopandas(self):
@@ -1459,6 +1465,7 @@ class JoinedTimeseriesTable(BaseTable):
         """Return Pandas DataFrame for Joined Timeseries."""
         df = self.df.toPandas()
         df.attrs['table_type'] = 'joined_timeseries'
+        df.attrs['fields'] = self.fields()
         return df
 
     def to_geopandas(self):
