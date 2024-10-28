@@ -74,7 +74,7 @@ def add_configuration(
 
     combined_df = pd.concat([org_df, new_df])
     validated_df = schema.validate(combined_df)
-    validated_df.to_csv(filepath)
+    validated_df.to_csv(filepath, index=False)
 
 
 def add_unit(
@@ -126,7 +126,7 @@ def add_unit(
 
     combined_df = pd.concat([org_df, new_df])
     validated_df = schema.validate(combined_df)
-    validated_df.to_csv(filepath)
+    validated_df.to_csv(filepath, index=False)
 
 
 def add_variable(
@@ -179,7 +179,7 @@ def add_variable(
 
     combined_df = pd.concat([org_df, new_df])
     validated_df = schema.validate(combined_df)
-    validated_df.to_csv(filepath)
+    validated_df.to_csv(filepath, index=False)
 
 
 def add_attribute(
@@ -238,4 +238,4 @@ def add_attribute(
 
     combined_df = pd.concat([org_df, new_df])
     validated_df = schema.validate(combined_df)
-    validated_df.to_csv(filepath)
+    validated_df.to_csv(filepath, index=False)
