@@ -135,3 +135,6 @@ dmypy.json
 
 # Tests output
 temp/
+
+# drawio backup files
+*.drawio.bkp

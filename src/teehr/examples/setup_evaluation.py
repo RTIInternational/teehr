@@ -27,20 +27,20 @@ SECONDARY_TIMESERIES_FILEPATH = Path(
 GEO_FILEPATH = Path(TEST_DATA_DIR, "geo")
 
 # Create an Evaluation object
-eval = Evaluation(dir_path=TEST_STUDY_DIR)
+ev = Evaluation(dir_path=TEST_STUDY_DIR)
 
 # Enable logging
-eval.enable_logging()
+ev.enable_logging()
 
 # Clone the template
-eval.clone_template()
+ev.clone_template()
 
 # Load the location data
-eval.load.import_locations(in_path=GEOJSON_GAGES_FILEPATH)
+ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
 
 
 # Load the timeseries data and map over the fields and set constants
-eval.load.import_primary_timeseries(
+ev.primary_timeseries.load_parquet(
     in_path=PRIMARY_TIMESERIES_FILEPATH,
     field_mapping={
         "reference_time": "reference_time",
@@ -59,12 +59,12 @@ eval.load.import_primary_timeseries(
 )
 
 # Load the crosswalk data
-eval.load.import_location_crosswalks(
+ev.location_crosswalks.load_csv(
     in_path=CROSSWALK_FILEPATH
 )
 
 # Load the secondary timeseries data and map over the fields and set constants
-eval.load.import_secondary_timeseries(
+ev.secondary_timeseries.load_parquet(
     in_path=SECONDARY_TIMESERIES_FILEPATH,
     field_mapping={
         "reference_time": "reference_time",
@@ -83,7 +83,7 @@ eval.load.import_secondary_timeseries(
 )
 
 # Add some attributes
-eval.load.add_attribute(
+ev.attributes.add(
     [
         Attribute(
             name="drainage_area",
@@ -104,11 +104,11 @@ eval.load.add_attribute(
 )
 
 # Load the location attribute data
-eval.load.import_location_attributes(
+ev.location_attributes.load_parquet(
     in_path=GEO_FILEPATH,
     field_mapping={"attribute_value": "value"},
     pattern="test_attr_*.parquet",
 )
 
 # Create the joined timeseries
-eval.create_joined_timeseries(execute_udf=True)
+ev.joined_timeseries.create(execute_udf=True)

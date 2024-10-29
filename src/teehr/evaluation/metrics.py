@@ -27,12 +27,12 @@ logger = logging.getLogger(__name__)
 class Metrics:
     """Component class for calculating metrics."""
 
-    def __init__(self, eval) -> None:
+    def __init__(self, ev) -> None:
         """Initialize the Metrics class."""
-        self.spark = eval.spark
-        self.dataset_dir = eval.dataset_dir
-        self.locations = eval.locations
-        self.joined_timeseries = eval.joined_timeseries
+        self.spark = ev.spark
+        self.dataset_dir = ev.dataset_dir
+        self.locations = ev.locations
+        self.joined_timeseries = ev.joined_timeseries
         self.df = self.joined_timeseries.to_sdf()
 
     def query(

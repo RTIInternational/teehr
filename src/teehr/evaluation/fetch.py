@@ -44,34 +44,34 @@ logger = logging.getLogger(__name__)
 class Fetch:
     """Component class for fetching data from external sources."""
 
-    def __init__(self, eval) -> None:
+    def __init__(self, ev) -> None:
         """Initialize the Fetch class."""
         # Now we have access to the Evaluation object.
-        self.eval = eval
+        self.ev = ev
         self.usgs_cache_dir = Path(
-            eval.cache_dir,
+            ev.cache_dir,
             const.FETCHING_CACHE_DIR,
             const.USGS_CACHE_DIR,
         )
         self.nwm_cache_dir = Path(
-            eval.cache_dir,
+            ev.cache_dir,
             const.FETCHING_CACHE_DIR,
             const.NWM_CACHE_DIR
         )
         self.kerchunk_cache_dir = Path(
-            eval.cache_dir,
+            ev.cache_dir,
             const.FETCHING_CACHE_DIR,
             const.KERCHUNK_DIR
         )
         self.weights_cache_dir = Path(
-            eval.cache_dir,
+            ev.cache_dir,
             const.FETCHING_CACHE_DIR,
             const.WEIGHTS_DIR
         )
 
     def _get_secondary_location_ids(self, prefix: str) -> List[str]:
         """Get the secondary location IDs corresponding to primary IDs."""
-        lcw_df = self.eval.location_crosswalks.query(
+        lcw_df = self.ev.location_crosswalks.query(
             filters={
                 "column": "secondary_location_id",
                 "operator": "like",
@@ -102,7 +102,7 @@ class Fetch:
         """Fetch USGS gage data and save as a Parquet file."""
         logger.info("Getting primary location IDs.")
         if sites is None:
-            locations_gdf = self.eval.locations.query(
+            locations_gdf = self.ev.locations.query(
                 filters={
                     "column": "id",
                     "operator": "like",
@@ -132,11 +132,10 @@ class Fetch:
         )
 
         validate_and_insert_timeseries(
-            ev=self.eval,
+            ev=self.ev,
             in_path=Path(
                 self.usgs_cache_dir
             ),
-            # dataset_path=self.eval.dataset_dir,
             timeseries_type=timeseries_type,
         )
 
@@ -182,11 +181,11 @@ class Fetch:
         )
 
         validate_and_insert_timeseries(
-            ev=self.eval,
+            ev=self.ev,
             in_path=Path(
                 self.nwm_cache_dir
             ),
-            # dataset_path=self.eval.dataset_dir,
+            # dataset_path=self.ev.dataset_dir,
             timeseries_type=timeseries_type,
         )
 
@@ -228,11 +227,11 @@ class Fetch:
         )
 
         validate_and_insert_timeseries(
-            ev=self.eval,
+            ev=self.ev,
             in_path=Path(
                 self.nwm_cache_dir
             ),
-            # dataset_path=self.eval.dataset_dir,
+            # dataset_path=self.ev.dataset_dir,
             timeseries_type=timeseries_type,
         )
 
@@ -292,11 +291,11 @@ class Fetch:
         )
 
         validate_and_insert_timeseries(
-            ev=self.eval,
+            ev=self.ev,
             in_path=Path(
                 self.nwm_cache_dir
             ),
-            # dataset_path=self.eval.dataset_dir,
+            # dataset_path=self.ev.dataset_dir,
             timeseries_type=timeseries_type,
         )
 
@@ -355,10 +354,10 @@ class Fetch:
         pass
 
         validate_and_insert_timeseries(
-            ev=self.eval,
+            ev=self.ev,
             in_path=Path(
                 self.nwm_cache_dir
             ),
-            # dataset_path=self.eval.dataset_dir,
+            # dataset_path=self.ev.dataset_dir,
             timeseries_type=timeseries_type,
         )

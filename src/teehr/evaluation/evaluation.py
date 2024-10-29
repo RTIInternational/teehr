@@ -10,14 +10,9 @@ import logging
 from teehr.loading.utils import (
     copy_template_to,
 )
-from teehr.loading.joined_timeseries import (
-    create_joined_timeseries_dataset,
-)
 import teehr.const as const
 from teehr.evaluation.fetch import Fetch
-from teehr.evaluation.load import Load
 from teehr.evaluation.metrics import Metrics
-# from teehr.evaluation.fields import Fields
 from teehr.evaluation.tables import (
     UnitTable,
     VariableTable,
@@ -30,6 +25,7 @@ from teehr.evaluation.tables import (
     SecondaryTimeseriesTable,
     JoinedTimeseriesTable,
 )
+from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor
 
 
 logger = logging.getLogger(__name__)
@@ -97,18 +93,18 @@ class Evaluation:
         # Create a local Spark Session if one is not provided.
         if not self.spark:
             logger.info("Creating a new Spark session.")
-            conf = SparkConf().setAppName("TEEHR").setMaster("local")
+            conf = (
+                SparkConf()
+                .setAppName("TEEHR")
+                .setMaster("local[*]")
+                .set("spark.sql.sources.partitionOverwriteMode", "dynamic")
+            )
             self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
 
     @property
     def fetch(self) -> Fetch:
         """The fetch component class."""
         return Fetch(self)
-
-    @property
-    def load(self) -> Load:
-        """The load component class."""
-        return Load(self)
 
     @property
     def metrics(self) -> Metrics:
@@ -204,18 +200,3 @@ class Evaluation:
         Includes retrieving metadata and contents.
         """
         pass
-
-    def create_joined_timeseries(self, execute_udf: bool = False):
-        """Create joined timeseries.
-
-        Parameters
-        ----------
-        execute_udf : bool, optional
-            Execute UDFs, by default False
-        """
-        create_joined_timeseries_dataset(
-            self.spark,
-            self.dataset_dir,
-            self.scripts_dir,
-            execute_udf,
-        )

@@ -143,7 +143,6 @@ def convert_location_crosswalks(
 def validate_and_insert_location_crosswalks(
     ev,
     in_path: Union[str, Path],
-    # dataset_dir: Union[str, Path],
     pattern: str = "**/*.parquet",
 ):
     """Validate and insert location crosswalks data."""
@@ -168,7 +167,7 @@ def validate_and_insert_location_crosswalks(
 
     # define schema
     schema = pa.DataFrameSchema(
-        {
+        columns={
             "primary_location_id": pa.Column(
                 T.StringType,
                 pa.Check.isin(location_ids),
@@ -179,8 +178,9 @@ def validate_and_insert_location_crosswalks(
                 coerce=True
             )
         },
+        strict=True
     )
-    validated_loc_xwalks = schema(loc_xwalks)
+    validated_loc_xwalks = schema(loc_xwalks.select(*schema.columns))
 
     errors = validated_loc_xwalks.pandera.errors
 

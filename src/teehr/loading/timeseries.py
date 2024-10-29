@@ -8,7 +8,8 @@ from teehr.loading.utils import (
     validate_dataset_structure,
     merge_field_mappings,
     validate_constant_values_dict,
-    read_and_convert_netcdf_to_df
+    read_and_convert_netcdf_to_df,
+    convert_datetime_ns_to_ms
 )
 from teehr.models.tables import Timeseries
 
@@ -77,6 +78,7 @@ def convert_single_timeseries(
             timeseries[field] = value
 
     timeseries = timeseries[field_mapping.values()]
+    timeseries = convert_datetime_ns_to_ms(timeseries)
 
     out_filepath.parent.mkdir(parents=True, exist_ok=True)
     timeseries.to_parquet(out_filepath)
@@ -221,7 +223,7 @@ def validate_and_insert_timeseries(
 
     # define schema
     schema = pa.DataFrameSchema(
-        {
+        columns={
             "reference_time": pa.Column(
                 T.TimestampNTZType,
                 coerce=True,
@@ -256,8 +258,9 @@ def validate_and_insert_timeseries(
                 coerce=True
             )
         },
+        strict=True
     )
-    validated_timeseries = schema(timeseries)
+    validated_timeseries = schema(timeseries.select(*schema.columns))
 
     df_out_errors = validated_timeseries.pandera.errors
 
