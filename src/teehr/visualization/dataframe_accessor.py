@@ -48,9 +48,9 @@ class TEEHRDataFrameAccessor:
                     missing.append(field)
             if len(missing) != 0:
                 raise AttributeError(f"""
-DataFrame with table_type == 'timeseries' is missing expected column(s):
-{missing}
-                    """)
+                    DataFrame with table_type == 'timeseries' is missing
+                    expected column(s): {missing}
+                """)
             # check for data
             if obj.index.size == 0:
                 raise AttributeError("DataFrame must have data.")
@@ -61,7 +61,7 @@ DataFrame with table_type == 'timeseries' is missing expected column(s):
 
             raise NotImplementedError(
                 "Joined_timeseries methods must be implemented."
-                )
+            )
 
         elif obj.attrs['table_type'] == 'location':
 
@@ -69,7 +69,7 @@ DataFrame with table_type == 'timeseries' is missing expected column(s):
 
             raise NotImplementedError(
                 "Location methods must be implemented."
-                )
+            )
 
         elif obj.attrs['table_type'] == 'metrics':
 
@@ -77,13 +77,14 @@ DataFrame with table_type == 'timeseries' is missing expected column(s):
 
             raise NotImplementedError(
                 "Metrics methods must be implemented."
-                )
+            )
 
         else:
             table_type_str = obj.attrs['table_type']
             raise AttributeError(f"""
-            Invalid table type:{table_type_str}. Visualization not supported.
-                                 """)
+                Invalid table type:{table_type_str}. Visualization not
+                supported.
+            """)
 
     def _get_unique_values(
             self,
@@ -129,8 +130,9 @@ DataFrame with table_type == 'timeseries' is missing expected column(s):
             filtered_schema[variable] = valid_combos
             if invalid_combos_count > 0:
                 logger.info(f"""
-    Removed {invalid_combos_count} invalid combinations from the schema.
-                            """)
+                    Removed {invalid_combos_count} invalid combinations from
+                    the schema.
+                """)
 
         return filtered_schema
 
@@ -231,16 +233,18 @@ DataFrame with table_type == 'timeseries' is missing expected column(s):
         if self._df.attrs['table_type'] != 'timeseries':
             table_type_str = self.attrs['table_type']
             raise AttributeError(f"""
-        Expected table_type == "timeseries", got table_type = {table_type_str}
-                                 """)
+                Expected table_type == "timeseries",
+                got table_type = {table_type_str}
+            """)
 
         if output_dir is not None:
             if output_dir.exists():
                 logger.info("Specified save directory is valid.")
             else:
                 logger.info(""""
-    Specified directory does not exist. Creating new directory to store figure.
-                            """)
+                    Specified directory does not exist.
+                    Creating new directory to store figure.
+                """)
                 Path(output_dir).mkdir(parents=True, exist_ok=True)
 
         schema = self._timeseries_schema()
