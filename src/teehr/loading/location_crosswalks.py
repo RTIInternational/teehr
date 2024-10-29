@@ -167,7 +167,7 @@ def validate_and_insert_location_crosswalks(
 
     # define schema
     schema = pa.DataFrameSchema(
-        {
+        columns={
             "primary_location_id": pa.Column(
                 T.StringType,
                 pa.Check.isin(location_ids),
@@ -178,6 +178,7 @@ def validate_and_insert_location_crosswalks(
                 coerce=True
             )
         },
+        strict="filter"
     )
     validated_loc_xwalks = schema(loc_xwalks)
 

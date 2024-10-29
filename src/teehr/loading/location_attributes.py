@@ -181,7 +181,7 @@ def validate_and_insert_location_attributes(
 
     # define schema
     schema = pa.DataFrameSchema(
-        {
+        columns={
             "location_id": pa.Column(
                 T.StringType,
                 pa.Check.isin(location_ids),
@@ -197,6 +197,7 @@ def validate_and_insert_location_attributes(
                 coerce=True
             )
         },
+        strict="filter"
     )
     validated_loc_attrs = schema(loc_attrs)
 
