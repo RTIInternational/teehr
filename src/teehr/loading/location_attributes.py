@@ -197,9 +197,9 @@ def validate_and_insert_location_attributes(
                 coerce=True
             )
         },
-        strict="filter"
+        strict=True
     )
-    validated_loc_attrs = schema(loc_attrs)
+    validated_loc_attrs = schema(loc_attrs.select(*schema.columns))
 
     df_out_errors = validated_loc_attrs.pandera.errors
 
