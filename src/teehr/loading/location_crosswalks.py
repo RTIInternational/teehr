@@ -178,9 +178,9 @@ def validate_and_insert_location_crosswalks(
                 coerce=True
             )
         },
-        strict="filter"
+        strict=True
     )
-    validated_loc_xwalks = schema(loc_xwalks)
+    validated_loc_xwalks = schema(loc_xwalks.select(*schema.columns))
 
     errors = validated_loc_xwalks.pandera.errors
 
