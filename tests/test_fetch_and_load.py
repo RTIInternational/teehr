@@ -55,7 +55,6 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
         start_date=datetime(2022, 2, 22),
         end_date=datetime(2022, 2, 23)
     )
-
     ts_df = eval.secondary_timeseries.to_pandas()
 
     assert isinstance(ts_df, pd.DataFrame)
@@ -128,10 +127,10 @@ def test_fetch_and_load_nwm_forecast_points(tmpdir):
         start_date=datetime(2024, 2, 22),
         ingest_days=1,
         nwm_version="nwm30",
+        prioritize_analysis_valid_time=True,
         t_minus_hours=[0],
         process_by_z_hour=False
     )
-
     ts_df = eval.secondary_timeseries.to_pandas()
 
     assert isinstance(ts_df, pd.DataFrame)
@@ -167,10 +166,10 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
         ingest_days=1,
         zonal_weights_filepath=ZONAL_WEIGHTS,
         nwm_version="nwm30",
+        prioritzie_analysis_valid_time=True,
         t_minus_hours=[0],
         location_id_prefix="huc10"
     )
-
     ts_df = eval.primary_timeseries.to_pandas()
 
     assert isinstance(ts_df, pd.DataFrame)

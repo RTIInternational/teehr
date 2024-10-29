@@ -166,7 +166,7 @@ def validate_and_insert_single_locations(
 
     validated_gdf = schema.validate(gdf)
 
-    validated_gdf.to_parquet(output_filepath)
+    validated_gdf.to_parquet(output_filepath, index=False)
 
     logger.info(f"Validated locations saved to {output_filepath}.")
 
