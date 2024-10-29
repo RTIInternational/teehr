@@ -680,7 +680,6 @@ class LocationTable(BaseTable):
             pattern=pattern
         )
         self._read_spark_df()
-        return self
 
 
 class LocationAttributeTable(BaseTable):
@@ -716,7 +715,6 @@ class LocationAttributeTable(BaseTable):
             pattern="**/*.parquet"
         )
         self._read_spark_df()
-        return self
 
     def field_enum(self) -> LocationAttributeFields:
         """Get the location attribute fields enum."""
@@ -771,7 +769,6 @@ class LocationAttributeTable(BaseTable):
             **kwargs
         )
         self._read_spark_df()
-        return self
 
     def load_csv(
         self,
@@ -806,7 +803,6 @@ class LocationAttributeTable(BaseTable):
             **kwargs
         )
         self._read_spark_df()
-        return self
 
 
 class LocationCrosswalkTable(BaseTable):
@@ -842,7 +838,6 @@ class LocationCrosswalkTable(BaseTable):
             pattern="**/*.parquet"
         )
         self._read_spark_df()
-        return self
 
     def field_enum(self) -> LocationCrosswalkFields:
         """Get the location crosswalk fields enum."""
@@ -899,7 +894,6 @@ class LocationCrosswalkTable(BaseTable):
             **kwargs
         )
         self._read_spark_df()
-        return self
 
     def load_csv(
         self,
@@ -934,7 +928,6 @@ class LocationCrosswalkTable(BaseTable):
             **kwargs
         )
         self._read_spark_df()
-        return self
 
 
 class PrimaryTimeseriesTable(BaseTable):
@@ -989,7 +982,6 @@ class PrimaryTimeseriesTable(BaseTable):
             pattern="**/*.parquet"
         )
         self._read_spark_df()
-        return self
 
     def field_enum(self) -> TimeseriesFields:
         """Get the timeseries fields enum."""
@@ -1060,7 +1052,6 @@ class PrimaryTimeseriesTable(BaseTable):
             **kwargs
         )
         self._read_spark_df()
-        return self
 
     def load_csv(
         self,
@@ -1111,7 +1102,6 @@ class PrimaryTimeseriesTable(BaseTable):
             **kwargs
         )
         self._read_spark_df()
-        return self
 
     def load_netcdf(
         self,
@@ -1162,7 +1152,6 @@ class PrimaryTimeseriesTable(BaseTable):
             **kwargs
         )
         self._read_spark_df()
-        return self
 
 
 class SecondaryTimeseriesTable(BaseTable):
@@ -1217,7 +1206,6 @@ class SecondaryTimeseriesTable(BaseTable):
             pattern="**/*.parquet"
         )
         self._read_spark_df()
-        return self
 
     def field_enum(self) -> TimeseriesFields:
         """Get the timeseries fields enum."""
@@ -1289,7 +1277,6 @@ class SecondaryTimeseriesTable(BaseTable):
             **kwargs
         )
         self._read_spark_df()
-        return self
 
     def load_csv(
         self,
@@ -1340,7 +1327,6 @@ class SecondaryTimeseriesTable(BaseTable):
             **kwargs
         )
         self._read_spark_df()
-        return self
 
     def load_netcdf(
         self,
@@ -1391,7 +1377,6 @@ class SecondaryTimeseriesTable(BaseTable):
             **kwargs
         )
         self._read_spark_df()
-        return self
 
 
 class JoinedTimeseriesTable(BaseTable):
@@ -1451,4 +1436,3 @@ class JoinedTimeseriesTable(BaseTable):
             self.scripts_dir,
             execute_udf,
         )
-        return self
