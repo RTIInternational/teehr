@@ -223,7 +223,7 @@ def validate_and_insert_timeseries(
 
     # define schema
     schema = pa.DataFrameSchema(
-        {
+        columns={
             "reference_time": pa.Column(
                 T.TimestampNTZType,
                 coerce=True,
@@ -258,8 +258,9 @@ def validate_and_insert_timeseries(
                 coerce=True
             )
         },
+        strict=True
     )
-    validated_timeseries = schema(timeseries)
+    validated_timeseries = schema(timeseries.select(*schema.columns))
 
     df_out_errors = validated_timeseries.pandera.errors
 

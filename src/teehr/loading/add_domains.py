@@ -51,30 +51,33 @@ def add_configuration(
     new_df = pd.DataFrame([c.model_dump() for c in configuration])
     new_df = new_df[[key for key in Configuration.model_fields]]
 
-    schema = pa.DataFrameSchema({
-        "name": pa.Column(
-            pa.String,
-            unique=True,
-            checks=[
-                pa.Check.str_matches(r"^[a-zA-Z0-9_]+$")
-            ],
-            regex=r"^[a-zA-Z0-9_]+$"
-        ),
-        "type": pa.Column(
-            pa.String,
-            checks=pa.Check.isin(
-                ["primary", "secondary"]
-            )
-        ),
-        "description": pa.Column(
-            pa.String,
-            checks=pa.Check(lambda s: not s.str.contains(",").any())
-        ),
-    })
+    schema = pa.DataFrameSchema(
+        columns={
+            "name": pa.Column(
+                pa.String,
+                unique=True,
+                checks=[
+                    pa.Check.str_matches(r"^[a-zA-Z0-9_]+$")
+                ],
+                regex=r"^[a-zA-Z0-9_]+$"
+            ),
+            "type": pa.Column(
+                pa.String,
+                checks=pa.Check.isin(
+                    ["primary", "secondary"]
+                )
+            ),
+            "description": pa.Column(
+                pa.String,
+                checks=pa.Check(lambda s: not s.str.contains(",").any())
+            ),
+        },
+        strict="filter"
+    )
 
     combined_df = pd.concat([org_df, new_df])
     validated_df = schema.validate(combined_df)
-    validated_df.to_csv(filepath)
+    validated_df.to_csv(filepath, index=False)
 
 
 def add_unit(
@@ -110,23 +113,26 @@ def add_unit(
     new_df = pd.DataFrame([u.model_dump() for u in unit])
     new_df = new_df[[key for key in Unit.model_fields]]
 
-    schema = pa.DataFrameSchema({
-        "name": pa.Column(
-            pa.String,
-            unique=True,
-            checks=[
-                pa.Check.str_matches(r"^[a-zA-Z0-9_^/]+$")
-            ]
-        ),
-        "long_name": pa.Column(
-            pa.String,
-            checks=pa.Check(lambda s: not s.str.contains(",").any())
-        ),
-    })
+    schema = pa.DataFrameSchema(
+        columns={
+            "name": pa.Column(
+                pa.String,
+                unique=True,
+                checks=[
+                    pa.Check.str_matches(r"^[a-zA-Z0-9_^/]+$")
+                ]
+            ),
+            "long_name": pa.Column(
+                pa.String,
+                checks=pa.Check(lambda s: not s.str.contains(",").any())
+            ),
+        },
+        strict="filter"
+    )
 
     combined_df = pd.concat([org_df, new_df])
     validated_df = schema.validate(combined_df)
-    validated_df.to_csv(filepath)
+    validated_df.to_csv(filepath, index=False)
 
 
 def add_variable(
@@ -162,24 +168,27 @@ def add_variable(
     new_df = pd.DataFrame([u.model_dump() for u in variable])
     new_df = new_df[[key for key in Variable.model_fields]]
 
-    schema = pa.DataFrameSchema({
-        "name": pa.Column(
-            pa.String,
-            unique=True,
-            checks=[
-                pa.Check.str_matches(r"^[a-zA-Z0-9_]+$")
-            ],
-            regex=r"^[a-zA-Z0-9_]+$"
-        ),
-        "long_name": pa.Column(
-            pa.String,
-            checks=pa.Check(lambda s: not s.str.contains(",").any())
-        ),
-    })
+    schema = pa.DataFrameSchema(
+        columns={
+            "name": pa.Column(
+                pa.String,
+                unique=True,
+                checks=[
+                    pa.Check.str_matches(r"^[a-zA-Z0-9_]+$")
+                ],
+                regex=r"^[a-zA-Z0-9_]+$"
+            ),
+            "long_name": pa.Column(
+                pa.String,
+                checks=pa.Check(lambda s: not s.str.contains(",").any())
+            ),
+        },
+        strict="filter"
+    )
 
     combined_df = pd.concat([org_df, new_df])
     validated_df = schema.validate(combined_df)
-    validated_df.to_csv(filepath)
+    validated_df.to_csv(filepath, index=False)
 
 
 def add_attribute(
@@ -216,26 +225,29 @@ def add_attribute(
     new_df = pd.DataFrame([u.model_dump() for u in attribute])
     new_df = new_df[[key for key in Attribute.model_fields]]
 
-    schema = pa.DataFrameSchema({
-        "name": pa.Column(
-            pa.String,
-            unique=True,
-            checks=[
-                pa.Check.str_matches(r"^[a-zA-Z0-9_]+$")
-            ],
-        ),
-        "type": pa.Column(
-            pa.String,
-            checks=pa.Check.isin(
-                ["categorical", "continuous"]
-            )
-        ),
-        "description": pa.Column(
-            pa.String,
-            checks=pa.Check(lambda s: not s.str.contains(",").any())
-        ),
-    })
+    schema = pa.DataFrameSchema(
+        columns={
+            "name": pa.Column(
+                pa.String,
+                unique=True,
+                checks=[
+                    pa.Check.str_matches(r"^[a-zA-Z0-9_]+$")
+                ],
+            ),
+            "type": pa.Column(
+                pa.String,
+                checks=pa.Check.isin(
+                    ["categorical", "continuous"]
+                )
+            ),
+            "description": pa.Column(
+                pa.String,
+                checks=pa.Check(lambda s: not s.str.contains(",").any())
+            ),
+        },
+        strict="filter"
+    )
 
     combined_df = pd.concat([org_df, new_df])
     validated_df = schema.validate(combined_df)
-    validated_df.to_csv(filepath)
+    validated_df.to_csv(filepath, index=False)
