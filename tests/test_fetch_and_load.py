@@ -40,7 +40,8 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
 
     eval.fetch.usgs_streamflow(
         start_date=datetime(2022, 2, 22),
-        end_date=datetime(2022, 2, 23)
+        end_date=datetime(2022, 2, 23),
+        sites=["01030350"]
     )
 
     _ = eval.primary_timeseries.to_pandas()

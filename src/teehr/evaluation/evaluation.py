@@ -25,7 +25,7 @@ from teehr.evaluation.tables import (
     SecondaryTimeseriesTable,
     JoinedTimeseriesTable,
 )
-from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor
+from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor  # noqa
 
 
 logger = logging.getLogger(__name__)
@@ -42,7 +42,16 @@ class Evaluation:
         dir_path: Union[str, Path],
         spark: SparkSession = None
     ):
-        """Initialize the Evaluation class."""
+        """
+        Initialize the Evaluation class.
+
+        Parameters
+        ----------
+        dir_path : Union[str, Path]
+            The path to the evaluation directory.
+        spark : SparkSession, optional
+            The SparkSession object, by default None
+        """
         self.dir_path = dir_path
         self.spark = spark
 
