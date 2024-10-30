@@ -25,7 +25,7 @@ from teehr.evaluation.tables import (
     SecondaryTimeseriesTable,
     JoinedTimeseriesTable,
 )
-from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor
+from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor # noqa
 
 
 logger = logging.getLogger(__name__)
@@ -40,6 +40,7 @@ class Evaluation:
     def __init__(
         self,
         dir_path: Union[str, Path],
+        create_dir: bool = False,
         spark: SparkSession = None
     ):
         """Initialize the Evaluation class."""
@@ -87,8 +88,12 @@ class Evaluation:
         )
 
         if not Path(self.dir_path).is_dir():
-            logger.error(f"Directory {self.dir_path} does not exist.")
-            raise NotADirectoryError
+            if create_dir:
+                logger.info(f"Creating directory {self.dir_path}.")
+                Path(self.dir_path).mkdir(parents=True, exist_ok=True)
+            else:
+                logger.error(f"Directory {self.dir_path} does not exist.")
+                raise NotADirectoryError
 
         # Create a local Spark Session if one is not provided.
         if not self.spark:
