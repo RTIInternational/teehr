@@ -48,11 +48,12 @@ extensions = [
     # "jupyter_sphinx",
 ]
 
+# -- Options for autodoc -----------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#configuration
+
+# -- Options for autoapi -----------------------------------------------------
 # Suppress auto-api warnings
 # suppress_warnings = ["autoapi.python_import_resolution"]
-
-# -- Options for autodoc ----------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#configuration
 
 # Automatically extract typehints when specified and place them in
 # descriptions of the relevant function/method.
@@ -67,7 +68,13 @@ extensions = [
 autoapi_dirs = ["../../src/teehr"]
 autoapi_add_toctree_entry = True
 autoapi_template_dir = '_templates/autoapi'
-# autoapi_options = {'show-module-summary': True}
+autoapi_options = [
+    "members",
+    "undoc-members",
+    "show-inheritance",
+    "show-module-summary",
+    "imported-members",
+]
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -81,7 +88,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The main toctree document.
 master_doc = 'index'
 
-# MyST-NB options
+
+# -- MyST-NB options ---------------------------------------------------------
 nb_execution_mode = "auto"
 # jupyter_execute_notebooks = "auto"  # deprecated?
 myst_enable_extensions = [
