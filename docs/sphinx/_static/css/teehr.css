@@ -61,6 +61,16 @@
     background: none !important;
   }
 
+  /* Styling Pandas DataFrame HTML rendering */
+  .dataframe th {
+    font-size: 14px;
+  }
+
+  .dataframe td {
+      font-size: 13px;
+  }
+
+  /* Dark theme styling */
   html[data-theme="dark"] {
     h1 {
       color: rgb(138, 189, 216);

@@ -1,0 +1,5 @@
+name,type,description
+2_year_flow,continuous,Two year flow rate in m^3/s
+drainage_area,continuous,Drainage area in square kilometers
+ecoregion,categorical,Ecoregion
+year_2_discharge,continuous,2-yr discharge in cubic meters per second

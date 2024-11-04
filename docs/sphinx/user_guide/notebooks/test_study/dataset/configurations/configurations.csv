@@ -1,0 +1,162 @@
+name,type,description
+nwm30_retrospective,secondary,NWM 3.0 Retrospective
+nwm22_retrospective,secondary,NWM 2.2 Retrospective
+nwm21_retrospective,secondary,NWM 2.1 Retrospective
+nwm20_retrospective,secondary,NWM 2.0 Retrospective
+usgs_observations,primary,USGS Observations
+nwm30_analysis_assim,primary,NWM Analysis and Assimilation
+nwm30_analysis_assim_no_da,secondary,NWM Analysis and Assimilation (No DA)
+nwm30_analysis_assim_extend,primary,NWM Analysis and Assimilation Extended
+nwm30_analysis_assim_extend_no_da,secondary,NWM Analysis and Assimilation Extended (No DA)
+nwm30_analysis_assim_long,primary,NWM Analysis and Assimilation Long
+nwm30_analysis_assim_long_no_da,secondary,NWM Analysis and Assimilation Long (No DA)
+nwm30_analysis_assim_hawaii,primary,NWM Analysis and Assimilation Hawaii
+nwm30_analysis_assim_hawaii_no_da,secondary,NWM Analysis and Assimilation Hawaii (No DA)
+nwm30_analysis_assim_puertorico,primary,NWM Analysis and Assimilation Puerto Rico
+nwm30_analysis_assim_puertorico_no_da,secondary,NWM Analysis and Assimilation Puerto Rico (No DA)
+nwm30_short_range,secondary,NWM Short Range
+nwm30_short_range_hawaii,secondary,NWM Short Range Hawaii
+nwm30_short_range_puertorico,secondary,NWM Short Range Puerto Rico
+nwm30_short_range_hawaii_no_da,secondary,NWM Short Range Hawaii (No DA)
+nwm30_short_range_puertorico_no_da,secondary,NWM Short Range Puerto Rico (No DA)
+nwm30_medium_range_mem1,secondary,NWM Medium Range Member 1
+nwm30_medium_range_mem2,secondary,NWM Medium Range Member 2
+nwm30_medium_range_mem3,secondary,NWM Medium Range Member 3
+nwm30_medium_range_mem4,secondary,NWM Medium Range Member 4
+nwm30_medium_range_mem5,secondary,NWM Medium Range Member 5
+nwm30_medium_range_mem6,secondary,NWM Medium Range Member 6
+nwm30_medium_range_mem7,secondary,NWM Medium Range Member 7
+nwm30_medium_range_no_da,secondary,NWM Medium Range (No DA)
+nwm30_long_range_mem1,secondary,NWM Long Range Member 1
+nwm30_long_range_mem2,secondary,NWM Long Range Member 2
+nwm30_long_range_mem3,secondary,NWM Long Range Member 3
+nwm30_long_range_mem4,secondary,NWM Long Range Member 4
+nwm30_forcing_medium_range,secondary,NWM Medium Range Forcing
+nwm30_forcing_medium_range_blend,secondary,NWM Medium Range Forcing Blend
+nwm30_forcing_medium_range_alaska,secondary,NWM Medium Range Forcing Alaska
+nwm30_forcing_medium_range_blend_alaska,secondary,NWM Medium Range Forcing Blend Alaska
+nwm30_forcing_short_range,secondary,NWM Short Range Forcing
+nwm30_forcing_short_range_hawaii,secondary,NWM Short Range Forcing Hawaii
+nwm30_forcing_short_range_puertorico,secondary,NWM Short Range Forcing Puerto Rico
+nwm30_forcing_short_range_alaska,secondary,NWM Short Range Forcing Alaska
+nwm30_forcing_analysis_assim,primary,NWM Analysis and Assimilation Forcing
+nwm30_forcing_analysis_assim_extend,primary,NWM Analysis and Assimilation Extended Forcing
+nwm30_forcing_analysis_assim_hawaii,primary,NWM Analysis and Assimilation Hawaii Forcing
+nwm30_forcing_analysis_assim_puertorico,primary,NWM Analysis and Assimilation Puerto Rico Forcing
+nwm22_analysis_assim,primary,NWM Analysis and Assimilation
+nwm22_analysis_assim_no_da,secondary,NWM Analysis and Assimilation (No DA)
+nwm22_analysis_assim_extend,primary,NWM Analysis and Assimilation Extended
+nwm22_analysis_assim_extend_no_da,secondary,NWM Analysis and Assimilation Extended (No DA)
+nwm22_analysis_assim_long,primary,NWM Analysis and Assimilation Long
+nwm22_analysis_assim_long_no_da,secondary,NWM Analysis and Assimilation Long (No DA)
+nwm22_analysis_assim_hawaii,primary,NWM Analysis and Assimilation Hawaii
+nwm22_analysis_assim_hawaii_no_da,secondary,NWM Analysis and Assimilation Hawaii (No DA)
+nwm22_analysis_assim_puertorico,primary,NWM Analysis and Assimilation Puerto Rico
+nwm22_analysis_assim_puertorico_no_da,secondary,NWM Analysis and Assimilation Puerto Rico (No DA)
+nwm22_short_range,secondary,NWM Short Range
+nwm22_short_range_hawaii,secondary,NWM Short Range Hawaii
+nwm22_short_range_puertorico,secondary,NWM Short Range Puerto Rico
+nwm22_short_range_hawaii_no_da,secondary,NWM Short Range Hawaii (No DA)
+nwm22_short_range_puertorico_no_da,secondary,NWM Short Range Puerto Rico (No DA)
+nwm22_medium_range_mem1,secondary,NWM Medium Range Member 1
+nwm22_medium_range_mem2,secondary,NWM Medium Range Member 2
+nwm22_medium_range_mem3,secondary,NWM Medium Range Member 3
+nwm22_medium_range_mem4,secondary,NWM Medium Range Member 4
+nwm22_medium_range_mem5,secondary,NWM Medium Range Member 5
+nwm22_medium_range_mem6,secondary,NWM Medium Range Member 6
+nwm22_medium_range_mem7,secondary,NWM Medium Range Member 7
+nwm22_medium_range_no_da,secondary,NWM Medium Range (No DA)
+nwm22_long_range_mem1,secondary,NWM Long Range Member 1
+nwm22_long_range_mem2,secondary,NWM Long Range Member 2
+nwm22_long_range_mem3,secondary,NWM Long Range Member 3
+nwm22_long_range_mem4,secondary,NWM Long Range Member 4
+nwm22_forcing_medium_range,secondary,NWM Medium Range Forcing
+nwm22_forcing_medium_range_blend,secondary,NWM Medium Range Forcing Blend
+nwm22_forcing_medium_range_alaska,secondary,NWM Medium Range Forcing Alaska
+nwm22_forcing_medium_range_blend_alaska,secondary,NWM Medium Range Forcing Blend Alaska
+nwm22_forcing_short_range,secondary,NWM Short Range Forcing
+nwm22_forcing_short_range_hawaii,secondary,NWM Short Range Forcing Hawaii
+nwm22_forcing_short_range_puertorico,secondary,NWM Short Range Forcing Puerto Rico
+nwm22_forcing_short_range_alaska,secondary,NWM Short Range Forcing Alaska
+nwm22_forcing_analysis_assim,primary,NWM Analysis and Assimilation Forcing
+nwm22_forcing_analysis_assim_extend,primary,NWM Analysis and Assimilation Extended Forcing
+nwm22_forcing_analysis_assim_hawaii,primary,NWM Analysis and Assimilation Hawaii Forcing
+nwm22_forcing_analysis_assim_puertorico,primary,NWM Analysis and Assimilation Puerto Rico Forcing
+nwm21_analysis_assim,primary,NWM Analysis and Assimilation
+nwm21_analysis_assim_no_da,secondary,NWM Analysis and Assimilation (No DA)
+nwm21_analysis_assim_extend,primary,NWM Analysis and Assimilation Extended
+nwm21_analysis_assim_extend_no_da,secondary,NWM Analysis and Assimilation Extended (No DA)
+nwm21_analysis_assim_long,primary,NWM Analysis and Assimilation Long
+nwm21_analysis_assim_long_no_da,secondary,NWM Analysis and Assimilation Long (No DA)
+nwm21_analysis_assim_hawaii,primary,NWM Analysis and Assimilation Hawaii
+nwm21_analysis_assim_hawaii_no_da,secondary,NWM Analysis and Assimilation Hawaii (No DA)
+nwm21_analysis_assim_puertorico,primary,NWM Analysis and Assimilation Puerto Rico
+nwm21_analysis_assim_puertorico_no_da,secondary,NWM Analysis and Assimilation Puerto Rico (No DA)
+nwm21_short_range,secondary,NWM Short Range
+nwm21_short_range_hawaii,secondary,NWM Short Range Hawaii
+nwm21_short_range_puertorico,secondary,NWM Short Range Puerto Rico
+nwm21_short_range_hawaii_no_da,secondary,NWM Short Range Hawaii (No DA)
+nwm21_short_range_puertorico_no_da,secondary,NWM Short Range Puerto Rico (No DA)
+nwm21_medium_range_mem1,secondary,NWM Medium Range Member 1
+nwm21_medium_range_mem2,secondary,NWM Medium Range Member 2
+nwm21_medium_range_mem3,secondary,NWM Medium Range Member 3
+nwm21_medium_range_mem4,secondary,NWM Medium Range Member 4
+nwm21_medium_range_mem5,secondary,NWM Medium Range Member 5
+nwm21_medium_range_mem6,secondary,NWM Medium Range Member 6
+nwm21_medium_range_mem7,secondary,NWM Medium Range Member 7
+nwm21_medium_range_no_da,secondary,NWM Medium Range (No DA)
+nwm21_long_range_mem1,secondary,NWM Long Range Member 1
+nwm21_long_range_mem2,secondary,NWM Long Range Member 2
+nwm21_long_range_mem3,secondary,NWM Long Range Member 3
+nwm21_long_range_mem4,secondary,NWM Long Range Member 4
+nwm21_forcing_medium_range,secondary,NWM Medium Range Forcing
+nwm21_forcing_medium_range_blend,secondary,NWM Medium Range Forcing Blend
+nwm21_forcing_medium_range_alaska,secondary,NWM Medium Range Forcing Alaska
+nwm21_forcing_medium_range_blend_alaska,secondary,NWM Medium Range Forcing Blend Alaska
+nwm21_forcing_short_range,secondary,NWM Short Range Forcing
+nwm21_forcing_short_range_hawaii,secondary,NWM Short Range Forcing Hawaii
+nwm21_forcing_short_range_puertorico,secondary,NWM Short Range Forcing Puerto Rico
+nwm21_forcing_short_range_alaska,secondary,NWM Short Range Forcing Alaska
+nwm21_forcing_analysis_assim,primary,NWM Analysis and Assimilation Forcing
+nwm21_forcing_analysis_assim_extend,primary,NWM Analysis and Assimilation Extended Forcing
+nwm21_forcing_analysis_assim_hawaii,primary,NWM Analysis and Assimilation Hawaii Forcing
+nwm21_forcing_analysis_assim_puertorico,primary,NWM Analysis and Assimilation Puerto Rico Forcing
+nwm20_analysis_assim,primary,NWM Analysis and Assimilation
+nwm20_analysis_assim_no_da,secondary,NWM Analysis and Assimilation (No DA)
+nwm20_analysis_assim_extend,primary,NWM Analysis and Assimilation Extended
+nwm20_analysis_assim_extend_no_da,secondary,NWM Analysis and Assimilation Extended (No DA)
+nwm20_analysis_assim_long,primary,NWM Analysis and Assimilation Long
+nwm20_analysis_assim_long_no_da,secondary,NWM Analysis and Assimilation Long (No DA)
+nwm20_analysis_assim_hawaii,primary,NWM Analysis and Assimilation Hawaii
+nwm20_analysis_assim_hawaii_no_da,secondary,NWM Analysis and Assimilation Hawaii (No DA)
+nwm20_analysis_assim_puertorico,primary,NWM Analysis and Assimilation Puerto Rico
+nwm20_analysis_assim_puertorico_no_da,secondary,NWM Analysis and Assimilation Puerto Rico (No DA)
+nwm20_short_range,secondary,NWM Short Range
+nwm20_short_range_hawaii,secondary,NWM Short Range Hawaii
+nwm20_short_range_puertorico,secondary,NWM Short Range Puerto Rico
+nwm20_short_range_hawaii_no_da,secondary,NWM Short Range Hawaii (No DA)
+nwm20_short_range_puertorico_no_da,secondary,NWM Short Range Puerto Rico (No DA)
+nwm20_medium_range_mem1,secondary,NWM Medium Range Member 1
+nwm20_medium_range_mem2,secondary,NWM Medium Range Member 2
+nwm20_medium_range_mem3,secondary,NWM Medium Range Member 3
+nwm20_medium_range_mem4,secondary,NWM Medium Range Member 4
+nwm20_medium_range_mem5,secondary,NWM Medium Range Member 5
+nwm20_medium_range_mem6,secondary,NWM Medium Range Member 6
+nwm20_medium_range_mem7,secondary,NWM Medium Range Member 7
+nwm20_medium_range_no_da,secondary,NWM Medium Range (No DA)
+nwm20_long_range_mem1,secondary,NWM Long Range Member 1
+nwm20_long_range_mem2,secondary,NWM Long Range Member 2
+nwm20_long_range_mem3,secondary,NWM Long Range Member 3
+nwm20_long_range_mem4,secondary,NWM Long Range Member 4
+nwm20_forcing_medium_range,secondary,NWM Medium Range Forcing
+nwm20_forcing_medium_range_blend,secondary,NWM Medium Range Forcing Blend
+nwm20_forcing_medium_range_alaska,secondary,NWM Medium Range Forcing Alaska
+nwm20_forcing_medium_range_blend_alaska,secondary,NWM Medium Range Forcing Blend Alaska
+nwm20_forcing_short_range,secondary,NWM Short Range Forcing
+nwm20_forcing_short_range_hawaii,secondary,NWM Short Range Forcing Hawaii
+nwm20_forcing_short_range_puertorico,secondary,NWM Short Range Forcing Puerto Rico
+nwm20_forcing_short_range_alaska,secondary,NWM Short Range Forcing Alaska
+nwm20_forcing_analysis_assim,primary,NWM Analysis and Assimilation Forcing
+nwm20_forcing_analysis_assim_extend,primary,NWM Analysis and Assimilation Extended Forcing
+nwm20_forcing_analysis_assim_hawaii,primary,NWM Analysis and Assimilation Hawaii Forcing
+nwm20_forcing_analysis_assim_puertorico,primary,NWM Analysis and Assimilation Puerto Rico Forcing
