@@ -103,6 +103,9 @@ class Evaluation:
                 .setAppName("TEEHR")
                 .setMaster("local[*]")
                 .set("spark.sql.sources.partitionOverwriteMode", "dynamic")
+                .set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+                .set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider")
+                .set("spark.sql.execution.arrow.pyspark.enabled", "true")
             )
             self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
 
@@ -192,16 +195,11 @@ class Evaluation:
         logger.info(f"Copying template from {template_dir} to {self.dir_path}")
         copy_template_to(template_dir, self.dir_path)
 
-    def clean_cache():
+    def clean_cache(self):
         """Clean temporary files.
 
         Includes removing temporary files.
         """
-        pass
-
-    def clone_study():
-        """Get a study from s3.
-
-        Includes retrieving metadata and contents.
-        """
-        pass
+        logger.info(f"Removing temporary files from {self.cache_dir}")
+        self.cache_dir.rmdir()
+        self.cache_dir.mkdir()
