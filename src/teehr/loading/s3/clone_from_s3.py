@@ -61,6 +61,13 @@ def clone_from_s3(ev, evaluation_name: str):
 
     Note: future version will allow subsetting the tables to clone.
     """
+
+    # Make the Evlaution directories
+    logger.info(f"Creating directories for evaluation: {evaluation_name}")
+    Path(ev.cache_dir).mkdir()
+    Path(ev.dataset_dir).mkdir()
+    Path(ev.scripts_dir).mkdir()
+
     logger.info(f"Cloning evaluation from s3: {evaluation_name}")
     tables = [
         {
@@ -126,9 +133,13 @@ def clone_from_s3(ev, evaluation_name: str):
     for table in tables:
         local_path = table["local_path"]
         format = table["format"]
+        name = table["name"]
         dir_name = str(Path(local_path).relative_to(ev.dataset_dir))
 
-        logger.debug(f"Cloning from {s3_dataset_path}/{dir_name}/ to {local_path}")
+        logger.debug(f"Making directory {table['local_path']}")
+        Path(local_path).mkdir()
+
+        logger.debug(f"Cloning {name} from {s3_dataset_path}/{dir_name}/ to {local_path}")
 
         sdf_in = (
             ev.spark

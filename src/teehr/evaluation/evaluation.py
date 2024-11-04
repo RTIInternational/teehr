@@ -1,14 +1,15 @@
 """Evaluation module."""
-# import pandas as pd
-# import geopandas as gpd
-from typing import Union
-# from enum import Enum
+from typing import Union, Literal
 from pathlib import Path
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
 import logging
 from teehr.loading.utils import (
     copy_template_to,
+)
+from teehr.loading.s3.clone_from_s3 import (
+    list_s3_evaluations,
+    clone_from_s3
 )
 import teehr.const as const
 from teehr.evaluation.fetch import Fetch
@@ -25,6 +26,7 @@ from teehr.evaluation.tables import (
     SecondaryTimeseriesTable,
     JoinedTimeseriesTable,
 )
+import pandas as pd
 from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor # noqa
 
 
@@ -194,6 +196,47 @@ class Evaluation:
         template_dir = Path(teehr_root, "template")
         logger.info(f"Copying template from {template_dir} to {self.dir_path}")
         copy_template_to(template_dir, self.dir_path)
+
+    @staticmethod
+    def list_s3_evaluations(
+        format: Literal["pandas", "list"] = "pandas"
+    ) -> Union[list, pd.DataFrame]:
+        """List the evaluations available on S3.
+
+        Parameters
+        ----------
+        format : str, optional
+            The format of the output. Either "pandas" or "list".
+            The default is "pandas".
+        """
+        return list_s3_evaluations(format=format)
+
+    def clone_from_s3(self, evaluation_name: str):
+        """Fetch the study data from S3.
+
+        Copies the study from s3 to the local directory.
+        Includes the following tables:
+            - units
+            - variables
+            - attributes
+            - configurations
+            - locations
+            - location_attributes
+            - location_crosswalks
+            - primary_timeseries
+            - secondary_timeseries
+            - joined_timeseries
+
+        Also includes the user_defined_fields.py script.
+
+        Parameters
+        ----------
+        evaluation_name : str
+            The name of the evaluation to clone from S3.
+            Use the list_s3_evaluations method to get the available evaluations.
+
+        """
+        return clone_from_s3(self, evaluation_name)
 
     def clean_cache(self):
         """Clean temporary files.

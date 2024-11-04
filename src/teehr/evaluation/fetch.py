@@ -12,7 +12,6 @@ from teehr.fetching.nwm.nwm_points import nwm_to_parquet
 from teehr.fetching.nwm.nwm_grids import nwm_grids_to_parquet
 from teehr.fetching.nwm.retrospective_points import nwm_retro_to_parquet
 from teehr.fetching.nwm.retrospective_grids import nwm_retro_grids_to_parquet
-from teehr.fetching.s3.clone_from_s3 import list_s3_evaluations, clone_from_s3
 from teehr.loading.timeseries import (
     validate_and_insert_timeseries,
 )
@@ -362,44 +361,3 @@ class Fetch:
             # dataset_path=self.ev.dataset_dir,
             timeseries_type=timeseries_type,
         )
-
-    def clone_from_s3(self, evaluation_name: str):
-        """Fetch the study data from S3.
-
-        Copies the study from s3 to the local directory.
-        Includes the following tables:
-            - units
-            - variables
-            - attributes
-            - configurations
-            - locations
-            - location_attributes
-            - location_crosswalks
-            - primary_timeseries
-            - secondary_timeseries
-            - joined_timeseries
-
-        Also includes the user_defined_fields.py script.
-
-        Parameters
-        ----------
-        evaluation_name : str
-            The name of the evaluation to clone from S3.
-            Use the list_s3_evaluations method to get the available evaluations.
-
-        """
-        return clone_from_s3(self.ev, evaluation_name)
-
-    @staticmethod
-    def list_s3_evaluations(
-        format: Literal["pandas", "list"] = "pandas"
-    ) -> Union[list, pd.DataFrame]:
-        """List the evaluations available on S3.
-
-        Parameters
-        ----------
-        format : str, optional
-            The format of the output. Either "pandas" or "list".
-            The default is "pandas".
-        """
-        return list_s3_evaluations(format=format)

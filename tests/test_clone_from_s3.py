@@ -1,11 +1,9 @@
 import tempfile
-import pytest
 import pandas as pd
 from pathlib import Path
+from teehr import Evaluation
 
-from setup_v0_3_study import setup_v0_3_study
-
-from teehr.fetching.s3.clone_from_s3 import list_s3_evaluations, clone_from_s3
+from teehr.loading.s3.clone_from_s3 import list_s3_evaluations
 
 def test_get_s3_evaluations_dataframe():
     """Test get_s3_evaluations as a dataframe."""
@@ -22,8 +20,8 @@ def test_get_s3_evaluations_list():
 
 def test_clone_example_form_s3(tmpdir):
     """Test filter string."""
-    ev = setup_v0_3_study(tmpdir)
-    clone_from_s3(ev, "p0_2_location_example")
+    ev = Evaluation(tmpdir)
+    ev.clone_from_s3("p0_2_location_example")
 
     assert ev.units.to_sdf().count() == 4
     assert ev.variables.to_sdf().count() == 3
