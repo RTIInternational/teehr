@@ -28,17 +28,17 @@ You can use Docker:
 Project Objectives
 ------------------
 
-* Easy integration into research workflows :octicon:`check;1em;sd-text-info`
+* Easy integration into research workflows
 
-* Use of modern and efficient data structures and computing platforms :octicon:`check;1em;sd-text-info`
+* Use of modern and efficient data structures and computing platforms
 
-* Scalable for rapid execution of large-domain/large-sample evaluations :octicon:`check;1em;sd-text-info`
+* Scalable for rapid execution of large-domain/large-sample evaluations
 
-* Simplified exploration of performance trends and potential drivers (e.g., climate, time-period, regulation, and basin characteristics) :octicon:`check;1em;sd-text-info`
+* Simplified exploration of performance trends and potential drivers (e.g., climate, time-period, regulation, and basin characteristics)
 
-* Inclusion of common and emergent evaluation methods (e.g., error statistics, skill scores, categorical metrics, hydrologic signatures, uncertainty quantification, and graphical methods) :octicon:`check;1em;sd-text-info`
+* Inclusion of common and emergent evaluation methods (e.g., error statistics, skill scores, categorical metrics, hydrologic signatures, uncertainty quantification, and graphical methods)
 
-* Open source and community-extensible development :octicon:`check;1em;sd-text-info`
+* Open source and community-extensible development
 
 
 TEEHR Evaluation Example
