@@ -1,1 +1,0 @@
-"""Template scripts init for TEEHR evaluations."""

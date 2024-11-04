@@ -21,8 +21,8 @@ class TEEHRDataFrameAccessor:
     as well as timeseries. This requires more validation in each method to
     ensure the DataFrame has the appropriate data.
 
-    Methods operating on metrics data should start with 'metrics' and methods
-    operating on timeseries data should start with 'timeseries'.
+    Methods operating on metrics data should start with 'metrics_' and methods
+    operating on timeseries data should start with 'timeseries_'.
     """
 
     def __init__(self, pandas_obj):
