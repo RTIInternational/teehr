@@ -19,3 +19,20 @@ from teehr.models.filters import (  # noqa
     TimeseriesFilter,
     JoinedTimeseriesFilter
 )
+
+# For docs
+from teehr.evaluation.tables import (  # noqa
+    BaseTable,
+    UnitTable,
+    VariableTable,
+    AttributeTable,
+    ConfigurationTable,
+    LocationTable,
+    LocationAttributeTable,
+    LocationCrosswalkTable,
+    PrimaryTimeseriesTable,
+    SecondaryTimeseriesTable,
+    JoinedTimeseriesTable,
+)
+from teehr.evaluation.fetch import Fetch  # noqa
+from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor  # noqa
