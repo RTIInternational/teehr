@@ -248,12 +248,30 @@ class Evaluation:
         self.cache_dir.mkdir()
 
     def sql(self, query: str):
-        """Run a SQL query on the Spark session.
+        """Run a SQL query on the Spark session against the TEEHR tables.
 
         Parameters
         ----------
         query : str
             The SQL query to run.
+
+        Returns
+        -------
+        pyspark.sql.DataFrame
+            The result of the SQL query.
+            This is lazily evaluated so you need to call an action (e.g., sdf.show()) to get the result.
+
+        This methhods has access to the following tables preloaded as temporary views:
+            - units
+            - variables
+            - attributes
+            - configurations
+            - locations
+            - location_attributes
+            - location_crosswalks
+            - primary_timeseries
+            - secondary_timeseries
+            - joined_timeseries
         """
         self.units.to_sdf().createOrReplaceTempView("units")
         self.variables.to_sdf().createOrReplaceTempView("variables")
