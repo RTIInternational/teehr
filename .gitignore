@@ -139,3 +139,5 @@ temp/
 
 # drawio backup files
 *.drawio.bkp
+
+.DS_Store
