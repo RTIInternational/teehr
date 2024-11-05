@@ -3,10 +3,10 @@ import pyspark
 import urllib.request
 
 SPARK_HOME = pyspark.__path__[0]
-print(SPARK_HOME)
+print(f"SPARK_HOME is: {SPARK_HOME}")
 
 SPARK_VERSION = pyspark.__version__
-print(SPARK_VERSION)
+print(f"SPARK_VERSION is: {SPARK_VERSION}")
 
 jars = [
     {

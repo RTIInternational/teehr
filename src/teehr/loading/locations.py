@@ -155,15 +155,18 @@ def validate_and_insert_single_locations(
 
     gdf = gpd.read_parquet(input_filepath)
 
-    schema = pa.DataFrameSchema({
-        "id": pa.Column(str, coerce=True),
-        "name": pa.Column(str, coerce=True),
-        "geometry": pa.Column("geometry")
-    })
+    schema = pa.DataFrameSchema(
+        columns={
+            "id": pa.Column(str, coerce=True),
+            "name": pa.Column(str, coerce=True),
+            "geometry": pa.Column("geometry")
+        },
+        strict="filter"
+    )
 
     validated_gdf = schema.validate(gdf)
 
-    validated_gdf.to_parquet(output_filepath)
+    validated_gdf.to_parquet(output_filepath, index=False)
 
     logger.info(f"Validated locations saved to {output_filepath}.")
 
