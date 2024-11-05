@@ -246,3 +246,42 @@ class Evaluation:
         logger.info(f"Removing temporary files from {self.cache_dir}")
         self.cache_dir.rmdir()
         self.cache_dir.mkdir()
+
+    def sql(self, query: str):
+        """Run a SQL query on the Spark session against the TEEHR tables.
+
+        Parameters
+        ----------
+        query : str
+            The SQL query to run.
+
+        Returns
+        -------
+        pyspark.sql.DataFrame
+            The result of the SQL query.
+            This is lazily evaluated so you need to call an action (e.g., sdf.show()) to get the result.
+
+        This methhods has access to the following tables preloaded as temporary views:
+            - units
+            - variables
+            - attributes
+            - configurations
+            - locations
+            - location_attributes
+            - location_crosswalks
+            - primary_timeseries
+            - secondary_timeseries
+            - joined_timeseries
+        """
+        self.units.to_sdf().createOrReplaceTempView("units")
+        self.variables.to_sdf().createOrReplaceTempView("variables")
+        self.attributes.to_sdf().createOrReplaceTempView("attributes")
+        self.configurations.to_sdf().createOrReplaceTempView("configurations")
+        self.locations.to_sdf().createOrReplaceTempView("locations")
+        self.location_attributes.to_sdf().createOrReplaceTempView("location_attributes")
+        self.location_crosswalks.to_sdf().createOrReplaceTempView("location_crosswalks")
+        self.primary_timeseries.to_sdf().createOrReplaceTempView("primary_timeseries")
+        self.secondary_timeseries.to_sdf().createOrReplaceTempView("secondary_timeseries")
+        self.joined_timeseries.to_sdf().createOrReplaceTempView("joined_timeseries")
+
+        return self.spark.sql(query)
