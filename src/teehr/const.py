@@ -32,3 +32,5 @@ WEIGHTS_DIR = "weights"
 
 # Loading cache directories
 LOADING_CACHE_DIR = "loading"
+
+S3_PROTOCOLS_PATH = "s3://ciroh-rti-public-data/teehr-data-warehouse/v0_4_protocols/protocols.yaml"

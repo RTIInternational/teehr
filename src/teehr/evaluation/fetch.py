@@ -1,5 +1,5 @@
 """Component class for fetching data from external sources."""
-from typing import Union, List, Optional
+from typing import Union, List, Optional, Literal
 from datetime import datetime
 import logging
 from pathlib import Path

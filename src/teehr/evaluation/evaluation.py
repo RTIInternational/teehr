@@ -1,14 +1,15 @@
 """Evaluation module."""
-# import pandas as pd
-# import geopandas as gpd
-from typing import Union
-# from enum import Enum
+from typing import Union, Literal
 from pathlib import Path
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
 import logging
 from teehr.loading.utils import (
     copy_template_to,
+)
+from teehr.loading.s3.clone_from_s3 import (
+    list_s3_evaluations,
+    clone_from_s3
 )
 import teehr.const as const
 from teehr.evaluation.fetch import Fetch
@@ -25,7 +26,8 @@ from teehr.evaluation.tables import (
     SecondaryTimeseriesTable,
     JoinedTimeseriesTable,
 )
-from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor
+import pandas as pd
+from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor # noqa
 
 
 logger = logging.getLogger(__name__)
@@ -40,6 +42,7 @@ class Evaluation:
     def __init__(
         self,
         dir_path: Union[str, Path],
+        create_dir: bool = False,
         spark: SparkSession = None
     ):
         """Initialize the Evaluation class."""
@@ -87,8 +90,12 @@ class Evaluation:
         )
 
         if not Path(self.dir_path).is_dir():
-            logger.error(f"Directory {self.dir_path} does not exist.")
-            raise NotADirectoryError
+            if create_dir:
+                logger.info(f"Creating directory {self.dir_path}.")
+                Path(self.dir_path).mkdir(parents=True, exist_ok=True)
+            else:
+                logger.error(f"Directory {self.dir_path} does not exist.")
+                raise NotADirectoryError
 
         # Create a local Spark Session if one is not provided.
         if not self.spark:
@@ -98,6 +105,9 @@ class Evaluation:
                 .setAppName("TEEHR")
                 .setMaster("local[*]")
                 .set("spark.sql.sources.partitionOverwriteMode", "dynamic")
+                .set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+                .set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider")
+                .set("spark.sql.execution.arrow.pyspark.enabled", "true")
             )
             self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
 
@@ -187,16 +197,52 @@ class Evaluation:
         logger.info(f"Copying template from {template_dir} to {self.dir_path}")
         copy_template_to(template_dir, self.dir_path)
 
-    def clean_cache():
+    @staticmethod
+    def list_s3_evaluations(
+        format: Literal["pandas", "list"] = "pandas"
+    ) -> Union[list, pd.DataFrame]:
+        """List the evaluations available on S3.
+
+        Parameters
+        ----------
+        format : str, optional
+            The format of the output. Either "pandas" or "list".
+            The default is "pandas".
+        """
+        return list_s3_evaluations(format=format)
+
+    def clone_from_s3(self, evaluation_name: str):
+        """Fetch the study data from S3.
+
+        Copies the study from s3 to the local directory.
+        Includes the following tables:
+            - units
+            - variables
+            - attributes
+            - configurations
+            - locations
+            - location_attributes
+            - location_crosswalks
+            - primary_timeseries
+            - secondary_timeseries
+            - joined_timeseries
+
+        Also includes the user_defined_fields.py script.
+
+        Parameters
+        ----------
+        evaluation_name : str
+            The name of the evaluation to clone from S3.
+            Use the list_s3_evaluations method to get the available evaluations.
+
+        """
+        return clone_from_s3(self, evaluation_name)
+
+    def clean_cache(self):
         """Clean temporary files.
 
         Includes removing temporary files.
         """
-        pass
-
-    def clone_study():
-        """Get a study from s3.
-
-        Includes retrieving metadata and contents.
-        """
-        pass
+        logger.info(f"Removing temporary files from {self.cache_dir}")
+        self.cache_dir.rmdir()
+        self.cache_dir.mkdir()
