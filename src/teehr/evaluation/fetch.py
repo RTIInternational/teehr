@@ -142,8 +142,6 @@ class Fetch:
         Initially the data is saved to the cache directory, then it is
         validated and loaded into the TEEHR dataset.
 
-        TODO: Import TEEHR and initialize an Evaluation.
-
         >>> import teehr
         >>> ev = teehr.Evaluation()
 
@@ -263,8 +261,6 @@ class Fetch:
         Here we fetch one days worth of NWM hourly streamflow data. Initially
         the data is saved to the cache directory, then it is validated and
         loaded into the TEEHR dataset.
-
-        TODO: Import TEEHR and initialize an Evaluation.
 
         >>> import teehr
         >>> ev = teehr.Evaluation()
@@ -406,8 +402,6 @@ class Fetch:
         some watersheds (polygons) a using pre-calculated weights file
         (see: :func:`generate_weights_file()
         <teehr.utilities.generate_weights.generate_weights_file>` for weights calculation).
-
-        TODO: Import TEEHR and initialize an Evaluation.
 
         >>> import teehr
         >>> ev = teehr.Evaluation()
@@ -570,8 +564,6 @@ class Fetch:
         --------
         Here we fetch operational streamflow forecasts for NWM v2.2 from GCS, and
         load into the TEEHR dataset.
-
-        TODO: Import TEEHR and initialize an Evaluation.
 
         >>> import teehr
         >>> ev = teehr.Evaluation()

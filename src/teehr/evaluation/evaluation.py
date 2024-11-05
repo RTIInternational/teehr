@@ -224,6 +224,16 @@ class Evaluation:
         """Fetch the study data from S3.
 
         Copies the study from s3 to the local directory.
+
+        Parameters
+        ----------
+        evaluation_name : str
+            The name of the evaluation to clone from S3.
+            Use the list_s3_evaluations method to get the available evaluations.
+
+        Notes
+        -----
+
         Includes the following tables:
             - units
             - variables
@@ -237,12 +247,6 @@ class Evaluation:
             - joined_timeseries
 
         Also includes the user_defined_fields.py script.
-
-        Parameters
-        ----------
-        evaluation_name : str
-            The name of the evaluation to clone from S3.
-            Use the list_s3_evaluations method to get the available evaluations.
 
         """
         return clone_from_s3(self, evaluation_name)

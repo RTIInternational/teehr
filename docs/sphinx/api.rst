@@ -28,7 +28,8 @@ Creating and Managing an Evaluation
    :toctree: generated/
 
    Evaluation.clone_template
-   Evaluation.clone_study
+   Evaluation.list_s3_evaluations
+   Evaluation.clone_from_s3
    Evaluation.clean_cache
    Evaluation.enable_logging
 
@@ -58,7 +59,6 @@ Fetching NWM and USGS data
 
 .. autosummary::
    :toctree: generated/
-   :recursive:
 
    Fetch.usgs_streamflow
    Fetch.nwm_retrospective_points
