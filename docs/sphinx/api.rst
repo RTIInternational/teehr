@@ -84,7 +84,7 @@ Methods for querying and calculating metrics.
    :toctree: generated/
    :template: custom-class-template.rst
 
-   teehr.evaluation.metrics.Metrics
+   evaluation.metrics.Metrics
 
 
 Metric and Bootstrap Models
@@ -96,8 +96,8 @@ Classes for defining and customizing metrics and bootstrap models.
    :toctree: generated/
    :template: custom-module-template.rst
 
-   teehr.models.metrics.metric_models
-   teehr.models.metrics.bootstrap_models
+   metric_models
+   bootstrap_models
 
 
 Visualization

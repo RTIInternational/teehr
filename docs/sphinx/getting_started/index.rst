@@ -41,6 +41,18 @@ Project Objectives
 * Open source and community-extensible development
 
 
+Why TEEHR?
+----------
+TEEHR is a python package that provides a framework for the evaluation of hydrologic model performance.
+It is designed to enable iterative and exploratory analysis of hydrologic data, and facilitates this through:
+
+* Scalability - TEEHR's computational engine is built on PySpark, allowing it to take advantage of your available compute resources.
+
+* Data Integrity - TEEHR's internal data model makes it easier to work with and validate the various data making up your evaluation, such as model outputs, observations, location attributes, and more.
+
+* Flexibility - TEEHR is designed to be flexible and extensible, allowing you to easily customize metrics, add bootstrapping, and group and filter your data in a variety of ways.
+
+
 TEEHR Evaluation Example
 ------------------------
 The following is an example of initializing a TEEHR Evaluation on an existing dataset,

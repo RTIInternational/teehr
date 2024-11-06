@@ -122,12 +122,12 @@ class Evaluation:
 
     @property
     def fetch(self) -> Fetch:
-        """The fetch component class."""
+        """The fetch component class for accessing external data."""
         return Fetch(self)
 
     @property
     def metrics(self) -> Metrics:
-        """The load component class."""
+        """The metrics component class for calculating performance metrics."""
         return Metrics(self)
 
     @property

@@ -77,8 +77,7 @@ napoleon_preprocess_types = True
 
 
 # -- MyST-NB options ---------------------------------------------------------
-nb_execution_mode = "auto"
-# jupyter_execute_notebooks = "auto"  # deprecated?
+nb_execution_mode = "auto"s
 myst_enable_extensions = [
     "html_image"
 ]

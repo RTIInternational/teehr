@@ -1,5 +1,5 @@
 """Component class for fetching data from external sources."""
-from typing import Union, List, Optional, Literal
+from typing import Union, List, Optional
 from datetime import datetime
 import logging
 from pathlib import Path
@@ -344,7 +344,7 @@ class Fetch:
         timeseries_type: TimeseriesTypeEnum = "primary"
     ):
         """
-        Fetch NWM gridded data, calculate zonal statistics (currently only
+        Fetch NWM retrospective gridded data, calculate zonal statistics (currently only
         mean is available) of selected variable for given zones, and load
         into the TEEHR dataset.
 
@@ -674,7 +674,7 @@ class Fetch:
         timeseries_type: TimeseriesTypeEnum = "primary"
     ):
         """
-        Fetch NWM gridded data, calculate zonal statistics (currently only
+        Fetch NWM operational gridded data, calculate zonal statistics (currently only
         mean is available) of selected variable for given zones, and load into
         the TEEHR dataset.
 
@@ -757,8 +757,6 @@ class Fetch:
         some watersheds (polygons) a using pre-calculated weights file
         (see: :func:`generate_weights_file()
         <teehr.utilities.generate_weights.generate_weights_file>` for weights calculation).
-
-        TODO: Import TEEHR and initialize an Evaluation.
 
         >>> import teehr
         >>> ev = teehr.Evaluation()

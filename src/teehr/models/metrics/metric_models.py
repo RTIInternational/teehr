@@ -1,4 +1,4 @@
-"""Metric Query Models."""
+"""Classes representing available performance metrics."""
 from typing import List, Dict, Callable, Union
 
 from pydantic import BaseModel as PydanticBaseModel

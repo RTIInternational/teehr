@@ -70,8 +70,6 @@ class Metrics:
         Examples
         --------
 
-        TODO: Import TEEHR and initialize an Evaluation.
-
         >>> import teehr
         >>> ev = teehr.Evaluation()
 

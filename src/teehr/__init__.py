@@ -36,3 +36,4 @@ from teehr.evaluation.tables import (  # noqa
 )
 from teehr.evaluation.fetch import Fetch  # noqa
 from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor  # noqa
+from teehr.models.metrics import metric_models, bootstrap_models  # noqa

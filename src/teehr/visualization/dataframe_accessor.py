@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 @pd.api.extensions.register_dataframe_accessor("teehr")
 class TEEHRDataFrameAccessor:
-    """Extends pandas DataFrame objects.
+    """Extends pandas DataFrame objects with visualization methods.
 
     Notes
     -----
