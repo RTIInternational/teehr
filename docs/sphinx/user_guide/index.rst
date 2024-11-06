@@ -9,7 +9,7 @@ The best way to get to know TEEHR is through the extensive examples.
 Evaluation examples
 -------------------
 
-:doc:`Exploring an existing Evaluation dataset </user_guide/notebooks/02-table_queries>`  :download:`(download) </user_guide/notebooks/02-table_queries.ipynb>`
+:doc:`Exploring an existing Evaluation dataset </user_guide/notebooks/02-table_queries>`  :download:`(download notebook) </user_guide/notebooks/02-table_queries.ipynb>`
 
 
 
