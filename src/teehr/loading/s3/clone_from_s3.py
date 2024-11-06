@@ -73,52 +73,62 @@ def clone_from_s3(ev, evaluation_name: str):
         {
             "name": "units",
             "local_path": ev.units_dir,
-            "format": "csv"
+            "format": "csv",
+            "partitions": None
         },
         {
             "name": "variables",
             "local_path": ev.variables_dir,
-            "format": "csv"
+            "format": "csv",
+            "partitions": None
         },
         {
             "name": "attributes",
             "local_path": ev.attributes_dir,
-            "format": "csv"
+            "format": "csv",
+            "partitions": None
         },
         {
             "name": "configurations",
             "local_path": ev.configurations_dir,
-            "format": "csv"
+            "format": "csv",
+            "partitions": None
         },
         {
             "name": "locations",
             "local_path": ev.locations_dir,
-            "format": "parquet"
+            "format": "parquet",
+            "partitions": None
         },
         {
             "name": "location_attributes",
             "local_path": ev.location_attributes_dir,
-            "format": "parquet"
+            "format": "parquet",
+            "partitions": None
         },
         {
             "name": "location_crosswalks",
             "local_path": ev.location_crosswalks_dir,
-            "format": "parquet"
+            "format": "parquet",
+            "partitions": None
         },
         {
             "name": "primary_timeseries",
             "local_path": ev.primary_timeseries_dir,
-            "format": "parquet"
+            "format": "parquet",
+            "partitions": ["configuration_name", "variable_name"]
         },
         {
             "name": "secondary_timeseries",
             "local_path": ev.secondary_timeseries_dir,
-            "format": "parquet"
+            "format": "parquet",
+            "partitions": ["configuration_name", "variable_name"]
         },
         {
             "name": "joined_timeseries",
             "local_path": ev.joined_timeseries_dir,
-            "format": "parquet"
+            "format": "parquet",
+            "partitions": ["configuration_name", "variable_name"]
         },
     ]
 
@@ -148,13 +158,25 @@ def clone_from_s3(ev, evaluation_name: str):
             .load(f"{s3_dataset_path}/{dir_name}/")
         )
 
-        (
-            sdf_in
-            .write
-            .format(format)
-            .mode("overwrite")
-            .save(str(local_path))
-        )
+        if table["partitions"]:
+            logger.debug(f"Partitioning {name} by {table['partitions']}.")
+            (
+                sdf_in
+                .write
+                .format(format)
+                .mode("overwrite")
+                .partitionBy(table["partitions"])
+                .save(str(local_path))
+            )
+        else:
+            logger.debug(f"Not partitioning is used for {name}.ß")
+            (
+                sdf_in
+                .write
+                .format(format)
+                .mode("overwrite")
+                .save(str(local_path))
+            )
 
     # copy scriopts path to ev.scripts_dir
     source = f"{url}/scripts/user_defined_fields.py"
