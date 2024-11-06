@@ -48,7 +48,7 @@ It is designed to enable iterative and exploratory analysis of hydrologic data, 
 
 * Scalability - TEEHR's computational engine is built on PySpark, allowing it to take advantage of your available compute resources.
 
-* Data Integrity - TEEHR's internal data model makes it easier to work with and validate the various data making up your evaluation, such as model outputs, observations, location attributes, and more.
+* Data Integrity - TEEHR's internal data model (:doc:`teehr_framework`) makes it easier to work with and validate the various data making up your evaluation, such as model outputs, observations, location attributes, and more.
 
 * Flexibility - TEEHR is designed to be flexible and extensible, allowing you to easily customize metrics, add bootstrapping, and group and filter your data in a variety of ways.
 

@@ -77,7 +77,7 @@ napoleon_preprocess_types = True
 
 
 # -- MyST-NB options ---------------------------------------------------------
-nb_execution_mode = "auto"s
+nb_execution_mode = "auto"
 myst_enable_extensions = [
     "html_image"
 ]
