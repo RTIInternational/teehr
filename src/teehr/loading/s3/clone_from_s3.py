@@ -21,9 +21,9 @@ def list_s3_evaluations(
         Default is "pandas".
 
     """
-    logger.info(f"Getting evaluations from s3: {const.S3_EVALVALUATIONS_PATH}")
+    logger.info(f"Getting evaluations from s3: {const.S3_EVALUATIONS_PATH}")
     # Read the content of the file using fsspec
-    with fsspec.open(const.S3_EVALVALUATIONS_PATH, 'r', anon=True) as file:
+    with fsspec.open(const.S3_EVALUATIONS_PATH, 'r', anon=True) as file:
         yaml_content = file.read()
 
     # Load the YAML content into a dictionary
