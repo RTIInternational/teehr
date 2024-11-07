@@ -4,6 +4,7 @@ from pathlib import Path
 from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor
 import logging
 import tempfile
+import geopandas as gpd
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -28,6 +29,20 @@ def sample_dataframe():
     return df
 
 
+@pytest.fixture
+def sample_geodataframe():
+    """Create sample geodata for test object."""
+    data = {
+        'id': [1, 2],
+        'name': ['Location1', 'Location2'],
+        'geometry': gpd.points_from_xy([10, 20], [30, 40])
+    }
+    gdf = gpd.GeoDataFrame(data, crs="EPSG:4326")
+    gdf.attrs['table_type'] = 'location'
+    gdf.attrs['fields'] = gdf.columns
+    return gdf
+
+
 def test_initialization(sample_dataframe):
     """Initialize test object."""
     # Test that the accessor initializes correctly
@@ -35,7 +50,7 @@ def test_initialization(sample_dataframe):
     assert isinstance(accessor, TEEHRDataFrameAccessor)
 
 
-def test_validation(sample_dataframe):
+def test_validation(sample_dataframe, sample_geodataframe):
     """Test validation method of TEEHRDataFrameAccessor."""
     # Test for missing field in 'timeseries' table_type
     with pytest.raises(AttributeError):
@@ -69,11 +84,19 @@ def test_validation(sample_dataframe):
         df_joined_timeseries.attrs['table_type'] = 'joined_timeseries'
         df_joined_timeseries.teehr
 
-    # Test for 'location' table_type (NotImplementedError)
-    with pytest.raises(NotImplementedError):
-        df_location = sample_dataframe.copy()
-        df_location.attrs['table_type'] = 'location'
-        df_location.teehr
+    # Test for 'location' table_type with missing fields
+    with pytest.raises(AttributeError):
+        gdf_invalid = sample_geodataframe.drop(columns=['id'])
+        gdf_invalid.attrs['table_type'] = 'location'
+        gdf_invalid.attrs['fields'] = sample_geodataframe.columns
+        gdf_invalid.teehr
+
+    # Test for empty GeoDataFrame in 'location' table_type
+    with pytest.raises(AttributeError):
+        gdf_empty = gpd.GeoDataFrame(columns=sample_geodataframe.columns)
+        gdf_empty.attrs['table_type'] = 'location'
+        gdf_empty.attrs['fields'] = sample_geodataframe.columns
+        gdf_empty.teehr
 
     # Test for 'metrics' table_type (NotImplementedError)
     with pytest.raises(NotImplementedError):
@@ -85,7 +108,7 @@ def test_validation(sample_dataframe):
 def test_get_unique_values(sample_dataframe):
     """Test unique values method."""
     accessor = sample_dataframe.teehr
-    unique_values = accessor._get_unique_values(sample_dataframe)
+    unique_values = accessor._timeseries_unique_values(sample_dataframe)
     expected_values = {
         'location_id': [1, 2],
         'variable_name': ['var1', 'var2'],
@@ -151,3 +174,21 @@ def test_timeseries_plot(sample_dataframe):
         # Clean up the files
         var1_file.unlink()
         var2_file.unlink()
+
+
+def test_location_map(sample_geodataframe):
+    """Test location map generation."""
+    accessor = sample_geodataframe.teehr
+
+    # Create a temporary directory
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        output_dir = Path(tmpdirname)
+        accessor.location_map(output_dir=output_dir)
+
+        # Check if the file exists in the temporary directory
+        map_file = output_dir / 'location_map.html'
+        logger.info(f"Checking if {map_file} exists.")
+        assert map_file.exists()
+
+        # Clean up the file
+        map_file.unlink()

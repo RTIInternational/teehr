@@ -40,6 +40,7 @@ numba = "^0.60.0"
 arch = "^7.0.0"
 pandera = {extras = ["pyspark"], version = "^0.20.4"}
 netcdf4 = "1.6.5"
+bokeh = "^3.5.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"
@@ -59,9 +60,6 @@ myst-nb = "^1.0.0"
 nbstripout = "^0.7.1"
 pickleshare = "^0.7.5"
 
-
-[tool.poetry.group.viz.dependencies]
-bokeh = "^3.5.0"
 
 [tool.numpydoc_validation]
 checks = [

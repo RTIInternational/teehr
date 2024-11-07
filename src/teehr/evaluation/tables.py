@@ -644,7 +644,10 @@ class LocationTable(BaseTable):
                 " Please load it first using load_spatial()."
             )
             logger.error(err_msg)
-        return df_to_gdf(self.to_pandas())
+        gdf = df_to_gdf(self.to_pandas())
+        gdf.attrs['table_type'] = 'location'
+        gdf.attrs['fields'] = self.fields()
+        return gdf
 
     def load_spatial(
         self,
@@ -739,7 +742,7 @@ class LocationAttributeTable(BaseTable):
     def to_pandas(self):
         """Return Pandas DataFrame for Location Attributes."""
         df = self.df.toPandas()
-        df.attrs['table_type'] = 'location'
+        df.attrs['table_type'] = 'location_atts'
         df.attrs['fields'] = self.fields()
         return df
 
@@ -872,7 +875,7 @@ class LocationCrosswalkTable(BaseTable):
     def to_pandas(self):
         """Return Pandas DataFrame for Location Crosswalk."""
         df = self.df.toPandas()
-        df.attrs['table_type'] = 'location'
+        df.attrs['table_type'] = 'location_xwalk'
         df.attrs['fields'] = self.fields()
         return df
 
