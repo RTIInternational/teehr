@@ -21,23 +21,23 @@ def list_s3_evaluations(
         Default is "pandas".
 
     """
-    logger.info(f"Getting evaluations from s3: {const.S3_PROTOCOLS_PATH}")
+    logger.info(f"Getting evaluations from s3: {const.S3_EVALVALUATIONS_PATH}")
     # Read the content of the file using fsspec
-    with fsspec.open(const.S3_PROTOCOLS_PATH, 'r', anon=True) as file:
+    with fsspec.open(const.S3_EVALVALUATIONS_PATH, 'r', anon=True) as file:
         yaml_content = file.read()
 
     # Load the YAML content into a dictionary
     yaml_dict = yaml.safe_load(yaml_content)
 
     if format == "pandas":
-        return pd.DataFrame(yaml_dict["protocols"])
-    return yaml_dict["protocols"]
+        return pd.DataFrame(yaml_dict["evaluations"])
+    return yaml_dict["evaluations"]
 
 
 def clone_from_s3(ev, evaluation_name: str):
-    """Clone a study from s3.
+    """Clone an evaluation from s3.
 
-    Copies the study from s3 to the local directory.
+    Copies the evaluation from s3 to the local directory.
     Includes the following tables:
         - units
         - variables
