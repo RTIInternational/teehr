@@ -92,6 +92,7 @@ Classes for defining and customizing metrics and bootstrap models.
 
    metric_models
    bootstrap_models
+   metric_funcs
 
 
 Visualization
