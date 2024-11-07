@@ -622,7 +622,7 @@ class Fetch:
         schema_variable_name = get_schema_variable_name(variable_name)
         schema_configuration_name = f"{nwm_version}_{nwm_configuration}"
         nwm_to_parquet(
-            nwm_configuration=nwm_configuration,
+            configuration=nwm_configuration,
             output_type=output_type,
             variable_name=variable_name,
             start_date=start_date,
@@ -809,7 +809,7 @@ class Fetch:
         schema_variable_name = get_schema_variable_name(variable_name)
         schema_configuration_name = f"{nwm_version}_{nwm_configuration}"
         nwm_grids_to_parquet(
-            nwm_configuration=nwm_configuration,
+            configuration=nwm_configuration,
             output_type=output_type,
             variable_name=variable_name,
             start_date=start_date,

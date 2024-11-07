@@ -36,12 +36,11 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
     eval.enable_logging()
     eval.clone_template()
 
-    _ = eval.locations.load_spatial(in_path=GEO_GAGES_FILEPATH).to_geopandas()
+    eval.locations.load_spatial(in_path=GEO_GAGES_FILEPATH)
 
     eval.fetch.usgs_streamflow(
         start_date=datetime(2022, 2, 22),
-        end_date=datetime(2022, 2, 23),
-        sites=["01030350"]
+        end_date=datetime(2022, 2, 23)
     )
 
     _ = eval.primary_timeseries.to_pandas()
@@ -122,7 +121,7 @@ def test_fetch_and_load_nwm_forecast_points(tmpdir):
     )
 
     eval.fetch.nwm_forecast_points(
-        configuration="analysis_assim",
+        nwm_configuration="analysis_assim",
         output_type="channel_rt",
         variable_name="streamflow",
         start_date=datetime(2024, 2, 22),
@@ -160,7 +159,7 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
     eval.locations.load_spatial(in_path=ZONAL_LOCATIONS)
 
     eval.fetch.nwm_forecast_grids(
-        configuration="forcing_analysis_assim",
+        nwm_configuration="forcing_analysis_assim",
         output_type="forcing",
         variable_name="RAINRATE",
         start_date=datetime(2024, 2, 22),
