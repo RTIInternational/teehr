@@ -261,7 +261,7 @@ class Evaluation:
             The result of the SQL query.
             This is lazily evaluated so you need to call an action (e.g., sdf.show()) to get the result.
 
-        This methhods has access to the following tables preloaded as temporary views:
+        This method has access to the following tables preloaded as temporary views:
             - units
             - variables
             - attributes
