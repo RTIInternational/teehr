@@ -38,7 +38,7 @@ def sample_geodataframe():
         'geometry': gpd.points_from_xy([10, 20], [30, 40])
     }
     gdf = gpd.GeoDataFrame(data, crs="EPSG:4326")
-    gdf.attrs['table_type'] = 'location'
+    gdf.attrs['table_type'] = 'locations'
     gdf.attrs['fields'] = gdf.columns
     return gdf
 
@@ -87,14 +87,14 @@ def test_validation(sample_dataframe, sample_geodataframe):
     # Test for 'location' table_type with missing fields
     with pytest.raises(AttributeError):
         gdf_invalid = sample_geodataframe.drop(columns=['id'])
-        gdf_invalid.attrs['table_type'] = 'location'
+        gdf_invalid.attrs['table_type'] = 'locations'
         gdf_invalid.attrs['fields'] = sample_geodataframe.columns
         gdf_invalid.teehr
 
     # Test for empty GeoDataFrame in 'location' table_type
     with pytest.raises(AttributeError):
         gdf_empty = gpd.GeoDataFrame(columns=sample_geodataframe.columns)
-        gdf_empty.attrs['table_type'] = 'location'
+        gdf_empty.attrs['table_type'] = 'locations'
         gdf_empty.attrs['fields'] = sample_geodataframe.columns
         gdf_empty.teehr
 

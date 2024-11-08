@@ -74,7 +74,7 @@ class TEEHRDataFrameAccessor:
                 "Joined_timeseries methods must be implemented."
             )
 
-        elif obj.attrs['table_type'] == 'location':
+        elif obj.attrs['table_type'] == 'locations':
 
             # check for expected fields
             fields_list = obj.attrs['fields']
@@ -84,7 +84,7 @@ class TEEHRDataFrameAccessor:
                     missing.append(field)
             if len(missing) != 0:
                 raise AttributeError(f"""
-                    DataFrame with table_type == 'location' is missing
+                    DataFrame with table_type == 'locations' is missing
                     expected column(s): {missing}
                 """)
 
@@ -116,7 +116,7 @@ class TEEHRDataFrameAccessor:
                 "Location Attributes methods must be implemented."
             )
 
-        elif obj.attrs['table_type'] == 'location_crosswalk':
+        elif obj.attrs['table_type'] == 'location_crosswalks':
 
             # TO-DO: add validation
 
@@ -429,21 +429,21 @@ class TEEHRDataFrameAccessor:
         Raises
         ------
         AttributeError
-            If the table type is not 'location'.
+            If the table type is not 'locations'.
 
         Notes
         -----
-        This function checks the table type to ensure it is 'location'. If an
+        This function checks the table type to ensure it is 'locations'. If an
         output directory is specified, it checks if the directory exists and
         creates it if it does not. The function then formats the location
         points and generates the map, saving it to the specified directory if
         provided.
         """
         # check table type
-        if self._gdf.attrs['table_type'] != 'location':
+        if self._gdf.attrs['table_type'] != 'locations':
             table_type_str = self.attrs['table_type']
             raise AttributeError(f"""
-                Expected table_type == "location",
+                Expected table_type == "locations",
                 got table_type = {table_type_str}
             """)
 
