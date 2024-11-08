@@ -34,17 +34,14 @@ class TEEHRDataFrameAccessor:
         if not (isinstance(pandas_obj, gpd.GeoDataFrame)):
             self._df = pandas_obj
             self._gdf = None
-            self._validate(self=self,
-                           obj=pandas_obj)
+            self._validate(self=self, obj=pandas_obj)
         else:
             self._df = None
             self._gdf = pandas_obj
-            self._validate(self=self,
-                           obj=pandas_obj)
+            self._validate(self=self, obj=pandas_obj)
 
     @staticmethod
-    def _validate(self,
-                  obj):
+    def _validate(self, obj):
         """Validate the DataFrame object."""
         if 'table_type' not in obj.attrs:
             raise AttributeError(
@@ -102,15 +99,16 @@ class TEEHRDataFrameAccessor:
                     GeoDataFrame...
                             """)
                 geo_obj = df_to_gdf(obj)
-                geo_obj.attrs['table_type'] = 'location'
-                geo_obj.attrs['fields'] = fields_list
+                # reassign pandas attributes (they dont carry over)
+                for attribute in obj.attrs:
+                    geo_obj.attrs[attribute] = obj.attrs[attribute]
                 self._gdf = geo_obj
 
             # convert given crs to web mercator [EPSG:3857]
             target_crs = 'EPSG:3857'
             self._gdf.to_crs(target_crs, inplace=True)
 
-        elif obj.attrs['table_type'] == 'location_atts':
+        elif obj.attrs['table_type'] == 'location_attributes':
 
             # TO-DO: add validation
 
@@ -118,7 +116,7 @@ class TEEHRDataFrameAccessor:
                 "Location Attributes methods must be implemented."
             )
 
-        elif obj.attrs['table_type'] == 'location_xwalk':
+        elif obj.attrs['table_type'] == 'location_crosswalk':
 
             # TO-DO: add validation
 
@@ -142,8 +140,8 @@ class TEEHRDataFrameAccessor:
             """)
 
     def _timeseries_unique_values(
-            self,
-            variable_df: pd.DataFrame,
+        self,
+        variable_df: pd.DataFrame,
     ) -> dict:
         """Get dictionary of all unique values of each column."""
         logger.info("Retrieving unique values from DataFrame.")
@@ -191,9 +189,10 @@ class TEEHRDataFrameAccessor:
 
         return filtered_schema
 
-    def _timeseries_format_plot(self,
-                                plot: figure,
-                                ) -> figure:
+    def _timeseries_format_plot(
+        self,
+        plot: figure,
+    ) -> figure:
         """Format timeseries plot."""
         # x-axis
         plot.xaxis.major_label_orientation = pi/4
@@ -225,24 +224,27 @@ class TEEHRDataFrameAccessor:
 
         return plot
 
-    def _timeseries_generate_plot(self,
-                                  schema: dict,
-                                  df: pd.DataFrame,
-                                  variable: str,
-                                  output_dir: None,
-                                  ) -> figure:
+    def _timeseries_generate_plot(
+        self,
+        schema: dict,
+        df: pd.DataFrame,
+        variable: str,
+        output_dir: None,
+    ) -> figure:
         """Generate a single timeseries plot."""
         logger.info("Generating timeseries plot.")
 
         # generate plot
         unique_units = df['unit_name'].unique().tolist()
         palette = itertools.cycle(colorblind['Colorblind'][8])
-        p = figure(title="Click legend entry to toggle display of timeseries",
-                   y_axis_label=f"{variable} [{unique_units[0]}]",
-                   x_axis_label="Datetime",
-                   x_axis_type='datetime',
-                   tools=['xwheel_zoom', 'reset'],
-                   height=800)
+        p = figure(
+            title="Click legend entry to toggle display of timeseries",
+            y_axis_label=f"{variable} [{unique_units[0]}]",
+            x_axis_label="Datetime",
+            x_axis_type='datetime',
+            tools=['xwheel_zoom', 'reset'],
+            height=800
+            )
 
         # add data to plot
         for combo in schema[variable]:
@@ -251,11 +253,13 @@ class TEEHRDataFrameAccessor:
                       (df['location_id'] == combo[1])]
             if not temp.empty:
                 logger.info(f"Plotting data for combination: {combo}")
-                p.line(temp.value_time,
-                       temp.value,
-                       legend_label=f"{combo[0]} - {combo[1]}",
-                       line_width=1,
-                       color=next(palette))
+                p.line(
+                    temp.value_time,
+                    temp.value,
+                    legend_label=f"{combo[0]} - {combo[1]}",
+                    line_width=1,
+                    color=next(palette)
+                )
             else:
                 logger.warning(f"No data for combination: {combo}")
 
@@ -274,8 +278,7 @@ class TEEHRDataFrameAccessor:
 
         return
 
-    def timeseries_plot(self,
-                        output_dir=None):
+    def timeseries_plot(self, output_dir=None):
         """
         Generate and save TS plots for each unique variable in theDataFrame.
 
@@ -323,10 +326,12 @@ class TEEHRDataFrameAccessor:
         schema = self._timeseries_schema()
         for variable in schema.keys():
             df_variable = self._df[self._df['variable_name'] == variable]
-            self._timeseries_generate_plot(schema=schema,
-                                           df=df_variable,
-                                           variable=variable,
-                                           output_dir=output_dir)
+            self._timeseries_generate_plot(
+                schema=schema,
+                df=df_variable,
+                variable=variable,
+                output_dir=output_dir
+                )
 
     def _location_format_points(self) -> dict:
         """Generate dictionary for point plotting."""
@@ -339,8 +344,10 @@ class TEEHRDataFrameAccessor:
 
         return geo_data
 
-    def _location_get_boundaries(self,
-                                 geo_data: dict) -> dict:
+    def _location_get_boundaries(
+        self,
+        geo_data: dict
+    ) -> dict:
         """Determine axes ranges using point data."""
         logger.info("Retrieving axes ranges from geodata.")
         min_x = min(geo_data['x'])
@@ -355,38 +362,46 @@ class TEEHRDataFrameAccessor:
 
         return axes_bounds
 
-    def _location_generate_map(self,
-                               geo_data: dict,
-                               output_dir: None) -> figure:
+    def _location_generate_map(
+        self,
+        geo_data: dict,
+        output_dir: None
+    ) -> figure:
         """Generate location map."""
         logger.info("Generating location map.")
 
         # set tooltips
-        tooltips = [("ID", "@id"),
-                    ("Name", "@name"),
-                    ("X-Coordinate", "@x"),
-                    ("Y-Coordinate", "@y")]
+        tooltips = [
+            ("ID", "@id"),
+            ("Name", "@name"),
+            ("X-Coordinate", "@x"),
+            ("Y-Coordinate", "@y")
+            ]
 
         # get axes bounds
         axes_bounds = self._location_get_boundaries(geo_data=geo_data)
 
         # generate basemap
-        p = figure(x_range=axes_bounds['x_space'],
-                   y_range=axes_bounds['y_space'],
-                   x_axis_type="mercator",
-                   y_axis_type="mercator",
-                   tooltips=tooltips,
-                   tools="pan, wheel_zoom, reset")
-        p.add_tile(xyz.Esri.WorldTopoMap)
+        p = figure(
+            x_range=axes_bounds['x_space'],
+            y_range=axes_bounds['y_space'],
+            x_axis_type="mercator",
+            y_axis_type="mercator",
+            tooltips=tooltips,
+            tools="pan, wheel_zoom, reset"
+            )
+        p.add_tile(xyz.OpenStreetMap.Mapnik)
 
         # add data
         source = ColumnDataSource(data=geo_data)
-        p.scatter(x='x',
-                  y='y',
-                  color='blue',
-                  source=source,
-                  size=10,
-                  fill_alpha=1.0)
+        p.scatter(
+            x='x',
+            y='y',
+            color='blue',
+            source=source,
+            size=10,
+            fill_alpha=1.0
+            )
 
         # output figure
         if output_dir is not None:
@@ -400,8 +415,7 @@ class TEEHRDataFrameAccessor:
 
         return
 
-    def location_map(self,
-                     output_dir=None):
+    def location_map(self, output_dir=None):
         """
         Generate a location map and save it to the specified directory.
 
@@ -438,15 +452,13 @@ class TEEHRDataFrameAccessor:
             if output_dir.exists():
                 logger.info("Specified save directory is valid.")
             else:
-                logger.info(""""
+                logger.info("""
                     Specified directory does not exist.
                     Creating new directory to store figure.
                 """)
                 Path(output_dir).mkdir(parents=True, exist_ok=True)
 
         geo_data = self._location_format_points()
-        print(xyz.Esri)
 
         # generate map
-        self._location_generate_map(geo_data=geo_data,
-                                    output_dir=output_dir)
+        self._location_generate_map(geo_data=geo_data, output_dir=output_dir)

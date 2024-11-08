@@ -742,7 +742,7 @@ class LocationAttributeTable(BaseTable):
     def to_pandas(self):
         """Return Pandas DataFrame for Location Attributes."""
         df = self.df.toPandas()
-        df.attrs['table_type'] = 'location_atts'
+        df.attrs['table_type'] = 'location_attributes'
         df.attrs['fields'] = self.fields()
         return df
 
@@ -875,7 +875,7 @@ class LocationCrosswalkTable(BaseTable):
     def to_pandas(self):
         """Return Pandas DataFrame for Location Crosswalk."""
         df = self.df.toPandas()
-        df.attrs['table_type'] = 'location_xwalk'
+        df.attrs['table_type'] = 'location_crosswalk'
         df.attrs['fields'] = self.fields()
         return df
 
