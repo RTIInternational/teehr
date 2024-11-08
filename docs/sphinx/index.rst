@@ -62,8 +62,8 @@ TEEHR (pronounced "tier") is a python tool set for loading, storing, processing 
 
         +++
 
-        .. button-ref:: autoapi
-            :ref-type: ref
+        .. button-ref:: api
+            :ref-type: doc
             :click-parent:
             :color: secondary
             :expand:
@@ -99,3 +99,4 @@ TEEHR (pronounced "tier") is a python tool set for loading, storing, processing 
    user_guide/index
    development/index
    changelog/index
+   api
