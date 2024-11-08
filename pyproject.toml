@@ -37,6 +37,7 @@ numba = "^0.60.0"
 arch = "^7.0.0"
 pandera = {extras = ["pyspark"], version = "^0.20.4"}
 netcdf4 = "1.6.5"
+bokeh = "^3.5.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"
@@ -56,9 +57,6 @@ sphinx-autoapi = "3.0.0"
 pydata-sphinx-theme = "^0.16.0"
 sphinx-autobuild = "^2024.10.3"
 
-
-[tool.poetry.group.viz.dependencies]
-bokeh = "^3.5.0"
 
 [tool.numpydoc_validation]
 checks = [
