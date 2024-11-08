@@ -184,7 +184,9 @@ class BaseTable():
 
         Examples
         --------
-        Filters as dictionary
+
+        Filters as dictionary:
+
         >>> ts_df = ev.primary_timeseries.query(
         >>>     filters=[
         >>>         {
@@ -206,7 +208,8 @@ class BaseTable():
         >>>     order_by=["location_id", "value_time"]
         >>> ).to_pandas()
 
-        Filters as string
+        Filters as string:
+
         >>> ts_df = ev.primary_timeseries.query(
         >>>     filters=[
         >>>         "value_time > '2022-01-01'",
@@ -216,7 +219,8 @@ class BaseTable():
         >>>     order_by=["location_id", "value_time"]
         >>> ).to_pandas()
 
-        Filters as FilterBaseModel
+        Filters as FilterBaseModel:
+
         >>> from teehr.models.filters import TimeseriesFilter
         >>> from teehr.models.filters import FilterOperators
         >>>
@@ -281,7 +285,9 @@ class BaseTable():
 
         Examples
         --------
-        Filters as dictionary
+
+        Filters as dictionary:
+
         >>> ts_df = ev.primary_timeseries.filter(
         >>>     filters=[
         >>>         {
@@ -302,7 +308,8 @@ class BaseTable():
         >>>     ]
         >>> ).to_pandas()
 
-        Filters as string
+        Filters as string:
+
         >>> ts_df = ev.primary_timeseries.filter(
         >>>     filters=[
         >>>         "value_time > '2022-01-01'",
@@ -311,7 +318,8 @@ class BaseTable():
         >>>     ]
         >>> ).to_pandas()
 
-        Filters as FilterBaseModel
+        Filters as FilterBaseModel:
+
         >>> from teehr.models.filters import TimeseriesFilter
         >>> from teehr.models.filters import FilterOperators
         >>>
@@ -367,10 +375,13 @@ class BaseTable():
 
         Examples
         --------
-        Order by string
+
+        Order by string:
+
         >>> ts_df = ev.primary_timeseries.order_by("value_time").to_df()
 
-        Order by StrEnum
+        Order by StrEnum:
+
         >>> from teehr.querying.field_enums import TimeseriesFields
         >>> ts_df = ev.primary_timeseries.order_by(
         >>>     TimeseriesFields.value_time
@@ -672,7 +683,11 @@ class LocationTable(BaseTable):
         File is first read by GeoPandas, field names renamed and
         then validated and inserted into the dataset.
 
+        Notes
+        -----
+
         The TEEHR Location Crosswalk table schema includes fields:
+
         - id
         - name
         - geometry
@@ -773,7 +788,11 @@ class LocationAttributeTable(BaseTable):
         **kwargs
             Additional keyword arguments are passed to pd.read_parquet().
 
+        Notes
+        -----
+
         The TEEHR Location Attribute table schema includes fields:
+
         - location_id
         - attribute_name
         - value
@@ -807,7 +826,11 @@ class LocationAttributeTable(BaseTable):
         **kwargs
             Additional keyword arguments are passed to pd.read_parquet().
 
+        Notes
+        -----
+
         The TEEHR Location Attribute table schema includes fields:
+
         - location_id
         - attribute_name
         - value
@@ -906,7 +929,11 @@ class LocationCrosswalkTable(BaseTable):
             Additional keyword arguments are passed to pd.read_csv()
             or pd.read_parquet().
 
+        Notes
+        -----
+
         The TEEHR Location Crosswalk table schema includes fields:
+
         - primary_location_id
         - secondary_location_id
         """
@@ -940,7 +967,11 @@ class LocationCrosswalkTable(BaseTable):
             Additional keyword arguments are passed to pd.read_csv()
             or pd.read_parquet().
 
+        Notes
+        -----
+
         The TEEHR Location Crosswalk table schema includes fields:
+
         - primary_location_id
         - secondary_location_id
         """
@@ -1060,7 +1091,11 @@ class PrimaryTimeseriesTable(BaseTable):
 
         Includes validation and importing data to database.
 
+        Notes
+        -----
+
         The TEEHR Timeseries table schema includes fields:
+
         - reference_time
         - value_time
         - configuration_name
@@ -1110,7 +1145,11 @@ class PrimaryTimeseriesTable(BaseTable):
 
         Includes validation and importing data to database.
 
+        Notes
+        -----
+
         The TEEHR Timeseries table schema includes fields:
+
         - reference_time
         - value_time
         - configuration_name
@@ -1160,7 +1199,11 @@ class PrimaryTimeseriesTable(BaseTable):
 
         Includes validation and importing data to database.
 
+        Notes
+        -----
+
         The TEEHR Timeseries table schema includes fields:
+
         - reference_time
         - value_time
         - configuration_name
@@ -1292,7 +1335,11 @@ class SecondaryTimeseriesTable(BaseTable):
 
         Includes validation and importing data to database.
 
+        Notes
+        -----
+
         The TEEHR Timeseries table schema includes fields:
+
         - reference_time
         - value_time
         - configuration_name
@@ -1342,7 +1389,11 @@ class SecondaryTimeseriesTable(BaseTable):
 
         Includes validation and importing data to database.
 
+        Notes
+        -----
+
         The TEEHR Timeseries table schema includes fields:
+
         - reference_time
         - value_time
         - configuration_name
@@ -1392,7 +1443,11 @@ class SecondaryTimeseriesTable(BaseTable):
 
         Includes validation and importing data to database.
 
+        Notes
+        -----
+
         The TEEHR Timeseries table schema includes fields:
+
         - reference_time
         - value_time
         - configuration_name

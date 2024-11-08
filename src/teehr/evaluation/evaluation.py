@@ -45,7 +45,16 @@ class Evaluation:
         create_dir: bool = False,
         spark: SparkSession = None
     ):
-        """Initialize the Evaluation class."""
+        """
+        Initialize the Evaluation class.
+
+        Parameters
+        ----------
+        dir_path : Union[str, Path]
+            The path to the evaluation directory.
+        spark : SparkSession, optional
+            The SparkSession object, by default None
+        """
         self.dir_path = dir_path
         self.spark = spark
 
@@ -113,12 +122,12 @@ class Evaluation:
 
     @property
     def fetch(self) -> Fetch:
-        """The fetch component class."""
+        """The fetch component class for accessing external data."""
         return Fetch(self)
 
     @property
     def metrics(self) -> Metrics:
-        """The load component class."""
+        """The metrics component class for calculating performance metrics."""
         return Metrics(self)
 
     @property
@@ -215,6 +224,16 @@ class Evaluation:
         """Fetch the study data from S3.
 
         Copies the study from s3 to the local directory.
+
+        Parameters
+        ----------
+        evaluation_name : str
+            The name of the evaluation to clone from S3.
+            Use the list_s3_evaluations method to get the available evaluations.
+
+        Notes
+        -----
+
         Includes the following tables:
             - units
             - variables
@@ -228,12 +247,6 @@ class Evaluation:
             - joined_timeseries
 
         Also includes the user_defined_fields.py script.
-
-        Parameters
-        ----------
-        evaluation_name : str
-            The name of the evaluation to clone from S3.
-            Use the list_s3_evaluations method to get the available evaluations.
 
         """
         return clone_from_s3(self, evaluation_name)

@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 @pd.api.extensions.register_dataframe_accessor("teehr")
 class TEEHRDataFrameAccessor:
-    """Extends pandas DataFrame objects.
+    """Extends pandas DataFrame objects with visualization methods.
 
     Notes
     -----
@@ -21,8 +21,8 @@ class TEEHRDataFrameAccessor:
     as well as timeseries. This requires more validation in each method to
     ensure the DataFrame has the appropriate data.
 
-    Methods operating on metrics data should start with 'metrics_' and methods
-    operating on timeseries data should start with 'timeseries_'.
+    Methods operating on metrics data should start with 'metrics' and methods
+    operating on timeseries data should start with 'timeseries'.
     """
 
     def __init__(self, pandas_obj):

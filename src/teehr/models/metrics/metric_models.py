@@ -1,4 +1,4 @@
-"""Metric Query Models."""
+"""Classes representing available performance metrics."""
 from typing import List, Dict, Callable, Union
 
 from pydantic import BaseModel as PydanticBaseModel
@@ -35,7 +35,7 @@ class ME(MetricsBasemodel):
         "mean_error".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.mean_error.
+        :func:`metric_funcs.mean_error.`
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -66,7 +66,7 @@ class REL_BIAS(MetricsBasemodel):
         "relative_bias".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.relative_bias.
+        :func:`metric_funcs.relative_bias`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -97,7 +97,7 @@ class MULT_BIAS(MetricsBasemodel):
         "multiplicative_bias".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.multiplicative_bias.
+        :func:`metric_funcs.multiplicative_bias.`
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -128,7 +128,7 @@ class MSE(MetricsBasemodel):
         "mean_squared_error".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.mean_squared_error.
+        :func:`metric_funcs.mean_squared_error`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -159,7 +159,7 @@ class RMSE(MetricsBasemodel):
         "root_mean_square_error".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.root_mean_square_error.
+        :func:`metric_funcs.root_mean_square_error`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -190,7 +190,7 @@ class MAE(MetricsBasemodel):
         "mean_absolute_error".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.mean_absolute_error.
+        :func:`metric_funcs.mean_absolute_error`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -221,7 +221,7 @@ class REL_MAE(MetricsBasemodel):
         "mean_absolute_relative_error".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.mean_absolute_relative_error.
+        :func:`metric_funcs.mean_absolute_relative_error`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -252,7 +252,7 @@ class PEARSON_R(MetricsBasemodel):
         "pearson_correlation".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.pearson_correlation.
+        :func:`metric_funcs.pearson_correlation`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -283,7 +283,7 @@ class R2(MetricsBasemodel):
         "r_squared".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.r_squared.
+        :func:`metric_funcs.r_squared`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -314,7 +314,7 @@ class NSE(MetricsBasemodel):
         "nash_sutcliffe_efficiency".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.nash_sutcliffe_efficiency.
+        :func:`metric_funcs.nash_sutcliffe_efficiency`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -345,7 +345,7 @@ class NNSE(MetricsBasemodel):
         "nash_sutcliffe_efficiency_normalized".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.nash_sutcliffe_efficiency_normalized.
+        :func:`metric_funcs.nash_sutcliffe_efficiency_normalized`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -377,7 +377,7 @@ class KGE(MetricsBasemodel):
         The output field name, by default "kling_gupta_efficiency".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.kling_gupta_efficiency.
+        :func:`metric_funcs.kling_gupta_efficiency`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -407,7 +407,7 @@ class KGE_Mod1(MetricsBasemodel):
         The output field name, by default "kling_gupta_efficiency_mod1".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.kling_gupta_efficiency_mod1.
+        :func:`kling_gupta_efficiency_mod1`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -437,7 +437,7 @@ class KGE_Mod2(MetricsBasemodel):
         The output field name, by default "kling_gupta_efficiency_mod2".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.kling_gupta_efficiency_mod2.
+        :func:`kling_gupta_efficiency_mod2`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -467,7 +467,7 @@ class SPEARMAN_R(MetricsBasemodel):
         The output field name, by default "spearman_correlation".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.spearman_correlation.
+        :func:`metric_funcs.spearman_correlation`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -497,7 +497,7 @@ class COUNT(MetricsBasemodel):
         The output field name, by default "primary_count".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.count.
+        :func:`metric_funcs.count`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value"].
     attrs : Dict
@@ -525,7 +525,7 @@ class MINIMUM(MetricsBasemodel):
         The output field name, by default "primary_minimum".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.minimum.
+        :func:`metric_funcs.minimum`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value"].
     attrs : Dict
@@ -554,7 +554,7 @@ class MAXIMUM(MetricsBasemodel):
         The output field name, by default "maximum".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.maximum.
+        :func:`metric_funcs.maximum`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value"].
     attrs : Dict
@@ -583,7 +583,7 @@ class AVERAGE(MetricsBasemodel):
         The output field name, by default "average".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.average.
+        :func:`metric_funcs.average`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value"].
     attrs : Dict
@@ -612,7 +612,7 @@ class SUM(MetricsBasemodel):
         The output field name, by default "sum".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.sum.
+        :func:`metric_funcs.sum`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value"].
     attrs : Dict
@@ -641,7 +641,7 @@ class VARIANCE(MetricsBasemodel):
         The output field name, by default "variance".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.variance.
+        :func:`metric_funcs.variance`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value"].
     attrs : Dict
@@ -671,7 +671,7 @@ class MAX_VALUE_DELTA(MetricsBasemodel):
         The output field name, by default "max_value_delta".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.max_value_delta.
+        :func:`metric_funcs.max_value_delta`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -700,7 +700,7 @@ class MAX_VALUE_TIME_DELTA(MetricsBasemodel):
         The output field name, by default "max_value_timedelta".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.max_value_timedelta.
+        :func:`metric_funcs.max_value_timedelta`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default
         ["primary_value", "secondary_value", "value_time"].
@@ -730,7 +730,7 @@ class MAX_VALUE_TIME(MetricsBasemodel):
         The output field name, by default "max_value_time".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.max_value_time.
+        :func:`metric_funcs.max_value_time`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value"].
     attrs : Dict
@@ -759,7 +759,7 @@ class ANNUAL_PEAK_RBIAS(MetricsBasemodel):
         The output field name, by default "annual_peak_relative_bias".
     func : Callable
         The function to apply to the data, by default
-        metric_funcs.annual_peak_relative_bias.
+        :func:`metric_funcs.annual_peak_relative_bias`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default
         ["primary_value", "secondary_value", "value_time"].
