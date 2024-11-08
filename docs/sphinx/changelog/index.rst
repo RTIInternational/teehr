@@ -1,6 +1,23 @@
 Release Notes
 =============
 
+0.4.0 - 2024-10-08
+--------------------
+
+Added
+^^^^^
+* This is a major (although still less that version 1) release that includes a number of new features and changes.
+* Some of the more significant changes:
+  - Added a new Evaluation class that is the primary interface for working with TEEHR data.
+  - Switched from DuckDB to PySpark to enable horizonal scaling for the computational workloads.
+  - Formalized the structure of the TEEHR dataset.
+  - Added data validation of values referenced from domain and location tables to the timeseries tables.
+  - Updated docs to include new features and changes.
+
+Changed
+^^^^^^^
+* Many changes have been made between v0.3.28 and v0.4.0.
+
 0.3.28 - 2024-07-10
 --------------------
 
