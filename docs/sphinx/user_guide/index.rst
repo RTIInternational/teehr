@@ -20,3 +20,4 @@ Evaluation examples
    notebooks/loading_examples_index
    notebooks/evaluation_examples_index
    metrics/metrics
+   /tutorials/tutorials_index

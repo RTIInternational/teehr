@@ -51,23 +51,22 @@ Performing this calculation in TEEHR might look something like this:
 
 .. code-block:: python
 
-    # First, we initialize a teehr joined parquet class with our parquet file.
-    from teehr.classes.duckdb_joined_parquet import DuckDBJoinedParquet
+    from pathlib import Path
 
-    TEEHR_BASE = Path(Path.home(), 'teehr/example-2')
-    JOINED_FILEPATH = f"{TEEHR_BASE}/joined/teehr_joined.parquet"
+    from teehr import Evaluation
+    from teehr import Metrics as m
 
-    joined_data = DuckDBJoinedParquet(
-        joined_parquet_filepath = JOINED_FILEPATH
-    )
+    ev = Evaluation(Path(Path.home(), "p1_camels_daily_streamflow"))
 
-    # Now, we calculate the relative bias for each model configuration and location.
-    joined_data.get_metrics(
+    metrics_df = ev.metrics.query(
         group_by=["primary_location_id", "configuration"],
         include_metrics=[
-            'relative_bias',
+            m.RelativeBias(),
         ]
-    )
+    ).to_pandas()
+
+
+
 
 Note that if you wanted to include a field in the query result, it must be included in the ``group_by`` list
 even if it's not necessary for the grouping operation!
@@ -84,12 +83,12 @@ For example, if we wanted to include ``q95_cms`` in the query result, we would n
 .. code-block:: python
 
     # Adding q95_cms to the group_by list to include it in the results.
-    joined_data.get_metrics(
+    metrics_df = ev.metrics.query(
         group_by=["primary_location_id", "configuration", "q95_cms"],
         include_metrics=[
-            'relative_bias',
+            m.RelativeBias(),
         ]
-    )
+    ).to_pandas()
 
 Filtering
 ---------
@@ -107,19 +106,19 @@ We need to specify a filter in the ``get_metrics`` function to only include the 
 .. code-block:: python
 
     # Adding a filter to further limit the population for metrics calculations.
-    joined_data.get_metrics(
+    metrics_df = ev.metrics.query(
         group_by=["primary_location_id", "configuration", "q95_cms"],
         include_metrics=[
-            'relative_bias',
+            m.RelativeBias(),
         ],
         filters = [
             {
-                "column": "configuration",
+                "column": "configuration_name",
                 "operator": "in",
                 "value": ["nwm30_retro", "marrmot_37_hbv_obj1"]
             }
         ]
-    )
+    ).to_pandas()
 
 Summary
 -------
