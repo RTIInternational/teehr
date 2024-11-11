@@ -54,7 +54,7 @@ def test_get_all_metrics(tmpdir):
 
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
-    assert metrics_df.columns.size == 26
+    assert metrics_df.columns.size == 27
 
 
 def test_metrics_filter_and_geometry(tmpdir):
