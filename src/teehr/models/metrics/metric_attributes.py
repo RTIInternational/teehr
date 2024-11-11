@@ -226,3 +226,12 @@ SPEARMAN_R_ATTRS = {
     "optimal_value": 1.0,
     "return_type": "float"
 }
+
+RSR_ATTRS = {
+    "short_name": "root_mean_standard_deviation_ratio",
+    "display_name": "Root Mean Standard Deviation Ratio",
+    "category": "Deterministic",
+    "value_range": [0.0, None],
+    "optimal_value": 0.0,
+    "return_type": "float"
+}

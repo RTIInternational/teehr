@@ -263,6 +263,13 @@ def root_mean_squared_error(p: pd.Series, s: pd.Series) -> float:
     return _mean_error(p, s, power=2.0, root=True)
 
 
+def root_mean_standard_deviation_ratio(p: pd.Series, s: pd.Series) -> float:
+    """Root mean standard deviation ratio."""
+    rmse = root_mean_squared_error(p, s)
+    obs_std_dev = np.std(p)
+    return rmse / obs_std_dev
+
+
 # Time-based Metrics
 def max_value_timedelta(
     p: pd.Series,

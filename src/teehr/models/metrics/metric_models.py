@@ -747,7 +747,7 @@ class MAX_VALUE_TIME(MetricsBasemodel):
 
 
 class ANNUAL_PEAK_RBIAS(MetricsBasemodel):
-    """Annual Peak Relative Bias..
+    """Annual Peak Relative Bias.
 
     Parameters
     ----------
@@ -775,6 +775,37 @@ class ANNUAL_PEAK_RBIAS(MetricsBasemodel):
         default=["primary_value", "secondary_value", "value_time"]
     )
     attrs: Dict = Field(default=tma.ANNUAL_PEAK_RBIAS_ATTRS, frozen=True)
+
+
+class RSR(MetricsBasemodel):
+    """Root Mean Standard Deviation Ratio.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "root_mean_standard_deviation_ratio".
+    func : Callable
+        The function to apply to the data, by default
+        :func:`metric_funcs.root_mean_standard_deviation_ratio`.
+    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+        The input field names, by default
+        ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
+
+    bootstrap: MetricsBasemodel = Field(default=None)
+    transform: TransformEnum = Field(default=None)
+    output_field_name: str = Field(default="root_mean_standard_deviation_ratio")
+    func: Callable = metric_funcs.root_mean_standard_deviation_ratio
+    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+        default=["primary_value", "secondary_value"]
+    )
+    attrs: Dict = Field(default=tma.RSR_ATTRS, frozen=True)
 
 
 class Metrics():
@@ -805,3 +836,4 @@ class Metrics():
     RootMeanSquareError = RMSE
     Rsquared = R2
     SpearmanCorrelation = SPEARMAN_R
+    RootMeanStandardDeviationRatio = RSR
