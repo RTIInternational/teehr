@@ -61,17 +61,17 @@ def subset_the_table(
                 sdf_in.location_id.isin(primary_location_ids)
             )
     elif name == "secondary_timeseries":
-        xwalk = (
-            ev.
-            spark.
-            read.
-            format("parquet").
-            load(f"{s3_dataset_path}/location_crosswalks/")
-        )
-        secondary_ids = xwalk.filter(
-            xwalk.primary_location_id.isin(primary_location_ids)
-        ).select("secondary_location_id").rdd.flatMap(lambda x: x).collect()
         if primary_location_ids is not None:
+            xwalk = (
+                ev.
+                spark.
+                read.
+                format("parquet").
+                load(f"{s3_dataset_path}/location_crosswalks/")
+            )
+            secondary_ids = xwalk.filter(
+                xwalk.primary_location_id.isin(primary_location_ids)
+            ).select("secondary_location_id").rdd.flatMap(lambda x: x).collect()
             sdf_in = sdf_in.filter(sdf_in.location_id.isin(secondary_ids))
     elif name == "joined_timeseries":
         if primary_location_ids is not None:
