@@ -141,3 +141,6 @@ temp/
 *.drawio.bkp
 
 .DS_Store
+
+tests/data/tutorial_subset/*/*/_SUCCESS
+tests/data/tutorial_subset/*/*/*.crc

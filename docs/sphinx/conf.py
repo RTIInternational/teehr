@@ -79,7 +79,8 @@ napoleon_preprocess_types = True
 # -- MyST-NB options ---------------------------------------------------------
 nb_execution_mode = "auto"
 myst_enable_extensions = [
-    "html_image"
+    "html_image",
+    "colon_fence",
 ]
 
 # -- Options for HTML output -------------------------------------------------
