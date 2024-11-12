@@ -31,14 +31,19 @@ class TEEHRDataFrameAccessor:
 
     def __init__(self, pandas_obj):
         """Initialize the class."""
+        logger.info("Initializing new dataframe_accessor object...")
         if not (isinstance(pandas_obj, gpd.GeoDataFrame)):
+            logger.info("Adding DataFrame to accessor object.")
             self._df = pandas_obj
             self._gdf = None
             self._validate(self=self, obj=pandas_obj)
+            logger.info("Object validation successful.")
         else:
+            logger.info("Adding GeoDataFrame to accessor object. ")
             self._df = None
             self._gdf = pandas_obj
             self._validate(self=self, obj=pandas_obj)
+            logger.info("Object validation successful.")
 
     @staticmethod
     def _validate(self, obj):
@@ -163,8 +168,11 @@ class TEEHRDataFrameAccessor:
         for variable in unique_variables:
             variable_df = self._df[self._df['variable_name'] == variable]
             unique_column_vals = self._timeseries_unique_values(variable_df)
-            all_list = [unique_column_vals['configuration_name'],
-                        unique_column_vals['location_id']]
+            all_list = [
+                unique_column_vals['configuration_name'],
+                unique_column_vals['location_id'],
+                unique_column_vals['reference_time']
+                ]
             res = list(itertools.product(*all_list))
             raw_schema[variable] = res
 
@@ -174,17 +182,30 @@ class TEEHRDataFrameAccessor:
             invalid_combos_count = 0
             var_df = self._df[self._df['variable_name'] == variable]
             for combo in raw_schema[variable]:
-                temp = var_df[(var_df['configuration_name'] == combo[0]) &
-                              (var_df['location_id'] == combo[1])]
-                if not temp.empty:
-                    valid_combos.append(combo)
-                else:
-                    invalid_combos_count += 1
+                if pd.isnull(combo[2]):  # reference_time is null
+                    temp = var_df[
+                        (var_df['configuration_name'] == combo[0]) &
+                        (var_df['location_id'] == combo[1])
+                        ]
+                    if not temp.empty:
+                        valid_combos.append(combo)
+                    else:
+                        invalid_combos_count += 1
+                else:  # reference_time is not null
+                    temp = var_df[
+                        (var_df['configuration_name'] == combo[0]) &
+                        (var_df['location_id'] == combo[1]) &
+                        (var_df['reference_time'] == combo[2])
+                        ]
+                    if not temp.empty:
+                        valid_combos.append(combo)
+                    else:
+                        invalid_combos_count += 1
             filtered_schema[variable] = valid_combos
             if invalid_combos_count > 0:
                 logger.info(f"""
-                    Removed {invalid_combos_count} invalid combinations from
-                    the schema.
+                    Removed {invalid_combos_count} invalid combinations
+                    from the schema.
                 """)
 
         return filtered_schema
@@ -200,7 +221,7 @@ class TEEHRDataFrameAccessor:
         plot.xaxis.axis_label_text_font_style = 'bold'
         # plot.xaxis.major_label_text_font_size = '12pt'
 
-        # # y-axis
+        # y-axis
         # plot.yaxis.axis_label_text_font_size = '14pt'
         plot.yaxis.axis_label_text_font_style = 'bold'
         # plot.yaxis.major_label_text_font_size = '12pt'
@@ -248,20 +269,45 @@ class TEEHRDataFrameAccessor:
 
         # add data to plot
         for combo in schema[variable]:
-            logger.info(f"Processing combination: {combo}")
-            temp = df[(df['configuration_name'] == combo[0]) &
-                      (df['location_id'] == combo[1])]
-            if not temp.empty:
-                logger.info(f"Plotting data for combination: {combo}")
-                p.line(
-                    temp.value_time,
-                    temp.value,
-                    legend_label=f"{combo[0]} - {combo[1]}",
-                    line_width=1,
-                    color=next(palette)
-                )
-            else:
-                logger.warning(f"No data for combination: {combo}")
+            if pd.isnull(combo[2]):  # reference_time is null
+                logger.info(f"Processing combination: {combo}")
+                logger.info(f"""
+                            reference_time == NaT, ignoring reference_time for
+                            combo: {combo}
+                            """)
+                temp = df[
+                    (df['configuration_name'] == combo[0]) &
+                    (df['location_id'] == combo[1])
+                    ]
+                if not temp.empty:
+                    logger.info(f"Plotting data for combination: {combo}")
+                    p.line(
+                        temp.value_time,
+                        temp.value,
+                        legend_label=f"{combo[0]} - {combo[1]}",
+                        line_width=1,
+                        color=next(palette)
+                    )
+                else:
+                    logger.warning(f"No data for combination: {combo}")
+            else:  # reference_time is not null
+                logger.info(f"Processing combination: {combo}")
+                temp = df[
+                    (df['configuration_name'] == combo[0]) &
+                    (df['location_id'] == combo[1]) &
+                    (df['reference_time'] == combo[2])
+                    ]
+                if not temp.empty:
+                    logger.info(f"Plotting data for combination: {combo}")
+                    p.line(
+                        temp.value_time,
+                        temp.value,
+                        legend_label=f"{combo[0]} - {combo[1]} - {combo[2]}",
+                        line_width=1,
+                        color=next(palette)
+                    )
+                else:
+                    logger.warning(f"No data for combination: {combo}")
 
         # format plot
         p = self._timeseries_format_plot(plot=p)

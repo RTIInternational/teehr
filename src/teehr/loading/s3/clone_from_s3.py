@@ -1,10 +1,13 @@
+"""A module for cloning and optionally subsetting evaluations from s3."""
 from pathlib import Path
 import yaml
 import fsspec
 import pandas as pd
 import teehr.const as const
-from typing import Union, Literal
+from datetime import datetime
+from typing import Union, Literal, List
 import logging
+import pyspark
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +37,63 @@ def list_s3_evaluations(
     return yaml_dict["evaluations"]
 
 
-def clone_from_s3(ev, evaluation_name: str):
+def subset_the_table(
+    ev,
+    s3_dataset_path: str,
+    sdf_in: pyspark.sql.DataFrame,
+    name: str,
+    primary_location_ids: Union[None, List[str]],
+    start_date: Union[str, datetime, None],
+    end_date: Union[str, datetime, None],
+) -> pyspark.sql.DataFrame:
+    """Subset the dataset based on location and start/end time."""
+    if name == "locations" and primary_location_ids is not None:
+        sdf_in = sdf_in.filter(sdf_in.id.isin(primary_location_ids))
+    elif name == "location_attributes" and primary_location_ids is not None:
+        sdf_in = sdf_in.filter(sdf_in.location_id.isin(primary_location_ids))
+    elif name == "location_crosswalks" and primary_location_ids is not None:
+        sdf_in = sdf_in.filter(
+            sdf_in.primary_location_id.isin(primary_location_ids)
+        )
+    elif name == "primary_timeseries":
+        if primary_location_ids is not None:
+            sdf_in = sdf_in.filter(
+                sdf_in.location_id.isin(primary_location_ids)
+            )
+    elif name == "secondary_timeseries":
+        if primary_location_ids is not None:
+            xwalk = (
+                ev.
+                spark.
+                read.
+                format("parquet").
+                load(f"{s3_dataset_path}/location_crosswalks/")
+            )
+            secondary_ids = xwalk.filter(
+                xwalk.primary_location_id.isin(primary_location_ids)
+            ).select("secondary_location_id").rdd.flatMap(lambda x: x).collect()
+            sdf_in = sdf_in.filter(sdf_in.location_id.isin(secondary_ids))
+    elif name == "joined_timeseries":
+        if primary_location_ids is not None:
+            sdf_in = sdf_in.filter(
+                sdf_in.location_id.isin(primary_location_ids)
+            )
+    if "timeseries" in name:
+        if start_date is not None:
+            sdf_in = sdf_in.filter(sdf_in.value_time >= start_date)
+        if end_date is not None:
+            sdf_in = sdf_in.filter(sdf_in.value_time <= end_date)
+
+    return sdf_in
+
+
+def clone_from_s3(
+    ev,
+    evaluation_name: str,
+    primary_location_ids: Union[None, List[str]],
+    start_date: Union[str, datetime, None],
+    end_date: Union[str, datetime, None],
+):
     """Clone an evaluation from s3.
 
     Copies the evaluation from s3 to the local directory.
@@ -158,6 +217,16 @@ def clone_from_s3(ev, evaluation_name: str):
             .load(f"{s3_dataset_path}/{dir_name}/")
         )
 
+        sdf_in = subset_the_table(
+            ev=ev,
+            s3_dataset_path=s3_dataset_path,
+            sdf_in=sdf_in,
+            name=name,
+            primary_location_ids=primary_location_ids,
+            start_date=start_date,
+            end_date=end_date
+        )
+
         if table["partitions"]:
             logger.debug(f"Partitioning {name} by {table['partitions']}.")
             (
@@ -178,7 +247,7 @@ def clone_from_s3(ev, evaluation_name: str):
                 .save(str(local_path))
             )
 
-    # copy scriopts path to ev.scripts_dir
+    # copy scripts path to ev.scripts_dir
     source = f"{url}/scripts/user_defined_fields.py"
     dest = f"{ev.scripts_dir}/user_defined_fields.py"
     logger.debug(f"Copying from {source}/ to {dest}")

@@ -21,7 +21,11 @@ def sample_dataframe():
         'unit_name': ['unit1', 'unit1', 'unit2', 'unit2'],
         'value_time': pd.date_range(start='1/1/2022', periods=4, freq='D'),
         'value': [10, 20, 30, 40],
-        'reference_time': [None, None, None, None]
+        'reference_time': [
+            pd.Timestamp('2022-01-01'),
+            pd.Timestamp('2022-01-01'),
+            pd.Timestamp('2022-01-02'),
+            pd.NaT]
     }
     df = pd.DataFrame(data)
     df.attrs['table_type'] = 'timeseries'
@@ -116,7 +120,11 @@ def test_get_unique_values(sample_dataframe):
         'unit_name': ['unit1', 'unit2'],
         'value_time': list(sample_dataframe['value_time'].unique()),
         'value': [10, 20, 30, 40],
-        'reference_time': [None]
+        'reference_time': [
+            pd.Timestamp('2022-01-01'),
+            pd.Timestamp('2022-01-02'),
+            pd.NaT
+            ]
     }
     assert unique_values == expected_values
 
@@ -126,8 +134,15 @@ def test_timeseries_schema(sample_dataframe):
     accessor = sample_dataframe.teehr
     schema = accessor._timeseries_schema()
     expected_schema = {
-        'var1': [('config1', 1), ('config2', 2)],
-        'var2': [('config1', 1), ('config2', 2)]
+        'var1': [
+            ('config1', 1, pd.Timestamp('2022-01-01')),
+            ('config2', 2, pd.Timestamp('2022-01-01'))
+            ],
+        'var2': [
+         ('config1', 1, pd.Timestamp('2022-01-02')),
+         ('config1', 1, pd.NaT),
+         ('config2', 2, pd.NaT)
+         ]
     }
     assert schema == expected_schema
 
