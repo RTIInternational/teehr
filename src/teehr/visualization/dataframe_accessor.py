@@ -217,21 +217,21 @@ class TEEHRDataFrameAccessor:
         """Format timeseries plot."""
         # x-axis
         plot.xaxis.major_label_orientation = pi/4
-        plot.xaxis.axis_label_text_font_size = '14pt'
+        # plot.xaxis.axis_label_text_font_size = '14pt'
         plot.xaxis.axis_label_text_font_style = 'bold'
-        plot.xaxis.major_label_text_font_size = '12pt'
+        # plot.xaxis.major_label_text_font_size = '12pt'
 
         # y-axis
-        plot.yaxis.axis_label_text_font_size = '14pt'
+        # plot.yaxis.axis_label_text_font_size = '14pt'
         plot.yaxis.axis_label_text_font_style = 'bold'
-        plot.yaxis.major_label_text_font_size = '12pt'
+        # plot.yaxis.major_label_text_font_size = '12pt'
 
         # title
         plot.title.text_font_size = '12pt'
 
         # legend
         plot.legend.location = 'top_right'
-        plot.legend.label_text_font_size = '14pt'
+        # plot.legend.label_text_font_size = '14pt'
         plot.legend.border_line_width = 1
         plot.legend.border_line_color = 'black'
         plot.legend.border_line_alpha = 1.0
