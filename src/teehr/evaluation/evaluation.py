@@ -1,5 +1,6 @@
 """Evaluation module."""
-from typing import Union, Literal
+from datetime import datetime
+from typing import Union, Literal, List
 from pathlib import Path
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
@@ -220,16 +221,33 @@ class Evaluation:
         """
         return list_s3_evaluations(format=format)
 
-    def clone_from_s3(self, evaluation_name: str):
+    def clone_from_s3(
+        self,
+        evaluation_name: str,
+        primary_location_ids: List[str] = None,
+        start_date: Union[str, datetime] = None,
+        end_date: Union[str, datetime] = None,
+    ):
         """Fetch the study data from S3.
 
-        Copies the study from s3 to the local directory.
+        Copies the study from s3 to the local directory, with the option
+        to subset the dataset by primary location ID, start and end dates.
 
         Parameters
         ----------
         evaluation_name : str
             The name of the evaluation to clone from S3.
-            Use the list_s3_evaluations method to get the available evaluations.
+            Use the list_s3_evaluations method to get the available
+            evaluations.
+        primary_location_ids : List[str], optional
+            The list of primary location ids to subset the data.
+            The default is None.
+        start_date : Union[str, datetime], optional
+            The start date to subset the data.
+            The default is None.
+        end_date : Union[str, datetime], optional
+            The end date to subset the data.
+            The default is None.
 
         Notes
         -----
@@ -249,7 +267,13 @@ class Evaluation:
         Also includes the user_defined_fields.py script.
 
         """
-        return clone_from_s3(self, evaluation_name)
+        return clone_from_s3(
+            self,
+            evaluation_name,
+            primary_location_ids,
+            start_date,
+            end_date
+        )
 
     def clean_cache(self):
         """Clean temporary files.
