@@ -15,11 +15,13 @@ Evaluation examples
 
 :doc:`Introduction to the Schema </user_guide/notebooks/01_introduction_schema>`  :download:`(download notebook) </user_guide/notebooks/01_introduction_schema.ipynb>`
 
-:doc:`Loading Data </user_guide/notebooks/02_loading_data>`  :download:`(download notebook) </user_guide/notebooks/02_loading_data.ipynb>`
+:doc:`Loading Data </user_guide/notebooks/02_loading_local_data>`  :download:`(download notebook) </user_guide/notebooks/02_loading_local_data.ipynb>`
 
 :doc:`Introduction to the Evaluation Class </user_guide/notebooks/03_introduction_class>`  :download:`(download notebook) </user_guide/notebooks/03_introduction_class.ipynb>`
 
-:doc:`Evaluation Example </user_guide/notebooks/04_setup_real_example>`  :download:`(download notebook) </user_guide/notebooks/04_setup_real_example.ipynb>`
+:doc:`Setting-up a Simple Example </user_guide/notebooks/04_setup_simple_example>`  :download:`(download notebook) </user_guide/notebooks/04_setup_simple_example.ipynb>`
+
+:doc:`Clone an Evaluation from S3 </user_guide/notebooks/05_clone_from_s3>`  :download:`(download notebook) </user_guide/notebooks/05_clone_from_s3.ipynb>`
 
 .. toctree::
    :maxdepth: 2
