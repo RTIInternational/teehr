@@ -142,5 +142,5 @@ temp/
 
 .DS_Store
 
-docs/sphinx/tutorials/tutorial_subset/*/*/_SUCCESS
-docs/sphinx/tutorials/tutorial_subset/*/*/*.crc
+docs/sphinx/tutorials/*/*/*/_SUCCESS
+docs/sphinx/tutorials/*/*/*/*.crc
