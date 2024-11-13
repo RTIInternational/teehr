@@ -4,21 +4,37 @@
 Getting started
 ===============
 
+
 Installation
 ------------
-There are several methods currently available for installing TEEHR.
+TEEHR requires the following dependencies:
 
-You can install from github:
+* Python 3.10 or later
+
+* Java 8 or later for Spark (we use 17)
+
+
+There are several methods currently available for installing and using TEEHR.
+
+We do not currently push TEEHR to PyPI, so the easiest way to install it is directly from GitHub.
+If using `pip` to install TEEHR, we recommend installing in a virtual environment.
+The code below should create a new virtual environment and install TEEHR in it.
 
 .. code-block:: python
+
+   # Create directory for your code and create a new virtual environment
+   mkdir teehr_examples
+   cd teehr_examples
+   python3 -m venv .venv
+   source .venv/bin/activate
 
    # Using pip
    pip install 'teehr @ git+https://github.com/RTIInternational/teehr@[BRANCH_TAG]'
 
-   # Using poetry
-   poetry add git+https://github.com/RTIInternational/teehr.git#[BRANCH TAG]
+   # Download the required JAR files for Spark (this is broken)
+   python download_spark_jars.py
 
-You can use Docker:
+Or, if you do not want to install TEEHR in your own virtual environment, you can use Docker:
 
 .. code-block:: bash
 
@@ -55,39 +71,45 @@ It is designed to enable iterative and exploratory analysis of hydrologic data, 
 
 TEEHR Evaluation Example
 ------------------------
-The following is an example of initializing a TEEHR Evaluation on an existing dataset,
-and calculating two versions of KGE (one including bootstrapping and one without).
+The following is an example of initializing a TEEHR Evaluation, cloning a dataset from the TEEHR S3 bucket,
+and calculating two versions of KGE (one with bootstrap uncertainty and one without).
 
 .. code-block:: python
 
-    import teehr
+   import teehr
+   from pathlib import Path
 
-    # Initialize an Evaluation object
-    ev = teehr.Evaluation(dir_path="test_data/test_study")
+   # Initialize an Evaluation object
+   ev = teehr.Evaluation(
+      dir_path=Path(Path().home(), "temp", "quick_start_example"),
+      create_dir=True
+   )
 
-    # Enable logging
-    ev.enable_logging()
+   # Clone the example data from S3
+   ev.clone_from_s3("p0_2_location_example")
 
-    # Define a bootstrapper with custom parameters.
-    boot = teehr.Bootstrappers.CircularBlock(
-       seed=50,
-       reps=500,
-       block_size=10,
-       quantiles=[0.05, 0.95]
-    )
-    kge = teehr.Metrics.KlingGuptaEfficiency(bootstrap=boot)
-    kge.output_field_name = "BS_KGE"
+   # Define a bootstrapper with custom parameters.
+   boot = teehr.Bootstrappers.CircularBlock(
+      seed=50,
+      reps=500,
+      block_size=10,
+      quantiles=[0.05, 0.95]
+   )
+   kge = teehr.Metrics.KlingGuptaEfficiency(bootstrap=boot)
+   kge.output_field_name = "BS_KGE"
 
-    include_metrics = [kge, metrics.KlingGuptaEfficiency()]
+   include_metrics = [kge, teehr.Metrics.KlingGuptaEfficiency()]
 
-    # Get the currently available fields to use in the query.
-    flds = ev.joined_timeseries.field_enum()
+   # Get the currently available fields to use in the query.
+   flds = ev.joined_timeseries.field_enum()
 
-    metrics_df = ev.metrics.query(
-       include_metrics=include_metrics,
-       group_by=[flds.primary_location_id],
-       order_by=[flds.primary_location_id]
-    ).to_geopandas()
+   metrics_df = ev.metrics.query(
+      include_metrics=include_metrics,
+      group_by=[flds.primary_location_id],
+      order_by=[flds.primary_location_id]
+   ).to_pandas()
+
+   metrics_df
 
 
 For a full list of metrics currently available in TEEHR, see the :doc:`/user_guide/metrics/metrics` documentation.

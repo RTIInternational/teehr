@@ -226,8 +226,8 @@ class TEEHRDataFrameAccessor:
         plot.yaxis.axis_label_text_font_style = 'bold'
         # plot.yaxis.major_label_text_font_size = '12pt'
 
-        # title
-        plot.title.text_font_size = '12pt'
+        # # title
+        # plot.title.text_font_size = '12pt'
 
         # legend
         plot.legend.location = 'top_right'
@@ -264,7 +264,7 @@ class TEEHRDataFrameAccessor:
             x_axis_label="Datetime",
             x_axis_type='datetime',
             tools=['xwheel_zoom', 'reset'],
-            height=800
+            height=500
             )
 
         # add data to plot
@@ -434,7 +434,8 @@ class TEEHRDataFrameAccessor:
             x_axis_type="mercator",
             y_axis_type="mercator",
             tooltips=tooltips,
-            tools="pan, wheel_zoom, reset"
+            tools="pan, wheel_zoom, reset",
+            height=500
             )
         p.add_tile(xyz.OpenStreetMap.Mapnik)
 

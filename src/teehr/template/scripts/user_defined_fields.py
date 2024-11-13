@@ -78,21 +78,21 @@ def add_user_defined_fields(
 
     # Add a normalized flow for primary and secondary values
     # to the joined timeseries data.
-    logger.info("Adding normalized flow")
+    # logger.info("Adding normalized flow")
 
-    @udf(returnType=FloatType())
-    def normalized_flow(flow, area):
-        return float(flow) / float(area)
+    # @udf(returnType=FloatType())
+    # def normalized_flow(flow, area):
+    #     return float(flow) / float(area)
 
-    joined_df = joined_df.withColumn(
-        "primary_normalized_flow",
-        normalized_flow("primary_value", "drainage_area")
-    )
+    # joined_df = joined_df.withColumn(
+    #     "primary_normalized_flow",
+    #     normalized_flow("primary_value", "drainage_area")
+    # )
 
-    joined_df = joined_df.withColumn(
-        "secondary_normalized_flow",
-        normalized_flow("secondary_value", "drainage_area")
-    )
+    # joined_df = joined_df.withColumn(
+    #     "secondary_normalized_flow",
+    #     normalized_flow("secondary_value", "drainage_area")
+    # )
 
     # Return the joined timeseries data with user defined fields
     return joined_df
