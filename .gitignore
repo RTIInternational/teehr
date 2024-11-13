@@ -142,5 +142,5 @@ temp/
 
 .DS_Store
 
-tests/data/tutorial_subset/*/*/_SUCCESS
-tests/data/tutorial_subset/*/*/*.crc
+docs/sphinx/tutorials/tutorial_subset/*/*/_SUCCESS
+docs/sphinx/tutorials/tutorial_subset/*/*/*.crc
