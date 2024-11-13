@@ -1,1 +1,1 @@
-"""TEEHR Loading init."""
+"""Loading module for TEEHR."""

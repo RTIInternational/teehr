@@ -1,2 +1,0 @@
-"""Queries init."""
-import duckdb

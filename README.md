@@ -40,10 +40,16 @@ $ pip install 'teehr @ git+https://github.com/RTIInternational/teehr@[BRANCH_TAG
 $ poetry add git+https://github.com/RTIInternational/teehr.git#[BRANCH TAG]
 ```
 
+After you have installed TEEHR, ensure the correct virtual environment is active then run
+the following to download the required JAR files to you PySpark home.
+```
+$ python download_spark_jars.py
+```
+
 Use Docker
 ```bash
-$ docker build -t teehr:v0.3.28 .
-$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.3.28 jupyter lab --ip 0.0.0.0 $HOME
+$ docker build -t teehr:v0.4.0 .
+$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.4.0 jupyter lab --ip 0.0.0.0 $HOME
 ```
 
 ## Examples

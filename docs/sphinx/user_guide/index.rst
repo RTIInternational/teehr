@@ -4,51 +4,33 @@
 User Guide
 ==========
 
-This guide provides examples of using some of TEEHR's core features.
+The best way to get to know TEEHR is by working through each of the User Guide pages below.
+Each page in this section is a Jupyter notebook that demonstrates some aspect of TEEHR.
+The User Guide is designed to be interactive, so you can download the notebooks and run the code to see the results for yourself.
 
-Fetching and Loading Data
--------------------------
+Before starting, make sure you have installed TEEHR and its dependencies as described in the :doc:`Getting Started </getting_started/index>` section.
 
-TEEHR provides tools for fetching and loading hydrologic data into an efficient storage format (parquet). It currently
-supports both operational and retrospective National Water Model data as well as USGS streamflow data. Support for
-the Office of Water Prediction's Nextgen data is also in development.
+.. note::
+   The pages below are Jupyter notebooks that also make up many of the pages in the User Guide that contain executable code.
+   You can view the content in the User Guide pages, but you will need to download the notebooks to run the code yourself.
 
-:doc:`NWM Operational Point Data </user_guide/notebooks/loading/point_loading_example>`
+:doc:`Introduction to the Schema </user_guide/notebooks/01_introduction_schema>`  :download:`(download notebook) </user_guide/notebooks/01_introduction_schema.ipynb>`
 
-:doc:`NWM Operational Gridded Data </user_guide/notebooks/loading/grid_loading_example>`
+:doc:`Loading Data </user_guide/notebooks/02_loading_local_data>`  :download:`(download notebook) </user_guide/notebooks/02_loading_local_data.ipynb>`
 
-:doc:`NWM Retrospective Point Data </user_guide/notebooks/loading/load_retrospective>`
+:doc:`Introduction to the Evaluation Class </user_guide/notebooks/03_introduction_class>`  :download:`(download notebook) </user_guide/notebooks/03_introduction_class.ipynb>`
 
-:doc:`NWM Retrospective Gridded Data </user_guide/notebooks/loading/load_gridded_retrospective>`
+:doc:`Setting-up a Simple Example </user_guide/notebooks/04_setup_simple_example>`  :download:`(download notebook) </user_guide/notebooks/04_setup_simple_example.ipynb>`
 
-:doc:`USGS Streamflow Data </user_guide/notebooks/loading/usgs_loading>`
-
-Model Evaluation and Visualization with TEEHR
----------------------------------------------
-
-Once the timeseries data conforms to the data model, we can take advantage of TEEHR's capabilities for
-quantifying and understanding model performance.  The following example notebooks demonstrate how to
-use TEEHR to join timeseries and evaluate model performance through calculation of various metrics.
-
-While mapping and plotting functionality is not yet available in TEEHR, we provide several examples of visualizing
-model output using the `holoviews` library.
-
-Note: These notebooks were developed for the 2024 CIROH Developer's Conference and can be also found
-here: https://github.com/RTIInternational/teehr-devcon24-workshop
-
-:doc:`Building a Simple TEEHR Dataset </user_guide/notebooks/evaluation/01-ex1-simple>`
-
-:doc:`Building a Joined Database </user_guide/notebooks/evaluation/02-ex2_join_data>`
-
-:doc:`Evaluating and Visualizing Model Output, Ex. 1 </user_guide/notebooks/evaluation/03-ex2_evaluate>`
-
-:doc:`Evaluating and Visualizing Model Output, Ex. 2 </user_guide/notebooks/evaluation/04-ex3_evaluate>`
-
+:doc:`Clone an Evaluation from S3 </user_guide/notebooks/05_clone_from_s3>`  :download:`(download notebook) </user_guide/notebooks/05_clone_from_s3.ipynb>`
 
 .. toctree::
    :maxdepth: 2
    :hidden:
 
-   notebooks/loading_examples_index
-   notebooks/evaluation_examples_index
-   metrics/metrics
+   Introduction to the Schema </user_guide/notebooks/01_introduction_schema>
+   Loading Data </user_guide/notebooks/02_loading_local_data>
+   Introduction to the Evaluation Class </user_guide/notebooks/03_introduction_class>
+   Setting-up a Simple Example </user_guide/notebooks/04_setup_simple_example>
+   Clone an Evaluation from S3 </user_guide/notebooks/05_clone_from_s3>
+   Metrics </user_guide/metrics/metrics>

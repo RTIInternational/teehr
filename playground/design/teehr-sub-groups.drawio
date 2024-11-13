@@ -1,0 +1,82 @@
+<mxfile host="Electron" modified="2024-06-11T15:51:51.335Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" etag="1AHx7nVPWfwxeI0nCAOt" version="21.6.8" type="device">
+  <diagram name="Page-1" id="-Mq1UJ9Rg9Z-jRjFlbSf">
+    <mxGraphModel dx="1359" dy="843" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="F_u2jaanzpHaE-U4cb29-1" value="" style="endArrow=none;html=1;rounded=0;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="280" y="800" as="sourcePoint" />
+            <mxPoint x="280" y="40" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="F_u2jaanzpHaE-U4cb29-2" value="" style="endArrow=none;html=1;rounded=0;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="560" y="800" as="sourcePoint" />
+            <mxPoint x="560" y="40" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="F_u2jaanzpHaE-U4cb29-3" value="" style="endArrow=none;html=1;rounded=0;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="840" y="800" as="sourcePoint" />
+            <mxPoint x="840" y="40" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="F_u2jaanzpHaE-U4cb29-5" value="Pre-processing" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="30" y="40" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="F_u2jaanzpHaE-U4cb29-6" value="Processing" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="370" y="40" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="F_u2jaanzpHaE-U4cb29-7" value="Post-processing" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="580" y="40" width="240" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="F_u2jaanzpHaE-U4cb29-8" value="Documentation and Outreach" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=24;fontStyle=1" parent="1" vertex="1">
+          <mxGeometry x="930" y="50" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="F_u2jaanzpHaE-U4cb29-9" value="Fetching data from remote sources" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="20" y="100" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="F_u2jaanzpHaE-U4cb29-10" value="Collecting information from the user RE: standing up a new Study&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="110" y="170" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="F_u2jaanzpHaE-U4cb29-11" value="Saving timeseries, geometry, attributes and crosswalk to standard folder structure" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="10" y="730" width="180" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="F_u2jaanzpHaE-U4cb29-12" value="Validate data" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="110" y="660" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="F_u2jaanzpHaE-U4cb29-13" value="Create materialized joined timeseries&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="310" y="100" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="F_u2jaanzpHaE-U4cb29-14" value="Collecting data from user RE: additional fields to add to joined timeseries" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="20" y="260" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="F_u2jaanzpHaE-U4cb29-15" value="Add attributes" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="400" y="160" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="F_u2jaanzpHaE-U4cb29-16" value="Add UDFs" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="310" y="230" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="F_u2jaanzpHaE-U4cb29-17" value="Metrics Summaries" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="580" y="100" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="F_u2jaanzpHaE-U4cb29-18" value="Visualizations" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="680" y="160" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="F_u2jaanzpHaE-U4cb29-19" value="Docs" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="860" y="120" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="F_u2jaanzpHaE-U4cb29-20" value="Examples" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="940" y="180" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="F_u2jaanzpHaE-U4cb29-21" value="Blogs" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="860" y="240" width="140" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="1seR5BuQ0Q44aYKOgza9-1" value="Query Dataset" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="410" y="760" width="140" height="40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

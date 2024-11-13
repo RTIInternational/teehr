@@ -1,0 +1,4 @@
+name,long_name
+streamflow_hourly_inst,Hourly Instantaneous Streamflow
+streamflow_daily_mean,Daily Mean Streamflow
+rainfall_hourly_rate,Hourly Rainfall Rate
