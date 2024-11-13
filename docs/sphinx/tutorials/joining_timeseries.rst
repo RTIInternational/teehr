@@ -10,7 +10,7 @@ In this example, we consider a comparison of National Water Model (NWM) v3.0 ret
 streamflow simulations ("secondary") to USGS observed streamflow data ("primary") for a few
 time steps at five different locations (gage stations).
 
-When the timeseries and attributes have been brought into the TEEHR data model, it will look something like this:
+When the timeseries and attributes have been loaded into the TEEHR data model, it will look something like this:
 
 .. figure:: ../../images/tutorials/joining/nwm_usgs_ex_data_model.png
    :scale: 60%
@@ -19,7 +19,7 @@ When the timeseries and attributes have been brought into the TEEHR data model, 
 
 * **Primary Timeseries**: The USGS observed streamflow data at all locations and times.
 * **Secondary Timeseries**: The NWM v3.0 retrospective streamflow simulations at all locations and times.
-* **Crosswalk**: A mapping between the USGS and NWM location IDs.
+* **Crosswalk**: A table linking the USGS location IDs with the NWM location IDs.
 * **Geometry**: The point geometries of the USGS gage station locations.
 * **Attributes**: Additional information about each of the locations.
 
@@ -29,8 +29,8 @@ on the location, time, and potentially some other attributes.  For example, we c
 
 First, we can join the primary and secondary timeseries by location and time without adding geometry or
 attributes.  This requires the crosswalk table to map the primary and secondary location IDs. Because
-the data may contain more than one variable (e.g., temperature, C) we also need to consider the `variable_name`
-and `measurement_unit` fields during the join.
+the data may contain more than one variable (e.g., temperature, C) we also need to consider the ``variable_name``
+and ``measurement_unit`` fields during the join.
 
 .. figure:: ../../images/tutorials/joining/nwm_usgs_ex_joining_snip.png
    :scale: 55%
