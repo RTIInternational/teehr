@@ -10,6 +10,10 @@ The User Guide is designed to be interactive, so you can download the notebooks 
 
 Before starting, make sure you have installed TEEHR and its dependencies as described in the :doc:`Getting Started </getting_started/index>` section.
 
+.. note::
+   The pages below are Jupyter notebooks that also make up many of the pages in the User Guide that contain executable code.
+   You can view the content in the User Guide pages, but you will need to download the notebooks to run the code yourself.
+
 :doc:`Introduction to the Schema </user_guide/notebooks/01_introduction_schema>`  :download:`(download notebook) </user_guide/notebooks/01_introduction_schema.ipynb>`
 
 :doc:`Loading Data </user_guide/notebooks/02_loading_local_data>`  :download:`(download notebook) </user_guide/notebooks/02_loading_local_data.ipynb>`
