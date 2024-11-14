@@ -119,4 +119,3 @@ For a full list of metrics currently available in TEEHR, see the :doc:`/user_gui
     :hidden:
 
     TEEHR Framework <teehr_framework>
-    Tutorials <../tutorials/tutorials_index.rst>
