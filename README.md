@@ -17,35 +17,23 @@ NOTE: THIS PROJECT IS UNDER DEVELOPMENT - EXPECT TO FIND BROKEN AND INCOMPLETE C
 [TEEHR Documentation](https://rtiinternational.github.io/teehr/)
 
 ## How to Install TEEHR
-Install poetry
+We do not currently push TEEHR to PyPI, so the easiest way to install it is directly from GitHub.
+If using `pip` to install TEEHR, we recommend installing TEEHR in a virtual environment.
+The code below should create a new virtual environment and install TEEHR in it.
+
 ```bash
-$ pipx install poetry
+# Create directory for your code and create a new virtual environment.
+mkdir teehr_examples
+cd teehr_examples
+python3 -m venv .venv
+source .venv/bin/activate
+
+# Install using pip.
+pip install 'teehr @ git+https://github.com/RTIInternational/teehr@[BRANCH_TAG]'
+
+# Download the required JAR files for Spark to interact with AWS S3.
+python -m teehr.utils.install_spark_jars
 ```
-
-Install from source
-```bash
-# Create and activate python environment, requires python >= 3.10
-$ poetry shell
-
-# Install from source
-$ poetry install
-```
-
-Install from GitHub
-```bash
-# Using pip
-$ pip install 'teehr @ git+https://github.com/RTIInternational/teehr@[BRANCH_TAG]'
-
-# Using poetry
-$ poetry add git+https://github.com/RTIInternational/teehr.git#[BRANCH TAG]
-```
-
-After you have installed TEEHR, ensure the correct virtual environment is active then run
-the following to download the required JAR files to you PySpark home.
-```
-$ python download_spark_jars.py
-```
-
 Use Docker
 ```bash
 $ docker build -t teehr:v0.4.0 .
