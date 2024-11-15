@@ -1,7 +1,20 @@
 Release Notes
 =============
 
-0.4.0 - 2024-10-08
+0.4.1 - 2024-10-15
+--------------------
+
+Added
+^^^^^
+* Updated docs to include pages for `grouping`, `filtering` and `Joining` in the User Guide.
+
+Changed
+^^^^^^^
+* Fixed some broken data download links in the User Guide.
+* Fixed the post-install script to install the AWS Spark Jars.
+* Fixed the API doc build.
+
+0.4.0 - 2024-10-13
 --------------------
 
 Added

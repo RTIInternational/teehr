@@ -20,14 +20,14 @@ The code below should create a new virtual environment and install TEEHR in it.
 
 .. code-block:: python
 
-   # Create directory for your code and create a new virtual environment
+   # Create directory for your code and create a new virtual environment.
    mkdir teehr_examples
    cd teehr_examples
    python3 -m venv .venv
    source .venv/bin/activate
 
-   # Using pip
-   pip install 'teehr @ git+https://github.com/RTIInternational/teehr@[BRANCH_TAG]'
+   # Using pip. The version can be changed to install a different version.
+   pip install 'teehr @ git+https://github.com/RTIInternational/teehr@v0.4.1'
 
    # Download the required JAR files for Spark to interact with AWS S3.
    python -m teehr.utils.install_spark_jars
@@ -36,8 +36,8 @@ Or, if you do not want to install TEEHR in your own virtual environment, you can
 
 .. code-block:: bash
 
-   docker build -t teehr:[RELEASE TAG] .
-   docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:[RELEASE TAG] jupyter lab --ip 0.0.0.0 $HOME
+   docker build -t teehr:v0.4.1 .
+   docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.4.1 jupyter lab --ip 0.0.0.0 $HOME
 
 Project Objectives
 ------------------
