@@ -56,7 +56,7 @@ jobs:
       #----------------------------------------------
       - name: Install distutils
         run: |
-          apt install -y python3-distutils
+          sudo apt install -y python3-distutils
       #----------------------------------------------
       # install JARS
       #----------------------------------------------
