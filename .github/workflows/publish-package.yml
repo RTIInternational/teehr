@@ -10,6 +10,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      - name: check_python_version
+        run: python --version
       #----------------------------------------------
       #       check-out repo and set-up python
       #----------------------------------------------
@@ -45,16 +47,12 @@ jobs:
       #----------------------------------------------
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: |
-          poetry install --no-interaction --no-root
-          poetry add distutils
+        run: poetry install --no-interaction --no-root
       #----------------------------------------------
       # install your root project, if required
       #----------------------------------------------
       - name: Install project
-        run: |
-          poetry install --no-interaction
-          poetry add distutils
+        run: poetry install --no-interaction
       #----------------------------------------------
       # install JARS
       #----------------------------------------------
