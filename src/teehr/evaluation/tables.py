@@ -769,7 +769,10 @@ class LocationAttributeTable(BaseTable):
             )
             logger.error(err_msg)
             raise ValueError(err_msg)
-        return join_geometry(self.df, self.ev.locations.to_sdf())
+        gdf = join_geometry(self.df, self.ev.locations.to_sdf())
+        gdf.attrs['table_type'] = 'location_attributes'
+        gdf.attrs['fields'] = self.fields()
+        return gdf
 
     def load_parquet(
         self,
@@ -906,10 +909,13 @@ class LocationCrosswalkTable(BaseTable):
             )
             logger.error(err_msg)
             raise ValueError(err_msg)
-        return join_geometry(
+        gdf = join_geometry(
             self.df, self.ev.locations.to_sdf(),
             "primary_location_id"
         )
+        gdf.attrs['table_type'] = 'location_crosswalks'
+        gdf.attrs['fields'] = self.fields()
+        return gdf
 
     def load_parquet(
         self,

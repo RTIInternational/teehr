@@ -6,8 +6,6 @@ import geopandas as gpd
 import logging
 from pathlib import Path
 
-from teehr.querying.utils import df_to_gdf
-
 from bokeh.plotting import figure, save, output_file, show, ColumnDataSource
 from bokeh.palettes import colorblind
 import xyzservices.providers as xyz
@@ -99,15 +97,10 @@ class TEEHRDataFrameAccessor:
 
             # convert to gdf if given df
             if not (isinstance(obj, gpd.GeoDataFrame)):
-                logger.info("""
-                    Object is DataFrame. Expected GeoDataFrame. Converting to
-                    GeoDataFrame...
-                            """)
-                geo_obj = df_to_gdf(obj)
-                # reassign pandas attributes (they dont carry over)
-                for attribute in obj.attrs:
-                    geo_obj.attrs[attribute] = obj.attrs[attribute]
-                self._gdf = geo_obj
+                raise NotImplementedError(f"""
+                    Locations mapping does not currently support input of
+                    type = {type(obj)}. Use to_geopandas() instead.
+                """)
 
             # convert given crs to web mercator [EPSG:3857]
             target_crs = 'EPSG:3857'
@@ -115,19 +108,61 @@ class TEEHRDataFrameAccessor:
 
         elif obj.attrs['table_type'] == 'location_attributes':
 
-            # TO-DO: add validation
+            # check for expected fields
+            fields_list = obj.attrs['fields']
+            missing = []
+            for field in fields_list:
+                if field not in obj.columns:
+                    missing.append(field)
+            if len(missing) != 0:
+                raise AttributeError(f"""
+                    DataFrame with table_type == 'location_attributes' is
+                    missing expected column(s): {missing}
+                """)
 
-            raise NotImplementedError(
-                "Location Attributes methods must be implemented."
-            )
+            # check for data
+            if obj.index.size == 0:
+                raise AttributeError("GeoDataFrame must have data.")
+
+            # convert to gdf if given df (not implemented)
+            if not (isinstance(obj, gpd.GeoDataFrame)):
+                raise NotImplementedError(f"""
+                    Location attributes mapping does not currently support
+                    input of type = {type(obj)}. Use to_geopandas() instead.
+                """)
+
+            # convert given crs to web mercator [EPSG:3857]
+            target_crs = 'EPSG:3857'
+            self._gdf.to_crs(target_crs, inplace=True)
 
         elif obj.attrs['table_type'] == 'location_crosswalks':
 
-            # TO-DO: add validation
+            # check for expected fields
+            fields_list = obj.attrs['fields']
+            missing = []
+            for field in fields_list:
+                if field not in obj.columns:
+                    missing.append(field)
+            if len(missing) != 0:
+                raise AttributeError(f"""
+                    DataFrame with table_type == 'location_crosswalks' is
+                    missing expected column(s): {missing}
+                """)
 
-            raise NotImplementedError(
-                "Location Crosswalk methods must be implemented."
-            )
+            # check for data
+            if obj.index.size == 0:
+                raise AttributeError("GeoDataFrame must have data.")
+
+            # convert to gdf if given df (not implemented)
+            if not (isinstance(obj, gpd.GeoDataFrame)):
+                raise NotImplementedError(f"""
+                    Location attributes mapping does not currently support
+                    input of type = {type(obj)}. Use to_geopandas() instead.
+                """)
+
+            # convert given crs to web mercator [EPSG:3857]
+            target_crs = 'EPSG:3857'
+            self._gdf.to_crs(target_crs, inplace=True)
 
         elif obj.attrs['table_type'] == 'metrics':
 
@@ -217,21 +252,16 @@ class TEEHRDataFrameAccessor:
         """Format timeseries plot."""
         # x-axis
         plot.xaxis.major_label_orientation = pi/4
-        # plot.xaxis.axis_label_text_font_size = '14pt'
         plot.xaxis.axis_label_text_font_style = 'bold'
-        # plot.xaxis.major_label_text_font_size = '12pt'
 
         # y-axis
-        # plot.yaxis.axis_label_text_font_size = '14pt'
         plot.yaxis.axis_label_text_font_style = 'bold'
-        # plot.yaxis.major_label_text_font_size = '12pt'
 
         # title
         plot.title.text_font_size = '12pt'
 
         # legend
         plot.legend.location = 'top_right'
-        # plot.legend.label_text_font_size = '14pt'
         plot.legend.border_line_width = 1
         plot.legend.border_line_color = 'black'
         plot.legend.border_line_alpha = 1.0
@@ -381,16 +411,17 @@ class TEEHRDataFrameAccessor:
 
     def _location_format_points(self) -> dict:
         """Generate dictionary for point plotting."""
-        logger.info("Assembling geodata for mapping.")
+        logger.info("Assembling geodata for locations mapping...")
         geo_data = {}
         geo_data['id'] = self._gdf['id'].tolist()
         geo_data['name'] = self._gdf['name'].tolist()
         geo_data['x'] = self._gdf.geometry.x.values.tolist()
         geo_data['y'] = self._gdf.geometry.y.values.tolist()
+        logger.info("Locations geodata assembled.")
 
         return geo_data
 
-    def _location_get_boundaries(
+    def _location_get_bounds(
         self,
         geo_data: dict
     ) -> dict:
@@ -418,14 +449,12 @@ class TEEHRDataFrameAccessor:
 
         # set tooltips
         tooltips = [
-            ("ID", "@id"),
-            ("Name", "@name"),
-            ("X-Coordinate", "@x"),
-            ("Y-Coordinate", "@y")
+            ("id", "@id"),
+            ("name", "@name")
             ]
 
         # get axes bounds
-        axes_bounds = self._location_get_boundaries(geo_data=geo_data)
+        axes_bounds = self._location_get_bounds(geo_data=geo_data)
 
         # generate basemap
         p = figure(
@@ -461,7 +490,7 @@ class TEEHRDataFrameAccessor:
 
         return
 
-    def location_map(self, output_dir=None):
+    def locations_map(self, output_dir=None):
         """
         Generate a location map and save it to the specified directory.
 
@@ -508,3 +537,313 @@ class TEEHRDataFrameAccessor:
 
         # generate map
         self._location_generate_map(geo_data=geo_data, output_dir=output_dir)
+
+    def _location_attributes_format_points(self) -> dict:
+        """Format location_attributes data for use in mapping method."""
+        logger.info("Assembling geodata for location attributes mapping...")
+        geo_data = {}
+        locations = self._gdf['location_id'].unique()
+        for location in locations:
+            local_attributes = {}
+            location_gdf = self._gdf[self._gdf['location_id'] == location]
+            attributes = location_gdf['attribute_name'].unique()
+            for attribute in attributes:
+                row = location_gdf[location_gdf['attribute_name'] == attribute]
+                local_attributes[attribute] = row['value'].values[0]
+                if attribute == attributes[-1]:
+                    local_attributes['x'] = row.geometry.x.values[0]
+                    local_attributes['y'] = row.geometry.y.values[0]
+                    local_attributes['location_id'] = location
+            geo_data[location] = local_attributes
+        logger.info("Location attributes geodata assembled.")
+
+        return geo_data
+
+    def _location_attributes_get_tooltips(
+            self,
+            geo_data: dict
+    ) -> list:
+        """Dynamically create tooltips for location_attributes."""
+        # extract attributes from geo_data
+        all_attributes = []
+        for location in geo_data.keys():
+            attributes = geo_data[location]
+            for attribute in attributes.keys():
+                all_attributes.append(attribute)
+
+        # remove duplicates and x/y
+        unique_attributes = list(set(all_attributes))
+        unique_attributes.remove('x')
+        unique_attributes.remove('y')
+
+        # format tuples for tooltips
+        tooltips = []
+        for attribute in unique_attributes:
+            entry = (f"{attribute}", f"@{attribute}")
+            tooltips.append(entry)
+
+        return tooltips
+
+    def _location_attributes_get_bounds(
+            self,
+            geo_data: dict
+    ) -> dict:
+        """Obtain axes bounds for location_attributes mapping."""
+        x_list = []
+        y_list = []
+        for location in geo_data.keys():
+            attributes = geo_data[location]
+            x_list.append(attributes['x'])
+            y_list.append(attributes['y'])
+        min_x = min(x_list)
+        max_x = max(x_list)
+        min_y = min(y_list)
+        max_y = max(y_list)
+        x_buffer = abs((max_x - min_x)*0.1)
+        y_buffer = abs((max_y - min_y)*0.1)
+        axes_bounds = {}
+        axes_bounds['x_space'] = ((min_x - x_buffer), (max_x + x_buffer))
+        axes_bounds['y_space'] = ((min_y - y_buffer), (max_y + y_buffer))
+
+        return axes_bounds
+
+    def _location_attributes_make_iterable(self, geo_data) -> dict:
+        """Make values iterable for plotting."""
+        for key, value in geo_data.items():
+            if not isinstance(value, (list, tuple, set)):
+                geo_data[key] = [value]
+
+        return geo_data
+
+    def _location_attributes_generate_map(
+            self,
+            geo_data: dict,
+            output_dir=None
+    ) -> figure:
+        """Generate map for location_attributes table."""
+        logger.info("Generating location attributes map...")
+
+        # set tooltips
+        tooltips = self._location_attributes_get_tooltips(geo_data=geo_data)
+
+        # get axes bounds
+        axes_bounds = self._location_attributes_get_bounds(geo_data=geo_data)
+
+        # generate basemap
+        p = figure(
+            x_range=axes_bounds['x_space'],
+            y_range=axes_bounds['y_space'],
+            x_axis_type="mercator",
+            y_axis_type="mercator",
+            tooltips=tooltips,
+            tools="pan, wheel_zoom, reset"
+            )
+        p.add_tile(xyz.OpenStreetMap.Mapnik)
+
+        # add data per location
+        for location in geo_data.keys():
+            location_dict = self._location_attributes_make_iterable(
+                geo_data[location]
+                )
+            source = ColumnDataSource(location_dict)
+            p.scatter(
+                x='x',
+                y='y',
+                color='blue',
+                source=source,
+                size=10,
+                fill_alpha=1.0
+            )
+
+        # output figure
+        if output_dir is not None:
+            fname = Path(output_dir, 'location_attributes_map.html')
+            output_file(filename=fname, title='Location Attributes Map')
+            logger.info(f"Saving location map at {output_dir}")
+            save(p)
+        else:
+            logger.info("No output directory specified, displaying plot.")
+            show(p)
+
+        return
+
+    def location_attributes_map(self, output_dir=None):
+        """Generate location_attributes table map.
+
+        Generate a map of location attributes and save it to the specified
+        directory.
+
+        This function checks the table type to ensure it is
+        'location_attributes'. If an output directory is specified, it checks
+        if the directory exists and creates it if it does not. It then formats
+        the point data and generates the map.
+
+        Parameters
+        ----------
+        output_dir : Path or None, optional
+            The directory where the generated map will be saved. If None, the
+            map will not be saved to a file. Default is None.
+
+        Raises
+        ------
+        AttributeError
+            If the table type is not 'location_attributes'.
+
+        Notes
+        -----
+        This function relies on the following methods:
+        - `_location_attributes_format_points`: Formats the point data.
+        - `_location_attributes_generate_map`: Generates the map using the
+                                               formatted data.
+
+        Examples
+        --------
+        >>> obj = YourClass()
+        >>> obj.location_attributes_map(output_dir=Path('/path/to/save'))
+        """
+        # check table type
+        if self._gdf.attrs['table_type'] != 'location_attributes':
+            table_type_str = self.attrs['table_type']
+            raise AttributeError(f"""
+                Expected table_type == "location_attributes",
+                got table_type = {table_type_str}
+            """)
+
+        # check output location
+        if output_dir is not None:
+            if output_dir.exists():
+                logger.info("Specified save directory is valid.")
+            else:
+                logger.info("""
+                    Specified directory does not exist.
+                    Creating new directory to store figure.
+                """)
+                Path(output_dir).mkdir(parents=True, exist_ok=True)
+
+        # format point data
+        geo_data = self._location_attributes_format_points()
+
+        # generate map
+        self._location_attributes_generate_map(geo_data=geo_data)
+
+    def _location_crosswalks_format_points(self) -> dict:
+        """Generate dictionary for point plotting."""
+        logger.info("Assembling geodata for location_crosswalks mapping...")
+        geo_data = {}
+        geo_data['primary_id'] = self._gdf['primary_location_id'].tolist()
+        geo_data['secondary_id'] = self._gdf['secondary_location_id'].tolist()
+        geo_data['x'] = self._gdf.geometry.x.values.tolist()
+        geo_data['y'] = self._gdf.geometry.y.values.tolist()
+        logger.info("location_crosswalks geodata assembled.")
+
+        return geo_data
+
+    def _location_crosswalks_generate_map(
+            self,
+            geo_data: dict,
+            output_dir=None
+    ) -> figure:
+        """Generate map for location_crosswalks table."""
+        logger.info("Generating location_crosswalks map...")
+
+        # set tooltips
+        tooltips = [
+            ("primary_location_id", "@primary_id"),
+            ("secondary_location_id", "@secondary_id")
+            ]
+
+        # get axes bounds
+        axes_bounds = self._location_get_bounds(geo_data=geo_data)
+
+        # generate basemap
+        p = figure(
+            x_range=axes_bounds['x_space'],
+            y_range=axes_bounds['y_space'],
+            x_axis_type="mercator",
+            y_axis_type="mercator",
+            tooltips=tooltips,
+            tools="pan, wheel_zoom, reset"
+            )
+        p.add_tile(xyz.OpenStreetMap.Mapnik)
+
+        # add data
+        source = ColumnDataSource(data=geo_data)
+        p.scatter(
+            x='x',
+            y='y',
+            color='blue',
+            source=source,
+            size=10,
+            fill_alpha=1.0
+            )
+
+        # output figure
+        if output_dir is not None:
+            fname = Path(output_dir, 'location_crosswalks_map.html')
+            output_file(filename=fname, title='Location Crosswalks Map')
+            logger.info(f"Saving location map at {output_dir}")
+            save(p)
+        else:
+            logger.info("No output directory specified, displaying plot.")
+            show(p)
+
+        return
+
+    def location_crosswalks_map(self, output_dir=None):
+        """Generate location_crosswalks table map.
+
+        Generate a map of location crosswalks and save it to the specified
+        directory.
+
+        This method checks the table type to ensure it is
+        'location_crosswalks'. If an output directory is specified, it checks
+        if the directory exists and creates it if it does not. It then
+        assembles the point data and generates the map.
+
+        Parameters
+        ----------
+        output_dir : Path or None, optional
+            The directory where the generated map will be saved. If None, the
+            map will not be saved to a file. Default is None.
+
+        Raises
+        ------
+        AttributeError
+            If the table type is not 'location_crosswalks'.
+
+        Notes
+        -----
+        This method relies on the following methods:
+        - `_location_crosswalks_format_points`: Assembles the point data.
+        - `_location_crosswalks_generate_map`: Generates the map using the
+                                               assembled data.
+
+        Examples
+        --------
+        >>> obj = YourClass()
+        >>> obj.location_crosswalks_map(output_dir=Path('/path/to/save'))
+        """
+        # check table type
+        if self._gdf.attrs['table_type'] != 'location_crosswalks':
+            table_type_str = self.attrs['table_type']
+            raise AttributeError(f"""
+                Expected table_type == "location_crosswalks",
+                got table_type = {table_type_str}
+            """)
+
+        # check output location
+        if output_dir is not None:
+            if output_dir.exists():
+                logger.info("Specified save directory is valid.")
+            else:
+                logger.info("""
+                    Specified directory does not exist.
+                    Creating new directory to store figure.
+                """)
+                Path(output_dir).mkdir(parents=True, exist_ok=True)
+
+        # assemble data
+        geo_data = self._location_crosswalks_format_points()
+
+        # generate map
+        self._location_crosswalks_generate_map(geo_data=geo_data)
