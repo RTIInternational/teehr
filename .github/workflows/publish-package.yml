@@ -67,7 +67,7 @@ jobs:
         run: |
           source .venv/bin/activate
           pytest tests/
-          coverage report
+      # coverage report
       #----------------------------------------------
       #              build publish package
       #----------------------------------------------
