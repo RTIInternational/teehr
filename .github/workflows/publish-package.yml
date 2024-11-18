@@ -1,10 +1,10 @@
-name: test
+name: test-build-publish
 
 # on: pull_request
-# on:
-#   push:
-#     tags: [ 'v*.*.*' ]
-on: push
+on:
+  push:
+    tags: [ 'v*.*.*' ]
+# on: push
 
 jobs:
   test:

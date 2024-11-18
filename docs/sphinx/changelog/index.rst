@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+0.4.2 - 2024-10-18
+--------------------
+
+Added
+^^^^^
+* A test-build-publish workflow to push to PyPI
+
+Changed
+^^^^^^^
+* None
+
 0.4.1 - 2024-10-15
 --------------------
 
