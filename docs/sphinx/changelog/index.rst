@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+0.4.3 - 2024-10-19
+--------------------
+
+Added
+^^^^^
+* None
+
+Changed
+^^^^^^^
+* Changed paths to the S3 bucket evaluations to reference "e*..." instead of "p*..." naming convention.
+
 0.4.2 - 2024-10-18
 --------------------
 
