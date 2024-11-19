@@ -272,31 +272,115 @@ def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
     assert (teehr_values == nc_values).all()
 
 
+def test_validate_and_insert_fews_xml_timeseries(tmpdir):
+    """Test the validate_locations function."""
+    mbrfc_locations = Path(
+        "/mnt/data/ciroh/hefs/fews/sample_xml_timeseries/MEFPP_MBRFC_locations.parquet"
+    )
+    in_filepath = Path(
+        "/mnt/data/ciroh/hefs/fews/sample_xml_timeseries/MEFP.MBRFC.DNVC2LOCAL.SQIN.xml"
+    )
+
+    # from teehr.loading.utils import read_and_convert_xml_to_df
+    # df = read_and_convert_xml_to_df(
+    #     in_filepath="/mnt/data/ciroh/hefs/fews/sample_xml_timeseries/MEFP.MBRFC.DNVC2LOCAL.SQIN.xml",
+    #     field_mapping={
+    #         "value": "value",
+    #         "units": "measurement_unit",
+    #         "locationId": "location_id",
+    #         "ensembleMemberIndex": "ensemble_member_id"
+    #     }
+    # )
+
+    eval = Evaluation(dir_path=tmpdir)
+    eval.enable_logging()
+    eval.clone_template()
+
+    eval.locations.load_spatial(
+        in_path=mbrfc_locations,
+        field_mapping={
+            "locationId": "id",
+            "stationName": "name",
+        }
+    )
+    eval.configurations.add(
+        Configuration(
+            name="mbrfc_hefs",
+            type="primary",
+            description="MBRFC HEFS Data"
+        )
+    )
+    eval.variables.add(
+        Variable(
+            name="SQIN",
+            long_name="HEFS SQIN Forecast Streamflow"
+        )
+    )
+    # "ensembleMemberIndex": "ensemble_member_id",
+    field_mapping = {
+        "value": "value",
+        "units": "unit_name",
+        "locationId": "location_id",
+        "forecastDate": "reference_time"
+    }
+    constant_field_values = {
+        "unit_name": "cfs",
+        "variable_name": "SQIN",
+        "configuration_name": "mbrfc_hefs",
+        "reference_time": None
+    }
+    eval.primary_timeseries.load_xml(
+        in_path=in_filepath,
+        field_mapping=field_mapping,
+        constant_field_values=constant_field_values
+    )
+
+    pass
+
+    # # Compare loaded values with the values in the netcdf file.
+    # primary_df = eval.primary_timeseries.to_pandas()
+    # primary_df.set_index("location_id", inplace=True)
+    # teehr_values = primary_df.loc["77000002"].value.values
+
+    # mizu_ds = xr.open_dataset(MIZU_TIMESERIES_FILEPATH_NC)
+    # nc_values = mizu_ds.where(
+    #     mizu_ds.reachID == 77000002, drop=True
+    # ).KWroutedRunoff.values.ravel()
+
+    # assert (teehr_values == nc_values).all()
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_validate_and_insert_timeseries(
+        # test_validate_and_insert_timeseries(
+        #     tempfile.mkdtemp(
+        #         prefix="1-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_validate_and_insert_timeseries_set_const(
+        #     tempfile.mkdtemp(
+        #         prefix="2-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_validate_and_insert_summa_nc_timeseries(
+        #     tempfile.mkdtemp(
+        #         prefix="3-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_validate_and_insert_mizu_nc_timeseries(
+        #     tempfile.mkdtemp(
+        #         prefix="4-",
+        #         dir=tempdir
+        #     )
+        # )
+        test_validate_and_insert_fews_xml_timeseries(
             tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_validate_and_insert_timeseries_set_const(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_validate_and_insert_summa_nc_timeseries(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        test_validate_and_insert_mizu_nc_timeseries(
-            tempfile.mkdtemp(
-                prefix="4-",
+                prefix="5-",
                 dir=tempdir
             )
         )

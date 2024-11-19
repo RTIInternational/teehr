@@ -9,6 +9,7 @@ from teehr.loading.utils import (
     merge_field_mappings,
     validate_constant_values_dict,
     read_and_convert_netcdf_to_df,
+    read_and_convert_xml_to_df,
     convert_datetime_ns_to_ms
 )
 from teehr.models.tables import Timeseries
@@ -67,6 +68,12 @@ def convert_single_timeseries(
             in_filepath,
             field_mapping,
             **kwargs
+        )
+    elif in_filepath.suffix == ".xml":
+        # read and convert xml file
+        timeseries = read_and_convert_xml_to_df(
+            in_filepath,
+            field_mapping
         )
     else:
         raise ValueError("Unsupported file type.")

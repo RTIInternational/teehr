@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Union, List
 import logging
 import shutil
+import xml.etree.ElementTree as ET
+from xml.dom import minidom
 
 
 logger = logging.getLogger(__name__)
@@ -179,6 +181,91 @@ def read_and_convert_netcdf_to_df(
     df.reset_index(inplace=True)
     return df
 
+# def read_and_convert_xml_to_df_minidom(
+#         in_filepath: Union[str, Path],
+#         field_mapping: dict,
+#         **kwargs
+# ) -> pd.DataFrame:
+#     """Read a xml file and convert to pandas dataframe."""
+#     logger.debug(f"Reading and converting xml file {in_filepath}")
+
+#     hefs_xml = minidom.parse(in_filepath)
+
+#     series = hefs_xml.getElementsByTagName('series')
+#     headers = hefs_xml.getElementsByTagName('header')
+
+
+def strip_namespace(tag):
+    """Strip the namespace from the tag."""
+    return tag.split('}', 1)[-1] if '}' in tag else tag
+
+
+def read_and_convert_xml_to_df(
+        in_filepath: Union[str, Path],
+        field_mapping: dict,
+        event_keys: dict = {
+            "date_key": "date",
+            "time_key": "time",
+            "value_key": "value",
+            "flag_key": "flag"
+        },
+        namespace: str = "http://www.wldelft.nl/fews/PI",
+) -> pd.DataFrame:
+    """Read a xml file and convert to pandas dataframe.
+
+    Specify the event keys to extract the date, time, value, and flag
+    from the timeseries data.
+
+    """
+    logger.debug(f"Reading and converting xml file {in_filepath}")
+
+    tree = ET.parse(in_filepath)
+    root = tree.getroot()
+    namespace = {"xmlns": namespace}
+
+    # TODO: What does this value mean?
+    # timezone = root.find("xmlns:timeZone", namespace).text
+
+    temp_gdfs = []
+
+    timeseries_df_list = []
+    series_tags = root.findall("xmlns:series", namespace)
+    for series in series_tags:
+        timeseries_data = []
+        events = series.findall("xmlns:event", namespace)
+        for event in events:
+            date = event.get(event_keys["date_key"])
+            time = event.get(event_keys["time_key"])
+            value = event.get(event_keys["value_key"])
+            flag = event.get(event_keys["flag_key"])
+            timeseries_data.append(
+                {"date": date, "time": time, "value": value, "flag": flag}
+            )
+        timeseries_df = pd.DataFrame(timeseries_data)
+        timeseries_df["value_time"] = pd.to_datetime(
+            timeseries_df["date"] + " " + timeseries_df["time"]
+        )
+        # Add header info
+        header = series.find("xmlns:header", namespace)
+        if header is not None:
+            for child in header:
+                timeseries_df.loc[:, strip_namespace(child.tag)] = child.text
+
+        # Parse out the columns specified in the field mapping
+        col_subset = [
+            col for col in field_mapping if col in timeseries_df.columns
+        ]
+        timeseries_df_list.append(timeseries_df[col_subset])
+
+        # gdf = gpd.GeoDataFrame(
+        #     data=timeseries_df,
+        #     geometry=gpd.points_from_xy(timeseries_df.x, timeseries_df.y),
+        #     crs="EPSG:4326"
+        # )
+        # temp_gdfs.append(gdf.drop_duplicates(subset=["geometry"]))
+
+    return pd.concat(timeseries_df_list)  # , pd.concat(temp_gdfs)
+
 
 def validate_input_is_parquet(
         in_path: Union[str, Path]
@@ -238,3 +325,23 @@ def validate_input_is_netcdf(
         if not in_path.suffix.endswith(".nc"):
             logger.error("Input file must be a netcdf file.")
             raise ValueError("Input file must be a netcdf file.")
+
+
+def validate_input_is_xml(
+        in_path: Union[str, Path]
+) -> None:
+    """
+    Validate that the input is xml format.
+
+    Check that either the file is a xml file or the directory
+    contains xml files.
+    """
+    in_path = Path(in_path)
+    if in_path.is_dir():
+        if len(list(in_path.glob("**/*.xml"))) == 0:
+            logger.error("No xml files found in the directory.")
+            raise ValueError("No xml files found in the directory.")
+    else:
+        if not in_path.suffix.endswith(".xml"):
+            logger.error("Input file must be an xml file.")
+            raise ValueError("Input file must be an xml file.")

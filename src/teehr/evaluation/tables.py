@@ -68,7 +68,8 @@ from teehr.loading.joined_timeseries import (
 from teehr.loading.utils import (
     validate_input_is_parquet,
     validate_input_is_csv,
-    validate_input_is_netcdf
+    validate_input_is_netcdf,
+    validate_input_is_xml
 )
 import teehr.const as const
 
@@ -1219,6 +1220,60 @@ class PrimaryTimeseriesTable(BaseTable):
         self.primary_cache_dir.mkdir(parents=True, exist_ok=True)
 
         validate_input_is_netcdf(in_path)
+        self._load(
+            in_path=in_path,
+            cache_path=self.primary_cache_dir,
+            pattern=pattern,
+            timeseries_type="primary",
+            field_mapping=field_mapping,
+            constant_field_values=constant_field_values,
+            **kwargs
+        )
+        self._read_spark_df()
+
+    def load_xml(
+        self,
+        in_path: Union[Path, str],
+        pattern: str = "**/*.nc",
+        field_mapping: dict = None,
+        constant_field_values: dict = None,
+        **kwargs
+    ):
+        """Import primary timeseries xml data.
+
+        Parameters
+        ----------
+        in_path : Union[Path, str]
+            Path to the timeseries data (file or directory) in
+            xml file format.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+        constant_field_values : dict, optional
+            A dictionary mapping field names to constant values.
+            Format: {field_name: value}
+        **kwargs
+            Additional keyword arguments are passed to xr.open_dataset().
+
+        Includes validation and importing data to database.
+
+        Notes
+        -----
+
+        The TEEHR Timeseries table schema includes fields:
+
+        - reference_time
+        - value_time
+        - configuration_name
+        - unit_name
+        - variable_name
+        - value
+        - location_id
+        """
+        logger.info(f"Loading primary timeseries netcdf data: {in_path}")
+        self.primary_cache_dir.mkdir(parents=True, exist_ok=True)
+
+        validate_input_is_xml(in_path)
         self._load(
             in_path=in_path,
             cache_path=self.primary_cache_dir,
