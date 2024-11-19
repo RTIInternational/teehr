@@ -24,7 +24,7 @@ def test_get_s3_evaluations_list():
 def test_clone_example_from_s3(tmpdir):
     """Test filter string."""
     ev = Evaluation(tmpdir)
-    ev.clone_from_s3("p0_2_location_example")
+    ev.clone_from_s3("e0_2_location_example")
 
     assert ev.units.to_sdf().count() == 4
     assert ev.variables.to_sdf().count() == 3
@@ -44,7 +44,7 @@ def test_clone_and_subset_example_from_s3(tmpdir):
     """Test filter string."""
     ev = Evaluation(tmpdir)
     ev.clone_from_s3(
-        evaluation_name="p0_2_location_example",
+        evaluation_name="e0_2_location_example",
         primary_location_ids=["usgs-14316700"],
         start_date="2001-09-30 20:00",
         end_date="2010-09-29 20:00"
