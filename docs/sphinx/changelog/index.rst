@@ -1,7 +1,42 @@
 Release Notes
 =============
 
-0.4.0 - 2024-10-08
+0.4.3 - 2024-10-19
+--------------------
+
+Added
+^^^^^
+* None
+
+Changed
+^^^^^^^
+* Changed paths to the S3 bucket evaluations to reference "e*..." instead of "p*..." naming convention.
+
+0.4.2 - 2024-10-18
+--------------------
+
+Added
+^^^^^
+* A test-build-publish workflow to push to PyPI
+
+Changed
+^^^^^^^
+* None
+
+0.4.1 - 2024-10-15
+--------------------
+
+Added
+^^^^^
+* Updated docs to include pages for `grouping`, `filtering` and `Joining` in the User Guide.
+
+Changed
+^^^^^^^
+* Fixed some broken data download links in the User Guide.
+* Fixed the post-install script to install the AWS Spark Jars.
+* Fixed the API doc build.
+
+0.4.0 - 2024-10-13
 --------------------
 
 Added

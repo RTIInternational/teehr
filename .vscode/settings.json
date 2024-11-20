@@ -5,5 +5,12 @@
   "terminal.integrated.env.osx": {
     "PYTHONPATH": "${workspaceFolder}/src"
   },
-  "files.trimTrailingWhitespace": true
+  "files.trimTrailingWhitespace": true,
+  "cSpell.words": [
+    "geospatial",
+    "streamflow",
+    "TEEHR",
+    "timeseries",
+    "USGS"
+  ]
 }

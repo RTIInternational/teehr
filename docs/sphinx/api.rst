@@ -12,12 +12,13 @@ documentation.
 
 
 The Evaluation Class
-====================
+--------------------
 
 The top-level class for interacting with and exploring a TEEHR Evaluation.
 
 .. autosummary::
    :template: custom-class-template.rst
+   :toctree: generated
 
    Evaluation
 
@@ -43,6 +44,7 @@ Classes for creating, describing, and querying the Evaluation dataset tables.
 
 .. autosummary::
    :template: custom-class-template.rst
+   :toctree: generated
 
    BaseTable
    UnitTable
@@ -63,6 +65,7 @@ Fetching NWM and USGS data
 Methods for fetching NWM and USGS data from external sources.
 
 .. autosummary::
+   :toctree: generated
 
    Fetch.usgs_streamflow
    Fetch.nwm_retrospective_points
@@ -78,6 +81,7 @@ Methods for querying and calculating metrics.
 
 .. autosummary::
    :template: custom-class-template.rst
+   :toctree: generated
 
    evaluation.metrics.Metrics
 
@@ -89,6 +93,7 @@ Classes for defining and customizing metrics and bootstrap models.
 
 .. autosummary::
    :template: custom-module-template.rst
+   :toctree: generated
 
    metric_models
    bootstrap_models
@@ -102,16 +107,6 @@ Methods for visualizing Evaluation data.
 
 .. autosummary::
    :template: custom-class-template.rst
+   :toctree: generated
 
    TEEHRDataFrameAccessor
-
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-
-   api_evaluation_index
-   api_dataset_index
-   api_fetch_index
-   api_metrics_index
-   api_visualization_index
