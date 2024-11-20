@@ -73,7 +73,8 @@ def convert_single_timeseries(
         # read and convert xml file
         timeseries = read_and_convert_xml_to_df(
             in_filepath,
-            field_mapping
+            field_mapping,
+            **kwargs
         )
     else:
         raise ValueError("Unsupported file type.")

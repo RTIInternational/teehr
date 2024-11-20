@@ -319,17 +319,16 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
     # "ensembleMemberIndex": "ensemble_member_id",
     field_mapping = {
         "value": "value",
-        "units": "unit_name",
         "locationId": "location_id",
         "forecastDate": "reference_time"
     }
     constant_field_values = {
-        "unit_name": "cfs",
+        "unit_name": "ft^3/s",
         "variable_name": "SQIN",
         "configuration_name": "mbrfc_hefs",
         "reference_time": None
     }
-    eval.primary_timeseries.load_xml(
+    eval.primary_timeseries.load_fews_xml(
         in_path=in_filepath,
         field_mapping=field_mapping,
         constant_field_values=constant_field_values

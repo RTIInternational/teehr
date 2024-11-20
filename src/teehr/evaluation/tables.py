@@ -1205,7 +1205,6 @@ class PrimaryTimeseriesTable(BaseTable):
 
         Notes
         -----
-
         The TEEHR Timeseries table schema includes fields:
 
         - reference_time
@@ -1231,15 +1230,15 @@ class PrimaryTimeseriesTable(BaseTable):
         )
         self._read_spark_df()
 
-    def load_xml(
+    def load_fews_xml(
         self,
         in_path: Union[Path, str],
-        pattern: str = "**/*.nc",
+        pattern: str = "**/*.xml",
         field_mapping: dict = None,
         constant_field_values: dict = None,
-        **kwargs
+        kwargs: dict = {"namespace": "http://www.wldelft.nl/fews/PI"}
     ):
-        """Import primary timeseries xml data.
+        """Import primary timeseries from XML data format.
 
         Parameters
         ----------
@@ -1252,13 +1251,19 @@ class PrimaryTimeseriesTable(BaseTable):
         constant_field_values : dict, optional
             A dictionary mapping field names to constant values.
             Format: {field_name: value}
-        **kwargs
-            Additional keyword arguments are passed to xr.open_dataset().
+        kwargs : dict, optional
+            A dictionary of keywords used when parsing the XML file. Currently,
+            only the namespace is handled, which is set to
+            "http://www.wldelft.nl/fews/PI" by default.
 
         Includes validation and importing data to database.
 
         Notes
         -----
+        This function follows the Delft-FEWS Published Interface (PI)
+        XML format.
+
+        reference: https://publicwiki.deltares.nl/display/FEWSDOC/Dynamic+data
 
         The TEEHR Timeseries table schema includes fields:
 
@@ -1521,6 +1526,66 @@ class SecondaryTimeseriesTable(BaseTable):
         self._load(
             in_path=in_path,
             cache_path=self.secondary_cache_dir,
+            pattern=pattern,
+            timeseries_type="secondary",
+            field_mapping=field_mapping,
+            constant_field_values=constant_field_values,
+            **kwargs
+        )
+        self._read_spark_df()
+
+    def load_fews_xml(
+        self,
+        in_path: Union[Path, str],
+        pattern: str = "**/*.xml",
+        field_mapping: dict = None,
+        constant_field_values: dict = None,
+        kwargs: dict = {"namespace": "http://www.wldelft.nl/fews/PI"}
+    ):
+        """Import secondary timeseries from XML data format.
+
+        Parameters
+        ----------
+        in_path : Union[Path, str]
+            Path to the timeseries data (file or directory) in
+            xml file format.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+        constant_field_values : dict, optional
+            A dictionary mapping field names to constant values.
+            Format: {field_name: value}
+        kwargs : dict, optional
+            A dictionary of keywords used when parsing the XML file. Currently,
+            only the namespace is handled, which is set to
+            "http://www.wldelft.nl/fews/PI" by default.
+
+        Includes validation and importing data to database.
+
+        Notes
+        -----
+        This function follows the Delft-FEWS Published Interface (PI)
+        XML format.
+
+        reference: https://publicwiki.deltares.nl/display/FEWSDOC/Dynamic+data
+
+        The TEEHR Timeseries table schema includes fields:
+
+        - reference_time
+        - value_time
+        - configuration_name
+        - unit_name
+        - variable_name
+        - value
+        - location_id
+        """
+        logger.info(f"Loading primary timeseries netcdf data: {in_path}")
+        self.primary_cache_dir.mkdir(parents=True, exist_ok=True)
+
+        validate_input_is_xml(in_path)
+        self._load(
+            in_path=in_path,
+            cache_path=self.primary_cache_dir,
             pattern=pattern,
             timeseries_type="secondary",
             field_mapping=field_mapping,
