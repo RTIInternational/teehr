@@ -1084,6 +1084,8 @@ class PrimaryTimeseriesTable(BaseTable):
         in_path : Union[Path, str]
             Path to the timeseries data (file or directory) in
             parquet file format.
+        pattern : str, optional (default: "**/*.parquet"),
+            The pattern to match files.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
@@ -1138,6 +1140,8 @@ class PrimaryTimeseriesTable(BaseTable):
         in_path : Union[Path, str]
             Path to the timeseries data (file or directory) in
             csv file format.
+        pattern : str, optional (default: "**/*.csv"),
+            The pattern to match files.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
@@ -1192,6 +1196,8 @@ class PrimaryTimeseriesTable(BaseTable):
         in_path : Union[Path, str]
             Path to the timeseries data (file or directory) in
             netcdf file format.
+        pattern : str, optional (default: "**/*.nc"),
+            The pattern to match files.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
@@ -1234,9 +1240,16 @@ class PrimaryTimeseriesTable(BaseTable):
         self,
         in_path: Union[Path, str],
         pattern: str = "**/*.xml",
-        field_mapping: dict = None,
+        field_mapping: dict = {
+            "locationId": "location_id",
+            "forecastDate": "reference_time",
+            "parameterId": "variable_name",
+            "units": "unit_name",
+            "ensembleId": "configuration_name",
+            # "ensembleMemberIndex": "member_id",
+            "forecastDate": "reference_time"
+        },
         constant_field_values: dict = None,
-        kwargs: dict = {"namespace": "http://www.wldelft.nl/fews/PI"}
     ):
         """Import primary timeseries from XML data format.
 
@@ -1245,16 +1258,24 @@ class PrimaryTimeseriesTable(BaseTable):
         in_path : Union[Path, str]
             Path to the timeseries data (file or directory) in
             xml file format.
+        pattern : str, optional (default: "**/*.xml")
+            The pattern to match files.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
+            Default mapping:
+            {
+                "locationId": "location_id",
+                "forecastDate": "reference_time",
+                "parameterId": "variable_name",
+                "units": "unit_name",
+                "ensembleId": "configuration_name",
+                "ensembleMemberIndex": "member_id",
+                "forecastDate": "reference_time"
+            }
         constant_field_values : dict, optional
             A dictionary mapping field names to constant values.
-            Format: {field_name: value}
-        kwargs : dict, optional
-            A dictionary of keywords used when parsing the XML file. Currently,
-            only the namespace is handled, which is set to
-            "http://www.wldelft.nl/fews/PI" by default.
+            Format: {field_name: value}.
 
         Includes validation and importing data to database.
 
@@ -1264,6 +1285,8 @@ class PrimaryTimeseriesTable(BaseTable):
         XML format.
 
         reference: https://publicwiki.deltares.nl/display/FEWSDOC/Dynamic+data
+
+        The ``value`` and ``value_time`` fields are parsed automatically.
 
         The TEEHR Timeseries table schema includes fields:
 
@@ -1275,7 +1298,7 @@ class PrimaryTimeseriesTable(BaseTable):
         - value
         - location_id
         """
-        logger.info(f"Loading primary timeseries netcdf data: {in_path}")
+        logger.info(f"Loading primary timeseries xml data: {in_path}")
         self.primary_cache_dir.mkdir(parents=True, exist_ok=True)
 
         validate_input_is_xml(in_path)
@@ -1286,7 +1309,6 @@ class PrimaryTimeseriesTable(BaseTable):
             timeseries_type="primary",
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
-            **kwargs
         )
         self._read_spark_df()
 
@@ -1538,9 +1560,16 @@ class SecondaryTimeseriesTable(BaseTable):
         self,
         in_path: Union[Path, str],
         pattern: str = "**/*.xml",
-        field_mapping: dict = None,
+        field_mapping: dict = {
+            "locationId": "location_id",
+            "forecastDate": "reference_time",
+            "parameterId": "variable_name",
+            "units": "unit_name",
+            "ensembleId": "configuration_name",
+            # "ensembleMemberIndex": "member_id",
+            "forecastDate": "reference_time"
+        },
         constant_field_values: dict = None,
-        kwargs: dict = {"namespace": "http://www.wldelft.nl/fews/PI"}
     ):
         """Import secondary timeseries from XML data format.
 
@@ -1549,16 +1578,24 @@ class SecondaryTimeseriesTable(BaseTable):
         in_path : Union[Path, str]
             Path to the timeseries data (file or directory) in
             xml file format.
+        pattern : str, optional (default: "**/*.xml")
+            The pattern to match files.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
+            Default mapping:
+            {
+                "locationId": "location_id",
+                "forecastDate": "reference_time",
+                "parameterId": "variable_name",
+                "units": "unit_name",
+                "ensembleId": "configuration_name",
+                "ensembleMemberIndex": "member_id",
+                "forecastDate": "reference_time"
+            }
         constant_field_values : dict, optional
             A dictionary mapping field names to constant values.
-            Format: {field_name: value}
-        kwargs : dict, optional
-            A dictionary of keywords used when parsing the XML file. Currently,
-            only the namespace is handled, which is set to
-            "http://www.wldelft.nl/fews/PI" by default.
+            Format: {field_name: value}.
 
         Includes validation and importing data to database.
 
@@ -1568,6 +1605,8 @@ class SecondaryTimeseriesTable(BaseTable):
         XML format.
 
         reference: https://publicwiki.deltares.nl/display/FEWSDOC/Dynamic+data
+
+        The ``value`` and ``value_time`` fields are parsed automatically.
 
         The TEEHR Timeseries table schema includes fields:
 
@@ -1579,7 +1618,7 @@ class SecondaryTimeseriesTable(BaseTable):
         - value
         - location_id
         """
-        logger.info(f"Loading primary timeseries netcdf data: {in_path}")
+        logger.info(f"Loading secondary timeseries xml data: {in_path}")
         self.primary_cache_dir.mkdir(parents=True, exist_ok=True)
 
         validate_input_is_xml(in_path)
@@ -1590,7 +1629,6 @@ class SecondaryTimeseriesTable(BaseTable):
             timeseries_type="secondary",
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
-            **kwargs
         )
         self._read_spark_df()
 

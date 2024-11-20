@@ -182,77 +182,85 @@ def read_and_convert_netcdf_to_df(
     return df
 
 
-def strip_namespace(tag):
-    """Strip the namespace from the tag."""
-    return tag.split('}', 1)[-1] if '}' in tag else tag
-
-
 def read_and_convert_xml_to_df(
-        in_filepath: Union[str, Path],
-        field_mapping: dict,
-        **kwargs
+    in_filepath: Union[str, Path],
+    field_mapping: dict,
 ) -> pd.DataFrame:
-    """Read a xml file and convert to pandas dataframe.
-
-    Parameters
-    ----------
-    in_filepath : Union[str, Path]
-        The input xml file.
-    field_mapping : dict
-        The field mapping.
-    **kwargs
-        Keywords for parsing the XML file. Currently only handles the
-        namespace keyword.
-
-    Returns
-    -------
-    pd.DataFrame
-
-    Notes
-    -----
-    This function adheres to the Delft-FEWS Published Interface (PI)
-    XML format.
-
-    reference: https://publicwiki.deltares.nl/display/FEWSDOC/Dynamic+data
-    """
+    """Read an xml file and convert to pandas dataframe."""
     logger.debug(f"Reading and converting xml file {in_filepath}")
 
-    tree = ET.parse(in_filepath)
-    root = tree.getroot()
-    namespace = {"xmlns": kwargs.get("namespace")}
+    inv_field_mapping = {v: k for k, v in field_mapping.items()}
 
-    # This is the offset from UTC in decimal hours.
-    utc_offset = float(root.find("xmlns:timeZone", namespace).text)
+    location_id_kw = inv_field_mapping["location_id"]
+    variable_name_kw = inv_field_mapping["variable_name"]
+    reference_time_kw = inv_field_mapping["reference_time"]
+    unit_name_kw = inv_field_mapping["unit_name"]
+    # member_id_kw = inv_field_mapping["member_id"]
+    configuration_kw = inv_field_mapping["configuration_name"]
 
-    timeseries_df_list = []
-    series_tags = root.findall("xmlns:series", namespace)
-    for series in series_tags:
+    fews_xml = minidom.parse(str(in_filepath))
+
+    utc_offset = pd.Timedelta(
+        float(
+            fews_xml.getElementsByTagName("timeZone")[0].firstChild.nodeValue
+        ),
+        format="H"
+    )
+    series = fews_xml.getElementsByTagName("series")
+
+    timeseries_list = []
+    for member in series:
+        location_id = member.getElementsByTagName(
+            location_id_kw
+        )[0].firstChild.nodeValue
+        variable_name = member.getElementsByTagName(
+            variable_name_kw
+        )[0].firstChild.nodeValue
+        configuration = member.getElementsByTagName(
+            configuration_kw
+        )[0].firstChild.nodeValue
+        # ensemble_member_id = member.getElementsByTagName(
+        #     member_id_kw
+        # )[0].firstChild.nodeValue
+        forecastDate = member.getElementsByTagName(
+            reference_time_kw
+        )[0].getAttribute("date")
+        forecastTime = member.getElementsByTagName(
+            reference_time_kw
+        )[0].getAttribute("time")
+        unit_name = member.getElementsByTagName(
+            unit_name_kw
+        )[0].firstChild.nodeValue
+
+        reference_time = pd.to_datetime(
+            forecastDate + " " + forecastTime
+        ) + utc_offset
+
+        events = member.getElementsByTagName("event")
         timeseries_data = []
-        events = series.findall("xmlns:event", namespace)
         for event in events:
-            date = event.get("date")
-            time = event.get("time")
-            value = event.get("value")
-            timeseries_data.append(
-                {"date": date, "time": time, "value": value}
-            )
-        timeseries_df = pd.DataFrame(timeseries_data)
-        # Combine date and time columns and apply the UTC offset.
-        timeseries_df["value_time"] = pd.to_datetime(
-            timeseries_df["date"] + " " + timeseries_df["time"]
-        ) + pd.Timedelta(utc_offset, format="H")
-        # Add header info.
-        header = series.find("xmlns:header", namespace)
-        if header is not None:
-            for child in header:
-                timeseries_df.loc[:, strip_namespace(child.tag)] = child.text
-        # Parse out the columns specified in the field mapping
-        col_subset = [
-            col for col in field_mapping if col in timeseries_df.columns
-        ]
-        timeseries_df_list.append(timeseries_df[col_subset])
+            event_date = event.getAttribute("date")
+            event_time = event.getAttribute("time")
+            event_value = event.getAttribute("value")
+            value_time = pd.to_datetime(
+                event_date + " " + event_time
+            ) + utc_offset
+            timeseries_data.append({
+                "value": event_value,
+                "value_time": value_time
+            })
 
-    return pd.concat(timeseries_df_list)
+        timeseries_df = pd.DataFrame(timeseries_data)
+        timeseries_df["reference_time"] = reference_time
+        timeseries_df["unit_name"] = unit_name
+        timeseries_df["variable_name"] = variable_name
+        timeseries_df["location_id"] = location_id
+        # timeseries_df["member_id"] = ensemble_member_id
+        timeseries_df["configuration_name"] = configuration
+
+        timeseries_list.append(timeseries_df)
+
+    return pd.concat(timeseries_list)
 
 
 def validate_input_is_parquet(

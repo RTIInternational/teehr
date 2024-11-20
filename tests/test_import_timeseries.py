@@ -274,30 +274,19 @@ def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
 
 def test_validate_and_insert_fews_xml_timeseries(tmpdir):
     """Test the validate_locations function."""
-    mbrfc_locations = Path(
-        "/mnt/data/ciroh/hefs/fews/sample_xml_timeseries/MEFPP_MBRFC_locations.parquet"
+    mbrfc_location = Path(
+        TEST_STUDY_DATA_DIR_v0_4, "geo", "MEFP_MBRFC_location.parquet"
     )
     in_filepath = Path(
-        "/mnt/data/ciroh/hefs/fews/sample_xml_timeseries/MEFP.MBRFC.DNVC2LOCAL.SQIN.xml"
+        TEST_STUDY_DATA_DIR_v0_4, "timeseries", "MEFP.MBRFC.DNVC2LOCAL.SQIN.xml"
     )
-
-    # from teehr.loading.utils import read_and_convert_xml_to_df
-    # df = read_and_convert_xml_to_df(
-    #     in_filepath="/mnt/data/ciroh/hefs/fews/sample_xml_timeseries/MEFP.MBRFC.DNVC2LOCAL.SQIN.xml",
-    #     field_mapping={
-    #         "value": "value",
-    #         "units": "measurement_unit",
-    #         "locationId": "location_id",
-    #         "ensembleMemberIndex": "ensemble_member_id"
-    #     }
-    # )
 
     eval = Evaluation(dir_path=tmpdir)
     eval.enable_logging()
     eval.clone_template()
 
     eval.locations.load_spatial(
-        in_path=mbrfc_locations,
+        in_path=mbrfc_location,
         field_mapping={
             "locationId": "id",
             "stationName": "name",
@@ -305,7 +294,7 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
     )
     eval.configurations.add(
         Configuration(
-            name="mbrfc_hefs",
+            name="MEFP",
             type="primary",
             description="MBRFC HEFS Data"
         )
@@ -316,37 +305,17 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
             long_name="HEFS SQIN Forecast Streamflow"
         )
     )
-    # "ensembleMemberIndex": "ensemble_member_id",
-    field_mapping = {
-        "value": "value",
-        "locationId": "location_id",
-        "forecastDate": "reference_time"
-    }
     constant_field_values = {
         "unit_name": "ft^3/s",
-        "variable_name": "SQIN",
-        "configuration_name": "mbrfc_hefs",
-        "reference_time": None
     }
     eval.primary_timeseries.load_fews_xml(
         in_path=in_filepath,
-        field_mapping=field_mapping,
         constant_field_values=constant_field_values
     )
 
-    pass
-
-    # # Compare loaded values with the values in the netcdf file.
-    # primary_df = eval.primary_timeseries.to_pandas()
-    # primary_df.set_index("location_id", inplace=True)
-    # teehr_values = primary_df.loc["77000002"].value.values
-
-    # mizu_ds = xr.open_dataset(MIZU_TIMESERIES_FILEPATH_NC)
-    # nc_values = mizu_ds.where(
-    #     mizu_ds.reachID == 77000002, drop=True
-    # ).KWroutedRunoff.values.ravel()
-
-    # assert (teehr_values == nc_values).all()
+    df = eval.primary_timeseries.to_pandas()
+    assert df.shape == (99, 7)
+    assert df["location_id"].nunique() == 1
 
 
 if __name__ == "__main__":
