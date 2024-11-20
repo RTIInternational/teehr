@@ -556,8 +556,28 @@ class TEEHRDataFrameAccessor:
                     local_attributes['location_id'] = location
             geo_data[location] = local_attributes
         logger.info("Location attributes geodata assembled.")
+        logger.info("Checking for duplicate attributes...")
+        self._location_attributes_check_duplicates(geo_data=geo_data)
 
         return geo_data
+
+    def _location_attributes_check_duplicates(
+        self,
+        geo_data: dict
+    ):
+        """Check for duplicate attributes."""
+        for location in geo_data.keys():
+            location_data = self._gdf[self._gdf['location_id'] == location]
+            attribute_counts = location_data['attribute_name'].value_counts()
+            for i in range(len(attribute_counts)):
+                attribute_val = attribute_counts.iloc[i]
+                attribute_name = attribute_counts.index[i]
+                if attribute_val > 1:
+                    logger.warning(f"""
+        Location = {location} has multiple entries for
+        attribute = {attribute_name}. Remove duplicates to avoid unintended
+        results.
+                                   """)
 
     def _location_attributes_get_tooltips(
             self,
