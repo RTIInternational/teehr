@@ -664,8 +664,8 @@ class LocationTable(BaseTable):
     def load_spatial(
         self,
         in_path: Union[Path, str],
-        field_mapping: dict = None,
         pattern: str = "**/*.parquet",
+        field_mapping: dict = None,
         **kwargs
     ):
         """Import geometry data.
@@ -675,12 +675,12 @@ class LocationTable(BaseTable):
         in_path : Union[Path, str]
             The input file or directory path.
             Any file format that can be read by GeoPandas.
-        field_mapping : dict, optional
-            A dictionary mapping input fields to output fields.
-            Format: {input_field: output_field}
         pattern : str, optional (default: "**/*.parquet")
             The pattern to match files.
             Only used when in_path is a directory.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
         **kwargs
             Additional keyword arguments are passed to GeoPandas read_file().
 
@@ -786,6 +786,8 @@ class LocationAttributeTable(BaseTable):
         in_path : Union[Path, str]
             The input file or directory path.
             Parquet file format.
+        pattern : str, optional (default: "**/*.parquet")
+            The pattern to match files.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
@@ -824,6 +826,8 @@ class LocationAttributeTable(BaseTable):
         in_path : Union[Path, str]
             The input file or directory path.
             CSV file format.
+        pattern : str, optional (default: "**/*.csv")
+            The pattern to match files.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
@@ -926,6 +930,8 @@ class LocationCrosswalkTable(BaseTable):
         in_path : Union[Path, str]
             The input file or directory path.
             Parquet file format.
+        pattern : str, optional (default: "**/*.parquet")
+            The pattern to match files.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
@@ -964,6 +970,8 @@ class LocationCrosswalkTable(BaseTable):
         in_path : Union[Path, str]
             The input file or directory path.
             CSV file format.
+        pattern : str, optional (default: "**/*.csv")
+            The pattern to match files.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
@@ -1409,6 +1417,8 @@ class SecondaryTimeseriesTable(BaseTable):
         in_path : Union[Path, str]
             Path to the timeseries data (file or directory) in
             parquet file format.
+        pattern : str, optional (default: "**/*.parquet")
+            The pattern to match files.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
@@ -1463,6 +1473,8 @@ class SecondaryTimeseriesTable(BaseTable):
         in_path : Union[Path, str]
             Path to the timeseries data (file or directory) in
             csv file format.
+        pattern : str, optional (default: "**/*.csv")
+            The pattern to match files.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
@@ -1517,6 +1529,8 @@ class SecondaryTimeseriesTable(BaseTable):
         in_path : Union[Path, str]
             Path to the timeseries data (file or directory) in
             netcdf file format.
+        pattern : str, optional (default: "**/*.nc")
+            The pattern to match files.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
