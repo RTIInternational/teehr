@@ -1254,7 +1254,7 @@ class PrimaryTimeseriesTable(BaseTable):
             "parameterId": "variable_name",
             "units": "unit_name",
             "ensembleId": "configuration_name",
-            # "ensembleMemberIndex": "member_id",
+            "ensembleMemberIndex": "member_id",
             "forecastDate": "reference_time"
         },
         constant_field_values: dict = None,
@@ -1580,7 +1580,7 @@ class SecondaryTimeseriesTable(BaseTable):
             "parameterId": "variable_name",
             "units": "unit_name",
             "ensembleId": "configuration_name",
-            # "ensembleMemberIndex": "member_id",
+            "ensembleMemberIndex": "member_id",
             "forecastDate": "reference_time"
         },
         constant_field_values: dict = None,
@@ -1638,7 +1638,7 @@ class SecondaryTimeseriesTable(BaseTable):
         validate_input_is_xml(in_path)
         self._load(
             in_path=in_path,
-            cache_path=self.primary_cache_dir,
+            cache_path=self.secondary_cache_dir,
             pattern=pattern,
             timeseries_type="secondary",
             field_mapping=field_mapping,

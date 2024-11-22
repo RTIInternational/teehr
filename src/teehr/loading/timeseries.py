@@ -264,6 +264,10 @@ def validate_and_insert_timeseries(
                 T.StringType,
                 pa.Check.isin(allowed_location_ids),
                 coerce=True
+            ),
+            "member_id": pa.Column(
+                T.FloatType,
+                coerce=True
             )
         },
         strict=True

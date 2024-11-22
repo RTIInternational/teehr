@@ -1,6 +1,7 @@
 """Test the import_timeseries function in the Evaluation class."""
 from pathlib import Path
 from teehr import Evaluation
+from teehr import Metrics as m
 from teehr.models.tables import (
     Configuration,
     Unit,
@@ -274,11 +275,18 @@ def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
 
 def test_validate_and_insert_fews_xml_timeseries(tmpdir):
     """Test the validate_locations function."""
-    mbrfc_location = Path(
-        TEST_STUDY_DATA_DIR_v0_4, "geo", "MEFP_MBRFC_location.parquet"
+    usgs_location = Path(
+        TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_location.parquet"
     )
-    in_filepath = Path(
-        TEST_STUDY_DATA_DIR_v0_4, "timeseries", "MEFP.MBRFC.DNVC2LOCAL.SQIN.xml"
+    secondary_filepath = Path(
+        TEST_STUDY_DATA_DIR_v0_4,
+        "timeseries",
+        "MEFP.MBRFC.DNVC2LOCAL.SQIN.xml"
+    )
+    primary_filepath = Path(
+        TEST_STUDY_DATA_DIR_v0_4,
+        "timeseries",
+        "usgs_hefs_06711565.parquet"
     )
 
     eval = Evaluation(dir_path=tmpdir)
@@ -286,11 +294,10 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
     eval.clone_template()
 
     eval.locations.load_spatial(
-        in_path=mbrfc_location,
-        field_mapping={
-            "locationId": "id",
-            "stationName": "name",
-        }
+        in_path=usgs_location
+    )
+    eval.location_crosswalks.load_csv(
+        in_path=Path(TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv")
     )
     eval.configurations.add(
         Configuration(
@@ -299,21 +306,32 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
             description="MBRFC HEFS Data"
         )
     )
-    eval.variables.add(
-        Variable(
-            name="SQIN",
-            long_name="HEFS SQIN Forecast Streamflow"
-        )
-    )
     constant_field_values = {
         "unit_name": "ft^3/s",
+        "variable_name": "streamflow_hourly_inst",
     }
-    eval.primary_timeseries.load_fews_xml(
-        in_path=in_filepath,
+    eval.secondary_timeseries.load_fews_xml(
+        in_path=secondary_filepath,
         constant_field_values=constant_field_values
     )
+    eval.primary_timeseries.load_parquet(
+        in_path=primary_filepath
+    )
+    eval.joined_timeseries.create(execute_udf=False)
+    df = eval.joined_timeseries.to_pandas()
 
-    df = eval.primary_timeseries.to_pandas()
+    # Now, metrics.
+    kge = m.KlingGuptaEfficiency()
+    include_metrics = [kge]
+
+    # Define some filters?
+
+    metrics_df = eval.metrics.query(
+        include_metrics=include_metrics,
+        group_by=["primary_location_id", "reference_time"],
+        order_by=["primary_location_id"],
+    ).to_geopandas()
+
     assert df.shape == (99, 7)
     assert df["location_id"].nunique() == 1
 

@@ -76,6 +76,7 @@ def create_joined_df(
             , sf.configuration_name
             , sf.unit_name
             , sf.variable_name
+            , sf.member_id
         FROM sf sf
         JOIN cf cf
             on cf.secondary_location_id = sf.location_id

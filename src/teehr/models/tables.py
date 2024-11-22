@@ -85,6 +85,7 @@ class Timeseries(TableBaseModel):
     variable_name: str
     value: float
     location_id: str
+    member_id: str  # but, not present in primary timeseries
 
 # Note: there is no JoinedTimeseries model in this file because the
 # JoinedTimeseries model is dynamic and the fields can be different
