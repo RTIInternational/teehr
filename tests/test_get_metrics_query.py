@@ -1,6 +1,7 @@
 """Test evaluation class."""
 from teehr import Metrics
 from teehr import Operators as ops
+from teehr.models.tables import Configuration
 import tempfile
 import shutil
 import pandas as pd
@@ -15,6 +16,7 @@ from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 from teehr.evaluation.evaluation import Evaluation
 
 from setup_v0_3_study import setup_v0_3_study
+TEST_STUDY_DATA_DIR_v0_4 = Path("tests", "data", "test_study")
 
 
 BOOT_YEAR_FILE = Path(
@@ -344,43 +346,111 @@ def test_metric_chaining(tmpdir):
     )
 
 
+def test_ensemble_metrics(tmpdir):
+    """Test get_metrics method with ensemble metrics."""
+    usgs_location = Path(
+        TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_location.parquet"
+    )
+    secondary_filepath = Path(
+        TEST_STUDY_DATA_DIR_v0_4,
+        "timeseries",
+        "MEFP.MBRFC.DNVC2LOCAL.SQIN.xml"
+    )
+    primary_filepath = Path(
+        TEST_STUDY_DATA_DIR_v0_4,
+        "timeseries",
+        "usgs_hefs_06711565.parquet"
+    )
+
+    eval = Evaluation(dir_path=tmpdir)
+    eval.enable_logging()
+    eval.clone_template()
+
+    eval.locations.load_spatial(
+        in_path=usgs_location
+    )
+    eval.location_crosswalks.load_csv(
+        in_path=Path(TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv")
+    )
+    eval.configurations.add(
+        Configuration(
+            name="MEFP",
+            type="primary",
+            description="MBRFC HEFS Data"
+        )
+    )
+    constant_field_values = {
+        "unit_name": "ft^3/s",
+        "variable_name": "streamflow_hourly_inst",
+    }
+    eval.secondary_timeseries.load_fews_xml(
+        in_path=secondary_filepath,
+        constant_field_values=constant_field_values
+    )
+    eval.primary_timeseries.load_parquet(
+        in_path=primary_filepath
+    )
+    eval.joined_timeseries.create(execute_udf=False)
+    # df = eval.joined_timeseries.to_pandas()
+
+    # Now, metrics.
+    crps = Metrics.CRPSEnsembleMean()
+    include_metrics = [crps]
+
+    # Define some filters?
+
+    metrics_df = eval.metrics.query(
+        include_metrics=include_metrics,
+        group_by=["primary_location_id", "reference_time"],
+        order_by=["primary_location_id"],
+    ).to_pandas()
+
+    pass
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_get_all_metrics(
+        # test_get_all_metrics(
+        #     tempfile.mkdtemp(
+        #         prefix="1-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_metrics_filter_and_geometry(
+        #     tempfile.mkdtemp(
+        #         prefix="2-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_circularblock_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="3-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_stationary_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="4-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_gumboot_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="5-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_metric_chaining(
+        #     tempfile.mkdtemp(
+        #         prefix="6-",
+        #         dir=tempdir
+        #     )
+        # )
+        test_ensemble_metrics(
             tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_metrics_filter_and_geometry(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_circularblock_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        test_stationary_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
-        test_gumboot_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="5-",
-                dir=tempdir
-            )
-        )
-        test_metric_chaining(
-            tempfile.mkdtemp(
-                prefix="6-",
+                prefix="7-",
                 dir=tempdir
             )
         )

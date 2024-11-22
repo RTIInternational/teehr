@@ -235,3 +235,12 @@ RSR_ATTRS = {
     "optimal_value": 0.0,
     "return_type": "float"
 }
+
+CRPS_ENSEMBLE_ATTRS = {
+    "short_name": "crps_ensemble",
+    "display_name": "Continuous Ranked Probability Score - Ensemble",
+    "category": "Probabilistic",
+    "value_range": [None, None],
+    "optimal_value": 0.0,
+    "return_type": "float"
+}

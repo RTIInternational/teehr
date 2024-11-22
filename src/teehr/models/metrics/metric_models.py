@@ -808,6 +808,36 @@ class RSR(MetricsBasemodel):
     attrs: Dict = Field(default=tma.RSR_ATTRS, frozen=True)
 
 
+# Probabilistic Metrics
+class CRPSensemble(MetricsBasemodel):
+    """Continous Ranked Probability Score - Ensemble.
+
+    Parameters
+    ----------
+    bootstrap : MetricsBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "mean_crps_ensemble".
+    func : Callable
+        The function to apply to the data, by default
+        :func:`metric_funcs.ensemble_crps`.
+    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+        The input field names, by default
+        ["primary_value", "secondary_value", "value_time"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
+
+    output_field_name: str = Field(default="mean_crps_ensemble")
+    func: Callable = metric_funcs.ensemble_crps
+    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+        default=["primary_value", "secondary_value", "value_time"]
+    )
+    attrs: Dict = Field(default=tma.CRPS_ENSEMBLE_ATTRS, frozen=True)
+
+
 class Metrics():
     """Define and customize performance metrics."""
 
@@ -837,3 +867,4 @@ class Metrics():
     Rsquared = R2
     SpearmanCorrelation = SPEARMAN_R
     RootMeanStandardDeviationRatio = RSR
+    CRPSEnsembleMean = CRPSensemble

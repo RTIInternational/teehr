@@ -2,6 +2,7 @@
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+import scoringrules as sr
 
 
 def count(p: pd.Series) -> float:
@@ -293,9 +294,41 @@ def max_value_time(
     return value_time[p.idxmax()]
 
 
-# def secondary_max_value_time(
-#     s: pd.Series,
-#     value_time: pd.Series
-# ) -> pd.Timestamp:
-#     """Secondary max value time."""
-#     return value_time[s.idxmax()]
+# Probabilistic Metrics
+def ensemble_crps(
+    p: pd.Series,
+    s: pd.Series,
+    value_time: pd.Series
+) -> float:
+    """Create a wrapper around scoringrules crps_ensemble.
+
+    Returns
+    -------
+    float
+        The mean Continuous Ranked Probability Score (CRPS) for the ensemble
+        forecast.
+
+    Notes
+    -----
+    prim_arr: A 1-D array of observations at each time step in the forecast.
+
+    sec_arr: A 2-D array of simulations at each time step in the forecast.
+               The first dimension should be the time step, and the second
+               dimension should be the ensemble member.
+
+    This assumes that the input data in grouped by reference time.
+    """
+    # TODO: Probably a better way to do this.
+    primary = []
+    secondary = []
+    for vt in value_time.unique():
+        vt_index = value_time[value_time == vt].index
+        primary.append(p[vt_index].values[0])
+        secondary.append(s[vt_index].values)
+    prim_arr = np.array(primary)
+    sec_arr = np.array(secondary)
+
+    return np.mean(sr.crps_ensemble(prim_arr, sec_arr))
+
+# NOTE: Skill score: skill_score = 1 – test_sim_metric/reference_sim_metric.
+# Answers: How does one model compare to the other?
