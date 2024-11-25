@@ -391,63 +391,64 @@ def test_ensemble_metrics(tmpdir):
         in_path=primary_filepath
     )
     eval.joined_timeseries.create(execute_udf=False)
-    # df = eval.joined_timeseries.to_pandas()
 
     # Now, metrics.
     crps = Metrics.CRPSEnsembleMean()
     include_metrics = [crps]
 
-    # Define some filters?
-
     metrics_df = eval.metrics.query(
         include_metrics=include_metrics,
-        group_by=["primary_location_id", "reference_time"],
+        group_by=[
+            "primary_location_id",
+            "reference_time",
+            "configuration_name"
+        ],
         order_by=["primary_location_id"],
     ).to_pandas()
 
-    pass
+    assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 61.190075)
 
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        # test_get_all_metrics(
-        #     tempfile.mkdtemp(
-        #         prefix="1-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_metrics_filter_and_geometry(
-        #     tempfile.mkdtemp(
-        #         prefix="2-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_circularblock_bootstrapping(
-        #     tempfile.mkdtemp(
-        #         prefix="3-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_stationary_bootstrapping(
-        #     tempfile.mkdtemp(
-        #         prefix="4-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_gumboot_bootstrapping(
-        #     tempfile.mkdtemp(
-        #         prefix="5-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_metric_chaining(
-        #     tempfile.mkdtemp(
-        #         prefix="6-",
-        #         dir=tempdir
-        #     )
-        # )
+        test_get_all_metrics(
+            tempfile.mkdtemp(
+                prefix="1-",
+                dir=tempdir
+            )
+        )
+        test_metrics_filter_and_geometry(
+            tempfile.mkdtemp(
+                prefix="2-",
+                dir=tempdir
+            )
+        )
+        test_circularblock_bootstrapping(
+            tempfile.mkdtemp(
+                prefix="3-",
+                dir=tempdir
+            )
+        )
+        test_stationary_bootstrapping(
+            tempfile.mkdtemp(
+                prefix="4-",
+                dir=tempdir
+            )
+        )
+        test_gumboot_bootstrapping(
+            tempfile.mkdtemp(
+                prefix="5-",
+                dir=tempdir
+            )
+        )
+        test_metric_chaining(
+            tempfile.mkdtemp(
+                prefix="6-",
+                dir=tempdir
+            )
+        )
         test_ensemble_metrics(
             tempfile.mkdtemp(
                 prefix="7-",
