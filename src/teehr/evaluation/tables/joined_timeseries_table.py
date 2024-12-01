@@ -165,16 +165,20 @@ class JoinedTimeseriesTable(TimeseriesTable):
 
         return joined_df
 
-    def create(self, execute_udf: bool = False):
+    def create(self, add_attrs: bool = False, execute_udf: bool = False):
         """Create joined timeseries table.
 
         Parameters
         ----------
         execute_udf : bool, optional
             Execute UDFs, by default False
+        add_attrs : bool, optional
+            Add attributes, by default False
         """
         joined_df = self._join()
-        joined_df = self._add_attr(joined_df)
+
+        if add_attrs:
+            joined_df = self._add_attr(joined_df)
 
         if execute_udf:
             joined_df = self._add_udfs(joined_df)
