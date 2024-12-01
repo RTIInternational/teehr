@@ -2,16 +2,13 @@
 from typing import Union
 from pathlib import Path
 import pandas as pd
-import pandera.pyspark as pa
-import pyspark.sql.types as T
 from teehr.loading.utils import (
-    validate_dataset_structure,
     merge_field_mappings,
     validate_constant_values_dict,
     read_and_convert_netcdf_to_df,
     convert_datetime_ns_to_ms
 )
-from teehr.models.tables import Timeseries
+import teehr.models.pandera_dataframe_schemas as schemas
 
 import logging
 
@@ -23,6 +20,7 @@ def convert_single_timeseries(
     out_filepath: Union[str, Path],
     field_mapping: dict,
     constant_field_values: dict = None,
+    timeseries_type: str = None,
     **kwargs
 ):
     """Convert timeseries data to parquet format.
@@ -55,6 +53,8 @@ def convert_single_timeseries(
     in_filepath = Path(in_filepath)
     out_filepath = Path(out_filepath)
 
+    logger.info(f"Converting timeseries data from: {in_filepath}")
+
     if in_filepath.suffix == ".parquet":
         # read and convert parquet file
         timeseries = pd.read_parquet(in_filepath, **kwargs)
@@ -78,10 +78,19 @@ def convert_single_timeseries(
             timeseries[field] = value
 
     timeseries = timeseries[field_mapping.values()]
-    timeseries = convert_datetime_ns_to_ms(timeseries)
 
+    if timeseries_type == "primary":
+        validated_df = schemas.primary_timeseries_schema(type="pandas").validate(timeseries)
+    elif timeseries_type == "secondary":
+        validated_df = schemas.secondary_timeseries_schema(type="pandas").validate(timeseries)
+    else:
+        raise ValueError("Invalid timeseries type.")
+
+    validated_df = convert_datetime_ns_to_ms(validated_df)
+
+    logger.info(f"Writing timeseries data to: {out_filepath}")
     out_filepath.parent.mkdir(parents=True, exist_ok=True)
-    timeseries.to_parquet(out_filepath)
+    validated_df.to_parquet(out_filepath)
 
 
 def convert_timeseries(
@@ -89,6 +98,7 @@ def convert_timeseries(
     out_path: Union[str, Path],
     field_mapping: dict = None,
     constant_field_values: dict = None,
+    timeseries_type: str = None,
     pattern: str = "**/*.parquet",
     **kwargs
 ):
@@ -120,7 +130,14 @@ def convert_timeseries(
     logger.info(f"Converting timeseries data: {in_path}")
 
     default_field_mapping = {}
-    for field in Timeseries.get_field_names():
+    if timeseries_type == "primary":
+        fields = schemas.primary_timeseries_schema(type="pandas").columns.keys()
+    elif timeseries_type == "secondary":
+        fields = schemas.secondary_timeseries_schema(type="pandas").columns.keys()
+    else:
+        raise ValueError("Invalid timeseries type.")
+
+    for field in fields:
         if field not in default_field_mapping.values():
             default_field_mapping[field] = field
 
@@ -154,6 +171,7 @@ def convert_timeseries(
                 out_filepath,
                 field_mapping,
                 constant_field_values,
+                timeseries_type=timeseries_type,
                 **kwargs
             )
             files_converted += 1
@@ -165,6 +183,7 @@ def convert_timeseries(
             out_filepath,
             field_mapping,
             constant_field_values,
+            timeseries_type=timeseries_type,
             **kwargs
         )
         files_converted += 1
@@ -194,87 +213,21 @@ def validate_and_insert_timeseries(
     in_path = Path(in_path)
     logger.info(f"Validating and inserting timeseries data from {in_path}")
 
-    if not validate_dataset_structure(ev.dataset_dir):
-        raise ValueError("Database structure is not valid.")
-
-    unit_names = ev.units.distinct_values("name")
-    variable_names = ev.variables.distinct_values("name")
-    configuration_names = ev.configurations.distinct_values("name")
-
-    if in_path.is_dir():
-        files = [str(f) for f in in_path.glob(f"{pattern}")]
-    else:
-        files = [str(in_path)]
-
-    timeseries = (ev.spark.read.format("parquet").load(files))
-
     if timeseries_type == "primary":
-        allowed_location_ids = ev.locations.distinct_values("id")
-        timeseries_dir = ev.primary_timeseries_dir
-
+        table = ev.primary_timeseries
     elif timeseries_type == "secondary":
-        allowed_location_ids = (
-            ev.location_crosswalks
-            .distinct_values("secondary_location_id")
-        )
-        timeseries_dir = ev.secondary_timeseries_dir
+        table = ev.secondary_timeseries
     else:
         raise ValueError("Invalid timeseries type.")
 
-    # define schema
-    schema = pa.DataFrameSchema(
-        columns={
-            "reference_time": pa.Column(
-                T.TimestampNTZType,
-                coerce=True,
-                nullable=True
-            ),
-            "value_time": pa.Column(
-                T.TimestampNTZType,
-                coerce=True
-            ),
-            "value": pa.Column(
-                T.FloatType,
-                coerce=True
-            ),
-            "variable_name": pa.Column(
-                T.StringType,
-                pa.Check.isin(variable_names),
-                coerce=True
-            ),
-            "configuration_name": pa.Column(
-                T.StringType,
-                pa.Check.isin(configuration_names),
-                coerce=True
-            ),
-            "unit_name": pa.Column(
-                T.StringType,
-                pa.Check.isin(unit_names),
-                coerce=True
-            ),
-            "location_id": pa.Column(
-                T.StringType,
-                pa.Check.isin(allowed_location_ids),
-                coerce=True
-            )
-        },
-        strict=True
-    )
-    validated_timeseries = schema(timeseries.select(*schema.columns))
+    # Read the converted files to Spark DataFrame
+    df = table._read_files(in_path, pattern)
 
-    df_out_errors = validated_timeseries.pandera.errors
+    # Validate using the _validate() method
+    validated_df = table._validate(df)
 
-    if len(df_out_errors) > 0:
-        raise ValueError(f"Validation errors: {df_out_errors}")
+    # Write to the table
+    table._write_spark_df(validated_df)
 
-    timeseries_dir.mkdir(parents=True, exist_ok=True)
-
-    (
-        validated_timeseries
-        .select(list(schema.columns.keys()))
-        .write
-        .partitionBy("configuration_name", "variable_name")
-        .format("parquet")
-        .mode("overwrite")
-        .save(str(timeseries_dir))
-    )
+    # Reload the table
+    table._load_table()
