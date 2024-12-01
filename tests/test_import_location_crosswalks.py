@@ -26,14 +26,14 @@ def test_convert_location_crosswalk(tmpdir):
 
 def test_validate_and_insert_crosswalks(tmpdir):
     """Test the validate crosswalks function."""
-    eval = Evaluation(dir_path=tmpdir)
-    eval.clone_template()
+    ev = Evaluation(dir_path=tmpdir)
+    ev.clone_template()
 
-    eval.locations.load_spatial(
+    ev.locations.load_spatial(
         in_path=GEOJSON_GAGES_FILEPATH
     )
 
-    eval.location_crosswalks.load_csv(
+    ev.location_crosswalks.load_csv(
         in_path=CROSSWALK_FILEPATH
     )
 

@@ -11,22 +11,22 @@ from setup_v0_3_study import setup_v0_3_study
 
 def test_chain_filter_single_str(tmpdir):
     """Test filter string."""
-    eval = setup_v0_3_study(tmpdir)
-    df = eval.primary_timeseries.filter("location_id = 'gage-A'").to_pandas()
+    ev = setup_v0_3_study(tmpdir)
+    df = ev.primary_timeseries.filter("location_id = 'gage-A'").to_pandas()
     assert len(df) == 26
 
 
 def test_chain_filter_single_str2(tmpdir):
     """Test filter string with invalid id."""
-    eval = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir)
     with pytest.raises(Exception):
-        eval.primary_timeseries.filter("id = 'gage-A'").to_pandas()
+        ev.primary_timeseries.filter("id = 'gage-A'").to_pandas()
 
 
 def test_chain_filter_single_dict(tmpdir):
     """Test filter dict."""
-    eval = setup_v0_3_study(tmpdir)
-    df = eval.primary_timeseries.filter({
+    ev = setup_v0_3_study(tmpdir)
+    df = ev.primary_timeseries.filter({
         "column": "location_id",
         "operator": "=",
         "value": "gage-A"
@@ -36,9 +36,9 @@ def test_chain_filter_single_dict(tmpdir):
 
 def test_chain_filter_single_dict2(tmpdir):
     """Test filter dict with invalid id."""
-    eval = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir)
     with pytest.raises(Exception):
-        eval.primary_timeseries.filter({
+        ev.primary_timeseries.filter({
             "column": "id",
             "operator": "=",
             "value": "gage-A"
@@ -51,9 +51,9 @@ def test_chain_filter_single_model(tmpdir):
         TimeseriesFilter,
         FilterOperators
     )
-    eval = setup_v0_3_study(tmpdir)
-    flds = eval.primary_timeseries.field_enum()
-    df = eval.primary_timeseries.filter(
+    ev = setup_v0_3_study(tmpdir)
+    flds = ev.primary_timeseries.field_enum()
+    df = ev.primary_timeseries.filter(
         TimeseriesFilter(
             column=flds.location_id,
             operator=FilterOperators.eq,
@@ -69,10 +69,10 @@ def test_chain_filter_single_model2(tmpdir):
         TimeseriesFilter,
         FilterOperators
     )
-    eval = setup_v0_3_study(tmpdir)
-    flds = eval.primary_timeseries.field_enum()
+    ev = setup_v0_3_study(tmpdir)
+    flds = ev.primary_timeseries.field_enum()
     with pytest.raises(Exception):
-        eval.primary_timeseries.filter(
+        ev.primary_timeseries.filter(
             TimeseriesFilter(
                 column=flds.id,
                 operator=FilterOperators.eq,
@@ -83,8 +83,8 @@ def test_chain_filter_single_model2(tmpdir):
 
 def test_chain_filter_list_str(tmpdir):
     """Test filter list of strings."""
-    eval = setup_v0_3_study(tmpdir)
-    df = eval.primary_timeseries.filter([
+    ev = setup_v0_3_study(tmpdir)
+    df = ev.primary_timeseries.filter([
         "location_id = 'gage-A'",
         "value_time > '2022-01-01T12:00:00'"
     ]).to_pandas()
@@ -93,8 +93,8 @@ def test_chain_filter_list_str(tmpdir):
 
 def test_chain_filter_list_dict(tmpdir):
     """Test filter list of dicts."""
-    eval = setup_v0_3_study(tmpdir)
-    df = eval.primary_timeseries.filter([
+    ev = setup_v0_3_study(tmpdir)
+    df = ev.primary_timeseries.filter([
         {
             "column": "location_id",
             "operator": "=",
@@ -115,9 +115,9 @@ def test_chain_filter_list_model(tmpdir):
         TimeseriesFilter,
         FilterOperators
     )
-    eval = setup_v0_3_study(tmpdir)
-    flds = eval.primary_timeseries.field_enum()
-    df = eval.primary_timeseries.filter([
+    ev = setup_v0_3_study(tmpdir)
+    flds = ev.primary_timeseries.field_enum()
+    df = ev.primary_timeseries.filter([
         TimeseriesFilter(
             column=flds.location_id,
             operator=FilterOperators.eq,
@@ -134,8 +134,8 @@ def test_chain_filter_list_model(tmpdir):
 
 def test_query_single_str(tmpdir):
     """Test query string."""
-    eval = setup_v0_3_study(tmpdir)
-    df = eval.primary_timeseries.query(
+    ev = setup_v0_3_study(tmpdir)
+    df = ev.primary_timeseries.query(
         filters="location_id = 'gage-A'"
     ).to_pandas()
     assert len(df) == 26
@@ -143,8 +143,8 @@ def test_query_single_str(tmpdir):
 
 def test_query_single_dict(tmpdir):
     """Test query dict."""
-    eval = setup_v0_3_study(tmpdir)
-    df = eval.primary_timeseries.query(
+    ev = setup_v0_3_study(tmpdir)
+    df = ev.primary_timeseries.query(
         filters={
             "column": "location_id",
             "operator": "=",
@@ -160,9 +160,9 @@ def test_query_single_model(tmpdir):
         TimeseriesFilter,
         FilterOperators
     )
-    eval = setup_v0_3_study(tmpdir)
-    flds = eval.primary_timeseries.field_enum()
-    df = eval.primary_timeseries.query(
+    ev = setup_v0_3_study(tmpdir)
+    flds = ev.primary_timeseries.field_enum()
+    df = ev.primary_timeseries.query(
         filters=TimeseriesFilter(
             column=flds.location_id,
             operator=FilterOperators.eq,
@@ -174,8 +174,8 @@ def test_query_single_model(tmpdir):
 
 def test_query_list_str(tmpdir):
     """Test query list of strings."""
-    eval = setup_v0_3_study(tmpdir)
-    df = eval.primary_timeseries.query(
+    ev = setup_v0_3_study(tmpdir)
+    df = ev.primary_timeseries.query(
         filters=[
             "location_id = 'gage-A'",
             "value_time > '2022-01-01T12:00:00'"
@@ -186,8 +186,8 @@ def test_query_list_str(tmpdir):
 
 def test_query_list_dict(tmpdir):
     """Test query list of dicts."""
-    eval = setup_v0_3_study(tmpdir)
-    df = eval.primary_timeseries.query(
+    ev = setup_v0_3_study(tmpdir)
+    df = ev.primary_timeseries.query(
         filters=[
             {
                 "column": "location_id",
@@ -210,9 +210,9 @@ def test_query_list_model(tmpdir):
         TimeseriesFilter,
         FilterOperators
     )
-    eval = setup_v0_3_study(tmpdir)
-    flds = eval.primary_timeseries.field_enum()
-    df = eval.primary_timeseries.query(
+    ev = setup_v0_3_study(tmpdir)
+    flds = ev.primary_timeseries.field_enum()
+    df = ev.primary_timeseries.query(
         filters=[
             TimeseriesFilter(
                 column=flds.location_id,

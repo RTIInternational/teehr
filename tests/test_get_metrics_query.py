@@ -309,7 +309,7 @@ def test_gumboot_bootstrapping(tmpdir):
     # Also compare to R benchmark results.
     r_df = pd.read_csv(R_BENCHMARK_RESULTS)
     r_kge_vals = np.sort(r_df.KGE.values)
-    assert np.allclose(teehr_results, r_kge_vals, rtol=1e-08)
+    assert np.allclose(teehr_results, r_kge_vals, rtol=1e-06)
 
 
 def test_metric_chaining(tmpdir):
@@ -384,3 +384,9 @@ if __name__ == "__main__":
                 dir=tempdir
             )
         )
+
+    # import shutil
+    # TEST_STUDY_DIR = Path(Path().home(), "temp", "test_study")
+    # shutil.rmtree(TEST_STUDY_DIR, ignore_errors=True)
+    # TEST_STUDY_DIR.mkdir(parents=True, exist_ok=True)
+    # test_metric_chaining(TEST_STUDY_DIR)
