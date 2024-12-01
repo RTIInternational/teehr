@@ -2,12 +2,22 @@
 from datetime import datetime
 from typing import Union, Literal, List
 from pathlib import Path
+from teehr.evaluation.tables.attribute_table import AttributeTable
+from teehr.evaluation.tables.configuration_table import ConfigurationTable
+from teehr.evaluation.tables.location_attribute_table import LocationAttributeTable
+from teehr.evaluation.tables.location_crosswalk_table import LocationCrosswalkTable
+from teehr.evaluation.tables.location_table import LocationTable
+from teehr.evaluation.tables.primary_timeseries_table import PrimaryTimeseriesTable
+from teehr.evaluation.tables.secondary_timeseries_table import SecondaryTimeseriesTable
+from teehr.evaluation.tables.unit_table import UnitTable
+from teehr.evaluation.tables.variable_table import VariableTable
+from teehr.evaluation.tables.joined_timeseries_table import JoinedTimeseriesTable
+from teehr.utils.s3path import S3Path
+from teehr.utils.utils import to_path_or_s3path
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
 import logging
-from teehr.loading.utils import (
-    copy_template_to,
-)
+from teehr.loading.utils import copy_template_to
 from teehr.loading.s3.clone_from_s3 import (
     list_s3_evaluations,
     clone_from_s3
@@ -15,18 +25,6 @@ from teehr.loading.s3.clone_from_s3 import (
 import teehr.const as const
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.metrics import Metrics
-from teehr.evaluation.tables import (
-    UnitTable,
-    VariableTable,
-    AttributeTable,
-    ConfigurationTable,
-    LocationTable,
-    LocationAttributeTable,
-    LocationCrosswalkTable,
-    PrimaryTimeseriesTable,
-    SecondaryTimeseriesTable,
-    JoinedTimeseriesTable,
-)
 import pandas as pd
 from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor # noqa
 
@@ -42,7 +40,7 @@ class Evaluation:
 
     def __init__(
         self,
-        dir_path: Union[str, Path],
+        dir_path: Union[str, Path, S3Path],
         create_dir: bool = False,
         spark: SparkSession = None
     ):
@@ -51,55 +49,60 @@ class Evaluation:
 
         Parameters
         ----------
-        dir_path : Union[str, Path]
+        dir_path : Union[str, Path, S3Path]
             The path to the evaluation directory.
         spark : SparkSession, optional
             The SparkSession object, by default None
         """
-        self.dir_path = dir_path
+        self.dir_path = to_path_or_s3path(dir_path)
+        self.is_s3 = False
+        if isinstance(self.dir_path, S3Path):
+            self.is_s3 = True
+            logger.info(f"Using S3 path {self.dir_path}.  Evaluation will be read-only")
+
         self.spark = spark
 
-        self.dataset_dir = Path(
+        self.dataset_dir = to_path_or_s3path(
             self.dir_path, const.DATASET_DIR
         )
-        self.cache_dir = Path(
+        self.cache_dir = to_path_or_s3path(
             self.dir_path, const.CACHE_DIR
         )
-        self.scripts_dir = Path(
+        self.scripts_dir = to_path_or_s3path(
             self.dir_path, const.SCRIPTS_DIR
         )
-        self.units_dir = Path(
+        self.units_dir = to_path_or_s3path(
             self.dataset_dir, const.UNITS_DIR
         )
-        self.variables_dir = Path(
+        self.variables_dir = to_path_or_s3path(
             self.dataset_dir, const.VARIABLES_DIR
         )
-        self.configurations_dir = Path(
+        self.configurations_dir = to_path_or_s3path(
             self.dataset_dir, const.CONFIGURATIONS_DIR
         )
-        self.attributes_dir = Path(
+        self.attributes_dir = to_path_or_s3path(
             self.dataset_dir, const.ATTRIBUTES_DIR
         )
-        self.locations_dir = Path(
+        self.locations_dir = to_path_or_s3path(
             self.dataset_dir, const.LOCATIONS_DIR
         )
-        self.location_crosswalks_dir = Path(
+        self.location_crosswalks_dir = to_path_or_s3path(
             self.dataset_dir, const.LOCATION_CROSSWALKS_DIR
         )
-        self.location_attributes_dir = Path(
+        self.location_attributes_dir = to_path_or_s3path(
             self.dataset_dir, const.LOCATION_ATTRIBUTES_DIR
         )
-        self.primary_timeseries_dir = Path(
+        self.primary_timeseries_dir = to_path_or_s3path(
             self.dataset_dir, const.PRIMARY_TIMESERIES_DIR
         )
-        self.secondary_timeseries_dir = Path(
+        self.secondary_timeseries_dir = to_path_or_s3path(
             self.dataset_dir, const.SECONDARY_TIMESERIES_DIR
         )
-        self.joined_timeseries_dir = Path(
+        self.joined_timeseries_dir = to_path_or_s3path(
             self.dataset_dir, const.JOINED_TIMESERIES_DIR
         )
 
-        if not Path(self.dir_path).is_dir():
+        if not self.is_s3 and not Path(self.dir_path).is_dir():
             if create_dir:
                 logger.info(f"Creating directory {self.dir_path}.")
                 Path(self.dir_path).mkdir(parents=True, exist_ok=True)
@@ -118,6 +121,7 @@ class Evaluation:
                 .set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
                 .set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider")
                 .set("spark.sql.execution.arrow.pyspark.enabled", "true")
+                .set("spark.sql.session.timeZone", "UTC")
             )
             self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
 
@@ -284,13 +288,16 @@ class Evaluation:
         self.cache_dir.rmdir()
         self.cache_dir.mkdir()
 
-    def sql(self, query: str):
+    def sql(self, query: str, create_temp_views: List[str] = None):
         """Run a SQL query on the Spark session against the TEEHR tables.
 
         Parameters
         ----------
         query : str
             The SQL query to run.
+        create_temp_views : List[str], optional
+            A list of tables to create temporary views for.
+            The default is None which creates all.
 
         Returns
         -------
@@ -298,7 +305,7 @@ class Evaluation:
             The result of the SQL query.
             This is lazily evaluated so you need to call an action (e.g., sdf.show()) to get the result.
 
-        This method has access to the following tables preloaded as temporary views:
+        By default this method has access to the following tables preloaded as temporary views:
             - units
             - variables
             - attributes
@@ -310,15 +317,39 @@ class Evaluation:
             - secondary_timeseries
             - joined_timeseries
         """
-        self.units.to_sdf().createOrReplaceTempView("units")
-        self.variables.to_sdf().createOrReplaceTempView("variables")
-        self.attributes.to_sdf().createOrReplaceTempView("attributes")
-        self.configurations.to_sdf().createOrReplaceTempView("configurations")
-        self.locations.to_sdf().createOrReplaceTempView("locations")
-        self.location_attributes.to_sdf().createOrReplaceTempView("location_attributes")
-        self.location_crosswalks.to_sdf().createOrReplaceTempView("location_crosswalks")
-        self.primary_timeseries.to_sdf().createOrReplaceTempView("primary_timeseries")
-        self.secondary_timeseries.to_sdf().createOrReplaceTempView("secondary_timeseries")
-        self.joined_timeseries.to_sdf().createOrReplaceTempView("joined_timeseries")
+        if not create_temp_views:
+            create_temp_views = [
+                "units",
+                "variables",
+                "attributes",
+                "configurations",
+                "locations",
+                "location_attributes",
+                "location_crosswalks",
+                "primary_timeseries",
+                "secondary_timeseries",
+                "joined_timeseries"
+            ]
+
+        if "units" in create_temp_views:
+            self.units.to_sdf().createOrReplaceTempView("units")
+        if "variables" in create_temp_views:
+            self.variables.to_sdf().createOrReplaceTempView("variables")
+        if "attributes" in create_temp_views:
+            self.attributes.to_sdf().createOrReplaceTempView("attributes")
+        if "configurations" in create_temp_views:
+            self.configurations.to_sdf().createOrReplaceTempView("configurations")
+        if "locations" in create_temp_views:
+            self.locations.to_sdf().createOrReplaceTempView("locations")
+        if "location_attributes" in create_temp_views:
+            self.location_attributes.to_sdf().createOrReplaceTempView("location_attributes")
+        if "location_crosswalks" in create_temp_views:
+            self.location_crosswalks.to_sdf().createOrReplaceTempView("location_crosswalks")
+        if "primary_timeseries" in create_temp_views:
+            self.primary_timeseries.to_sdf().createOrReplaceTempView("primary_timeseries")
+        if "secondary_timeseries" in create_temp_views:
+            self.secondary_timeseries.to_sdf().createOrReplaceTempView("secondary_timeseries")
+        if "joined_timeseries" in create_temp_views:
+            self.joined_timeseries.to_sdf().createOrReplaceTempView("joined_timeseries")
 
         return self.spark.sql(query)
