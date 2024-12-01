@@ -36,6 +36,7 @@ from teehr.fetching.const import (
     VARIABLE_NAME,
     CONFIGURATION_NAME
 )
+import teehr.models.pandera_dataframe_schemas as schemas
 
 
 logger = logging.getLogger(__name__)
@@ -195,17 +196,19 @@ def write_parquet_file(
     """
     logger.debug(f"Writing parquet file: {filepath}")
 
+    if isinstance(data, pa.Table):
+        df = data.to_pandas()
+    else:
+        df = data
+
+    schema = schemas.primary_timeseries_schema(type="pandas")
+    validated_df = schema.validate(df)
+
     if not filepath.is_file():
-        if isinstance(data, pa.Table):
-            pq.write_table(data, filepath)
-        else:
-            data.to_parquet(filepath)
+        validated_df.to_parquet(filepath)
     elif filepath.is_file() and overwrite_output:
         logger.info(f"Overwriting {filepath.name}")
-        if isinstance(data, pa.Table):
-            pq.write_table(data, filepath)
-        else:
-            data.to_parquet(filepath)
+        validated_df.to_parquet(filepath)
     elif filepath.is_file() and not overwrite_output:
         logger.info(
             f"{filepath.name} already exists and overwrite_output=False;"
