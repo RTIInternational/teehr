@@ -253,7 +253,7 @@ def location_attributes_schema(
                     coerce=True
                 )
             },
-            strict=True
+            strict="filter"
         )
     if type == "pyspark":
         return ps.DataFrameSchema(
@@ -294,7 +294,7 @@ def location_crosswalks_schema(
                     coerce=True
                 )
             },
-            strict=True
+            strict="filter"
         )
     if type == "pyspark":
         return ps.DataFrameSchema(
