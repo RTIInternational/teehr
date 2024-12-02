@@ -1,0 +1,6 @@
+teehr.metric\_funcs.sum
+=======================
+
+.. currentmodule:: teehr
+
+.. autofunction:: metric_funcs.sum

@@ -1,0 +1,166 @@
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/site-packages/jupyter_cache/executors/utils.py", line 58, in single_nb_execution
+    executenb(
+  File "/opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/site-packages/nbclient/client.py", line 1314, in execute
+    return NotebookClient(nb=nb, resources=resources, km=km, **kwargs).execute()
+  File "/opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/site-packages/jupyter_core/utils/__init__.py", line 165, in wrapped
+    return loop.run_until_complete(inner)
+  File "/opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/asyncio/base_events.py", line 649, in run_until_complete
+    return future.result()
+  File "/opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/site-packages/nbclient/client.py", line 709, in async_execute
+    await self.async_execute_cell(
+  File "/opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/site-packages/nbclient/client.py", line 1062, in async_execute_cell
+    await self._check_raise_for_error(cell, cell_index, exec_reply)
+  File "/opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/site-packages/nbclient/client.py", line 918, in _check_raise_for_error
+    raise CellExecutionError.from_cell_and_msg(cell, exec_reply_content)
+nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
+------------------
+# Clone the e0_2_location_example evaluation from the S3 bucket
+ev.clone_from_s3("e0_2_location_example")
+------------------
+
+----- stderr -----
+24/12/02 16:47:15 WARN FileStreamSink: Assume no metadata directory. Error while looking for metadata directory in the path: s3a://ciroh-rti-public-data/teehr-data-warehouse/v0_4_evaluations/e0_2_location_example/dataset/units/.
+java.lang.RuntimeException: java.lang.ClassNotFoundException: Class org.apache.hadoop.fs.s3a.S3AFileSystem not found
+	at org.apache.hadoop.conf.Configuration.getClass(Configuration.java:2688)
+	at org.apache.hadoop.fs.FileSystem.getFileSystemClass(FileSystem.java:3431)
+	at org.apache.hadoop.fs.FileSystem.createFileSystem(FileSystem.java:3466)
+	at org.apache.hadoop.fs.FileSystem.access$300(FileSystem.java:174)
+	at org.apache.hadoop.fs.FileSystem$Cache.getInternal(FileSystem.java:3574)
+	at org.apache.hadoop.fs.FileSystem$Cache.get(FileSystem.java:3521)
+	at org.apache.hadoop.fs.FileSystem.get(FileSystem.java:540)
+	at org.apache.hadoop.fs.Path.getFileSystem(Path.java:365)
+	at org.apache.spark.sql.execution.streaming.FileStreamSink$.hasMetadata(FileStreamSink.scala:53)
+	at org.apache.spark.sql.execution.datasources.DataSource.resolveRelation(DataSource.scala:366)
+	at org.apache.spark.sql.DataFrameReader.loadV1Source(DataFrameReader.scala:229)
+	at org.apache.spark.sql.DataFrameReader.$anonfun$load$2(DataFrameReader.scala:211)
+	at scala.Option.getOrElse(Option.scala:189)
+	at org.apache.spark.sql.DataFrameReader.load(DataFrameReader.scala:211)
+	at org.apache.spark.sql.DataFrameReader.load(DataFrameReader.scala:186)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at py4j.reflection.MethodInvoker.invoke(MethodInvoker.java:244)
+	at py4j.reflection.ReflectionEngine.invoke(ReflectionEngine.java:374)
+	at py4j.Gateway.invoke(Gateway.java:282)
+	at py4j.commands.AbstractCommand.invokeMethod(AbstractCommand.java:132)
+	at py4j.commands.CallCommand.execute(CallCommand.java:79)
+	at py4j.ClientServerConnection.waitForCommands(ClientServerConnection.java:182)
+	at py4j.ClientServerConnection.run(ClientServerConnection.java:106)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+Caused by: java.lang.ClassNotFoundException: Class org.apache.hadoop.fs.s3a.S3AFileSystem not found
+	at org.apache.hadoop.conf.Configuration.getClassByName(Configuration.java:2592)
+	at org.apache.hadoop.conf.Configuration.getClass(Configuration.java:2686)
+	... 26 more
+------------------
+
+[0;31m---------------------------------------------------------------------------[0m
+[0;31mPy4JJavaError[0m                             Traceback (most recent call last)
+Cell [0;32mIn[4], line 2[0m
+[1;32m      1[0m [38;5;66;03m# Clone the e0_2_location_example evaluation from the S3 bucket[39;00m
+[0;32m----> 2[0m [43mev[49m[38;5;241;43m.[39;49m[43mclone_from_s3[49m[43m([49m[38;5;124;43m"[39;49m[38;5;124;43me0_2_location_example[39;49m[38;5;124;43m"[39;49m[43m)[49m
+
+File [0;32m~/work/teehr/teehr/src/teehr/evaluation/evaluation.py:262[0m, in [0;36mEvaluation.clone_from_s3[0;34m(self, evaluation_name, primary_location_ids, start_date, end_date)[0m
+[1;32m    259[0m     logger[38;5;241m.[39merror([38;5;124m"[39m[38;5;124mCannot clone from S3 to S3.[39m[38;5;124m"[39m)
+[1;32m    260[0m     [38;5;28;01mraise[39;00m [38;5;167;01mException[39;00m([38;5;124m"[39m[38;5;124mCannot clone from S3 to S3.[39m[38;5;124m"[39m)
+[0;32m--> 262[0m [38;5;28;01mreturn[39;00m [43mclone_from_s3[49m[43m([49m
+[1;32m    263[0m [43m    [49m[38;5;28;43mself[39;49m[43m,[49m
+[1;32m    264[0m [43m    [49m[43mevaluation_name[49m[43m,[49m
+[1;32m    265[0m [43m    [49m[43mprimary_location_ids[49m[43m,[49m
+[1;32m    266[0m [43m    [49m[43mstart_date[49m[43m,[49m
+[1;32m    267[0m [43m    [49m[43mend_date[49m
+[1;32m    268[0m [43m[49m[43m)[49m
+
+File [0;32m~/work/teehr/teehr/src/teehr/loading/s3/clone_from_s3.py:177[0m, in [0;36mclone_from_s3[0;34m(ev, evaluation_name, primary_location_ids, start_date, end_date)[0m
+[1;32m    173[0m Path(table[38;5;241m.[39mdir)[38;5;241m.[39mmkdir()
+[1;32m    175[0m logger[38;5;241m.[39mdebug([38;5;124mf[39m[38;5;124m"[39m[38;5;124mCloning [39m[38;5;132;01m{[39;00mtable[38;5;241m.[39mname[38;5;132;01m}[39;00m[38;5;124m from [39m[38;5;132;01m{[39;00ms3_dataset_path[38;5;132;01m}[39;00m[38;5;124m/[39m[38;5;132;01m{[39;00mtable[38;5;241m.[39mname[38;5;132;01m}[39;00m[38;5;124m/ to [39m[38;5;132;01m{[39;00mtable[38;5;241m.[39mdir[38;5;132;01m}[39;00m[38;5;124m"[39m)
+[0;32m--> 177[0m sdf_in [38;5;241m=[39m [43mtable[49m[38;5;241;43m.[39;49m[43m_read_files[49m[43m([49m[43mpath[49m[38;5;241;43m=[39;49m[38;5;124;43mf[39;49m[38;5;124;43m"[39;49m[38;5;132;43;01m{[39;49;00m[43ms3_dataset_path[49m[38;5;132;43;01m}[39;49;00m[38;5;124;43m/[39;49m[38;5;132;43;01m{[39;49;00m[43mtable[49m[38;5;241;43m.[39;49m[43mname[49m[38;5;132;43;01m}[39;49;00m[38;5;124;43m/[39;49m[38;5;124;43m"[39;49m[43m)[49m
+[1;32m    179[0m sdf_in [38;5;241m=[39m subset_the_table(
+[1;32m    180[0m     ev[38;5;241m=[39mev,
+[1;32m    181[0m     sdf_in[38;5;241m=[39msdf_in,
+[0;32m   (...)[0m
+[1;32m    185[0m     end_date[38;5;241m=[39mend_date
+[1;32m    186[0m )
+[1;32m    188[0m table[38;5;241m.[39m_write_spark_df(sdf_in)
+
+File [0;32m~/work/teehr/teehr/src/teehr/evaluation/tables/base_table.py:79[0m, in [0;36mBaseTable._read_files[0;34m(self, path, pattern, **options)[0m
+[1;32m     76[0m path [38;5;241m=[39m path_to_spark(path, pattern)
+[1;32m     78[0m [38;5;66;03m# May need to deal with empty files here.[39;00m
+[0;32m---> 79[0m df [38;5;241m=[39m [38;5;28;43mself[39;49m[38;5;241;43m.[39;49m[43mev[49m[38;5;241;43m.[39;49m[43mspark[49m[38;5;241;43m.[39;49m[43mread[49m[38;5;241;43m.[39;49m[43mformat[49m[43m([49m[38;5;28;43mself[39;49m[38;5;241;43m.[39;49m[43mformat[49m[43m)[49m[38;5;241;43m.[39;49m[43moptions[49m[43m([49m[38;5;241;43m*[39;49m[38;5;241;43m*[39;49m[43moptions[49m[43m)[49m[38;5;241;43m.[39;49m[43mload[49m[43m([49m[43mpath[49m[43m)[49m
+[1;32m     81[0m [38;5;28;01mreturn[39;00m df
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/site-packages/pyspark/sql/readwriter.py:307[0m, in [0;36mDataFrameReader.load[0;34m(self, path, format, schema, **options)[0m
+[1;32m    305[0m [38;5;28mself[39m[38;5;241m.[39moptions([38;5;241m*[39m[38;5;241m*[39moptions)
+[1;32m    306[0m [38;5;28;01mif[39;00m [38;5;28misinstance[39m(path, [38;5;28mstr[39m):
+[0;32m--> 307[0m     [38;5;28;01mreturn[39;00m [38;5;28mself[39m[38;5;241m.[39m_df([38;5;28;43mself[39;49m[38;5;241;43m.[39;49m[43m_jreader[49m[38;5;241;43m.[39;49m[43mload[49m[43m([49m[43mpath[49m[43m)[49m)
+[1;32m    308[0m [38;5;28;01melif[39;00m path [38;5;129;01mis[39;00m [38;5;129;01mnot[39;00m [38;5;28;01mNone[39;00m:
+[1;32m    309[0m     [38;5;28;01mif[39;00m [38;5;28mtype[39m(path) [38;5;241m!=[39m [38;5;28mlist[39m:
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/site-packages/py4j/java_gateway.py:1322[0m, in [0;36mJavaMember.__call__[0;34m(self, *args)[0m
+[1;32m   1316[0m command [38;5;241m=[39m proto[38;5;241m.[39mCALL_COMMAND_NAME [38;5;241m+[39m\
+[1;32m   1317[0m     [38;5;28mself[39m[38;5;241m.[39mcommand_header [38;5;241m+[39m\
+[1;32m   1318[0m     args_command [38;5;241m+[39m\
+[1;32m   1319[0m     proto[38;5;241m.[39mEND_COMMAND_PART
+[1;32m   1321[0m answer [38;5;241m=[39m [38;5;28mself[39m[38;5;241m.[39mgateway_client[38;5;241m.[39msend_command(command)
+[0;32m-> 1322[0m return_value [38;5;241m=[39m [43mget_return_value[49m[43m([49m
+[1;32m   1323[0m [43m    [49m[43manswer[49m[43m,[49m[43m [49m[38;5;28;43mself[39;49m[38;5;241;43m.[39;49m[43mgateway_client[49m[43m,[49m[43m [49m[38;5;28;43mself[39;49m[38;5;241;43m.[39;49m[43mtarget_id[49m[43m,[49m[43m [49m[38;5;28;43mself[39;49m[38;5;241;43m.[39;49m[43mname[49m[43m)[49m
+[1;32m   1325[0m [38;5;28;01mfor[39;00m temp_arg [38;5;129;01min[39;00m temp_args:
+[1;32m   1326[0m     [38;5;28;01mif[39;00m [38;5;28mhasattr[39m(temp_arg, [38;5;124m"[39m[38;5;124m_detach[39m[38;5;124m"[39m):
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/site-packages/pyspark/errors/exceptions/captured.py:179[0m, in [0;36mcapture_sql_exception.<locals>.deco[0;34m(*a, **kw)[0m
+[1;32m    177[0m [38;5;28;01mdef[39;00m [38;5;21mdeco[39m([38;5;241m*[39ma: Any, [38;5;241m*[39m[38;5;241m*[39mkw: Any) [38;5;241m-[39m[38;5;241m>[39m Any:
+[1;32m    178[0m     [38;5;28;01mtry[39;00m:
+[0;32m--> 179[0m         [38;5;28;01mreturn[39;00m [43mf[49m[43m([49m[38;5;241;43m*[39;49m[43ma[49m[43m,[49m[43m [49m[38;5;241;43m*[39;49m[38;5;241;43m*[39;49m[43mkw[49m[43m)[49m
+[1;32m    180[0m     [38;5;28;01mexcept[39;00m Py4JJavaError [38;5;28;01mas[39;00m e:
+[1;32m    181[0m         converted [38;5;241m=[39m convert_exception(e[38;5;241m.[39mjava_exception)
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.15/x64/lib/python3.10/site-packages/py4j/protocol.py:326[0m, in [0;36mget_return_value[0;34m(answer, gateway_client, target_id, name)[0m
+[1;32m    324[0m value [38;5;241m=[39m OUTPUT_CONVERTER[[38;5;28mtype[39m](answer[[38;5;241m2[39m:], gateway_client)
+[1;32m    325[0m [38;5;28;01mif[39;00m answer[[38;5;241m1[39m] [38;5;241m==[39m REFERENCE_TYPE:
+[0;32m--> 326[0m     [38;5;28;01mraise[39;00m Py4JJavaError(
+[1;32m    327[0m         [38;5;124m"[39m[38;5;124mAn error occurred while calling [39m[38;5;132;01m{0}[39;00m[38;5;132;01m{1}[39;00m[38;5;132;01m{2}[39;00m[38;5;124m.[39m[38;5;130;01m\n[39;00m[38;5;124m"[39m[38;5;241m.[39m
+[1;32m    328[0m         [38;5;28mformat[39m(target_id, [38;5;124m"[39m[38;5;124m.[39m[38;5;124m"[39m, name), value)
+[1;32m    329[0m [38;5;28;01melse[39;00m:
+[1;32m    330[0m     [38;5;28;01mraise[39;00m Py4JError(
+[1;32m    331[0m         [38;5;124m"[39m[38;5;124mAn error occurred while calling [39m[38;5;132;01m{0}[39;00m[38;5;132;01m{1}[39;00m[38;5;132;01m{2}[39;00m[38;5;124m. Trace:[39m[38;5;130;01m\n[39;00m[38;5;132;01m{3}[39;00m[38;5;130;01m\n[39;00m[38;5;124m"[39m[38;5;241m.[39m
+[1;32m    332[0m         [38;5;28mformat[39m(target_id, [38;5;124m"[39m[38;5;124m.[39m[38;5;124m"[39m, name, value))
+
+[0;31mPy4JJavaError[0m: An error occurred while calling o39.load.
+: java.lang.RuntimeException: java.lang.ClassNotFoundException: Class org.apache.hadoop.fs.s3a.S3AFileSystem not found
+	at org.apache.hadoop.conf.Configuration.getClass(Configuration.java:2688)
+	at org.apache.hadoop.fs.FileSystem.getFileSystemClass(FileSystem.java:3431)
+	at org.apache.hadoop.fs.FileSystem.createFileSystem(FileSystem.java:3466)
+	at org.apache.hadoop.fs.FileSystem.access$300(FileSystem.java:174)
+	at org.apache.hadoop.fs.FileSystem$Cache.getInternal(FileSystem.java:3574)
+	at org.apache.hadoop.fs.FileSystem$Cache.get(FileSystem.java:3521)
+	at org.apache.hadoop.fs.FileSystem.get(FileSystem.java:540)
+	at org.apache.hadoop.fs.Path.getFileSystem(Path.java:365)
+	at org.apache.spark.sql.execution.datasources.DataSource$.$anonfun$checkAndGlobPathIfNecessary$1(DataSource.scala:724)
+	at scala.collection.immutable.List.map(List.scala:293)
+	at org.apache.spark.sql.execution.datasources.DataSource$.checkAndGlobPathIfNecessary(DataSource.scala:722)
+	at org.apache.spark.sql.execution.datasources.DataSource.checkAndGlobPathIfNecessary(DataSource.scala:551)
+	at org.apache.spark.sql.execution.datasources.DataSource.resolveRelation(DataSource.scala:404)
+	at org.apache.spark.sql.DataFrameReader.loadV1Source(DataFrameReader.scala:229)
+	at org.apache.spark.sql.DataFrameReader.$anonfun$load$2(DataFrameReader.scala:211)
+	at scala.Option.getOrElse(Option.scala:189)
+	at org.apache.spark.sql.DataFrameReader.load(DataFrameReader.scala:211)
+	at org.apache.spark.sql.DataFrameReader.load(DataFrameReader.scala:186)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at py4j.reflection.MethodInvoker.invoke(MethodInvoker.java:244)
+	at py4j.reflection.ReflectionEngine.invoke(ReflectionEngine.java:374)
+	at py4j.Gateway.invoke(Gateway.java:282)
+	at py4j.commands.AbstractCommand.invokeMethod(AbstractCommand.java:132)
+	at py4j.commands.CallCommand.execute(CallCommand.java:79)
+	at py4j.ClientServerConnection.waitForCommands(ClientServerConnection.java:182)
+	at py4j.ClientServerConnection.run(ClientServerConnection.java:106)
+	at java.base/java.lang.Thread.run(Thread.java:829)
+Caused by: java.lang.ClassNotFoundException: Class org.apache.hadoop.fs.s3a.S3AFileSystem not found
+	at org.apache.hadoop.conf.Configuration.getClassByName(Configuration.java:2592)
+	at org.apache.hadoop.conf.Configuration.getClass(Configuration.java:2686)
+	... 29 more
+
+

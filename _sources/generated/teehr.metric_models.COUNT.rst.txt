@@ -1,0 +1,61 @@
+teehr.metric\_models.COUNT
+==========================
+
+.. currentmodule:: teehr
+
+.. autoclass:: metric_models.COUNT
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~metric_models.COUNT.construct
+      ~metric_models.COUNT.copy
+      ~metric_models.COUNT.dict
+      ~metric_models.COUNT.from_orm
+      ~metric_models.COUNT.json
+      ~metric_models.COUNT.model_construct
+      ~metric_models.COUNT.model_copy
+      ~metric_models.COUNT.model_dump
+      ~metric_models.COUNT.model_dump_json
+      ~metric_models.COUNT.model_json_schema
+      ~metric_models.COUNT.model_parametrized_name
+      ~metric_models.COUNT.model_post_init
+      ~metric_models.COUNT.model_rebuild
+      ~metric_models.COUNT.model_validate
+      ~metric_models.COUNT.model_validate_json
+      ~metric_models.COUNT.model_validate_strings
+      ~metric_models.COUNT.parse_file
+      ~metric_models.COUNT.parse_obj
+      ~metric_models.COUNT.parse_raw
+      ~metric_models.COUNT.schema
+      ~metric_models.COUNT.schema_json
+      ~metric_models.COUNT.update_forward_refs
+      ~metric_models.COUNT.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~metric_models.COUNT.model_computed_fields
+      ~metric_models.COUNT.model_config
+      ~metric_models.COUNT.model_extra
+      ~metric_models.COUNT.model_fields
+      ~metric_models.COUNT.model_fields_set
+      ~metric_models.COUNT.output_field_name
+      ~metric_models.COUNT.func
+      ~metric_models.COUNT.input_field_names
+      ~metric_models.COUNT.attrs
+   
+   

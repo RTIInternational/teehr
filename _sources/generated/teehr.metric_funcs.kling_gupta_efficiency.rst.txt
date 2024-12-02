@@ -1,0 +1,6 @@
+teehr.metric\_funcs.kling\_gupta\_efficiency
+============================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: metric_funcs.kling_gupta_efficiency

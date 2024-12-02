@@ -1,0 +1,6 @@
+teehr.metric\_funcs.root\_mean\_standard\_deviation\_ratio
+==========================================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: metric_funcs.root_mean_standard_deviation_ratio

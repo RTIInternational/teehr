@@ -1,0 +1,63 @@
+teehr.metric\_models.ANNUAL\_PEAK\_RBIAS
+========================================
+
+.. currentmodule:: teehr
+
+.. autoclass:: metric_models.ANNUAL_PEAK_RBIAS
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~metric_models.ANNUAL_PEAK_RBIAS.construct
+      ~metric_models.ANNUAL_PEAK_RBIAS.copy
+      ~metric_models.ANNUAL_PEAK_RBIAS.dict
+      ~metric_models.ANNUAL_PEAK_RBIAS.from_orm
+      ~metric_models.ANNUAL_PEAK_RBIAS.json
+      ~metric_models.ANNUAL_PEAK_RBIAS.model_construct
+      ~metric_models.ANNUAL_PEAK_RBIAS.model_copy
+      ~metric_models.ANNUAL_PEAK_RBIAS.model_dump
+      ~metric_models.ANNUAL_PEAK_RBIAS.model_dump_json
+      ~metric_models.ANNUAL_PEAK_RBIAS.model_json_schema
+      ~metric_models.ANNUAL_PEAK_RBIAS.model_parametrized_name
+      ~metric_models.ANNUAL_PEAK_RBIAS.model_post_init
+      ~metric_models.ANNUAL_PEAK_RBIAS.model_rebuild
+      ~metric_models.ANNUAL_PEAK_RBIAS.model_validate
+      ~metric_models.ANNUAL_PEAK_RBIAS.model_validate_json
+      ~metric_models.ANNUAL_PEAK_RBIAS.model_validate_strings
+      ~metric_models.ANNUAL_PEAK_RBIAS.parse_file
+      ~metric_models.ANNUAL_PEAK_RBIAS.parse_obj
+      ~metric_models.ANNUAL_PEAK_RBIAS.parse_raw
+      ~metric_models.ANNUAL_PEAK_RBIAS.schema
+      ~metric_models.ANNUAL_PEAK_RBIAS.schema_json
+      ~metric_models.ANNUAL_PEAK_RBIAS.update_forward_refs
+      ~metric_models.ANNUAL_PEAK_RBIAS.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~metric_models.ANNUAL_PEAK_RBIAS.model_computed_fields
+      ~metric_models.ANNUAL_PEAK_RBIAS.model_config
+      ~metric_models.ANNUAL_PEAK_RBIAS.model_extra
+      ~metric_models.ANNUAL_PEAK_RBIAS.model_fields
+      ~metric_models.ANNUAL_PEAK_RBIAS.model_fields_set
+      ~metric_models.ANNUAL_PEAK_RBIAS.bootstrap
+      ~metric_models.ANNUAL_PEAK_RBIAS.transform
+      ~metric_models.ANNUAL_PEAK_RBIAS.output_field_name
+      ~metric_models.ANNUAL_PEAK_RBIAS.func
+      ~metric_models.ANNUAL_PEAK_RBIAS.input_field_names
+      ~metric_models.ANNUAL_PEAK_RBIAS.attrs
+   
+   

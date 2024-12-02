@@ -1,0 +1,59 @@
+﻿teehr.metric\_models
+====================
+
+.. automodule:: teehr.metric_models
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom-class-template.rst
+      :nosignatures:
+   
+      ANNUAL_PEAK_RBIAS
+      AVERAGE
+      COUNT
+      KGE
+      KGE_Mod1
+      KGE_Mod2
+      MAE
+      MAXIMUM
+      MAX_VALUE_DELTA
+      MAX_VALUE_TIME
+      MAX_VALUE_TIME_DELTA
+      ME
+      MINIMUM
+      MSE
+      MULT_BIAS
+      Metrics
+      MetricsBasemodel
+      NNSE
+      NSE
+      PEARSON_R
+      R2
+      REL_BIAS
+      REL_MAE
+      RMSE
+      RSR
+      SPEARMAN_R
+      SUM
+      VARIANCE
+   
+   
+
+   
+   
+   
+
+
+

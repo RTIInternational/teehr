@@ -1,0 +1,62 @@
+teehr.metric\_models.MINIMUM
+============================
+
+.. currentmodule:: teehr
+
+.. autoclass:: metric_models.MINIMUM
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~metric_models.MINIMUM.construct
+      ~metric_models.MINIMUM.copy
+      ~metric_models.MINIMUM.dict
+      ~metric_models.MINIMUM.from_orm
+      ~metric_models.MINIMUM.json
+      ~metric_models.MINIMUM.model_construct
+      ~metric_models.MINIMUM.model_copy
+      ~metric_models.MINIMUM.model_dump
+      ~metric_models.MINIMUM.model_dump_json
+      ~metric_models.MINIMUM.model_json_schema
+      ~metric_models.MINIMUM.model_parametrized_name
+      ~metric_models.MINIMUM.model_post_init
+      ~metric_models.MINIMUM.model_rebuild
+      ~metric_models.MINIMUM.model_validate
+      ~metric_models.MINIMUM.model_validate_json
+      ~metric_models.MINIMUM.model_validate_strings
+      ~metric_models.MINIMUM.parse_file
+      ~metric_models.MINIMUM.parse_obj
+      ~metric_models.MINIMUM.parse_raw
+      ~metric_models.MINIMUM.schema
+      ~metric_models.MINIMUM.schema_json
+      ~metric_models.MINIMUM.update_forward_refs
+      ~metric_models.MINIMUM.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~metric_models.MINIMUM.model_computed_fields
+      ~metric_models.MINIMUM.model_config
+      ~metric_models.MINIMUM.model_extra
+      ~metric_models.MINIMUM.model_fields
+      ~metric_models.MINIMUM.model_fields_set
+      ~metric_models.MINIMUM.transform
+      ~metric_models.MINIMUM.output_field_name
+      ~metric_models.MINIMUM.func
+      ~metric_models.MINIMUM.input_field_names
+      ~metric_models.MINIMUM.attrs
+   
+   

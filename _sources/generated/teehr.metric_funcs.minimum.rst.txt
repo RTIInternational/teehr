@@ -1,0 +1,6 @@
+teehr.metric\_funcs.minimum
+===========================
+
+.. currentmodule:: teehr
+
+.. autofunction:: metric_funcs.minimum

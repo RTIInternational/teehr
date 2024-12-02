@@ -1,0 +1,63 @@
+teehr.metric\_models.KGE\_Mod2
+==============================
+
+.. currentmodule:: teehr
+
+.. autoclass:: metric_models.KGE_Mod2
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~metric_models.KGE_Mod2.construct
+      ~metric_models.KGE_Mod2.copy
+      ~metric_models.KGE_Mod2.dict
+      ~metric_models.KGE_Mod2.from_orm
+      ~metric_models.KGE_Mod2.json
+      ~metric_models.KGE_Mod2.model_construct
+      ~metric_models.KGE_Mod2.model_copy
+      ~metric_models.KGE_Mod2.model_dump
+      ~metric_models.KGE_Mod2.model_dump_json
+      ~metric_models.KGE_Mod2.model_json_schema
+      ~metric_models.KGE_Mod2.model_parametrized_name
+      ~metric_models.KGE_Mod2.model_post_init
+      ~metric_models.KGE_Mod2.model_rebuild
+      ~metric_models.KGE_Mod2.model_validate
+      ~metric_models.KGE_Mod2.model_validate_json
+      ~metric_models.KGE_Mod2.model_validate_strings
+      ~metric_models.KGE_Mod2.parse_file
+      ~metric_models.KGE_Mod2.parse_obj
+      ~metric_models.KGE_Mod2.parse_raw
+      ~metric_models.KGE_Mod2.schema
+      ~metric_models.KGE_Mod2.schema_json
+      ~metric_models.KGE_Mod2.update_forward_refs
+      ~metric_models.KGE_Mod2.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~metric_models.KGE_Mod2.model_computed_fields
+      ~metric_models.KGE_Mod2.model_config
+      ~metric_models.KGE_Mod2.model_extra
+      ~metric_models.KGE_Mod2.model_fields
+      ~metric_models.KGE_Mod2.model_fields_set
+      ~metric_models.KGE_Mod2.bootstrap
+      ~metric_models.KGE_Mod2.transform
+      ~metric_models.KGE_Mod2.output_field_name
+      ~metric_models.KGE_Mod2.func
+      ~metric_models.KGE_Mod2.input_field_names
+      ~metric_models.KGE_Mod2.attrs
+   
+   

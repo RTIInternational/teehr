@@ -1,0 +1,65 @@
+teehr.bootstrap\_models.CircularBlockModel
+==========================================
+
+.. currentmodule:: teehr
+
+.. autoclass:: bootstrap_models.CircularBlockModel
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~bootstrap_models.CircularBlockModel.construct
+      ~bootstrap_models.CircularBlockModel.copy
+      ~bootstrap_models.CircularBlockModel.dict
+      ~bootstrap_models.CircularBlockModel.from_orm
+      ~bootstrap_models.CircularBlockModel.json
+      ~bootstrap_models.CircularBlockModel.model_construct
+      ~bootstrap_models.CircularBlockModel.model_copy
+      ~bootstrap_models.CircularBlockModel.model_dump
+      ~bootstrap_models.CircularBlockModel.model_dump_json
+      ~bootstrap_models.CircularBlockModel.model_json_schema
+      ~bootstrap_models.CircularBlockModel.model_parametrized_name
+      ~bootstrap_models.CircularBlockModel.model_post_init
+      ~bootstrap_models.CircularBlockModel.model_rebuild
+      ~bootstrap_models.CircularBlockModel.model_validate
+      ~bootstrap_models.CircularBlockModel.model_validate_json
+      ~bootstrap_models.CircularBlockModel.model_validate_strings
+      ~bootstrap_models.CircularBlockModel.parse_file
+      ~bootstrap_models.CircularBlockModel.parse_obj
+      ~bootstrap_models.CircularBlockModel.parse_raw
+      ~bootstrap_models.CircularBlockModel.schema
+      ~bootstrap_models.CircularBlockModel.schema_json
+      ~bootstrap_models.CircularBlockModel.update_forward_refs
+      ~bootstrap_models.CircularBlockModel.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~bootstrap_models.CircularBlockModel.model_computed_fields
+      ~bootstrap_models.CircularBlockModel.model_config
+      ~bootstrap_models.CircularBlockModel.model_extra
+      ~bootstrap_models.CircularBlockModel.model_fields
+      ~bootstrap_models.CircularBlockModel.model_fields_set
+      ~bootstrap_models.CircularBlockModel.seed
+      ~bootstrap_models.CircularBlockModel.random_state
+      ~bootstrap_models.CircularBlockModel.reps
+      ~bootstrap_models.CircularBlockModel.block_size
+      ~bootstrap_models.CircularBlockModel.quantiles
+      ~bootstrap_models.CircularBlockModel.name
+      ~bootstrap_models.CircularBlockModel.include_value_time
+      ~bootstrap_models.CircularBlockModel.func
+   
+   

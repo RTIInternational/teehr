@@ -1,0 +1,6 @@
+teehr.metric\_funcs.max\_value\_time
+====================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: metric_funcs.max_value_time

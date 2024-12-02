@@ -1,0 +1,63 @@
+teehr.metric\_models.REL\_MAE
+=============================
+
+.. currentmodule:: teehr
+
+.. autoclass:: metric_models.REL_MAE
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~metric_models.REL_MAE.construct
+      ~metric_models.REL_MAE.copy
+      ~metric_models.REL_MAE.dict
+      ~metric_models.REL_MAE.from_orm
+      ~metric_models.REL_MAE.json
+      ~metric_models.REL_MAE.model_construct
+      ~metric_models.REL_MAE.model_copy
+      ~metric_models.REL_MAE.model_dump
+      ~metric_models.REL_MAE.model_dump_json
+      ~metric_models.REL_MAE.model_json_schema
+      ~metric_models.REL_MAE.model_parametrized_name
+      ~metric_models.REL_MAE.model_post_init
+      ~metric_models.REL_MAE.model_rebuild
+      ~metric_models.REL_MAE.model_validate
+      ~metric_models.REL_MAE.model_validate_json
+      ~metric_models.REL_MAE.model_validate_strings
+      ~metric_models.REL_MAE.parse_file
+      ~metric_models.REL_MAE.parse_obj
+      ~metric_models.REL_MAE.parse_raw
+      ~metric_models.REL_MAE.schema
+      ~metric_models.REL_MAE.schema_json
+      ~metric_models.REL_MAE.update_forward_refs
+      ~metric_models.REL_MAE.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~metric_models.REL_MAE.model_computed_fields
+      ~metric_models.REL_MAE.model_config
+      ~metric_models.REL_MAE.model_extra
+      ~metric_models.REL_MAE.model_fields
+      ~metric_models.REL_MAE.model_fields_set
+      ~metric_models.REL_MAE.bootstrap
+      ~metric_models.REL_MAE.transform
+      ~metric_models.REL_MAE.output_field_name
+      ~metric_models.REL_MAE.func
+      ~metric_models.REL_MAE.input_field_names
+      ~metric_models.REL_MAE.attrs
+   
+   
