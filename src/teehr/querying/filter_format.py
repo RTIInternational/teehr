@@ -1,5 +1,6 @@
 """Functions for formatting filters for querying."""
 import pandas as pd
+import pandera as pa
 import warnings
 
 from collections.abc import Iterable
@@ -10,7 +11,7 @@ from pyspark.sql import DataFrame
 from teehr.models.str_enum import StrEnum
 
 from teehr.models.filters import FilterBaseModel
-from teehr.models.tables import TableBaseModel
+from teehr.models.pydantic_table_models import TableBaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +51,8 @@ def format_iterable_value(
     elif isinstance(values[0], datetime):
         return f"""({",".join(get_datetime_list_string(values))})"""
     else:
-        warnings.warn(
-            "treating value as string because didn't know what else to do."
+        logger.warning(
+            "Treating value as string because didn't know what else to do."
         )
         return f"""({",".join([f"'{str(v)}'" for v in values])})"""
 
@@ -92,7 +93,7 @@ def format_filter(
         value = format_iterable_value(filter.value)
         return f"""{column} {operator} {value}"""
     else:
-        logger.warn(
+        logger.warning(
             f"Treating value {filter.value} as string because "
             "didn't know what else to do."
         )
@@ -101,13 +102,13 @@ def format_filter(
 
 def validate_filter(
     filter: FilterBaseModel,
-    model: TableBaseModel
+    dataframe_schema: pa.DataFrameSchema
 ):
     """Validate a single model."""
-    if filter.column.value not in model.model_fields:
+    if filter.column.value not in dataframe_schema.columns:
         raise ValueError(f"Filter column not in model fields: {filter}")
 
-    model_field_data_type = model.model_fields[filter.column.value].annotation
+    model_field_data_type = dataframe_schema.columns[filter.column.value].dtype.type
     logging.debug(
         f"Model field {filter.column.value} has type: {model_field_data_type}"
     )
@@ -126,11 +127,23 @@ def validate_filter(
             validate_vals.append(str(v))
         elif model_field_data_type == int:
             validate_vals.append(int(v))
-        elif model_field_data_type == float:
+        elif (
+            model_field_data_type == float or
+            model_field_data_type == "float64" or
+            model_field_data_type == "float32"
+        ):
             validate_vals.append(float(v))
-        elif model_field_data_type == datetime:
+        elif (
+            model_field_data_type == datetime or
+            model_field_data_type == "datetime64[ns]" or
+            model_field_data_type == "datetime64[ms]"
+        ):
             validate_vals.append(pd.Timestamp(v))
         else:
+            logger.warning(
+                f"Treating value as string because "
+                "didn't know what else to do."
+            )
             validate_vals.append(str(v))
 
     if value_was_iterable:
@@ -146,7 +159,7 @@ def validate_and_apply_filters(
     filters: Union[str, dict, List[dict]],
     filter_model: FilterBaseModel,
     fields_enum: StrEnum,
-    table_model: TableBaseModel = None,
+    dataframe_schema: pa.DataFrameSchema = None,
     validate: bool = True
 ):
     """Validate and apply filters."""
@@ -169,7 +182,7 @@ def validate_and_apply_filters(
             )
             logger.debug(f"Filter: {filter.model_dump_json()}")
             if validate:
-                filter = validate_filter(filter, table_model)
+                filter = validate_filter(filter, dataframe_schema)
             filter = format_filter(filter)
 
         sdf = sdf.filter(filter)

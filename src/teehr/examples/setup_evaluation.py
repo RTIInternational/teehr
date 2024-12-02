@@ -7,7 +7,7 @@ class.
 """
 from teehr import Evaluation
 from pathlib import Path
-from teehr.models.tables import (
+from teehr.models.pydantic_table_models import (
     Attribute,
 )
 

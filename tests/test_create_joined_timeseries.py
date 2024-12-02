@@ -1,7 +1,7 @@
 """Test the import_timeseries function in the Evaluation class."""
 from pathlib import Path
 from teehr import Evaluation
-from teehr.models.tables import (
+from teehr.models.pydantic_table_models import (
     Attribute
 )
 import tempfile
@@ -104,9 +104,30 @@ def test_create_joined_timeseries(tmpdir):
     )
 
     # Create the joined timeseries
-    eval.joined_timeseries.create(execute_udf=True)
+    eval.joined_timeseries.create(add_attrs=True, execute_udf=True)
 
-    assert True
+    columns = eval.joined_timeseries.to_sdf().columns
+    expected_columns = [
+        'reference_time',
+        'value_time',
+        'primary_location_id',
+        'secondary_location_id',
+        'primary_value',
+        'secondary_value',
+        'unit_name',
+        'location_id',
+        'drainage_area',
+        'ecoregion',
+        'year_2_discharge',
+        'month',
+        'year',
+        'water_year',
+        'configuration_name',
+        'variable_name'
+    ]
+
+    assert len(columns) == 16
+    assert sorted(columns) == sorted(expected_columns)
 
 
 if __name__ == "__main__":

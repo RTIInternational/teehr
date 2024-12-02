@@ -37,8 +37,8 @@ Or, if you do not want to install TEEHR in your own virtual environment, you can
 
 .. code-block:: bash
 
-   docker build -t teehr:v0.4.2 .
-   docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.4.2 jupyter lab --ip 0.0.0.0 $HOME
+   docker build -t teehr:v0.4.4 .
+   docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.4.4 jupyter lab --ip 0.0.0.0 $HOME
 
 Project Objectives
 ------------------
@@ -85,7 +85,7 @@ and calculating two versions of KGE (one with bootstrap uncertainty and one with
    )
 
    # Clone the example data from S3
-   ev.clone_from_s3("p0_2_location_example")
+   ev.clone_from_s3("e0_2_location_example")
 
    # Define a bootstrapper with custom parameters.
    boot = teehr.Bootstrappers.CircularBlock(

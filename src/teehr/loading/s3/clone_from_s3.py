@@ -39,46 +39,43 @@ def list_s3_evaluations(
 
 def subset_the_table(
     ev,
-    s3_dataset_path: str,
+    table,
     sdf_in: pyspark.sql.DataFrame,
-    name: str,
     primary_location_ids: Union[None, List[str]],
     start_date: Union[str, datetime, None],
     end_date: Union[str, datetime, None],
 ) -> pyspark.sql.DataFrame:
     """Subset the dataset based on location and start/end time."""
-    if name == "locations" and primary_location_ids is not None:
+    if table.name == "locations" and primary_location_ids is not None:
         sdf_in = sdf_in.filter(sdf_in.id.isin(primary_location_ids))
-    elif name == "location_attributes" and primary_location_ids is not None:
+    elif table.name == "location_attributes" and primary_location_ids is not None:
         sdf_in = sdf_in.filter(sdf_in.location_id.isin(primary_location_ids))
-    elif name == "location_crosswalks" and primary_location_ids is not None:
+    elif table.name == "location_crosswalks" and primary_location_ids is not None:
         sdf_in = sdf_in.filter(
             sdf_in.primary_location_id.isin(primary_location_ids)
         )
-    elif name == "primary_timeseries":
+    elif table.name == "primary_timeseries":
         if primary_location_ids is not None:
             sdf_in = sdf_in.filter(
                 sdf_in.location_id.isin(primary_location_ids)
             )
-    elif name == "secondary_timeseries":
+    elif table.name == "secondary_timeseries":
         if primary_location_ids is not None:
-            xwalk = (
-                ev.
-                spark.
-                read.
-                format("parquet").
-                load(f"{s3_dataset_path}/location_crosswalks/")
+            secondary_ids = (
+                ev.location_crosswalks.to_sdf()
+                .select("secondary_location_id").rdd.flatMap(lambda x: x).collect()
             )
-            secondary_ids = xwalk.filter(
-                xwalk.primary_location_id.isin(primary_location_ids)
-            ).select("secondary_location_id").rdd.flatMap(lambda x: x).collect()
             sdf_in = sdf_in.filter(sdf_in.location_id.isin(secondary_ids))
-    elif name == "joined_timeseries":
+    elif table.name == "joined_timeseries":
         if primary_location_ids is not None:
             sdf_in = sdf_in.filter(
                 sdf_in.location_id.isin(primary_location_ids)
             )
-    if "timeseries" in name:
+    if (
+        table.name == "primary_timeseries"
+        or table.name == "secondary_timeseries"
+        or table.name == "joined_timeseries"
+    ):
         if start_date is not None:
             sdf_in = sdf_in.filter(sdf_in.value_time >= start_date)
         if end_date is not None:
@@ -121,7 +118,7 @@ def clone_from_s3(
     Note: future version will allow subsetting the tables to clone.
     """
 
-    # Make the Evlaution directories
+    # Make the Evaluation directories
     logger.info(f"Creating directories for evaluation: {evaluation_name}")
     Path(ev.cache_dir).mkdir()
     Path(ev.dataset_dir).mkdir()
@@ -130,64 +127,34 @@ def clone_from_s3(
     logger.info(f"Cloning evaluation from s3: {evaluation_name}")
     tables = [
         {
-            "name": "units",
-            "local_path": ev.units_dir,
-            "format": "csv",
-            "partitions": None
+            "table": ev.units
         },
         {
-            "name": "variables",
-            "local_path": ev.variables_dir,
-            "format": "csv",
-            "partitions": None
+            "table": ev.variables
         },
         {
-            "name": "attributes",
-            "local_path": ev.attributes_dir,
-            "format": "csv",
-            "partitions": None
+            "table": ev.attributes
         },
         {
-            "name": "configurations",
-            "local_path": ev.configurations_dir,
-            "format": "csv",
-            "partitions": None
+            "table": ev.configurations
         },
         {
-            "name": "locations",
-            "local_path": ev.locations_dir,
-            "format": "parquet",
-            "partitions": None
+            "table": ev.locations
         },
         {
-            "name": "location_attributes",
-            "local_path": ev.location_attributes_dir,
-            "format": "parquet",
-            "partitions": None
+            "table": ev.location_attributes
         },
         {
-            "name": "location_crosswalks",
-            "local_path": ev.location_crosswalks_dir,
-            "format": "parquet",
-            "partitions": None
+            "table": ev.location_crosswalks
         },
         {
-            "name": "primary_timeseries",
-            "local_path": ev.primary_timeseries_dir,
-            "format": "parquet",
-            "partitions": ["configuration_name", "variable_name"]
+            "table": ev.primary_timeseries
         },
         {
-            "name": "secondary_timeseries",
-            "local_path": ev.secondary_timeseries_dir,
-            "format": "parquet",
-            "partitions": ["configuration_name", "variable_name"]
+            "table": ev.secondary_timeseries
         },
         {
-            "name": "joined_timeseries",
-            "local_path": ev.joined_timeseries_dir,
-            "format": "parquet",
-            "partitions": ["configuration_name", "variable_name"]
+            "table": ev.joined_timeseries
         },
     ]
 
@@ -200,52 +167,26 @@ def clone_from_s3(
     logger.info(f"Cloning evaluation from s3: {s3_dataset_path}")
 
     for table in tables:
-        local_path = table["local_path"]
-        format = table["format"]
-        name = table["name"]
-        dir_name = str(Path(local_path).relative_to(ev.dataset_dir))
+        table = table["table"]
 
-        logger.debug(f"Making directory {table['local_path']}")
-        Path(local_path).mkdir()
+        logger.debug(f"Making directory {table.dir}")
+        Path(table.dir).mkdir()
 
-        logger.debug(f"Cloning {name} from {s3_dataset_path}/{dir_name}/ to {local_path}")
+        logger.debug(f"Cloning {table.name} from {s3_dataset_path}/{table.name}/ to {table.dir}")
 
-        sdf_in = (
-            ev.spark
-            .read
-            .format(format)
-            .load(f"{s3_dataset_path}/{dir_name}/")
-        )
+        sdf_in = table._read_files(path=f"{s3_dataset_path}/{table.name}/")
 
         sdf_in = subset_the_table(
             ev=ev,
-            s3_dataset_path=s3_dataset_path,
             sdf_in=sdf_in,
-            name=name,
+            table=table,
             primary_location_ids=primary_location_ids,
             start_date=start_date,
             end_date=end_date
         )
 
-        if table["partitions"]:
-            logger.debug(f"Partitioning {name} by {table['partitions']}.")
-            (
-                sdf_in
-                .write
-                .format(format)
-                .mode("overwrite")
-                .partitionBy(table["partitions"])
-                .save(str(local_path))
-            )
-        else:
-            logger.debug(f"Not partitioning is used for {name}.ß")
-            (
-                sdf_in
-                .write
-                .format(format)
-                .mode("overwrite")
-                .save(str(local_path))
-            )
+        table._write_spark_df(sdf_in)
+
 
     # copy scripts path to ev.scripts_dir
     source = f"{url}/scripts/user_defined_fields.py"

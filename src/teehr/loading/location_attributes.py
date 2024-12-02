@@ -1,17 +1,13 @@
 """Module for importing location attributes from a file."""
 from typing import Union
 from pathlib import Path
-from teehr.loading.utils import (
-    validate_dataset_structure,
-    read_and_convert_netcdf_to_df
-)
-from teehr.models.tables import LocationAttribute
+from teehr.loading.utils import read_and_convert_netcdf_to_df
+import teehr.models.pandera_dataframe_schemas as schemas
 from teehr.loading.utils import merge_field_mappings
-import logging
 import pandas as pd
+import teehr.models.pandera_dataframe_schemas as schemas
 
-import pandera.pyspark as pa
-import pyspark.sql.types as T
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -61,14 +57,14 @@ def convert_single_location_attributes(
     # rename fields if field_mapping provided
     location_attributes.rename(columns=field_mapping, inplace=True)
 
-    # make sure dataframe only contains required fields
-    location_attributes = location_attributes[field_mapping.values()]
-
-    location_attributes = location_attributes.astype(str)
+    # validate schema
+    schema = schemas.location_attributes_schema(type="pandas")
+    validated_df = schema.validate(location_attributes)
 
     # write to parquet
+    logger.info(f"Writing location attributes to: {out_filepath}")
     out_filepath.parent.mkdir(parents=True, exist_ok=True)
-    location_attributes.to_parquet(out_filepath)
+    validated_df.to_parquet(out_filepath)
 
 
 def convert_location_attributes(
@@ -100,7 +96,7 @@ def convert_location_attributes(
     logger.info(f"Converting attributes data: {in_path}")
 
     default_field_mapping = {}
-    for field in LocationAttribute.get_field_names():
+    for field in schemas.location_attributes_schema(type="pandas").columns.keys():
         if field not in default_field_mapping.values():
             default_field_mapping[field] = field
 
@@ -140,81 +136,3 @@ def convert_location_attributes(
         )
         files_converted += 1
     logger.info(f"Converted {files_converted} files.")
-
-
-def validate_and_insert_location_attributes(
-    ev,
-    in_path: Union[str, Path],
-    pattern: str = "**/*.parquet",
-):
-    """Validate and insert location attributes data.
-
-    Parameters
-    ----------
-    ev : Evaluation
-        Evaluation object
-    in_path : Union[str, Path]
-        The input file or directory path.
-    pattern : str, optional (default: "**/*.parquet")
-        The pattern to match files.
-
-    Returns
-    -------
-    None
-    """
-    logger.info(
-        f"Validating and inserting location attributes data from {in_path}"
-    )
-
-    if not validate_dataset_structure(ev.dataset_dir):
-        raise ValueError("Database structure is not valid.")
-
-    location_ids = ev.locations.distinct_values("id")
-    attr_names = ev.attributes.distinct_values("name")
-
-    if in_path.is_dir():
-        files = [str(f) for f in in_path.glob(f"{pattern}")]
-    else:
-        files = [str(in_path)]
-
-    loc_attrs = (ev.spark.read.format("parquet").load(files))
-
-    # define schema
-    schema = pa.DataFrameSchema(
-        columns={
-            "location_id": pa.Column(
-                T.StringType,
-                pa.Check.isin(location_ids),
-                coerce=True
-            ),
-            "attribute_name": pa.Column(
-                T.StringType,
-                pa.Check.isin(attr_names),
-                coerce=True
-            ),
-            "value": pa.Column(
-                T.StringType,
-                coerce=True
-            )
-        },
-        strict=True
-    )
-    validated_loc_attrs = schema(loc_attrs.select(*schema.columns))
-
-    df_out_errors = validated_loc_attrs.pandera.errors
-
-    if len(df_out_errors) > 0:
-        raise ValueError(f"Validation errors: {df_out_errors}")
-
-    loc_attrs_dir = ev.location_attributes_dir
-    loc_attrs_dir.mkdir(parents=True, exist_ok=True)
-
-    (
-        validated_loc_attrs
-        .select(list(schema.columns.keys()))
-        .write
-        # .partitionBy("configuration_name", "variable_name")
-        .format("parquet")
-        .mode("overwrite")
-        .save(str(loc_attrs_dir))
-    )
