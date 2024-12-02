@@ -17,7 +17,7 @@ from teehr.models.table_enums import (
     TimeseriesFields,
     JoinedTimeseriesFields
 )
-from teehr.models.tables import (
+from teehr.models.pydantic_table_models import (
     TableBaseModel
 )
 

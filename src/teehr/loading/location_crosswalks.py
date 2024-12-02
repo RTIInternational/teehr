@@ -1,17 +1,13 @@
 """Module for importing location crosswalks from a file."""
 from typing import Union
 from pathlib import Path
-from teehr.loading.utils import (
-    validate_dataset_structure,
-    read_and_convert_netcdf_to_df
-)
-from teehr.models.tables import LocationCrosswalk
+from teehr.loading.utils import read_and_convert_netcdf_to_df
+import teehr.models.pandera_dataframe_schemas as schemas
 from teehr.loading.utils import merge_field_mappings
-import logging
 import pandas as pd
+import teehr.models.pandera_dataframe_schemas as schemas
 
-import pandera.pyspark as pa
-import pyspark.sql.types as T
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -61,12 +57,14 @@ def convert_single_location_crosswalks(
     # rename fields if field_mapping provided
     location_crosswalks.rename(columns=field_mapping, inplace=True)
 
-    # make sure dataframe only contains required fields
-    location_crosswalks = location_crosswalks[field_mapping.values()]
+    # validate schema
+    schema = schemas.location_crosswalks_schema(type="pandas")
+    validated_df = schema.validate(location_crosswalks)
 
     # write to parquet
+    logger.info(f"Writing location crosswalks to: {out_filepath}")
     out_filepath.parent.mkdir(parents=True, exist_ok=True)
-    location_crosswalks.to_parquet(out_filepath)
+    validated_df.to_parquet(out_filepath)
 
 
 def convert_location_crosswalks(
@@ -98,7 +96,7 @@ def convert_location_crosswalks(
     logger.info(f"Converting crosswalks data: {in_path}")
 
     default_field_mapping = {}
-    for field in LocationCrosswalk.get_field_names():
+    for field in schemas.location_crosswalks_schema(type="pandas").columns.keys():
         if field not in default_field_mapping.values():
             default_field_mapping[field] = field
 
@@ -138,64 +136,3 @@ def convert_location_crosswalks(
         )
         files_converted += 1
     logger.info(f"Converted {files_converted} files.")
-
-
-def validate_and_insert_location_crosswalks(
-    ev,
-    in_path: Union[str, Path],
-    pattern: str = "**/*.parquet",
-):
-    """Validate and insert location crosswalks data."""
-    logger.info(
-        f"Validating and inserting location crosswalks data from {in_path}"
-    )
-
-    if not validate_dataset_structure(ev.dataset_dir):
-        raise ValueError("Database structure is not valid.")
-
-    if not validate_dataset_structure(ev.dataset_dir):
-        raise ValueError("Database structure is not valid.")
-
-    location_ids = ev.locations.distinct_values("id")
-
-    if in_path.is_dir():
-        files = [str(f) for f in in_path.glob(f"{pattern}")]
-    else:
-        files = [str(in_path)]
-
-    loc_xwalks = (ev.spark.read.format("parquet").load(files))
-
-    # define schema
-    schema = pa.DataFrameSchema(
-        columns={
-            "primary_location_id": pa.Column(
-                T.StringType,
-                pa.Check.isin(location_ids),
-                coerce=True
-            ),
-            "secondary_location_id": pa.Column(
-                T.StringType,
-                coerce=True
-            )
-        },
-        strict=True
-    )
-    validated_loc_xwalks = schema(loc_xwalks.select(*schema.columns))
-
-    errors = validated_loc_xwalks.pandera.errors
-
-    if len(errors) > 0:
-        raise ValueError(f"Validation errors: {errors}")
-
-    loc_xwalks_dir = ev.location_crosswalks_dir
-    loc_xwalks_dir.mkdir(parents=True, exist_ok=True)
-
-    (
-        validated_loc_xwalks
-        .select(list(schema.columns.keys()))
-        .write
-        # .partitionBy("configuration_name", "variable_name")
-        .format("parquet")
-        .mode("overwrite")
-        .save(str(loc_xwalks_dir))
-    )

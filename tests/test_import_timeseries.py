@@ -1,7 +1,7 @@
 """Test the import_timeseries function in the Evaluation class."""
 from pathlib import Path
 from teehr import Evaluation
-from teehr.models.tables import (
+from teehr.models.pydantic_table_models import (
     Configuration,
     Unit,
     Variable
@@ -36,15 +36,15 @@ MIZU_LOCATIONS = Path(
 
 def test_validate_and_insert_timeseries(tmpdir):
     """Test the validate_locations function."""
-    eval = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir)
 
-    eval.enable_logging()
+    ev.enable_logging()
 
-    eval.clone_template()
+    ev.clone_template()
 
-    eval.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
+    ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
 
-    eval.configurations.add(
+    ev.configurations.add(
         Configuration(
             name="test_obs",
             type="primary",
@@ -52,21 +52,21 @@ def test_validate_and_insert_timeseries(tmpdir):
         )
     )
 
-    eval.units.add(
+    ev.units.add(
         Unit(
             name="cfd",
             long_name="Cubic Feet per Day"
         )
     )
 
-    eval.variables.add(
+    ev.variables.add(
         Variable(
             name="streamflow",
             long_name="Streamflow"
         )
     )
 
-    eval.primary_timeseries.load_parquet(
+    ev.primary_timeseries.load_parquet(
         in_path=PRIMARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
@@ -79,11 +79,11 @@ def test_validate_and_insert_timeseries(tmpdir):
         }
     )
 
-    eval.location_crosswalks.load_csv(
+    ev.location_crosswalks.load_csv(
         in_path=CROSSWALK_FILEPATH
     )
 
-    eval.configurations.add(
+    ev.configurations.add(
         Configuration(
             name="test_short",
             type="secondary",
@@ -91,7 +91,7 @@ def test_validate_and_insert_timeseries(tmpdir):
         )
     )
 
-    eval.secondary_timeseries.load_parquet(
+    ev.secondary_timeseries.load_parquet(
         in_path=SECONDARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
@@ -109,15 +109,15 @@ def test_validate_and_insert_timeseries(tmpdir):
 
 def test_validate_and_insert_timeseries_set_const(tmpdir):
     """Test the validate_locations function."""
-    eval = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir)
 
-    eval.enable_logging()
+    ev.enable_logging()
 
-    eval.clone_template()
+    ev.clone_template()
 
-    eval.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
+    ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
 
-    eval.primary_timeseries.load_parquet(
+    ev.primary_timeseries.load_parquet(
         in_path=PRIMARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
@@ -135,11 +135,11 @@ def test_validate_and_insert_timeseries_set_const(tmpdir):
         }
     )
 
-    eval.location_crosswalks.load_csv(
+    ev.location_crosswalks.load_csv(
         in_path=CROSSWALK_FILEPATH
     )
 
-    eval.secondary_timeseries.load_parquet(
+    ev.secondary_timeseries.load_parquet(
         in_path=SECONDARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
@@ -162,15 +162,15 @@ def test_validate_and_insert_timeseries_set_const(tmpdir):
 
 def test_validate_and_insert_summa_nc_timeseries(tmpdir):
     """Test the validate_locations function."""
-    eval = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir)
 
-    eval.enable_logging()
+    ev.enable_logging()
 
-    eval.clone_template()
+    ev.clone_template()
 
-    eval.locations.load_spatial(in_path=SUMMA_LOCATIONS)
+    ev.locations.load_spatial(in_path=SUMMA_LOCATIONS)
 
-    eval.configurations.add(
+    ev.configurations.add(
         Configuration(
             name="summa",
             type="primary",
@@ -178,7 +178,7 @@ def test_validate_and_insert_summa_nc_timeseries(tmpdir):
         )
     )
 
-    eval.variables.add(
+    ev.variables.add(
         Variable(
             name="runoff",
             long_name="runoff"
@@ -197,14 +197,14 @@ def test_validate_and_insert_summa_nc_timeseries(tmpdir):
         "reference_time": None
     }
 
-    eval.primary_timeseries.load_netcdf(
+    ev.primary_timeseries.load_netcdf(
         in_path=SUMMA_TIMESERIES_FILEPATH_NC,
         field_mapping=summa_field_mapping,
         constant_field_values=summa_constant_field_values
     )
 
     # Compare loaded values with the values in the netcdf file.
-    primary_df = eval.primary_timeseries.to_pandas()
+    primary_df = ev.primary_timeseries.to_pandas()
     primary_df.set_index("location_id", inplace=True)
     teehr_values = primary_df.loc["170300010101"].value.values
 
@@ -218,15 +218,15 @@ def test_validate_and_insert_summa_nc_timeseries(tmpdir):
 
 def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
     """Test the validate_locations function."""
-    eval = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir)
 
-    eval.enable_logging()
+    ev.enable_logging()
 
-    eval.clone_template()
+    ev.clone_template()
 
-    eval.locations.load_spatial(in_path=MIZU_LOCATIONS)
+    ev.locations.load_spatial(in_path=MIZU_LOCATIONS)
 
-    eval.configurations.add(
+    ev.configurations.add(
         Configuration(
             name="mizuroute",
             type="primary",
@@ -234,7 +234,7 @@ def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
         )
     )
 
-    eval.variables.add(
+    ev.variables.add(
         Variable(
             name="runoff",
             long_name="runoff"
@@ -253,14 +253,14 @@ def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
         "reference_time": None
     }
 
-    eval.primary_timeseries.load_netcdf(
+    ev.primary_timeseries.load_netcdf(
         in_path=MIZU_TIMESERIES_FILEPATH_NC,
         field_mapping=mizu_field_mapping,
         constant_field_values=mizu_constant_field_values
     )
 
     # Compare loaded values with the values in the netcdf file.
-    primary_df = eval.primary_timeseries.to_pandas()
+    primary_df = ev.primary_timeseries.to_pandas()
     primary_df.set_index("location_id", inplace=True)
     teehr_values = primary_df.loc["77000002"].value.values
 

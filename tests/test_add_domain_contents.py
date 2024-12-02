@@ -1,6 +1,5 @@
 """Tests for the domain update columns"""
-from pathlib import Path
-from teehr.models.tables import (
+from teehr.models.pydantic_table_models import (
     Configuration,
     Unit,
     Variable,
@@ -9,7 +8,7 @@ from teehr.models.tables import (
 import tempfile
 
 
-def test_clone_template(tmpdir):
+def test_add_domains(tmpdir):
     """Test creating a new study."""
     from teehr import Evaluation
 
@@ -25,7 +24,7 @@ def test_clone_template(tmpdir):
                 name="conf1",
                 type="secondary",
                 description="Configuration 1",
-            ),
+            )
         ]
     )
 
@@ -85,7 +84,7 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_clone_template(
+        test_add_domains(
             tempfile.mkdtemp(
                 prefix="1-",
                 dir=tempdir

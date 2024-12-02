@@ -3,7 +3,7 @@ from teehr.loading.location_attributes import convert_location_attributes
 from pathlib import Path
 from teehr import Evaluation
 import tempfile
-from teehr.models.tables import (
+from teehr.models.pydantic_table_models import (
     Attribute,
 )
 
@@ -30,15 +30,15 @@ def test_convert_location_attributes(tmpdir):
 
 def test_validate_and_insert_location_attributes(tmpdir):
     """Test the validate location_attributes function."""
-    eval = Evaluation(dir_path=tmpdir)
-    eval.clone_template()
+    ev = Evaluation(dir_path=tmpdir)
+    ev.clone_template()
 
-    eval.enable_logging()
+    ev.enable_logging()
 
-    eval.locations.load_spatial(
+    ev.locations.load_spatial(
         in_path=GEOJSON_GAGES_FILEPATH
     )
-    eval.attributes.add(
+    ev.attributes.add(
         [
             Attribute(
                 name="drainage_area",
@@ -57,7 +57,7 @@ def test_validate_and_insert_location_attributes(tmpdir):
             ),
         ]
     )
-    eval.location_attributes.load_parquet(
+    ev.location_attributes.load_parquet(
         in_path=GEO_FILEPATH,
         field_mapping={"attribute_value": "value"},
         pattern="test_attr_*.parquet",

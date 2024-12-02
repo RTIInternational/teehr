@@ -26,7 +26,7 @@ import dataretrieval.nwis as nwis
 from teehr.models.fetching.utils import USGSChunkByEnum, USGSServiceEnum
 from pydantic import validate_call, ConfigDict
 from teehr.fetching.utils import (
-    write_parquet_file,
+    write_timeseries_parquet_file,
     get_period_start_end_times,
     create_periods_based_on_chunksize,
     format_timeseries_data_types
@@ -277,7 +277,7 @@ def usgs_to_parquet(
                     output_parquet_dir,
                     f"{site}.parquet"
                 )
-                write_parquet_file(
+                write_timeseries_parquet_file(
                     filepath=output_filepath,
                     overwrite_output=overwrite_output,
                     data=usgs_df
@@ -323,7 +323,7 @@ def usgs_to_parquet(
             )
 
             output_filepath = Path(output_parquet_dir, output_filename)
-            write_parquet_file(
+            write_timeseries_parquet_file(
                 filepath=output_filepath,
                 overwrite_output=overwrite_output,
                 data=usgs_df

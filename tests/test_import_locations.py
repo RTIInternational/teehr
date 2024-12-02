@@ -22,12 +22,12 @@ def test_convert_locations_geojson(tmpdir):
 
 def test_validate_and_insert_locations(tmpdir):
     """Test the validate_locations function."""
-    eval = Evaluation(dir_path=tmpdir)
-    eval.clone_template()
+    ev = Evaluation(dir_path=tmpdir)
+    ev.clone_template()
 
-    eval.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
+    ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
 
-    assert Path(eval.locations_dir, "gages.parquet").is_file()
+    assert ev.locations.to_sdf().count() == 3
 
 
 if __name__ == "__main__":
