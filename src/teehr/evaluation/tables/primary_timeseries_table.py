@@ -3,23 +3,22 @@ from teehr.evaluation.tables.timeseries_table import TimeseriesTable
 from teehr.models.table_enums import TimeseriesFields
 from teehr.loading.timeseries import convert_timeseries
 import teehr.models.pandera_dataframe_schemas as schemas
-
 from pathlib import Path
 from typing import Union
-
 import logging
+
 
 logger = logging.getLogger(__name__)
 
+
 class PrimaryTimeseriesTable(TimeseriesTable):
-    """Access methods to timeseries table."""
+    """Access methods to primary timeseries table."""
 
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
         self.dir = ev.primary_timeseries_dir
         self.schema_func = schemas.primary_timeseries_schema
-        # self._load_table()
 
     def field_enum(self) -> TimeseriesFields:
         """Get the timeseries fields enum."""

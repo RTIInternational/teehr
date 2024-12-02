@@ -3,12 +3,12 @@ from teehr.models.filters import VariableFilter
 from teehr.models.table_enums import VariableFields
 from teehr.models.pydantic_table_models import Variable
 import teehr.models.pandera_dataframe_schemas as schemas
-
 from typing import List, Union
-
 import logging
 
+
 logger = logging.getLogger(__name__)
+
 
 class VariableTable(DomainTable):
     """Access methods to variables table."""
@@ -17,10 +17,8 @@ class VariableTable(DomainTable):
         """Initialize class."""
         super().__init__(ev)
         self.dir = ev.variables_dir
-        # self.table_model = Variable
         self.filter_model = VariableFilter
         self.schema_func = schemas.variable_schema
-        # self._load_table()
 
     def field_enum(self) -> VariableFields:
         """Get the variable fields enum."""

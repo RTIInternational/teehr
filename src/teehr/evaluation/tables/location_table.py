@@ -3,16 +3,15 @@ from teehr.evaluation.tables.base_table import BaseTable
 from teehr.loading.locations import convert_locations
 from teehr.models.filters import LocationFilter
 from teehr.models.table_enums import LocationFields
-# from teehr.models.pydantic_table_models import Location
 from teehr.querying.utils import df_to_gdf
 import teehr.models.pandera_dataframe_schemas as schemas
-
 from pathlib import Path
 from typing import Union
-
 import logging
 
+
 logger = logging.getLogger(__name__)
+
 
 class LocationTable(BaseTable):
     """Access methods to locations table."""
@@ -23,10 +22,8 @@ class LocationTable(BaseTable):
         self.dir = ev.locations_dir
         self.format = "parquet"
         self.save_mode = "overwrite"
-        # self.table_model = Location
         self.filter_model = LocationFilter
         self.schema_func = schemas.locations_schema
-        # self._load_table()
 
     def field_enum(self) -> LocationFields:
         """Get the location fields enum."""

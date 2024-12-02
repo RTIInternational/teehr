@@ -3,12 +3,12 @@ from teehr.models.filters import UnitFilter
 from teehr.models.table_enums import UnitFields
 from teehr.models.pydantic_table_models import Unit
 import teehr.models.pandera_dataframe_schemas as schemas
-
 from typing import List, Union
-
 import logging
 
+
 logger = logging.getLogger(__name__)
+
 
 class UnitTable(DomainTable):
     """Access methods to units table."""
@@ -17,10 +17,8 @@ class UnitTable(DomainTable):
         """Initialize class."""
         super().__init__(ev)
         self.dir = ev.units_dir
-        # self.table_model = Unit
         self.filter_model = UnitFilter
         self.schema_func = schemas.unit_schema
-        # self._load_table()
 
     def field_enum(self) -> UnitFields:
         """Get the unit fields enum."""

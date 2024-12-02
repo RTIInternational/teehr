@@ -4,16 +4,15 @@ from teehr.loading.location_crosswalks import convert_location_crosswalks
 from teehr.loading.utils import validate_input_is_csv, validate_input_is_parquet
 from teehr.models.filters import LocationCrosswalkFilter
 from teehr.models.table_enums import LocationCrosswalkFields
-# from teehr.models.pydantic_table_models import LocationCrosswalk
 from teehr.querying.utils import join_geometry
 import teehr.models.pandera_dataframe_schemas as schemas
-
 from pathlib import Path
 from typing import Union
-
 import logging
 
+
 logger = logging.getLogger(__name__)
+
 
 class LocationCrosswalkTable(BaseTable):
     """Access methods to location crosswalks table."""
@@ -24,10 +23,8 @@ class LocationCrosswalkTable(BaseTable):
         self.dir = ev.location_crosswalks_dir
         self.format = "parquet"
         self.save_mode = "overwrite"
-        # self.table_model = LocationCrosswalk
         self.filter_model = LocationCrosswalkFilter
         self.schema_func = schemas.location_crosswalks_schema
-        # self._load_table()
 
     def _load(
         self,

@@ -10,7 +10,7 @@ import pyarrow as pa
 
 from teehr.fetching.utils import (
     get_dataset,
-    write_parquet_file,
+    write_timeseries_parquet_file,
     split_dataframe
 )
 from teehr.fetching.const import (
@@ -145,7 +145,7 @@ def process_chunk_of_files(
         end = f"{end_json[1]}T{end_json[3][1:3]}F{end_json[6][1:]}"
         filename = f"{start}_{end}.parquet"
 
-    write_parquet_file(
+    write_timeseries_parquet_file(
         Path(output_parquet_dir, filename),
         overwrite_output,
         output_table

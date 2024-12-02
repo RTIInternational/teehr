@@ -128,6 +128,10 @@ class Evaluation:
     @property
     def fetch(self) -> Fetch:
         """The fetch component class for accessing external data."""
+        if self.is_s3:
+            logger.error("Cannot fetch data and save to S3 yet.")
+            raise Exception("Cannot fetch data and save to S3 yet.")
+
         return Fetch(self)
 
     @property
@@ -189,7 +193,12 @@ class Evaluation:
         """Enable logging."""
         logger = logging.getLogger("teehr")
         # logger.addHandler(logging.StreamHandler())
-        handler = logging.FileHandler(Path(self.dir_path, 'teehr.log'))
+        if self.is_s3:
+            logger_path = Path(Path.home, 'teehr.log')
+        else:
+            logger_path = Path(self.dir_path, 'teehr.log')
+
+        handler = logging.FileHandler(logger_path)
         handler.setFormatter(
             logging.Formatter(
                 "%(asctime)s %(levelname)s %(message)s"
@@ -206,6 +215,10 @@ class Evaluation:
         This method mainly copies the template directory to the specified
         evaluation directory.
         """
+        if self.is_s3:
+            logger.error("Cannot clone template to S3.")
+            raise Exception("Cannot clone template to S3.")
+
         teehr_root = Path(__file__).parent.parent
         template_dir = Path(teehr_root, "template")
         logger.info(f"Copying template from {template_dir} to {self.dir_path}")
@@ -271,6 +284,10 @@ class Evaluation:
         Also includes the user_defined_fields.py script.
 
         """
+        if self.is_s3:
+            logger.error("Cannot clone from S3 to S3.")
+            raise Exception("Cannot clone from S3 to S3.")
+
         return clone_from_s3(
             self,
             evaluation_name,
@@ -284,6 +301,10 @@ class Evaluation:
 
         Includes removing temporary files.
         """
+        if self.is_s3:
+            logger.error("Cannot clean cache on S3.")
+            raise Exception("Cannot clean cache on S3.")
+
         logger.info(f"Removing temporary files from {self.cache_dir}")
         self.cache_dir.rmdir()
         self.cache_dir.mkdir()

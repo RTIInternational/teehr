@@ -1,19 +1,14 @@
 from teehr.evaluation.tables.base_table import BaseTable
 from teehr.models.pydantic_table_models import TableBaseModel
-
 import pandas as pd
-
-
 from typing import List, Union
-
-
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class DomainTable(BaseTable):
-    """Access methods to attributes table."""
+    """Domain table class."""
 
     def __init__(self, ev):
         """Initialize class."""

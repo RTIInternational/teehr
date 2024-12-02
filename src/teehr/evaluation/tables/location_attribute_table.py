@@ -4,15 +4,12 @@ from teehr.loading.location_attributes import convert_location_attributes
 from teehr.loading.utils import validate_input_is_csv, validate_input_is_parquet
 from teehr.models.filters import LocationAttributeFilter
 from teehr.models.table_enums import LocationAttributeFields
-# from teehr.models.pydantic_table_models import LocationAttribute
 from teehr.querying.utils import join_geometry
 import teehr.models.pandera_dataframe_schemas as schemas
-
-
 from pathlib import Path
 from typing import Union
-
 import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +23,8 @@ class LocationAttributeTable(BaseTable):
         self.dir = ev.location_attributes_dir
         self.format = "parquet"
         self.save_mode = "overwrite"
-        # self.table_model = LocationAttribute
         self.filter_model = LocationAttributeFilter
         self.schema_func = schemas.location_attributes_schema
-        # self._load_table()
 
     def _load(
         self,

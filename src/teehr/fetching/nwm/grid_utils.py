@@ -10,7 +10,7 @@ import xarray as xr
 
 from teehr.fetching.utils import (
     get_dataset,
-    write_parquet_file,
+    write_timeseries_parquet_file,
     format_timeseries_data_types
 )
 from teehr.fetching.const import (
@@ -237,4 +237,4 @@ def fetch_and_format_nwm_grids(
             Path(output_parquet_dir), f"{ref_time_str}.parquet"
         )
         z_hour_df.sort_values([LOCATION_ID, VALUE_TIME], inplace=True)
-        write_parquet_file(parquet_filepath, overwrite_output, z_hour_df)
+        write_timeseries_parquet_file(parquet_filepath, overwrite_output, z_hour_df)

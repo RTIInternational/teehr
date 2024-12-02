@@ -155,14 +155,14 @@ def copy_template_to(
     gitignore_text.rename(Path(destination_dir, ".gitignore"))
 
 
-def convert_datetime_ns_to_ms(
-    df: pd.DataFrame
-) -> pd.DataFrame:
-    """Convert datetime columns from nanoseconds to milliseconds."""
-    for column in df.columns:
-        if df[column].dtype == "datetime64[ns]":
-            df[column] = df[column].astype("datetime64[ms]")
-    return df
+# def convert_datetime_ns_to_ms(
+#     df: pd.DataFrame
+# ) -> pd.DataFrame:
+#     """Convert datetime columns from nanoseconds to milliseconds."""
+#     for column in df.columns:
+#         if df[column].dtype == "datetime64[ns]":
+#             df[column] = df[column].astype("datetime64[ms]")
+#     return df
 
 
 def read_and_convert_netcdf_to_df(

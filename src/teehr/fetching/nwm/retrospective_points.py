@@ -56,7 +56,7 @@ from teehr.models.fetching.utils import (
     ChannelRtRetroVariableEnum
 )
 from teehr.fetching.utils import (
-    write_parquet_file,
+    write_timeseries_parquet_file,
     get_period_start_end_times,
     create_periods_based_on_chunksize,
     format_timeseries_data_types
@@ -326,4 +326,4 @@ def nwm_retro_to_parquet(
         output_filepath = Path(
             output_parquet_dir, output_filename
         )
-        write_parquet_file(output_filepath, overwrite_output, df)
+        write_timeseries_parquet_file(output_filepath, overwrite_output, df)

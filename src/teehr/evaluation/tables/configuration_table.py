@@ -3,8 +3,6 @@ from teehr.models.filters import ConfigurationFilter
 from teehr.models.table_enums import ConfigurationFields
 from teehr.models.pydantic_table_models import Configuration
 import teehr.models.pandera_dataframe_schemas as schemas
-
-
 from typing import List, Union
 
 
@@ -15,10 +13,8 @@ class ConfigurationTable(DomainTable):
         """Initialize class."""
         super().__init__(ev)
         self.dir = ev.configurations_dir
-        # self.table_model = Configuration
         self.filter_model = ConfigurationFilter
         self.schema_func = schemas.configuration_schema
-        # self._load_table()
 
     def field_enum(self) -> ConfigurationFields:
         """Get the configuration fields enum."""

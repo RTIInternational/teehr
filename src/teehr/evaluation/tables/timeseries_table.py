@@ -22,7 +22,6 @@ class TimeseriesTable(BaseTable):
         self.format = "parquet"
         self.save_mode = "overwrite"
         self.partition_by = ["configuration_name", "variable_name"]
-        # self.table_model = Timeseries
         self.filter_model = TimeseriesFilter
 
     def to_pandas(self):
@@ -83,7 +82,6 @@ class TimeseriesTable(BaseTable):
         self._load(
             in_path=in_path,
             pattern=pattern,
-            # timeseries_type="primary",
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
             **kwargs
@@ -135,7 +133,6 @@ class TimeseriesTable(BaseTable):
         self._load(
             in_path=in_path,
             pattern=pattern,
-            # timeseries_type="primary",
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
             **kwargs
@@ -187,7 +184,6 @@ class TimeseriesTable(BaseTable):
         self._load(
             in_path=in_path,
             pattern=pattern,
-            # timeseries_type="primary",
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
             **kwargs

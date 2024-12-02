@@ -3,8 +3,6 @@ from teehr.models.filters import AttributeFilter
 from teehr.models.table_enums import AttributeFields
 from teehr.models.pydantic_table_models import Attribute
 import teehr.models.pandera_dataframe_schemas as schemas
-
-
 from typing import List, Union
 
 

@@ -1,17 +1,11 @@
 import sys
 from pathlib import Path
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
-# from teehr.loading.joined_timeseries import create_joined_timeseries_dataset
 from teehr.models.filters import JoinedTimeseriesFilter
 from teehr.models.table_enums import JoinedTimeseriesFields
 from teehr.querying.utils import join_geometry
 import teehr.models.pandera_dataframe_schemas as schemas
 import pyspark.sql as ps
-from teehr.utils.s3path import S3Path
-from teehr.utils.utils import to_path_or_s3path, path_to_spark
-from typing import Union
-
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -25,11 +19,9 @@ class JoinedTimeseriesTable(TimeseriesTable):
         super().__init__(ev)
         self.dir = ev.joined_timeseries_dir
         self.filter_model = JoinedTimeseriesFilter
-        # self.table_model = JoinedTimeseriesTable
         self.validate_filter_field_types = False
         self.strict_validation = False
         self.schema_func = schemas.joined_timeseries_schema
-        # self._load_table()
 
     def field_enum(self) -> JoinedTimeseriesFields:
         """Get the joined timeseries fields enum."""
@@ -55,41 +47,6 @@ class JoinedTimeseriesTable(TimeseriesTable):
             self.df, self.ev.locations.to_sdf(),
             "primary_location_id"
         )
-
-    # def _get_schema(self, type: str = "pyspark"):
-    #     """Get the primary timeseries schema."""
-    #     if type == "pandas":
-    #         return self.schema_func(type="pandas")
-
-    #     return self.schema_func()
-
-    # def _read_files(
-    #         self,
-    #         path: Union[str, Path, S3Path],
-    #         pattern: str = None,
-    #         **options
-    # ) -> ps.DataFrame:
-    #     """Read data from directory as a spark dataframe."""
-    #     logger.info(f"Reading files from {path}.")
-    #     if len(options) == 0:
-    #         options = {
-    #             "header": "true",
-    #             "ignoreMissingFiles": "true"
-    #         }
-
-    #     path = to_path_or_s3path(path)
-
-    #     path = path_to_spark(path, pattern)
-
-    #     # May need to deal with empty files here.
-    #     df = (
-    #         self.ev.spark.read.format(self.format)
-    #         # .schema(self._get_schema().to_structtype())
-    #         .options(**options)
-    #         .load(path)
-    #     )
-
-    #     return df
 
     def _join(self) -> ps.DataFrame:
         """Join primary and secondary timeseries."""

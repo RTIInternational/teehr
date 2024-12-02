@@ -63,7 +63,7 @@ from teehr.fetching.nwm.grid_utils import (
     get_weights_row_col_stats
 )
 from teehr.fetching.utils import (
-    write_parquet_file,
+    write_timeseries_parquet_file,
     get_dataset,
     get_period_start_end_times,
     create_periods_based_on_chunksize,
@@ -389,7 +389,7 @@ def nwm_retro_grids_to_parquet(
 
             chunk_df = format_timeseries_data_types(chunk_df)
 
-            write_parquet_file(
+            write_timeseries_parquet_file(
                 filepath=output_filename,
                 overwrite_output=overwrite_output,
                 data=chunk_df)
@@ -450,7 +450,7 @@ def nwm_retro_grids_to_parquet(
                 fname
             )
 
-            write_parquet_file(
+            write_timeseries_parquet_file(
                 filepath=output_filename,
                 overwrite_output=overwrite_output,
                 data=chunk_df

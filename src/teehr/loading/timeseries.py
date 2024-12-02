@@ -6,7 +6,7 @@ from teehr.loading.utils import (
     merge_field_mappings,
     validate_constant_values_dict,
     read_and_convert_netcdf_to_df,
-    convert_datetime_ns_to_ms
+    # convert_datetime_ns_to_ms
 )
 import teehr.models.pandera_dataframe_schemas as schemas
 
@@ -86,7 +86,7 @@ def convert_single_timeseries(
     else:
         raise ValueError("Invalid timeseries type.")
 
-    validated_df = convert_datetime_ns_to_ms(validated_df)
+    # validated_df = convert_datetime_ns_to_ms(validated_df)
 
     logger.info(f"Writing timeseries data to: {out_filepath}")
     out_filepath.parent.mkdir(parents=True, exist_ok=True)

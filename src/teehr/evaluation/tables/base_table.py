@@ -1,25 +1,21 @@
-"""Access methods to units table."""
+"""Base class for tables."""
 
 from teehr.models.str_enum import StrEnum
 from teehr.querying.filter_format import validate_and_apply_filters
 import pyspark.sql as ps
 from typing import List, Union
-# from pyspark.sql.functions import col
 from pathlib import Path
 from teehr.querying.utils import order_df
 from teehr.utils.s3path import S3Path
 from teehr.utils.utils import to_path_or_s3path, path_to_spark
-# from teehr.models.pydantic_table_models import TableBaseModel
 from teehr.models.filters import FilterBaseModel
-from pyspark.errors import AnalysisException
-
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class BaseTable():
-    """Base query class."""
+    """Base table class."""
 
     def __init__(self, ev):
         """Initialize class."""
@@ -31,7 +27,6 @@ class BaseTable():
         self.partition_by = None
         self.spark = ev.spark
         self.df: ps.DataFrame = None
-        # self.table_model: TableBaseModel = None
         self.filter_model: FilterBaseModel = None
         self.strict_validation = True
         self.validate_filter_field_types = True
@@ -52,7 +47,22 @@ class BaseTable():
             pattern: str = None,
             **options
     ) -> ps.DataFrame:
-        """Read data from directory as a spark dataframe."""
+        """Read data from table directory as a spark dataframe.
+
+        Parameters
+        ----------
+        path : Union[str, Path, S3Path]
+            The path to the directory containing the files.
+        pattern : str, optional
+            The pattern to match files.
+        **options
+            Additional options to pass to the spark read method.
+
+        Returns
+        -------
+        df : ps.DataFrame
+            The spark dataframe.
+        """
         logger.info(f"Reading files from {path}.")
         if len(options) == 0:
             options = {
@@ -65,30 +75,48 @@ class BaseTable():
         path = path_to_spark(path, pattern)
 
         # May need to deal with empty files here.
-        df = (
-            self.ev.spark.read.format(self.format)
-            # .schema(self._get_schema().to_structtype())
-            .options(**options)
-            .load(path)
-        )
+        df = self.ev.spark.read.format(self.format).options(**options).load(path)
 
         return df
 
     def _load_table(self, **kwargs):
-        """Read data from directory as a spark dataframe."""
+        """Load the table from the directory to self.df
+
+        Parameters
+        ----------
+        **kwargs
+            Additional options to pass to the spark read method.
+        """
         logger.info(f"Loading files from {self.dir}.")
         self.df = self._read_files(self.dir, **kwargs)
 
     def _check_load_table(self):
-        """Check if the table is loaded."""
+        """Check if the table is loaded.
+
+        If the table is not loaded, try to load it.  If the table is still
+        not loaded, raise an error.
+        """
         if self.df is None:
             self._load_table()
         if self.df is None:
             self._raise_missing_table_error()
 
     def _write_spark_df(self, df: ps.DataFrame, **kwargs):
-        """Write spark dataframe to directory."""
+        """Write spark dataframe to directory.
+
+        Parameters
+        ----------
+        df : ps.DataFrame
+            The spark dataframe to write.
+        **kwargs
+            Additional options to pass to the spark write method.
+        """
+        if self.ev.is_s3:
+            logger.error("Writing to S3 is not supported.")
+            raise ValueError("Writing to S3 is not supported.")
+
         logger.info(f"Writing files to {self.dir}.")
+
         if len(kwargs) == 0:
             kwargs = {
                 "header": "true",
@@ -103,14 +131,31 @@ class BaseTable():
         self._load_table()
 
     def _get_schema(self, type: str = "pyspark"):
-        """Get the primary timeseries schema."""
+        """Get the primary timeseries schema.
+
+        Parameters
+        ----------
+        type : str, optional
+            The type of schema to return.  Valid values are "pyspark" and
+            "pandas".  The default is "pyspark".
+        """
         if type == "pandas":
             return self.schema_func(type="pandas")
 
         return self.schema_func()
 
     def _validate(self, df: ps.DataFrame, strict: bool = True) -> ps.DataFrame:
-        """Validate a DataFrame against the schema."""
+        """Validate a DataFrame against the table schema.
+
+        Parameters
+        ----------
+        df : ps.DataFrame
+            The DataFrame to validate.
+        strict : bool, optional
+            If True, any extra columns will be dropped before validation.
+            If False, will be validated as-is.
+            The default is True.
+        """
         schema = self._get_schema()
 
         logger.info(f"Validating DataFrame with {schema.columns}.")
@@ -128,7 +173,7 @@ class BaseTable():
         return validated_df
 
     def validate(self):
-        """Validate the table against the schema."""
+        """Validate the dataset table against the schema."""
         self._check_load_table()
         self._validate(self.df)
 
@@ -152,8 +197,9 @@ class BaseTable():
                 str, dict, FilterBaseModel,
                 List[Union[str, dict, FilterBaseModel]]
             ]
-            The filters to apply to the query.  The filters can be a string,
-            dictionary, FilterBaseModel or a list of any of these.  The filters
+            The filters to apply to the query.  The filters can be an SQL string,
+            dictionary, FilterBaseModel or a list of any of these. The filters
+            will be applied in the order they are provided.
 
         order_by : Union[str, List[str], StrEnum, List[StrEnum]]
             The fields to order the query by.  The fields can be a string,
@@ -167,7 +213,7 @@ class BaseTable():
         Examples
         --------
 
-        Filters as dictionary:
+        Filters as dictionaries:
 
         >>> ts_df = ev.primary_timeseries.query(
         >>>     filters=[
@@ -190,7 +236,7 @@ class BaseTable():
         >>>     order_by=["location_id", "value_time"]
         >>> ).to_pandas()
 
-        Filters as string:
+        Filters as SQL strings:
 
         >>> ts_df = ev.primary_timeseries.query(
         >>>     filters=[
@@ -201,7 +247,7 @@ class BaseTable():
         >>>     order_by=["location_id", "value_time"]
         >>> ).to_pandas()
 
-        Filters as FilterBaseModel:
+        Filters as FilterBaseModels:
 
         >>> from teehr.models.filters import TimeseriesFilter
         >>> from teehr.models.filters import FilterOperators
@@ -257,7 +303,7 @@ class BaseTable():
                 str, dict, FilterBaseModel,
                 List[Union[str, dict, FilterBaseModel]]
             ]
-            The filters to apply to the query.  The filters can be a string,
+            The filters to apply to the query.  The filters can be an SQL string,
             dictionary, FilterBaseModel or a list of any of these.
 
         Returns

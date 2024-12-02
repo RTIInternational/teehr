@@ -176,7 +176,7 @@ def generate_json_paths(
     return json_paths
 
 
-def write_parquet_file(
+def write_timeseries_parquet_file(
     filepath: Path,
     overwrite_output: bool,
     data: Union[pa.Table, pd.DataFrame]
