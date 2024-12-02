@@ -104,7 +104,7 @@ def test_create_joined_timeseries(tmpdir):
     )
 
     # Create the joined timeseries
-    eval.joined_timeseries.create(execute_udf=True)
+    eval.joined_timeseries.create(add_attrs=True, execute_udf=True)
 
     columns = eval.joined_timeseries.to_sdf().columns
     expected_columns = [
