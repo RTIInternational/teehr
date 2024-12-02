@@ -1,6 +1,11 @@
 import teehr.const as const
 from teehr.evaluation.tables.base_table import BaseTable
-from teehr.loading.utils import validate_input_is_csv, validate_input_is_netcdf, validate_input_is_parquet
+from teehr.loading.utils import (
+    validate_input_is_xml,
+    validate_input_is_csv,
+    validate_input_is_netcdf,
+    validate_input_is_parquet
+)
 from teehr.models.filters import TimeseriesFilter
 # from teehr.models.table_enums import TimeseriesFields
 # from teehr.models.pydantic_table_models import Timeseries
@@ -12,6 +17,7 @@ from typing import Union
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 class TimeseriesTable(BaseTable):
     """Access methods to timeseries table."""
@@ -187,5 +193,79 @@ class TimeseriesTable(BaseTable):
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
             **kwargs
+        )
+        self._load_table()
+
+    def load_fews_xml(
+        self,
+        in_path: Union[Path, str],
+        pattern: str = "**/*.xml",
+        field_mapping: dict = {
+            "locationId": "location_id",
+            "forecastDate": "reference_time",
+            "parameterId": "variable_name",
+            "units": "unit_name",
+            "ensembleId": "configuration_name",
+            # "ensembleMemberIndex": "member",
+            "forecastDate": "reference_time"
+        },
+        constant_field_values: dict = None,
+    ):
+        """Import timeseries from XML data format.
+
+        Parameters
+        ----------
+        in_path : Union[Path, str]
+            Path to the timeseries data (file or directory) in
+            xml file format.
+        pattern : str, optional (default: "**/*.xml")
+            The pattern to match files.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+            Default mapping:
+            {
+                "locationId": "location_id",
+                "forecastDate": "reference_time",
+                "parameterId": "variable_name",
+                "units": "unit_name",
+                "ensembleId": "configuration_name",
+                "ensembleMemberIndex": "member",
+                "forecastDate": "reference_time"
+            }
+        constant_field_values : dict, optional
+            A dictionary mapping field names to constant values.
+            Format: {field_name: value}.
+
+        Includes validation and importing data to database.
+
+        Notes
+        -----
+        This function follows the Delft-FEWS Published Interface (PI)
+        XML format.
+
+        reference: https://publicwiki.deltares.nl/display/FEWSDOC/Dynamic+data
+
+        The ``value`` and ``value_time`` fields are parsed automatically.
+
+        The TEEHR Timeseries table schema includes fields:
+
+        - reference_time
+        - value_time
+        - configuration_name
+        - unit_name
+        - variable_name
+        - value
+        - location_id
+        - member
+        """
+        logger.info(f"Loading primary timeseries xml data: {in_path}")
+
+        validate_input_is_xml(in_path)
+        self._load(
+            in_path=in_path,
+            pattern=pattern,
+            field_mapping=field_mapping,
+            constant_field_values=constant_field_values,
         )
         self._load_table()

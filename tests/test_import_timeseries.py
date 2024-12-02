@@ -1,6 +1,7 @@
 """Test the import_timeseries function in the Evaluation class."""
 from pathlib import Path
 from teehr import Evaluation
+from teehr import Metrics as m
 from teehr.models.pydantic_table_models import (
     Configuration,
     Unit,
@@ -317,7 +318,7 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
         in_path=primary_filepath
     )
     eval.joined_timeseries.create(execute_udf=False)
-    df = eval.joined_timeseries.to_pandas()
+    # df = eval.joined_timeseries.to_pandas()
 
     # Now, metrics.
     kge = m.KlingGuptaEfficiency()
@@ -331,8 +332,8 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
         order_by=["primary_location_id"],
     ).to_geopandas()
 
-    assert df.shape == (99, 7)
-    assert df["location_id"].nunique() == 1
+    assert metrics_df.shape == (1, 4)
+    assert metrics_df["location_id"].nunique() == 1
 
 
 if __name__ == "__main__":

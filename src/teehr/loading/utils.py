@@ -184,8 +184,7 @@ def read_and_convert_xml_to_df(
     variable_name_kw = inv_field_mapping["variable_name"]
     reference_time_kw = inv_field_mapping["reference_time"]
     unit_name_kw = inv_field_mapping["unit_name"]
-    member_id_kw = inv_field_mapping["member_id"]
-    # member_id_kw = "ensembleMemberIndex"
+    member_kw = inv_field_mapping["member"]
     configuration_kw = inv_field_mapping["configuration_name"]
 
     fews_xml = minidom.parse(str(in_filepath))
@@ -209,8 +208,8 @@ def read_and_convert_xml_to_df(
         configuration = member.getElementsByTagName(
             configuration_kw
         )[0].firstChild.nodeValue
-        ensemble_member_id = member.getElementsByTagName(
-            member_id_kw
+        ensemble_member = member.getElementsByTagName(
+            member_kw
         )[0].firstChild.nodeValue
         forecastDate = member.getElementsByTagName(
             reference_time_kw
@@ -245,7 +244,7 @@ def read_and_convert_xml_to_df(
         timeseries_df["unit_name"] = unit_name
         timeseries_df["variable_name"] = variable_name
         timeseries_df["location_id"] = location_id
-        timeseries_df["member_id"] = ensemble_member_id
+        timeseries_df["member"] = ensemble_member
         timeseries_df["configuration_name"] = configuration
 
         timeseries_list.append(timeseries_df)
