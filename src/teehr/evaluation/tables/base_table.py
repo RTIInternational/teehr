@@ -20,8 +20,8 @@ class BaseTable():
     def __init__(self, ev):
         """Initialize class."""
         self.ev = ev
-        self.dir = None
         self.name = None
+        self.dir = None
         self.schema_func = None
         self.format = None
         self.save_mode = "error"

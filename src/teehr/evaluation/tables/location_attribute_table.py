@@ -9,6 +9,7 @@ import teehr.models.pandera_dataframe_schemas as schemas
 from pathlib import Path
 from typing import Union
 import logging
+from teehr.utils.utils import to_path_or_s3path
 
 
 logger = logging.getLogger(__name__)
@@ -20,8 +21,9 @@ class LocationAttributeTable(BaseTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.dir = ev.location_attributes_dir
         self.name = "location_attributes"
+        # self.dir = ev.location_attributes_dir
+        self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.format = "parquet"
         self.save_mode = "overwrite"
         self.filter_model = LocationAttributeFilter

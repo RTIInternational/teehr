@@ -71,36 +71,36 @@ class Evaluation:
         self.scripts_dir = to_path_or_s3path(
             self.dir_path, const.SCRIPTS_DIR
         )
-        self.units_dir = to_path_or_s3path(
-            self.dataset_dir, const.UNITS_DIR
-        )
-        self.variables_dir = to_path_or_s3path(
-            self.dataset_dir, const.VARIABLES_DIR
-        )
-        self.configurations_dir = to_path_or_s3path(
-            self.dataset_dir, const.CONFIGURATIONS_DIR
-        )
-        self.attributes_dir = to_path_or_s3path(
-            self.dataset_dir, const.ATTRIBUTES_DIR
-        )
-        self.locations_dir = to_path_or_s3path(
-            self.dataset_dir, const.LOCATIONS_DIR
-        )
-        self.location_crosswalks_dir = to_path_or_s3path(
-            self.dataset_dir, const.LOCATION_CROSSWALKS_DIR
-        )
-        self.location_attributes_dir = to_path_or_s3path(
-            self.dataset_dir, const.LOCATION_ATTRIBUTES_DIR
-        )
-        self.primary_timeseries_dir = to_path_or_s3path(
-            self.dataset_dir, const.PRIMARY_TIMESERIES_DIR
-        )
-        self.secondary_timeseries_dir = to_path_or_s3path(
-            self.dataset_dir, const.SECONDARY_TIMESERIES_DIR
-        )
-        self.joined_timeseries_dir = to_path_or_s3path(
-            self.dataset_dir, const.JOINED_TIMESERIES_DIR
-        )
+        # self.units_dir = to_path_or_s3path(
+        #     self.dataset_dir, const.UNITS_DIR
+        # )
+        # self.variables_dir = to_path_or_s3path(
+        #     self.dataset_dir, const.VARIABLES_DIR
+        # )
+        # self.configurations_dir = to_path_or_s3path(
+        #     self.dataset_dir, const.CONFIGURATIONS_DIR
+        # )
+        # self.attributes_dir = to_path_or_s3path(
+        #     self.dataset_dir, const.ATTRIBUTES_DIR
+        # )
+        # self.locations_dir = to_path_or_s3path(
+        #     self.dataset_dir, const.LOCATIONS_DIR
+        # )
+        # self.location_crosswalks_dir = to_path_or_s3path(
+        #     self.dataset_dir, const.LOCATION_CROSSWALKS_DIR
+        # )
+        # self.location_attributes_dir = to_path_or_s3path(
+        #     self.dataset_dir, const.LOCATION_ATTRIBUTES_DIR
+        # )
+        # self.primary_timeseries_dir = to_path_or_s3path(
+        #     self.dataset_dir, const.PRIMARY_TIMESERIES_DIR
+        # )
+        # self.secondary_timeseries_dir = to_path_or_s3path(
+        #     self.dataset_dir, const.SECONDARY_TIMESERIES_DIR
+        # )
+        # self.joined_timeseries_dir = to_path_or_s3path(
+        #     self.dataset_dir, const.JOINED_TIMESERIES_DIR
+        # )
 
         if not self.is_s3 and not Path(self.dir_path).is_dir():
             if create_dir:

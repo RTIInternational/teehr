@@ -4,6 +4,7 @@ from teehr.models.table_enums import ConfigurationFields
 from teehr.models.pydantic_table_models import Configuration
 import teehr.models.pandera_dataframe_schemas as schemas
 from typing import List, Union
+from teehr.utils.utils import to_path_or_s3path
 
 
 class ConfigurationTable(DomainTable):
@@ -12,8 +13,9 @@ class ConfigurationTable(DomainTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.dir = ev.configurations_dir
         self.name = "configurations"
+        # self.dir = ev.configurations_dir
+        self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.filter_model = ConfigurationFilter
         self.schema_func = schemas.configuration_schema
 

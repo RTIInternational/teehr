@@ -234,13 +234,13 @@ def test_gumboot_bootstrapping(tmpdir):
     # Copy in joined timeseries file.
     shutil.copy(
         joined_timeseries_filepath,
-        Path(eval.joined_timeseries_dir, joined_timeseries_filepath.name)
+        Path(eval.joined_timeseries.dir, joined_timeseries_filepath.name)
     )
     # Copy in the locations file.
     test_study_data_dir = Path("tests", "data", "v0_3_test_study")
     shutil.copy(
         Path(test_study_data_dir, "geo", "gages.parquet"),
-        Path(eval.locations_dir, "gages.parquet")
+        Path(eval.locations.dir, "gages.parquet")
     )
 
     # quantiles = [0.05, 0.5, 0.95]

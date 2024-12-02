@@ -7,6 +7,7 @@ from teehr.querying.utils import join_geometry
 import teehr.models.pandera_dataframe_schemas as schemas
 import pyspark.sql as ps
 import logging
+from teehr.utils.utils import to_path_or_s3path
 
 logger = logging.getLogger(__name__)
 
@@ -17,8 +18,9 @@ class JoinedTimeseriesTable(TimeseriesTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.dir = ev.joined_timeseries_dir
         self.name = "joined_timeseries"
+        # self.dir = ev.joined_timeseries_dir
+        self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.filter_model = JoinedTimeseriesFilter
         self.validate_filter_field_types = False
         self.strict_validation = False

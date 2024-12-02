@@ -6,6 +6,7 @@ from teehr.models.table_enums import TimeseriesFields
 from pathlib import Path
 from typing import Union
 import logging
+from teehr.utils.utils import to_path_or_s3path
 
 
 logger = logging.getLogger(__name__)
@@ -17,8 +18,9 @@ class SecondaryTimeseriesTable(TimeseriesTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.dir = ev.secondary_timeseries_dir
         self.name = "secondary_timeseries"
+        # self.dir = ev.secondary_timeseries_dir
+        self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.schema_func = schemas.secondary_timeseries_schema
 
     def field_enum(self) -> TimeseriesFields:
