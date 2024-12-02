@@ -171,6 +171,60 @@ def read_and_convert_netcdf_to_df(
     return df
 
 
+def _get_element_node_value(
+    element: minidom.Element,
+    tag_name: str
+) -> str:
+    """Get the node value of an element."""
+    elements_list = element.getElementsByTagName(tag_name)
+    if len(elements_list) == 0:
+        logger.error(f"'{tag_name}' not found, unable to parse this file.")
+        raise ValueError(
+            f"'{tag_name}' not found, unable to parse this XML file."
+        )
+    elif len(elements_list) > 1:
+        logger.error(
+            f"More than one entry for'{tag_name}', unable to parse this file."
+        )
+        raise ValueError(
+            f"More than one entry for'{tag_name}', unable to parse this file."
+        )
+    else:
+        node_value = elements_list[0].firstChild.nodeValue
+        return node_value
+
+
+def _get_element_attribute_value(
+    element: minidom.Element,
+    tag_name: str,
+    attribute_name: str
+) -> str:
+    """Get the attribute value of an element."""
+    elements_list = element.getElementsByTagName(tag_name)
+    if len(elements_list) == 0:
+        logger.error(f"'{tag_name}' not found, unable to parse this file.")
+        raise ValueError(
+            f"'{tag_name}' not found, unable to parse this XML file."
+        )
+    elif len(elements_list) > 1:
+        logger.error(
+            f"More than one entry for'{tag_name}', unable to parse this file."
+        )
+        raise ValueError(
+            f"More than one entry for'{tag_name}', unable to parse this file."
+        )
+    else:
+        attr_value = elements_list[0].getAttribute(attribute_name)
+        if len(attr_value) == 0:
+            logger.error(
+                f"Attribute '{attribute_name}' not found for '{tag_name}'."
+            )
+            raise ValueError(
+                f"Attribute '{attribute_name}' not found for '{tag_name}'."
+            )
+        return attr_value
+
+
 def read_and_convert_xml_to_df(
     in_filepath: Union[str, Path],
     field_mapping: dict,
@@ -184,7 +238,7 @@ def read_and_convert_xml_to_df(
     variable_name_kw = inv_field_mapping["variable_name"]
     reference_time_kw = inv_field_mapping["reference_time"]
     unit_name_kw = inv_field_mapping["unit_name"]
-    member_kw = inv_field_mapping["member"]
+    # member_kw = inv_field_mapping["member"]
     configuration_kw = inv_field_mapping["configuration_name"]
 
     fews_xml = minidom.parse(str(in_filepath))
@@ -199,27 +253,14 @@ def read_and_convert_xml_to_df(
 
     timeseries_list = []
     for member in series:
-        location_id = member.getElementsByTagName(
-            location_id_kw
-        )[0].firstChild.nodeValue
-        variable_name = member.getElementsByTagName(
-            variable_name_kw
-        )[0].firstChild.nodeValue
-        configuration = member.getElementsByTagName(
-            configuration_kw
-        )[0].firstChild.nodeValue
-        ensemble_member = member.getElementsByTagName(
-            member_kw
-        )[0].firstChild.nodeValue
-        forecastDate = member.getElementsByTagName(
-            reference_time_kw
-        )[0].getAttribute("date")
-        forecastTime = member.getElementsByTagName(
-            reference_time_kw
-        )[0].getAttribute("time")
-        unit_name = member.getElementsByTagName(
-            unit_name_kw
-        )[0].firstChild.nodeValue
+        location_id = _get_element_node_value(member, location_id_kw)
+        variable_name = _get_element_node_value(member, variable_name_kw)
+        configuration = _get_element_node_value(member, configuration_kw)
+        unit_name = _get_element_node_value(member, unit_name_kw)
+        # ensemble_member = _get_element_node_value(member, member_kw)
+
+        forecastDate = _get_element_attribute_value(member, reference_time_kw, "date")
+        forecastTime = _get_element_attribute_value(member, reference_time_kw, "time")
 
         reference_time = pd.to_datetime(
             forecastDate + " " + forecastTime
@@ -244,7 +285,7 @@ def read_and_convert_xml_to_df(
         timeseries_df["unit_name"] = unit_name
         timeseries_df["variable_name"] = variable_name
         timeseries_df["location_id"] = location_id
-        timeseries_df["member"] = ensemble_member
+        # timeseries_df["member"] = ensemble_member
         timeseries_df["configuration_name"] = configuration
 
         timeseries_list.append(timeseries_df)
