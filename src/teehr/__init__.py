@@ -1,4 +1,4 @@
-__version__ = "0.4.3"
+__version__ = "0.4.4"
 
 from teehr.evaluation.evaluation import Evaluation  # noqa
 # from teehr.evaluation.tables.attribute_table import AttributeTable

@@ -1,6 +1,21 @@
 Release Notes
 =============
 
+0.4.4 - 2024-12-02
+--------------------
+
+Added
+^^^^^
+* Added ability to read an Evaluation dataset directly from an S3 bucket.
+* When path to an Evaluation dataset is an S3 bucket, the Evaluation is read-only.
+
+Changed
+^^^^^^^
+* Pretty significant refactor of the Table classes to make them more flexible and easier to use.
+* Added more robust Pandera validation to the Table classes.
+* Updated docs to reflect changes and added `read_from_s3` example.
+
+
 0.4.3 - 2024-10-19
 --------------------
 
