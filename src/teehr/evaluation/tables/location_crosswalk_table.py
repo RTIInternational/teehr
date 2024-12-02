@@ -21,6 +21,7 @@ class LocationCrosswalkTable(BaseTable):
         """Initialize class."""
         super().__init__(ev)
         self.dir = ev.location_crosswalks_dir
+        self.name = "location_crosswalks"
         self.format = "parquet"
         self.save_mode = "overwrite"
         self.filter_model = LocationCrosswalkFilter

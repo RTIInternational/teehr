@@ -18,6 +18,7 @@ class PrimaryTimeseriesTable(TimeseriesTable):
         """Initialize class."""
         super().__init__(ev)
         self.dir = ev.primary_timeseries_dir
+        self.name = "primary_timeseries"
         self.schema_func = schemas.primary_timeseries_schema
 
     def field_enum(self) -> TimeseriesFields:

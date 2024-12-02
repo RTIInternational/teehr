@@ -21,6 +21,7 @@ class BaseTable():
         """Initialize class."""
         self.ev = ev
         self.dir = None
+        self.name = None
         self.schema_func = None
         self.format = None
         self.save_mode = "error"

@@ -17,6 +17,7 @@ class VariableTable(DomainTable):
         """Initialize class."""
         super().__init__(ev)
         self.dir = ev.variables_dir
+        self.name = "variables"
         self.filter_model = VariableFilter
         self.schema_func = schemas.variable_schema
 

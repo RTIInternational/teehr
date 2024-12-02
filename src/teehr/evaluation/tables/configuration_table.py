@@ -13,6 +13,7 @@ class ConfigurationTable(DomainTable):
         """Initialize class."""
         super().__init__(ev)
         self.dir = ev.configurations_dir
+        self.name = "configurations"
         self.filter_model = ConfigurationFilter
         self.schema_func = schemas.configuration_schema
 

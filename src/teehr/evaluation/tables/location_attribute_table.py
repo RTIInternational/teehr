@@ -21,6 +21,7 @@ class LocationAttributeTable(BaseTable):
         """Initialize class."""
         super().__init__(ev)
         self.dir = ev.location_attributes_dir
+        self.name = "location_attributes"
         self.format = "parquet"
         self.save_mode = "overwrite"
         self.filter_model = LocationAttributeFilter

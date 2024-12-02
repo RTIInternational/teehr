@@ -13,10 +13,10 @@ class AttributeTable(DomainTable):
         """Initialize class."""
         super().__init__(ev)
         self.dir = ev.attributes_dir
-        # self.table_model = Attribute
+        self.name = "attributes"
         self.filter_model = AttributeFilter
         self.schema_func = schemas.attribute_schema
-        # self._load_table()
+
 
     def field_enum(self) -> AttributeFields:
         """Get the attribute fields enum."""

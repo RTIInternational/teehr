@@ -20,6 +20,7 @@ class LocationTable(BaseTable):
         """Initialize class."""
         super().__init__(ev)
         self.dir = ev.locations_dir
+        self.name = "locations"
         self.format = "parquet"
         self.save_mode = "overwrite"
         self.filter_model = LocationFilter

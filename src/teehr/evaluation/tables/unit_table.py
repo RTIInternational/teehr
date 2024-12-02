@@ -17,6 +17,7 @@ class UnitTable(DomainTable):
         """Initialize class."""
         super().__init__(ev)
         self.dir = ev.units_dir
+        self.name = "units"
         self.filter_model = UnitFilter
         self.schema_func = schemas.unit_schema
 

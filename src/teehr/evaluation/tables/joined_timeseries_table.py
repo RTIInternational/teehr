@@ -18,6 +18,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
         """Initialize class."""
         super().__init__(ev)
         self.dir = ev.joined_timeseries_dir
+        self.name = "joined_timeseries"
         self.filter_model = JoinedTimeseriesFilter
         self.validate_filter_field_types = False
         self.strict_validation = False
