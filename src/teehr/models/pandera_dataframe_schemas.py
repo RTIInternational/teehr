@@ -371,7 +371,8 @@ def primary_timeseries_schema(
                 )
             },
             strict="filter",
-            coerce=True
+            coerce=True,
+            add_missing_columns=True
         )
     if type == "pyspark":
         return ps.DataFrameSchema(
@@ -415,7 +416,7 @@ def primary_timeseries_schema(
                 )
             },
             strict=True,
-            coerce=True,
+            coerce=True
         )
 
 
@@ -470,7 +471,8 @@ def secondary_timeseries_schema(
                 )
             },
             strict="filter",
-            coerce=True
+            coerce=True,
+            add_missing_columns=True
         )
     if type == "pyspark":
         return ps.DataFrameSchema(
@@ -514,7 +516,7 @@ def secondary_timeseries_schema(
                 )
             },
             strict=True,
-            coerce=True,
+            coerce=True
         )
 
 def joined_timeseries_schema(

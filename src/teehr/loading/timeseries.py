@@ -85,10 +85,7 @@ def convert_single_timeseries(
         for field, value in constant_field_values.items():
             timeseries[field] = value
 
-    if "member" not in timeseries.columns:
-        timeseries["member"] = None
-
-    timeseries = timeseries[field_mapping.values()]
+    # timeseries = timeseries[field_mapping.values()]
 
     if timeseries_type == "primary":
         validated_df = schemas.primary_timeseries_schema(type="pandas").validate(timeseries)
