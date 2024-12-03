@@ -64,6 +64,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
                 , sf.configuration_name
                 , sf.unit_name
                 , sf.variable_name
+                , sf.member
             FROM secondary_timeseries sf
             JOIN location_crosswalks cf
                 on cf.secondary_location_id = sf.location_id

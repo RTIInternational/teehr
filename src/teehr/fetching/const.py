@@ -10,6 +10,7 @@ LOCATION_ID = "location_id"
 UNIT_NAME = "unit_name"
 VARIABLE_NAME = "variable_name"
 CONFIGURATION_NAME = "configuration_name"
+MEMBER = "member"
 
 TIMESERIES_DATA_TYPES = {
     VALUE: "float32",

@@ -20,7 +20,8 @@ from teehr.fetching.const import (
     LOCATION_ID,
     UNIT_NAME,
     VARIABLE_NAME,
-    CONFIGURATION_NAME
+    CONFIGURATION_NAME,
+    MEMBER
 )
 
 
@@ -75,6 +76,7 @@ def file_chunk_loop(
             CONFIGURATION_NAME: num_vals * [nwm_version + "_" + configuration],
             VARIABLE_NAME: num_vals * [teehr_variable_name],
             UNIT_NAME: num_vals * [teehr_units],
+            MEMBER: num_vals * [None]
         },
         schema=schema,
     )
@@ -106,6 +108,7 @@ def process_chunk_of_files(
             (CONFIGURATION_NAME, pa.string()),
             (VARIABLE_NAME, pa.string()),
             (UNIT_NAME, pa.string()),
+            (MEMBER, pa.string())
         ]
     )
 

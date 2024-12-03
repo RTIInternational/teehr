@@ -206,7 +206,7 @@ class TimeseriesTable(BaseTable):
             "parameterId": "variable_name",
             "units": "unit_name",
             "ensembleId": "configuration_name",
-            # "ensembleMemberIndex": "member",
+            "ensembleMemberIndex": "member",
             "forecastDate": "reference_time"
         },
         constant_field_values: dict = None,

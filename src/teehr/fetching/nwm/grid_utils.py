@@ -20,7 +20,8 @@ from teehr.fetching.const import (
     LOCATION_ID,
     UNIT_NAME,
     VARIABLE_NAME,
-    CONFIGURATION_NAME
+    CONFIGURATION_NAME,
+    MEMBER
 )
 
 
@@ -154,6 +155,7 @@ def process_single_nwm_grid_file(
     df.loc[:, VALUE_TIME] = value_time
     df.loc[:, REFERENCE_TIME] = ref_time
     df.loc[:, CONFIGURATION_NAME] = configuration_name
+    df.loc[:, MEMBER] = None
 
     if location_id_prefix:
         df = update_location_id_prefix(df, location_id_prefix)

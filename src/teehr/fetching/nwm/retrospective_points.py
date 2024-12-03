@@ -47,7 +47,8 @@ from teehr.fetching.const import (
     LOCATION_ID,
     UNIT_NAME,
     VARIABLE_NAME,
-    CONFIGURATION_NAME
+    CONFIGURATION_NAME,
+    MEMBER
 )
 from teehr.models.fetching.utils import (
     NWMChunkByEnum,
@@ -137,6 +138,7 @@ def da_to_df(
         )
     df[CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
     df[REFERENCE_TIME] = np.nan
+    df[MEMBER] = None
     df.rename(
         columns={
             "time": VALUE_TIME,

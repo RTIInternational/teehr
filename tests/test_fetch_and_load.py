@@ -65,7 +65,8 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
             "unit_name",
             "location_id",
             "configuration_name",
-            "variable_name"
+            "variable_name",
+            "member"
             ])
     assert ts_df.unit_name.iloc[0] == "m^3/s"
     assert np.isclose(ts_df.value.sum(), np.float32(7319.99))
@@ -100,7 +101,8 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
             "unit_name",
             "location_id",
             "configuration_name",
-            "variable_name"
+            "variable_name",
+            "member"
             ])
     assert ts_df.unit_name.iloc[0] == "mm/s"
     assert np.isclose(ts_df.value.sum(), np.float32(0.00028747512))
@@ -141,7 +143,8 @@ def test_fetch_and_load_nwm_forecast_points(tmpdir):
             "unit_name",
             "location_id",
             "configuration_name",
-            "variable_name"
+            "variable_name",
+            "member"
             ])
     assert ts_df.unit_name.iloc[0] == "m^3/s"
     assert np.isclose(ts_df.value.sum(), np.float32(658.14))
@@ -180,7 +183,8 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
             "unit_name",
             "location_id",
             "configuration_name",
-            "variable_name"
+            "variable_name",
+            "member"
             ])
     assert ts_df.unit_name.iloc[0] == "mm/s"
     assert np.isclose(ts_df.value.sum(), np.float32(0.0))

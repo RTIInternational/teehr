@@ -308,7 +308,7 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
     )
     constant_field_values = {
         "unit_name": "ft^3/s",
-        "variable_name": "streamflow_hourly_inst",
+        "variable_name": "streamflow_hourly_inst"
     }
     eval.secondary_timeseries.load_fews_xml(
         in_path=secondary_filepath,
@@ -333,37 +333,37 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
     ).to_geopandas()
 
     assert metrics_df.shape == (1, 4)
-    assert metrics_df["location_id"].nunique() == 1
+    assert metrics_df["primary_location_id"].nunique() == 1
 
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        # test_validate_and_insert_timeseries(
-        #     tempfile.mkdtemp(
-        #         prefix="1-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_validate_and_insert_timeseries_set_const(
-        #     tempfile.mkdtemp(
-        #         prefix="2-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_validate_and_insert_summa_nc_timeseries(
-        #     tempfile.mkdtemp(
-        #         prefix="3-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_validate_and_insert_mizu_nc_timeseries(
-        #     tempfile.mkdtemp(
-        #         prefix="4-",
-        #         dir=tempdir
-        #     )
-        # )
+        test_validate_and_insert_timeseries(
+            tempfile.mkdtemp(
+                prefix="1-",
+                dir=tempdir
+            )
+        )
+        test_validate_and_insert_timeseries_set_const(
+            tempfile.mkdtemp(
+                prefix="2-",
+                dir=tempdir
+            )
+        )
+        test_validate_and_insert_summa_nc_timeseries(
+            tempfile.mkdtemp(
+                prefix="3-",
+                dir=tempdir
+            )
+        )
+        test_validate_and_insert_mizu_nc_timeseries(
+            tempfile.mkdtemp(
+                prefix="4-",
+                dir=tempdir
+            )
+        )
         test_validate_and_insert_fews_xml_timeseries(
             tempfile.mkdtemp(
                 prefix="5-",

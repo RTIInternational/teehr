@@ -48,7 +48,8 @@ from teehr.fetching.const import (
     LOCATION_ID,
     UNIT_NAME,
     VARIABLE_NAME,
-    CONFIGURATION_NAME
+    CONFIGURATION_NAME,
+    MEMBER
 )
 from teehr.models.fetching.utils import (
     NWMChunkByEnum,
@@ -145,6 +146,7 @@ def process_nwm30_retro_group(
 
     chunk_df.loc[:, REFERENCE_TIME] = np.nan
     chunk_df.loc[:, CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
+    chunk_df.loc[:, MEMBER] = None
 
     if location_id_prefix:
         chunk_df = update_location_id_prefix(chunk_df, location_id_prefix)
@@ -237,6 +239,7 @@ def process_single_nwm21_retro_grid_file(
     df.loc[:, VALUE_TIME] = value_time
     df.loc[:, REFERENCE_TIME] = np.nan
     df.loc[:, CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
+    df.loc[:, MEMBER] = None
 
     if location_id_prefix:
         df = update_location_id_prefix(df, location_id_prefix)

@@ -41,6 +41,7 @@ from teehr.fetching.const import (
     UNIT_NAME,
     VARIABLE_NAME,
     CONFIGURATION_NAME,
+    MEMBER,
     USGS_VARIABLE_MAPPER
 )
 
@@ -100,6 +101,7 @@ def _format_df_column_names(
     df[REFERENCE_TIME] = np.nan
     df[UNIT_NAME] = unit_name
     df[VARIABLE_NAME] = variable_name
+    df[MEMBER] = None
     return df[[
         LOCATION_ID,
         REFERENCE_TIME,
@@ -107,7 +109,8 @@ def _format_df_column_names(
         VALUE,
         VARIABLE_NAME,
         UNIT_NAME,
-        CONFIGURATION_NAME
+        CONFIGURATION_NAME,
+        MEMBER
     ]]
 
 

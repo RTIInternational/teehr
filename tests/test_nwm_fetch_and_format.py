@@ -133,7 +133,8 @@ def test_nwm22_grid_fetch_and_format(tmpdir):
         'variable_name',
         'value_time',
         'reference_time',
-        'configuration_name'
+        'configuration_name',
+        'member'
     ]].copy()
 
     assert test_df.compare(bench_df).index.size == 0
@@ -173,7 +174,8 @@ def test_nwm30_grid_fetch_and_format(tmpdir):
         'variable_name',
         'value_time',
         'reference_time',
-        'configuration_name'
+        'configuration_name',
+        'member'
     ]].copy()
 
     assert test_df.compare(bench_df).index.size == 0
