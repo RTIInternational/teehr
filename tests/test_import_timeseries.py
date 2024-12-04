@@ -302,7 +302,7 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
     eval.configurations.add(
         Configuration(
             name="MEFP",
-            type="primary",
+            type="secondary",
             description="MBRFC HEFS Data"
         )
     )
