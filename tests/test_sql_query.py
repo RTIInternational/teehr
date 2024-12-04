@@ -25,7 +25,6 @@ def test_sql_query(tmpdir):
         'value',
         'unit_name',
         'location_id',
-        'member',
         'configuration_name',
         'variable_name',
         'name',
