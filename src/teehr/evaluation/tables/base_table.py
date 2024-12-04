@@ -438,8 +438,8 @@ class BaseTable():
         """Return Pandas DataFrame."""
         self._check_load_table()
         df = self.df.toPandas()
-        df.attrs['table_type'] = None
-        df.attrs['fields'] = None
+        df.attrs['table_type'] = self.name
+        df.attrs['fields'] = self.fields()
         return df
 
     def to_geopandas(self):

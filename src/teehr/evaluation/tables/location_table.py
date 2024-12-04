@@ -48,7 +48,7 @@ class LocationTable(BaseTable):
         """Return GeoPandas DataFrame."""
         self._check_load_table()
         gdf = df_to_gdf(self.to_pandas())
-        gdf.attrs['table_type'] = 'locations'
+        gdf.attrs['table_type'] = self.name
         gdf.attrs['fields'] = self.fields()
         return gdf
 
