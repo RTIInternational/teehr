@@ -198,7 +198,8 @@ class Fetch:
             filter_to_hourly=filter_to_hourly,
             filter_no_data=filter_no_data,
             convert_to_si=convert_to_si,
-            overwrite_output=overwrite_output
+            overwrite_output=overwrite_output,
+            timeseries_type=timeseries_type
         )
 
         validate_and_insert_timeseries(
@@ -318,7 +319,8 @@ class Fetch:
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
             domain=domain,
-            variable_mapper=NWM_VARIABLE_MAPPER
+            variable_mapper=NWM_VARIABLE_MAPPER,
+            timeseries_type=timeseries_type
         )
 
         validate_and_insert_timeseries(
@@ -387,6 +389,9 @@ class Fetch:
             and "PR". Only relevant when NWM version equals v3.0.
         location_id_prefix : Union[str, None]
             Optional location ID prefix to add (prepend) or replace.
+        timeseries_type : str
+            Whether to consider as the "primary" or "secondary" timeseries.
+            Default is "primary".
 
         Notes
         -----
@@ -457,7 +462,8 @@ class Fetch:
             overwrite_output=overwrite_output,
             domain=domain,
             location_id_prefix=location_id_prefix,
-            variable_mapper=NWM_VARIABLE_MAPPER
+            variable_mapper=NWM_VARIABLE_MAPPER,
+            timeseries_type=timeseries_type
         )
 
         validate_and_insert_timeseries(
@@ -643,7 +649,8 @@ class Fetch:
             stepsize=stepsize,
             ignore_missing_file=ignore_missing_file,
             overwrite_output=overwrite_output,
-            variable_mapper=NWM_VARIABLE_MAPPER
+            variable_mapper=NWM_VARIABLE_MAPPER,
+            timeseries_type=timeseries_type
         )
 
         validate_and_insert_timeseries(

@@ -101,8 +101,7 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
             "unit_name",
             "location_id",
             "configuration_name",
-            "variable_name",
-            "member"
+            "variable_name"
             ])
     assert ts_df.unit_name.iloc[0] == "mm/s"
     assert np.isclose(ts_df.value.sum(), np.float32(0.00028747512))
@@ -169,7 +168,7 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
         ingest_days=1,
         zonal_weights_filepath=ZONAL_WEIGHTS,
         nwm_version="nwm30",
-        prioritzie_analysis_valid_time=True,
+        prioritize_analysis_valid_time=True,
         t_minus_hours=[0],
         location_id_prefix="huc10"
     )
@@ -183,23 +182,22 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
             "unit_name",
             "location_id",
             "configuration_name",
-            "variable_name",
-            "member"
+            "variable_name"
             ])
     assert ts_df.unit_name.iloc[0] == "mm/s"
     assert np.isclose(ts_df.value.sum(), np.float32(0.0))
     assert ts_df.value_time.min() == pd.Timestamp("2024-02-22 00:00:00")
-    assert ts_df.value_time.max() == pd.Timestamp("2024-02-22 00:00:00")
+    assert ts_df.value_time.max() == pd.Timestamp("2024-02-22 23:00:00")
     file_list = list(
         Path(
             tmpdir,
             "dataset",
             "primary_timeseries",
-            "nwm30_forcing_analysis_assim",
-            "rainfall_hourly_rate"
+            "configuration_name=nwm30_forcing_analysis_assim",
+            "variable_name=rainfall_hourly_rate"
             ).glob("*.parquet")
     )
-    assert len(file_list) == 24
+    assert len(file_list) == 8
 
 
 if __name__ == "__main__":

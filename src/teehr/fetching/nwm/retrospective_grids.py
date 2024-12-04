@@ -48,13 +48,13 @@ from teehr.fetching.const import (
     LOCATION_ID,
     UNIT_NAME,
     VARIABLE_NAME,
-    CONFIGURATION_NAME,
-    MEMBER
+    CONFIGURATION_NAME
 )
 from teehr.models.fetching.utils import (
     NWMChunkByEnum,
     SupportedNWMRetroVersionsEnum,
-    SupportedNWMRetroDomainsEnum
+    SupportedNWMRetroDomainsEnum,
+    TimeseriesTypeEnum
 )
 from teehr.models.fetching.nwm22_grid import ForcingVariablesEnum
 from teehr.fetching.nwm.grid_utils import (
@@ -67,8 +67,7 @@ from teehr.fetching.utils import (
     write_timeseries_parquet_file,
     get_dataset,
     get_period_start_end_times,
-    create_periods_based_on_chunksize,
-    format_timeseries_data_types
+    create_periods_based_on_chunksize
 )
 from teehr.fetching.nwm.retrospective_points import (
     format_grouped_filename,
@@ -146,12 +145,10 @@ def process_nwm30_retro_group(
 
     chunk_df.loc[:, REFERENCE_TIME] = np.nan
     chunk_df.loc[:, CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
-    chunk_df.loc[:, MEMBER] = None
 
     if location_id_prefix:
         chunk_df = update_location_id_prefix(chunk_df, location_id_prefix)
 
-    chunk_df = format_timeseries_data_types(chunk_df)
 
     return chunk_df
 
@@ -239,7 +236,6 @@ def process_single_nwm21_retro_grid_file(
     df.loc[:, VALUE_TIME] = value_time
     df.loc[:, REFERENCE_TIME] = np.nan
     df.loc[:, CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
-    df.loc[:, MEMBER] = None
 
     if location_id_prefix:
         df = update_location_id_prefix(df, location_id_prefix)
@@ -259,7 +255,8 @@ def nwm_retro_grids_to_parquet(
     overwrite_output: Optional[bool] = False,
     domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
     location_id_prefix: Optional[Union[str, None]] = None,
-    variable_mapper: Dict[str, Dict[str, str]] = None
+    variable_mapper: Dict[str, Dict[str, str]] = None,
+    timeseries_type: TimeseriesTypeEnum = "primary"
 ):
     """Compute the weighted average for NWM v2.1 or v3.0 gridded data.
 
@@ -390,12 +387,12 @@ def nwm_retro_grids_to_parquet(
                     f"{start}_{end}.parquet"
                 )
 
-            chunk_df = format_timeseries_data_types(chunk_df)
-
             write_timeseries_parquet_file(
                 filepath=output_filename,
                 overwrite_output=overwrite_output,
-                data=chunk_df)
+                data=chunk_df,
+                timeseries_type=timeseries_type
+            )
 
     if nwm_version == SupportedNWMRetroVersionsEnum.nwm30:
 
@@ -456,5 +453,6 @@ def nwm_retro_grids_to_parquet(
             write_timeseries_parquet_file(
                 filepath=output_filename,
                 overwrite_output=overwrite_output,
-                data=chunk_df
+                data=chunk_df,
+                timeseries_type=timeseries_type
             )

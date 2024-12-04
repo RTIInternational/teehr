@@ -13,6 +13,7 @@ from teehr.fetching.utils import (
     write_timeseries_parquet_file,
     split_dataframe
 )
+from teehr.models.fetching.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
     VALUE,
     VALUE_TIME,
@@ -94,7 +95,8 @@ def process_chunk_of_files(
     ignore_missing_file: bool,
     overwrite_output: bool,
     nwm_version: str,
-    variable_mapper: Dict[str, Dict[str, str]]
+    variable_mapper: Dict[str, Dict[str, str]],
+    timeseries_type: TimeseriesTypeEnum
 ):
     """Assemble a table for a chunk of NWM files."""
     location_ids = np.array(location_ids).astype(int)
@@ -151,7 +153,8 @@ def process_chunk_of_files(
     write_timeseries_parquet_file(
         Path(output_parquet_dir, filename),
         overwrite_output,
-        output_table
+        output_table,
+        timeseries_type
     )
 
 
@@ -166,7 +169,8 @@ def fetch_and_format_nwm_points(
     ignore_missing_file: bool,
     overwrite_output: bool,
     nwm_version: str,
-    variable_mapper: Dict[str, Dict[str, str]]
+    variable_mapper: Dict[str, Dict[str, str]],
+    timeseries_type: TimeseriesTypeEnum
 ):
     """Fetch NWM point data and save as parquet files.
 
@@ -242,5 +246,6 @@ def fetch_and_format_nwm_points(
             ignore_missing_file,
             overwrite_output,
             nwm_version,
-            variable_mapper
+            variable_mapper,
+            timeseries_type
         )

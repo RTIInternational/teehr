@@ -10,9 +10,9 @@ import xarray as xr
 
 from teehr.fetching.utils import (
     get_dataset,
-    write_timeseries_parquet_file,
-    format_timeseries_data_types
+    write_timeseries_parquet_file
 )
+from teehr.models.fetching.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
     VALUE,
     VALUE_TIME,
@@ -20,8 +20,7 @@ from teehr.fetching.const import (
     LOCATION_ID,
     UNIT_NAME,
     VARIABLE_NAME,
-    CONFIGURATION_NAME,
-    MEMBER
+    CONFIGURATION_NAME
 )
 
 
@@ -155,7 +154,6 @@ def process_single_nwm_grid_file(
     df.loc[:, VALUE_TIME] = value_time
     df.loc[:, REFERENCE_TIME] = ref_time
     df.loc[:, CONFIGURATION_NAME] = configuration_name
-    df.loc[:, MEMBER] = None
 
     if location_id_prefix:
         df = update_location_id_prefix(df, location_id_prefix)
@@ -172,7 +170,8 @@ def fetch_and_format_nwm_grids(
     ignore_missing_file: bool,
     overwrite_output: bool,
     location_id_prefix: Union[str, None],
-    variable_mapper: Dict[str, Dict[str, str]]
+    variable_mapper: Dict[str, Dict[str, str]],
+    timeseries_type: TimeseriesTypeEnum
 ):
     """Compute weighted average, grouping by reference time.
 
@@ -228,9 +227,6 @@ def fetch_and_format_nwm_grids(
                                     "configuration were found in GCS!")
         z_hour_df = pd.concat(output)
 
-        # Assign data types.
-        z_hour_df = format_timeseries_data_types(z_hour_df)
-
         # Save to parquet.
         yrmoday = df.day.iloc[0]
         z_hour = df.z_hour.iloc[0][1:3]
@@ -239,4 +235,9 @@ def fetch_and_format_nwm_grids(
             Path(output_parquet_dir), f"{ref_time_str}.parquet"
         )
         z_hour_df.sort_values([LOCATION_ID, VALUE_TIME], inplace=True)
-        write_timeseries_parquet_file(parquet_filepath, overwrite_output, z_hour_df)
+        write_timeseries_parquet_file(
+            filepath=parquet_filepath,
+            overwrite_output=overwrite_output,
+            data=z_hour_df,
+            timeseries_type=timeseries_type
+        )

@@ -364,15 +364,10 @@ def primary_timeseries_schema(
                     pa.String,
                     # checks=pa.Check.isin(location_ids),
                     nullable=False
-                ),
-                "member": pa.Column(
-                    pa.String,
-                    nullable=True
                 )
             },
             strict="filter",
-            coerce=True,
-            add_missing_columns=True
+            coerce=True
         )
     if type == "pyspark":
         return ps.DataFrameSchema(
@@ -409,10 +404,6 @@ def primary_timeseries_schema(
                     T.StringType(),
                     ps.Check.isin(location_ids),
                     nullable=False
-                ),
-                "member": ps.Column(
-                    T.StringType(),
-                    nullable=True
                 )
             },
             strict=True,
