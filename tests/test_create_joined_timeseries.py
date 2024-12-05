@@ -123,10 +123,11 @@ def test_create_joined_timeseries(tmpdir):
         'year',
         'water_year',
         'configuration_name',
-        'variable_name'
+        'variable_name',
+        'member'
     ]
 
-    assert len(columns) == 16
+    assert len(columns) == 17
     assert sorted(columns) == sorted(expected_columns)
 
 

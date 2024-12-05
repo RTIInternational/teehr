@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TimeSeries xmlns="http://www.wldelft.nl/fews/PI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.wldelft.nl/fews/PI http://fews.wldelft.nl/schemas/version1.0/pi-schemas/pi_timeseries.xsd" version="1.8">
+    <timeZone>0.0</timeZone>
+    <series>
+        <header>
+            <type>instantaneous</type>
+            <locationId>DNVC2LOCAL</locationId>
+            <parameterId>SQIN</parameterId>
+            <ensembleId>MEFP</ensembleId>
+            <ensembleMemberIndex>1990</ensembleMemberIndex>
+            <timeStep unit="second" multiplier="21600"/>
+            <startDate date="2024-11-19" time="12:00:00"/>
+            <endDate date="2024-12-17" time="12:00:00"/>
+            <forecastDate date="2024-11-19" time="12:00:00"/>
+            <missVal>-999.0</missVal>
+            <stationName>DENVER CO</stationName>
+            <lat>39.729443</lat>
+            <lon>-105.008331</lon>
+            <x>-105.008331</x>
+            <y>39.729443</y>
+            <z>1593.494385</z>
+            <units>CFS</units>
+            <creationDate>2024-11-19</creationDate>
+            <creationTime>15:16:06</creationTime>
+        </header>
+        <event date="2024-11-19" time="12:00:00" value="19.57" flag="0"/>
+        <event date="2024-11-19" time="18:00:00" value="17.26" flag="0"/>
+        <event date="2024-11-20" time="00:00:00" value="18.77" flag="0"/>
+        <event date="2024-11-20" time="06:00:00" value="18.22" flag="0"/>
+        <event date="2024-11-20" time="12:00:00" value="16.56" flag="0"/>
+        <event date="2024-11-20" time="18:00:00" value="18.17" flag="0"/>
+        <event date="2024-11-21" time="00:00:00" value="19.98" flag="0"/>
+        <event date="2024-11-21" time="06:00:00" value="18.01" flag="0"/>
+        <event date="2024-11-21" time="12:00:00" value="15.85" flag="0"/>
+        <event date="2024-11-21" time="18:00:00" value="17.43" flag="0"/>
+        <event date="2024-11-22" time="00:00:00" value="19.24" flag="0"/>
+    </series>
+    <series>
+        <header>
+            <type>instantaneous</type>
+            <locationId>DNVC2LOCAL</locationId>
+            <parameterId>SQIN</parameterId>
+            <ensembleId>MEFP</ensembleId>
+            <ensembleMemberIndex>1991</ensembleMemberIndex>
+            <timeStep unit="second" multiplier="21600"/>
+            <startDate date="2024-11-19" time="12:00:00"/>
+            <endDate date="2024-12-17" time="12:00:00"/>
+            <forecastDate date="2024-11-19" time="12:00:00"/>
+            <missVal>-999.0</missVal>
+            <stationName>DENVER CO</stationName>
+            <lat>39.729443</lat>
+            <lon>-105.008331</lon>
+            <x>-105.008331</x>
+            <y>39.729443</y>
+            <z>1593.494385</z>
+            <units>CFS</units>
+            <creationDate>2024-11-19</creationDate>
+            <creationTime>15:16:06</creationTime>
+        </header>
+        <event date="2024-11-19" time="12:00:00" value="19.57" flag="0"/>
+        <event date="2024-11-19" time="18:00:00" value="17.26" flag="0"/>
+        <event date="2024-11-20" time="00:00:00" value="18.77" flag="0"/>
+        <event date="2024-11-20" time="06:00:00" value="18.22" flag="0"/>
+        <event date="2024-11-20" time="12:00:00" value="16.56" flag="0"/>
+        <event date="2024-11-20" time="18:00:00" value="18.17" flag="0"/>
+        <event date="2024-11-21" time="00:00:00" value="19.98" flag="0"/>
+        <event date="2024-11-21" time="06:00:00" value="18.01" flag="0"/>
+        <event date="2024-11-21" time="12:00:00" value="15.85" flag="0"/>
+        <event date="2024-11-21" time="18:00:00" value="17.43" flag="0"/>
+        <event date="2024-11-22" time="00:00:00" value="19.24" flag="0"/>
+    </series>
+    <series>
+        <header>
+            <type>instantaneous</type>
+            <locationId>DNVC2LOCAL</locationId>
+            <parameterId>SQIN</parameterId>
+            <ensembleId>MEFP</ensembleId>
+            <ensembleMemberIndex>1993</ensembleMemberIndex>
+            <timeStep unit="second" multiplier="21600"/>
+            <startDate date="2024-11-19" time="12:00:00"/>
+            <endDate date="2024-12-17" time="12:00:00"/>
+            <forecastDate date="2024-11-19" time="12:00:00"/>
+            <missVal>-999.0</missVal>
+            <stationName>DENVER CO</stationName>
+            <lat>39.729443</lat>
+            <lon>-105.008331</lon>
+            <x>-105.008331</x>
+            <y>39.729443</y>
+            <z>1593.494385</z>
+            <units>CFS</units>
+            <creationDate>2024-11-19</creationDate>
+            <creationTime>15:16:06</creationTime>
+        </header>
+        <event date="2024-11-19" time="12:00:00" value="19.57" flag="0"/>
+        <event date="2024-11-19" time="18:00:00" value="17.26" flag="0"/>
+        <event date="2024-11-20" time="00:00:00" value="18.77" flag="0"/>
+        <event date="2024-11-20" time="06:00:00" value="18.22" flag="0"/>
+        <event date="2024-11-20" time="12:00:00" value="16.56" flag="0"/>
+        <event date="2024-11-20" time="18:00:00" value="18.17" flag="0"/>
+        <event date="2024-11-21" time="00:00:00" value="19.98" flag="0"/>
+        <event date="2024-11-21" time="06:00:00" value="18.01" flag="0"/>
+        <event date="2024-11-21" time="12:00:00" value="15.85" flag="0"/>
+        <event date="2024-11-21" time="18:00:00" value="17.43" flag="0"/>
+        <event date="2024-11-22" time="00:00:00" value="19.24" flag="0"/>
+    </series>
+    <series>
+        <header>
+            <type>instantaneous</type>
+            <locationId>DNVC2LOCAL</locationId>
+            <parameterId>SQIN</parameterId>
+            <ensembleId>MEFP</ensembleId>
+            <ensembleMemberIndex>1994</ensembleMemberIndex>
+            <timeStep unit="second" multiplier="21600"/>
+            <startDate date="2024-11-19" time="12:00:00"/>
+            <endDate date="2024-12-17" time="12:00:00"/>
+            <forecastDate date="2024-11-19" time="12:00:00"/>
+            <missVal>-999.0</missVal>
+            <stationName>DENVER CO</stationName>
+            <lat>39.729443</lat>
+            <lon>-105.008331</lon>
+            <x>-105.008331</x>
+            <y>39.729443</y>
+            <z>1593.494385</z>
+            <units>CFS</units>
+            <creationDate>2024-11-19</creationDate>
+            <creationTime>15:16:06</creationTime>
+        </header>
+        <event date="2024-11-19" time="12:00:00" value="19.57" flag="0"/>
+        <event date="2024-11-19" time="18:00:00" value="17.26" flag="0"/>
+        <event date="2024-11-20" time="00:00:00" value="18.77" flag="0"/>
+        <event date="2024-11-20" time="06:00:00" value="18.22" flag="0"/>
+        <event date="2024-11-20" time="12:00:00" value="16.56" flag="0"/>
+        <event date="2024-11-20" time="18:00:00" value="18.17" flag="0"/>
+        <event date="2024-11-21" time="00:00:00" value="19.98" flag="0"/>
+        <event date="2024-11-21" time="06:00:00" value="18.01" flag="0"/>
+        <event date="2024-11-21" time="12:00:00" value="15.85" flag="0"/>
+        <event date="2024-11-21" time="18:00:00" value="17.43" flag="0"/>
+        <event date="2024-11-22" time="00:00:00" value="19.24" flag="0"/>
+    </series>
+    <series>
+        <header>
+            <type>instantaneous</type>
+            <locationId>DNVC2LOCAL</locationId>
+            <parameterId>SQIN</parameterId>
+            <ensembleId>MEFP</ensembleId>
+            <ensembleMemberIndex>1995</ensembleMemberIndex>
+            <timeStep unit="second" multiplier="21600"/>
+            <startDate date="2024-11-19" time="12:00:00"/>
+            <endDate date="2024-12-17" time="12:00:00"/>
+            <forecastDate date="2024-11-19" time="12:00:00"/>
+            <missVal>-999.0</missVal>
+            <stationName>DENVER CO</stationName>
+            <lat>39.729443</lat>
+            <lon>-105.008331</lon>
+            <x>-105.008331</x>
+            <y>39.729443</y>
+            <z>1593.494385</z>
+            <units>CFS</units>
+            <creationDate>2024-11-19</creationDate>
+            <creationTime>15:16:06</creationTime>
+        </header>
+        <event date="2024-11-19" time="12:00:00" value="19.57" flag="0"/>
+        <event date="2024-11-19" time="18:00:00" value="17.26" flag="0"/>
+        <event date="2024-11-20" time="00:00:00" value="18.77" flag="0"/>
+        <event date="2024-11-20" time="06:00:00" value="18.22" flag="0"/>
+        <event date="2024-11-20" time="12:00:00" value="16.56" flag="0"/>
+        <event date="2024-11-20" time="18:00:00" value="18.17" flag="0"/>
+        <event date="2024-11-21" time="00:00:00" value="19.98" flag="0"/>
+        <event date="2024-11-21" time="06:00:00" value="18.01" flag="0"/>
+        <event date="2024-11-21" time="12:00:00" value="15.85" flag="0"/>
+        <event date="2024-11-21" time="18:00:00" value="17.43" flag="0"/>
+        <event date="2024-11-22" time="00:00:00" value="19.24" flag="0"/>
+    </series>
+    <series>
+        <header>
+            <type>instantaneous</type>
+            <locationId>DNVC2LOCAL</locationId>
+            <parameterId>SQIN</parameterId>
+            <ensembleId>MEFP</ensembleId>
+            <ensembleMemberIndex>1996</ensembleMemberIndex>
+            <timeStep unit="second" multiplier="21600"/>
+            <startDate date="2024-11-19" time="12:00:00"/>
+            <endDate date="2024-12-17" time="12:00:00"/>
+            <forecastDate date="2024-11-19" time="12:00:00"/>
+            <missVal>-999.0</missVal>
+            <stationName>DENVER CO</stationName>
+            <lat>39.729443</lat>
+            <lon>-105.008331</lon>
+            <x>-105.008331</x>
+            <y>39.729443</y>
+            <z>1593.494385</z>
+            <units>CFS</units>
+            <creationDate>2024-11-19</creationDate>
+            <creationTime>15:16:06</creationTime>
+        </header>
+        <event date="2024-11-19" time="12:00:00" value="19.57" flag="0"/>
+        <event date="2024-11-19" time="18:00:00" value="17.26" flag="0"/>
+        <event date="2024-11-20" time="00:00:00" value="18.77" flag="0"/>
+        <event date="2024-11-20" time="06:00:00" value="18.22" flag="0"/>
+        <event date="2024-11-20" time="12:00:00" value="16.56" flag="0"/>
+        <event date="2024-11-20" time="18:00:00" value="18.17" flag="0"/>
+        <event date="2024-11-21" time="00:00:00" value="19.98" flag="0"/>
+        <event date="2024-11-21" time="06:00:00" value="18.01" flag="0"/>
+        <event date="2024-11-21" time="12:00:00" value="15.85" flag="0"/>
+        <event date="2024-11-21" time="18:00:00" value="17.43" flag="0"/>
+        <event date="2024-11-22" time="00:00:00" value="19.24" flag="0"/>
+    </series>
+    <series>
+        <header>
+            <type>instantaneous</type>
+            <locationId>DNVC2LOCAL</locationId>
+            <parameterId>SQIN</parameterId>
+            <ensembleId>MEFP</ensembleId>
+            <ensembleMemberIndex>1997</ensembleMemberIndex>
+            <timeStep unit="second" multiplier="21600"/>
+            <startDate date="2024-11-19" time="12:00:00"/>
+            <endDate date="2024-12-17" time="12:00:00"/>
+            <forecastDate date="2024-11-19" time="12:00:00"/>
+            <missVal>-999.0</missVal>
+            <stationName>DENVER CO</stationName>
+            <lat>39.729443</lat>
+            <lon>-105.008331</lon>
+            <x>-105.008331</x>
+            <y>39.729443</y>
+            <z>1593.494385</z>
+            <units>CFS</units>
+            <creationDate>2024-11-19</creationDate>
+            <creationTime>15:16:06</creationTime>
+        </header>
+        <event date="2024-11-19" time="12:00:00" value="19.57" flag="0"/>
+        <event date="2024-11-19" time="18:00:00" value="17.26" flag="0"/>
+        <event date="2024-11-20" time="00:00:00" value="18.77" flag="0"/>
+        <event date="2024-11-20" time="06:00:00" value="18.22" flag="0"/>
+        <event date="2024-11-20" time="12:00:00" value="16.56" flag="0"/>
+        <event date="2024-11-20" time="18:00:00" value="18.17" flag="0"/>
+        <event date="2024-11-21" time="00:00:00" value="19.98" flag="0"/>
+        <event date="2024-11-21" time="06:00:00" value="18.01" flag="0"/>
+        <event date="2024-11-21" time="12:00:00" value="15.85" flag="0"/>
+        <event date="2024-11-21" time="18:00:00" value="17.43" flag="0"/>
+        <event date="2024-11-22" time="00:00:00" value="19.24" flag="0"/>
+    </series>
+    <series>
+        <header>
+            <type>instantaneous</type>
+            <locationId>DNVC2LOCAL</locationId>
+            <parameterId>SQIN</parameterId>
+            <ensembleId>MEFP</ensembleId>
+            <ensembleMemberIndex>1998</ensembleMemberIndex>
+            <timeStep unit="second" multiplier="21600"/>
+            <startDate date="2024-11-19" time="12:00:00"/>
+            <endDate date="2024-12-17" time="12:00:00"/>
+            <forecastDate date="2024-11-19" time="12:00:00"/>
+            <missVal>-999.0</missVal>
+            <stationName>DENVER CO</stationName>
+            <lat>39.729443</lat>
+            <lon>-105.008331</lon>
+            <x>-105.008331</x>
+            <y>39.729443</y>
+            <z>1593.494385</z>
+            <units>CFS</units>
+            <creationDate>2024-11-19</creationDate>
+            <creationTime>15:16:06</creationTime>
+        </header>
+        <event date="2024-11-19" time="12:00:00" value="19.57" flag="0"/>
+        <event date="2024-11-19" time="18:00:00" value="17.26" flag="0"/>
+        <event date="2024-11-20" time="00:00:00" value="18.77" flag="0"/>
+        <event date="2024-11-20" time="06:00:00" value="18.22" flag="0"/>
+        <event date="2024-11-20" time="12:00:00" value="16.56" flag="0"/>
+        <event date="2024-11-20" time="18:00:00" value="18.17" flag="0"/>
+        <event date="2024-11-21" time="00:00:00" value="19.98" flag="0"/>
+        <event date="2024-11-21" time="06:00:00" value="18.01" flag="0"/>
+        <event date="2024-11-21" time="12:00:00" value="15.85" flag="0"/>
+        <event date="2024-11-21" time="18:00:00" value="17.43" flag="0"/>
+        <event date="2024-11-22" time="00:00:00" value="19.24" flag="0"/>
+    </series>
+    <series>
+        <header>
+            <type>instantaneous</type>
+            <locationId>DNVC2LOCAL</locationId>
+            <parameterId>SQIN</parameterId>
+            <ensembleId>MEFP</ensembleId>
+            <ensembleMemberIndex>1999</ensembleMemberIndex>
+            <timeStep unit="second" multiplier="21600"/>
+            <startDate date="2024-11-19" time="12:00:00"/>
+            <endDate date="2024-12-17" time="12:00:00"/>
+            <forecastDate date="2024-11-19" time="12:00:00"/>
+            <missVal>-999.0</missVal>
+            <stationName>DENVER CO</stationName>
+            <lat>39.729443</lat>
+            <lon>-105.008331</lon>
+            <x>-105.008331</x>
+            <y>39.729443</y>
+            <z>1593.494385</z>
+            <units>CFS</units>
+            <creationDate>2024-11-19</creationDate>
+            <creationTime>15:16:06</creationTime>
+        </header>
+        <event date="2024-11-19" time="12:00:00" value="19.57" flag="0"/>
+        <event date="2024-11-19" time="18:00:00" value="17.26" flag="0"/>
+        <event date="2024-11-20" time="00:00:00" value="18.77" flag="0"/>
+        <event date="2024-11-20" time="06:00:00" value="18.22" flag="0"/>
+        <event date="2024-11-20" time="12:00:00" value="16.56" flag="0"/>
+        <event date="2024-11-20" time="18:00:00" value="18.17" flag="0"/>
+        <event date="2024-11-21" time="00:00:00" value="19.98" flag="0"/>
+        <event date="2024-11-21" time="06:00:00" value="18.01" flag="0"/>
+        <event date="2024-11-21" time="12:00:00" value="15.85" flag="0"/>
+        <event date="2024-11-21" time="18:00:00" value="17.43" flag="0"/>
+        <event date="2024-11-22" time="00:00:00" value="19.24" flag="0"/>
+    </series>
+</TimeSeries>

@@ -6,6 +6,7 @@ from teehr.loading.utils import (
     merge_field_mappings,
     validate_constant_values_dict,
     read_and_convert_netcdf_to_df,
+    read_and_convert_xml_to_df,
     # convert_datetime_ns_to_ms
 )
 import teehr.models.pandera_dataframe_schemas as schemas
@@ -68,6 +69,13 @@ def convert_single_timeseries(
             field_mapping,
             **kwargs
         )
+    elif in_filepath.suffix == ".xml":
+        # read and convert xml file
+        timeseries = read_and_convert_xml_to_df(
+            in_filepath,
+            field_mapping,
+            **kwargs
+        )
     else:
         raise ValueError("Unsupported file type.")
 
@@ -77,7 +85,7 @@ def convert_single_timeseries(
         for field, value in constant_field_values.items():
             timeseries[field] = value
 
-    timeseries = timeseries[field_mapping.values()]
+    # timeseries = timeseries[field_mapping.values()]
 
     if timeseries_type == "primary":
         validated_df = schemas.primary_timeseries_schema(type="pandas").validate(timeseries)

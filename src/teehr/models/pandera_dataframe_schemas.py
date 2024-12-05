@@ -407,7 +407,7 @@ def primary_timeseries_schema(
                 )
             },
             strict=True,
-            coerce=True,
+            coerce=True
         )
 
 
@@ -455,10 +455,15 @@ def secondary_timeseries_schema(
                     pa.String,
                     # checks=pa.Check.isin(location_ids),
                     nullable=False
+                ),
+                "member": pa.Column(
+                    pa.String,
+                    nullable=True
                 )
             },
             strict="filter",
-            coerce=True
+            coerce=True,
+            add_missing_columns=True
         )
     if type == "pyspark":
         return ps.DataFrameSchema(
@@ -496,14 +501,13 @@ def secondary_timeseries_schema(
                     ps.Check.isin(location_ids),
                     nullable=False
                 ),
-                # "member": ps.Column(
-                #     T.StringType(),
-                #     ps.Check.isin(location_ids),
-                #     nullable=True
-                # )
+                "member": ps.Column(
+                    T.StringType(),
+                    nullable=True
+                )
             },
             strict=True,
-            coerce=True,
+            coerce=True
         )
 
 def joined_timeseries_schema(
@@ -549,6 +553,10 @@ def joined_timeseries_schema(
                 "secondary_location_id": pa.Column(
                     pa.String,
                     nullable=False
+                ),
+                "member": pa.Column(
+                    pa.String,
+                    nullable=True
                 )
             }
         )
@@ -592,6 +600,10 @@ def joined_timeseries_schema(
                 "secondary_location_id": ps.Column(
                     T.StringType(),
                     nullable=False
+                ),
+                "member": ps.Column(
+                    T.StringType(),
+                    nullable=True
                 )
             },
             coerce=True

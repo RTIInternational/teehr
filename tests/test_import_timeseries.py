@@ -1,6 +1,7 @@
 """Test the import_timeseries function in the Evaluation class."""
 from pathlib import Path
 from teehr import Evaluation
+from teehr import Metrics as m
 from teehr.models.pydantic_table_models import (
     Configuration,
     Unit,
@@ -272,6 +273,69 @@ def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
     assert (teehr_values == nc_values).all()
 
 
+def test_validate_and_insert_fews_xml_timeseries(tmpdir):
+    """Test the validate_locations function."""
+    usgs_location = Path(
+        TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_location.parquet"
+    )
+    secondary_filepath = Path(
+        TEST_STUDY_DATA_DIR_v0_4,
+        "timeseries",
+        "MEFP.MBRFC.DNVC2LOCAL.SQIN.xml"
+    )
+    primary_filepath = Path(
+        TEST_STUDY_DATA_DIR_v0_4,
+        "timeseries",
+        "usgs_hefs_06711565.parquet"
+    )
+
+    eval = Evaluation(dir_path=tmpdir)
+    eval.enable_logging()
+    eval.clone_template()
+
+    eval.locations.load_spatial(
+        in_path=usgs_location
+    )
+    eval.location_crosswalks.load_csv(
+        in_path=Path(TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv")
+    )
+    eval.configurations.add(
+        Configuration(
+            name="MEFP",
+            type="secondary",
+            description="MBRFC HEFS Data"
+        )
+    )
+    constant_field_values = {
+        "unit_name": "ft^3/s",
+        "variable_name": "streamflow_hourly_inst"
+    }
+    eval.secondary_timeseries.load_fews_xml(
+        in_path=secondary_filepath,
+        constant_field_values=constant_field_values
+    )
+    eval.primary_timeseries.load_parquet(
+        in_path=primary_filepath
+    )
+    eval.joined_timeseries.create(execute_udf=False)
+    # df = eval.joined_timeseries.to_pandas()
+
+    # Now, metrics.
+    kge = m.KlingGuptaEfficiency()
+    include_metrics = [kge]
+
+    # Define some filters?
+
+    metrics_df = eval.metrics.query(
+        include_metrics=include_metrics,
+        group_by=["primary_location_id", "reference_time"],
+        order_by=["primary_location_id"],
+    ).to_geopandas()
+
+    assert metrics_df.shape == (1, 4)
+    assert metrics_df["primary_location_id"].nunique() == 1
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
@@ -297,6 +361,12 @@ if __name__ == "__main__":
         test_validate_and_insert_mizu_nc_timeseries(
             tempfile.mkdtemp(
                 prefix="4-",
+                dir=tempdir
+            )
+        )
+        test_validate_and_insert_fews_xml_timeseries(
+            tempfile.mkdtemp(
+                prefix="5-",
                 dir=tempdir
             )
         )

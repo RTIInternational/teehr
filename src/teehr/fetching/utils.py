@@ -15,10 +15,10 @@ import numpy as np
 import xarray as xr
 import geopandas as gpd
 import pyarrow as pa
-import pyarrow.parquet as pq
 
 from teehr.models.fetching.utils import (
-    SupportedKerchunkMethod
+    SupportedKerchunkMethod,
+    TimeseriesTypeEnum
 )
 from teehr.models.fetching.utils import (
     SupportedNWMOperationalVersionsEnum,
@@ -27,48 +27,13 @@ from teehr.models.fetching.utils import (
 from teehr.fetching.const import (
     NWM_BUCKET,
     NWM_S3_JSON_PATH,
-    NWM30_START_DATE,
-    TIMESERIES_DATA_TYPES,
-    VALUE,
-    VALUE_TIME,
-    LOCATION_ID,
-    UNIT_NAME,
-    VARIABLE_NAME,
-    CONFIGURATION_NAME
+    NWM30_START_DATE
 )
 import teehr.models.pandera_dataframe_schemas as schemas
 
 
 logger = logging.getLogger(__name__)
 
-
-def format_timeseries_data_types(df: pd.DataFrame) -> pd.DataFrame:
-    """Convert field types to TEEHR data model.
-
-    Notes
-    -----
-    dataretrieval attempts to return values in UTC, here we explicitly convert
-    to be sure. We also drop timezone information and convert to datetime64[ms].
-
-    The fields types are specified in the TIMESERIES_DATA_TYPES dictionary.
-    """
-    logger.debug("Formatting timeseries data types.")
-
-    # Convert to UTC if not already in UTC.
-    if df[VALUE_TIME].dt.tz is not None:
-        df[VALUE_TIME] = df[VALUE_TIME].dt.tz_convert("UTC")
-    # Drop timezone information.
-    df[VALUE_TIME] = df[VALUE_TIME].dt.tz_localize(None)
-    # Convert to datetime64[ms].
-    df[VALUE_TIME] = df[VALUE_TIME].astype(TIMESERIES_DATA_TYPES[VALUE_TIME])  # noqa
-    # Convert remaining fields.
-    df[VALUE] = df[VALUE].astype(TIMESERIES_DATA_TYPES[VALUE])
-    df[UNIT_NAME] = df[UNIT_NAME].astype(TIMESERIES_DATA_TYPES[UNIT_NAME])  # noqa
-    df[VARIABLE_NAME] = df[VARIABLE_NAME].astype(TIMESERIES_DATA_TYPES[VARIABLE_NAME])  # noqa
-    df[CONFIGURATION_NAME] = df[CONFIGURATION_NAME].astype(TIMESERIES_DATA_TYPES[CONFIGURATION_NAME])  # noqa
-    df[LOCATION_ID] = df[LOCATION_ID].astype(TIMESERIES_DATA_TYPES[LOCATION_ID])  # noqa
-
-    return df
 
 
 def check_dates_against_nwm_version(
@@ -179,7 +144,8 @@ def generate_json_paths(
 def write_timeseries_parquet_file(
     filepath: Path,
     overwrite_output: bool,
-    data: Union[pa.Table, pd.DataFrame]
+    data: Union[pa.Table, pd.DataFrame],
+    timeseries_type: TimeseriesTypeEnum
 ):
     """Write the output timeseries parquet file.
 
@@ -201,7 +167,10 @@ def write_timeseries_parquet_file(
     else:
         df = data
 
-    schema = schemas.primary_timeseries_schema(type="pandas")
+    if timeseries_type == TimeseriesTypeEnum.primary:
+        schema = schemas.primary_timeseries_schema(type="pandas")
+    elif timeseries_type == TimeseriesTypeEnum.secondary:
+        schema = schemas.secondary_timeseries_schema(type="pandas")
     validated_df = schema.validate(df)
 
     if not filepath.is_file():

@@ -28,9 +28,9 @@ from pydantic import validate_call, ConfigDict
 from teehr.fetching.utils import (
     write_timeseries_parquet_file,
     get_period_start_end_times,
-    create_periods_based_on_chunksize,
-    format_timeseries_data_types
+    create_periods_based_on_chunksize
 )
+from teehr.models.fetching.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
     USGS_NODATA_VALUES,
     USGS_CONFIGURATION_NAME,
@@ -142,8 +142,6 @@ def _fetch_usgs_streamflow(
 
     usgs_df = _format_df_column_names(usgs_df, variable_name, unit_name)
 
-    usgs_df = format_timeseries_data_types(usgs_df)
-
     if filter_to_hourly is True:
         usgs_df = _filter_to_hourly(usgs_df)
     if filter_no_data is True:
@@ -178,7 +176,8 @@ def usgs_to_parquet(
     filter_no_data: bool = True,
     convert_to_si: bool = True,
     overwrite_output: Optional[bool] = False,
-    variable_mapper: Dict[str, Dict[str, str]] = USGS_VARIABLE_MAPPER
+    variable_mapper: Dict[str, Dict[str, str]] = USGS_VARIABLE_MAPPER,
+    timeseries_type: TimeseriesTypeEnum = "primary"
 ):
     """Fetch USGS gage data and save as a Parquet file.
 
@@ -269,8 +268,8 @@ def usgs_to_parquet(
                 convert_to_si=convert_to_si,
             )
 
-            usgs_df = usgs_df[(usgs_df[VALUE_TIME] >= start_date) &
-                              (usgs_df[VALUE_TIME] < end_date)]
+            usgs_df = usgs_df[(usgs_df[VALUE_TIME] >= start_date.tz_localize("UTC")) &
+                              (usgs_df[VALUE_TIME] < end_date.tz_localize("UTC"))]
 
             if len(usgs_df) > 0:
                 output_filepath = Path(
@@ -280,7 +279,8 @@ def usgs_to_parquet(
                 write_timeseries_parquet_file(
                     filepath=output_filepath,
                     overwrite_output=overwrite_output,
-                    data=usgs_df
+                    data=usgs_df,
+                    timeseries_type=timeseries_type
                 )
         return
 
@@ -313,8 +313,8 @@ def usgs_to_parquet(
             convert_to_si=convert_to_si
         )
 
-        usgs_df = usgs_df[(usgs_df[VALUE_TIME] >= dts["start_dt"]) &
-                          (usgs_df[VALUE_TIME] <= dts["end_dt"])]
+        usgs_df = usgs_df[(usgs_df[VALUE_TIME] >= dts["start_dt"].tz_localize("UTC")) &
+                          (usgs_df[VALUE_TIME] <= dts["end_dt"].tz_localize("UTC"))]
 
         if len(usgs_df) > 0:
 
@@ -326,7 +326,8 @@ def usgs_to_parquet(
             write_timeseries_parquet_file(
                 filepath=output_filepath,
                 overwrite_output=overwrite_output,
-                data=usgs_df
+                data=usgs_df,
+                timeseries_type=timeseries_type
             )
 
 

@@ -17,7 +17,8 @@ from teehr.fetching.utils import (
 from teehr.models.fetching.utils import (
     SupportedNWMOperationalVersionsEnum,
     SupportedNWMDataSourcesEnum,
-    SupportedKerchunkMethod
+    SupportedKerchunkMethod,
+    TimeseriesTypeEnum
 )
 from teehr.fetching.const import (
     NWM22_ANALYSIS_CONFIG,
@@ -46,7 +47,8 @@ def nwm_to_parquet(
     stepsize: Optional[int] = 100,
     ignore_missing_file: Optional[bool] = True,
     overwrite_output: Optional[bool] = False,
-    variable_mapper: Dict[str, Dict[str, str]] = None
+    variable_mapper: Dict[str, Dict[str, str]] = None,
+    timeseries_type: TimeseriesTypeEnum = "secondary"
 ):
     """Fetch NWM point data and save as a Parquet file in TEEHR format.
 
@@ -111,6 +113,9 @@ def nwm_to_parquet(
     overwrite_output : Optional[bool]
         Flag specifying whether or not to overwrite output files if they
         already exist.  True = overwrite; False = fail.
+    timeseries_type : str
+        Whether to consider as the "primary" or "secondary" timeseries.
+        Default is "secondary".
 
     Notes
     -----
@@ -243,5 +248,6 @@ def nwm_to_parquet(
             ignore_missing_file,
             overwrite_output,
             nwm_version,
-            variable_mapper
+            variable_mapper,
+            timeseries_type
         )
