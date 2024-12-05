@@ -90,10 +90,13 @@ class LocationCrosswalkTable(BaseTable):
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
         self._check_load_table()
-        return join_geometry(
+        gdf = join_geometry(
             self.df, self.ev.locations.to_sdf(),
             "primary_location_id"
         )
+        gdf.attrs['table_type'] = self.name
+        gdf.attrs['fields'] = self.fields()
+        return gdf
 
     def load_parquet(
         self,
