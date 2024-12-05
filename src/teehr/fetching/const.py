@@ -12,16 +12,6 @@ VARIABLE_NAME = "variable_name"
 CONFIGURATION_NAME = "configuration_name"
 MEMBER = "member"
 
-TIMESERIES_DATA_TYPES = {
-    VALUE: "float32",
-    VALUE_TIME: "datetime64[ms]",
-    REFERENCE_TIME: "datetime64[ms]",
-    LOCATION_ID: "string",
-    UNIT_NAME: "category",
-    VARIABLE_NAME: "category",
-    CONFIGURATION_NAME: "category"
-}
-
 USGS_NODATA_VALUES = [-999999, -999, -9999, -99999]
 USGS_CONFIGURATION_NAME = "usgs_observations"
 
