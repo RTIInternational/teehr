@@ -5,10 +5,13 @@ import pandas as pd
 import geopandas as gpd
 import logging
 from pathlib import Path
+import pandera as pa
 
 from bokeh.plotting import figure, save, output_file, show, ColumnDataSource
 from bokeh.palettes import colorblind
 import xyzservices.providers as xyz
+
+import teehr.models.pandera_dataframe_schemas as schemas
 
 logger = logging.getLogger(__name__)
 
@@ -53,17 +56,12 @@ class TEEHRDataFrameAccessor:
 
         if obj.attrs['table_type'] == 'timeseries':
 
-            # check for expected fields
-            fields_list = obj.attrs['fields']
-            missing = []
-            for field in fields_list:
-                if field not in obj.columns:
-                    missing.append(field)
-            if len(missing) != 0:
-                raise AttributeError(f"""
-                    DataFrame with table_type == 'timeseries' is missing
-                    expected column(s): {missing}
-                """)
+            # validate using pandera schema
+            schema = schemas.primary_timeseries_schema(type='pandas')
+            try:
+                schema.validate(obj)
+            except pa.errors.SchemaError as exc:
+                print(exc)
 
             # check for data
             if obj.index.size == 0:
@@ -79,17 +77,12 @@ class TEEHRDataFrameAccessor:
 
         elif obj.attrs['table_type'] == 'locations':
 
-            # check for expected fields
-            fields_list = obj.attrs['fields']
-            missing = []
-            for field in fields_list:
-                if field not in obj.columns:
-                    missing.append(field)
-            if len(missing) != 0:
-                raise AttributeError(f"""
-                    DataFrame with table_type == 'locations' is missing
-                    expected column(s): {missing}
-                """)
+            # validate using pandera schema
+            schema = schemas.locations_schema(type='pandas')
+            try:
+                schema.validate(obj)
+            except pa.errors.SchemaError as exc:
+                print(exc)
 
             # check for data
             if obj.index.size == 0:
@@ -108,17 +101,12 @@ class TEEHRDataFrameAccessor:
 
         elif obj.attrs['table_type'] == 'location_attributes':
 
-            # check for expected fields
-            fields_list = obj.attrs['fields']
-            missing = []
-            for field in fields_list:
-                if field not in obj.columns:
-                    missing.append(field)
-            if len(missing) != 0:
-                raise AttributeError(f"""
-                    DataFrame with table_type == 'location_attributes' is
-                    missing expected column(s): {missing}
-                """)
+            # validate using pandera schema
+            schema = schemas.location_attributes_schema(type='pandas')
+            try:
+                schema.validate(obj)
+            except pa.errors.SchemaError as exc:
+                print(exc)
 
             # check for data
             if obj.index.size == 0:
@@ -137,17 +125,12 @@ class TEEHRDataFrameAccessor:
 
         elif obj.attrs['table_type'] == 'location_crosswalks':
 
-            # check for expected fields
-            fields_list = obj.attrs['fields']
-            missing = []
-            for field in fields_list:
-                if field not in obj.columns:
-                    missing.append(field)
-            if len(missing) != 0:
-                raise AttributeError(f"""
-                    DataFrame with table_type == 'location_crosswalks' is
-                    missing expected column(s): {missing}
-                """)
+            # validate using pandera schema
+            schema = schemas.location_crosswalks_schema(type='pandas')
+            try:
+                schema.validate(obj)
+            except pa.errors.SchemaError as exc:
+                print(exc)
 
             # check for data
             if obj.index.size == 0:
