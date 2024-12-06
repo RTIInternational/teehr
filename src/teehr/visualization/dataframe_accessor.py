@@ -61,7 +61,9 @@ class TEEHRDataFrameAccessor:
             try:
                 schema.validate(obj)
             except pa.errors.SchemaError as exc:
-                print(exc)
+                raise AttributeError(
+                    f"Pandera validation failed: {exc}"
+                )
 
             # check for data
             if obj.index.size == 0:
@@ -82,7 +84,9 @@ class TEEHRDataFrameAccessor:
             try:
                 schema.validate(obj)
             except pa.errors.SchemaError as exc:
-                print(exc)
+                raise AttributeError(
+                    f"Pandera validation failed: {exc}"
+                )
 
             # check for data
             if obj.index.size == 0:
@@ -106,7 +110,9 @@ class TEEHRDataFrameAccessor:
             try:
                 schema.validate(obj)
             except pa.errors.SchemaError as exc:
-                print(exc)
+                raise AttributeError(
+                    f"Pandera validation failed: {exc}"
+                )
 
             # check for data
             if obj.index.size == 0:
@@ -130,7 +136,9 @@ class TEEHRDataFrameAccessor:
             try:
                 schema.validate(obj)
             except pa.errors.SchemaError as exc:
-                print(exc)
+                raise AttributeError(
+                    f"Pandera validation failed: {exc}"
+                )
 
             # check for data
             if obj.index.size == 0:

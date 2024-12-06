@@ -6,9 +6,17 @@ from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor
 
 def test_init_with_dataframe():
     """Test validation with pd.DataFrame."""
-    df = pd.DataFrame({'a': [1, 2, 3]})
+    df = pd.DataFrame({
+        'variable_name': ['var1', 'var1'],
+        'configuration_name': ['config1', 'config1'],
+        'location_id': ['loc1', 'loc1'],
+        'reference_time': [None, None],
+        'value_time': pd.to_datetime(['2021-01-01', '2021-01-02']),
+        'value': [1, 2],
+        'unit_name': ['unit1', 'unit1']
+    })
     df.attrs['table_type'] = 'timeseries'
-    df.attrs['fields'] = ['a']
+    df.attrs['fields'] = df.columns
     accessor = TEEHRDataFrameAccessor(df)
     assert accessor._df is not None
     assert accessor._gdf is None
@@ -16,9 +24,13 @@ def test_init_with_dataframe():
 
 def test_init_with_geodataframe():
     """Test validation with gpd.GeoDataFrame."""
-    gdf = gpd.GeoDataFrame({'a': [1, 2, 3], 'geometry': [None, None, None]})
+    gdf = gpd.GeoDataFrame({
+        'id': [1, 2],
+        'name': ['loc1', 'loc2'],
+        'geometry': gpd.points_from_xy([0, 1], [0, 1])
+    })
     gdf.attrs['table_type'] = 'locations'
-    gdf.attrs['fields'] = ['a']
+    gdf.attrs['fields'] = gdf.columns
     gdf.crs = "EPSG:4326"
     accessor = TEEHRDataFrameAccessor(gdf)
     assert accessor._df is None
