@@ -37,8 +37,8 @@ python -m teehr.utils.install_spark_jars
 ```
 Use Docker
 ```bash
-$ docker build -t teehr:v0.4.4 .
-$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.4.4 jupyter lab --ip 0.0.0.0 $HOME
+$ docker build -t teehr:v0.4.5 .
+$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.4.5 jupyter lab --ip 0.0.0.0 $HOME
 ```
 
 ## Examples
