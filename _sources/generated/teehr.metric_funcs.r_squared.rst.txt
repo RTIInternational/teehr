@@ -1,0 +1,6 @@
+teehr.metric\_funcs.r\_squared
+==============================
+
+.. currentmodule:: teehr
+
+.. autofunction:: metric_funcs.r_squared

@@ -1,0 +1,62 @@
+teehr.metric\_models.MAX\_VALUE\_DELTA
+======================================
+
+.. currentmodule:: teehr
+
+.. autoclass:: metric_models.MAX_VALUE_DELTA
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~metric_models.MAX_VALUE_DELTA.construct
+      ~metric_models.MAX_VALUE_DELTA.copy
+      ~metric_models.MAX_VALUE_DELTA.dict
+      ~metric_models.MAX_VALUE_DELTA.from_orm
+      ~metric_models.MAX_VALUE_DELTA.json
+      ~metric_models.MAX_VALUE_DELTA.model_construct
+      ~metric_models.MAX_VALUE_DELTA.model_copy
+      ~metric_models.MAX_VALUE_DELTA.model_dump
+      ~metric_models.MAX_VALUE_DELTA.model_dump_json
+      ~metric_models.MAX_VALUE_DELTA.model_json_schema
+      ~metric_models.MAX_VALUE_DELTA.model_parametrized_name
+      ~metric_models.MAX_VALUE_DELTA.model_post_init
+      ~metric_models.MAX_VALUE_DELTA.model_rebuild
+      ~metric_models.MAX_VALUE_DELTA.model_validate
+      ~metric_models.MAX_VALUE_DELTA.model_validate_json
+      ~metric_models.MAX_VALUE_DELTA.model_validate_strings
+      ~metric_models.MAX_VALUE_DELTA.parse_file
+      ~metric_models.MAX_VALUE_DELTA.parse_obj
+      ~metric_models.MAX_VALUE_DELTA.parse_raw
+      ~metric_models.MAX_VALUE_DELTA.schema
+      ~metric_models.MAX_VALUE_DELTA.schema_json
+      ~metric_models.MAX_VALUE_DELTA.update_forward_refs
+      ~metric_models.MAX_VALUE_DELTA.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~metric_models.MAX_VALUE_DELTA.model_computed_fields
+      ~metric_models.MAX_VALUE_DELTA.model_config
+      ~metric_models.MAX_VALUE_DELTA.model_extra
+      ~metric_models.MAX_VALUE_DELTA.model_fields
+      ~metric_models.MAX_VALUE_DELTA.model_fields_set
+      ~metric_models.MAX_VALUE_DELTA.transform
+      ~metric_models.MAX_VALUE_DELTA.output_field_name
+      ~metric_models.MAX_VALUE_DELTA.func
+      ~metric_models.MAX_VALUE_DELTA.input_field_names
+      ~metric_models.MAX_VALUE_DELTA.attrs
+   
+   

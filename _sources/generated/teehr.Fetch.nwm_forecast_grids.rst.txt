@@ -1,0 +1,6 @@
+﻿teehr.Fetch.nwm\_forecast\_grids
+================================
+
+.. currentmodule:: teehr
+
+.. automethod:: Fetch.nwm_forecast_grids

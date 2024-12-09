@@ -1,0 +1,63 @@
+teehr.metric\_models.MSE
+========================
+
+.. currentmodule:: teehr
+
+.. autoclass:: metric_models.MSE
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~metric_models.MSE.construct
+      ~metric_models.MSE.copy
+      ~metric_models.MSE.dict
+      ~metric_models.MSE.from_orm
+      ~metric_models.MSE.json
+      ~metric_models.MSE.model_construct
+      ~metric_models.MSE.model_copy
+      ~metric_models.MSE.model_dump
+      ~metric_models.MSE.model_dump_json
+      ~metric_models.MSE.model_json_schema
+      ~metric_models.MSE.model_parametrized_name
+      ~metric_models.MSE.model_post_init
+      ~metric_models.MSE.model_rebuild
+      ~metric_models.MSE.model_validate
+      ~metric_models.MSE.model_validate_json
+      ~metric_models.MSE.model_validate_strings
+      ~metric_models.MSE.parse_file
+      ~metric_models.MSE.parse_obj
+      ~metric_models.MSE.parse_raw
+      ~metric_models.MSE.schema
+      ~metric_models.MSE.schema_json
+      ~metric_models.MSE.update_forward_refs
+      ~metric_models.MSE.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~metric_models.MSE.model_computed_fields
+      ~metric_models.MSE.model_config
+      ~metric_models.MSE.model_extra
+      ~metric_models.MSE.model_fields
+      ~metric_models.MSE.model_fields_set
+      ~metric_models.MSE.bootstrap
+      ~metric_models.MSE.transform
+      ~metric_models.MSE.output_field_name
+      ~metric_models.MSE.func
+      ~metric_models.MSE.input_field_names
+      ~metric_models.MSE.attrs
+   
+   

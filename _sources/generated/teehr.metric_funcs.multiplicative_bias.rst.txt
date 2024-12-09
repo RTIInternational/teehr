@@ -1,0 +1,6 @@
+teehr.metric\_funcs.multiplicative\_bias
+========================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: metric_funcs.multiplicative_bias

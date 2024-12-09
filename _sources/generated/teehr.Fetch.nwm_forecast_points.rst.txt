@@ -1,0 +1,6 @@
+﻿teehr.Fetch.nwm\_forecast\_points
+=================================
+
+.. currentmodule:: teehr
+
+.. automethod:: Fetch.nwm_forecast_points

@@ -1,0 +1,6 @@
+teehr.metric\_funcs.mean\_squared\_error
+========================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: metric_funcs.mean_squared_error

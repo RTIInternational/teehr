@@ -1,0 +1,6 @@
+teehr.metric\_funcs.mean\_absolute\_error
+=========================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: metric_funcs.mean_absolute_error

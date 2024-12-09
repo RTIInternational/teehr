@@ -1,0 +1,62 @@
+teehr.metric\_models.MAXIMUM
+============================
+
+.. currentmodule:: teehr
+
+.. autoclass:: metric_models.MAXIMUM
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~metric_models.MAXIMUM.construct
+      ~metric_models.MAXIMUM.copy
+      ~metric_models.MAXIMUM.dict
+      ~metric_models.MAXIMUM.from_orm
+      ~metric_models.MAXIMUM.json
+      ~metric_models.MAXIMUM.model_construct
+      ~metric_models.MAXIMUM.model_copy
+      ~metric_models.MAXIMUM.model_dump
+      ~metric_models.MAXIMUM.model_dump_json
+      ~metric_models.MAXIMUM.model_json_schema
+      ~metric_models.MAXIMUM.model_parametrized_name
+      ~metric_models.MAXIMUM.model_post_init
+      ~metric_models.MAXIMUM.model_rebuild
+      ~metric_models.MAXIMUM.model_validate
+      ~metric_models.MAXIMUM.model_validate_json
+      ~metric_models.MAXIMUM.model_validate_strings
+      ~metric_models.MAXIMUM.parse_file
+      ~metric_models.MAXIMUM.parse_obj
+      ~metric_models.MAXIMUM.parse_raw
+      ~metric_models.MAXIMUM.schema
+      ~metric_models.MAXIMUM.schema_json
+      ~metric_models.MAXIMUM.update_forward_refs
+      ~metric_models.MAXIMUM.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~metric_models.MAXIMUM.model_computed_fields
+      ~metric_models.MAXIMUM.model_config
+      ~metric_models.MAXIMUM.model_extra
+      ~metric_models.MAXIMUM.model_fields
+      ~metric_models.MAXIMUM.model_fields_set
+      ~metric_models.MAXIMUM.transform
+      ~metric_models.MAXIMUM.output_field_name
+      ~metric_models.MAXIMUM.func
+      ~metric_models.MAXIMUM.input_field_names
+      ~metric_models.MAXIMUM.attrs
+   
+   
