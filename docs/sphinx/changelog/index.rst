@@ -1,6 +1,21 @@
 Release Notes
 =============
 
+
+0.4.5 - 2024-12-09
+--------------------
+
+Added
+^^^^^
+* Fixes issues with sphinx docs and run the `install_spark_jars.py` script in the build container.
+* Adds location plotting to accessor.
+* Adds loading from FEWS XML files.
+* Adds `member` to secondary timeseries schema for ensembles.
+
+Changed
+^^^^^^^
+* Fixes issues with sphinx docs and run the `install_spark_jars.py` script in the build container.
+
 0.4.4 - 2024-12-02
 --------------------
 
