@@ -1,0 +1,63 @@
+teehr.metric\_models.MULT\_BIAS
+===============================
+
+.. currentmodule:: teehr
+
+.. autoclass:: metric_models.MULT_BIAS
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~metric_models.MULT_BIAS.construct
+      ~metric_models.MULT_BIAS.copy
+      ~metric_models.MULT_BIAS.dict
+      ~metric_models.MULT_BIAS.from_orm
+      ~metric_models.MULT_BIAS.json
+      ~metric_models.MULT_BIAS.model_construct
+      ~metric_models.MULT_BIAS.model_copy
+      ~metric_models.MULT_BIAS.model_dump
+      ~metric_models.MULT_BIAS.model_dump_json
+      ~metric_models.MULT_BIAS.model_json_schema
+      ~metric_models.MULT_BIAS.model_parametrized_name
+      ~metric_models.MULT_BIAS.model_post_init
+      ~metric_models.MULT_BIAS.model_rebuild
+      ~metric_models.MULT_BIAS.model_validate
+      ~metric_models.MULT_BIAS.model_validate_json
+      ~metric_models.MULT_BIAS.model_validate_strings
+      ~metric_models.MULT_BIAS.parse_file
+      ~metric_models.MULT_BIAS.parse_obj
+      ~metric_models.MULT_BIAS.parse_raw
+      ~metric_models.MULT_BIAS.schema
+      ~metric_models.MULT_BIAS.schema_json
+      ~metric_models.MULT_BIAS.update_forward_refs
+      ~metric_models.MULT_BIAS.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~metric_models.MULT_BIAS.model_computed_fields
+      ~metric_models.MULT_BIAS.model_config
+      ~metric_models.MULT_BIAS.model_extra
+      ~metric_models.MULT_BIAS.model_fields
+      ~metric_models.MULT_BIAS.model_fields_set
+      ~metric_models.MULT_BIAS.bootstrap
+      ~metric_models.MULT_BIAS.transform
+      ~metric_models.MULT_BIAS.output_field_name
+      ~metric_models.MULT_BIAS.func
+      ~metric_models.MULT_BIAS.input_field_names
+      ~metric_models.MULT_BIAS.attrs
+   
+   

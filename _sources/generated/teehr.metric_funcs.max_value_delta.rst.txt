@@ -1,0 +1,6 @@
+teehr.metric\_funcs.max\_value\_delta
+=====================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: metric_funcs.max_value_delta

@@ -1,0 +1,34 @@
+﻿teehr.BaseTable
+===============
+
+.. currentmodule:: teehr
+
+.. autoclass:: BaseTable
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~BaseTable.distinct_values
+      ~BaseTable.field_enum
+      ~BaseTable.fields
+      ~BaseTable.filter
+      ~BaseTable.order_by
+      ~BaseTable.query
+      ~BaseTable.to_geopandas
+      ~BaseTable.to_pandas
+      ~BaseTable.to_sdf
+      ~BaseTable.validate
+   
+   
+
+   
+   
+   

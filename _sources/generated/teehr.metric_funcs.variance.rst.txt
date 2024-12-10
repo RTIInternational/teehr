@@ -1,0 +1,6 @@
+teehr.metric\_funcs.variance
+============================
+
+.. currentmodule:: teehr
+
+.. autofunction:: metric_funcs.variance

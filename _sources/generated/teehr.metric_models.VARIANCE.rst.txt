@@ -1,0 +1,63 @@
+teehr.metric\_models.VARIANCE
+=============================
+
+.. currentmodule:: teehr
+
+.. autoclass:: metric_models.VARIANCE
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~metric_models.VARIANCE.construct
+      ~metric_models.VARIANCE.copy
+      ~metric_models.VARIANCE.dict
+      ~metric_models.VARIANCE.from_orm
+      ~metric_models.VARIANCE.json
+      ~metric_models.VARIANCE.model_construct
+      ~metric_models.VARIANCE.model_copy
+      ~metric_models.VARIANCE.model_dump
+      ~metric_models.VARIANCE.model_dump_json
+      ~metric_models.VARIANCE.model_json_schema
+      ~metric_models.VARIANCE.model_parametrized_name
+      ~metric_models.VARIANCE.model_post_init
+      ~metric_models.VARIANCE.model_rebuild
+      ~metric_models.VARIANCE.model_validate
+      ~metric_models.VARIANCE.model_validate_json
+      ~metric_models.VARIANCE.model_validate_strings
+      ~metric_models.VARIANCE.parse_file
+      ~metric_models.VARIANCE.parse_obj
+      ~metric_models.VARIANCE.parse_raw
+      ~metric_models.VARIANCE.schema
+      ~metric_models.VARIANCE.schema_json
+      ~metric_models.VARIANCE.update_forward_refs
+      ~metric_models.VARIANCE.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~metric_models.VARIANCE.model_computed_fields
+      ~metric_models.VARIANCE.model_config
+      ~metric_models.VARIANCE.model_extra
+      ~metric_models.VARIANCE.model_fields
+      ~metric_models.VARIANCE.model_fields_set
+      ~metric_models.VARIANCE.bootstrap
+      ~metric_models.VARIANCE.transform
+      ~metric_models.VARIANCE.output_field_name
+      ~metric_models.VARIANCE.func
+      ~metric_models.VARIANCE.input_field_names
+      ~metric_models.VARIANCE.attrs
+   
+   

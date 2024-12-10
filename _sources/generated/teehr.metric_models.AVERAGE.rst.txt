@@ -1,0 +1,62 @@
+teehr.metric\_models.AVERAGE
+============================
+
+.. currentmodule:: teehr
+
+.. autoclass:: metric_models.AVERAGE
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~metric_models.AVERAGE.construct
+      ~metric_models.AVERAGE.copy
+      ~metric_models.AVERAGE.dict
+      ~metric_models.AVERAGE.from_orm
+      ~metric_models.AVERAGE.json
+      ~metric_models.AVERAGE.model_construct
+      ~metric_models.AVERAGE.model_copy
+      ~metric_models.AVERAGE.model_dump
+      ~metric_models.AVERAGE.model_dump_json
+      ~metric_models.AVERAGE.model_json_schema
+      ~metric_models.AVERAGE.model_parametrized_name
+      ~metric_models.AVERAGE.model_post_init
+      ~metric_models.AVERAGE.model_rebuild
+      ~metric_models.AVERAGE.model_validate
+      ~metric_models.AVERAGE.model_validate_json
+      ~metric_models.AVERAGE.model_validate_strings
+      ~metric_models.AVERAGE.parse_file
+      ~metric_models.AVERAGE.parse_obj
+      ~metric_models.AVERAGE.parse_raw
+      ~metric_models.AVERAGE.schema
+      ~metric_models.AVERAGE.schema_json
+      ~metric_models.AVERAGE.update_forward_refs
+      ~metric_models.AVERAGE.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~metric_models.AVERAGE.model_computed_fields
+      ~metric_models.AVERAGE.model_config
+      ~metric_models.AVERAGE.model_extra
+      ~metric_models.AVERAGE.model_fields
+      ~metric_models.AVERAGE.model_fields_set
+      ~metric_models.AVERAGE.transform
+      ~metric_models.AVERAGE.output_field_name
+      ~metric_models.AVERAGE.func
+      ~metric_models.AVERAGE.input_field_names
+      ~metric_models.AVERAGE.attrs
+   
+   

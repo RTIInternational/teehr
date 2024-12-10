@@ -1,0 +1,63 @@
+teehr.metric\_models.PEARSON\_R
+===============================
+
+.. currentmodule:: teehr
+
+.. autoclass:: metric_models.PEARSON_R
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~metric_models.PEARSON_R.construct
+      ~metric_models.PEARSON_R.copy
+      ~metric_models.PEARSON_R.dict
+      ~metric_models.PEARSON_R.from_orm
+      ~metric_models.PEARSON_R.json
+      ~metric_models.PEARSON_R.model_construct
+      ~metric_models.PEARSON_R.model_copy
+      ~metric_models.PEARSON_R.model_dump
+      ~metric_models.PEARSON_R.model_dump_json
+      ~metric_models.PEARSON_R.model_json_schema
+      ~metric_models.PEARSON_R.model_parametrized_name
+      ~metric_models.PEARSON_R.model_post_init
+      ~metric_models.PEARSON_R.model_rebuild
+      ~metric_models.PEARSON_R.model_validate
+      ~metric_models.PEARSON_R.model_validate_json
+      ~metric_models.PEARSON_R.model_validate_strings
+      ~metric_models.PEARSON_R.parse_file
+      ~metric_models.PEARSON_R.parse_obj
+      ~metric_models.PEARSON_R.parse_raw
+      ~metric_models.PEARSON_R.schema
+      ~metric_models.PEARSON_R.schema_json
+      ~metric_models.PEARSON_R.update_forward_refs
+      ~metric_models.PEARSON_R.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~metric_models.PEARSON_R.model_computed_fields
+      ~metric_models.PEARSON_R.model_config
+      ~metric_models.PEARSON_R.model_extra
+      ~metric_models.PEARSON_R.model_fields
+      ~metric_models.PEARSON_R.model_fields_set
+      ~metric_models.PEARSON_R.bootstrap
+      ~metric_models.PEARSON_R.transform
+      ~metric_models.PEARSON_R.output_field_name
+      ~metric_models.PEARSON_R.func
+      ~metric_models.PEARSON_R.input_field_names
+      ~metric_models.PEARSON_R.attrs
+   
+   

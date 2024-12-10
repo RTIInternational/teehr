@@ -1,0 +1,6 @@
+teehr.metric\_funcs.nash\_sutcliffe\_efficiency
+===============================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: metric_funcs.nash_sutcliffe_efficiency

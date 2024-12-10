@@ -1,0 +1,62 @@
+teehr.metric\_models.SUM
+========================
+
+.. currentmodule:: teehr
+
+.. autoclass:: metric_models.SUM
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~metric_models.SUM.construct
+      ~metric_models.SUM.copy
+      ~metric_models.SUM.dict
+      ~metric_models.SUM.from_orm
+      ~metric_models.SUM.json
+      ~metric_models.SUM.model_construct
+      ~metric_models.SUM.model_copy
+      ~metric_models.SUM.model_dump
+      ~metric_models.SUM.model_dump_json
+      ~metric_models.SUM.model_json_schema
+      ~metric_models.SUM.model_parametrized_name
+      ~metric_models.SUM.model_post_init
+      ~metric_models.SUM.model_rebuild
+      ~metric_models.SUM.model_validate
+      ~metric_models.SUM.model_validate_json
+      ~metric_models.SUM.model_validate_strings
+      ~metric_models.SUM.parse_file
+      ~metric_models.SUM.parse_obj
+      ~metric_models.SUM.parse_raw
+      ~metric_models.SUM.schema
+      ~metric_models.SUM.schema_json
+      ~metric_models.SUM.update_forward_refs
+      ~metric_models.SUM.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~metric_models.SUM.model_computed_fields
+      ~metric_models.SUM.model_config
+      ~metric_models.SUM.model_extra
+      ~metric_models.SUM.model_fields
+      ~metric_models.SUM.model_fields_set
+      ~metric_models.SUM.transform
+      ~metric_models.SUM.output_field_name
+      ~metric_models.SUM.func
+      ~metric_models.SUM.input_field_names
+      ~metric_models.SUM.attrs
+   
+   
