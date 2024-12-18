@@ -103,6 +103,6 @@ def setup_v0_3_study(tmpdir):
     )
 
     # Create the joined timeseries
-    eval.joined_timeseries.create(execute_udf=True)
+    eval.joined_timeseries.create(add_attrs=True, execute_udf=True)
 
     return eval

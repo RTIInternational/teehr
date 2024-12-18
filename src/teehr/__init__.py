@@ -22,6 +22,9 @@ from teehr.models.filters import (  # noqa
     JoinedTimeseriesFilter
 )
 
+from teehr.models.udfs.timeseries_aware import TimeseriesAwareUDF
+from teehr.models.udfs.row_level import RowLevelUDF
+
 # For docs
 from teehr.evaluation.tables.base_table import (  # noqa
     BaseTable,

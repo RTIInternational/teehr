@@ -8,6 +8,7 @@ from teehr.models.filters import (
     JoinedTimeseriesFilter
 )
 from teehr.models.metrics.metric_models import MetricsBasemodel
+from teehr.models.udfs.row_level import UDFBasemodel
 from teehr.models.table_enums import (
     JoinedTimeseriesFields
 )
@@ -173,3 +174,35 @@ class Metrics:
     def to_sdf(self) -> ps.DataFrame:
         """Return the Spark DataFrame."""
         return self.df
+
+    def add_udf_columns(self, udfs: Union[UDFBasemodel, List[UDFBasemodel]]):
+            """Add UDFs to the joined timeseries DataFrame before running metrics.
+
+            Parameters
+            ----------
+            udfs : Union[UDFBasemodel, List[UDFBasemodel]]
+                The UDFs to apply to the DataFrame.
+
+            Returns
+            -------
+            self
+                The Metrics object with the UDFs applied to the DataFrame.
+
+            Examples
+            --------
+            >>> import teehr
+            >>> from teehr import RowLevelUDF as rlu
+            >>> from teehr import TimeseriesAwareUDF as tau
+            >>> ev.join_timeseries.add_udf_columns([
+            >>>     rlu.Month()
+            >>> ]).write()
+            """
+            # self._check_load_table()
+
+            if not isinstance(udfs, List):
+                udfs = [udfs]
+
+            for udf in udfs:
+                self.df = udf.apply_to(self.df)
+
+            return self

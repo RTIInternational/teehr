@@ -8,6 +8,8 @@ import teehr.models.pandera_dataframe_schemas as schemas
 import pyspark.sql as ps
 import logging
 from teehr.utils.utils import to_path_or_s3path
+from teehr.models.udfs.row_level import UDFBasemodel
+from typing import List, Union
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +112,29 @@ class JoinedTimeseriesTable(TimeseriesTable):
 
         return joined_df
 
-    def _add_udfs(self, joined_df: ps.DataFrame) -> ps.DataFrame:
+    def add_udf_columns(self, udfs: Union[UDFBasemodel, List[UDFBasemodel]]):
+        """Add UDFs to the joined timeseries table.
+
+        Note this does not persist the UDFs to the table. It only applies them to the DataFrame.
+        To persist the UDFs to the table, use the `write` method.
+        """
+        self._check_load_table()
+
+        if not isinstance(udfs, List):
+            udfs = [udfs]
+
+        for udf in udfs:
+            self.df = udf.apply_to(self.df)
+
+        return self
+
+    def write(self):
+        """Write the joined timeseries table to disk."""
+        self._write_spark_df(self.df)
+        logger.info("Joined timeseries table written to disk.")
+        self._load_table()
+
+    def _run_udf_script(self, joined_df: ps.DataFrame) -> ps.DataFrame:
         """Add UDFs to the joined timeseries dataframe."""
 
         try:
@@ -142,10 +166,9 @@ class JoinedTimeseriesTable(TimeseriesTable):
             joined_df = self._add_attr(joined_df)
 
         if execute_udf:
-            joined_df = self._add_udfs(joined_df)
+            joined_df = self._run_udf_script(joined_df)
 
         validated_df = self._validate(joined_df, False)
-
         self._write_spark_df(validated_df)
         logger.info("Joined timeseries table created.")
         self._load_table()
