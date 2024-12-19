@@ -13,16 +13,6 @@ LOCATION_ATTRIBUTES_DIR = "location_attributes"
 SECONDARY_TIMESERIES_DIR = "secondary_timeseries"
 JOINED_TIMESERIES_DIR = "joined_timeseries"
 
-# Domain files and directories
-VARIABLES_DIR = "variables"
-CONFIGURATIONS_DIR = "configurations"
-UNITS_DIR = "units"
-ATTRIBUTES_DIR = "attributes"
-VARIABLES_FILE = "variables.csv"
-CONFIGURATIONS_FILE = "configurations.csv"
-UNITS_FILE = "units.csv"
-ATTRIBUTES_FILE = "attributes.csv"
-
 # Fetching cache directories
 FETCHING_CACHE_DIR = "fetching"
 USGS_CACHE_DIR = "usgs"

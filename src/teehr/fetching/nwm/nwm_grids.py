@@ -14,7 +14,8 @@ from teehr.fetching.utils import (
 from teehr.models.fetching.utils import (
     SupportedNWMOperationalVersionsEnum,
     SupportedNWMDataSourcesEnum,
-    SupportedKerchunkMethod
+    SupportedKerchunkMethod,
+    TimeseriesTypeEnum
 )
 from teehr.fetching.const import (
     NWM22_ANALYSIS_CONFIG,
@@ -40,7 +41,8 @@ def nwm_grids_to_parquet(
     ignore_missing_file: Optional[bool] = True,
     overwrite_output: Optional[bool] = False,
     location_id_prefix: Optional[Union[str, None]] = None,
-    variable_mapper: Dict[str, Dict[str, str]] = None
+    variable_mapper: Dict[str, Dict[str, str]] = None,
+    timeseries_type: TimeseriesTypeEnum = "primary"
 ):
     """
     Fetch NWM gridded data, calculate zonal statistics (currently only
@@ -237,7 +239,8 @@ def nwm_grids_to_parquet(
             ignore_missing_file=ignore_missing_file,
             overwrite_output=overwrite_output,
             location_id_prefix=location_id_prefix,
-            variable_mapper=variable_mapper
+            variable_mapper=variable_mapper,
+            timeseries_type=timeseries_type
         )
 
 

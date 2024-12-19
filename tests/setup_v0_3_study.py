@@ -2,7 +2,7 @@
 from pathlib import Path
 from teehr import Evaluation
 
-from teehr.models.tables import (
+from teehr.models.pydantic_table_models import (
     Attribute
 )
 

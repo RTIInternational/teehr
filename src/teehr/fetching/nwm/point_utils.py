@@ -10,9 +10,10 @@ import pyarrow as pa
 
 from teehr.fetching.utils import (
     get_dataset,
-    write_parquet_file,
+    write_timeseries_parquet_file,
     split_dataframe
 )
+from teehr.models.fetching.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
     VALUE,
     VALUE_TIME,
@@ -20,7 +21,8 @@ from teehr.fetching.const import (
     LOCATION_ID,
     UNIT_NAME,
     VARIABLE_NAME,
-    CONFIGURATION_NAME
+    CONFIGURATION_NAME,
+    MEMBER
 )
 
 
@@ -75,6 +77,7 @@ def file_chunk_loop(
             CONFIGURATION_NAME: num_vals * [nwm_version + "_" + configuration],
             VARIABLE_NAME: num_vals * [teehr_variable_name],
             UNIT_NAME: num_vals * [teehr_units],
+            MEMBER: num_vals * [None]
         },
         schema=schema,
     )
@@ -92,7 +95,8 @@ def process_chunk_of_files(
     ignore_missing_file: bool,
     overwrite_output: bool,
     nwm_version: str,
-    variable_mapper: Dict[str, Dict[str, str]]
+    variable_mapper: Dict[str, Dict[str, str]],
+    timeseries_type: TimeseriesTypeEnum
 ):
     """Assemble a table for a chunk of NWM files."""
     location_ids = np.array(location_ids).astype(int)
@@ -106,6 +110,7 @@ def process_chunk_of_files(
             (CONFIGURATION_NAME, pa.string()),
             (VARIABLE_NAME, pa.string()),
             (UNIT_NAME, pa.string()),
+            (MEMBER, pa.string())
         ]
     )
 
@@ -145,10 +150,11 @@ def process_chunk_of_files(
         end = f"{end_json[1]}T{end_json[3][1:3]}F{end_json[6][1:]}"
         filename = f"{start}_{end}.parquet"
 
-    write_parquet_file(
+    write_timeseries_parquet_file(
         Path(output_parquet_dir, filename),
         overwrite_output,
-        output_table
+        output_table,
+        timeseries_type
     )
 
 
@@ -163,7 +169,8 @@ def fetch_and_format_nwm_points(
     ignore_missing_file: bool,
     overwrite_output: bool,
     nwm_version: str,
-    variable_mapper: Dict[str, Dict[str, str]]
+    variable_mapper: Dict[str, Dict[str, str]],
+    timeseries_type: TimeseriesTypeEnum
 ):
     """Fetch NWM point data and save as parquet files.
 
@@ -239,5 +246,6 @@ def fetch_and_format_nwm_points(
             ignore_missing_file,
             overwrite_output,
             nwm_version,
-            variable_mapper
+            variable_mapper,
+            timeseries_type
         )

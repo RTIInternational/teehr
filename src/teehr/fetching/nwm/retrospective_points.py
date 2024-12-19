@@ -47,19 +47,20 @@ from teehr.fetching.const import (
     LOCATION_ID,
     UNIT_NAME,
     VARIABLE_NAME,
-    CONFIGURATION_NAME
+    CONFIGURATION_NAME,
+    MEMBER
 )
 from teehr.models.fetching.utils import (
     NWMChunkByEnum,
     SupportedNWMRetroVersionsEnum,
     SupportedNWMRetroDomainsEnum,
-    ChannelRtRetroVariableEnum
+    ChannelRtRetroVariableEnum,
+    TimeseriesTypeEnum
 )
 from teehr.fetching.utils import (
-    write_parquet_file,
+    write_timeseries_parquet_file,
     get_period_start_end_times,
-    create_periods_based_on_chunksize,
-    format_timeseries_data_types
+    create_periods_based_on_chunksize
 )
 
 NWM20_MIN_DATE = datetime(1993, 1, 1)
@@ -137,6 +138,7 @@ def da_to_df(
         )
     df[CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
     df[REFERENCE_TIME] = np.nan
+    df[MEMBER] = None
     df.rename(
         columns={
             "time": VALUE_TIME,
@@ -152,7 +154,6 @@ def da_to_df(
     if (nwm_version == "nwm21") or (nwm_version == "nwm30"):
         df.drop(columns=["elevation", "gage_id", "order"], inplace=True)
 
-    df = format_timeseries_data_types(df)
 
     return df
 
@@ -194,6 +195,7 @@ def nwm_retro_to_parquet(
     overwrite_output: Optional[bool] = False,
     domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
     variable_mapper: Dict[str, Dict[str, str]] = None,
+    timeseries_type: TimeseriesTypeEnum = "secondary"
 ):
     """Fetch NWM retrospective at NWM COMIDs and store as Parquet file.
 
@@ -326,4 +328,9 @@ def nwm_retro_to_parquet(
         output_filepath = Path(
             output_parquet_dir, output_filename
         )
-        write_parquet_file(output_filepath, overwrite_output, df)
+        write_timeseries_parquet_file(
+            filepath=output_filepath,
+            overwrite_output=overwrite_output,
+            data=df,
+            timeseries_type=timeseries_type
+        )

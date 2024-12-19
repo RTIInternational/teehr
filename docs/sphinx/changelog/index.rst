@@ -1,6 +1,47 @@
 Release Notes
 =============
 
+
+0.4.5 - 2024-12-09
+--------------------
+
+Added
+^^^^^
+* Fixes issues with sphinx docs and run the `install_spark_jars.py` script in the build container.
+* Adds location plotting to accessor.
+* Adds loading from FEWS XML files.
+* Adds `member` to secondary timeseries schema for ensembles.
+
+Changed
+^^^^^^^
+* Fixes issues with sphinx docs and run the `install_spark_jars.py` script in the build container.
+
+0.4.4 - 2024-12-02
+--------------------
+
+Added
+^^^^^
+* Added ability to read an Evaluation dataset directly from an S3 bucket.
+* When path to an Evaluation dataset is an S3 bucket, the Evaluation is read-only.
+
+Changed
+^^^^^^^
+* Pretty significant refactor of the Table classes to make them more flexible and easier to use.
+* Added more robust Pandera validation to the Table classes.
+* Updated docs to reflect changes and added `read_from_s3` example.
+
+
+0.4.3 - 2024-10-19
+--------------------
+
+Added
+^^^^^
+* None
+
+Changed
+^^^^^^^
+* Changed paths to the S3 bucket evaluations to reference "e*..." instead of "p*..." naming convention.
+
 0.4.2 - 2024-10-18
 --------------------
 

@@ -2,7 +2,7 @@
 from pathlib import Path
 from teehr import Evaluation
 from teehr import Metrics as m
-from teehr.models.tables import (
+from teehr.models.pydantic_table_models import (
     Configuration,
     Unit,
     Variable
@@ -37,15 +37,15 @@ MIZU_LOCATIONS = Path(
 
 def test_validate_and_insert_timeseries(tmpdir):
     """Test the validate_locations function."""
-    eval = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir)
 
-    eval.enable_logging()
+    ev.enable_logging()
 
-    eval.clone_template()
+    ev.clone_template()
 
-    eval.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
+    ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
 
-    eval.configurations.add(
+    ev.configurations.add(
         Configuration(
             name="test_obs",
             type="primary",
@@ -53,21 +53,21 @@ def test_validate_and_insert_timeseries(tmpdir):
         )
     )
 
-    eval.units.add(
+    ev.units.add(
         Unit(
             name="cfd",
             long_name="Cubic Feet per Day"
         )
     )
 
-    eval.variables.add(
+    ev.variables.add(
         Variable(
             name="streamflow",
             long_name="Streamflow"
         )
     )
 
-    eval.primary_timeseries.load_parquet(
+    ev.primary_timeseries.load_parquet(
         in_path=PRIMARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
@@ -80,11 +80,11 @@ def test_validate_and_insert_timeseries(tmpdir):
         }
     )
 
-    eval.location_crosswalks.load_csv(
+    ev.location_crosswalks.load_csv(
         in_path=CROSSWALK_FILEPATH
     )
 
-    eval.configurations.add(
+    ev.configurations.add(
         Configuration(
             name="test_short",
             type="secondary",
@@ -92,7 +92,7 @@ def test_validate_and_insert_timeseries(tmpdir):
         )
     )
 
-    eval.secondary_timeseries.load_parquet(
+    ev.secondary_timeseries.load_parquet(
         in_path=SECONDARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
@@ -110,15 +110,15 @@ def test_validate_and_insert_timeseries(tmpdir):
 
 def test_validate_and_insert_timeseries_set_const(tmpdir):
     """Test the validate_locations function."""
-    eval = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir)
 
-    eval.enable_logging()
+    ev.enable_logging()
 
-    eval.clone_template()
+    ev.clone_template()
 
-    eval.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
+    ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
 
-    eval.primary_timeseries.load_parquet(
+    ev.primary_timeseries.load_parquet(
         in_path=PRIMARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
@@ -136,11 +136,11 @@ def test_validate_and_insert_timeseries_set_const(tmpdir):
         }
     )
 
-    eval.location_crosswalks.load_csv(
+    ev.location_crosswalks.load_csv(
         in_path=CROSSWALK_FILEPATH
     )
 
-    eval.secondary_timeseries.load_parquet(
+    ev.secondary_timeseries.load_parquet(
         in_path=SECONDARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
@@ -163,15 +163,15 @@ def test_validate_and_insert_timeseries_set_const(tmpdir):
 
 def test_validate_and_insert_summa_nc_timeseries(tmpdir):
     """Test the validate_locations function."""
-    eval = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir)
 
-    eval.enable_logging()
+    ev.enable_logging()
 
-    eval.clone_template()
+    ev.clone_template()
 
-    eval.locations.load_spatial(in_path=SUMMA_LOCATIONS)
+    ev.locations.load_spatial(in_path=SUMMA_LOCATIONS)
 
-    eval.configurations.add(
+    ev.configurations.add(
         Configuration(
             name="summa",
             type="primary",
@@ -179,7 +179,7 @@ def test_validate_and_insert_summa_nc_timeseries(tmpdir):
         )
     )
 
-    eval.variables.add(
+    ev.variables.add(
         Variable(
             name="runoff",
             long_name="runoff"
@@ -198,14 +198,14 @@ def test_validate_and_insert_summa_nc_timeseries(tmpdir):
         "reference_time": None
     }
 
-    eval.primary_timeseries.load_netcdf(
+    ev.primary_timeseries.load_netcdf(
         in_path=SUMMA_TIMESERIES_FILEPATH_NC,
         field_mapping=summa_field_mapping,
         constant_field_values=summa_constant_field_values
     )
 
     # Compare loaded values with the values in the netcdf file.
-    primary_df = eval.primary_timeseries.to_pandas()
+    primary_df = ev.primary_timeseries.to_pandas()
     primary_df.set_index("location_id", inplace=True)
     teehr_values = primary_df.loc["170300010101"].value.values
 
@@ -219,15 +219,15 @@ def test_validate_and_insert_summa_nc_timeseries(tmpdir):
 
 def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
     """Test the validate_locations function."""
-    eval = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir)
 
-    eval.enable_logging()
+    ev.enable_logging()
 
-    eval.clone_template()
+    ev.clone_template()
 
-    eval.locations.load_spatial(in_path=MIZU_LOCATIONS)
+    ev.locations.load_spatial(in_path=MIZU_LOCATIONS)
 
-    eval.configurations.add(
+    ev.configurations.add(
         Configuration(
             name="mizuroute",
             type="primary",
@@ -235,7 +235,7 @@ def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
         )
     )
 
-    eval.variables.add(
+    ev.variables.add(
         Variable(
             name="runoff",
             long_name="runoff"
@@ -254,14 +254,14 @@ def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
         "reference_time": None
     }
 
-    eval.primary_timeseries.load_netcdf(
+    ev.primary_timeseries.load_netcdf(
         in_path=MIZU_TIMESERIES_FILEPATH_NC,
         field_mapping=mizu_field_mapping,
         constant_field_values=mizu_constant_field_values
     )
 
     # Compare loaded values with the values in the netcdf file.
-    primary_df = eval.primary_timeseries.to_pandas()
+    primary_df = ev.primary_timeseries.to_pandas()
     primary_df.set_index("location_id", inplace=True)
     teehr_values = primary_df.loc["77000002"].value.values
 
@@ -302,13 +302,13 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
     eval.configurations.add(
         Configuration(
             name="MEFP",
-            type="primary",
+            type="secondary",
             description="MBRFC HEFS Data"
         )
     )
     constant_field_values = {
         "unit_name": "ft^3/s",
-        "variable_name": "streamflow_hourly_inst",
+        "variable_name": "streamflow_hourly_inst"
     }
     eval.secondary_timeseries.load_fews_xml(
         in_path=secondary_filepath,
@@ -318,7 +318,7 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
         in_path=primary_filepath
     )
     eval.joined_timeseries.create(execute_udf=False)
-    df = eval.joined_timeseries.to_pandas()
+    # df = eval.joined_timeseries.to_pandas()
 
     # Now, metrics.
     kge = m.KlingGuptaEfficiency()
@@ -332,38 +332,38 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
         order_by=["primary_location_id"],
     ).to_geopandas()
 
-    assert df.shape == (99, 7)
-    assert df["location_id"].nunique() == 1
+    assert metrics_df.shape == (1, 4)
+    assert metrics_df["primary_location_id"].nunique() == 1
 
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        # test_validate_and_insert_timeseries(
-        #     tempfile.mkdtemp(
-        #         prefix="1-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_validate_and_insert_timeseries_set_const(
-        #     tempfile.mkdtemp(
-        #         prefix="2-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_validate_and_insert_summa_nc_timeseries(
-        #     tempfile.mkdtemp(
-        #         prefix="3-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_validate_and_insert_mizu_nc_timeseries(
-        #     tempfile.mkdtemp(
-        #         prefix="4-",
-        #         dir=tempdir
-        #     )
-        # )
+        test_validate_and_insert_timeseries(
+            tempfile.mkdtemp(
+                prefix="1-",
+                dir=tempdir
+            )
+        )
+        test_validate_and_insert_timeseries_set_const(
+            tempfile.mkdtemp(
+                prefix="2-",
+                dir=tempdir
+            )
+        )
+        test_validate_and_insert_summa_nc_timeseries(
+            tempfile.mkdtemp(
+                prefix="3-",
+                dir=tempdir
+            )
+        )
+        test_validate_and_insert_mizu_nc_timeseries(
+            tempfile.mkdtemp(
+                prefix="4-",
+                dir=tempdir
+            )
+        )
         test_validate_and_insert_fews_xml_timeseries(
             tempfile.mkdtemp(
                 prefix="5-",

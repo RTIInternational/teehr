@@ -48,7 +48,8 @@ def test_nwm22_point_fetch_and_format(tmpdir):
         ignore_missing_file=False,
         overwrite_output=True,
         nwm_version="nwm22",
-        variable_mapper=TEST_NWM_VARIABLE_MAPPER
+        variable_mapper=TEST_NWM_VARIABLE_MAPPER,
+        timeseries_type="secondary"
     )
 
     parquet_file = Path(tmpdir, "20230318T14.parquet")
@@ -87,7 +88,8 @@ def test_nwm30_point_fetch_and_format(tmpdir):
         stepsize=100,
         ignore_missing_file=False,
         overwrite_output=True,
-        variable_mapper=TEST_NWM_VARIABLE_MAPPER
+        variable_mapper=TEST_NWM_VARIABLE_MAPPER,
+        timeseries_type="secondary"
     )
 
     parquet_file = Path(tmpdir, "20231101T00.parquet")
@@ -117,7 +119,8 @@ def test_nwm22_grid_fetch_and_format(tmpdir):
         ignore_missing_file=False,
         overwrite_output=True,
         location_id_prefix=None,
-        variable_mapper=None
+        variable_mapper=None,
+        timeseries_type="primary"
     )
 
     parquet_file = Path(tmpdir, "20201218T00.parquet")
@@ -133,7 +136,7 @@ def test_nwm22_grid_fetch_and_format(tmpdir):
         'variable_name',
         'value_time',
         'reference_time',
-        'configuration_name'
+        'configuration_name',
     ]].copy()
 
     assert test_df.compare(bench_df).index.size == 0
@@ -157,7 +160,8 @@ def test_nwm30_grid_fetch_and_format(tmpdir):
         ignore_missing_file=False,
         overwrite_output=True,
         location_id_prefix=None,
-        variable_mapper=TEST_NWM_VARIABLE_MAPPER
+        variable_mapper=TEST_NWM_VARIABLE_MAPPER,
+        timeseries_type="primary"
     )
 
     parquet_file = Path(tmpdir, "20231101T00.parquet")
@@ -166,6 +170,7 @@ def test_nwm30_grid_fetch_and_format(tmpdir):
     bench_df = pd.read_parquet(benchmark_file)
     test_df = pd.read_parquet(parquet_file)
     # Match the column order.
+    # TODO: fix bench df
     bench_df = bench_df[[
         'location_id',
         'value',
