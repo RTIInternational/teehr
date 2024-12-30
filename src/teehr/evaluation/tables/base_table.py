@@ -10,6 +10,7 @@ from teehr.utils.s3path import S3Path
 from teehr.utils.utils import to_path_or_s3path, path_to_spark
 from teehr.models.filters import FilterBaseModel
 import logging
+from pyspark.sql.functions import lit, col
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +146,12 @@ class BaseTable():
 
         return self.schema_func()
 
-    def _validate(self, df: ps.DataFrame, strict: bool = True) -> ps.DataFrame:
+    def _validate(
+        self,
+        df: ps.DataFrame,
+        strict: bool = True,
+        add_missing_columns: bool = False
+    ) -> ps.DataFrame:
         """Validate a DataFrame against the table schema.
 
         Parameters
@@ -156,13 +162,25 @@ class BaseTable():
             If True, any extra columns will be dropped before validation.
             If False, will be validated as-is.
             The default is True.
+
+        Returns
+        -------
+        validated_df : ps.DataFrame
+            The validated DataFrame.
         """
         schema = self._get_schema()
 
         logger.info(f"Validating DataFrame with {schema.columns}.")
 
+        schema_cols = schema.columns.keys()
+
+        # Add missing columns
+        if add_missing_columns:
+            for col_name in schema_cols:
+                if col_name not in df.columns:
+                    df = df.withColumn(col_name, lit(None))
+
         if strict:
-            schema_cols = schema.columns.keys()
             df = df.select(*schema_cols)
 
         validated_df = schema.validate(df)
