@@ -1,0 +1,6 @@
+teehr.metric\_funcs.spearman\_correlation
+=========================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: metric_funcs.spearman_correlation

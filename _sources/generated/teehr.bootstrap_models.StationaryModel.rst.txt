@@ -1,0 +1,65 @@
+teehr.bootstrap\_models.StationaryModel
+=======================================
+
+.. currentmodule:: teehr
+
+.. autoclass:: bootstrap_models.StationaryModel
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~bootstrap_models.StationaryModel.construct
+      ~bootstrap_models.StationaryModel.copy
+      ~bootstrap_models.StationaryModel.dict
+      ~bootstrap_models.StationaryModel.from_orm
+      ~bootstrap_models.StationaryModel.json
+      ~bootstrap_models.StationaryModel.model_construct
+      ~bootstrap_models.StationaryModel.model_copy
+      ~bootstrap_models.StationaryModel.model_dump
+      ~bootstrap_models.StationaryModel.model_dump_json
+      ~bootstrap_models.StationaryModel.model_json_schema
+      ~bootstrap_models.StationaryModel.model_parametrized_name
+      ~bootstrap_models.StationaryModel.model_post_init
+      ~bootstrap_models.StationaryModel.model_rebuild
+      ~bootstrap_models.StationaryModel.model_validate
+      ~bootstrap_models.StationaryModel.model_validate_json
+      ~bootstrap_models.StationaryModel.model_validate_strings
+      ~bootstrap_models.StationaryModel.parse_file
+      ~bootstrap_models.StationaryModel.parse_obj
+      ~bootstrap_models.StationaryModel.parse_raw
+      ~bootstrap_models.StationaryModel.schema
+      ~bootstrap_models.StationaryModel.schema_json
+      ~bootstrap_models.StationaryModel.update_forward_refs
+      ~bootstrap_models.StationaryModel.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~bootstrap_models.StationaryModel.model_computed_fields
+      ~bootstrap_models.StationaryModel.model_config
+      ~bootstrap_models.StationaryModel.model_extra
+      ~bootstrap_models.StationaryModel.model_fields
+      ~bootstrap_models.StationaryModel.model_fields_set
+      ~bootstrap_models.StationaryModel.seed
+      ~bootstrap_models.StationaryModel.random_state
+      ~bootstrap_models.StationaryModel.reps
+      ~bootstrap_models.StationaryModel.block_size
+      ~bootstrap_models.StationaryModel.quantiles
+      ~bootstrap_models.StationaryModel.name
+      ~bootstrap_models.StationaryModel.include_value_time
+      ~bootstrap_models.StationaryModel.func
+   
+   

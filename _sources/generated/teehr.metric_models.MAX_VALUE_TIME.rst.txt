@@ -1,0 +1,62 @@
+teehr.metric\_models.MAX\_VALUE\_TIME
+=====================================
+
+.. currentmodule:: teehr
+
+.. autoclass:: metric_models.MAX_VALUE_TIME
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~metric_models.MAX_VALUE_TIME.construct
+      ~metric_models.MAX_VALUE_TIME.copy
+      ~metric_models.MAX_VALUE_TIME.dict
+      ~metric_models.MAX_VALUE_TIME.from_orm
+      ~metric_models.MAX_VALUE_TIME.json
+      ~metric_models.MAX_VALUE_TIME.model_construct
+      ~metric_models.MAX_VALUE_TIME.model_copy
+      ~metric_models.MAX_VALUE_TIME.model_dump
+      ~metric_models.MAX_VALUE_TIME.model_dump_json
+      ~metric_models.MAX_VALUE_TIME.model_json_schema
+      ~metric_models.MAX_VALUE_TIME.model_parametrized_name
+      ~metric_models.MAX_VALUE_TIME.model_post_init
+      ~metric_models.MAX_VALUE_TIME.model_rebuild
+      ~metric_models.MAX_VALUE_TIME.model_validate
+      ~metric_models.MAX_VALUE_TIME.model_validate_json
+      ~metric_models.MAX_VALUE_TIME.model_validate_strings
+      ~metric_models.MAX_VALUE_TIME.parse_file
+      ~metric_models.MAX_VALUE_TIME.parse_obj
+      ~metric_models.MAX_VALUE_TIME.parse_raw
+      ~metric_models.MAX_VALUE_TIME.schema
+      ~metric_models.MAX_VALUE_TIME.schema_json
+      ~metric_models.MAX_VALUE_TIME.update_forward_refs
+      ~metric_models.MAX_VALUE_TIME.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~metric_models.MAX_VALUE_TIME.model_computed_fields
+      ~metric_models.MAX_VALUE_TIME.model_config
+      ~metric_models.MAX_VALUE_TIME.model_extra
+      ~metric_models.MAX_VALUE_TIME.model_fields
+      ~metric_models.MAX_VALUE_TIME.model_fields_set
+      ~metric_models.MAX_VALUE_TIME.transform
+      ~metric_models.MAX_VALUE_TIME.output_field_name
+      ~metric_models.MAX_VALUE_TIME.func
+      ~metric_models.MAX_VALUE_TIME.input_field_names
+      ~metric_models.MAX_VALUE_TIME.attrs
+   
+   

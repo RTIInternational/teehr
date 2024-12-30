@@ -1,0 +1,57 @@
+teehr.metric\_models.MetricsBasemodel
+=====================================
+
+.. currentmodule:: teehr
+
+.. autoclass:: metric_models.MetricsBasemodel
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~metric_models.MetricsBasemodel.construct
+      ~metric_models.MetricsBasemodel.copy
+      ~metric_models.MetricsBasemodel.dict
+      ~metric_models.MetricsBasemodel.from_orm
+      ~metric_models.MetricsBasemodel.json
+      ~metric_models.MetricsBasemodel.model_construct
+      ~metric_models.MetricsBasemodel.model_copy
+      ~metric_models.MetricsBasemodel.model_dump
+      ~metric_models.MetricsBasemodel.model_dump_json
+      ~metric_models.MetricsBasemodel.model_json_schema
+      ~metric_models.MetricsBasemodel.model_parametrized_name
+      ~metric_models.MetricsBasemodel.model_post_init
+      ~metric_models.MetricsBasemodel.model_rebuild
+      ~metric_models.MetricsBasemodel.model_validate
+      ~metric_models.MetricsBasemodel.model_validate_json
+      ~metric_models.MetricsBasemodel.model_validate_strings
+      ~metric_models.MetricsBasemodel.parse_file
+      ~metric_models.MetricsBasemodel.parse_obj
+      ~metric_models.MetricsBasemodel.parse_raw
+      ~metric_models.MetricsBasemodel.schema
+      ~metric_models.MetricsBasemodel.schema_json
+      ~metric_models.MetricsBasemodel.update_forward_refs
+      ~metric_models.MetricsBasemodel.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~metric_models.MetricsBasemodel.model_computed_fields
+      ~metric_models.MetricsBasemodel.model_config
+      ~metric_models.MetricsBasemodel.model_extra
+      ~metric_models.MetricsBasemodel.model_fields
+      ~metric_models.MetricsBasemodel.model_fields_set
+   
+   

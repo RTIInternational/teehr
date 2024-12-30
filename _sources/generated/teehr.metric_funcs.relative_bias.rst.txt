@@ -1,0 +1,6 @@
+teehr.metric\_funcs.relative\_bias
+==================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: metric_funcs.relative_bias

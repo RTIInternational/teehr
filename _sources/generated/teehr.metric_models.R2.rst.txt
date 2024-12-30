@@ -1,0 +1,63 @@
+teehr.metric\_models.R2
+=======================
+
+.. currentmodule:: teehr
+
+.. autoclass:: metric_models.R2
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~metric_models.R2.construct
+      ~metric_models.R2.copy
+      ~metric_models.R2.dict
+      ~metric_models.R2.from_orm
+      ~metric_models.R2.json
+      ~metric_models.R2.model_construct
+      ~metric_models.R2.model_copy
+      ~metric_models.R2.model_dump
+      ~metric_models.R2.model_dump_json
+      ~metric_models.R2.model_json_schema
+      ~metric_models.R2.model_parametrized_name
+      ~metric_models.R2.model_post_init
+      ~metric_models.R2.model_rebuild
+      ~metric_models.R2.model_validate
+      ~metric_models.R2.model_validate_json
+      ~metric_models.R2.model_validate_strings
+      ~metric_models.R2.parse_file
+      ~metric_models.R2.parse_obj
+      ~metric_models.R2.parse_raw
+      ~metric_models.R2.schema
+      ~metric_models.R2.schema_json
+      ~metric_models.R2.update_forward_refs
+      ~metric_models.R2.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~metric_models.R2.model_computed_fields
+      ~metric_models.R2.model_config
+      ~metric_models.R2.model_extra
+      ~metric_models.R2.model_fields
+      ~metric_models.R2.model_fields_set
+      ~metric_models.R2.bootstrap
+      ~metric_models.R2.transform
+      ~metric_models.R2.output_field_name
+      ~metric_models.R2.func
+      ~metric_models.R2.input_field_names
+      ~metric_models.R2.attrs
+   
+   

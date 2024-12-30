@@ -1,0 +1,65 @@
+teehr.bootstrap\_models.GumbootModel
+====================================
+
+.. currentmodule:: teehr
+
+.. autoclass:: bootstrap_models.GumbootModel
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~bootstrap_models.GumbootModel.construct
+      ~bootstrap_models.GumbootModel.copy
+      ~bootstrap_models.GumbootModel.dict
+      ~bootstrap_models.GumbootModel.from_orm
+      ~bootstrap_models.GumbootModel.json
+      ~bootstrap_models.GumbootModel.model_construct
+      ~bootstrap_models.GumbootModel.model_copy
+      ~bootstrap_models.GumbootModel.model_dump
+      ~bootstrap_models.GumbootModel.model_dump_json
+      ~bootstrap_models.GumbootModel.model_json_schema
+      ~bootstrap_models.GumbootModel.model_parametrized_name
+      ~bootstrap_models.GumbootModel.model_post_init
+      ~bootstrap_models.GumbootModel.model_rebuild
+      ~bootstrap_models.GumbootModel.model_validate
+      ~bootstrap_models.GumbootModel.model_validate_json
+      ~bootstrap_models.GumbootModel.model_validate_strings
+      ~bootstrap_models.GumbootModel.parse_file
+      ~bootstrap_models.GumbootModel.parse_obj
+      ~bootstrap_models.GumbootModel.parse_raw
+      ~bootstrap_models.GumbootModel.schema
+      ~bootstrap_models.GumbootModel.schema_json
+      ~bootstrap_models.GumbootModel.update_forward_refs
+      ~bootstrap_models.GumbootModel.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~bootstrap_models.GumbootModel.model_computed_fields
+      ~bootstrap_models.GumbootModel.model_config
+      ~bootstrap_models.GumbootModel.model_extra
+      ~bootstrap_models.GumbootModel.model_fields
+      ~bootstrap_models.GumbootModel.model_fields_set
+      ~bootstrap_models.GumbootModel.reps
+      ~bootstrap_models.GumbootModel.seed
+      ~bootstrap_models.GumbootModel.quantiles
+      ~bootstrap_models.GumbootModel.boot_year_file
+      ~bootstrap_models.GumbootModel.water_year_month
+      ~bootstrap_models.GumbootModel.name
+      ~bootstrap_models.GumbootModel.include_value_time
+      ~bootstrap_models.GumbootModel.func
+   
+   

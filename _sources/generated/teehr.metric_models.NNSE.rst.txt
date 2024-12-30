@@ -1,0 +1,63 @@
+teehr.metric\_models.NNSE
+=========================
+
+.. currentmodule:: teehr
+
+.. autoclass:: metric_models.NNSE
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~metric_models.NNSE.construct
+      ~metric_models.NNSE.copy
+      ~metric_models.NNSE.dict
+      ~metric_models.NNSE.from_orm
+      ~metric_models.NNSE.json
+      ~metric_models.NNSE.model_construct
+      ~metric_models.NNSE.model_copy
+      ~metric_models.NNSE.model_dump
+      ~metric_models.NNSE.model_dump_json
+      ~metric_models.NNSE.model_json_schema
+      ~metric_models.NNSE.model_parametrized_name
+      ~metric_models.NNSE.model_post_init
+      ~metric_models.NNSE.model_rebuild
+      ~metric_models.NNSE.model_validate
+      ~metric_models.NNSE.model_validate_json
+      ~metric_models.NNSE.model_validate_strings
+      ~metric_models.NNSE.parse_file
+      ~metric_models.NNSE.parse_obj
+      ~metric_models.NNSE.parse_raw
+      ~metric_models.NNSE.schema
+      ~metric_models.NNSE.schema_json
+      ~metric_models.NNSE.update_forward_refs
+      ~metric_models.NNSE.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~metric_models.NNSE.model_computed_fields
+      ~metric_models.NNSE.model_config
+      ~metric_models.NNSE.model_extra
+      ~metric_models.NNSE.model_fields
+      ~metric_models.NNSE.model_fields_set
+      ~metric_models.NNSE.bootstrap
+      ~metric_models.NNSE.transform
+      ~metric_models.NNSE.output_field_name
+      ~metric_models.NNSE.func
+      ~metric_models.NNSE.input_field_names
+      ~metric_models.NNSE.attrs
+   
+   

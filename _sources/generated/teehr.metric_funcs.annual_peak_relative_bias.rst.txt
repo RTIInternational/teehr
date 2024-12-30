@@ -1,0 +1,6 @@
+teehr.metric\_funcs.annual\_peak\_relative\_bias
+================================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: metric_funcs.annual_peak_relative_bias

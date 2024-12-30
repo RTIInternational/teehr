@@ -1,0 +1,6 @@
+﻿teehr.Fetch.usgs\_streamflow
+============================
+
+.. currentmodule:: teehr
+
+.. automethod:: Fetch.usgs_streamflow

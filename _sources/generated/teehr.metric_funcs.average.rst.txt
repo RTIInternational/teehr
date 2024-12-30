@@ -1,0 +1,6 @@
+teehr.metric\_funcs.average
+===========================
+
+.. currentmodule:: teehr
+
+.. autofunction:: metric_funcs.average

@@ -1,0 +1,6 @@
+teehr.metric\_funcs.pearson\_correlation
+========================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: metric_funcs.pearson_correlation

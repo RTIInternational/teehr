@@ -1,0 +1,63 @@
+teehr.metric\_models.RSR
+========================
+
+.. currentmodule:: teehr
+
+.. autoclass:: metric_models.RSR
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~metric_models.RSR.construct
+      ~metric_models.RSR.copy
+      ~metric_models.RSR.dict
+      ~metric_models.RSR.from_orm
+      ~metric_models.RSR.json
+      ~metric_models.RSR.model_construct
+      ~metric_models.RSR.model_copy
+      ~metric_models.RSR.model_dump
+      ~metric_models.RSR.model_dump_json
+      ~metric_models.RSR.model_json_schema
+      ~metric_models.RSR.model_parametrized_name
+      ~metric_models.RSR.model_post_init
+      ~metric_models.RSR.model_rebuild
+      ~metric_models.RSR.model_validate
+      ~metric_models.RSR.model_validate_json
+      ~metric_models.RSR.model_validate_strings
+      ~metric_models.RSR.parse_file
+      ~metric_models.RSR.parse_obj
+      ~metric_models.RSR.parse_raw
+      ~metric_models.RSR.schema
+      ~metric_models.RSR.schema_json
+      ~metric_models.RSR.update_forward_refs
+      ~metric_models.RSR.validate
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~metric_models.RSR.model_computed_fields
+      ~metric_models.RSR.model_config
+      ~metric_models.RSR.model_extra
+      ~metric_models.RSR.model_fields
+      ~metric_models.RSR.model_fields_set
+      ~metric_models.RSR.bootstrap
+      ~metric_models.RSR.transform
+      ~metric_models.RSR.output_field_name
+      ~metric_models.RSR.func
+      ~metric_models.RSR.input_field_names
+      ~metric_models.RSR.attrs
+   
+   

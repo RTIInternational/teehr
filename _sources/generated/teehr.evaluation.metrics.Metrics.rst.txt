@@ -1,0 +1,28 @@
+﻿teehr.evaluation.metrics.Metrics
+================================
+
+.. currentmodule:: teehr.evaluation.metrics
+
+.. autoclass:: Metrics
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Metrics.query
+      ~Metrics.to_geopandas
+      ~Metrics.to_pandas
+      ~Metrics.to_sdf
+   
+   
+
+   
+   
+   
