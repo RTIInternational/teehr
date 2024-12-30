@@ -1,7 +1,6 @@
 """Test evaluation class."""
-from teehr import Metrics
+from teehr import Metrics, Configuration
 from teehr import Operators as ops
-from teehr.models.tables import Configuration
 import tempfile
 import shutil
 import pandas as pd
