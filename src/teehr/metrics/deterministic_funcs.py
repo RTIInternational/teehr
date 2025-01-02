@@ -1,38 +1,7 @@
-"""Contains UDFs for metric calculations for use in Spark queries."""
+"""Contains UDFs for deterministic metric calculations in Spark queries."""
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-import scoringrules as sr
-
-
-def count(p: pd.Series) -> float:
-    """Count."""
-    return len(p)
-
-
-def minimum(p: pd.Series) -> float:
-    """Minimum."""
-    return np.min(p)
-
-
-def maximum(p: pd.Series) -> float:
-    """Maximum."""
-    return np.max(p)
-
-
-def average(p: pd.Series) -> float:
-    """Average."""
-    return np.mean(p)
-
-
-def sum(p: pd.Series) -> float:
-    """Sum."""
-    return np.sum(p)
-
-
-def variance(p: pd.Series) -> float:
-    """Variance."""
-    return np.var(p)
 
 
 def mean_error(p: pd.Series, s: pd.Series) -> float:
@@ -133,9 +102,9 @@ def nash_sutcliffe_efficiency(p: pd.Series, s: pd.Series) -> float:
         return np.nan
     numerator = np.sum(np.subtract(p, s) ** 2)
     denominator = np.sum(np.subtract(p, np.mean(p)) ** 2)
-    if numerator == np.nan or denominator  == np.nan:
+    if numerator == np.nan or denominator == np.nan:
         return np.nan
-    if denominator  == 0:
+    if denominator == 0:
         return np.nan
     return 1.0 - numerator/denominator
 
@@ -148,9 +117,9 @@ def nash_sutcliffe_efficiency_normalized(p: pd.Series, s: pd.Series) -> float:
         return np.nan
     numerator = np.sum(np.subtract(p, s) ** 2)
     denominator = np.sum(np.subtract(p, np.mean(p)) ** 2)
-    if numerator == np.nan or denominator  == np.nan:
+    if numerator == np.nan or denominator == np.nan:
         return np.nan
-    if denominator  == 0:
+    if denominator == 0:
         return np.nan
     return 1.0 / (1.0 + numerator/denominator)
 
@@ -284,51 +253,3 @@ def max_value_timedelta(
     td = s_max_time - p_max_time
 
     return td.total_seconds()
-
-
-def max_value_time(
-    p: pd.Series,
-    value_time: pd.Series
-) -> pd.Timestamp:
-    """Max value time."""
-    return value_time[p.idxmax()]
-
-
-# Probabilistic Metrics
-def ensemble_crps(
-    p: pd.Series,
-    s: pd.Series,
-    value_time: pd.Series
-) -> float:
-    """Create a wrapper around scoringrules crps_ensemble.
-
-    Returns
-    -------
-    float
-        The mean Continuous Ranked Probability Score (CRPS) for the ensemble
-        forecast.
-
-    Notes
-    -----
-    prim_arr: A 1-D array of observations at each time step in the forecast.
-
-    sec_arr: A 2-D array of simulations at each time step in the forecast.
-               The first dimension should be the time step, and the second
-               dimension should be the ensemble member.
-
-    This assumes that the input data in grouped by reference time.
-    """
-    # TODO: Probably a better way to do this.
-    primary = []
-    secondary = []
-    for vt in value_time.unique():
-        vt_index = value_time[value_time == vt].index
-        primary.append(p[vt_index].values[0])
-        secondary.append(s[vt_index].values)
-    prim_arr = np.array(primary)
-    sec_arr = np.array(secondary)
-
-    return np.mean(sr.crps_ensemble(prim_arr, sec_arr))
-
-# NOTE: Skill score: skill_score = 1 – test_sim_metric/reference_sim_metric.
-# Answers: How does one model compare to the other?

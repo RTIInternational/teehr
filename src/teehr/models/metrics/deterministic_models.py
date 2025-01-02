@@ -1,32 +1,23 @@
 """Classes representing available performance metrics."""
 from typing import List, Dict, Callable, Union
 
-from pydantic import BaseModel as PydanticBaseModel
-from pydantic import Field, ConfigDict
+from pydantic import Field
 import teehr.models.metrics.metric_attributes as tma
-from teehr.models.metrics.metric_enums import (
-    TransformEnum
+from teehr.models.metrics.basemodels import (
+    TransformEnum,
+    DeterministicBasemodel,
+    BootstrapBasemodel
 )
-from teehr.metrics import metric_funcs as metric_funcs
+from teehr.metrics import deterministic_funcs as metric_funcs
 from teehr.models.str_enum import StrEnum
 
 
-class MetricsBasemodel(PydanticBaseModel):
-    """Metrics Basemodel configuration."""
-
-    model_config = ConfigDict(
-        arbitrary_types_allowed=True,
-        validate_assignment=True,
-        extra='forbid'  # raise an error if extra fields are passed
-    )
-
-
-class ME(MetricsBasemodel):
+class ME(DeterministicBasemodel):
     """Mean Error.
 
     Parameters
     ----------
-    bootstrap : MetricsBasemodel
+    bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
@@ -42,7 +33,7 @@ class ME(MetricsBasemodel):
         The static attributes for the metric.
     """
 
-    bootstrap: MetricsBasemodel = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="mean_error")
     func: Callable = metric_funcs.mean_error
@@ -52,12 +43,12 @@ class ME(MetricsBasemodel):
     attrs: Dict = Field(default=tma.ME_ATTRS, frozen=True)
 
 
-class REL_BIAS(MetricsBasemodel):
+class REL_BIAS(DeterministicBasemodel):
     """Relative Bias.
 
     Parameters
     ----------
-    bootstrap : MetricsBasemodel
+    bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
@@ -73,7 +64,7 @@ class REL_BIAS(MetricsBasemodel):
         The static attributes for the metric.
     """
 
-    bootstrap: MetricsBasemodel = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="relative_bias")
     func: Callable = metric_funcs.relative_bias
@@ -83,12 +74,12 @@ class REL_BIAS(MetricsBasemodel):
     attrs: Dict = Field(default=tma.RBIAS_ATTRS, frozen=True)
 
 
-class MULT_BIAS(MetricsBasemodel):
+class MULT_BIAS(DeterministicBasemodel):
     """Multiplicative Bias.
 
     Parameters
     ----------
-    bootstrap : MetricsBasemodel
+    bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
@@ -104,7 +95,7 @@ class MULT_BIAS(MetricsBasemodel):
         The static attributes for the metric.
     """
 
-    bootstrap: MetricsBasemodel = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="multiplicative_bias")
     func: Callable = metric_funcs.multiplicative_bias
@@ -114,12 +105,12 @@ class MULT_BIAS(MetricsBasemodel):
     attrs: Dict = Field(default=tma.MULTBIAS_ATTRS, frozen=True)
 
 
-class MSE(MetricsBasemodel):
+class MSE(DeterministicBasemodel):
     """Mean Square Error.
 
     Parameters
     ----------
-    bootstrap : MetricsBasemodel
+    bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
@@ -135,7 +126,7 @@ class MSE(MetricsBasemodel):
         The static attributes for the metric.
     """
 
-    bootstrap: MetricsBasemodel = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="mean_square_error")
     func: Callable = metric_funcs.mean_squared_error
@@ -145,12 +136,12 @@ class MSE(MetricsBasemodel):
     attrs: Dict = Field(default=tma.MSE_ATTRS, frozen=True)
 
 
-class RMSE(MetricsBasemodel):
+class RMSE(DeterministicBasemodel):
     """Root Mean Squared Error.
 
     Parameters
     ----------
-    bootstrap : MetricsBasemodel
+    bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
@@ -166,7 +157,7 @@ class RMSE(MetricsBasemodel):
         The static attributes for the metric.
     """
 
-    bootstrap: MetricsBasemodel = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="root_mean_square_error")
     func: Callable = metric_funcs.root_mean_squared_error
@@ -176,12 +167,12 @@ class RMSE(MetricsBasemodel):
     attrs: Dict = Field(default=tma.RMSE_ATTRS, frozen=True)
 
 
-class MAE(MetricsBasemodel):
+class MAE(DeterministicBasemodel):
     """Mean Absolute Error.
 
     Parameters
     ----------
-    bootstrap : MetricsBasemodel
+    bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
@@ -197,7 +188,7 @@ class MAE(MetricsBasemodel):
         The static attributes for the metric.
     """
 
-    bootstrap: MetricsBasemodel = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="mean_absolute_error")
     func: Callable = metric_funcs.mean_absolute_error
@@ -207,12 +198,12 @@ class MAE(MetricsBasemodel):
     attrs: Dict = Field(default=tma.MAE_ATTRS, frozen=True)
 
 
-class REL_MAE(MetricsBasemodel):
+class REL_MAE(DeterministicBasemodel):
     """Relative Mean Absolute Error.
 
     Parameters
     ----------
-    bootstrap : MetricsBasemodel
+    bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
@@ -228,7 +219,7 @@ class REL_MAE(MetricsBasemodel):
         The static attributes for the metric.
     """
 
-    bootstrap: MetricsBasemodel = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="mean_absolute_relative_error")
     func: Callable = metric_funcs.mean_absolute_relative_error
@@ -238,12 +229,12 @@ class REL_MAE(MetricsBasemodel):
     attrs: Dict = Field(default=tma.RMAE_ATTRS, frozen=True)
 
 
-class PEARSON_R(MetricsBasemodel):
+class PEARSON_R(DeterministicBasemodel):
     """Pearson Correlation.
 
     Parameters
     ----------
-    bootstrap : MetricsBasemodel
+    bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
@@ -259,7 +250,7 @@ class PEARSON_R(MetricsBasemodel):
         The static attributes for the metric.
     """
 
-    bootstrap: MetricsBasemodel = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="pearson_correlation")
     func: Callable = metric_funcs.pearson_correlation
@@ -269,12 +260,12 @@ class PEARSON_R(MetricsBasemodel):
     attrs: Dict = Field(default=tma.PEARSON_ATTRS, frozen=True)
 
 
-class R2(MetricsBasemodel):
+class R2(DeterministicBasemodel):
     """Coefficient of Determination.
 
     Parameters
     ----------
-    bootstrap : MetricsBasemodel
+    bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
@@ -290,7 +281,7 @@ class R2(MetricsBasemodel):
         The static attributes for the metric.
     """
 
-    bootstrap: MetricsBasemodel = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="r_squared")
     func: Callable = metric_funcs.r_squared
@@ -300,12 +291,12 @@ class R2(MetricsBasemodel):
     attrs: Dict = Field(default=tma.R2_ATTRS, frozen=True)
 
 
-class NSE(MetricsBasemodel):
+class NSE(DeterministicBasemodel):
     """Nash-Sutcliffe Efficiency.
 
     Parameters
     ----------
-    bootstrap : MetricsBasemodel
+    bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
@@ -321,7 +312,7 @@ class NSE(MetricsBasemodel):
         The static attributes for the metric.
     """
 
-    bootstrap: MetricsBasemodel = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="nash_sutcliffe_efficiency")
     func: Callable = metric_funcs.nash_sutcliffe_efficiency
@@ -331,12 +322,12 @@ class NSE(MetricsBasemodel):
     attrs: Dict = Field(default=tma.NSE_ATTRS, frozen=True)
 
 
-class NNSE(MetricsBasemodel):
+class NNSE(DeterministicBasemodel):
     """Normalized Nash-Sutcliffe Efficiency.
 
     Parameters
     ----------
-    bootstrap : MetricsBasemodel
+    bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
@@ -352,7 +343,7 @@ class NNSE(MetricsBasemodel):
         The static attributes for the metric.
     """
 
-    bootstrap: MetricsBasemodel = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(
         default="nash_sutcliffe_efficiency_normalized"
@@ -364,12 +355,12 @@ class NNSE(MetricsBasemodel):
     attrs: Dict = Field(default=tma.NNSE_ATTRS, frozen=True)
 
 
-class KGE(MetricsBasemodel):
+class KGE(DeterministicBasemodel):
     """Kling-Gupta Efficiency.
 
     Parameters
     ----------
-    bootstrap : MetricsBasemodel
+    bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
@@ -384,7 +375,7 @@ class KGE(MetricsBasemodel):
         The static attributes for the metric.
     """
 
-    bootstrap: MetricsBasemodel = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency")
     func: Callable = metric_funcs.kling_gupta_efficiency
@@ -394,12 +385,12 @@ class KGE(MetricsBasemodel):
     attrs: Dict = Field(default=tma.KGE_ATTRS, frozen=True)
 
 
-class KGE_Mod1(MetricsBasemodel):
+class KGE_Mod1(DeterministicBasemodel):
     """Kling-Gupta Efficiency - modified 1 (2012).
 
     Parameters
     ----------
-    bootstrap : MetricsBasemodel
+    bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
@@ -414,7 +405,7 @@ class KGE_Mod1(MetricsBasemodel):
         The static attributes for the metric.
     """
 
-    bootstrap: MetricsBasemodel = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency_mod1")
     func: Callable = metric_funcs.kling_gupta_efficiency_mod1
@@ -424,12 +415,12 @@ class KGE_Mod1(MetricsBasemodel):
     attrs: Dict = Field(default=tma.KGE1_ATTRS, frozen=True)
 
 
-class KGE_Mod2(MetricsBasemodel):
+class KGE_Mod2(DeterministicBasemodel):
     """Kling-Gupta Efficiency - modified 2 (2021).
 
     Parameters
     ----------
-    bootstrap : MetricsBasemodel
+    bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
@@ -444,7 +435,7 @@ class KGE_Mod2(MetricsBasemodel):
         The static attributes for the metric.
     """
 
-    bootstrap: MetricsBasemodel = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency_mod2")
     func: Callable = metric_funcs.kling_gupta_efficiency_mod2
@@ -454,12 +445,12 @@ class KGE_Mod2(MetricsBasemodel):
     attrs: Dict = Field(default=tma.KGE2_ATTRS, frozen=True)
 
 
-class SPEARMAN_R(MetricsBasemodel):
+class SPEARMAN_R(DeterministicBasemodel):
     """Spearman Rank Correlation Coefficient.
 
     Parameters
     ----------
-    bootstrap : MetricsBasemodel
+    bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
@@ -474,7 +465,7 @@ class SPEARMAN_R(MetricsBasemodel):
         The static attributes for the metric.
     """
 
-    bootstrap: MetricsBasemodel = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="spearman_correlation")
     func: Callable = metric_funcs.spearman_correlation
@@ -484,186 +475,186 @@ class SPEARMAN_R(MetricsBasemodel):
     attrs: Dict = Field(default=tma.SPEARMAN_R_ATTRS, frozen=True)
 
 
-class COUNT(MetricsBasemodel):
-    """Count.
+# class COUNT(DeterministicBasemodel):
+#     """Count.
 
-    Parameters
-    ----------
-    bootstrap : MetricsBasemodel
-        The bootstrap model, by default None.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "primary_count".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`metric_funcs.count`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    """
+#     Parameters
+#     ----------
+#     bootstrap : DeterministicBasemodel
+#         The bootstrap model, by default None.
+#     transform : TransformEnum
+#         The transformation to apply to the data, by default None.
+#     output_field_name : str
+#         The output field name, by default "primary_count".
+#     func : Callable
+#         The function to apply to the data, by default
+#         :func:`metric_funcs.count`.
+#     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+#         The input field names, by default ["primary_value"].
+#     attrs : Dict
+#         The static attributes for the metric.
+#     """
 
-    output_field_name: str = Field(default="count")
-    func: Callable = metric_funcs.count
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value"]
-    )
-    attrs: Dict = Field(default=tma.COUNT_ATTRS, frozen=True)
-
-
-class MINIMUM(MetricsBasemodel):
-    """Minimum.
-
-    Parameters
-    ----------
-    bootstrap : MetricsBasemodel
-        The bootstrap model, by default None.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "primary_minimum".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`metric_funcs.minimum`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    """
-
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="minimum")
-    func: Callable = metric_funcs.minimum
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value"]
-    )
-    attrs: Dict = Field(default=tma.MINIMUM_ATTRS, frozen=True)
+#     output_field_name: str = Field(default="count")
+#     func: Callable = sig_funcs.count
+#     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+#         default=["primary_value"]
+#     )
+#     attrs: Dict = Field(default=tma.COUNT_ATTRS, frozen=True)
 
 
-class MAXIMUM(MetricsBasemodel):
-    """Maximum.
+# class MINIMUM(DeterministicBasemodel):
+#     """Minimum.
 
-    Parameters
-    ----------
-    bootstrap : MetricsBasemodel
-        The bootstrap model, by default None.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "maximum".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`metric_funcs.maximum`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    """
+#     Parameters
+#     ----------
+#     bootstrap : DeterministicBasemodel
+#         The bootstrap model, by default None.
+#     transform : TransformEnum
+#         The transformation to apply to the data, by default None.
+#     output_field_name : str
+#         The output field name, by default "primary_minimum".
+#     func : Callable
+#         The function to apply to the data, by default
+#         :func:`metric_funcs.minimum`.
+#     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+#         The input field names, by default ["primary_value"].
+#     attrs : Dict
+#         The static attributes for the metric.
+#     """
 
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="maximum")
-    func: Callable = metric_funcs.maximum
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value"]
-    )
-    attrs: Dict = Field(default=tma.MAXIMUM_ATTRS, frozen=True)
-
-
-class AVERAGE(MetricsBasemodel):
-    """Average.
-
-    Parameters
-    ----------
-    bootstrap : MetricsBasemodel
-        The bootstrap model, by default None.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "average".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`metric_funcs.average`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    """
-
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="average")
-    func: Callable = metric_funcs.average
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value"]
-    )
-    attrs: Dict = Field(default=tma.AVERAGE_ATTRS, frozen=True)
+#     transform: TransformEnum = Field(default=None)
+#     output_field_name: str = Field(default="minimum")
+#     func: Callable = sig_funcs.minimum
+#     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+#         default=["primary_value"]
+#     )
+#     attrs: Dict = Field(default=tma.MINIMUM_ATTRS, frozen=True)
 
 
-class SUM(MetricsBasemodel):
-    """Sum.
+# class MAXIMUM(DeterministicBasemodel):
+#     """Maximum.
 
-    Parameters
-    ----------
-    bootstrap : MetricsBasemodel
-        The bootstrap model, by default None.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "sum".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`metric_funcs.sum`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    """
+#     Parameters
+#     ----------
+#     bootstrap : DeterministicBasemodel
+#         The bootstrap model, by default None.
+#     transform : TransformEnum
+#         The transformation to apply to the data, by default None.
+#     output_field_name : str
+#         The output field name, by default "maximum".
+#     func : Callable
+#         The function to apply to the data, by default
+#         :func:`metric_funcs.maximum`.
+#     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+#         The input field names, by default ["primary_value"].
+#     attrs : Dict
+#         The static attributes for the metric.
+#     """
 
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="sum")
-    func: Callable = metric_funcs.sum
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value"]
-    )
-    attrs: Dict = Field(default=tma.SUM_ATTRS, frozen=True)
-
-
-class VARIANCE(MetricsBasemodel):
-    """Variance.
-
-    Parameters
-    ----------
-    bootstrap : MetricsBasemodel
-        The bootstrap model, by default None.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "variance".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`metric_funcs.variance`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    """
-
-    bootstrap: MetricsBasemodel = Field(default=None)
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="variance")
-    func: Callable = metric_funcs.variance
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value"]
-    )
-    attrs: Dict = Field(default=tma.VARIANCE_ATTRS, frozen=True)
+#     transform: TransformEnum = Field(default=None)
+#     output_field_name: str = Field(default="maximum")
+#     func: Callable = sig_funcs.maximum
+#     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+#         default=["primary_value"]
+#     )
+#     attrs: Dict = Field(default=tma.MAXIMUM_ATTRS, frozen=True)
 
 
-class MAX_VALUE_DELTA(MetricsBasemodel):
+# class AVERAGE(DeterministicBasemodel):
+#     """Average.
+
+#     Parameters
+#     ----------
+#     bootstrap : DeterministicBasemodel
+#         The bootstrap model, by default None.
+#     transform : TransformEnum
+#         The transformation to apply to the data, by default None.
+#     output_field_name : str
+#         The output field name, by default "average".
+#     func : Callable
+#         The function to apply to the data, by default
+#         :func:`metric_funcs.average`.
+#     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+#         The input field names, by default ["primary_value"].
+#     attrs : Dict
+#         The static attributes for the metric.
+#     """
+
+#     transform: TransformEnum = Field(default=None)
+#     output_field_name: str = Field(default="average")
+#     func: Callable = sig_funcs.average
+#     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+#         default=["primary_value"]
+#     )
+#     attrs: Dict = Field(default=tma.AVERAGE_ATTRS, frozen=True)
+
+
+# class SUM(DeterministicBasemodel):
+#     """Sum.
+
+#     Parameters
+#     ----------
+#     bootstrap : DeterministicBasemodel
+#         The bootstrap model, by default None.
+#     transform : TransformEnum
+#         The transformation to apply to the data, by default None.
+#     output_field_name : str
+#         The output field name, by default "sum".
+#     func : Callable
+#         The function to apply to the data, by default
+#         :func:`metric_funcs.sum`.
+#     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+#         The input field names, by default ["primary_value"].
+#     attrs : Dict
+#         The static attributes for the metric.
+#     """
+
+#     transform: TransformEnum = Field(default=None)
+#     output_field_name: str = Field(default="sum")
+#     func: Callable = sig_funcs.sum
+#     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+#         default=["primary_value"]
+#     )
+#     attrs: Dict = Field(default=tma.SUM_ATTRS, frozen=True)
+
+
+# class VARIANCE(DeterministicBasemodel):
+#     """Variance.
+
+#     Parameters
+#     ----------
+#     bootstrap : DeterministicBasemodel
+#         The bootstrap model, by default None.
+#     transform : TransformEnum
+#         The transformation to apply to the data, by default None.
+#     output_field_name : str
+#         The output field name, by default "variance".
+#     func : Callable
+#         The function to apply to the data, by default
+#         :func:`metric_funcs.variance`.
+#     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+#         The input field names, by default ["primary_value"].
+#     attrs : Dict
+#         The static attributes for the metric.
+#     """
+
+#     bootstrap: BootstrapBasemodel = Field(default=None)
+#     transform: TransformEnum = Field(default=None)
+#     output_field_name: str = Field(default="variance")
+#     func: Callable = sig_funcs.variance
+#     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+#         default=["primary_value"]
+#     )
+#     attrs: Dict = Field(default=tma.VARIANCE_ATTRS, frozen=True)
+
+
+class MAX_VALUE_DELTA(DeterministicBasemodel):
     """Max Value Delta.
 
     Parameters
     ----------
-    bootstrap : MetricsBasemodel
+    bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
@@ -687,12 +678,12 @@ class MAX_VALUE_DELTA(MetricsBasemodel):
     attrs: Dict = Field(default=tma.MAX_VALUE_DELTA_ATTRS, frozen=True)
 
 
-class MAX_VALUE_TIME_DELTA(MetricsBasemodel):
+class MAX_VALUE_TIME_DELTA(DeterministicBasemodel):
     """Max Value Time Delta.
 
     Parameters
     ----------
-    bootstrap : MetricsBasemodel
+    bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
@@ -717,41 +708,41 @@ class MAX_VALUE_TIME_DELTA(MetricsBasemodel):
     attrs: Dict = Field(default=tma.MAX_VALUE_TIMEDELTA_ATTRS, frozen=True)
 
 
-class MAX_VALUE_TIME(MetricsBasemodel):
-    """Max Value Time.
+# class MAX_VALUE_TIME(DeterministicBasemodel):
+#     """Max Value Time.
 
-    Parameters
-    ----------
-    bootstrap : MetricsBasemodel
-        The bootstrap model, by default None.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "max_value_time".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`metric_funcs.max_value_time`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default ["primary_value"].
-    attrs : Dict
-        The static attributes for the metric.
-    """
+#     Parameters
+#     ----------
+#     bootstrap : DeterministicBasemodel
+#         The bootstrap model, by default None.
+#     transform : TransformEnum
+#         The transformation to apply to the data, by default None.
+#     output_field_name : str
+#         The output field name, by default "max_value_time".
+#     func : Callable
+#         The function to apply to the data, by default
+#         :func:`metric_funcs.max_value_time`.
+#     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+#         The input field names, by default ["primary_value"].
+#     attrs : Dict
+#         The static attributes for the metric.
+#     """
 
-    transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="max_value_time")
-    func: Callable = metric_funcs.max_value_time
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "value_time"]
-    )
-    attrs: Dict = Field(default=tma.MAX_VAL_TIME_ATTRS, frozen=True)
+#     transform: TransformEnum = Field(default=None)
+#     output_field_name: str = Field(default="max_value_time")
+#     func: Callable = sig_funcs.max_value_time
+#     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+#         default=["primary_value", "value_time"]
+#     )
+#     attrs: Dict = Field(default=tma.MAX_VAL_TIME_ATTRS, frozen=True)
 
 
-class ANNUAL_PEAK_RBIAS(MetricsBasemodel):
+class ANNUAL_PEAK_RBIAS(DeterministicBasemodel):
     """Annual Peak Relative Bias.
 
     Parameters
     ----------
-    bootstrap : MetricsBasemodel
+    bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
@@ -767,7 +758,7 @@ class ANNUAL_PEAK_RBIAS(MetricsBasemodel):
         The static attributes for the metric.
     """
 
-    bootstrap: MetricsBasemodel = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="annual_peak_flow_bias")
     func: Callable = metric_funcs.annual_peak_relative_bias
@@ -777,12 +768,12 @@ class ANNUAL_PEAK_RBIAS(MetricsBasemodel):
     attrs: Dict = Field(default=tma.ANNUAL_PEAK_RBIAS_ATTRS, frozen=True)
 
 
-class RSR(MetricsBasemodel):
+class RSR(DeterministicBasemodel):
     """Root Mean Standard Deviation Ratio.
 
     Parameters
     ----------
-    bootstrap : MetricsBasemodel
+    bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
@@ -798,7 +789,7 @@ class RSR(MetricsBasemodel):
         The static attributes for the metric.
     """
 
-    bootstrap: MetricsBasemodel = Field(default=None)
+    bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="root_mean_standard_deviation_ratio")
     func: Callable = metric_funcs.root_mean_standard_deviation_ratio
@@ -808,37 +799,7 @@ class RSR(MetricsBasemodel):
     attrs: Dict = Field(default=tma.RSR_ATTRS, frozen=True)
 
 
-# Probabilistic Metrics
-class CRPSensemble(MetricsBasemodel):
-    """Continous Ranked Probability Score - Ensemble.
-
-    Parameters
-    ----------
-    bootstrap : MetricsBasemodel
-        The bootstrap model, by default None.
-    transform : TransformEnum
-        The transformation to apply to the data, by default None.
-    output_field_name : str
-        The output field name, by default "mean_crps_ensemble".
-    func : Callable
-        The function to apply to the data, by default
-        :func:`metric_funcs.ensemble_crps`.
-    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-        The input field names, by default
-        ["primary_value", "secondary_value", "value_time"].
-    attrs : Dict
-        The static attributes for the metric.
-    """
-
-    output_field_name: str = Field(default="mean_crps_ensemble")
-    func: Callable = metric_funcs.ensemble_crps
-    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value", "value_time"]
-    )
-    attrs: Dict = Field(default=tma.CRPS_ENSEMBLE_ATTRS, frozen=True)
-
-
-class Metrics():
+class DeterministicMetrics():
     """Define and customize performance metrics."""
 
     AnnualPeakRelativeBias = ANNUAL_PEAK_RBIAS
@@ -853,13 +814,13 @@ class Metrics():
     MeanSquareError = MSE
     MultiplicativeBias = MULT_BIAS
     PearsonCorrelation = PEARSON_R
-    Average = AVERAGE
-    Count = COUNT
-    MaxValueTime = MAX_VALUE_TIME
-    Maximum = MAXIMUM
-    Minimum = MINIMUM
-    Sum = SUM
-    Variance = VARIANCE
+    # Average = AVERAGE
+    # Count = COUNT
+    # MaxValueTime = MAX_VALUE_TIME
+    # Maximum = MAXIMUM
+    # Minimum = MINIMUM
+    # Sum = SUM
+    # Variance = VARIANCE
     NashSutcliffeEfficiency = NSE
     NormalizedNashSutcliffeEfficiency = NNSE
     RelativeBias = REL_BIAS
@@ -867,4 +828,4 @@ class Metrics():
     Rsquared = R2
     SpearmanCorrelation = SPEARMAN_R
     RootMeanStandardDeviationRatio = RSR
-    CRPSEnsembleMean = CRPSensemble
+    # CRPS = CRPSensemble

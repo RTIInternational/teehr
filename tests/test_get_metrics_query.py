@@ -1,5 +1,6 @@
 """Test evaluation class."""
-from teehr import Metrics, Configuration
+# from teehr import Configuration
+from teehr import DeterministicMetrics, ProbabilisticMetrics, SignatureMetrics
 from teehr import Operators as ops
 import tempfile
 import shutil
@@ -34,14 +35,14 @@ R_BENCHMARK_RESULTS = Path(
 )
 
 
-def test_get_all_metrics(tmpdir):
+def test_get_all_deterministic_metrics(tmpdir):
     """Test get_metrics method."""
     # Define the evaluation object.
     eval = setup_v0_3_study(tmpdir)
 
     # Test all the metrics.
     include_all_metrics = [
-        func() for func in Metrics.__dict__.values() if callable(func)
+        func() for func in DeterministicMetrics.__dict__.values() if callable(func)
     ]
 
     # Get the currently available fields to use in the query.
@@ -64,10 +65,10 @@ def test_metrics_filter_and_geometry(tmpdir):
     eval = setup_v0_3_study(tmpdir)
 
     # Define some metrics.
-    kge = Metrics.KlingGuptaEfficiency()
-    primary_avg = Metrics.Average()
-    mvtd = Metrics.MaxValueTimeDelta()
-    pmvt = Metrics.MaxValueTime()
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    primary_avg = DeterministicMetrics.Average()
+    mvtd = DeterministicMetrics.MaxValueTimeDelta()
+    pmvt = DeterministicMetrics.MaxValueTime()
 
     include_metrics = [pmvt, mvtd, primary_avg, kge]
 
@@ -107,7 +108,7 @@ def test_circularblock_bootstrapping(tmpdir):
         quantiles=None,
         reps=500
     )
-    kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
+    kge = DeterministicMetrics.KlingGuptaEfficiency(bootstrap=boot)
 
     # Manual bootstrapping.
     df = eval.joined_timeseries.to_pandas()
@@ -169,7 +170,7 @@ def test_stationary_bootstrapping(tmpdir):
         quantiles=None,
         reps=500
     )
-    kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
+    kge = DeterministicMetrics.KlingGuptaEfficiency(bootstrap=boot)
 
     # Manual bootstrapping.
     df = eval.joined_timeseries.to_pandas()
@@ -254,8 +255,8 @@ def test_gumboot_bootstrapping(tmpdir):
         reps=500,
         boot_year_file=BOOT_YEAR_FILE
     )
-    kge = Metrics.KlingGuptaEfficiency(bootstrap=boot)
-    nse = Metrics.NashSutcliffeEfficiency(bootstrap=boot)
+    kge = DeterministicMetrics.KlingGuptaEfficiency(bootstrap=boot)
+    nse = DeterministicMetrics.NashSutcliffeEfficiency(bootstrap=boot)
 
     # Manually calling Gumboot.
     df = eval.joined_timeseries.to_pandas()
@@ -323,15 +324,15 @@ def test_metric_chaining(tmpdir):
         order_by=["primary_location_id", "month"],
         group_by=["primary_location_id", "month"],
         include_metrics=[
-            Metrics.KlingGuptaEfficiency(),
-            Metrics.NashSutcliffeEfficiency(),
-            Metrics.RelativeBias()
+            DeterministicMetrics.KlingGuptaEfficiency(),
+            DeterministicMetrics.NashSutcliffeEfficiency(),
+            DeterministicMetrics.RelativeBias()
         ]
     ).query(
         order_by=["primary_location_id"],
         group_by=["primary_location_id"],
         include_metrics=[
-            Metrics.Average(
+            SignatureMetrics.Average(
                 input_field_names="relative_bias",
                 output_field_name="primary_average"
             )
@@ -347,55 +348,73 @@ def test_metric_chaining(tmpdir):
 
 def test_ensemble_metrics(tmpdir):
     """Test get_metrics method with ensemble metrics."""
-    usgs_location = Path(
-        TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_location.parquet"
-    )
-    secondary_filepath = Path(
-        TEST_STUDY_DATA_DIR_v0_4,
-        "timeseries",
-        "MEFP.MBRFC.DNVC2LOCAL.SQIN.xml"
-    )
-    primary_filepath = Path(
-        TEST_STUDY_DATA_DIR_v0_4,
-        "timeseries",
-        "usgs_hefs_06711565.parquet"
-    )
+    # usgs_location = Path(
+    #     TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_location.parquet"
+    # )
+    # # usgs_location = Path(
+    # #     TEST_STUDY_DATA_DIR_v0_4, "geo", "two_usgs_locations.parquet"
+    # # )
+    # secondary_filename = "MEFP.MBRFC.DNVC2LOCAL.SQIN.xml"
+    # # secondary_filename = "MEFP.MBRFC.TwoLocations.SQIN.xml"
+    # secondary_filepath = Path(
+    #     TEST_STUDY_DATA_DIR_v0_4,
+    #     "timeseries",
+    #     secondary_filename
+    # )
+    # primary_filepath = Path(
+    #     TEST_STUDY_DATA_DIR_v0_4,
+    #     "timeseries",
+    #     "usgs_hefs_06711565.parquet"
+    # )
 
-    eval = Evaluation(dir_path=tmpdir)
-    eval.enable_logging()
-    eval.clone_template()
+    # # primary_filepath = Path(
+    # #     TEST_STUDY_DATA_DIR_v0_4,
+    # #     "timeseries",
+    # #     "usgs_hefs_two_locations.parquet"
+    # # )
 
-    eval.locations.load_spatial(
-        in_path=usgs_location
-    )
-    eval.location_crosswalks.load_csv(
-        in_path=Path(TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv")
-    )
-    eval.configurations.add(
-        Configuration(
-            name="MEFP",
-            type="primary",
-            description="MBRFC HEFS Data"
-        )
-    )
-    constant_field_values = {
-        "unit_name": "ft^3/s",
-        "variable_name": "streamflow_hourly_inst",
-    }
-    eval.secondary_timeseries.load_fews_xml(
-        in_path=secondary_filepath,
-        constant_field_values=constant_field_values
-    )
-    eval.primary_timeseries.load_parquet(
-        in_path=primary_filepath
-    )
-    eval.joined_timeseries.create(execute_udf=False)
+    # ev = Evaluation(dir_path=tmpdir)
+    # ev.enable_logging()
+    # ev.clone_template()
+
+    # ev.locations.load_spatial(
+    #     in_path=usgs_location
+    # )
+    # ev.location_crosswalks.load_csv(
+    #     in_path=Path(TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv")
+    # )
+    # ev.configurations.add(
+    #     Configuration(
+    #         name="MEFP",
+    #         type="primary",
+    #         description="MBRFC HEFS Data"
+    #     )
+    # )
+    # constant_field_values = {
+    #     "unit_name": "ft^3/s",
+    #     "variable_name": "streamflow_hourly_inst",
+    # }
+    # ev.secondary_timeseries.load_fews_xml(
+    #     in_path=secondary_filepath,
+    #     constant_field_values=constant_field_values
+    # )
+    # ev.primary_timeseries.load_parquet(
+    #     in_path=primary_filepath
+    # )
+    # ev.joined_timeseries.create(execute_udf=False)
+
+    from teehr import Evaluation
+
+    ev = Evaluation(dir_path="/mnt/data/ciroh/teehr/ensembles/test_datasets/test_ensemble_evaluation")
 
     # Now, metrics.
-    crps = Metrics.CRPSEnsembleMean()
+    crps = ProbabilisticMetrics.CRPS()
+
+    crps.summary_func = np.mean
+
     include_metrics = [crps]
 
-    metrics_df = eval.metrics.query(
+    metrics_df = ev.metrics.query(
         include_metrics=include_metrics,
         group_by=[
             "primary_location_id",
@@ -412,42 +431,42 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_get_all_metrics(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_metrics_filter_and_geometry(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_circularblock_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        test_stationary_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
-        test_gumboot_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="5-",
-                dir=tempdir
-            )
-        )
-        test_metric_chaining(
-            tempfile.mkdtemp(
-                prefix="6-",
-                dir=tempdir
-            )
-        )
+        # test_get_all_metrics(
+        #     tempfile.mkdtemp(
+        #         prefix="1-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_metrics_filter_and_geometry(
+        #     tempfile.mkdtemp(
+        #         prefix="2-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_circularblock_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="3-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_stationary_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="4-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_gumboot_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="5-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_metric_chaining(
+        #     tempfile.mkdtemp(
+        #         prefix="6-",
+        #         dir=tempdir
+        #     )
+        # )
         test_ensemble_metrics(
             tempfile.mkdtemp(
                 prefix="7-",
