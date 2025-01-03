@@ -38,6 +38,7 @@ arch = "^7.0.0"
 pandera = {extras = ["pyspark"], version = "^0.20.4"}
 netcdf4 = "1.6.5"
 bokeh = "^3.5.0"
+hvplot = "^0.11.1"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"
