@@ -94,10 +94,10 @@ and calculating two versions of KGE (one with bootstrap uncertainty and one with
       block_size=10,
       quantiles=[0.05, 0.95]
    )
-   kge = teehr.Metrics.KlingGuptaEfficiency(bootstrap=boot)
+   kge = teehr.DeterministicMetrics.KlingGuptaEfficiency(bootstrap=boot)
    kge.output_field_name = "BS_KGE"
 
-   include_metrics = [kge, teehr.Metrics.KlingGuptaEfficiency()]
+   include_metrics = [kge, teehr.DeterministicMetrics.KlingGuptaEfficiency()]
 
    # Get the currently available fields to use in the query.
    flds = ev.joined_timeseries.field_enum()
