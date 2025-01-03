@@ -26,7 +26,7 @@ class ME(DeterministicBasemodel):
         "mean_error".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.mean_error.`
+        :func:`deterministic_funcs.mean_error.`
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -57,7 +57,7 @@ class REL_BIAS(DeterministicBasemodel):
         "relative_bias".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.relative_bias`.
+        :func:`deterministic_funcs.relative_bias`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -88,7 +88,7 @@ class MULT_BIAS(DeterministicBasemodel):
         "multiplicative_bias".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.multiplicative_bias.`
+        :func:`deterministic_funcs.multiplicative_bias.`
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -119,7 +119,7 @@ class MSE(DeterministicBasemodel):
         "mean_squared_error".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.mean_squared_error`.
+        :func:`deterministic_funcs.mean_squared_error`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -150,7 +150,7 @@ class RMSE(DeterministicBasemodel):
         "root_mean_square_error".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.root_mean_square_error`.
+        :func:`deterministic_funcs.root_mean_square_error`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -181,7 +181,7 @@ class MAE(DeterministicBasemodel):
         "mean_absolute_error".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.mean_absolute_error`.
+        :func:`deterministic_funcs.mean_absolute_error`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -212,7 +212,7 @@ class REL_MAE(DeterministicBasemodel):
         "mean_absolute_relative_error".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.mean_absolute_relative_error`.
+        :func:`deterministic_funcs.mean_absolute_relative_error`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -243,7 +243,7 @@ class PEARSON_R(DeterministicBasemodel):
         "pearson_correlation".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.pearson_correlation`.
+        :func:`deterministic_funcs.pearson_correlation`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -274,7 +274,7 @@ class R2(DeterministicBasemodel):
         "r_squared".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.r_squared`.
+        :func:`deterministic_funcs.r_squared`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -305,7 +305,7 @@ class NSE(DeterministicBasemodel):
         "nash_sutcliffe_efficiency".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.nash_sutcliffe_efficiency`.
+        :func:`deterministic_funcs.nash_sutcliffe_efficiency`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -336,7 +336,7 @@ class NNSE(DeterministicBasemodel):
         "nash_sutcliffe_efficiency_normalized".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.nash_sutcliffe_efficiency_normalized`.
+        :func:`deterministic_funcs.nash_sutcliffe_efficiency_normalized`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -368,7 +368,7 @@ class KGE(DeterministicBasemodel):
         The output field name, by default "kling_gupta_efficiency".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.kling_gupta_efficiency`.
+        :func:`deterministic_funcs.kling_gupta_efficiency`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -458,7 +458,7 @@ class SPEARMAN_R(DeterministicBasemodel):
         The output field name, by default "spearman_correlation".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.spearman_correlation`.
+        :func:`deterministic_funcs.spearman_correlation`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -475,180 +475,6 @@ class SPEARMAN_R(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.SPEARMAN_R_ATTRS, frozen=True)
 
 
-# class COUNT(DeterministicBasemodel):
-#     """Count.
-
-#     Parameters
-#     ----------
-#     bootstrap : DeterministicBasemodel
-#         The bootstrap model, by default None.
-#     transform : TransformEnum
-#         The transformation to apply to the data, by default None.
-#     output_field_name : str
-#         The output field name, by default "primary_count".
-#     func : Callable
-#         The function to apply to the data, by default
-#         :func:`metric_funcs.count`.
-#     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-#         The input field names, by default ["primary_value"].
-#     attrs : Dict
-#         The static attributes for the metric.
-#     """
-
-#     output_field_name: str = Field(default="count")
-#     func: Callable = sig_funcs.count
-#     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-#         default=["primary_value"]
-#     )
-#     attrs: Dict = Field(default=tma.COUNT_ATTRS, frozen=True)
-
-
-# class MINIMUM(DeterministicBasemodel):
-#     """Minimum.
-
-#     Parameters
-#     ----------
-#     bootstrap : DeterministicBasemodel
-#         The bootstrap model, by default None.
-#     transform : TransformEnum
-#         The transformation to apply to the data, by default None.
-#     output_field_name : str
-#         The output field name, by default "primary_minimum".
-#     func : Callable
-#         The function to apply to the data, by default
-#         :func:`metric_funcs.minimum`.
-#     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-#         The input field names, by default ["primary_value"].
-#     attrs : Dict
-#         The static attributes for the metric.
-#     """
-
-#     transform: TransformEnum = Field(default=None)
-#     output_field_name: str = Field(default="minimum")
-#     func: Callable = sig_funcs.minimum
-#     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-#         default=["primary_value"]
-#     )
-#     attrs: Dict = Field(default=tma.MINIMUM_ATTRS, frozen=True)
-
-
-# class MAXIMUM(DeterministicBasemodel):
-#     """Maximum.
-
-#     Parameters
-#     ----------
-#     bootstrap : DeterministicBasemodel
-#         The bootstrap model, by default None.
-#     transform : TransformEnum
-#         The transformation to apply to the data, by default None.
-#     output_field_name : str
-#         The output field name, by default "maximum".
-#     func : Callable
-#         The function to apply to the data, by default
-#         :func:`metric_funcs.maximum`.
-#     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-#         The input field names, by default ["primary_value"].
-#     attrs : Dict
-#         The static attributes for the metric.
-#     """
-
-#     transform: TransformEnum = Field(default=None)
-#     output_field_name: str = Field(default="maximum")
-#     func: Callable = sig_funcs.maximum
-#     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-#         default=["primary_value"]
-#     )
-#     attrs: Dict = Field(default=tma.MAXIMUM_ATTRS, frozen=True)
-
-
-# class AVERAGE(DeterministicBasemodel):
-#     """Average.
-
-#     Parameters
-#     ----------
-#     bootstrap : DeterministicBasemodel
-#         The bootstrap model, by default None.
-#     transform : TransformEnum
-#         The transformation to apply to the data, by default None.
-#     output_field_name : str
-#         The output field name, by default "average".
-#     func : Callable
-#         The function to apply to the data, by default
-#         :func:`metric_funcs.average`.
-#     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-#         The input field names, by default ["primary_value"].
-#     attrs : Dict
-#         The static attributes for the metric.
-#     """
-
-#     transform: TransformEnum = Field(default=None)
-#     output_field_name: str = Field(default="average")
-#     func: Callable = sig_funcs.average
-#     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-#         default=["primary_value"]
-#     )
-#     attrs: Dict = Field(default=tma.AVERAGE_ATTRS, frozen=True)
-
-
-# class SUM(DeterministicBasemodel):
-#     """Sum.
-
-#     Parameters
-#     ----------
-#     bootstrap : DeterministicBasemodel
-#         The bootstrap model, by default None.
-#     transform : TransformEnum
-#         The transformation to apply to the data, by default None.
-#     output_field_name : str
-#         The output field name, by default "sum".
-#     func : Callable
-#         The function to apply to the data, by default
-#         :func:`metric_funcs.sum`.
-#     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-#         The input field names, by default ["primary_value"].
-#     attrs : Dict
-#         The static attributes for the metric.
-#     """
-
-#     transform: TransformEnum = Field(default=None)
-#     output_field_name: str = Field(default="sum")
-#     func: Callable = sig_funcs.sum
-#     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-#         default=["primary_value"]
-#     )
-#     attrs: Dict = Field(default=tma.SUM_ATTRS, frozen=True)
-
-
-# class VARIANCE(DeterministicBasemodel):
-#     """Variance.
-
-#     Parameters
-#     ----------
-#     bootstrap : DeterministicBasemodel
-#         The bootstrap model, by default None.
-#     transform : TransformEnum
-#         The transformation to apply to the data, by default None.
-#     output_field_name : str
-#         The output field name, by default "variance".
-#     func : Callable
-#         The function to apply to the data, by default
-#         :func:`metric_funcs.variance`.
-#     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-#         The input field names, by default ["primary_value"].
-#     attrs : Dict
-#         The static attributes for the metric.
-#     """
-
-#     bootstrap: BootstrapBasemodel = Field(default=None)
-#     transform: TransformEnum = Field(default=None)
-#     output_field_name: str = Field(default="variance")
-#     func: Callable = sig_funcs.variance
-#     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-#         default=["primary_value"]
-#     )
-#     attrs: Dict = Field(default=tma.VARIANCE_ATTRS, frozen=True)
-
-
 class MAX_VALUE_DELTA(DeterministicBasemodel):
     """Max Value Delta.
 
@@ -662,7 +488,7 @@ class MAX_VALUE_DELTA(DeterministicBasemodel):
         The output field name, by default "max_value_delta".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.max_value_delta`.
+        :func:`deterministic_funcs.max_value_delta`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
     attrs : Dict
@@ -691,7 +517,7 @@ class MAX_VALUE_TIME_DELTA(DeterministicBasemodel):
         The output field name, by default "max_value_timedelta".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.max_value_timedelta`.
+        :func:`deterministic_funcs.max_value_timedelta`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default
         ["primary_value", "secondary_value", "value_time"].
@@ -708,35 +534,6 @@ class MAX_VALUE_TIME_DELTA(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.MAX_VALUE_TIMEDELTA_ATTRS, frozen=True)
 
 
-# class MAX_VALUE_TIME(DeterministicBasemodel):
-#     """Max Value Time.
-
-#     Parameters
-#     ----------
-#     bootstrap : DeterministicBasemodel
-#         The bootstrap model, by default None.
-#     transform : TransformEnum
-#         The transformation to apply to the data, by default None.
-#     output_field_name : str
-#         The output field name, by default "max_value_time".
-#     func : Callable
-#         The function to apply to the data, by default
-#         :func:`metric_funcs.max_value_time`.
-#     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
-#         The input field names, by default ["primary_value"].
-#     attrs : Dict
-#         The static attributes for the metric.
-#     """
-
-#     transform: TransformEnum = Field(default=None)
-#     output_field_name: str = Field(default="max_value_time")
-#     func: Callable = sig_funcs.max_value_time
-#     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-#         default=["primary_value", "value_time"]
-#     )
-#     attrs: Dict = Field(default=tma.MAX_VAL_TIME_ATTRS, frozen=True)
-
-
 class ANNUAL_PEAK_RBIAS(DeterministicBasemodel):
     """Annual Peak Relative Bias.
 
@@ -750,7 +547,7 @@ class ANNUAL_PEAK_RBIAS(DeterministicBasemodel):
         The output field name, by default "annual_peak_relative_bias".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.annual_peak_relative_bias`.
+        :func:`deterministic_funcs.annual_peak_relative_bias`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default
         ["primary_value", "secondary_value", "value_time"].
@@ -781,7 +578,7 @@ class RSR(DeterministicBasemodel):
         The output field name, by default "root_mean_standard_deviation_ratio".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.root_mean_standard_deviation_ratio`.
+        :func:`deterministic_funcs.root_mean_standard_deviation_ratio`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default
         ["primary_value", "secondary_value"].
@@ -791,7 +588,7 @@ class RSR(DeterministicBasemodel):
 
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
-    output_field_name: str = Field(default="root_mean_standard_deviation_ratio")
+    output_field_name: str = Field(default="root_mean_standard_deviation_ratio")  # noqa: E501
     func: Callable = metric_funcs.root_mean_standard_deviation_ratio
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
@@ -814,13 +611,6 @@ class DeterministicMetrics():
     MeanSquareError = MSE
     MultiplicativeBias = MULT_BIAS
     PearsonCorrelation = PEARSON_R
-    # Average = AVERAGE
-    # Count = COUNT
-    # MaxValueTime = MAX_VALUE_TIME
-    # Maximum = MAXIMUM
-    # Minimum = MINIMUM
-    # Sum = SUM
-    # Variance = VARIANCE
     NashSutcliffeEfficiency = NSE
     NormalizedNashSutcliffeEfficiency = NNSE
     RelativeBias = REL_BIAS
@@ -828,4 +618,3 @@ class DeterministicMetrics():
     Rsquared = R2
     SpearmanCorrelation = SPEARMAN_R
     RootMeanStandardDeviationRatio = RSR
-    # CRPS = CRPSensemble

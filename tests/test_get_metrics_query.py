@@ -35,10 +35,10 @@ R_BENCHMARK_RESULTS = Path(
 )
 
 
-def test_get_all_deterministic_metrics(tmpdir):
+def test_executing_deterministic_metrics(tmpdir):
     """Test get_metrics method."""
     # Define the evaluation object.
-    eval = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir)
 
     # Test all the metrics.
     include_all_metrics = [
@@ -46,9 +46,9 @@ def test_get_all_deterministic_metrics(tmpdir):
     ]
 
     # Get the currently available fields to use in the query.
-    flds = eval.joined_timeseries.field_enum()
+    flds = ev.joined_timeseries.field_enum()
 
-    metrics_df = eval.metrics.query(
+    metrics_df = ev.metrics.query(
         include_metrics=include_all_metrics,
         group_by=[flds.primary_location_id],
         order_by=[flds.primary_location_id],
@@ -56,7 +56,31 @@ def test_get_all_deterministic_metrics(tmpdir):
 
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
-    assert metrics_df.columns.size == 27
+    assert metrics_df.columns.size == 20
+
+
+def test_executing_signature_metrics(tmpdir):
+    """Test get_metrics method."""
+    # Define the evaluation object.
+    ev = setup_v0_3_study(tmpdir)
+
+    # Test all the metrics.
+    include_all_metrics = [
+        func() for func in SignatureMetrics.__dict__.values() if callable(func)
+    ]
+
+    # Get the currently available fields to use in the query.
+    flds = ev.joined_timeseries.field_enum()
+
+    metrics_df = ev.metrics.query(
+        include_metrics=include_all_metrics,
+        group_by=[flds.primary_location_id],
+        order_by=[flds.primary_location_id],
+    ).to_pandas()
+
+    assert isinstance(metrics_df, pd.DataFrame)
+    assert metrics_df.index.size == 3
+    assert metrics_df.columns.size == 8
 
 
 def test_metrics_filter_and_geometry(tmpdir):
@@ -66,9 +90,9 @@ def test_metrics_filter_and_geometry(tmpdir):
 
     # Define some metrics.
     kge = DeterministicMetrics.KlingGuptaEfficiency()
-    primary_avg = DeterministicMetrics.Average()
+    primary_avg = SignatureMetrics.Average()
     mvtd = DeterministicMetrics.MaxValueTimeDelta()
-    pmvt = DeterministicMetrics.MaxValueTime()
+    pmvt = SignatureMetrics.MaxValueTime()
 
     include_metrics = [pmvt, mvtd, primary_avg, kge]
 
@@ -409,8 +433,8 @@ def test_ensemble_metrics(tmpdir):
 
     # Now, metrics.
     crps = ProbabilisticMetrics.CRPS()
-
     crps.summary_func = np.mean
+    crps.estimator = "pwm"
 
     include_metrics = [crps]
 
@@ -431,42 +455,48 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        # test_get_all_metrics(
-        #     tempfile.mkdtemp(
-        #         prefix="1-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_metrics_filter_and_geometry(
-        #     tempfile.mkdtemp(
-        #         prefix="2-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_circularblock_bootstrapping(
-        #     tempfile.mkdtemp(
-        #         prefix="3-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_stationary_bootstrapping(
-        #     tempfile.mkdtemp(
-        #         prefix="4-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_gumboot_bootstrapping(
-        #     tempfile.mkdtemp(
-        #         prefix="5-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_metric_chaining(
-        #     tempfile.mkdtemp(
-        #         prefix="6-",
-        #         dir=tempdir
-        #     )
-        # )
+        test_executing_deterministic_metrics(
+            tempfile.mkdtemp(
+                prefix="1-",
+                dir=tempdir
+            )
+        )
+        test_executing_signature_metrics(
+            tempfile.mkdtemp(
+                prefix="2-",
+                dir=tempdir
+            )
+        )
+        test_metrics_filter_and_geometry(
+            tempfile.mkdtemp(
+                prefix="2-",
+                dir=tempdir
+            )
+        )
+        test_circularblock_bootstrapping(
+            tempfile.mkdtemp(
+                prefix="3-",
+                dir=tempdir
+            )
+        )
+        test_stationary_bootstrapping(
+            tempfile.mkdtemp(
+                prefix="4-",
+                dir=tempdir
+            )
+        )
+        test_gumboot_bootstrapping(
+            tempfile.mkdtemp(
+                prefix="5-",
+                dir=tempdir
+            )
+        )
+        test_metric_chaining(
+            tempfile.mkdtemp(
+                prefix="6-",
+                dir=tempdir
+            )
+        )
         test_ensemble_metrics(
             tempfile.mkdtemp(
                 prefix="7-",

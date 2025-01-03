@@ -37,7 +37,7 @@ class ProbabilisticBasemodel(MetricsBasemodel):
 class DeterministicBasemodel(MetricsBasemodel):
     """Deterministic Basemodel configuration."""
 
-    return_type: Union[str] = Field(default="float")
+    return_type: str = Field(default="float", frozen=True)
 
 
 class BootstrapBasemodel(MetricsBasemodel):

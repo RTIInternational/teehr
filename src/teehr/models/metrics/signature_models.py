@@ -25,7 +25,7 @@ class COUNT(DeterministicBasemodel):
         The output field name, by default "primary_count".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.count`.
+        :func:`signature_funcs.count`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value"].
     attrs : Dict
@@ -53,7 +53,7 @@ class MINIMUM(DeterministicBasemodel):
         The output field name, by default "primary_minimum".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.minimum`.
+        :func:`signature_funcs.minimum`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value"].
     attrs : Dict
@@ -82,7 +82,7 @@ class MAXIMUM(DeterministicBasemodel):
         The output field name, by default "maximum".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.maximum`.
+        :func:`signature_funcs.maximum`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value"].
     attrs : Dict
@@ -111,7 +111,7 @@ class AVERAGE(DeterministicBasemodel):
         The output field name, by default "average".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.average`.
+        :func:`signature_funcs.average`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value"].
     attrs : Dict
@@ -140,7 +140,7 @@ class SUM(DeterministicBasemodel):
         The output field name, by default "sum".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.sum`.
+        :func:`signature_funcs.sum`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value"].
     attrs : Dict
@@ -169,7 +169,7 @@ class VARIANCE(DeterministicBasemodel):
         The output field name, by default "variance".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.variance`.
+        :func:`signature_funcs.variance`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value"].
     attrs : Dict
@@ -199,7 +199,7 @@ class MAX_VALUE_TIME(DeterministicBasemodel):
         The output field name, by default "max_value_time".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.max_value_time`.
+        :func:`signature_funcs.max_value_time`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value"].
     attrs : Dict
@@ -213,6 +213,7 @@ class MAX_VALUE_TIME(DeterministicBasemodel):
         default=["primary_value", "value_time"]
     )
     attrs: Dict = Field(default=tma.MAX_VAL_TIME_ATTRS, frozen=True)
+    return_type: str = Field(default="timestamp", frozen=True)
 
 
 class SignatureMetrics:

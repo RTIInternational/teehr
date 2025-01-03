@@ -23,7 +23,7 @@ class CRPSensemble(ProbabilisticBasemodel):
         The output field name, by default "mean_crps_ensemble".
     func : Callable
         The function to apply to the data, by default
-        :func:`metric_funcs.ensemble_crps`.
+        :func:`probabilistic_funcs.ensemble_crps`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default
         ["primary_value", "secondary_value", "value_time"].
