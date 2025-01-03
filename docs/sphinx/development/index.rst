@@ -4,7 +4,7 @@
 Developer Guide
 ===============
 
-Setting uo the Development Environment
+Setting up the Development Environment
 --------------------------------------
 Setting up the development environment is a critical step in contributing to TEEHR.
 This guide will walk you through the steps to set up a development environment for TEEHR.
@@ -19,18 +19,22 @@ Install the prerequisites:
 ```bash
 git clone https://github.com/RTIInternational/teehr.git
 ```
+
 2. Navigate to the TEEHR directory:
 ```bash
 cd teehr
 ```
+
 3. Create a new virtual environment using poetry:
 ```bash
 poetry install
 ```
+
 4. Activate the virtual environment:
 ```bash
 poetry shell
 ```
+
 5. Install the required JAR files for Spark:
 ```bash
 python download_spark_jars.py

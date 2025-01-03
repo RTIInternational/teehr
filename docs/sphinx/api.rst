@@ -80,10 +80,12 @@ Metric Queries
 Methods for querying and calculating metrics.
 
 .. autosummary::
-   :template: custom-class-template.rst
    :toctree: generated
 
    evaluation.metrics.Metrics
+   deterministic_funcs
+   signature_funcs
+   probabilistic_funcs
 
 
 Metric and Bootstrap Models
@@ -92,12 +94,12 @@ Metric and Bootstrap Models
 Classes for defining and customizing metrics and bootstrap models.
 
 .. autosummary::
-   :template: custom-module-template.rst
    :toctree: generated
 
-   metric_models
+   deterministic_models
+   signature_models
+   probabilistic_models
    bootstrap_models
-   metric_funcs
 
 
 Visualization

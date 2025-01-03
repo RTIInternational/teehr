@@ -1,7 +1,7 @@
 """Test the import_timeseries function in the Evaluation class."""
 from pathlib import Path
 from teehr import Evaluation
-from teehr import Metrics as m
+from teehr import DeterministicMetrics as m
 from teehr.models.pydantic_table_models import (
     Configuration,
     Unit,

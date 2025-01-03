@@ -7,7 +7,7 @@ import pyspark.sql as ps
 from teehr.models.filters import (
     JoinedTimeseriesFilter
 )
-from teehr.models.metrics.metric_models import MetricsBasemodel
+from teehr.models.metrics.basemodels import MetricsBasemodel
 from teehr.models.table_enums import (
     JoinedTimeseriesFields
 )
