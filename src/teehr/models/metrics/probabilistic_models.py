@@ -17,6 +17,8 @@ class CRPSensemble(ProbabilisticBasemodel):
     ----------
     estimator : str
         CRPS estimator, can be ("pwm", "nrg", or "fair"). Default is "pwm".
+    backend : str
+        The backend to use, by default "numba". Can be ("numba" or "numpy").
     summary_func : Callable
         The function to apply to the results, by default np.mean.
     output_field_name : str
@@ -32,6 +34,7 @@ class CRPSensemble(ProbabilisticBasemodel):
     """
 
     estimator: CRPSEstimators = Field(default="pwm")
+    backend: str = Field(default="numba")
     output_field_name: str = Field(default="mean_crps_ensemble")
     func: Callable = Field(probabilistic_funcs.create_crps_func, frozen=True)
     summary_func: Union[Callable, None] = Field(default=None)

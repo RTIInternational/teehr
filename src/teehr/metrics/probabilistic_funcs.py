@@ -69,14 +69,16 @@ def create_crps_func(model: MetricsBasemodel) -> Callable:
                 sr.crps_ensemble(
                     pivoted_dict["primary"],
                     pivoted_dict["secondary"],
-                    estimator=model.estimator
+                    estimator=model.estimator,
+                    backend=model.backend
                 )
             )
         else:
             return sr.crps_ensemble(
                 pivoted_dict["primary"],
                 pivoted_dict["secondary"],
-                estimator=model.estimator
+                estimator=model.estimator,
+                backend=model.backend
             )
 
     return ensemble_crps

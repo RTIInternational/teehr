@@ -1,5 +1,5 @@
 """Test evaluation class."""
-# from teehr import Configuration
+from teehr import Configuration
 from teehr import DeterministicMetrics, ProbabilisticMetrics, SignatureMetrics
 from teehr import Operators as ops
 import tempfile
@@ -372,69 +372,57 @@ def test_metric_chaining(tmpdir):
 
 def test_ensemble_metrics(tmpdir):
     """Test get_metrics method with ensemble metrics."""
-    # usgs_location = Path(
-    #     TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_location.parquet"
-    # )
-    # # usgs_location = Path(
-    # #     TEST_STUDY_DATA_DIR_v0_4, "geo", "two_usgs_locations.parquet"
-    # # )
-    # secondary_filename = "MEFP.MBRFC.DNVC2LOCAL.SQIN.xml"
-    # # secondary_filename = "MEFP.MBRFC.TwoLocations.SQIN.xml"
-    # secondary_filepath = Path(
-    #     TEST_STUDY_DATA_DIR_v0_4,
-    #     "timeseries",
-    #     secondary_filename
-    # )
-    # primary_filepath = Path(
-    #     TEST_STUDY_DATA_DIR_v0_4,
-    #     "timeseries",
-    #     "usgs_hefs_06711565.parquet"
-    # )
+    usgs_location = Path(
+        TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_location.parquet"
+    )
 
-    # # primary_filepath = Path(
-    # #     TEST_STUDY_DATA_DIR_v0_4,
-    # #     "timeseries",
-    # #     "usgs_hefs_two_locations.parquet"
-    # # )
+    secondary_filename = "MEFP.MBRFC.DNVC2LOCAL.SQIN.xml"
+    secondary_filepath = Path(
+        TEST_STUDY_DATA_DIR_v0_4,
+        "timeseries",
+        secondary_filename
+    )
+    primary_filepath = Path(
+        TEST_STUDY_DATA_DIR_v0_4,
+        "timeseries",
+        "usgs_hefs_06711565.parquet"
+    )
 
-    # ev = Evaluation(dir_path=tmpdir)
-    # ev.enable_logging()
-    # ev.clone_template()
+    ev = Evaluation(dir_path=tmpdir)
+    ev.enable_logging()
+    ev.clone_template()
 
-    # ev.locations.load_spatial(
-    #     in_path=usgs_location
-    # )
-    # ev.location_crosswalks.load_csv(
-    #     in_path=Path(TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv")
-    # )
-    # ev.configurations.add(
-    #     Configuration(
-    #         name="MEFP",
-    #         type="primary",
-    #         description="MBRFC HEFS Data"
-    #     )
-    # )
-    # constant_field_values = {
-    #     "unit_name": "ft^3/s",
-    #     "variable_name": "streamflow_hourly_inst",
-    # }
-    # ev.secondary_timeseries.load_fews_xml(
-    #     in_path=secondary_filepath,
-    #     constant_field_values=constant_field_values
-    # )
-    # ev.primary_timeseries.load_parquet(
-    #     in_path=primary_filepath
-    # )
-    # ev.joined_timeseries.create(execute_udf=False)
-
-    from teehr import Evaluation
-
-    ev = Evaluation(dir_path="/mnt/data/ciroh/teehr/ensembles/test_datasets/test_ensemble_evaluation")
+    ev.locations.load_spatial(
+        in_path=usgs_location
+    )
+    ev.location_crosswalks.load_csv(
+        in_path=Path(TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv")
+    )
+    ev.configurations.add(
+        Configuration(
+            name="MEFP",
+            type="primary",
+            description="MBRFC HEFS Data"
+        )
+    )
+    constant_field_values = {
+        "unit_name": "ft^3/s",
+        "variable_name": "streamflow_hourly_inst",
+    }
+    ev.secondary_timeseries.load_fews_xml(
+        in_path=secondary_filepath,
+        constant_field_values=constant_field_values
+    )
+    ev.primary_timeseries.load_parquet(
+        in_path=primary_filepath
+    )
+    ev.joined_timeseries.create(execute_udf=False)
 
     # Now, metrics.
     crps = ProbabilisticMetrics.CRPS()
     crps.summary_func = np.mean
     crps.estimator = "pwm"
+    crps.backend = "numba"
 
     include_metrics = [crps]
 
