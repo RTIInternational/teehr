@@ -40,9 +40,9 @@ def test_read_from_s3():
         order_by=["primary_location_id", "month"],
         group_by=["primary_location_id", "month"],
         include_metrics=[
-            teehr.Metrics.KlingGuptaEfficiency(),
-            teehr.Metrics.NashSutcliffeEfficiency(),
-            teehr.Metrics.RelativeBias()
+            teehr.DeterministicMetrics.KlingGuptaEfficiency(),
+            teehr.DeterministicMetrics.NashSutcliffeEfficiency(),
+            teehr.DeterministicMetrics.RelativeBias()
         ]
     ).to_sdf().count()
     assert m_cnt == 24
