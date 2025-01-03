@@ -109,3 +109,12 @@ class CRPSEstimators(StrEnum):
     pwm = "pwm"
     nrg = "nrg"
     fair = "fair"
+
+
+class MetricCategories(StrEnum):
+    """Metric categories."""
+
+    Deterministic = "Deterministic"
+    Categorical = "Categorical"
+    Signature = "Signature"
+    Probabilistic = "Probabilistic"

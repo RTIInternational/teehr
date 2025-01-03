@@ -8,6 +8,7 @@ from pyspark.sql.functions import pandas_udf
 from pyspark.sql import types as T
 
 from teehr.models.metrics.basemodels import MetricsBasemodel
+from teehr.models.metrics.basemodels import MetricCategories as mc
 from teehr.querying.utils import validate_fields_exist, parse_fields_to_list
 
 logger = logging.getLogger(__name__)
@@ -52,7 +53,7 @@ def apply_aggregation_metrics(
                 input_field_names.append("value_time")
         else:
             logger.debug(f"Applying metric: {alias}")
-            if model.attrs["category"] == "Probabilistic":
+            if model.attrs["category"] == mc.Probabilistic:
                 func_pd = pandas_udf(model.func(model), model.return_type)
             else:
                 func_pd = pandas_udf(model.func, model.return_type)

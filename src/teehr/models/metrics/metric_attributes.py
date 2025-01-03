@@ -1,10 +1,11 @@
 """Dictionaries defining static metric attributes."""
+from teehr.models.metrics.basemodels import MetricCategories as mc
 
 
 ME_ATTRS = {
     "short_name": "ME",
     "display_name": "Mean Error",
-    "category": "Deterministic",
+    "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
 }
@@ -12,7 +13,7 @@ ME_ATTRS = {
 RBIAS_ATTRS = {
     "short_name": "RelBias",
     "display_name": "Relative Bias",
-    "category": "Deterministic",
+    "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
 }
@@ -20,7 +21,7 @@ RBIAS_ATTRS = {
 MULTBIAS_ATTRS = {
     "short_name": "MultBias",
     "display_name": "Multiplicative Bias",
-    "category": "Deterministic",
+    "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 1.0,
 }
@@ -28,7 +29,7 @@ MULTBIAS_ATTRS = {
 MSE_ATTRS = {
     "short_name": "MSE",
     "display_name": "Mean Square Error",
-    "category": "Deterministic",
+    "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
 }
@@ -36,7 +37,7 @@ MSE_ATTRS = {
 RMSE_ATTRS = {
     "short_name": "RMSE",
     "display_name": "Root Mean Square Error",
-    "category": "Deterministic",
+    "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
 }
@@ -44,7 +45,7 @@ RMSE_ATTRS = {
 MAE_ATTRS = {
     "short_name": "MAE",
     "display_name": "Mean Absolute Error",
-    "category": "Deterministic",
+    "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
 }
@@ -52,7 +53,7 @@ MAE_ATTRS = {
 RMAE_ATTRS = {
     "short_name": "RelMAE",
     "display_name": "Mean Absolute Relative Error",
-    "category": "Deterministic",
+    "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
 }
@@ -60,7 +61,7 @@ RMAE_ATTRS = {
 PEARSON_ATTRS = {
     "short_name": "r",
     "display_name": "Pearson Correlation",
-    "category": "Deterministic",
+    "category": mc.Deterministic,
     "value_range": [-1.0, 1.0],
     "optimal_value": 1.0,
 }
@@ -68,7 +69,7 @@ PEARSON_ATTRS = {
 R2_ATTRS = {
     "short_name": "r2",
     "display_name": "Coefficient of Determination",
-    "category": "Deterministic",
+    "category": mc.Deterministic,
     "value_range": [0.0, 1.0],
     "optimal_value": 1.0,
 }
@@ -76,7 +77,7 @@ R2_ATTRS = {
 NSE_ATTRS = {
     "short_name": "NSE",
     "display_name": "Nash-Sutcliffe Efficiency",
-    "category": "Deterministic",
+    "category": mc.Deterministic,
     "value_range": [None, 1.0],
     "optimal_value": 1.0,
 }
@@ -84,7 +85,7 @@ NSE_ATTRS = {
 NNSE_ATTRS = {
     "short_name": "NNSE",
     "display_name": "Normalized Nash-Sutcliffe Efficiency",
-    "category": "Deterministic",
+    "category": mc.Deterministic,
     "value_range": [0.0, 1.0],
     "optimal_value": 1.0,
 }
@@ -92,7 +93,7 @@ NNSE_ATTRS = {
 KGE_ATTRS = {
     "short_name": "KGE",
     "display_name": "Kling-Gupta Efficiency - original",
-    "category": "Deterministic",
+    "category": mc.Deterministic,
     "value_range": [0.0, 1.0],
     "optimal_value": 1.0,
 }
@@ -100,7 +101,7 @@ KGE_ATTRS = {
 KGE1_ATTRS = {
     "short_name": "KGE_mod1",
     "display_name": "Kling-Gupta Efficiency - modified 1 (2012)",
-    "category": "Deterministic",
+    "category": mc.Deterministic,
     "value_range": [0.0, 1.0],
     "optimal_value": 1.0,
 }
@@ -108,7 +109,7 @@ KGE1_ATTRS = {
 KGE2_ATTRS = {
     "short_name": "KGE_mod2",
     "display_name": "Kling-Gupta Efficiency - modified 2 (2021)",
-    "category": "Deterministic",
+    "category": mc.Deterministic,
     "value_range": [0.0, 1.0],
     "optimal_value": 1.0,
 }
@@ -116,7 +117,7 @@ KGE2_ATTRS = {
 COUNT_ATTRS = {
     "short_name": "count",
     "display_name": "Count",
-    "category": "Signature",
+    "category": mc.Signature,
     "value_range": None,
     "optimal_value": None,
 }
@@ -124,7 +125,7 @@ COUNT_ATTRS = {
 MINIMUM_ATTRS = {
     "short_name": "minimum",
     "display_name": "Minimum",
-    "category": "Signature",
+    "category": mc.Signature,
     "value_range": None,
     "optimal_value": None,
 }
@@ -132,7 +133,7 @@ MINIMUM_ATTRS = {
 MAXIMUM_ATTRS = {
     "short_name": "maximum",
     "display_name": "Maximum",
-    "category": "Signature",
+    "category": mc.Signature,
     "value_range": None,
     "optimal_value": None,
 }
@@ -140,7 +141,7 @@ MAXIMUM_ATTRS = {
 AVERAGE_ATTRS = {
     "short_name": "average",
     "display_name": "Average",
-    "category": "Signature",
+    "category": mc.Signature,
     "value_range": None,
     "optimal_value": None,
 }
@@ -148,7 +149,7 @@ AVERAGE_ATTRS = {
 SUM_ATTRS = {
     "short_name": "sum",
     "display_name": "Sum",
-    "category": "Signature",
+    "category": mc.Signature,
     "value_range": None,
     "optimal_value": None,
 }
@@ -156,7 +157,7 @@ SUM_ATTRS = {
 VARIANCE_ATTRS = {
     "short_name": "variance",
     "display_name": "Variance",
-    "category": "Signature",
+    "category": mc.Signature,
     "value_range": None,
     "optimal_value": None,
 }
@@ -164,7 +165,7 @@ VARIANCE_ATTRS = {
 MAX_VALUE_DELTA_ATTRS = {
     "short_name": "max_value_delta",
     "display_name": "Max Value Delta",
-    "category": "Deterministic",
+    "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": None,
 }
@@ -172,7 +173,7 @@ MAX_VALUE_DELTA_ATTRS = {
 MAX_VAL_TIME_ATTRS = {
     "short_name": "max_val_time",
     "display_name": "Max Value Time",
-    "category": "Signature",
+    "category": mc.Signature,
     "value_range": None,
     "optimal_value": None,
 }
@@ -180,7 +181,7 @@ MAX_VAL_TIME_ATTRS = {
 MAX_VALUE_TIMEDELTA_ATTRS = {
     "short_name": "max_value_time_delta",
     "display_name": "Max Value Time Delta",
-    "category": "Deterministic",
+    "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": None,
     "units": "seconds"
@@ -189,7 +190,7 @@ MAX_VALUE_TIMEDELTA_ATTRS = {
 ANNUAL_PEAK_RBIAS_ATTRS = {
     "short_name": "annual_peak_relative_bias",
     "display_name": "Annual Peak Relative Bias",
-    "category": "Deterministic",
+    "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": None,
 }
@@ -197,7 +198,7 @@ ANNUAL_PEAK_RBIAS_ATTRS = {
 SPEARMAN_R_ATTRS = {
     "short_name": "spearman_correlation",
     "display_name": "Spearman Rank Correlation Coefficient",
-    "category": "Deterministic",
+    "category": mc.Deterministic,
     "value_range": [-1.0, 1.0],
     "optimal_value": 1.0,
 }
@@ -205,7 +206,7 @@ SPEARMAN_R_ATTRS = {
 RSR_ATTRS = {
     "short_name": "root_mean_standard_deviation_ratio",
     "display_name": "Root Mean Standard Deviation Ratio",
-    "category": "Deterministic",
+    "category": mc.Deterministic,
     "value_range": [0.0, None],
     "optimal_value": 0.0,
 }
@@ -213,7 +214,7 @@ RSR_ATTRS = {
 CRPS_ENSEMBLE_ATTRS = {
     "short_name": "crps_ensemble",
     "display_name": "Continuous Ranked Probability Score - Ensemble",
-    "category": "Probabilistic",
+    "category": mc.Probabilistic,
     "value_range": [None, None],
     "optimal_value": 0.0,
 }
