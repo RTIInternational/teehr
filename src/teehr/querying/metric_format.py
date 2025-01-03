@@ -38,15 +38,15 @@ def apply_aggregation_metrics(
                 f"Applying metric: {alias} with {model.bootstrap.name}"
                 " bootstrapping"
             )
-            # TODO: Let bootstrap basemodel validation handle this.
-            if model.bootstrap.quantiles is None:
-                return_type = ARRAY_TYPE
-            else:
-                return_type = DICT_TYPE
+            # # TODO: Let bootstrap basemodel validation handle this.
+            # if model.bootstrap.quantiles is None:
+            #     return_type = ARRAY_TYPE
+            # else:
+            #     return_type = DICT_TYPE
 
             func_pd = pandas_udf(
                 model.bootstrap.func(model),
-                return_type
+                model.bootstrap.return_type
             )
             if (model.bootstrap.include_value_time) and \
                ("value_time" not in input_field_names):

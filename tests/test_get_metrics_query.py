@@ -174,7 +174,7 @@ def test_circularblock_bootstrapping(tmpdir):
     teehr_results = np.sort(
         np.array(metrics_df.kling_gupta_efficiency.values[0])
     )
-    manual_results = np.sort(results.ravel())
+    manual_results = np.sort(results.ravel()).astype(np.float32)
 
     assert (teehr_results == manual_results).all()
     assert isinstance(metrics_df, pd.DataFrame)
@@ -236,7 +236,7 @@ def test_stationary_bootstrapping(tmpdir):
     teehr_results = np.sort(
         np.array(metrics_df.kling_gupta_efficiency.values[0])
     )
-    manual_results = np.sort(results.ravel())
+    manual_results = np.sort(results.ravel()).astype(np.float32)
 
     assert (teehr_results == manual_results).all()
     assert isinstance(metrics_df, pd.DataFrame)
@@ -328,7 +328,7 @@ def test_gumboot_bootstrapping(tmpdir):
 
     # Unpack and compare the results.
     teehr_results = np.sort(np.array(metrics_df.kling_gupta_efficiency.values[0]))
-    manual_results = np.sort(results.ravel())
+    manual_results = np.sort(results.ravel()).astype(np.float32)
     assert (teehr_results == manual_results).all()
     assert isinstance(metrics_df, pd.DataFrame)
 

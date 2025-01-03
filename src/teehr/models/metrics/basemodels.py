@@ -12,7 +12,7 @@ from pyspark.sql import types as T
 class MetricsBasemodel(PydanticBaseModel):
     """Metrics Basemodel configuration."""
 
-    return_type: Union[str, T.ArrayType] = Field(default=None)
+    return_type: Union[str, T.ArrayType, T.MapType] = Field(default=None)
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
@@ -37,16 +37,12 @@ class ProbabilisticBasemodel(MetricsBasemodel):
 class DeterministicBasemodel(MetricsBasemodel):
     """Deterministic Basemodel configuration."""
 
-    return_type: str = Field(default="float", frozen=True)
+    return_type:  Union[str, T.ArrayType, T.MapType] = Field(default="float", frozen=True)
 
 
 class BootstrapBasemodel(MetricsBasemodel):
     """Bootstrap Basemodel configuration."""
 
-    # if model.bootstrap.quantiles is None:
-    #     return_type = ARRAY_TYPE
-    # else:
-    #     return_type = DICT_TYPE
     @model_validator(mode="before")
     def update_return_type(cls, values):
         """Update the return type based on the summary function."""
