@@ -12,8 +12,8 @@ WARNING: Do not change the name of this file or the functions it contains.
 
 from pyspark.sql import DataFrame
 import logging
-from teehr.models.udfs.row_level import RowLevelUDF as rlu
-from teehr.models.udfs.timeseries_aware import TimeseriesAwareUDF as tau
+from teehr import RowLevelCalculatedFields as rcf
+from teehr import TimeseriesAwareCalculatedFields as tcf
 
 logger = logging.getLogger(__name__)
 
@@ -39,13 +39,13 @@ def add_user_defined_fields(
     # Add a month field to the joined timeseries data
     logger.info("Adding month from date")
 
-    month = rlu.Month()
-    year = rlu.Year()
-    water_year = rlu.WaterYear()
-    # normalized_flow = rlu.NormalizedFlow()
-    seasons = rlu.Seasons()
+    month = rcf.Month()
+    year = rcf.Year()
+    water_year = rcf.WaterYear()
+    # normalized_flow = rcf.NormalizedFlow()
+    seasons = rcf.Seasons()
 
-    udfs = [
+    cfs = [
         month,
         year,
         water_year,
@@ -53,8 +53,8 @@ def add_user_defined_fields(
         seasons
     ]
 
-    for udf in udfs:
-        joined_df = udf.apply_to(joined_df)
+    for cf in cfs:
+        joined_df = cf.apply_to(joined_df)
 
     # Return the joined timeseries data with user defined fields
     return joined_df

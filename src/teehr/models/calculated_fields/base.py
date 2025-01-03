@@ -2,14 +2,14 @@ import abc
 from pydantic import BaseModel as PydanticBaseModel, ConfigDict
 
 
-class UDF_ABC(abc.ABC):
+class CalculatedFieldABC(abc.ABC):
     @abc.abstractmethod
     def apply_to(self):
         pass
 
 
-class UDFBasemodel(PydanticBaseModel):
-    """UDF Basemodel configuration."""
+class CalculatedFieldBaseModel(PydanticBaseModel):
+    """Calculated field base model configuration."""
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,

@@ -4,11 +4,42 @@ from pydantic import Field
 import pandas as pd
 import pyspark.sql.types as T
 import pyspark.sql as ps
+from teehr.models.calculated_fields.base import CalculatedFieldABC, CalculatedFieldBaseModel
 
-from teehr.models.udfs.udf_base import UDF_ABC, UDFBasemodel
+class PercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
+    """Adds an "event" and "event_id" column to the DataFrame based on a percentile threshold.
 
+    The "event" column (bool) indicates whether the value is above the XXth percentile.
+    The "event_id" column (string) groups continuous segments of events and assigns a
+        unique ID to each segment in the format "startdate-enddate".
 
-class PercentileEventDetection(UDF_ABC, UDFBasemodel):
+    Properties
+    ----------
+    - quantile:
+        The percentile threshold to use for event detection.
+        Default: 0.85
+    - value_time_field_name:
+        The name of the column containing the timestamp.
+        Default: "value_time"
+    - value_field_name:
+        The name of the column containing the value to detect events on.
+        Default: "primary_value"
+    - output_event_field_name:
+        The name of the column to store the event detection.
+        Default: "event"
+    - output_event_id_field_name:
+        The name of the column to store the event ID.
+        Default: "event_id"
+    - uniqueness_fields:
+        The columns to use to uniquely identify each timeseries.
+        `Default: [
+            'reference_time',
+            'primary_location_id',
+            'configuration_name',
+            'variable_name',
+            'unit_name'
+        ]`
+    """
     quantile: float = Field(
         default=0.85
     )
@@ -147,11 +178,21 @@ class PercentileEventDetection(UDF_ABC, UDFBasemodel):
         return sdf
 
 
-class TimeseriesAwareUDF():
-    """Class to hold timeseries aware UDFs.
+class TimeseriesAwareCalculatedFields():
+    """Timeseries aware calculated fields.
 
-    Timeseries aware UDFs are applied to each row in a DataFrame
-    and are aware of the timeseries data.  These can be used for
-    event detection, etc.
+    Timeseries aware CFs are aware of ordered groups of data (e.g., a timeseries).
+    This is useful for things such as event detection, base flow separation, and
+    other fields that need to be calculated based on a entire timeseries.  The
+    definition of what creates a unique set of timeseries (i.e., a timeseries) can
+    be specified.
+
+    Available Calculated Fields:
+    - PercentileEventDetection
+
     """
     PercentileEventDetection = PercentileEventDetection
+
+    # print all properties such as PercentileEventDetection
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.__dict__})"

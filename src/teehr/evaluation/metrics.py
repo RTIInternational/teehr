@@ -8,7 +8,7 @@ from teehr.models.filters import (
     JoinedTimeseriesFilter
 )
 from teehr.models.metrics.metric_models import MetricsBasemodel
-from teehr.models.udfs.row_level import UDFBasemodel
+from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
 from teehr.models.table_enums import (
     JoinedTimeseriesFields
 )
@@ -175,34 +175,33 @@ class Metrics:
         """Return the Spark DataFrame."""
         return self.df
 
-    def add_udf_columns(self, udfs: Union[UDFBasemodel, List[UDFBasemodel]]):
-            """Add UDFs to the joined timeseries DataFrame before running metrics.
+    def add_calculated_fields(self, cfs: Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]):
+            """Add calculated fields to the joined timeseries DataFrame before running metrics.
 
             Parameters
             ----------
-            udfs : Union[UDFBasemodel, List[UDFBasemodel]]
-                The UDFs to apply to the DataFrame.
+            cfs : Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]
+                The CFs to apply to the DataFrame.
 
             Returns
             -------
             self
-                The Metrics object with the UDFs applied to the DataFrame.
+                The Metrics object with the CFs applied to the DataFrame.
 
             Examples
             --------
             >>> import teehr
-            >>> from teehr import RowLevelUDF as rlu
-            >>> from teehr import TimeseriesAwareUDF as tau
-            >>> ev.join_timeseries.add_udf_columns([
-            >>>     rlu.Month()
+            >>> from teehr import RowLevelCalculatedFields as rcf
+            >>> ev.join_timeseries.add_calculated_fields([
+            >>>     rcf.Month()
             >>> ]).write()
             """
             # self._check_load_table()
 
-            if not isinstance(udfs, List):
-                udfs = [udfs]
+            if not isinstance(cfs, List):
+                cfs = [cfs]
 
-            for udf in udfs:
-                self.df = udf.apply_to(self.df)
+            for cf in cfs:
+                self.df = cf.apply_to(self.df)
 
             return self

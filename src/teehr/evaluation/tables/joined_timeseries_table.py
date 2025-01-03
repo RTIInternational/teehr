@@ -8,7 +8,7 @@ import teehr.models.pandera_dataframe_schemas as schemas
 import pyspark.sql as ps
 import logging
 from teehr.utils.utils import to_path_or_s3path
-from teehr.models.udfs.row_level import UDFBasemodel
+from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
 from typing import List, Union
 
 logger = logging.getLogger(__name__)
@@ -112,19 +112,32 @@ class JoinedTimeseriesTable(TimeseriesTable):
 
         return joined_df
 
-    def add_udf_columns(self, udfs: Union[UDFBasemodel, List[UDFBasemodel]]):
-        """Add UDFs to the joined timeseries table.
+    def add_calculated_fields(self, cfs: Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]):
+        """Add calculated fields to the joined timeseries table.
 
-        Note this does not persist the UDFs to the table. It only applies them to the DataFrame.
-        To persist the UDFs to the table, use the `write` method.
+        Note this does not persist the CFs to the table. It only applies them to the DataFrame.
+        To persist the CFs to the table, use the `write` method.
+
+        Parameters
+        ----------
+        cfs : Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]
+            The CFs to apply to the DataFrame.
+
+        Examples
+        --------
+        >>> import teehr
+        >>> from teehr import RowLevelCalculatedFields as rcf
+        >>> ev.join_timeseries.add_calculated_fields([
+        >>>     rcf.Month()
+        >>> ]).write()
         """
         self._check_load_table()
 
-        if not isinstance(udfs, List):
-            udfs = [udfs]
+        if not isinstance(cfs, List):
+            cfs = [cfs]
 
-        for udf in udfs:
-            self.df = udf.apply_to(self.df)
+        for cf in cfs:
+            self.df = cf.apply_to(self.df)
 
         return self
 
