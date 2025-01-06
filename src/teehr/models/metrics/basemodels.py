@@ -1,7 +1,8 @@
 """Enums and Basemodels for metric classes."""
-from typing import Union
+from typing import Union, Callable
 
 from teehr.models.str_enum import StrEnum
+from teehr.querying.utils import unpack_sdf_dict_columns
 
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import Field, ConfigDict, model_validator
@@ -13,6 +14,8 @@ class MetricsBasemodel(PydanticBaseModel):
     """Metrics Basemodel configuration."""
 
     return_type: Union[str, T.ArrayType, T.MapType] = Field(default=None)
+    unpack_results: bool = Field(default=False)
+    unpack_function: Callable = Field(default=None)
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
@@ -34,23 +37,24 @@ class ProbabilisticBasemodel(MetricsBasemodel):
         return values
 
 
-class DeterministicBasemodel(MetricsBasemodel):
-    """Deterministic Basemodel configuration."""
-
-    return_type:  Union[str, T.ArrayType, T.MapType] = Field(default="float", frozen=True)
-
-
 class BootstrapBasemodel(MetricsBasemodel):
     """Bootstrap Basemodel configuration."""
 
     @model_validator(mode="before")
     def update_return_type(cls, values):
-        """Update the return type based on the summary function."""
+        """Update the return type based on the quantiles."""
         if values.get("quantiles") is None:
             values["return_type"] = T.ArrayType(T.FloatType())
         elif values.get("quantiles") is not None:
             values["return_type"] = T.MapType(T.StringType(), T.FloatType())
         return values
+
+
+class DeterministicBasemodel(MetricsBasemodel):
+    """Deterministic Basemodel configuration."""
+
+    unpack_function: Callable = Field(default=unpack_sdf_dict_columns)
+    return_type:  Union[str, T.ArrayType, T.MapType] = Field(default="float")
 
 
 # Enums
@@ -114,3 +118,4 @@ class MetricCategories(StrEnum):
     Categorical = "Categorical"
     Signature = "Signature"
     Probabilistic = "Probabilistic"
+

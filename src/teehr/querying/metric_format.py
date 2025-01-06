@@ -5,16 +5,12 @@ import logging
 import pandas as pd
 from pyspark.sql import GroupedData
 from pyspark.sql.functions import pandas_udf
-from pyspark.sql import types as T
 
 from teehr.models.metrics.basemodels import MetricsBasemodel
 from teehr.models.metrics.basemodels import MetricCategories as mc
 from teehr.querying.utils import validate_fields_exist, parse_fields_to_list
 
 logger = logging.getLogger(__name__)
-
-ARRAY_TYPE = T.ArrayType(T.DoubleType())  # Array results.
-DICT_TYPE = T.MapType(T.StringType(), T.FloatType())  # Quantile results.
 
 
 def apply_aggregation_metrics(
@@ -57,6 +53,11 @@ def apply_aggregation_metrics(
             func_pd(*input_field_names).alias(alias)
         )
 
-    df = gp.agg(*func_list)
+    sdf = gp.agg(*func_list)
 
-    return df
+    # Note: Test exploding multiple columns
+    for model in include_metrics:
+        if model.unpack_results:
+            sdf = model.unpack_function(sdf, model.output_field_name)
+
+    return sdf

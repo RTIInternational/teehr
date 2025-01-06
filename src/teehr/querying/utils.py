@@ -4,10 +4,22 @@ import pandas as pd
 from typing import List, Union
 from teehr.models.str_enum import StrEnum
 import pyspark.sql as ps
+from pyspark.sql import DataFrame
+import pyspark.sql.functions as F
 
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def unpack_sdf_dict_columns(sdf: DataFrame, column_name: str) -> DataFrame:
+    """Explode a column of dictionaries into new columns named key_item."""
+    keys = sdf.select(
+        F.explode(F.map_keys(F.col(column_name))),
+    ).distinct()
+    key_list = list(map(lambda row: row[0], keys.collect()))
+    key_cols = list(map(lambda f: F.col(column_name).getItem(f).alias(str(f)), key_list))
+    return sdf.select(F.col('*'), *key_cols)
 
 
 def df_to_gdf(df: pd.DataFrame) -> gpd.GeoDataFrame:

@@ -120,6 +120,45 @@ def test_metrics_filter_and_geometry(tmpdir):
     assert metrics_df.columns.size == 6
 
 
+def test_unpacking_bootstrap_results(tmpdir):
+    """Test unpacking bootstrapping quantile results."""
+    # Define the evaluation object.
+    ev = setup_v0_3_study(tmpdir)
+
+    # Define a bootstrapper.
+    boot = Bootstrappers.CircularBlock(
+        seed=40,
+        block_size=100,
+        quantiles=[0.05, 0.5, 0.95],
+        reps=500
+    )
+    kge = DeterministicMetrics.KlingGuptaEfficiency(bootstrap=boot)
+    kge.unpack_results = True
+    flds = ev.joined_timeseries.field_enum()
+    filters = [
+        JoinedTimeseriesFilter(
+            column=flds.primary_location_id,
+            operator=ops.eq,
+            value="gage-A"
+        )
+    ]
+    metrics_df = ev.metrics.query(
+        include_metrics=[kge],
+        filters=filters,
+        group_by=[flds.primary_location_id],
+    ).to_pandas()
+    cols = metrics_df.columns
+    benchmark_cols = [
+        "primary_location_id",
+        "kling_gupta_efficiency",
+        "kling_gupta_efficiency_0.95",
+        "kling_gupta_efficiency_0.5",
+        "kling_gupta_efficiency_0.05"
+    ]
+
+    assert (cols == benchmark_cols).all()
+
+
 def test_circularblock_bootstrapping(tmpdir):
     """Test get_metrics method circular block bootstrapping."""
     # Define the evaluation object.
@@ -133,6 +172,7 @@ def test_circularblock_bootstrapping(tmpdir):
         reps=500
     )
     kge = DeterministicMetrics.KlingGuptaEfficiency(bootstrap=boot)
+    # kge.unpack_results = True
 
     # Manual bootstrapping.
     df = eval.joined_timeseries.to_pandas()
@@ -457,37 +497,43 @@ if __name__ == "__main__":
         )
         test_metrics_filter_and_geometry(
             tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_circularblock_bootstrapping(
-            tempfile.mkdtemp(
                 prefix="3-",
                 dir=tempdir
             )
         )
-        test_stationary_bootstrapping(
+        test_unpacking_bootstrap_results(
             tempfile.mkdtemp(
                 prefix="4-",
                 dir=tempdir
             )
         )
-        test_gumboot_bootstrapping(
+        test_circularblock_bootstrapping(
             tempfile.mkdtemp(
                 prefix="5-",
                 dir=tempdir
             )
         )
-        test_metric_chaining(
+        test_stationary_bootstrapping(
             tempfile.mkdtemp(
                 prefix="6-",
                 dir=tempdir
             )
         )
-        test_ensemble_metrics(
+        test_gumboot_bootstrapping(
             tempfile.mkdtemp(
                 prefix="7-",
+                dir=tempdir
+            )
+        )
+        test_metric_chaining(
+            tempfile.mkdtemp(
+                prefix="8-",
+                dir=tempdir
+            )
+        )
+        test_ensemble_metrics(
+            tempfile.mkdtemp(
+                prefix="9-",
                 dir=tempdir
             )
         )
