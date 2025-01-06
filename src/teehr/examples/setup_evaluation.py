@@ -111,4 +111,4 @@ ev.location_attributes.load_parquet(
 )
 
 # Create the joined timeseries
-ev.joined_timeseries.create(execute_udf=True)
+ev.joined_timeseries.create(execute_scripts=True)

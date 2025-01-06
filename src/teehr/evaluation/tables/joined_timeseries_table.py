@@ -147,7 +147,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
         logger.info("Joined timeseries table written to disk.")
         self._load_table()
 
-    def _run_udf_script(self, joined_df: ps.DataFrame) -> ps.DataFrame:
+    def _run_script(self, joined_df: ps.DataFrame) -> ps.DataFrame:
         """Add UDFs to the joined timeseries dataframe."""
 
         try:
@@ -163,12 +163,12 @@ class JoinedTimeseriesTable(TimeseriesTable):
 
         return joined_df
 
-    def create(self, add_attrs: bool = False, execute_udf: bool = False):
+    def create(self, add_attrs: bool = False, execute_scripts: bool = False):
         """Create joined timeseries table.
 
         Parameters
         ----------
-        execute_udf : bool, optional
+        execute_scripts : bool, optional
             Execute UDFs, by default False
         add_attrs : bool, optional
             Add attributes, by default False
@@ -178,8 +178,8 @@ class JoinedTimeseriesTable(TimeseriesTable):
         if add_attrs:
             joined_df = self._add_attr(joined_df)
 
-        if execute_udf:
-            joined_df = self._run_udf_script(joined_df)
+        if execute_scripts:
+            joined_df = self._run_script(joined_df)
 
         validated_df = self._validate(joined_df, False)
         self._write_spark_df(validated_df)
