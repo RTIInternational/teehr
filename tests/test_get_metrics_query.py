@@ -150,7 +150,6 @@ def test_unpacking_bootstrap_results(tmpdir):
     cols = metrics_df.columns
     benchmark_cols = [
         "primary_location_id",
-        "kling_gupta_efficiency",
         "kling_gupta_efficiency_0.95",
         "kling_gupta_efficiency_0.5",
         "kling_gupta_efficiency_0.05"
