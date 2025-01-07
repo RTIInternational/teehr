@@ -28,6 +28,8 @@ Before starting, make sure you have installed TEEHR and its dependencies as desc
 
 :doc:`Grouping and Filtering </user_guide/notebooks/06_grouping_and_filtering>`  :download:`(download notebook) </user_guide/notebooks/06_grouping_and_filtering.ipynb>`
 
+:doc:`Ensemble Forecast Evaluation </user_guide/notebooks/09_ensemble_metrics>`  :download:`(download notebook) </user_guide/notebooks/09_ensemble_metrics.ipynb>`
+
 .. toctree::
    :maxdepth: 2
    :hidden:
@@ -40,4 +42,5 @@ Before starting, make sure you have installed TEEHR and its dependencies as desc
    Read an Evaluation from S3 </user_guide/notebooks/07_read_from_s3>
    Joining Timeseries </user_guide/tutorials/joining_timeseries>
    Grouping and Filtering </user_guide/notebooks/06_grouping_and_filtering>
+   Ensemble Forecast Evaluation </user_guide/notebooks/09_ensemble_metrics>
    Metrics </user_guide/metrics/metrics>

@@ -12,7 +12,7 @@ from teehr.metrics import deterministic_funcs as metric_funcs
 from teehr.models.str_enum import StrEnum
 
 
-class ME(DeterministicBasemodel):
+class MeanError(DeterministicBasemodel):
     """Mean Error.
 
     Parameters
@@ -43,7 +43,7 @@ class ME(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.ME_ATTRS, frozen=True)
 
 
-class REL_BIAS(DeterministicBasemodel):
+class RelativeBias(DeterministicBasemodel):
     """Relative Bias.
 
     Parameters
@@ -74,7 +74,7 @@ class REL_BIAS(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.RBIAS_ATTRS, frozen=True)
 
 
-class MULT_BIAS(DeterministicBasemodel):
+class MultiplicativeBias(DeterministicBasemodel):
     """Multiplicative Bias.
 
     Parameters
@@ -105,7 +105,7 @@ class MULT_BIAS(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.MULTBIAS_ATTRS, frozen=True)
 
 
-class MSE(DeterministicBasemodel):
+class MeanSquareError(DeterministicBasemodel):
     """Mean Square Error.
 
     Parameters
@@ -136,7 +136,7 @@ class MSE(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.MSE_ATTRS, frozen=True)
 
 
-class RMSE(DeterministicBasemodel):
+class RootMeanSquareError(DeterministicBasemodel):
     """Root Mean Squared Error.
 
     Parameters
@@ -167,7 +167,7 @@ class RMSE(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.RMSE_ATTRS, frozen=True)
 
 
-class MAE(DeterministicBasemodel):
+class MeanAbsoluteError(DeterministicBasemodel):
     """Mean Absolute Error.
 
     Parameters
@@ -198,7 +198,7 @@ class MAE(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.MAE_ATTRS, frozen=True)
 
 
-class REL_MAE(DeterministicBasemodel):
+class MeanAbsoluteRelativeError(DeterministicBasemodel):
     """Relative Mean Absolute Error.
 
     Parameters
@@ -229,7 +229,7 @@ class REL_MAE(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.RMAE_ATTRS, frozen=True)
 
 
-class PEARSON_R(DeterministicBasemodel):
+class PearsonCorrelation(DeterministicBasemodel):
     """Pearson Correlation.
 
     Parameters
@@ -260,7 +260,7 @@ class PEARSON_R(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.PEARSON_ATTRS, frozen=True)
 
 
-class R2(DeterministicBasemodel):
+class Rsquared(DeterministicBasemodel):
     """Coefficient of Determination.
 
     Parameters
@@ -291,7 +291,7 @@ class R2(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.R2_ATTRS, frozen=True)
 
 
-class NSE(DeterministicBasemodel):
+class NashSutcliffeEfficiency(DeterministicBasemodel):
     """Nash-Sutcliffe Efficiency.
 
     Parameters
@@ -322,7 +322,7 @@ class NSE(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.NSE_ATTRS, frozen=True)
 
 
-class NNSE(DeterministicBasemodel):
+class NormalizedNashSutcliffeEfficiency(DeterministicBasemodel):
     """Normalized Nash-Sutcliffe Efficiency.
 
     Parameters
@@ -355,7 +355,7 @@ class NNSE(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.NNSE_ATTRS, frozen=True)
 
 
-class KGE(DeterministicBasemodel):
+class KlingGuptaEfficiency(DeterministicBasemodel):
     """Kling-Gupta Efficiency.
 
     Parameters
@@ -385,7 +385,7 @@ class KGE(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.KGE_ATTRS, frozen=True)
 
 
-class KGE_Mod1(DeterministicBasemodel):
+class KlingGuptaEfficiencyMod1(DeterministicBasemodel):
     """Kling-Gupta Efficiency - modified 1 (2012).
 
     Parameters
@@ -415,7 +415,7 @@ class KGE_Mod1(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.KGE1_ATTRS, frozen=True)
 
 
-class KGE_Mod2(DeterministicBasemodel):
+class KlingGuptaEfficiencyMod2(DeterministicBasemodel):
     """Kling-Gupta Efficiency - modified 2 (2021).
 
     Parameters
@@ -445,7 +445,7 @@ class KGE_Mod2(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.KGE2_ATTRS, frozen=True)
 
 
-class SPEARMAN_R(DeterministicBasemodel):
+class SpearmanCorrelation(DeterministicBasemodel):
     """Spearman Rank Correlation Coefficient.
 
     Parameters
@@ -475,7 +475,7 @@ class SPEARMAN_R(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.SPEARMAN_R_ATTRS, frozen=True)
 
 
-class MAX_VALUE_DELTA(DeterministicBasemodel):
+class MaxValueDelta(DeterministicBasemodel):
     """Max Value Delta.
 
     Parameters
@@ -504,7 +504,7 @@ class MAX_VALUE_DELTA(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.MAX_VALUE_DELTA_ATTRS, frozen=True)
 
 
-class MAX_VALUE_TIME_DELTA(DeterministicBasemodel):
+class MaxValueTimeDelta(DeterministicBasemodel):
     """Max Value Time Delta.
 
     Parameters
@@ -534,7 +534,7 @@ class MAX_VALUE_TIME_DELTA(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.MAX_VALUE_TIMEDELTA_ATTRS, frozen=True)
 
 
-class ANNUAL_PEAK_RBIAS(DeterministicBasemodel):
+class AnnualPeakRelativeBias(DeterministicBasemodel):
     """Annual Peak Relative Bias.
 
     Parameters
@@ -565,7 +565,7 @@ class ANNUAL_PEAK_RBIAS(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.ANNUAL_PEAK_RBIAS_ATTRS, frozen=True)
 
 
-class RSR(DeterministicBasemodel):
+class RootMeanStandardDeviationRatio(DeterministicBasemodel):
     """Root Mean Standard Deviation Ratio.
 
     Parameters
@@ -599,22 +599,22 @@ class RSR(DeterministicBasemodel):
 class DeterministicMetrics():
     """Define and customize performance metrics."""
 
-    AnnualPeakRelativeBias = ANNUAL_PEAK_RBIAS
-    KlingGuptaEfficiency = KGE
-    KlingGuptaEfficiencyMod1 = KGE_Mod1
-    KlingGuptaEfficiencyMod2 = KGE_Mod2
-    MaxValueDelta = MAX_VALUE_DELTA
-    MaxValueTimeDelta = MAX_VALUE_TIME_DELTA
-    MeanError = ME
-    MeanAbsoluteError = MAE
-    MeanAbsoluteRelativeError = REL_MAE
-    MeanSquareError = MSE
-    MultiplicativeBias = MULT_BIAS
-    PearsonCorrelation = PEARSON_R
-    NashSutcliffeEfficiency = NSE
-    NormalizedNashSutcliffeEfficiency = NNSE
-    RelativeBias = REL_BIAS
-    RootMeanSquareError = RMSE
-    Rsquared = R2
-    SpearmanCorrelation = SPEARMAN_R
-    RootMeanStandardDeviationRatio = RSR
+    AnnualPeakRelativeBias = AnnualPeakRelativeBias
+    KlingGuptaEfficiency = KlingGuptaEfficiency
+    KlingGuptaEfficiencyMod1 = KlingGuptaEfficiencyMod1
+    KlingGuptaEfficiencyMod2 = KlingGuptaEfficiencyMod2
+    MaxValueDelta = MaxValueDelta
+    MaxValueTimeDelta = MaxValueTimeDelta
+    MeanError = MeanError
+    MeanAbsoluteError = MeanAbsoluteError
+    MeanAbsoluteRelativeError = MeanAbsoluteRelativeError
+    MeanSquareError = MeanSquareError
+    MultiplicativeBias = MultiplicativeBias
+    PearsonCorrelation = PearsonCorrelation
+    NashSutcliffeEfficiency = NashSutcliffeEfficiency
+    NormalizedNashSutcliffeEfficiency = NormalizedNashSutcliffeEfficiency
+    RelativeBias = RelativeBias
+    RootMeanSquareError = RootMeanSquareError
+    Rsquared = Rsquared
+    SpearmanCorrelation = SpearmanCorrelation
+    RootMeanStandardDeviationRatio = RootMeanStandardDeviationRatio
