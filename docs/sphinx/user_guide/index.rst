@@ -30,6 +30,8 @@ Before starting, make sure you have installed TEEHR and its dependencies as desc
 
 :doc:`Ensemble Forecast Evaluation </user_guide/notebooks/09_ensemble_metrics>`  :download:`(download notebook) </user_guide/notebooks/09_ensemble_metrics.ipynb>`
 
+:doc:`Adding calculated fields </user_guide/notebooks/08_adding_calculated_fields>`  :download:`(download notebook) </user_guide/notebooks/08_adding_calculated_fields.ipynb>`
+
 .. toctree::
    :maxdepth: 2
    :hidden:
@@ -43,4 +45,5 @@ Before starting, make sure you have installed TEEHR and its dependencies as desc
    Joining Timeseries </user_guide/tutorials/joining_timeseries>
    Grouping and Filtering </user_guide/notebooks/06_grouping_and_filtering>
    Ensemble Forecast Evaluation </user_guide/notebooks/09_ensemble_metrics>
+   Adding calculated fields </user_guide/notebooks/08_adding_calculated_fields>
    Metrics </user_guide/metrics/metrics>
