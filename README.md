@@ -51,3 +51,5 @@ In May of 2023 we put on a workshop at the CIROH 1st Annual Training and Develop
 ## Versioning
 The TEEHR project follows semantic versioning as described here: [https://semver.org/](https://semver.org/).
 Note, per the specification, "Major version zero (0.y.z) is for initial development. Anything MAY change at any time. The public API SHOULD NOT be considered stable.".  We are solidly in "major version zero" territory, and trying to move fast, so expect breaking changes often.
+
+changing this file
