@@ -12,7 +12,7 @@ from teehr.metrics import signature_funcs as sig_funcs
 from teehr.models.str_enum import StrEnum
 
 
-class COUNT(DeterministicBasemodel):
+class Count(DeterministicBasemodel):
     """Count.
 
     Parameters
@@ -40,7 +40,7 @@ class COUNT(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.COUNT_ATTRS, frozen=True)
 
 
-class MINIMUM(DeterministicBasemodel):
+class Minimum(DeterministicBasemodel):
     """Minimum.
 
     Parameters
@@ -69,7 +69,7 @@ class MINIMUM(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.MINIMUM_ATTRS, frozen=True)
 
 
-class MAXIMUM(DeterministicBasemodel):
+class Maximum(DeterministicBasemodel):
     """Maximum.
 
     Parameters
@@ -98,7 +98,7 @@ class MAXIMUM(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.MAXIMUM_ATTRS, frozen=True)
 
 
-class AVERAGE(DeterministicBasemodel):
+class Average(DeterministicBasemodel):
     """Average.
 
     Parameters
@@ -127,7 +127,7 @@ class AVERAGE(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.AVERAGE_ATTRS, frozen=True)
 
 
-class SUM(DeterministicBasemodel):
+class Sum(DeterministicBasemodel):
     """Sum.
 
     Parameters
@@ -156,7 +156,7 @@ class SUM(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.SUM_ATTRS, frozen=True)
 
 
-class VARIANCE(DeterministicBasemodel):
+class Variance(DeterministicBasemodel):
     """Variance.
 
     Parameters
@@ -186,7 +186,7 @@ class VARIANCE(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.VARIANCE_ATTRS, frozen=True)
 
 
-class MAX_VALUE_TIME(DeterministicBasemodel):
+class MaxValueTime(DeterministicBasemodel):
     """Max Value Time.
 
     Parameters
@@ -219,10 +219,10 @@ class MAX_VALUE_TIME(DeterministicBasemodel):
 class SignatureMetrics:
     """Define and customize performance metrics."""
 
-    Average = AVERAGE
-    Count = COUNT
-    MaxValueTime = MAX_VALUE_TIME
-    Maximum = MAXIMUM
-    Minimum = MINIMUM
-    Sum = SUM
-    Variance = VARIANCE
+    Average = Average
+    Count = Count
+    MaxValueTime = MaxValueTime
+    Maximum = Maximum
+    Minimum = Minimum
+    Sum = Sum
+    Variance = Variance
