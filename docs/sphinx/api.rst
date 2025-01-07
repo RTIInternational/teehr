@@ -74,15 +74,16 @@ Methods for fetching NWM and USGS data from external sources.
    Fetch.nwm_forecast_grids
 
 
-Metric Queries
---------------
+Metric Functions
+----------------
 
-Methods for querying and calculating metrics.
+Functions for calculating metrics.
 
 .. autosummary::
    :toctree: generated
+   :template: custom-module-template.rst
+   :recursive:
 
-   evaluation.metrics.Metrics
    deterministic_funcs
    signature_funcs
    probabilistic_funcs
@@ -95,11 +96,26 @@ Classes for defining and customizing metrics and bootstrap models.
 
 .. autosummary::
    :toctree: generated
+   :template: custom-class-template.rst
+   :recursive:
 
    deterministic_models
    signature_models
    probabilistic_models
    bootstrap_models
+
+
+User-Defined Field Models
+-------------------------
+
+Classes for defining and customizing user-defined field models.
+
+.. autosummary::
+   :template: custom-class-template.rst
+   :toctree: generated
+
+   RowLevelCalculatedFields
+   TimeseriesAwareCalculatedFields
 
 
 Visualization
