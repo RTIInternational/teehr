@@ -61,7 +61,7 @@ ev.fetch.nwm_retrospective_points(
 # ev.load.import_secondary_timeseries()
 
 # Create the joined timeseries
-ev.joined_timeseries.create(execute_udf=False)
+ev.joined_timeseries.create(execute_scripts=False)
 
 df = ev.metrics.query(
     order_by=["primary_location_id", "configuration_name"],

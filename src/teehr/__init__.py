@@ -22,6 +22,9 @@ from teehr.models.filters import (  # noqa
     JoinedTimeseriesFilter
 )
 
+from teehr.models.calculated_fields.row_level import RowLevelCalculatedFields # noqa
+from teehr.models.calculated_fields.timeseries_aware import TimeseriesAwareCalculatedFields # noqa
+
 # For docs
 from teehr.evaluation.tables.base_table import (  # noqa
     BaseTable,

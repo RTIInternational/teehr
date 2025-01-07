@@ -503,7 +503,8 @@ def secondary_timeseries_schema(
                 ),
                 "member": ps.Column(
                     T.StringType(),
-                    nullable=True
+                    nullable=True,
+
                 )
             },
             strict=True,
