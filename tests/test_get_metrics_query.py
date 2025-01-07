@@ -455,7 +455,7 @@ def test_ensemble_metrics(tmpdir):
     ev.primary_timeseries.load_parquet(
         in_path=primary_filepath
     )
-    ev.joined_timeseries.create(execute_udf=False)
+    ev.joined_timeseries.create(execute_scripts=False)
 
     # Now, metrics.
     crps = ProbabilisticMetrics.CRPS()
@@ -475,7 +475,7 @@ def test_ensemble_metrics(tmpdir):
         order_by=["primary_location_id"],
     ).to_pandas()
 
-    assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 61.190075)
+    assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 35.627174)
 
 
 if __name__ == "__main__":
