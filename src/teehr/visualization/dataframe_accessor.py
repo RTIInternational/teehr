@@ -8,7 +8,6 @@ from pathlib import Path
 
 from bokeh.plotting import figure, save, output_file, show, ColumnDataSource
 from bokeh.palettes import colorblind
-from bokeh.resources import INLINE
 import xyzservices.providers as xyz
 
 logger = logging.getLogger(__name__)
