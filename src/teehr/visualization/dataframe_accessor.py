@@ -375,8 +375,8 @@ class TEEHRDataFrameAccessor:
 
         Notes
         -----
-        This method calls `_timeseries_schema` to get the plotting
-        schema and `_timeseries_generate_plot` to generate each plot. It
+        This method calls ``_timeseries_schema`` to get the plotting
+        schema and ``_timeseries_generate_plot`` to generate each plot. It
         ensures the output directory exists before saving the plots.
         """
         # check table type
@@ -712,9 +712,10 @@ class TEEHRDataFrameAccessor:
         Notes
         -----
         This function relies on the following methods:
-        - `_location_attributes_format_points`: Formats the point data.
-        - `_location_attributes_generate_map`: Generates the map using the
-                                               formatted data.
+
+        - ``_location_attributes_format_points``: Formats the point data.
+        - ``_location_attributes_generate_map``: Generates the map using the
+                                                 formatted data.
 
         Examples
         --------
@@ -834,8 +835,9 @@ class TEEHRDataFrameAccessor:
         Notes
         -----
         This method relies on the following methods:
-        - `_location_crosswalks_format_points`: Assembles the point data.
-        - `_location_crosswalks_generate_map`: Generates the map using the
+
+        - ``_location_crosswalks_format_points``: Assembles the point data.
+        - ``_location_crosswalks_generate_map``: Generates the map using the
                                                assembled data.
 
         Examples

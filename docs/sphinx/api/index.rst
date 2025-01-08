@@ -24,7 +24,7 @@ The top-level class for interacting with and exploring a TEEHR Evaluation.
 
 
 Creating and Managing an Evaluation
-------------------------------------
+-----------------------------------
 
 Methods for creating, cloning, and configuring an Evaluation.
 
