@@ -5,6 +5,7 @@ from teehr.evaluation.evaluation import Evaluation  # noqa
 from teehr.models.metrics.deterministic_models import DeterministicMetrics  # noqa
 from teehr.models.metrics.probabilistic_models import ProbabilisticMetrics  # noqa
 from teehr.models.metrics.signature_models import SignatureMetrics  # noqa
+from teehr.models.metrics.bootstrap_models import Bootstrappers  # noqa
 from teehr.models.metrics.basemodels import Operators  # noqa
 from teehr.models.pydantic_table_models import (  # noqa
     Configuration,
@@ -44,6 +45,5 @@ from teehr.evaluation.tables.unit_table import UnitTable
 from teehr.evaluation.tables.variable_table import VariableTable
 from teehr.evaluation.fetch import Fetch  # noqa
 from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor  # noqa
-from teehr.models.metrics import deterministic_models, bootstrap_models, signature_models, probabilistic_models  # noqa
 from teehr.metrics import deterministic_funcs, signature_funcs, probabilistic_funcs # noqa
 from teehr.metrics.signature_funcs import count  # noqa

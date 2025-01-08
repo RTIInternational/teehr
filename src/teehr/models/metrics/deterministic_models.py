@@ -596,7 +596,7 @@ class RootMeanStandardDeviationRatio(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.RSR_ATTRS, frozen=True)
 
 
-class DeterministicMetrics():
+class DeterministicMetrics:
     """Define and customize performance metrics."""
 
     AnnualPeakRelativeBias = AnnualPeakRelativeBias

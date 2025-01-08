@@ -10,7 +10,7 @@ from teehr.models.metrics.basemodels import CRPSEstimators
 from teehr.models.str_enum import StrEnum
 
 
-class CRPSensemble(ProbabilisticBasemodel):
+class CRPS(ProbabilisticBasemodel):
     """Continous Ranked Probability Score - Ensemble.
 
     Parameters
@@ -47,4 +47,4 @@ class CRPSensemble(ProbabilisticBasemodel):
 class ProbabilisticMetrics:
     """Probabilistic metric calculation methods."""
 
-    CRPS = CRPSensemble
+    CRPS = CRPS

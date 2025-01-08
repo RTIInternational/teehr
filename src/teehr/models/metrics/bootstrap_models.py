@@ -9,7 +9,7 @@ import teehr.metrics.bootstrap_funcs as bootstrap_funcs
 from teehr.models.metrics.basemodels import BootstrapBasemodel
 
 
-class GumbootModel(BootstrapBasemodel):
+class Gumboot(BootstrapBasemodel):
     """Gumboot bootstrapping.
 
     This is a partial implementation of the Gumboot R package, a
@@ -66,7 +66,7 @@ class GumbootModel(BootstrapBasemodel):
     func: Callable = Field(bootstrap_funcs.create_gumboot_func, frozen=True)
 
 
-class CircularBlockModel(BootstrapBasemodel):
+class CircularBlock(BootstrapBasemodel):
     """CircularBlock bootstrapping from the arch python package.
 
     Parameters
@@ -105,7 +105,7 @@ class CircularBlockModel(BootstrapBasemodel):
     )
 
 
-class StationaryModel(BootstrapBasemodel):
+class Stationary(BootstrapBasemodel):
     """Stationary bootstrapping from the arch python package.
 
     Parameters
@@ -147,6 +147,6 @@ class StationaryModel(BootstrapBasemodel):
 class Bootstrappers:
     """Container class for bootstrap sampling classes."""
 
-    Gumboot = GumbootModel
-    CircularBlock = CircularBlockModel
-    Stationary = StationaryModel
+    Gumboot = Gumboot
+    CircularBlock = CircularBlock
+    Stationary = Stationary

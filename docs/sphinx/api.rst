@@ -99,10 +99,10 @@ Classes for defining and customizing metrics and bootstrap models.
    :template: custom-class-template.rst
    :recursive:
 
-   deterministic_models
-   signature_models
-   probabilistic_models
-   bootstrap_models
+   DeterministicMetrics
+   SignatureMetrics
+   ProbabilisticMetrics
+   Bootstrappers
 
 
 User-Defined Field Models
@@ -111,8 +111,8 @@ User-Defined Field Models
 Classes for defining and customizing user-defined field models.
 
 .. autosummary::
-   :template: custom-class-template.rst
    :toctree: generated
+   :template: custom-class-template.rst
 
    RowLevelCalculatedFields
    TimeseriesAwareCalculatedFields

@@ -11,7 +11,7 @@ class PercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     The "event" column (bool) indicates whether the value is above the XXth percentile.
     The "event_id" column (string) groups continuous segments of events and assigns a
-        unique ID to each segment in the format "startdate-enddate".
+    unique ID to each segment in the format "startdate-enddate".
 
     Properties
     ----------
@@ -32,13 +32,16 @@ class PercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
         Default: "event_id"
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
-        `Default: [
-            'reference_time',
-            'primary_location_id',
-            'configuration_name',
-            'variable_name',
-            'unit_name'
-        ]`
+
+        .. code-block:: python
+
+            Default: [
+                'reference_time',
+                'primary_location_id',
+                'configuration_name',
+                'variable_name',
+                'unit_name'
+            ]
     """
     quantile: float = Field(
         default=0.85
@@ -188,7 +191,8 @@ class TimeseriesAwareCalculatedFields():
     be specified.
 
     Available Calculated Fields:
-    - PercentileEventDetection
 
+    - PercentileEventDetection
     """
+
     PercentileEventDetection = PercentileEventDetection
