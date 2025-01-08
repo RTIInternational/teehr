@@ -145,7 +145,18 @@ class Stationary(BootstrapBasemodel):
 
 
 class Bootstrappers:
-    """Container class for bootstrap sampling classes."""
+    """Container class for bootstrap sampling classes.
+
+    Notes
+    -----
+    Bootstrapping is a resampling method used to estimate uncertainty
+    in metric results. The bootstrapping methods available in TEEHR
+    include:
+
+    - Gumboot
+    - CircularBlock
+    - Stationary
+    """
 
     Gumboot = Gumboot
     CircularBlock = CircularBlock

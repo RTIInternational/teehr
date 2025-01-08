@@ -1,6 +1,6 @@
-.. currentmodule:: teehr
-
 .. _api:
+
+.. currentmodule:: teehr
 
 #############
 API reference
