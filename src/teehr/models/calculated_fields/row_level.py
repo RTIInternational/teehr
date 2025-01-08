@@ -206,6 +206,8 @@ class Seasons(CalculatedFieldABC, CalculatedFieldBaseModel):
 class RowLevelCalculatedFields:
     """Row level Calculated Fields.
 
+    Notes
+    -----
     Row level CFs are applied to each row in the table based on data that is in one or more
     existing fields.  These are applied per row and are not aware of the data in any other
     row (e.g., are not aware of any other timeseries values in a "timeseries").  This can be

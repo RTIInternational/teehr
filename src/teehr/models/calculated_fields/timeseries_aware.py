@@ -184,6 +184,8 @@ class PercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
 class TimeseriesAwareCalculatedFields():
     """Timeseries aware calculated fields.
 
+    Notes
+    -----
     Timeseries aware CFs are aware of ordered groups of data (e.g., a timeseries).
     This is useful for things such as event detection, base flow separation, and
     other fields that need to be calculated based on a entire timeseries.  The

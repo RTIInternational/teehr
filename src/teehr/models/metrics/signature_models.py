@@ -217,7 +217,21 @@ class MaxValueTime(DeterministicBasemodel):
 
 
 class SignatureMetrics:
-    """Define and customize performance metrics."""
+    """Define and customize signature metrics.
+
+    Notes
+    -----
+    Signature metrics operate on a single field.  Available
+    signature metrics are:
+
+    - Average
+    - Count
+    - MaxValueTime
+    - Maximum
+    - Minimum
+    - Sum
+    - Variance
+    """
 
     Average = Average
     Count = Count

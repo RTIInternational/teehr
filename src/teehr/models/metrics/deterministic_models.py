@@ -597,7 +597,33 @@ class RootMeanStandardDeviationRatio(DeterministicBasemodel):
 
 
 class DeterministicMetrics:
-    """Define and customize performance metrics."""
+    """Define and customize determinisitic metrics.
+
+    Notes
+    -----
+    Deterministic metrics compare two timeseries, typically primary ("observed")
+    vs. secondary ("modeled") values. Available metrics include:
+
+    - AnnualPeakRelativeBias
+    - KlingGuptaEfficiency
+    - KlingGuptaEfficiencyMod1
+    - KlingGuptaEfficiencyMod2
+    - MaxValueDelta
+    - MaxValueTimeDelta
+    - MeanError
+    - MeanAbsoluteError
+    - MeanAbsoluteRelativeError
+    - MeanSquareError
+    - MultiplicativeBias
+    - PearsonCorrelation
+    - NashSutcliffeEfficiency
+    - NormalizedNashSutcliffeEfficiency
+    - RelativeBias
+    - RootMeanSquareError
+    - Rsquared
+    - SpearmanCorrelation
+    - RootMeanStandardDeviationRatio
+    """
 
     AnnualPeakRelativeBias = AnnualPeakRelativeBias
     KlingGuptaEfficiency = KlingGuptaEfficiency

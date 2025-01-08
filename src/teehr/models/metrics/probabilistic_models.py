@@ -45,6 +45,14 @@ class CRPS(ProbabilisticBasemodel):
 
 
 class ProbabilisticMetrics:
-    """Probabilistic metric calculation methods."""
+    """Define and customize probalistic metrics.
+
+    Notes
+    -----
+    Probabilistic metrics compare a value against a distribution of predicted
+    values, such as ensemble forecasts. Available probabilistic metrics include:
+
+    - CRPS (Continuous Ranked Probability Score)
+    """
 
     CRPS = CRPS

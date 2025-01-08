@@ -13,7 +13,6 @@ from teehr.models.pydantic_table_models import (  # noqa
     Unit,
     Variable
 )
-from teehr.models.metrics.bootstrap_models import Bootstrappers  # noqa
 from teehr.models.filters import (  # noqa
     UnitFilter,
     ConfigurationFilter,
