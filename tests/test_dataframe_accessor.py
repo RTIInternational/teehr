@@ -1,8 +1,24 @@
-import pytest
+import shutil
 import pandas as pd
 import geopandas as gpd
-from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor
+import pytest
+from pathlib import Path
+import logging
+from teehr import TEEHRDataFrameAccessor
 
+OUTPUT_DIR = Path('test_output')
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def setup_module(module):
+    """Setup any state specific to the execution of the given module."""
+    OUTPUT_DIR.mkdir(exist_ok=True)
+
+def teardown_module(module):
+    """Teardown any state that was previously setup with a setup_module method."""
+    shutil.rmtree(OUTPUT_DIR)
 
 def test_init_with_dataframe():
     """Test validation with pd.DataFrame."""
@@ -12,7 +28,6 @@ def test_init_with_dataframe():
     accessor = TEEHRDataFrameAccessor(df)
     assert accessor._df is not None
     assert accessor._gdf is None
-
 
 def test_init_with_geodataframe():
     """Test validation with gpd.GeoDataFrame."""
@@ -24,13 +39,11 @@ def test_init_with_geodataframe():
     assert accessor._df is None
     assert accessor._gdf is not None
 
-
 def test_validate_missing_table_type():
     """Test missing table type."""
     df = pd.DataFrame({'a': [1, 2, 3]})
     with pytest.raises(AttributeError):
         TEEHRDataFrameAccessor._validate(None, df)
-
 
 def test_validate_missing_fields():
     """Test missing columns."""
@@ -39,7 +52,6 @@ def test_validate_missing_fields():
     df.attrs['fields'] = ['b']
     with pytest.raises(AttributeError):
         TEEHRDataFrameAccessor._validate(None, df)
-
 
 def test_timeseries_plot():
     """Test timeseries plot."""
@@ -63,8 +75,7 @@ def test_timeseries_plot():
         'unit_name'
         ]
     accessor = TEEHRDataFrameAccessor(df)
-    accessor.timeseries_plot(output_dir=None)
-
+    accessor.timeseries_plot(output_dir=OUTPUT_DIR)
 
 def test_locations_map():
     """Test locations table mapping."""
@@ -77,8 +88,7 @@ def test_locations_map():
     gdf.attrs['fields'] = ['id', 'name']
     gdf.crs = "EPSG:4326"
     accessor = TEEHRDataFrameAccessor(gdf)
-    accessor.locations_map(output_dir=None)
-
+    accessor.locations_map(output_dir=OUTPUT_DIR)
 
 def test_location_attributes_map():
     """Test location_attributes table mapping."""
@@ -92,8 +102,7 @@ def test_location_attributes_map():
     gdf.attrs['fields'] = ['location_id', 'attribute_name', 'value']
     gdf.crs = "EPSG:4326"
     accessor = TEEHRDataFrameAccessor(gdf)
-    accessor.location_attributes_map(output_dir=None)
-
+    accessor.location_attributes_map(output_dir=OUTPUT_DIR)
 
 def test_location_crosswalks_map():
     """Test location_crosswalks table mapping."""
@@ -106,4 +115,4 @@ def test_location_crosswalks_map():
     gdf.attrs['fields'] = ['primary_location_id', 'secondary_location_id']
     gdf.crs = "EPSG:4326"
     accessor = TEEHRDataFrameAccessor(gdf)
-    accessor.location_crosswalks_map(output_dir=None)
+    accessor.location_crosswalks_map(output_dir=OUTPUT_DIR)
