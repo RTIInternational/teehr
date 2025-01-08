@@ -105,7 +105,7 @@ Classes for defining and customizing metrics and bootstrap models.
    Bootstrappers
 
 
-User-Defined Field Models
+Calculated Field Models
 -------------------------
 
 Classes for defining and customizing user-defined field models.
