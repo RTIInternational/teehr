@@ -2,6 +2,42 @@ Release Notes
 =============
 
 
+0.4.7 - 2025-01-08
+--------------------
+
+Added
+^^^^^
+* Adds RowLevelCalculatedFields and TimeseriesAwareCalculatedFields which are hopefully descriptive enough names.
+
+* Adds a User Guide page to describe what they are and how to use them.
+
+* Adds hvplot dependency to poerty
+
+* Adds add_calculated_fields() methods to joined_timeseries and metrics "tables"
+
+* Adds the Continuous Rank Probability Score CRPS ensemble metric using the scoringrules package
+
+* Adds a script to create an example ensemble evaluation using data in the test directory
+
+* Adds an example notebook to demo CRPS metric query
+
+* Adds user guide notebook page for ensembles, reading a test ensemble evaluation from S3
+
+* Adds ability to unpack metric dictionary results into separate columns (ie, bootstrap quantiles)
+
+Changed
+^^^^^^^
+* Splits metric models and functions into three categories: Deterministic, Probabilistic, Signature. This is a breaking change requiring import of specific metric classes (Deterministic, Probabilistic, Signature) rather than just ``Metrics``.
+
+  * Functions are moved to separate modules
+
+  * Models are moved to separate classes
+
+  * Basemodels and metric enums are moved to a separate basemodel module
+
+* Updates API docs, removes unused files and the autoapi directory.
+
+
 0.4.6 - 2024-12-17
 --------------------
 
