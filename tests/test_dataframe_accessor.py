@@ -15,7 +15,7 @@ def test_init_with_dataframe():
         'value': [1, 2],
         'unit_name': ['unit1', 'unit1']
     })
-    df.attrs['table_type'] = 'timeseries'
+    df.attrs['table_type'] = 'primary_timeseries'
     df.attrs['fields'] = df.columns
     accessor = TEEHRDataFrameAccessor(df)
     assert accessor._df is not None
@@ -47,7 +47,7 @@ def test_validate_missing_table_type():
 def test_validate_missing_fields():
     """Test missing columns."""
     df = pd.DataFrame({'a': [1, 2, 3]})
-    df.attrs['table_type'] = 'timeseries'
+    df.attrs['table_type'] = 'primary_timeseries'
     df.attrs['fields'] = ['b']
     with pytest.raises(AttributeError):
         TEEHRDataFrameAccessor._validate(None, df)
@@ -64,7 +64,7 @@ def test_timeseries_plot():
         'value': [1, 2],
         'unit_name': ['unit1', 'unit1']
     })
-    df.attrs['table_type'] = 'timeseries'
+    df.attrs['table_type'] = 'primary_timeseries'
     df.attrs['fields'] = [
         'variable_name',
         'configuration_name',

@@ -54,7 +54,7 @@ class TEEHRDataFrameAccessor:
                 "No DataFrame Attribute 'table_type' defined."
                 )
 
-        if obj.attrs['table_type'] == 'timeseries':
+        if obj.attrs['table_type'] == 'primary_timeseries':
 
             # validate using pandera schema
             schema = schemas.primary_timeseries_schema(type='pandas')
@@ -68,6 +68,14 @@ class TEEHRDataFrameAccessor:
             # check for data
             if obj.index.size == 0:
                 raise AttributeError("DataFrame must have data.")
+
+        elif obj.attrs['table_type'] == 'secondary_timeseries':
+
+            #TO-DO: add validation
+
+            raise NotImplementedError(
+                "Secondary_timeseries methods must be implemented."
+            )
 
         elif obj.attrs['table_type'] == 'joined_timeseries':
 
@@ -371,10 +379,10 @@ class TEEHRDataFrameAccessor:
         ensures the output directory exists before saving the plots.
         """
         # check table type
-        if self._df.attrs['table_type'] != 'timeseries':
+        if self._df.attrs['table_type'] != 'primary_timeseries':
             table_type_str = self.attrs['table_type']
             raise AttributeError(f"""
-                Expected table_type == "timeseries",
+                Expected table_type == "primary_timeseries",
                 got table_type = {table_type_str}
             """)
 
