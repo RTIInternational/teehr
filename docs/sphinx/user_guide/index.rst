@@ -24,9 +24,11 @@ Before starting, make sure you have installed TEEHR and its dependencies as desc
 
 :doc:`Clone an Evaluation from S3 </user_guide/notebooks/05_clone_from_s3>`  :download:`(download notebook) </user_guide/notebooks/05_clone_from_s3.ipynb>`
 
+:doc:`Read an Evaluation from S3 </user_guide/notebooks/07_read_from_s3>`  :download:`(download notebook) </user_guide/notebooks/07_read_from_s3.ipynb>`
+
 :doc:`Grouping and Filtering </user_guide/notebooks/06_grouping_and_filtering>`  :download:`(download notebook) </user_guide/notebooks/06_grouping_and_filtering.ipynb>`
 
-:doc:`Grouping and Filtering </user_guide/notebooks/07_read_from_s3>`  :download:`(download notebook) </user_guide/notebooks/07_read_from_s3>.ipynb>`
+:doc:`Adding calculated fields </user_guide/notebooks/08_adding_calculated_fields>`  :download:`(download notebook) </user_guide/notebooks/08_adding_calculated_fields.ipynb>`
 
 .. toctree::
    :maxdepth: 2
@@ -37,7 +39,8 @@ Before starting, make sure you have installed TEEHR and its dependencies as desc
    Introduction to the Evaluation Class </user_guide/notebooks/03_introduction_class>
    Setting-up a Simple Example </user_guide/notebooks/04_setup_simple_example>
    Clone an Evaluation from S3 </user_guide/notebooks/05_clone_from_s3>
-   Read Evaluation from S3 </user_guide/notebooks/07_read_from_s3>
+   Read an Evaluation from S3 </user_guide/notebooks/07_read_from_s3>
    Joining Timeseries </user_guide/tutorials/joining_timeseries>
    Grouping and Filtering </user_guide/notebooks/06_grouping_and_filtering>
+   Adding calculated fields </user_guide/notebooks/08_adding_calculated_fields>
    Metrics </user_guide/metrics/metrics>

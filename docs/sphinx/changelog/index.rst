@@ -1,6 +1,41 @@
 Release Notes
 =============
 
+
+0.4.6 - 2024-12-17
+--------------------
+
+Added
+^^^^^
+* Adds `add_missing_columns` to the `_validate` method in the `BaseTable` class
+to allow for adding missing columns to the schema.
+   - When upgrading from 0.4.4 or earlier, you may need to run the following to add
+   the missing columns to the secondary_timeseries if you have existing datasets:
+     ```
+     sdf = ev.secondary_timeseries.to_sdf()
+     validated_sdf = ev.secondary_timeseries._validate(sdf, add_missing_columns=True)
+     ev.secondary_timeseries._write_spark_df(validated_sdf)
+     ``
+
+Changed
+^^^^^^^
+* None
+
+
+0.4.5 - 2024-12-09
+--------------------
+
+Added
+^^^^^
+* Fixes issues with sphinx docs and run the `install_spark_jars.py` script in the build container.
+* Adds location plotting to accessor.
+* Adds loading from FEWS XML files.
+* Adds `member` to secondary timeseries schema for ensembles.
+
+Changed
+^^^^^^^
+* Fixes issues with sphinx docs and run the `install_spark_jars.py` script in the build container.
+
 0.4.4 - 2024-12-02
 --------------------
 
