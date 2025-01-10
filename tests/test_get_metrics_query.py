@@ -344,43 +344,83 @@ def test_metric_chaining(tmpdir):
     )
 
 
+def test_persisting(tmpdir):
+    """Test get_metrics method with chaining."""
+    # Define the evaluation object.
+    ev = setup_v0_3_study(tmpdir)
+
+    # Test chaining.
+    metrics_obj = ev.metrics.query(
+        order_by=["primary_location_id", "month"],
+        group_by=["primary_location_id", "month"],
+        include_metrics=[
+            Metrics.KlingGuptaEfficiency(),
+            Metrics.NashSutcliffeEfficiency(),
+            Metrics.RelativeBias()
+        ]
+    ).query(
+        order_by=["primary_location_id"],
+        group_by=["primary_location_id"],
+        include_metrics=[
+            Metrics.Average(
+                input_field_names="relative_bias",
+                output_field_name="primary_average"
+            )
+        ]
+    ).persist()
+
+    pass
+
+    # assert isinstance(metrics_df, pd.DataFrame)
+    # assert metrics_df.index.size == 3
+    # assert all(
+    #     metrics_df.columns == ["primary_location_id", "primary_average"]
+    # )
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_get_all_metrics(
+        # test_get_all_metrics(
+        #     tempfile.mkdtemp(
+        #         prefix="1-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_metrics_filter_and_geometry(
+        #     tempfile.mkdtemp(
+        #         prefix="2-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_circularblock_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="3-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_stationary_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="4-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_gumboot_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="5-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_metric_chaining(
+        #     tempfile.mkdtemp(
+        #         prefix="6-",
+        #         dir=tempdir
+        #     )
+        # )
+        test_persisting(
             tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_metrics_filter_and_geometry(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_circularblock_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        test_stationary_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
-        test_gumboot_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="5-",
-                dir=tempdir
-            )
-        )
-        test_metric_chaining(
-            tempfile.mkdtemp(
-                prefix="6-",
+                prefix="7-",
                 dir=tempdir
             )
         )

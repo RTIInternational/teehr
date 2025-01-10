@@ -4,6 +4,7 @@ from typing import Union, List
 import pandas as pd
 import geopandas as gpd
 import pyspark.sql as ps
+from pyspark.storagelevel import StorageLevel as psl
 from teehr.models.filters import (
     JoinedTimeseriesFilter
 )
@@ -35,6 +36,11 @@ class Metrics:
         self.locations = ev.locations
         self.joined_timeseries = ev.joined_timeseries
         self.df = self.joined_timeseries.to_sdf()
+
+    def persist(self, storage_level: psl = psl.MEMORY_AND_DISK) -> 'Metrics':
+        """Persist the DataFrame to specified storage level."""
+        self.df.persist(storageLevel=storage_level)
+        return self
 
     def query(
         self,

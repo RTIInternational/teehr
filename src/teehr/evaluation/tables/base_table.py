@@ -196,6 +196,11 @@ class BaseTable():
         self._check_load_table()
         self._validate(self.df)
 
+    def persist(self, storage_level: str = "MEMORY_AND_DISK"):
+        """Persist the DataFrame to disk."""
+        self.df.persist(storageLevel=storage_level)
+        return self
+
     def query(
         self,
         filters: Union[
