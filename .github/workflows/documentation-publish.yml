@@ -16,7 +16,7 @@ jobs:
 
       - uses: actions/setup-python@v3
         with:
-          python-version: "3.12"
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
@@ -24,7 +24,6 @@ jobs:
           pip install poetry
           poetry config virtualenvs.create false
           poetry install
-          poetry add ghp-import
           python -m teehr.utils.install_spark_jars
 
       - name: Sphinx build
@@ -34,4 +33,5 @@ jobs:
 
       - name: Run ghp-import
         run: |
+          poetry add ghp-import
           ghp-import -n -p -f -o docs/sphinx/_build/html
