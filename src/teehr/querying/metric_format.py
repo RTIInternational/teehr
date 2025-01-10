@@ -1,19 +1,16 @@
 """Functions for formatting metrics for querying."""
-from typing import List, Union
+from typing import List
 import logging
 
 import pandas as pd
 from pyspark.sql import GroupedData
 from pyspark.sql.functions import pandas_udf
-from pyspark.sql import types as T
 
-from teehr.models.metrics.metric_models import MetricsBasemodel
+from teehr.models.metrics.basemodels import MetricsBasemodel
+from teehr.models.metrics.basemodels import MetricCategories as mc
 from teehr.querying.utils import validate_fields_exist, parse_fields_to_list
 
 logger = logging.getLogger(__name__)
-
-ARRAY_TYPE = T.ArrayType(T.DoubleType())  # Array results.
-DICT_TYPE = T.MapType(T.StringType(), T.FloatType())  # Quantile results.
 
 
 def apply_aggregation_metrics(
@@ -37,28 +34,30 @@ def apply_aggregation_metrics(
                 f"Applying metric: {alias} with {model.bootstrap.name}"
                 " bootstrapping"
             )
-            if model.bootstrap.quantiles is None:
-                return_type = ARRAY_TYPE
-            else:
-                return_type = DICT_TYPE
 
             func_pd = pandas_udf(
                 model.bootstrap.func(model),
-                return_type
+                model.bootstrap.return_type
             )
             if (model.bootstrap.include_value_time) and \
                ("value_time" not in input_field_names):
                 input_field_names.append("value_time")
         else:
             logger.debug(f"Applying metric: {alias}")
-            func_pd = pandas_udf(model.func, model.attrs["return_type"])
+            if model.attrs["category"] == mc.Probabilistic:
+                func_pd = pandas_udf(model.func(model), model.return_type)
+            else:
+                func_pd = pandas_udf(model.func, model.return_type)
 
         func_list.append(
             func_pd(*input_field_names).alias(alias)
         )
 
-        # Collect the metric attributes here and attach them to the DataFrame?
+    sdf = gp.agg(*func_list)
 
-    df = gp.agg(*func_list)
+    # Note: Test exploding multiple columns
+    for model in include_metrics:
+        if model.unpack_results:
+            sdf = model.unpack_function(sdf, model.output_field_name)
 
-    return df
+    return sdf

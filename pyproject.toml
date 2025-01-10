@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "teehr"
-version = "0.4.6"
+version = "0.4.7"
 description = "Tools for Exploratory Evaluation in Hydrologic Research"
 authors = [
     "RTI International",
@@ -38,6 +38,7 @@ arch = "^7.0.0"
 pandera = {extras = ["pyspark"], version = "^0.20.4"}
 netcdf4 = "1.6.5"
 bokeh = "^3.5.0"
+scoringrules = "^0.7.1"
 hvplot = "^0.11.1"
 
 [tool.poetry.group.test.dependencies]
