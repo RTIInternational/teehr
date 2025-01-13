@@ -77,7 +77,6 @@ def test_locations_map(tmpdir):
         'geometry': gpd.points_from_xy([0, 1], [0, 1])
     })
     gdf.attrs['table_type'] = 'locations'
-    gdf.attrs['fields'] = ['id', 'name']
     gdf.crs = "EPSG:4326"
     accessor = TEEHRDataFrameAccessor(gdf)
     accessor.locations_map(output_dir=tmpdir)
