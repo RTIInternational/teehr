@@ -2,8 +2,8 @@ name: documentation
 
 on:
   push:
-    # tags: [ 'v*.*.*' ]
-    branches: [368-fix-user-guide-docs]
+    tags: [ 'v*.*.*' ]
+    # branches: [368-fix-user-guide-docs]
 
 permissions:
   contents: write
