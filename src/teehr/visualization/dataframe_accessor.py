@@ -342,14 +342,16 @@ class TEEHRDataFrameAccessor:
         p = self._timeseries_format_plot(plot=p)
 
         # output figure
-        if output_dir is not None:
+        if output_dir:
             fname = Path(output_dir, f'timeseries_plot_{variable}.html')
-            output_file(filename=fname, title=f'Timeseries Plot [{variable}]')
+            output_file(filename=fname, title=f'Timeseries Plot [{variable}]', mode='inline')
             logger.info(f"Saving timeseries plot at {output_dir}")
             save(p)
+            logger.info(f"Timeseries plot saved at {fname}")
         else:
             logger.info("No output directory specified, displaying plot.")
             show(p)
+            logger.info("Timeseries plot displayed.")
 
         return
 
@@ -478,14 +480,16 @@ class TEEHRDataFrameAccessor:
             )
 
         # output figure
-        if output_dir is not None:
+        if output_dir:
             fname = Path(output_dir, 'location_map.html')
-            output_file(filename=fname, title='Location Map')
+            output_file(filename=fname, title='Location Map', mode='inline')
             logger.info(f"Saving location map at {output_dir}")
             save(p)
+            logger.info(f"Location map saved at {fname}")
         else:
             logger.info("No output directory specified, displaying plot.")
             show(p)
+            logger.info(f"Location map displayed.")
 
         return
 
@@ -675,14 +679,16 @@ class TEEHRDataFrameAccessor:
             )
 
         # output figure
-        if output_dir is not None:
+        if output_dir:
             fname = Path(output_dir, 'location_attributes_map.html')
-            output_file(filename=fname, title='Location Attributes Map')
-            logger.info(f"Saving location map at {output_dir}")
+            output_file(filename=fname, title='Location Attributes Map', mode='inline')
+            logger.info(f"Saving location attributes map at {output_dir}")
             save(p)
+            logger.info(f"Location attributes map at {fname}")
         else:
             logger.info("No output directory specified, displaying plot.")
             show(p)
+            logger.info(f"Location attributes map displayed.")
 
         return
 
@@ -744,7 +750,7 @@ class TEEHRDataFrameAccessor:
         geo_data = self._location_attributes_format_points()
 
         # generate map
-        self._location_attributes_generate_map(geo_data=geo_data)
+        self._location_attributes_generate_map(geo_data=geo_data, output_dir=output_dir)
 
     def _location_crosswalks_format_points(self) -> dict:
         """Generate dictionary for point plotting."""
@@ -798,14 +804,16 @@ class TEEHRDataFrameAccessor:
             )
 
         # output figure
-        if output_dir is not None:
+        if output_dir:
             fname = Path(output_dir, 'location_crosswalks_map.html')
-            output_file(filename=fname, title='Location Crosswalks Map')
-            logger.info(f"Saving location map at {output_dir}")
+            output_file(filename=fname, title='Location Crosswalks Map', mode='inline')
+            logger.info(f"Saving location crosswalks map at {output_dir}")
             save(p)
+            logger.info(f"Location crosswalks map saved at {fname}")
         else:
             logger.info("No output directory specified, displaying plot.")
             show(p)
+            logger.info(f"Location crosswalks map displayed.")
 
         return
 
@@ -867,4 +875,4 @@ class TEEHRDataFrameAccessor:
         geo_data = self._location_crosswalks_format_points()
 
         # generate map
-        self._location_crosswalks_generate_map(geo_data=geo_data)
+        self._location_crosswalks_generate_map(geo_data=geo_data, output_dir=output_dir)
