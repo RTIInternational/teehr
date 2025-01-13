@@ -78,6 +78,7 @@ napoleon_preprocess_types = True
 
 # -- MyST-NB options ---------------------------------------------------------
 nb_execution_mode = "auto"
+nb_execution_timeout = 300
 nb_output_stderr = "remove-warn"
 myst_enable_extensions = [
     "html_image"
