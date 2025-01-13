@@ -1,0 +1,6 @@
+teehr.deterministic\_funcs.nash\_sutcliffe\_efficiency\_normalized
+==================================================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: deterministic_funcs.nash_sutcliffe_efficiency_normalized

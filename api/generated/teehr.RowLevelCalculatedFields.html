@@ -1,0 +1,842 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>teehr.RowLevelCalculatedFields &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.4.7 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/teehr.css?v=b36b674b" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=a78bb796"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/generated/teehr.RowLevelCalculatedFields';</script>
+    <link rel="icon" href="../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="teehr.TimeseriesAwareCalculatedFields" href="teehr.TimeseriesAwareCalculatedFields.html" />
+    <link rel="prev" title="teehr.Bootstrappers" href="teehr.Bootstrappers.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.4.7" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.4.7 documentation - Home"/>
+    <img src="../../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark pst-js-only" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.4.7 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="teehr.Evaluation.html">teehr.Evaluation</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="teehr.BaseTable.html">teehr.BaseTable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.UnitTable.html">teehr.UnitTable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.VariableTable.html">teehr.VariableTable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.AttributeTable.html">teehr.AttributeTable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.ConfigurationTable.html">teehr.ConfigurationTable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.LocationTable.html">teehr.LocationTable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.LocationAttributeTable.html">teehr.LocationAttributeTable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.LocationCrosswalkTable.html">teehr.LocationCrosswalkTable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.PrimaryTimeseriesTable.html">teehr.PrimaryTimeseriesTable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.SecondaryTimeseriesTable.html">teehr.SecondaryTimeseriesTable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.JoinedTimeseriesTable.html">teehr.JoinedTimeseriesTable</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="teehr.Fetch.usgs_streamflow.html">teehr.Fetch.usgs_streamflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.Fetch.nwm_retrospective_points.html">teehr.Fetch.nwm_retrospective_points</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.Fetch.nwm_forecast_points.html">teehr.Fetch.nwm_forecast_points</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.Fetch.nwm_retrospective_grids.html">teehr.Fetch.nwm_retrospective_grids</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.Fetch.nwm_forecast_grids.html">teehr.Fetch.nwm_forecast_grids</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="teehr.deterministic_funcs.html">teehr.deterministic_funcs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="teehr.deterministic_funcs.annual_peak_relative_bias.html">teehr.deterministic_funcs.annual_peak_relative_bias</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.deterministic_funcs.kling_gupta_efficiency.html">teehr.deterministic_funcs.kling_gupta_efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.deterministic_funcs.kling_gupta_efficiency_mod1.html">teehr.deterministic_funcs.kling_gupta_efficiency_mod1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.deterministic_funcs.kling_gupta_efficiency_mod2.html">teehr.deterministic_funcs.kling_gupta_efficiency_mod2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.deterministic_funcs.max_value_delta.html">teehr.deterministic_funcs.max_value_delta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.deterministic_funcs.max_value_timedelta.html">teehr.deterministic_funcs.max_value_timedelta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.deterministic_funcs.mean_absolute_error.html">teehr.deterministic_funcs.mean_absolute_error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.deterministic_funcs.mean_absolute_relative_error.html">teehr.deterministic_funcs.mean_absolute_relative_error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.deterministic_funcs.mean_error.html">teehr.deterministic_funcs.mean_error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.deterministic_funcs.mean_squared_error.html">teehr.deterministic_funcs.mean_squared_error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.deterministic_funcs.multiplicative_bias.html">teehr.deterministic_funcs.multiplicative_bias</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.deterministic_funcs.nash_sutcliffe_efficiency.html">teehr.deterministic_funcs.nash_sutcliffe_efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.deterministic_funcs.nash_sutcliffe_efficiency_normalized.html">teehr.deterministic_funcs.nash_sutcliffe_efficiency_normalized</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.deterministic_funcs.pearson_correlation.html">teehr.deterministic_funcs.pearson_correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.deterministic_funcs.r_squared.html">teehr.deterministic_funcs.r_squared</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.deterministic_funcs.relative_bias.html">teehr.deterministic_funcs.relative_bias</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.deterministic_funcs.root_mean_squared_error.html">teehr.deterministic_funcs.root_mean_squared_error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.deterministic_funcs.root_mean_standard_deviation_ratio.html">teehr.deterministic_funcs.root_mean_standard_deviation_ratio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.deterministic_funcs.spearman_correlation.html">teehr.deterministic_funcs.spearman_correlation</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="teehr.signature_funcs.html">teehr.signature_funcs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="teehr.signature_funcs.average.html">teehr.signature_funcs.average</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.signature_funcs.count.html">teehr.signature_funcs.count</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.signature_funcs.max_value_time.html">teehr.signature_funcs.max_value_time</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.signature_funcs.maximum.html">teehr.signature_funcs.maximum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.signature_funcs.minimum.html">teehr.signature_funcs.minimum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.signature_funcs.sum.html">teehr.signature_funcs.sum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.signature_funcs.variance.html">teehr.signature_funcs.variance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="teehr.probabilistic_funcs.html">teehr.probabilistic_funcs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="teehr.probabilistic_funcs.create_crps_func.html">teehr.probabilistic_funcs.create_crps_func</a></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="teehr.DeterministicMetrics.html">teehr.DeterministicMetrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.SignatureMetrics.html">teehr.SignatureMetrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.ProbabilisticMetrics.html">teehr.ProbabilisticMetrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.Bootstrappers.html">teehr.Bootstrappers</a></li>
+</ul>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">teehr.RowLevelCalculatedFields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.TimeseriesAwareCalculatedFields.html">teehr.TimeseriesAwareCalculatedFields</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="teehr.TEEHRDataFrameAccessor.html">teehr.TEEHRDataFrameAccessor</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API reference</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">teehr.RowLevelCalculatedFields</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="teehr-rowlevelcalculatedfields">
+<h1>teehr.RowLevelCalculatedFields<a class="headerlink" href="#teehr-rowlevelcalculatedfields" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.RowLevelCalculatedFields">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">teehr.</span></span><span class="sig-name descname"><span class="pre">RowLevelCalculatedFields</span></span><a class="reference internal" href="../../_modules/teehr/models/calculated_fields/row_level.html#RowLevelCalculatedFields"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.RowLevelCalculatedFields" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Row level Calculated Fields.</p>
+<p class="rubric">Notes</p>
+<p>Row level CFs are applied to each row in the table based on data that is in one or more
+existing fields.  These are applied per row and are not aware of the data in any other
+row (e.g., are not aware of any other timeseries values in a “timeseries”).  This can be
+used for adding fields such as a field based on the data/time (e.g., month, year, season, etc.)
+or based on the value field (e.g., normalized flow, log flow, etc.) and many other uses.</p>
+<p>Available Calculated Fields:</p>
+<ul class="simple">
+<li><p>Month</p></li>
+<li><p>Year</p></li>
+<li><p>WaterYear</p></li>
+<li><p>NormalizedFlow</p></li>
+<li><p>Seasons</p></li>
+</ul>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.RowLevelCalculatedFields.Month">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Month</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'value_time'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'month'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.RowLevelCalculatedFields.Month" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">CalculatedFieldABC</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">CalculatedFieldBaseModel</span></code></p>
+<p>Adds the month from a timestamp column.</p>
+<section id="properties">
+<h2>Properties<a class="headerlink" href="#properties" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><dl class="simple">
+<dt>input_field_name:</dt><dd><p>The name of the column containing the timestamp.
+Default: “value_time”</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>output_field_name:</dt><dd><p>The name of the column to store the month.
+Default: “month”</p>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.RowLevelCalculatedFields.Month.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'arbitrary_types_allowed':</span> <span class="pre">True,</span> <span class="pre">'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'validate_assignment':</span> <span class="pre">True}</span></em><a class="headerlink" href="#teehr.RowLevelCalculatedFields.Month.model_config" title="Link to this definition">#</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.RowLevelCalculatedFields.NormalizedFlow">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NormalizedFlow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">primary_value_field_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'primary_value'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drainage_area_field_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'drainage_area'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'normalized_flow'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.RowLevelCalculatedFields.NormalizedFlow" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">CalculatedFieldABC</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">CalculatedFieldBaseModel</span></code></p>
+<p>Normalize flow values by drainage area.</p>
+<section id="id1">
+<h2>Properties<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><dl class="simple">
+<dt>primary_value_field_name:</dt><dd><p>The name of the column containing the flow values.
+Default: “primary_value”</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>drainage_area_field_name:</dt><dd><p>The name of the column containing the drainage area.
+Default: “drainage_area”</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>output_field_name:</dt><dd><p>The name of the column to store the normalized flow values.
+Default: “normalized_flow”</p>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.RowLevelCalculatedFields.NormalizedFlow.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'arbitrary_types_allowed':</span> <span class="pre">True,</span> <span class="pre">'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'validate_assignment':</span> <span class="pre">True}</span></em><a class="headerlink" href="#teehr.RowLevelCalculatedFields.NormalizedFlow.model_config" title="Link to this definition">#</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.RowLevelCalculatedFields.Seasons">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Seasons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_time_field_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'value_time'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">season_months</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{'fall':</span> <span class="pre">[9,</span> <span class="pre">10,</span> <span class="pre">11],</span> <span class="pre">'spring':</span> <span class="pre">[3,</span> <span class="pre">4,</span> <span class="pre">5],</span> <span class="pre">'summer':</span> <span class="pre">[6,</span> <span class="pre">7,</span> <span class="pre">8],</span> <span class="pre">'winter':</span> <span class="pre">[12,</span> <span class="pre">1,</span> <span class="pre">2]}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'season'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.RowLevelCalculatedFields.Seasons" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">CalculatedFieldABC</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">CalculatedFieldBaseModel</span></code></p>
+<p>Adds the season from a timestamp column.</p>
+<section id="id2">
+<h2>Properties<a class="headerlink" href="#id2" title="Link to this heading">#</a></h2>
+<ul>
+<li><dl class="simple">
+<dt>value_time_field_name:</dt><dd><p>The name of the column containing the timestamp.
+Default: “value_time”</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>season_months:</dt><dd><p>A dictionary mapping season names to the months that define them.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Default</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">&quot;winter&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">12</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+    <span class="s2">&quot;spring&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+    <span class="s2">&quot;summer&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
+    <span class="s2">&quot;fall&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>output_field_name:</dt><dd><p>The name of the column to store the season.
+Default: “season”</p>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.RowLevelCalculatedFields.Seasons.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'arbitrary_types_allowed':</span> <span class="pre">True,</span> <span class="pre">'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'validate_assignment':</span> <span class="pre">True}</span></em><a class="headerlink" href="#teehr.RowLevelCalculatedFields.Seasons.model_config" title="Link to this definition">#</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.RowLevelCalculatedFields.WaterYear">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">WaterYear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'value_time'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'water_year'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.RowLevelCalculatedFields.WaterYear" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">CalculatedFieldABC</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">CalculatedFieldBaseModel</span></code></p>
+<p>Adds the water year from a timestamp column.</p>
+<section id="id3">
+<h2>Properties<a class="headerlink" href="#id3" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><dl class="simple">
+<dt>input_field_name:</dt><dd><p>The name of the column containing the timestamp.
+Default: “value_time”</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>output_field_name:</dt><dd><p>The name of the column to store the water year.
+Default: “water_year”</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Water year is defined as the year of the date plus one if the month is October or later.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.RowLevelCalculatedFields.WaterYear.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'arbitrary_types_allowed':</span> <span class="pre">True,</span> <span class="pre">'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'validate_assignment':</span> <span class="pre">True}</span></em><a class="headerlink" href="#teehr.RowLevelCalculatedFields.WaterYear.model_config" title="Link to this definition">#</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.RowLevelCalculatedFields.Year">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Year</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_field_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'value_time'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_field_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'year'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#teehr.RowLevelCalculatedFields.Year" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">CalculatedFieldABC</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">CalculatedFieldBaseModel</span></code></p>
+<p>Adds the year from a timestamp column.</p>
+<section id="id4">
+<h2>Properties<a class="headerlink" href="#id4" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><dl class="simple">
+<dt>input_field_name:</dt><dd><p>The name of the column containing the timestamp.
+Default: “value_time”</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>output_field_name:</dt><dd><p>The name of the column to store the year.
+Default: “year”</p>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="teehr.RowLevelCalculatedFields.Year.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ClassVar</span><span class="p"><span class="pre">[</span></span><span class="pre">ConfigDict</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'arbitrary_types_allowed':</span> <span class="pre">True,</span> <span class="pre">'extra':</span> <span class="pre">'forbid',</span> <span class="pre">'validate_assignment':</span> <span class="pre">True}</span></em><a class="headerlink" href="#teehr.RowLevelCalculatedFields.Year.model_config" title="Link to this definition">#</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+</section>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="teehr.Bootstrappers.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">teehr.Bootstrappers</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="teehr.TimeseriesAwareCalculatedFields.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">teehr.TimeseriesAwareCalculatedFields</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.RowLevelCalculatedFields"><code class="docutils literal notranslate"><span class="pre">RowLevelCalculatedFields</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.RowLevelCalculatedFields.Month"><code class="docutils literal notranslate"><span class="pre">RowLevelCalculatedFields.Month</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.RowLevelCalculatedFields.Month.model_config"><code class="docutils literal notranslate"><span class="pre">RowLevelCalculatedFields.Month.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.RowLevelCalculatedFields.NormalizedFlow"><code class="docutils literal notranslate"><span class="pre">RowLevelCalculatedFields.NormalizedFlow</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.RowLevelCalculatedFields.NormalizedFlow.model_config"><code class="docutils literal notranslate"><span class="pre">RowLevelCalculatedFields.NormalizedFlow.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.RowLevelCalculatedFields.Seasons"><code class="docutils literal notranslate"><span class="pre">RowLevelCalculatedFields.Seasons</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.RowLevelCalculatedFields.Seasons.model_config"><code class="docutils literal notranslate"><span class="pre">RowLevelCalculatedFields.Seasons.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.RowLevelCalculatedFields.WaterYear"><code class="docutils literal notranslate"><span class="pre">RowLevelCalculatedFields.WaterYear</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.RowLevelCalculatedFields.WaterYear.model_config"><code class="docutils literal notranslate"><span class="pre">RowLevelCalculatedFields.WaterYear.model_config</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.RowLevelCalculatedFields.Year"><code class="docutils literal notranslate"><span class="pre">RowLevelCalculatedFields.Year</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.RowLevelCalculatedFields.Year.model_config"><code class="docutils literal notranslate"><span class="pre">RowLevelCalculatedFields.Year.model_config</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/api/generated/teehr.RowLevelCalculatedFields.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><!-- This will display the version of the docs -->
+TEEHR version 0.4.7</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

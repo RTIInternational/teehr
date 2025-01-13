@@ -1,0 +1,6 @@
+teehr.deterministic\_funcs.relative\_bias
+=========================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: deterministic_funcs.relative_bias

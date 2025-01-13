@@ -1,0 +1,6 @@
+teehr.signature\_funcs.sum
+==========================
+
+.. currentmodule:: teehr
+
+.. autofunction:: signature_funcs.sum

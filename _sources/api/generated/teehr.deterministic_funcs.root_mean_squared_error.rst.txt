@@ -1,0 +1,6 @@
+teehr.deterministic\_funcs.root\_mean\_squared\_error
+=====================================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: deterministic_funcs.root_mean_squared_error

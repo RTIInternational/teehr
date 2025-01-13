@@ -1,0 +1,6 @@
+teehr.deterministic\_funcs.max\_value\_delta
+============================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: deterministic_funcs.max_value_delta

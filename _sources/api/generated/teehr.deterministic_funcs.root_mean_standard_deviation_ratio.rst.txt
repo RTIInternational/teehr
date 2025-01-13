@@ -1,0 +1,6 @@
+teehr.deterministic\_funcs.root\_mean\_standard\_deviation\_ratio
+=================================================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: deterministic_funcs.root_mean_standard_deviation_ratio

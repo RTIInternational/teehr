@@ -1,0 +1,6 @@
+teehr.signature\_funcs.maximum
+==============================
+
+.. currentmodule:: teehr
+
+.. autofunction:: signature_funcs.maximum

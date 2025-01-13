@@ -1,0 +1,6 @@
+teehr.deterministic\_funcs.multiplicative\_bias
+===============================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: deterministic_funcs.multiplicative_bias

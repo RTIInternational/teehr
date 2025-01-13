@@ -1,0 +1,6 @@
+teehr.signature\_funcs.minimum
+==============================
+
+.. currentmodule:: teehr
+
+.. autofunction:: signature_funcs.minimum

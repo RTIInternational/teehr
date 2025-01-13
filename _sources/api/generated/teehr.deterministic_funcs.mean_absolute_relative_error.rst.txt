@@ -1,0 +1,6 @@
+teehr.deterministic\_funcs.mean\_absolute\_relative\_error
+==========================================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: deterministic_funcs.mean_absolute_relative_error

@@ -1,0 +1,31 @@
+﻿teehr.probabilistic\_funcs
+==========================
+
+.. automodule:: teehr.probabilistic_funcs
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      create_crps_func
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

@@ -1,0 +1,6 @@
+teehr.deterministic\_funcs.pearson\_correlation
+===============================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: deterministic_funcs.pearson_correlation

@@ -1,0 +1,6 @@
+teehr.signature\_funcs.variance
+===============================
+
+.. currentmodule:: teehr
+
+.. autofunction:: signature_funcs.variance

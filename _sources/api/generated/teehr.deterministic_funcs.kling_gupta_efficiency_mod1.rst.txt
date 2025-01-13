@@ -1,0 +1,6 @@
+teehr.deterministic\_funcs.kling\_gupta\_efficiency\_mod1
+=========================================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: deterministic_funcs.kling_gupta_efficiency_mod1

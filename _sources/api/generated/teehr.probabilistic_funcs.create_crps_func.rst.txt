@@ -1,0 +1,6 @@
+teehr.probabilistic\_funcs.create\_crps\_func
+=============================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: probabilistic_funcs.create_crps_func

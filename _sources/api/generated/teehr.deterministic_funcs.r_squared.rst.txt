@@ -1,0 +1,6 @@
+teehr.deterministic\_funcs.r\_squared
+=====================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: deterministic_funcs.r_squared

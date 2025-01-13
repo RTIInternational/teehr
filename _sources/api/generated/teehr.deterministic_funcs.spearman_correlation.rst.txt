@@ -1,0 +1,6 @@
+teehr.deterministic\_funcs.spearman\_correlation
+================================================
+
+.. currentmodule:: teehr
+
+.. autofunction:: deterministic_funcs.spearman_correlation

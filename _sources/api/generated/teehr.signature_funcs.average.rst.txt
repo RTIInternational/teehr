@@ -1,0 +1,6 @@
+teehr.signature\_funcs.average
+==============================
+
+.. currentmodule:: teehr
+
+.. autofunction:: signature_funcs.average
