@@ -34,7 +34,7 @@ class TimeseriesTable(BaseTable):
         """Return Pandas DataFrame for Primary Timeseries."""
         self._check_load_table()
         df = self.df.toPandas()
-        df.attrs['table_type'] = 'timeseries'
+        df.attrs['table_type'] = self.name
         df.attrs['fields'] = self.fields()
         return df
 
