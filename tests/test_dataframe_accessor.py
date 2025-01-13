@@ -16,7 +16,6 @@ def test_init_with_dataframe():
         'unit_name': ['unit1', 'unit1']
     })
     df.attrs['table_type'] = 'primary_timeseries'
-    df.attrs['fields'] = df.columns
     accessor = TEEHRDataFrameAccessor(df)
     assert accessor._df is not None
     assert accessor._gdf is None
@@ -30,7 +29,6 @@ def test_init_with_geodataframe():
         'geometry': gpd.points_from_xy([0, 1], [0, 1])
     })
     gdf.attrs['table_type'] = 'locations'
-    gdf.attrs['fields'] = gdf.columns
     gdf.crs = "EPSG:4326"
     accessor = TEEHRDataFrameAccessor(gdf)
     assert accessor._df is None
@@ -48,7 +46,6 @@ def test_validate_missing_fields():
     """Test missing columns."""
     df = pd.DataFrame({'a': [1, 2, 3]})
     df.attrs['table_type'] = 'primary_timeseries'
-    df.attrs['fields'] = ['b']
     with pytest.raises(AttributeError):
         TEEHRDataFrameAccessor._validate(None, df)
 
@@ -65,15 +62,6 @@ def test_timeseries_plot():
         'unit_name': ['unit1', 'unit1']
     })
     df.attrs['table_type'] = 'primary_timeseries'
-    df.attrs['fields'] = [
-        'variable_name',
-        'configuration_name',
-        'location_id',
-        'reference_time',
-        'value_time',
-        'value',
-        'unit_name'
-        ]
     accessor = TEEHRDataFrameAccessor(df)
     accessor.timeseries_plot(output_dir=None)
 
@@ -101,7 +89,6 @@ def test_location_attributes_map():
         'geometry': gpd.points_from_xy([0, 0], [0, 0])
     })
     gdf.attrs['table_type'] = 'location_attributes'
-    gdf.attrs['fields'] = ['location_id', 'attribute_name', 'value']
     gdf.crs = "EPSG:4326"
     accessor = TEEHRDataFrameAccessor(gdf)
     accessor.location_attributes_map(output_dir=None)
@@ -115,7 +102,6 @@ def test_location_crosswalks_map():
         'geometry': gpd.points_from_xy([0, 1], [0, 1])
     })
     gdf.attrs['table_type'] = 'location_crosswalks'
-    gdf.attrs['fields'] = ['primary_location_id', 'secondary_location_id']
     gdf.crs = "EPSG:4326"
     accessor = TEEHRDataFrameAccessor(gdf)
     accessor.location_crosswalks_map(output_dir=None)
