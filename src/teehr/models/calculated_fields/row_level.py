@@ -14,14 +14,15 @@ class Month(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     Properties
     ----------
+
     - input_field_name:
         The name of the column containing the timestamp.
         Default: "value_time"
     - output_field_name:
         The name of the column to store the month.
         Default: "month"
-
     """
+
     input_field_name: str = Field(
         default="value_time"
     )
@@ -154,12 +155,16 @@ class Seasons(CalculatedFieldABC, CalculatedFieldBaseModel):
         Default: "value_time"
     - season_months:
         A dictionary mapping season names to the months that define them.
-        `Default: {
-            "winter": [12, 1, 2],
-            "spring": [3, 4, 5],
-            "summer": [6, 7, 8],
-            "fall": [9, 10, 11]
-        }`
+
+        .. code-block:: python
+
+            Default: {
+                "winter": [12, 1, 2],
+                "spring": [3, 4, 5],
+                "summer": [6, 7, 8],
+                "fall": [9, 10, 11]
+            }
+
     - output_field_name:
         The name of the column to store the season.
         Default: "season"
@@ -197,9 +202,12 @@ class Seasons(CalculatedFieldABC, CalculatedFieldBaseModel):
         )
         return sdf
 
-class RowLevelCalculatedFields():
+
+class RowLevelCalculatedFields:
     """Row level Calculated Fields.
 
+    Notes
+    -----
     Row level CFs are applied to each row in the table based on data that is in one or more
     existing fields.  These are applied per row and are not aware of the data in any other
     row (e.g., are not aware of any other timeseries values in a "timeseries").  This can be
@@ -207,13 +215,14 @@ class RowLevelCalculatedFields():
     or based on the value field (e.g., normalized flow, log flow, etc.) and many other uses.
 
     Available Calculated Fields:
+
     - Month
     - Year
     - WaterYear
     - NormalizedFlow
     - Seasons
-
     """
+
     Month = Month
     Year = Year
     WaterYear = WaterYear

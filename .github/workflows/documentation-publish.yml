@@ -3,7 +3,7 @@ name: documentation
 on:
   push:
     tags: [ 'v*.*.*' ]
-    # branches: [346-fix-user-guide-notebooks]
+    # branches: [368-fix-user-guide-docs]
 
 permissions:
   contents: write
@@ -12,16 +12,18 @@ jobs:
   docs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install sphinx==7.4.7 pydata-sphinx-theme==0.16.0 myst-nb==1.1.2 sphinx-design numpy==1.26.4 numpydoc ghp-import pickleshare -e .
+          pip install poetry
+          poetry config virtualenvs.create false
+          poetry install
           python -m teehr.utils.install_spark_jars
 
       - name: Sphinx build
@@ -31,4 +33,5 @@ jobs:
 
       - name: Run ghp-import
         run: |
+          poetry add ghp-import
           ghp-import -n -p -f -o docs/sphinx/_build/html
