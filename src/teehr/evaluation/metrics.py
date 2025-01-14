@@ -8,7 +8,7 @@ from pyspark.storagelevel import StorageLevel as psl
 from teehr.models.filters import (
     JoinedTimeseriesFilter
 )
-from teehr.models.metrics.metric_models import MetricsBasemodel
+from teehr.models.metrics.basemodels import MetricsBasemodel
 from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
 from teehr.models.table_enums import (
     JoinedTimeseriesFields

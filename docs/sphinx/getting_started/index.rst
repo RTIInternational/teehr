@@ -37,8 +37,8 @@ Or, if you do not want to install TEEHR in your own virtual environment, you can
 
 .. code-block:: bash
 
-   docker build -t teehr:v0.4.6 .
-   docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.4.6 jupyter lab --ip 0.0.0.0 $HOME
+   docker build -t teehr:v0.4.7 .
+   docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.4.7 jupyter lab --ip 0.0.0.0 $HOME
 
 Project Objectives
 ------------------
@@ -94,10 +94,10 @@ and calculating two versions of KGE (one with bootstrap uncertainty and one with
       block_size=10,
       quantiles=[0.05, 0.95]
    )
-   kge = teehr.Metrics.KlingGuptaEfficiency(bootstrap=boot)
+   kge = teehr.DeterministicMetrics.KlingGuptaEfficiency(bootstrap=boot)
    kge.output_field_name = "BS_KGE"
 
-   include_metrics = [kge, teehr.Metrics.KlingGuptaEfficiency()]
+   include_metrics = [kge, teehr.DeterministicMetrics.KlingGuptaEfficiency()]
 
    # Get the currently available fields to use in the query.
    flds = ev.joined_timeseries.field_enum()
