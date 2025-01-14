@@ -71,11 +71,18 @@ class TEEHRDataFrameAccessor:
 
         elif obj.attrs['table_type'] == 'secondary_timeseries':
 
-            #TO-DO: add validation
+            # validate using pandera schema
+            schema = schemas.secondary_timeseries_schema(type='pandas')
+            try:
+                schema.validate(obj)
+            except pa.errors.SchemaError as exc:
+                raise AttributeError(
+                    f"Pandera validation failed: {exc}"
+                )
 
-            raise NotImplementedError(
-                "Secondary_timeseries methods must be implemented."
-            )
+            # check for data
+            if obj.index.size == 0:
+                raise AttributeError("DataFrame must have data.")
 
         elif obj.attrs['table_type'] == 'joined_timeseries':
 
@@ -198,50 +205,130 @@ class TEEHRDataFrameAccessor:
         raw_schema = {}
         filtered_schema = {}
 
-        # get all unique combinations
-        for variable in unique_variables:
-            variable_df = self._df[self._df['variable_name'] == variable]
-            unique_column_vals = self._timeseries_unique_values(variable_df)
-            all_list = [
-                unique_column_vals['configuration_name'],
-                unique_column_vals['location_id'],
-                unique_column_vals['reference_time']
-                ]
-            res = list(itertools.product(*all_list))
-            raw_schema[variable] = res
+        # get all unique combinations (primary_timeseries)
+        if self._df.attrs['table_type'] == 'primary_timeseries':
+            for variable in unique_variables:
+                variable_df = self._df[self._df['variable_name'] == variable]
+                unique_column_vals = self._timeseries_unique_values(
+                    variable_df
+                    )
+                all_list = [
+                    unique_column_vals['configuration_name'],
+                    unique_column_vals['location_id'],
+                    unique_column_vals['reference_time']
+                    ]
+                res = list(itertools.product(*all_list))
+                raw_schema[variable] = res
 
-        # filter out invalid unique combinations
-        for variable in unique_variables:
-            valid_combos = []
-            invalid_combos_count = 0
-            var_df = self._df[self._df['variable_name'] == variable]
-            for combo in raw_schema[variable]:
-                if pd.isnull(combo[2]):  # reference_time is null
-                    temp = var_df[
-                        (var_df['configuration_name'] == combo[0]) &
-                        (var_df['location_id'] == combo[1])
-                        ]
-                    if not temp.empty:
-                        valid_combos.append(combo)
-                    else:
-                        invalid_combos_count += 1
-                else:  # reference_time is not null
-                    temp = var_df[
-                        (var_df['configuration_name'] == combo[0]) &
-                        (var_df['location_id'] == combo[1]) &
-                        (var_df['reference_time'] == combo[2])
-                        ]
-                    if not temp.empty:
-                        valid_combos.append(combo)
-                    else:
-                        invalid_combos_count += 1
-            filtered_schema[variable] = valid_combos
-            if invalid_combos_count > 0:
-                logger.info(f"""
-                    Removed {invalid_combos_count} invalid combinations
-                    from the schema.
-                """)
+        # get all unique combinations (secondary_timeseries)
+        else:
+            for variable in unique_variables:
+                variable_df = self._df[self._df['variable_name'] == variable]
+                unique_column_vals = self._timeseries_unique_values(
+                    variable_df
+                    )
+                all_list = [
+                    unique_column_vals['configuration_name'],
+                    unique_column_vals['location_id'],
+                    unique_column_vals['reference_time'],
+                    unique_column_vals['member']
+                    ]
+                res = list(itertools.product(*all_list))
+                raw_schema[variable] = res
 
+        # primary timeseries filter routine (no data for combo)
+        if self._df.attrs['table_type'] == 'primary_timeseries':
+            for variable in unique_variables:
+                valid_combos = []
+                invalid_combos_count = 0
+                var_df = self._df[self._df['variable_name'] == variable]
+                for combo in raw_schema[variable]:
+                    # reference_time is null
+                    if pd.isnull(combo[2]):
+                        temp = var_df[
+                            (var_df['configuration_name'] == combo[0]) &
+                            (var_df['location_id'] == combo[1])
+                            ]
+                        if not temp.empty:
+                            valid_combos.append(combo)
+                        else:
+                            invalid_combos_count += 1
+                    # reference_time is not null
+                    else:
+                        temp = var_df[
+                            (var_df['configuration_name'] == combo[0]) &
+                            (var_df['location_id'] == combo[1]) &
+                            (var_df['reference_time'] == combo[2])
+                            ]
+                        if not temp.empty:
+                            valid_combos.append(combo)
+                        else:
+                            invalid_combos_count += 1
+                filtered_schema[variable] = valid_combos
+                if invalid_combos_count > 0:
+                    logger.info(f"""
+                        Removed {invalid_combos_count} invalid combinations
+                        from the schema.
+                    """)
+
+        # secondary timeseries filter routine (no data for combo)
+        else:
+            for variable in unique_variables:
+                valid_combos = []
+                invalid_combos_count = 0
+                var_df = self._df[self._df['variable_name'] == variable]
+                for combo in raw_schema[variable]:
+                    # reference_time is null, member is null
+                    if (pd.isnull(combo[2]) and pd.isnull(combo[3])):
+                        temp = var_df[
+                            (var_df['configuration_name'] == combo[0]) &
+                            (var_df['location_id'] == combo[1])
+                            ]
+                        if not temp.empty:
+                            valid_combos.append(combo)
+                        else:
+                            invalid_combos_count += 1
+                    # reference_time is null, member is not null
+                    elif (pd.isnull(combo[2]) and not pd.isnull(combo[3])):
+                        temp = var_df[
+                            (var_df['configuration_name'] == combo[0]) &
+                            (var_df['location_id'] == combo[1]) &
+                            (var_df['member'] == combo[3])
+                            ]
+                        if not temp.empty:
+                            valid_combos.append(combo)
+                        else:
+                            invalid_combos_count += 1
+                    # reference_time is not null, member is null
+                    elif (not pd.isnull(combo[2]) and pd.isnull(combo[3])):
+                        temp = var_df[
+                            (var_df['configuration_name'] == combo[0]) &
+                            (var_df['location_id'] == combo[1]) &
+                            (var_df['reference_time'] == combo[2])
+                            ]
+                        if not temp.empty:
+                            valid_combos.append(combo)
+                        else:
+                            invalid_combos_count += 1
+                    # reference_time is not null, member is not null
+                    else:
+                        temp = var_df[
+                            (var_df['configuration_name'] == combo[0]) &
+                            (var_df['location_id'] == combo[1]) &
+                            (var_df['reference_time'] == combo[2]) &
+                            (var_df['member'] == combo[3])
+                            ]
+                        if not temp.empty:
+                            valid_combos.append(combo)
+                        else:
+                            invalid_combos_count += 1
+                filtered_schema[variable] = valid_combos
+                if invalid_combos_count > 0:
+                    logger.info(f"""
+                        Removed {invalid_combos_count} invalid combinations
+                        from the schema.
+                    """)
+        logger.info("Schema filtering complete.")
         return filtered_schema
 
     def _timeseries_format_plot(
@@ -296,62 +383,193 @@ class TEEHRDataFrameAccessor:
             height=800
             )
 
-        # add data to plot
-        for combo in schema[variable]:
-            if pd.isnull(combo[2]):  # reference_time is null
-                logger.info(f"Processing combination: {combo}")
-                logger.info(f"""
-                            reference_time == NaT, ignoring reference_time for
-                            combo: {combo}
-                            """)
-                temp = df[
-                    (df['configuration_name'] == combo[0]) &
-                    (df['location_id'] == combo[1])
-                    ]
-                if not temp.empty:
-                    logger.info(f"Plotting data for combination: {combo}")
-                    p.line(
-                        temp.value_time,
-                        temp.value,
-                        legend_label=f"{combo[0]} - {combo[1]}",
-                        line_width=1,
-                        color=next(palette)
-                    )
+        # add data to plot (primary timeseries)
+        if self._df.attrs['table_type'] == 'primary_timeseries':
+            for combo in schema[variable]:
+                # reference_time is null
+                if pd.isnull(combo[2]):
+                    logger.info(f"Processing combination: {combo}")
+                    logger.info(f"""
+                                reference_time == NaT, ignoring reference_time
+                                for combo: {combo}
+                                """)
+                    temp = df[
+                        (df['configuration_name'] == combo[0]) &
+                        (df['location_id'] == combo[1])
+                        ]
+                    if not temp.empty:
+                        logger.info(f"Plotting data for combination: {combo}")
+                        p.line(
+                            temp.value_time,
+                            temp.value,
+                            legend_label=f"{combo[0]} - {combo[1]}",
+                            line_width=1,
+                            color=next(palette)
+                        )
+                    else:
+                        logger.warning(f"No data for combination: {combo}")
+                # reference_time is not null
                 else:
-                    logger.warning(f"No data for combination: {combo}")
-            else:  # reference_time is not null
-                logger.info(f"Processing combination: {combo}")
-                temp = df[
-                    (df['configuration_name'] == combo[0]) &
-                    (df['location_id'] == combo[1]) &
-                    (df['reference_time'] == combo[2])
-                    ]
-                if not temp.empty:
-                    logger.info(f"Plotting data for combination: {combo}")
-                    p.line(
-                        temp.value_time,
-                        temp.value,
-                        legend_label=f"{combo[0]} - {combo[1]} - {combo[2]}",
-                        line_width=1,
-                        color=next(palette)
-                    )
+                    logger.info(f"Processing combination: {combo}")
+                    temp = df[
+                        (df['configuration_name'] == combo[0]) &
+                        (df['location_id'] == combo[1]) &
+                        (df['reference_time'] == combo[2])
+                        ]
+                    if not temp.empty:
+                        logger.info(f"Plotting data for combination: {combo}")
+                        label = f"{combo[0]} - {combo[1]} - {combo[2]}"
+                        p.line(
+                            temp.value_time,
+                            temp.value,
+                            legend_label=f"{label}",
+                            line_width=1,
+                            color=next(palette)
+                        )
+                    else:
+                        logger.warning(f"No data for combination: {combo}")
+
+        # add data to plot (secondary timeseries)
+        else:
+            for combo in schema[variable]:
+                # reference_time is null, member is null
+                if (pd.isnull(combo[2]) and pd.isnull(combo[3])):
+                    logger.info(f"Processing combination: {combo}")
+                    logger.info(f"""
+                                reference_time == NaT and member == None,
+                                ignoring reference_time and member for
+                                combo: {combo}
+                                """)
+                    temp = df[
+                        (df['configuration_name'] == combo[0]) &
+                        (df['location_id'] == combo[1])
+                        ]
+                    if not temp.empty:
+                        logger.info(f"Plotting data for combination: {combo}")
+                        p.line(
+                            temp.value_time,
+                            temp.value,
+                            legend_label=f"{combo[0]} - {combo[1]}",
+                            line_width=1,
+                            color=next(palette)
+                        )
+                    else:
+                        logger.warning(f"No data for combination: {combo}")
+                # reference_time is null, member is not null
+                elif (pd.isnull(combo[2]) and not pd.isnull(combo[3])):
+                    logger.info(f"Processing combination: {combo}")
+                    logger.info(f"""
+                                reference_time == NaT, ignoring reference_time
+                                for combo: {combo}
+                                """)
+                    temp = df[
+                        (df['configuration_name'] == combo[0]) &
+                        (df['location_id'] == combo[1]) &
+                        (df['member'] == combo[3])
+                        ]
+                    if not temp.empty:
+                        logger.info(f"Plotting data for combination: {combo}")
+                        label = f"{combo[0]} - {combo[1]} - {combo[3]}"
+                        p.line(
+                            temp.value_time,
+                            temp.value,
+                            legend_label=f"{label}",
+                            line_width=1,
+                            color=next(palette)
+                        )
+                    else:
+                        logger.warning(f"No data for combination: {combo}")
+                # reference_time is not null, member is null
+                elif (not pd.isnull(combo[2]) and pd.isnull(combo[3])):
+                    logger.info(f"Processing combination: {combo}")
+                    logger.info(f"""
+                                member == None, ignoring member for
+                                combo: {combo}
+                                """)
+                    temp = df[
+                        (df['configuration_name'] == combo[0]) &
+                        (df['location_id'] == combo[1]) &
+                        (df['reference_time'] == combo[2])
+                        ]
+                    if not temp.empty:
+                        logger.info(f"Plotting data for combination: {combo}")
+                        label = f"{combo[0]} - {combo[1]} - {combo[2]}"
+                        p.line(
+                            temp.value_time,
+                            temp.value,
+                            legend_label=f"{label}",
+                            line_width=1,
+                            color=next(palette)
+                        )
+                    else:
+                        logger.warning(f"No data for combination: {combo}")
+                # reference_time is not null, member is not null
                 else:
-                    logger.warning(f"No data for combination: {combo}")
+                    logger.info(f"Processing combination: {combo}")
+                    temp = df[
+                        (df['configuration_name'] == combo[0]) &
+                        (df['location_id'] == combo[1]) &
+                        (df['reference_time'] == combo[2]) &
+                        (df['member'] == combo[3])
+                        ]
+                    if not temp.empty:
+                        logger.info(f"Plotting data for combination: {combo}")
+                        label = f"{combo[0]} - {combo[1]} - {combo[2]} - \
+                                  {combo[3]}"
+                        p.line(
+                            temp.value_time,
+                            temp.value,
+                            legend_label=f"{label}",
+                            line_width=1,
+                            color=next(palette)
+                        )
+                    else:
+                        logger.warning(f"No data for combination: {combo}")
 
         # format plot
         p = self._timeseries_format_plot(plot=p)
 
-        # output figure
-        if output_dir:
-            fname = Path(output_dir, f'timeseries_plot_{variable}.html')
-            output_file(filename=fname, title=f'Timeseries Plot [{variable}]', mode='inline')
-            logger.info(f"Saving timeseries plot at {output_dir}")
-            save(p)
-            logger.info(f"Timeseries plot saved at {fname}")
+        # output figure (primary timeseries)
+        if self._df.attrs['table_type'] == 'primary_timeseries':
+            if output_dir:
+                fname = Path(
+                    output_dir,
+                    f'primary_timeseries_plot_{variable}.html'
+                    )
+                output_file(
+                    filename=fname,
+                    title=f'Primary Timeseries Plot [{variable}]',
+                    mode='inline'
+                        )
+                logger.info(f"Saving primary timeseries plot at {output_dir}")
+                save(p)
+                logger.info(f"Primary Timeseries plot saved at {fname}")
+            else:
+                logger.info("No output directory specified, displaying plot.")
+                show(p)
+                logger.info("Primary Timeseries plot displayed.")
+
+        # output figure (secondary timeseries)
         else:
-            logger.info("No output directory specified, displaying plot.")
-            show(p)
-            logger.info("Timeseries plot displayed.")
+            if output_dir:
+                fname = Path(
+                    output_dir,
+                    f'secondary_timeseries_plot_{variable}.html'
+                    )
+                output_file(
+                    filename=fname,
+                    title=f'Secondary Timeseries Plot [{variable}]',
+                    mode='inline'
+                        )
+                logger.info(
+                    f"Saving secondary timeseries plot at {output_dir}"
+                    )
+                save(p)
+                logger.info(f"Secondary Timeseries plot saved at {fname}")
+            else:
+                logger.info("No output directory specified, displaying plot.")
+                show(p)
+                logger.info("Secondary Timeseries plot displayed.")
 
         return
 
@@ -381,11 +599,12 @@ class TEEHRDataFrameAccessor:
         ensures the output directory exists before saving the plots.
         """
         # check table type
-        if self._df.attrs['table_type'] != 'primary_timeseries':
+        if (self._df.attrs['table_type'] != 'primary_timeseries' and
+           self._df.attrs['table_type'] != 'secondary_timeseries'):
             table_type_str = self.attrs['table_type']
             raise AttributeError(f"""
-                Expected table_type == "primary_timeseries",
-                got table_type = {table_type_str}
+                Expected table_type == "primary_timeseries" or
+                "secondary_timeseries", got table_type = {table_type_str}
             """)
 
         # check for output location
@@ -489,7 +708,7 @@ class TEEHRDataFrameAccessor:
         else:
             logger.info("No output directory specified, displaying plot.")
             show(p)
-            logger.info(f"Location map displayed.")
+            logger.info("Location map displayed.")
 
         return
 
@@ -681,14 +900,18 @@ class TEEHRDataFrameAccessor:
         # output figure
         if output_dir:
             fname = Path(output_dir, 'location_attributes_map.html')
-            output_file(filename=fname, title='Location Attributes Map', mode='inline')
+            output_file(
+                filename=fname,
+                title='Location Attributes Map',
+                mode='inline'
+                )
             logger.info(f"Saving location attributes map at {output_dir}")
             save(p)
             logger.info(f"Location attributes map at {fname}")
         else:
             logger.info("No output directory specified, displaying plot.")
             show(p)
-            logger.info(f"Location attributes map displayed.")
+            logger.info("Location attributes map displayed.")
 
         return
 
@@ -750,7 +973,10 @@ class TEEHRDataFrameAccessor:
         geo_data = self._location_attributes_format_points()
 
         # generate map
-        self._location_attributes_generate_map(geo_data=geo_data, output_dir=output_dir)
+        self._location_attributes_generate_map(
+            geo_data=geo_data,
+            output_dir=output_dir
+            )
 
     def _location_crosswalks_format_points(self) -> dict:
         """Generate dictionary for point plotting."""
@@ -806,14 +1032,18 @@ class TEEHRDataFrameAccessor:
         # output figure
         if output_dir:
             fname = Path(output_dir, 'location_crosswalks_map.html')
-            output_file(filename=fname, title='Location Crosswalks Map', mode='inline')
+            output_file(
+                filename=fname,
+                title='Location Crosswalks Map',
+                mode='inline'
+                )
             logger.info(f"Saving location crosswalks map at {output_dir}")
             save(p)
             logger.info(f"Location crosswalks map saved at {fname}")
         else:
             logger.info("No output directory specified, displaying plot.")
             show(p)
-            logger.info(f"Location crosswalks map displayed.")
+            logger.info("Location crosswalks map displayed.")
 
         return
 
@@ -875,4 +1105,7 @@ class TEEHRDataFrameAccessor:
         geo_data = self._location_crosswalks_format_points()
 
         # generate map
-        self._location_crosswalks_generate_map(geo_data=geo_data, output_dir=output_dir)
+        self._location_crosswalks_generate_map(
+            geo_data=geo_data,
+            output_dir=output_dir
+            )

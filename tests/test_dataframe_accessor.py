@@ -1,4 +1,4 @@
-import shutil
+"""This module tests the dataframe_accessor functions."""
 import pandas as pd
 import geopandas as gpd
 import pytest
@@ -10,6 +10,7 @@ import tempfile
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 def test_init_with_dataframe():
     """Test validation with pd.DataFrame."""
@@ -27,6 +28,7 @@ def test_init_with_dataframe():
     assert accessor._df is not None
     assert accessor._gdf is None
 
+
 def test_init_with_geodataframe():
     """Test validation with gpd.GeoDataFrame."""
     gdf = gpd.GeoDataFrame({
@@ -40,11 +42,13 @@ def test_init_with_geodataframe():
     assert accessor._df is None
     assert accessor._gdf is not None
 
+
 def test_validate_missing_table_type():
     """Test missing table type."""
     df = pd.DataFrame({'a': [1, 2, 3]})
     with pytest.raises(AttributeError):
         TEEHRDataFrameAccessor._validate(None, df)
+
 
 def test_validate_missing_fields():
     """Test missing columns."""
@@ -53,7 +57,8 @@ def test_validate_missing_fields():
     with pytest.raises(AttributeError):
         TEEHRDataFrameAccessor._validate(None, df)
 
-def test_timeseries_plot(tmpdir):
+
+def test_primary_timeseries_plot(tmpdir):
     """Test timeseries plot."""
     df = pd.DataFrame({
         'variable_name': ['var1', 'var1'],
@@ -67,7 +72,26 @@ def test_timeseries_plot(tmpdir):
     df.attrs['table_type'] = 'primary_timeseries'
     accessor = TEEHRDataFrameAccessor(df)
     accessor.timeseries_plot(output_dir=tmpdir)
-    assert Path(tmpdir, 'timeseries_plot_var1.html').is_file()
+    assert Path(tmpdir, 'primary_timeseries_plot_var1.html').is_file()
+
+
+def test_secondary_timeseries_plot(tmpdir):
+    """Test secondary timeseries plot."""
+    df = pd.DataFrame({
+        'variable_name': ['var1', 'var1'],
+        'configuration_name': ['config1', 'config1'],
+        'location_id': ['loc1', 'loc1'],
+        'reference_time': [None, None],
+        'value_time': pd.to_datetime(['2021-01-01', '2021-01-02']),
+        'value': [1, 2],
+        'unit_name': ['unit1', 'unit1'],
+        'member': [None, None]
+    })
+    df.attrs['table_type'] = 'secondary_timeseries'
+    accessor = TEEHRDataFrameAccessor(df)
+    accessor.timeseries_plot(output_dir=tmpdir)
+    assert Path(tmpdir, 'secondary_timeseries_plot_var1.html').is_file()
+
 
 def test_locations_map(tmpdir):
     """Test locations table mapping."""
@@ -82,6 +106,7 @@ def test_locations_map(tmpdir):
     accessor.locations_map(output_dir=tmpdir)
     assert Path(tmpdir, 'location_map.html').is_file()
 
+
 def test_location_attributes_map(tmpdir):
     """Test location_attributes table mapping."""
     gdf = gpd.GeoDataFrame({
@@ -95,6 +120,7 @@ def test_location_attributes_map(tmpdir):
     accessor = TEEHRDataFrameAccessor(gdf)
     accessor.location_attributes_map(output_dir=tmpdir)
     assert Path(tmpdir, 'location_attributes_map.html').is_file()
+
 
 def test_location_crosswalks_map(tmpdir):
     """Test location_crosswalks table mapping."""
@@ -118,7 +144,13 @@ if __name__ == "__main__":
         test_init_with_geodataframe()
         test_validate_missing_table_type()
         test_validate_missing_fields()
-        test_timeseries_plot(
+        test_primary_timeseries_plot(
+            tempfile.mkdtemp(
+                prefix="1-",
+                dir=tmpdir
+            )
+        )
+        test_secondary_timeseries_plot(
             tempfile.mkdtemp(
                 prefix="1-",
                 dir=tmpdir
