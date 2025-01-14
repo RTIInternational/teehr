@@ -57,17 +57,17 @@
             <creationDate>2024-11-19</creationDate>
             <creationTime>15:16:06</creationTime>
         </header>
-        <event date="2024-11-19" time="12:00:00" value="19.57" flag="0"/>
-        <event date="2024-11-19" time="18:00:00" value="17.26" flag="0"/>
-        <event date="2024-11-20" time="00:00:00" value="18.77" flag="0"/>
-        <event date="2024-11-20" time="06:00:00" value="18.22" flag="0"/>
-        <event date="2024-11-20" time="12:00:00" value="16.56" flag="0"/>
-        <event date="2024-11-20" time="18:00:00" value="18.17" flag="0"/>
-        <event date="2024-11-21" time="00:00:00" value="19.98" flag="0"/>
-        <event date="2024-11-21" time="06:00:00" value="18.01" flag="0"/>
-        <event date="2024-11-21" time="12:00:00" value="15.85" flag="0"/>
-        <event date="2024-11-21" time="18:00:00" value="17.43" flag="0"/>
-        <event date="2024-11-22" time="00:00:00" value="19.24" flag="0"/>
+        <event date="2024-11-19" time="12:00:00" value="24.46" flag="0"/>
+        <event date="2024-11-19" time="18:00:00" value="21.58" flag="0"/>
+        <event date="2024-11-20" time="00:00:00" value="23.46" flag="0"/>
+        <event date="2024-11-20" time="06:00:00" value="22.78" flag="0"/>
+        <event date="2024-11-20" time="12:00:00" value="20.70" flag="0"/>
+        <event date="2024-11-20" time="18:00:00" value="22.71" flag="0"/>
+        <event date="2024-11-21" time="00:00:00" value="24.98" flag="0"/>
+        <event date="2024-11-21" time="06:00:00" value="22.51" flag="0"/>
+        <event date="2024-11-21" time="12:00:00" value="19.81" flag="0"/>
+        <event date="2024-11-21" time="18:00:00" value="21.79" flag="0"/>
+        <event date="2024-11-22" time="00:00:00" value="24.05" flag="0"/>
     </series>
     <series>
         <header>
@@ -91,17 +91,17 @@
             <creationDate>2024-11-19</creationDate>
             <creationTime>15:16:06</creationTime>
         </header>
-        <event date="2024-11-19" time="12:00:00" value="19.57" flag="0"/>
-        <event date="2024-11-19" time="18:00:00" value="17.26" flag="0"/>
-        <event date="2024-11-20" time="00:00:00" value="18.77" flag="0"/>
-        <event date="2024-11-20" time="06:00:00" value="18.22" flag="0"/>
-        <event date="2024-11-20" time="12:00:00" value="16.56" flag="0"/>
-        <event date="2024-11-20" time="18:00:00" value="18.17" flag="0"/>
-        <event date="2024-11-21" time="00:00:00" value="19.98" flag="0"/>
-        <event date="2024-11-21" time="06:00:00" value="18.01" flag="0"/>
-        <event date="2024-11-21" time="12:00:00" value="15.85" flag="0"/>
-        <event date="2024-11-21" time="18:00:00" value="17.43" flag="0"/>
-        <event date="2024-11-22" time="00:00:00" value="19.24" flag="0"/>
+        <event date="2024-11-19" time="12:00:00" value="29.36" flag="0"/>
+        <event date="2024-11-19" time="18:00:00" value="25.89" flag="0"/>
+        <event date="2024-11-20" time="00:00:00" value="28.16" flag="0"/>
+        <event date="2024-11-20" time="06:00:00" value="27.33" flag="0"/>
+        <event date="2024-11-20" time="12:00:00" value="24.84" flag="0"/>
+        <event date="2024-11-20" time="18:00:00" value="27.26" flag="0"/>
+        <event date="2024-11-21" time="00:00:00" value="29.97" flag="0"/>
+        <event date="2024-11-21" time="06:00:00" value="27.02" flag="0"/>
+        <event date="2024-11-21" time="12:00:00" value="23.78" flag="0"/>
+        <event date="2024-11-21" time="18:00:00" value="26.15" flag="0"/>
+        <event date="2024-11-22" time="00:00:00" value="28.86" flag="0"/>
     </series>
     <series>
         <header>
@@ -125,17 +125,17 @@
             <creationDate>2024-11-19</creationDate>
             <creationTime>15:16:06</creationTime>
         </header>
-        <event date="2024-11-19" time="12:00:00" value="19.57" flag="0"/>
-        <event date="2024-11-19" time="18:00:00" value="17.26" flag="0"/>
-        <event date="2024-11-20" time="00:00:00" value="18.77" flag="0"/>
-        <event date="2024-11-20" time="06:00:00" value="18.22" flag="0"/>
-        <event date="2024-11-20" time="12:00:00" value="16.56" flag="0"/>
-        <event date="2024-11-20" time="18:00:00" value="18.17" flag="0"/>
-        <event date="2024-11-21" time="00:00:00" value="19.98" flag="0"/>
-        <event date="2024-11-21" time="06:00:00" value="18.01" flag="0"/>
-        <event date="2024-11-21" time="12:00:00" value="15.85" flag="0"/>
-        <event date="2024-11-21" time="18:00:00" value="17.43" flag="0"/>
-        <event date="2024-11-22" time="00:00:00" value="19.24" flag="0"/>
+        <event date="2024-11-19" time="12:00:00" value="34.25" flag="0"/>
+        <event date="2024-11-19" time="18:00:00" value="30.21" flag="0"/>
+        <event date="2024-11-20" time="00:00:00" value="32.85" flag="0"/>
+        <event date="2024-11-20" time="06:00:00" value="31.89" flag="0"/>
+        <event date="2024-11-20" time="12:00:00" value="28.98" flag="0"/>
+        <event date="2024-11-20" time="18:00:00" value="31.80" flag="0"/>
+        <event date="2024-11-21" time="00:00:00" value="34.97" flag="0"/>
+        <event date="2024-11-21" time="06:00:00" value="31.52" flag="0"/>
+        <event date="2024-11-21" time="12:00:00" value="27.74" flag="0"/>
+        <event date="2024-11-21" time="18:00:00" value="30.50" flag="0"/>
+        <event date="2024-11-22" time="00:00:00" value="33.67" flag="0"/>
     </series>
     <series>
         <header>
@@ -159,17 +159,17 @@
             <creationDate>2024-11-19</creationDate>
             <creationTime>15:16:06</creationTime>
         </header>
-        <event date="2024-11-19" time="12:00:00" value="19.57" flag="0"/>
-        <event date="2024-11-19" time="18:00:00" value="17.26" flag="0"/>
-        <event date="2024-11-20" time="00:00:00" value="18.77" flag="0"/>
-        <event date="2024-11-20" time="06:00:00" value="18.22" flag="0"/>
-        <event date="2024-11-20" time="12:00:00" value="16.56" flag="0"/>
-        <event date="2024-11-20" time="18:00:00" value="18.17" flag="0"/>
-        <event date="2024-11-21" time="00:00:00" value="19.98" flag="0"/>
-        <event date="2024-11-21" time="06:00:00" value="18.01" flag="0"/>
-        <event date="2024-11-21" time="12:00:00" value="15.85" flag="0"/>
-        <event date="2024-11-21" time="18:00:00" value="17.43" flag="0"/>
-        <event date="2024-11-22" time="00:00:00" value="19.24" flag="0"/>
+        <event date="2024-11-19" time="12:00:00" value="39.14" flag="0"/>
+        <event date="2024-11-19" time="18:00:00" value="34.52" flag="0"/>
+        <event date="2024-11-20" time="00:00:00" value="37.54" flag="0"/>
+        <event date="2024-11-20" time="06:00:00" value="36.44" flag="0"/>
+        <event date="2024-11-20" time="12:00:00" value="33.12" flag="0"/>
+        <event date="2024-11-20" time="18:00:00" value="36.34" flag="0"/>
+        <event date="2024-11-21" time="00:00:00" value="39.96" flag="0"/>
+        <event date="2024-11-21" time="06:00:00" value="36.02" flag="0"/>
+        <event date="2024-11-21" time="12:00:00" value="31.70" flag="0"/>
+        <event date="2024-11-21" time="18:00:00" value="34.86" flag="0"/>
+        <event date="2024-11-22" time="00:00:00" value="38.48" flag="0"/>
     </series>
     <series>
         <header>
@@ -193,17 +193,17 @@
             <creationDate>2024-11-19</creationDate>
             <creationTime>15:16:06</creationTime>
         </header>
-        <event date="2024-11-19" time="12:00:00" value="19.57" flag="0"/>
-        <event date="2024-11-19" time="18:00:00" value="17.26" flag="0"/>
-        <event date="2024-11-20" time="00:00:00" value="18.77" flag="0"/>
-        <event date="2024-11-20" time="06:00:00" value="18.22" flag="0"/>
-        <event date="2024-11-20" time="12:00:00" value="16.56" flag="0"/>
-        <event date="2024-11-20" time="18:00:00" value="18.17" flag="0"/>
-        <event date="2024-11-21" time="00:00:00" value="19.98" flag="0"/>
-        <event date="2024-11-21" time="06:00:00" value="18.01" flag="0"/>
-        <event date="2024-11-21" time="12:00:00" value="15.85" flag="0"/>
-        <event date="2024-11-21" time="18:00:00" value="17.43" flag="0"/>
-        <event date="2024-11-22" time="00:00:00" value="19.24" flag="0"/>
+        <event date="2024-11-19" time="12:00:00" value="44.03" flag="0"/>
+        <event date="2024-11-19" time="18:00:00" value="38.84" flag="0"/>
+        <event date="2024-11-20" time="00:00:00" value="42.23" flag="0"/>
+        <event date="2024-11-20" time="06:00:00" value="41.00" flag="0"/>
+        <event date="2024-11-20" time="12:00:00" value="37.26" flag="0"/>
+        <event date="2024-11-20" time="18:00:00" value="40.88" flag="0"/>
+        <event date="2024-11-21" time="00:00:00" value="44.96" flag="0"/>
+        <event date="2024-11-21" time="06:00:00" value="40.52" flag="0"/>
+        <event date="2024-11-21" time="12:00:00" value="35.66" flag="0"/>
+        <event date="2024-11-21" time="18:00:00" value="39.22" flag="0"/>
+        <event date="2024-11-22" time="00:00:00" value="43.29" flag="0"/>
     </series>
     <series>
         <header>
@@ -227,17 +227,17 @@
             <creationDate>2024-11-19</creationDate>
             <creationTime>15:16:06</creationTime>
         </header>
-        <event date="2024-11-19" time="12:00:00" value="19.57" flag="0"/>
-        <event date="2024-11-19" time="18:00:00" value="17.26" flag="0"/>
-        <event date="2024-11-20" time="00:00:00" value="18.77" flag="0"/>
-        <event date="2024-11-20" time="06:00:00" value="18.22" flag="0"/>
-        <event date="2024-11-20" time="12:00:00" value="16.56" flag="0"/>
-        <event date="2024-11-20" time="18:00:00" value="18.17" flag="0"/>
-        <event date="2024-11-21" time="00:00:00" value="19.98" flag="0"/>
-        <event date="2024-11-21" time="06:00:00" value="18.01" flag="0"/>
-        <event date="2024-11-21" time="12:00:00" value="15.85" flag="0"/>
-        <event date="2024-11-21" time="18:00:00" value="17.43" flag="0"/>
-        <event date="2024-11-22" time="00:00:00" value="19.24" flag="0"/>
+        <event date="2024-11-19" time="12:00:00" value="48.93" flag="0"/>
+        <event date="2024-11-19" time="18:00:00" value="43.15" flag="0"/>
+        <event date="2024-11-20" time="00:00:00" value="46.93" flag="0"/>
+        <event date="2024-11-20" time="06:00:00" value="45.55" flag="0"/>
+        <event date="2024-11-20" time="12:00:00" value="41.40" flag="0"/>
+        <event date="2024-11-20" time="18:00:00" value="45.43" flag="0"/>
+        <event date="2024-11-21" time="00:00:00" value="49.95" flag="0"/>
+        <event date="2024-11-21" time="06:00:00" value="45.03" flag="0"/>
+        <event date="2024-11-21" time="12:00:00" value="39.63" flag="0"/>
+        <event date="2024-11-21" time="18:00:00" value="43.58" flag="0"/>
+        <event date="2024-11-22" time="00:00:00" value="48.10" flag="0"/>
     </series>
     <series>
         <header>
@@ -261,17 +261,17 @@
             <creationDate>2024-11-19</creationDate>
             <creationTime>15:16:06</creationTime>
         </header>
-        <event date="2024-11-19" time="12:00:00" value="19.57" flag="0"/>
-        <event date="2024-11-19" time="18:00:00" value="17.26" flag="0"/>
-        <event date="2024-11-20" time="00:00:00" value="18.77" flag="0"/>
-        <event date="2024-11-20" time="06:00:00" value="18.22" flag="0"/>
-        <event date="2024-11-20" time="12:00:00" value="16.56" flag="0"/>
-        <event date="2024-11-20" time="18:00:00" value="18.17" flag="0"/>
-        <event date="2024-11-21" time="00:00:00" value="19.98" flag="0"/>
-        <event date="2024-11-21" time="06:00:00" value="18.01" flag="0"/>
-        <event date="2024-11-21" time="12:00:00" value="15.85" flag="0"/>
-        <event date="2024-11-21" time="18:00:00" value="17.43" flag="0"/>
-        <event date="2024-11-22" time="00:00:00" value="19.24" flag="0"/>
+        <event date="2024-11-19" time="12:00:00" value="53.82" flag="0"/>
+        <event date="2024-11-19" time="18:00:00" value="47.47" flag="0"/>
+        <event date="2024-11-20" time="00:00:00" value="51.62" flag="0"/>
+        <event date="2024-11-20" time="06:00:00" value="50.11" flag="0"/>
+        <event date="2024-11-20" time="12:00:00" value="45.54" flag="0"/>
+        <event date="2024-11-20" time="18:00:00" value="49.97" flag="0"/>
+        <event date="2024-11-21" time="00:00:00" value="54.95" flag="0"/>
+        <event date="2024-11-21" time="06:00:00" value="49.53" flag="0"/>
+        <event date="2024-11-21" time="12:00:00" value="43.59" flag="0"/>
+        <event date="2024-11-21" time="18:00:00" value="47.93" flag="0"/>
+        <event date="2024-11-22" time="00:00:00" value="52.91" flag="0"/>
     </series>
     <series>
         <header>
@@ -295,16 +295,16 @@
             <creationDate>2024-11-19</creationDate>
             <creationTime>15:16:06</creationTime>
         </header>
-        <event date="2024-11-19" time="12:00:00" value="19.57" flag="0"/>
-        <event date="2024-11-19" time="18:00:00" value="17.26" flag="0"/>
-        <event date="2024-11-20" time="00:00:00" value="18.77" flag="0"/>
-        <event date="2024-11-20" time="06:00:00" value="18.22" flag="0"/>
-        <event date="2024-11-20" time="12:00:00" value="16.56" flag="0"/>
-        <event date="2024-11-20" time="18:00:00" value="18.17" flag="0"/>
-        <event date="2024-11-21" time="00:00:00" value="19.98" flag="0"/>
-        <event date="2024-11-21" time="06:00:00" value="18.01" flag="0"/>
-        <event date="2024-11-21" time="12:00:00" value="15.85" flag="0"/>
-        <event date="2024-11-21" time="18:00:00" value="17.43" flag="0"/>
-        <event date="2024-11-22" time="00:00:00" value="19.24" flag="0"/>
+        <event date="2024-11-19" time="12:00:00" value="58.71" flag="0"/>
+        <event date="2024-11-19" time="18:00:00" value="51.78" flag="0"/>
+        <event date="2024-11-20" time="00:00:00" value="56.31" flag="0"/>
+        <event date="2024-11-20" time="06:00:00" value="54.66" flag="0"/>
+        <event date="2024-11-20" time="12:00:00" value="49.68" flag="0"/>
+        <event date="2024-11-20" time="18:00:00" value="54.51" flag="0"/>
+        <event date="2024-11-21" time="00:00:00" value="59.94" flag="0"/>
+        <event date="2024-11-21" time="06:00:00" value="54.03" flag="0"/>
+        <event date="2024-11-21" time="12:00:00" value="47.55" flag="0"/>
+        <event date="2024-11-21" time="18:00:00" value="52.29" flag="0"/>
+        <event date="2024-11-22" time="00:00:00" value="57.72" flag="0"/>
     </series>
 </TimeSeries>

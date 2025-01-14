@@ -5,10 +5,13 @@ import pandas as pd
 import geopandas as gpd
 import logging
 from pathlib import Path
+import pandera as pa
 
 from bokeh.plotting import figure, save, output_file, show, ColumnDataSource
 from bokeh.palettes import colorblind
 import xyzservices.providers as xyz
+
+import teehr.models.pandera_dataframe_schemas as schemas
 
 logger = logging.getLogger(__name__)
 
@@ -51,23 +54,28 @@ class TEEHRDataFrameAccessor:
                 "No DataFrame Attribute 'table_type' defined."
                 )
 
-        if obj.attrs['table_type'] == 'timeseries':
+        if obj.attrs['table_type'] == 'primary_timeseries':
 
-            # check for expected fields
-            fields_list = obj.attrs['fields']
-            missing = []
-            for field in fields_list:
-                if field not in obj.columns:
-                    missing.append(field)
-            if len(missing) != 0:
-                raise AttributeError(f"""
-                    DataFrame with table_type == 'timeseries' is missing
-                    expected column(s): {missing}
-                """)
+            # validate using pandera schema
+            schema = schemas.primary_timeseries_schema(type='pandas')
+            try:
+                schema.validate(obj)
+            except pa.errors.SchemaError as exc:
+                raise AttributeError(
+                    f"Pandera validation failed: {exc}"
+                )
 
             # check for data
             if obj.index.size == 0:
                 raise AttributeError("DataFrame must have data.")
+
+        elif obj.attrs['table_type'] == 'secondary_timeseries':
+
+            #TO-DO: add validation
+
+            raise NotImplementedError(
+                "Secondary_timeseries methods must be implemented."
+            )
 
         elif obj.attrs['table_type'] == 'joined_timeseries':
 
@@ -79,17 +87,14 @@ class TEEHRDataFrameAccessor:
 
         elif obj.attrs['table_type'] == 'locations':
 
-            # check for expected fields
-            fields_list = obj.attrs['fields']
-            missing = []
-            for field in fields_list:
-                if field not in obj.columns:
-                    missing.append(field)
-            if len(missing) != 0:
-                raise AttributeError(f"""
-                    DataFrame with table_type == 'locations' is missing
-                    expected column(s): {missing}
-                """)
+            # validate using pandera schema
+            schema = schemas.locations_schema(type='pandas')
+            try:
+                schema.validate(obj)
+            except pa.errors.SchemaError as exc:
+                raise AttributeError(
+                    f"Pandera validation failed: {exc}"
+                )
 
             # check for data
             if obj.index.size == 0:
@@ -108,17 +113,14 @@ class TEEHRDataFrameAccessor:
 
         elif obj.attrs['table_type'] == 'location_attributes':
 
-            # check for expected fields
-            fields_list = obj.attrs['fields']
-            missing = []
-            for field in fields_list:
-                if field not in obj.columns:
-                    missing.append(field)
-            if len(missing) != 0:
-                raise AttributeError(f"""
-                    DataFrame with table_type == 'location_attributes' is
-                    missing expected column(s): {missing}
-                """)
+            # validate using pandera schema
+            schema = schemas.location_attributes_schema(type='pandas')
+            try:
+                schema.validate(obj)
+            except pa.errors.SchemaError as exc:
+                raise AttributeError(
+                    f"Pandera validation failed: {exc}"
+                )
 
             # check for data
             if obj.index.size == 0:
@@ -137,17 +139,14 @@ class TEEHRDataFrameAccessor:
 
         elif obj.attrs['table_type'] == 'location_crosswalks':
 
-            # check for expected fields
-            fields_list = obj.attrs['fields']
-            missing = []
-            for field in fields_list:
-                if field not in obj.columns:
-                    missing.append(field)
-            if len(missing) != 0:
-                raise AttributeError(f"""
-                    DataFrame with table_type == 'location_crosswalks' is
-                    missing expected column(s): {missing}
-                """)
+            # validate using pandera schema
+            schema = schemas.location_crosswalks_schema(type='pandas')
+            try:
+                schema.validate(obj)
+            except pa.errors.SchemaError as exc:
+                raise AttributeError(
+                    f"Pandera validation failed: {exc}"
+                )
 
             # check for data
             if obj.index.size == 0:
@@ -343,14 +342,16 @@ class TEEHRDataFrameAccessor:
         p = self._timeseries_format_plot(plot=p)
 
         # output figure
-        if output_dir is not None:
+        if output_dir:
             fname = Path(output_dir, f'timeseries_plot_{variable}.html')
-            output_file(filename=fname, title=f'Timeseries Plot [{variable}]')
+            output_file(filename=fname, title=f'Timeseries Plot [{variable}]', mode='inline')
             logger.info(f"Saving timeseries plot at {output_dir}")
             save(p)
+            logger.info(f"Timeseries plot saved at {fname}")
         else:
             logger.info("No output directory specified, displaying plot.")
             show(p)
+            logger.info("Timeseries plot displayed.")
 
         return
 
@@ -375,15 +376,15 @@ class TEEHRDataFrameAccessor:
 
         Notes
         -----
-        This method calls `_timeseries_schema` to get the plotting
-        schema and `_timeseries_generate_plot` to generate each plot. It
+        This method calls ``_timeseries_schema`` to get the plotting
+        schema and ``_timeseries_generate_plot`` to generate each plot. It
         ensures the output directory exists before saving the plots.
         """
         # check table type
-        if self._df.attrs['table_type'] != 'timeseries':
+        if self._df.attrs['table_type'] != 'primary_timeseries':
             table_type_str = self.attrs['table_type']
             raise AttributeError(f"""
-                Expected table_type == "timeseries",
+                Expected table_type == "primary_timeseries",
                 got table_type = {table_type_str}
             """)
 
@@ -479,14 +480,16 @@ class TEEHRDataFrameAccessor:
             )
 
         # output figure
-        if output_dir is not None:
+        if output_dir:
             fname = Path(output_dir, 'location_map.html')
-            output_file(filename=fname, title='Location Map')
+            output_file(filename=fname, title='Location Map', mode='inline')
             logger.info(f"Saving location map at {output_dir}")
             save(p)
+            logger.info(f"Location map saved at {fname}")
         else:
             logger.info("No output directory specified, displaying plot.")
             show(p)
+            logger.info(f"Location map displayed.")
 
         return
 
@@ -676,14 +679,16 @@ class TEEHRDataFrameAccessor:
             )
 
         # output figure
-        if output_dir is not None:
+        if output_dir:
             fname = Path(output_dir, 'location_attributes_map.html')
-            output_file(filename=fname, title='Location Attributes Map')
-            logger.info(f"Saving location map at {output_dir}")
+            output_file(filename=fname, title='Location Attributes Map', mode='inline')
+            logger.info(f"Saving location attributes map at {output_dir}")
             save(p)
+            logger.info(f"Location attributes map at {fname}")
         else:
             logger.info("No output directory specified, displaying plot.")
             show(p)
+            logger.info(f"Location attributes map displayed.")
 
         return
 
@@ -712,9 +717,10 @@ class TEEHRDataFrameAccessor:
         Notes
         -----
         This function relies on the following methods:
-        - `_location_attributes_format_points`: Formats the point data.
-        - `_location_attributes_generate_map`: Generates the map using the
-                                               formatted data.
+
+        - ``_location_attributes_format_points``: Formats the point data.
+        - ``_location_attributes_generate_map``: Generates the map using the
+                                                 formatted data.
 
         Examples
         --------
@@ -744,7 +750,7 @@ class TEEHRDataFrameAccessor:
         geo_data = self._location_attributes_format_points()
 
         # generate map
-        self._location_attributes_generate_map(geo_data=geo_data)
+        self._location_attributes_generate_map(geo_data=geo_data, output_dir=output_dir)
 
     def _location_crosswalks_format_points(self) -> dict:
         """Generate dictionary for point plotting."""
@@ -798,14 +804,16 @@ class TEEHRDataFrameAccessor:
             )
 
         # output figure
-        if output_dir is not None:
+        if output_dir:
             fname = Path(output_dir, 'location_crosswalks_map.html')
-            output_file(filename=fname, title='Location Crosswalks Map')
-            logger.info(f"Saving location map at {output_dir}")
+            output_file(filename=fname, title='Location Crosswalks Map', mode='inline')
+            logger.info(f"Saving location crosswalks map at {output_dir}")
             save(p)
+            logger.info(f"Location crosswalks map saved at {fname}")
         else:
             logger.info("No output directory specified, displaying plot.")
             show(p)
+            logger.info(f"Location crosswalks map displayed.")
 
         return
 
@@ -834,8 +842,9 @@ class TEEHRDataFrameAccessor:
         Notes
         -----
         This method relies on the following methods:
-        - `_location_crosswalks_format_points`: Assembles the point data.
-        - `_location_crosswalks_generate_map`: Generates the map using the
+
+        - ``_location_crosswalks_format_points``: Assembles the point data.
+        - ``_location_crosswalks_generate_map``: Generates the map using the
                                                assembled data.
 
         Examples
@@ -866,4 +875,4 @@ class TEEHRDataFrameAccessor:
         geo_data = self._location_crosswalks_format_points()
 
         # generate map
-        self._location_crosswalks_generate_map(geo_data=geo_data)
+        self._location_crosswalks_generate_map(geo_data=geo_data, output_dir=output_dir)

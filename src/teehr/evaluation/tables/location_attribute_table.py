@@ -74,7 +74,7 @@ class LocationAttributeTable(BaseTable):
         """Return Pandas DataFrame for Location Attributes."""
         self._check_load_table()
         df = self.df.toPandas()
-        df.attrs['table_type'] = 'location_attributes'
+        df.attrs['table_type'] = self.name
         df.attrs['fields'] = self.fields()
         return df
 

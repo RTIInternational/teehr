@@ -9,7 +9,7 @@ from arch.bootstrap import (
     CircularBlockBootstrap,
 )
 
-from teehr.models.metrics.metric_models import MetricsBasemodel
+from teehr.models.metrics.basemodels import MetricsBasemodel
 from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 
 logger = logging.getLogger(__name__)

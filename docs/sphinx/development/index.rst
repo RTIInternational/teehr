@@ -4,7 +4,7 @@
 Developer Guide
 ===============
 
-Setting uo the Development Environment
+Setting up the Development Environment
 --------------------------------------
 Setting up the development environment is a critical step in contributing to TEEHR.
 This guide will walk you through the steps to set up a development environment for TEEHR.
@@ -19,18 +19,22 @@ Install the prerequisites:
 ```bash
 git clone https://github.com/RTIInternational/teehr.git
 ```
+
 2. Navigate to the TEEHR directory:
 ```bash
 cd teehr
 ```
+
 3. Create a new virtual environment using poetry:
 ```bash
 poetry install
 ```
+
 4. Activate the virtual environment:
 ```bash
 poetry shell
 ```
+
 5. Install the required JAR files for Spark:
 ```bash
 python download_spark_jars.py
@@ -81,7 +85,6 @@ installed, so you need to make sure you add ``src/`` to your Python path.
 There are two way to do this below, but depending on your development
 environment, your milage may vary.
 
-``TODO: Poetry docs``
 
 Release Process
 ^^^^^^^^^^^^^^^
@@ -89,11 +92,11 @@ This document describes the release process which has some manual steps to compl
 
 Create branch with the following updated to the new version (find and replace version number):
 
-- `version.txt`
-- `README.md`
-- `pyproject.toml`
-- `src/teehr/__init__.py`
-- `docs/sphinx/getting_started/index.rst`
+- ``version.txt``
+- ``README.md``
+- ``pyproject.toml``
+- ``src/teehr/__init__.py``
+- ``docs/sphinx/getting_started/index.rst``
 
 Update the changelog at ``docs/sphinx/changelog/index.rst`` to reflect the changes included in the release.
 
@@ -132,6 +135,12 @@ Check your files locally in a browser such as Firefox:
 .. code-block:: bash
 
    firefox _build/html/index.html &
+
+Or you can use sphinx-autobuild from the repo root directory to automatically rebuild the docs when you make changes:
+
+.. code-block:: bash
+
+   sphinx-autobuild docs/sphinx docs/sphinx/_build/html/
 
 Some pre-commit hooks are configured automatically run when you commit some code.
 These check for things like large files, docstring formatting, added whitespace, etc.

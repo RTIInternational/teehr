@@ -1,7 +1,7 @@
 """Test the import_timeseries function in the Evaluation class."""
 from pathlib import Path
 from teehr import Evaluation
-from teehr import Metrics as m
+from teehr import DeterministicMetrics as m
 from teehr.models.pydantic_table_models import (
     Configuration,
     Unit,
@@ -317,7 +317,7 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
     eval.primary_timeseries.load_parquet(
         in_path=primary_filepath
     )
-    eval.joined_timeseries.create(execute_udf=False)
+    eval.joined_timeseries.create(execute_scripts=False)
     # df = eval.joined_timeseries.to_pandas()
 
     # Now, metrics.

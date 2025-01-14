@@ -104,7 +104,7 @@ def test_create_joined_timeseries(tmpdir):
     )
 
     # Create the joined timeseries
-    eval.joined_timeseries.create(add_attrs=True, execute_udf=True)
+    eval.joined_timeseries.create(add_attrs=True, execute_scripts=True)
 
     columns = eval.joined_timeseries.to_sdf().columns
     expected_columns = [
@@ -124,10 +124,11 @@ def test_create_joined_timeseries(tmpdir):
         'water_year',
         'configuration_name',
         'variable_name',
-        'member'
+        'member',
+        'season'
     ]
 
-    assert len(columns) == 17
+    assert len(columns) == len(expected_columns)
     assert sorted(columns) == sorted(expected_columns)
 
 

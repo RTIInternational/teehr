@@ -1,37 +1,7 @@
-"""Contains UDFs for metric calculations for use in Spark queries."""
+"""Contains UDFs for deterministic metric calculations in Spark queries."""
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-
-
-def count(p: pd.Series) -> float:
-    """Count."""
-    return len(p)
-
-
-def minimum(p: pd.Series) -> float:
-    """Minimum."""
-    return np.min(p)
-
-
-def maximum(p: pd.Series) -> float:
-    """Maximum."""
-    return np.max(p)
-
-
-def average(p: pd.Series) -> float:
-    """Average."""
-    return np.mean(p)
-
-
-def sum(p: pd.Series) -> float:
-    """Sum."""
-    return np.sum(p)
-
-
-def variance(p: pd.Series) -> float:
-    """Variance."""
-    return np.var(p)
 
 
 def mean_error(p: pd.Series, s: pd.Series) -> float:
@@ -132,9 +102,9 @@ def nash_sutcliffe_efficiency(p: pd.Series, s: pd.Series) -> float:
         return np.nan
     numerator = np.sum(np.subtract(p, s) ** 2)
     denominator = np.sum(np.subtract(p, np.mean(p)) ** 2)
-    if numerator == np.nan or denominator  == np.nan:
+    if numerator == np.nan or denominator == np.nan:
         return np.nan
-    if denominator  == 0:
+    if denominator == 0:
         return np.nan
     return 1.0 - numerator/denominator
 
@@ -147,9 +117,9 @@ def nash_sutcliffe_efficiency_normalized(p: pd.Series, s: pd.Series) -> float:
         return np.nan
     numerator = np.sum(np.subtract(p, s) ** 2)
     denominator = np.sum(np.subtract(p, np.mean(p)) ** 2)
-    if numerator == np.nan or denominator  == np.nan:
+    if numerator == np.nan or denominator == np.nan:
         return np.nan
-    if denominator  == 0:
+    if denominator == 0:
         return np.nan
     return 1.0 / (1.0 + numerator/denominator)
 
@@ -283,19 +253,3 @@ def max_value_timedelta(
     td = s_max_time - p_max_time
 
     return td.total_seconds()
-
-
-def max_value_time(
-    p: pd.Series,
-    value_time: pd.Series
-) -> pd.Timestamp:
-    """Max value time."""
-    return value_time[p.idxmax()]
-
-
-# def secondary_max_value_time(
-#     s: pd.Series,
-#     value_time: pd.Series
-# ) -> pd.Timestamp:
-#     """Secondary max value time."""
-#     return value_time[s.idxmax()]

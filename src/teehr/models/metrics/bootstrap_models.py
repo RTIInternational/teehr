@@ -6,12 +6,10 @@ from numpy.random import RandomState
 from pydantic import Field
 
 import teehr.metrics.bootstrap_funcs as bootstrap_funcs
-from teehr.models.metrics.metric_models import MetricsBasemodel
+from teehr.models.metrics.basemodels import BootstrapBasemodel
 
 
-# TODO: Extend an abstract base class for bootstrapping classes to ensure
-# that the necessary fields are included?  For Metrics too?
-class GumbootModel(MetricsBasemodel):
+class Gumboot(BootstrapBasemodel):
     """Gumboot bootstrapping.
 
     This is a partial implementation of the Gumboot R package, a
@@ -68,7 +66,7 @@ class GumbootModel(MetricsBasemodel):
     func: Callable = Field(bootstrap_funcs.create_gumboot_func, frozen=True)
 
 
-class CircularBlockModel(MetricsBasemodel):
+class CircularBlock(BootstrapBasemodel):
     """CircularBlock bootstrapping from the arch python package.
 
     Parameters
@@ -107,7 +105,7 @@ class CircularBlockModel(MetricsBasemodel):
     )
 
 
-class StationaryModel(MetricsBasemodel):
+class Stationary(BootstrapBasemodel):
     """Stationary bootstrapping from the arch python package.
 
     Parameters
@@ -147,8 +145,19 @@ class StationaryModel(MetricsBasemodel):
 
 
 class Bootstrappers:
-    """Container class for bootstrap sampling classes."""
+    """Container class for bootstrap sampling classes.
 
-    Gumboot = GumbootModel
-    CircularBlock = CircularBlockModel
-    Stationary = StationaryModel
+    Notes
+    -----
+    Bootstrapping is a resampling method used to estimate uncertainty
+    in metric results. The bootstrapping methods available in TEEHR
+    include:
+
+    - Gumboot
+    - CircularBlock
+    - Stationary
+    """
+
+    Gumboot = Gumboot
+    CircularBlock = CircularBlock
+    Stationary = Stationary
