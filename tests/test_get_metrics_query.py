@@ -419,15 +419,15 @@ def test_persisting(tmpdir):
         order_by=["primary_location_id", "month"],
         group_by=["primary_location_id", "month"],
         include_metrics=[
-            Metrics.KlingGuptaEfficiency(),
-            Metrics.NashSutcliffeEfficiency(),
-            Metrics.RelativeBias()
+            DeterministicMetrics.KlingGuptaEfficiency(),
+            DeterministicMetrics.NashSutcliffeEfficiency(),
+            DeterministicMetrics.RelativeBias()
         ]
     ).query(
         order_by=["primary_location_id"],
         group_by=["primary_location_id"],
         include_metrics=[
-            Metrics.Average(
+            SignatureMetrics.Average(
                 input_field_names="relative_bias",
                 output_field_name="primary_average"
             )
