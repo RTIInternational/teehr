@@ -278,7 +278,8 @@ class TEEHRDataFrameAccessor:
                     if pd.isnull(combo[2]):
                         temp = var_df[
                             (var_df['configuration_name'] == combo[0]) &
-                            (var_df['location_id'] == combo[1])
+                            (var_df['location_id'] == combo[1]) &
+                            (var_df['reference_time'].isnull())
                             ]
                         if not temp.empty:
                             valid_combos.append(combo)
@@ -313,7 +314,9 @@ class TEEHRDataFrameAccessor:
                     if (pd.isnull(combo[2]) and pd.isnull(combo[3])):
                         temp = var_df[
                             (var_df['configuration_name'] == combo[0]) &
-                            (var_df['location_id'] == combo[1])
+                            (var_df['location_id'] == combo[1]) &
+                            (var_df['reference_time'].isnull()) &
+                            (var_df['member'].isnull())
                             ]
                         if not temp.empty:
                             valid_combos.append(combo)
@@ -324,6 +327,7 @@ class TEEHRDataFrameAccessor:
                         temp = var_df[
                             (var_df['configuration_name'] == combo[0]) &
                             (var_df['location_id'] == combo[1]) &
+                            (var_df['reference_time'].isnull()) &
                             (var_df['member'] == combo[3])
                             ]
                         if not temp.empty:
@@ -335,7 +339,8 @@ class TEEHRDataFrameAccessor:
                         temp = var_df[
                             (var_df['configuration_name'] == combo[0]) &
                             (var_df['location_id'] == combo[1]) &
-                            (var_df['reference_time'] == combo[2])
+                            (var_df['reference_time'] == combo[2]) &
+                            (var_df['member'].isnull())
                             ]
                         if not temp.empty:
                             valid_combos.append(combo)
@@ -426,7 +431,8 @@ class TEEHRDataFrameAccessor:
                                 """)
                     temp = df[
                         (df['configuration_name'] == combo[0]) &
-                        (df['location_id'] == combo[1])
+                        (df['location_id'] == combo[1]) &
+                        (df['reference_time'].isnull())
                         ]
                     if not temp.empty:
                         logger.info(f"Plotting data for combination: {combo}")
@@ -473,7 +479,9 @@ class TEEHRDataFrameAccessor:
                                 """)
                     temp = df[
                         (df['configuration_name'] == combo[0]) &
-                        (df['location_id'] == combo[1])
+                        (df['location_id'] == combo[1]) &
+                        (df['reference_time'].isnull()) &
+                        (df['member'].isnull())
                         ]
                     if not temp.empty:
                         logger.info(f"Plotting data for combination: {combo}")
@@ -496,6 +504,7 @@ class TEEHRDataFrameAccessor:
                     temp = df[
                         (df['configuration_name'] == combo[0]) &
                         (df['location_id'] == combo[1]) &
+                        (df['reference_time'].isnull()) &
                         (df['member'] == combo[3])
                         ]
                     if not temp.empty:
@@ -520,7 +529,8 @@ class TEEHRDataFrameAccessor:
                     temp = df[
                         (df['configuration_name'] == combo[0]) &
                         (df['location_id'] == combo[1]) &
-                        (df['reference_time'] == combo[2])
+                        (df['reference_time'] == combo[2]) &
+                        (df['member'].isnull())
                         ]
                     if not temp.empty:
                         logger.info(f"Plotting data for combination: {combo}")

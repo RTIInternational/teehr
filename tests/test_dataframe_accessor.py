@@ -64,7 +64,7 @@ def test_primary_timeseries_plot(tmpdir):
         'variable_name': ['var1', 'var1'],
         'configuration_name': ['config1', 'config1'],
         'location_id': ['loc1', 'loc1'],
-        'reference_time': [None, None],
+        'reference_time': ['2021-01-01', None],
         'value_time': pd.to_datetime(['2021-01-01', '2021-01-02']),
         'value': [1, 2],
         'unit_name': ['unit1', 'unit1']
@@ -81,11 +81,11 @@ def test_secondary_timeseries_plot(tmpdir):
         'variable_name': ['var1', 'var1'],
         'configuration_name': ['config1', 'config1'],
         'location_id': ['loc1', 'loc1'],
-        'reference_time': [None, None],
+        'reference_time': ['2021-01-01', None],
         'value_time': pd.to_datetime(['2021-01-01', '2021-01-02']),
         'value': [1, 2],
         'unit_name': ['unit1', 'unit1'],
-        'member': [None, None]
+        'member': [None, 'member1']
     })
     df.attrs['table_type'] = 'secondary_timeseries'
     accessor = TEEHRDataFrameAccessor(df)
