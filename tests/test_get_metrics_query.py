@@ -1,4 +1,6 @@
 """Test evaluation class."""
+import time
+
 from teehr import Configuration
 from teehr import DeterministicMetrics, ProbabilisticMetrics, SignatureMetrics
 from teehr import Operators as ops
@@ -409,40 +411,6 @@ def test_metric_chaining(tmpdir):
     )
 
 
-def test_persisting(tmpdir):
-    """Test get_metrics method with chaining."""
-    # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir)
-
-    # Test chaining.
-    metrics_obj = ev.metrics.query(
-        order_by=["primary_location_id", "month"],
-        group_by=["primary_location_id", "month"],
-        include_metrics=[
-            DeterministicMetrics.KlingGuptaEfficiency(),
-            DeterministicMetrics.NashSutcliffeEfficiency(),
-            DeterministicMetrics.RelativeBias()
-        ]
-    ).query(
-        order_by=["primary_location_id"],
-        group_by=["primary_location_id"],
-        include_metrics=[
-            SignatureMetrics.Average(
-                input_field_names="relative_bias",
-                output_field_name="primary_average"
-            )
-        ]
-    ).persist()
-
-    pass
-
-    # assert isinstance(metrics_df, pd.DataFrame)
-    # assert metrics_df.index.size == 3
-    # assert all(
-    #     metrics_df.columns == ["primary_location_id", "primary_average"]
-    # )
-
-
 def test_ensemble_metrics(tmpdir):
     """Test get_metrics method with ensemble metrics."""
     usgs_location = Path(
@@ -512,61 +480,197 @@ def test_ensemble_metrics(tmpdir):
     assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 35.627174)
 
 
+def test_persisting(tmpdir):
+    """Test get_metrics method with chaining."""
+    ev = Evaluation("s3a://ciroh-rti-public-data/teehr-data-warehouse/v0_4_evaluations/e1_camels_daily_streamflow")
+
+    # metrics_ds = ev.metrics.query(
+    #     order_by=["primary_location_id"],
+    #     group_by=["primary_location_id"],
+    #     include_metrics=[
+    #         DeterministicMetrics.KlingGuptaEfficiency(),
+    #     ]
+    # )
+
+    # t0 = time.time()
+    # df1 = ev.joined_timeseries.query("primary_location_id = 'usgs-01013500'").to_pandas()
+    # print(f"First query: {time.time() - t0}")
+
+    # # usgs-14316700
+
+    # t0 = time.time()
+    # df2 = ev.joined_timeseries.query("primary_location_id = 'usgs-14316700'").to_pandas()
+    # print(f"Second query: {time.time() - t0}")
+
+    # t0 = time.time()
+    # jt_tbl = ev.joined_timeseries
+    # df1 = jt_tbl.query("primary_location_id = 'usgs-01013500'").to_pandas()
+    # print(f"First query: {time.time() - t0}")
+
+    # # Note: The second query here is 2x faster than the second query above.
+    # t0 = time.time()
+    # df2 = jt_tbl.query("primary_location_id = 'usgs-14316700'").to_pandas()
+    # print(f"Second query: {time.time() - t0}")
+
+    # pass
+
+    # t0 = time.time()
+    # locs = ev.locations.to_geopandas()
+    # print(f"Time to locations: {time.time() - t0}")
+
+    # import hvplot
+
+    # t0 = time.time()
+    # plot1 = metrics_ds.plot_metrics(x_column="primary_location_id", y_column="kling_gupta_efficiency")
+    # print(f"Time to first plot: {time.time() - t0}")
+
+    # t0 = time.time()
+    # plot2 = metrics_ds.plot_bar_chart(x_column="primary_location_id", y_column="kling_gupta_efficiency", legend=False)
+    # print(f"Time to second plot: {time.time() - t0}")
+
+    # Note: Subsequent queries here are slower than re-running the queries
+    # from the metrics_ds object. (37, 13.29, 13.88) --> has to re-map the operation?
+    # t0 = time.time()
+    # metrics_df = ev.metrics.query(
+    #     order_by=["primary_location_id"],
+    #     group_by=["primary_location_id"],
+    #     include_metrics=[
+    #         DeterministicMetrics.KlingGuptaEfficiency(),
+    #     ]
+    # ).to_pandas()
+    # print(f"Initial query: {time.time() - t0}")
+
+    pass
+
+    # t0 = time.time()
+    # metrics_df = ev.metrics.query(
+    #     order_by=["primary_location_id"],
+    #     group_by=["primary_location_id"],
+    #     include_metrics=[
+    #         DeterministicMetrics.KlingGuptaEfficiency(),
+    #     ]
+    # ).to_pandas()
+    # print(f"Second query: {time.time() - t0}")
+
+    # t0 = time.time()
+    # metrics_df = ev.metrics.query(
+    #     order_by=["primary_location_id"],
+    #     group_by=["primary_location_id"],
+    #     include_metrics=[
+    #         DeterministicMetrics.KlingGuptaEfficiency(),
+    #     ]
+    # ).to_pandas()
+    # print(f"Third query: {time.time() - t0}")
+
+    # Note: Subsequent queries here are much faster than
+    # re-running the query from the evaluation. (37, 0.15, 0.11)
+    # t0 = time.time()
+    # first = metrics_ds.to_pandas()
+    # print(f"Initial query: {time.time() - t0}")
+
+    # t0 = time.time()
+    # second = metrics_ds.to_pandas()
+    # print(f"Second query: {time.time() - t0}")
+
+    # t0 = time.time()
+    # third = metrics_ds.to_pandas()
+    # print(f"Third query: {time.time() - t0}")
+
+    # pass
+
+    # # Define the evaluation object.
+    # ev = setup_v0_3_study(tmpdir)
+
+    # # Test chaining.
+    # metrics_obj = ev.metrics.query(
+    #     order_by=["primary_location_id", "month"],
+    #     group_by=["primary_location_id", "month"],
+    #     include_metrics=[
+    #         DeterministicMetrics.KlingGuptaEfficiency(),
+    #         DeterministicMetrics.NashSutcliffeEfficiency(),
+    #         DeterministicMetrics.RelativeBias()
+    #     ]
+    # ).query(
+    #     order_by=["primary_location_id"],
+    #     group_by=["primary_location_id"],
+    #     include_metrics=[
+    #         SignatureMetrics.Average(
+    #             input_field_names="relative_bias",
+    #             output_field_name="primary_average"
+    #         )
+    #     ]
+    # ).persist()
+
+    # pass
+
+    # assert isinstance(metrics_df, pd.DataFrame)
+    # assert metrics_df.index.size == 3
+    # assert all(
+    #     metrics_df.columns == ["primary_location_id", "primary_average"]
+    # )
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_executing_deterministic_metrics(
+        # test_executing_deterministic_metrics(
+        #     tempfile.mkdtemp(
+        #         prefix="1-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_metrics_filter_and_geometry(
+        #     tempfile.mkdtemp(
+        #         prefix="2-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_circularblock_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="3-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_stationary_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="4-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_gumboot_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="5-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_metric_chaining(
+        #     tempfile.mkdtemp(
+        #         prefix="6-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_gumboot_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="7-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_metric_chaining(
+        #     tempfile.mkdtemp(
+        #         prefix="8-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_ensemble_metrics(
+        #     tempfile.mkdtemp(
+        #         prefix="9-",
+        #         dir=tempdir
+        #     )
+        # )
+        test_persisting(
             tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_metrics_filter_and_geometry(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_circularblock_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        test_stationary_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
-        test_gumboot_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="5-",
-                dir=tempdir
-            )
-        )
-        test_metric_chaining(
-            tempfile.mkdtemp(
-                prefix="6-",
-                dir=tempdir
-            )
-        )
-        test_gumboot_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="7-",
-                dir=tempdir
-            )
-        )
-        test_metric_chaining(
-            tempfile.mkdtemp(
-                prefix="8-",
-                dir=tempdir
-            )
-        )
-        test_ensemble_metrics(
-            tempfile.mkdtemp(
-                prefix="9-",
+                prefix="10-",
                 dir=tempdir
             )
         )

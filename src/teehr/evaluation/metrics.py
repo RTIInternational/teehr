@@ -1,6 +1,8 @@
 """Module for generating metrics."""
 from typing import Union, List
 
+import hvplot.pandas    # noqa
+
 import pandas as pd
 import geopandas as gpd
 import pyspark.sql as ps
@@ -163,6 +165,18 @@ class Metrics:
         df = self.df.toPandas()
         df.attrs['table_type'] = 'metrics'
         return df
+
+    def plot_metrics(self, x_column: str, y_column: str, legend: bool = True):
+        """Plot the metrics."""
+        df = self.df.toPandas()
+        bar_chart = df.hvplot.bar(x=x_column, y=y_column, legend=legend)
+        return bar_chart
+
+    def plot_bar_chart(self, x_column: str, y_column: str, legend: bool = True):
+        """Plot the metrics."""
+        df = self.df.toPandas()
+        bar_chart = df.hvplot.bar(x=x_column, y=y_column, legend=legend)
+        return bar_chart
 
     def to_geopandas(self) -> gpd.GeoDataFrame:
         """Convert the DataFrame to a GeoPandas DataFrame."""

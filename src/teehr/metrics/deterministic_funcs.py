@@ -3,6 +3,8 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
+from numba import float64, guvectorize, njit
+
 
 def mean_error(p: pd.Series, s: pd.Series) -> float:
     """Mean Error."""
@@ -124,6 +126,63 @@ def nash_sutcliffe_efficiency_normalized(p: pd.Series, s: pd.Series) -> float:
     return 1.0 / (1.0 + numerator/denominator)
 
 
+# @guvectorize([(float64[:], float64[:], float64[:])], '(n),(n)->()')
+# def kling_gupta_efficiency_guvect(p, s, result):
+#     """Kling-Gupta Efficiency (2009)."""
+#     if np.std(s) == 0 or np.std(p) == 0:
+#         result[:] = np.nan
+
+#     # Pearson correlation coefficient
+#     linear_correlation = np.corrcoef(s, p)[0,1]
+
+#     # Relative variability
+#     relative_variability = np.std(s) / np.std(p)
+
+#     # Relative mean
+#     relative_mean = np.mean(s) / np.mean(p)
+
+#     # Scaled Euclidean distance
+#     euclidean_distance = np.sqrt(
+#         (1.0 * (linear_correlation - 1.0)) ** 2.0 +
+#         (1.0  * (relative_variability - 1.0)) ** 2.0 +
+#         (1.0  * (relative_mean - 1.0)) ** 2.0
+#     )
+#     result[:] = 1.0 - euclidean_distance
+
+# @njit
+# def kling_gupta_efficiency_njit(p, s) -> float:
+#     """Kling-Gupta Efficiency (2009)."""
+#     # if len(p) == 0 or len(s) == 0:
+#     #     return np.nan
+#     # if np.sum(p) == 0 or np.sum(s) == 0:
+#     #     return np.nan
+#     if np.std(s) == 0 or np.std(p) == 0:
+#         return np.nan
+
+#     # Pearson correlation coefficient
+#     linear_correlation = np.corrcoef(s, p)[0,1]
+
+#     # Relative variability
+#     relative_variability = np.std(s) / np.std(p)
+
+#     # Relative mean
+#     relative_mean = np.mean(s) / np.mean(p)
+
+#     # Scaled Euclidean distance
+#     euclidean_distance = np.sqrt(
+#         (1.0 * (linear_correlation - 1.0)) ** 2.0 +
+#         (1.0  * (relative_variability - 1.0)) ** 2.0 +
+#         (1.0  * (relative_mean - 1.0)) ** 2.0
+#     )
+
+#     # Return KGE
+#     return 1.0 - euclidean_distance
+
+
+# def kling_gupta_efficiency(p: pd.Series, s: pd.Series) -> float:
+#     """Kling-Gupta Efficiency (2009)."""
+#     return kling_gupta_efficiency_njit(p.to_numpy(), s.to_numpy())
+
 def kling_gupta_efficiency(p: pd.Series, s: pd.Series) -> float:
     """Kling-Gupta Efficiency (2009)."""
     # if len(p) == 0 or len(s) == 0:
@@ -145,8 +204,8 @@ def kling_gupta_efficiency(p: pd.Series, s: pd.Series) -> float:
     # Scaled Euclidean distance
     euclidean_distance = np.sqrt(
         (1.0 * (linear_correlation - 1.0)) ** 2.0 +
-        (1.0  * (relative_variability - 1.0)) ** 2.0 +
-        (1.0  * (relative_mean - 1.0)) ** 2.0
+        (1.0 * (relative_variability - 1.0)) ** 2.0 +
+        (1.0 * (relative_mean - 1.0)) ** 2.0
     )
 
     # Return KGE
