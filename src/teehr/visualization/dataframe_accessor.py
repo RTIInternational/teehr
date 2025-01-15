@@ -185,6 +185,37 @@ class TEEHRDataFrameAccessor:
                 supported.
             """)
 
+    def _validate_path(self, output_dir):
+        """Validate the output directory path."""
+        logger.info("Validating output directory path.")
+        if not isinstance(output_dir, Path):
+            logger.info(f"""
+                        Output directory must be a pathlib.Path object.
+                        Path was provided as type: {type(output_dir)}.
+                        Attempting to convert to pathlib.Path object.
+            """)
+            try:
+                output_dir = Path(output_dir)
+                logger.info("Path conversion successful.")
+            except TypeError:
+                logger.error("Path conversion failed.")
+
+        # check for output location
+        if output_dir is not None:
+            if output_dir.exists():
+                logger.info("Specified save directory is valid.")
+            else:
+                logger.info(""""
+                    Specified directory does not exist.
+                    Creating new directory to store figure.
+                """)
+                try:
+                    Path(output_dir).mkdir(parents=True, exist_ok=True)
+                except ValueError:
+                    logger.error("Directory creation failed.")
+
+        return output_dir
+
     def _timeseries_unique_values(
         self,
         variable_df: pd.DataFrame,
@@ -607,16 +638,8 @@ class TEEHRDataFrameAccessor:
                 "secondary_timeseries", got table_type = {table_type_str}
             """)
 
-        # check for output location
-        if output_dir is not None:
-            if output_dir.exists():
-                logger.info("Specified save directory is valid.")
-            else:
-                logger.info(""""
-                    Specified directory does not exist.
-                    Creating new directory to store figure.
-                """)
-                Path(output_dir).mkdir(parents=True, exist_ok=True)
+        # validate output location
+        output_dir = self._validate_path(output_dir)
 
         # generate plots
         schema = self._timeseries_schema()
@@ -744,16 +767,8 @@ class TEEHRDataFrameAccessor:
                 got table_type = {table_type_str}
             """)
 
-        # check output location
-        if output_dir is not None:
-            if output_dir.exists():
-                logger.info("Specified save directory is valid.")
-            else:
-                logger.info("""
-                    Specified directory does not exist.
-                    Creating new directory to store figure.
-                """)
-                Path(output_dir).mkdir(parents=True, exist_ok=True)
+        # validate output location
+        output_dir = self._validate_path(output_dir)
 
         geo_data = self._location_format_points()
 
@@ -958,16 +973,8 @@ class TEEHRDataFrameAccessor:
                 got table_type = {table_type_str}
             """)
 
-        # check output location
-        if output_dir is not None:
-            if output_dir.exists():
-                logger.info("Specified save directory is valid.")
-            else:
-                logger.info("""
-                    Specified directory does not exist.
-                    Creating new directory to store figure.
-                """)
-                Path(output_dir).mkdir(parents=True, exist_ok=True)
+        # validate output location
+        output_dir = self._validate_path(output_dir)
 
         # format point data
         geo_data = self._location_attributes_format_points()
@@ -1090,16 +1097,8 @@ class TEEHRDataFrameAccessor:
                 got table_type = {table_type_str}
             """)
 
-        # check output location
-        if output_dir is not None:
-            if output_dir.exists():
-                logger.info("Specified save directory is valid.")
-            else:
-                logger.info("""
-                    Specified directory does not exist.
-                    Creating new directory to store figure.
-                """)
-                Path(output_dir).mkdir(parents=True, exist_ok=True)
+        # validate output location
+        output_dir = self._validate_path(output_dir)
 
         # assemble data
         geo_data = self._location_crosswalks_format_points()
