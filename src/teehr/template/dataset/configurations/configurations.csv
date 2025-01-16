@@ -19,18 +19,9 @@ nwm30_short_range_hawaii,secondary,NWM Short Range Hawaii
 nwm30_short_range_puertorico,secondary,NWM Short Range Puerto Rico
 nwm30_short_range_hawaii_no_da,secondary,NWM Short Range Hawaii (No DA)
 nwm30_short_range_puertorico_no_da,secondary,NWM Short Range Puerto Rico (No DA)
-nwm30_medium_range_mem1,secondary,NWM Medium Range Member 1
-nwm30_medium_range_mem2,secondary,NWM Medium Range Member 2
-nwm30_medium_range_mem3,secondary,NWM Medium Range Member 3
-nwm30_medium_range_mem4,secondary,NWM Medium Range Member 4
-nwm30_medium_range_mem5,secondary,NWM Medium Range Member 5
-nwm30_medium_range_mem6,secondary,NWM Medium Range Member 6
-nwm30_medium_range_mem7,secondary,NWM Medium Range Member 7
+nwm30_medium_range,secondary,NWM Medium Range Ensemble Members
 nwm30_medium_range_no_da,secondary,NWM Medium Range (No DA)
-nwm30_long_range_mem1,secondary,NWM Long Range Member 1
-nwm30_long_range_mem2,secondary,NWM Long Range Member 2
-nwm30_long_range_mem3,secondary,NWM Long Range Member 3
-nwm30_long_range_mem4,secondary,NWM Long Range Member 4
+nwm30_long_range,secondary,NWM Long Range Ensemble Members
 nwm30_forcing_medium_range,secondary,NWM Medium Range Forcing
 nwm30_forcing_medium_range_blend,secondary,NWM Medium Range Forcing Blend
 nwm30_forcing_medium_range_alaska,secondary,NWM Medium Range Forcing Alaska
@@ -58,18 +49,9 @@ nwm22_short_range_hawaii,secondary,NWM Short Range Hawaii
 nwm22_short_range_puertorico,secondary,NWM Short Range Puerto Rico
 nwm22_short_range_hawaii_no_da,secondary,NWM Short Range Hawaii (No DA)
 nwm22_short_range_puertorico_no_da,secondary,NWM Short Range Puerto Rico (No DA)
-nwm22_medium_range_mem1,secondary,NWM Medium Range Member 1
-nwm22_medium_range_mem2,secondary,NWM Medium Range Member 2
-nwm22_medium_range_mem3,secondary,NWM Medium Range Member 3
-nwm22_medium_range_mem4,secondary,NWM Medium Range Member 4
-nwm22_medium_range_mem5,secondary,NWM Medium Range Member 5
-nwm22_medium_range_mem6,secondary,NWM Medium Range Member 6
-nwm22_medium_range_mem7,secondary,NWM Medium Range Member 7
+nwm22_medium_range,secondary,NWM Medium Range Ensemble Members
 nwm22_medium_range_no_da,secondary,NWM Medium Range (No DA)
-nwm22_long_range_mem1,secondary,NWM Long Range Member 1
-nwm22_long_range_mem2,secondary,NWM Long Range Member 2
-nwm22_long_range_mem3,secondary,NWM Long Range Member 3
-nwm22_long_range_mem4,secondary,NWM Long Range Member 4
+nwm22_long_range,secondary,NWM Long Range Ensemble Members
 nwm22_forcing_medium_range,secondary,NWM Medium Range Forcing
 nwm22_forcing_medium_range_blend,secondary,NWM Medium Range Forcing Blend
 nwm22_forcing_medium_range_alaska,secondary,NWM Medium Range Forcing Alaska
@@ -97,18 +79,9 @@ nwm21_short_range_hawaii,secondary,NWM Short Range Hawaii
 nwm21_short_range_puertorico,secondary,NWM Short Range Puerto Rico
 nwm21_short_range_hawaii_no_da,secondary,NWM Short Range Hawaii (No DA)
 nwm21_short_range_puertorico_no_da,secondary,NWM Short Range Puerto Rico (No DA)
-nwm21_medium_range_mem1,secondary,NWM Medium Range Member 1
-nwm21_medium_range_mem2,secondary,NWM Medium Range Member 2
-nwm21_medium_range_mem3,secondary,NWM Medium Range Member 3
-nwm21_medium_range_mem4,secondary,NWM Medium Range Member 4
-nwm21_medium_range_mem5,secondary,NWM Medium Range Member 5
-nwm21_medium_range_mem6,secondary,NWM Medium Range Member 6
-nwm21_medium_range_mem7,secondary,NWM Medium Range Member 7
+nwm21_medium_range,secondary,NWM Medium Range Ensemble Members
 nwm21_medium_range_no_da,secondary,NWM Medium Range (No DA)
-nwm21_long_range_mem1,secondary,NWM Long Range Member 1
-nwm21_long_range_mem2,secondary,NWM Long Range Member 2
-nwm21_long_range_mem3,secondary,NWM Long Range Member 3
-nwm21_long_range_mem4,secondary,NWM Long Range Member 4
+nwm21_long_range,secondary,NWM Long Range Ensemble Members
 nwm21_forcing_medium_range,secondary,NWM Medium Range Forcing
 nwm21_forcing_medium_range_blend,secondary,NWM Medium Range Forcing Blend
 nwm21_forcing_medium_range_alaska,secondary,NWM Medium Range Forcing Alaska
@@ -136,18 +109,9 @@ nwm20_short_range_hawaii,secondary,NWM Short Range Hawaii
 nwm20_short_range_puertorico,secondary,NWM Short Range Puerto Rico
 nwm20_short_range_hawaii_no_da,secondary,NWM Short Range Hawaii (No DA)
 nwm20_short_range_puertorico_no_da,secondary,NWM Short Range Puerto Rico (No DA)
-nwm20_medium_range_mem1,secondary,NWM Medium Range Member 1
-nwm20_medium_range_mem2,secondary,NWM Medium Range Member 2
-nwm20_medium_range_mem3,secondary,NWM Medium Range Member 3
-nwm20_medium_range_mem4,secondary,NWM Medium Range Member 4
-nwm20_medium_range_mem5,secondary,NWM Medium Range Member 5
-nwm20_medium_range_mem6,secondary,NWM Medium Range Member 6
-nwm20_medium_range_mem7,secondary,NWM Medium Range Member 7
+nwm20_medium_range,secondary,NWM Medium Range Ensemble Members
 nwm20_medium_range_no_da,secondary,NWM Medium Range (No DA)
-nwm20_long_range_mem1,secondary,NWM Long Range Member 1
-nwm20_long_range_mem2,secondary,NWM Long Range Member 2
-nwm20_long_range_mem3,secondary,NWM Long Range Member 3
-nwm20_long_range_mem4,secondary,NWM Long Range Member 4
+nwm20_long_range,secondary,NWM Long Range Ensemble Members
 nwm20_forcing_medium_range,secondary,NWM Medium Range Forcing
 nwm20_forcing_medium_range_blend,secondary,NWM Medium Range Forcing Blend
 nwm20_forcing_medium_range_alaska,secondary,NWM Medium Range Forcing Alaska

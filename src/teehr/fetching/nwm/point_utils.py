@@ -68,6 +68,12 @@ def file_chunk_loop(
         [f"{nwm_version}-{feat_id}" for feat_id in feature_ids]
     num_vals = vals.size
 
+    # If configuration is an ensemble member split out the member
+    # from the configuration name.
+    member = None
+    if bool(re.search(r"_mem[0-9]+", configuration)):
+        configuration, member = configuration.split("_mem")
+
     output_table = pa.table(
         {
             VALUE: vals,
@@ -77,7 +83,7 @@ def file_chunk_loop(
             CONFIGURATION_NAME: num_vals * [nwm_version + "_" + configuration],
             VARIABLE_NAME: num_vals * [teehr_variable_name],
             UNIT_NAME: num_vals * [teehr_units],
-            MEMBER: num_vals * [None]
+            MEMBER: num_vals * [member]
         },
         schema=schema,
     )
