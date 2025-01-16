@@ -39,7 +39,7 @@ class Metrics:
         self.joined_timeseries = ev.joined_timeseries
         self.df = self.joined_timeseries.to_sdf()
 
-    def persist(self, storage_level: psl = psl.MEMORY_AND_DISK) -> 'Metrics':
+    def persist(self, storage_level: psl = psl.MEMORY_AND_DISK):
         """Persist the DataFrame to specified storage level."""
         self.df.persist(storageLevel=storage_level)
         return self

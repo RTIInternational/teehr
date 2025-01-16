@@ -482,7 +482,8 @@ def test_ensemble_metrics(tmpdir):
 
 def test_persisting(tmpdir):
     """Test get_metrics method with chaining."""
-    ev = Evaluation("s3a://ciroh-rti-public-data/teehr-data-warehouse/v0_4_evaluations/e1_camels_daily_streamflow")
+
+    ev = Evaluation("s3a://ciroh-rti-public-data/teehr-data-warehouse/v0_4_evaluations/e2_camels_hourly_streamflow")
 
     # metrics_ds = ev.metrics.query(
     #     order_by=["primary_location_id"],
@@ -540,7 +541,7 @@ def test_persisting(tmpdir):
     # ).to_pandas()
     # print(f"Initial query: {time.time() - t0}")
 
-    pass
+    # pass
 
     # t0 = time.time()
     # metrics_df = ev.metrics.query(
@@ -581,27 +582,30 @@ def test_persisting(tmpdir):
     # # Define the evaluation object.
     # ev = setup_v0_3_study(tmpdir)
 
-    # # Test chaining.
-    # metrics_obj = ev.metrics.query(
-    #     order_by=["primary_location_id", "month"],
-    #     group_by=["primary_location_id", "month"],
-    #     include_metrics=[
-    #         DeterministicMetrics.KlingGuptaEfficiency(),
-    #         DeterministicMetrics.NashSutcliffeEfficiency(),
-    #         DeterministicMetrics.RelativeBias()
-    #     ]
-    # ).query(
-    #     order_by=["primary_location_id"],
-    #     group_by=["primary_location_id"],
-    #     include_metrics=[
-    #         SignatureMetrics.Average(
-    #             input_field_names="relative_bias",
-    #             output_field_name="primary_average"
-    #         )
-    #     ]
-    # ).persist()
+    from pyspark.storagelevel import StorageLevel as psl
 
-    # pass
+    # Test chaining.
+    metrics_ds = ev.metrics.query(
+        order_by=["primary_location_id", "month"],
+        group_by=["primary_location_id", "month"],
+        include_metrics=[
+            DeterministicMetrics.KlingGuptaEfficiency(),
+            DeterministicMetrics.NashSutcliffeEfficiency(),
+            DeterministicMetrics.RelativeBias()
+        ]
+    )  # .persist()
+
+    t0 = time.time()
+    first = metrics_ds.to_pandas()
+    print(f"Initial query: {time.time() - t0}")
+
+    t0 = time.time()
+    second = metrics_ds.to_pandas()
+    print(f"Second query: {time.time() - t0}")
+
+    pass
+
+    ev.spark.stop()
 
     # assert isinstance(metrics_df, pd.DataFrame)
     # assert metrics_df.index.size == 3
