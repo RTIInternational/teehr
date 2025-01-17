@@ -11,7 +11,8 @@ import pyarrow as pa
 from teehr.fetching.utils import (
     get_dataset,
     write_timeseries_parquet_file,
-    split_dataframe
+    split_dataframe,
+    format_nwm_configuration_name
 )
 from teehr.models.fetching.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
@@ -68,11 +69,10 @@ def file_chunk_loop(
         [f"{nwm_version}-{feat_id}" for feat_id in feature_ids]
     num_vals = vals.size
 
-    # If configuration is an ensemble member split out the member
-    # from the configuration name.
-    member = None
-    if bool(re.search(r"_mem[0-9]+", configuration)):
-        configuration, member = configuration.split("_mem")
+    teehr_config = format_nwm_configuration_name(
+        nwm_configuration_name=configuration,
+        nwm_version=nwm_version
+    )
 
     output_table = pa.table(
         {
@@ -80,10 +80,10 @@ def file_chunk_loop(
             REFERENCE_TIME: np.full(vals.shape, ref_time),
             LOCATION_ID: teehr_location_ids,
             VALUE_TIME: np.full(vals.shape, valid_time),
-            CONFIGURATION_NAME: num_vals * [nwm_version + "_" + configuration],
+            CONFIGURATION_NAME: num_vals * [teehr_config["configuration_name"]],
             VARIABLE_NAME: num_vals * [teehr_variable_name],
             UNIT_NAME: num_vals * [teehr_units],
-            MEMBER: num_vals * [member]
+            MEMBER: num_vals * [teehr_config["member"]]
         },
         schema=schema,
     )
