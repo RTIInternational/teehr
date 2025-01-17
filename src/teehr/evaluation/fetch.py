@@ -38,6 +38,9 @@ from teehr.fetching.const import (
     VARIABLE_NAME,
     NWM_VARIABLE_MAPPER
 )
+from teehr.models.pydantic_table_models import (
+    Configuration
+)
 
 logger = logging.getLogger(__name__)
 
@@ -184,8 +187,6 @@ class Fetch:
 
         usgs_variable_name = USGS_VARIABLE_MAPPER[VARIABLE_NAME][service]
 
-        # TODO: Get timeseries_type from the configurations table?
-
         usgs_to_parquet(
             sites=sites,
             start_date=start_date,
@@ -201,6 +202,14 @@ class Fetch:
             convert_to_si=convert_to_si,
             overwrite_output=overwrite_output,
             timeseries_type=timeseries_type
+        )
+
+        self.ev.configurations.add(
+            Configuration(
+                name="usgs_observations",
+                type="primary",
+                description="USGS Observations"
+            )
         )
 
         validate_and_insert_timeseries(
@@ -322,7 +331,13 @@ class Fetch:
             timeseries_type=timeseries_type
         )
 
-        # TODO: Add configuration here
+        self.ev.configurations.add(
+            Configuration(
+                name=ev_configuration_name,
+                type=timeseries_type,
+                description=f"{nwm_version} retrospective"
+            )
+        )
 
         validate_and_insert_timeseries(
             ev=self.ev,
@@ -442,7 +457,7 @@ class Fetch:
         --------
         :func:`teehr.fetching.nwm.nwm_grids.nwm_grids_to_parquet`
         """ # noqa
-        ev_configuration = f"{nwm_version}_retrospective"
+        ev_configuration_name = f"{nwm_version}_retrospective"
         ev_variable_name = format_nwm_variable_name(variable_name)
 
         nwm_retro_grids_to_parquet(
@@ -453,7 +468,7 @@ class Fetch:
             end_date=end_date,
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
-                ev_configuration,
+                ev_configuration_name,
                 ev_variable_name
             ),
             chunk_by=chunk_by,
@@ -464,7 +479,13 @@ class Fetch:
             timeseries_type=timeseries_type
         )
 
-        # TODO: Add configuration here
+        self.ev.configurations.add(
+            Configuration(
+                name=ev_configuration_name,
+                type=timeseries_type,
+                description=f"{nwm_version} retrospective"
+            )
+        )
 
         validate_and_insert_timeseries(
             ev=self.ev,
@@ -653,7 +674,13 @@ class Fetch:
             timeseries_type=timeseries_type
         )
 
-        # TODO: Add configuration here
+        self.ev.configurations.add(
+            Configuration(
+                name=ev_config["configuration_name"],
+                type=timeseries_type,
+                description=f"{nwm_version} operational forecasts"
+            )
+        )
 
         validate_and_insert_timeseries(
             ev=self.ev,
@@ -813,7 +840,6 @@ class Fetch:
         """ # noqa
 
         ev_variable_name = format_nwm_variable_name(variable_name)
-        # ev_configuration_name = f"{nwm_version}_{nwm_configuration}"
         ev_config = format_nwm_configuration_name(
             nwm_configuration_name=nwm_configuration,
             nwm_version=nwm_version
@@ -842,7 +868,13 @@ class Fetch:
             variable_mapper=NWM_VARIABLE_MAPPER
         )
 
-        # TODO: Add configuration here
+        self.ev.configurations.add(
+            Configuration(
+                name=ev_config["configuration_name"],
+                type=timeseries_type,
+                description=f"{nwm_version} operational forecasts"
+            )
+        )
 
         validate_and_insert_timeseries(
             ev=self.ev,
