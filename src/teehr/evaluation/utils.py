@@ -4,8 +4,6 @@ import fnmatch
 from typing import List
 from pathlib import Path
 
-from teehr.fetching.const import NWM_VARIABLE_MAPPER, VARIABLE_NAME
-
 logger = logging.getLogger(__name__)
 
 
@@ -16,13 +14,6 @@ PIPE_PREFIX = "│   "
 SPACE_PREFIX = "    "
 
 
-def get_schema_variable_name(variable_name: str) -> str:
-    """Get the variable name from the Evaluation schema."""
-    logger.info(f"Getting schema variable name for {variable_name}.")
-    return NWM_VARIABLE_MAPPER[VARIABLE_NAME]. \
-        get(variable_name, variable_name)
-
-
 def print_tree(
     path,
     prefix="",
@@ -31,7 +22,6 @@ def print_tree(
     current_depth: int = 0
 ):
     """Print the directory tree structure."""
-
     if max_depth != -1 and current_depth > max_depth:
         return
 

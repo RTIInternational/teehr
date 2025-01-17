@@ -15,8 +15,9 @@ from teehr.fetching.nwm.retrospective_grids import nwm_retro_grids_to_parquet
 from teehr.loading.timeseries import (
     validate_and_insert_timeseries,
 )
-from teehr.evaluation.utils import (
-    get_schema_variable_name,
+from teehr.fetching.utils import (
+    format_nwm_variable_name,
+    format_nwm_configuration_name
 )
 from teehr.models.fetching.nwm22_grid import ForcingVariablesEnum
 from teehr.models.fetching.utils import (
@@ -36,6 +37,9 @@ from teehr.fetching.const import (
     USGS_VARIABLE_MAPPER,
     VARIABLE_NAME,
     NWM_VARIABLE_MAPPER
+)
+from teehr.models.pydantic_table_models import (
+    Configuration
 )
 
 logger = logging.getLogger(__name__)
@@ -183,8 +187,6 @@ class Fetch:
 
         usgs_variable_name = USGS_VARIABLE_MAPPER[VARIABLE_NAME][service]
 
-        # TODO: Get timeseries_type from the configurations table?
-
         usgs_to_parquet(
             sites=sites,
             start_date=start_date,
@@ -200,6 +202,14 @@ class Fetch:
             convert_to_si=convert_to_si,
             overwrite_output=overwrite_output,
             timeseries_type=timeseries_type
+        )
+
+        self.ev.configurations.add(
+            Configuration(
+                name="usgs_observations",
+                type="primary",
+                description="USGS Observations"
+            )
         )
 
         validate_and_insert_timeseries(
@@ -295,10 +305,8 @@ class Fetch:
         --------
         :func:`teehr.fetching.nwm.retrospective_points.nwm_retro_to_parquet`
         """ # noqa
-        nwm_configuration = f"{nwm_version}_retrospective"
-        schema_variable_name = get_schema_variable_name(variable_name)
-
-        # TODO: Get timeseries_type from the configurations table?
+        ev_configuration_name = f"{nwm_version}_retrospective"
+        ev_variable_name = format_nwm_variable_name(variable_name)
 
         logger.info("Getting secondary location IDs.")
         location_ids = self._get_secondary_location_ids(
@@ -313,8 +321,8 @@ class Fetch:
             location_ids=location_ids,
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
-                nwm_configuration,
-                schema_variable_name
+                ev_configuration_name,
+                ev_variable_name
             ),
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
@@ -323,12 +331,19 @@ class Fetch:
             timeseries_type=timeseries_type
         )
 
+        self.ev.configurations.add(
+            Configuration(
+                name=ev_configuration_name,
+                type=timeseries_type,
+                description=f"{nwm_version} retrospective"
+            )
+        )
+
         validate_and_insert_timeseries(
             ev=self.ev,
             in_path=Path(
                 self.nwm_cache_dir
             ),
-            # dataset_path=self.ev.dataset_dir,
             timeseries_type=timeseries_type,
         )
 
@@ -442,10 +457,8 @@ class Fetch:
         --------
         :func:`teehr.fetching.nwm.nwm_grids.nwm_grids_to_parquet`
         """ # noqa
-        nwm_configuration = f"{nwm_version}_retrospective"
-        schema_variable_name = get_schema_variable_name(variable_name)
-
-        # TODO: Get timeseries_type from the configurations table?
+        ev_configuration_name = f"{nwm_version}_retrospective"
+        ev_variable_name = format_nwm_variable_name(variable_name)
 
         nwm_retro_grids_to_parquet(
             nwm_version=nwm_version,
@@ -455,8 +468,8 @@ class Fetch:
             end_date=end_date,
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
-                nwm_configuration,
-                schema_variable_name
+                ev_configuration_name,
+                ev_variable_name
             ),
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
@@ -466,12 +479,19 @@ class Fetch:
             timeseries_type=timeseries_type
         )
 
+        self.ev.configurations.add(
+            Configuration(
+                name=ev_configuration_name,
+                type=timeseries_type,
+                description=f"{nwm_version} retrospective"
+            )
+        )
+
         validate_and_insert_timeseries(
             ev=self.ev,
             in_path=Path(
                 self.nwm_cache_dir
             ),
-            # dataset_path=self.ev.dataset_dir,
             timeseries_type=timeseries_type,
         )
 
@@ -623,10 +643,11 @@ class Fetch:
             prefix=nwm_version
         )
 
-        # TODO: Read timeseries_type from the configurations table?
-
-        schema_variable_name = get_schema_variable_name(variable_name)
-        schema_configuration_name = f"{nwm_version}_{nwm_configuration}"
+        ev_variable_name = format_nwm_variable_name(variable_name)
+        ev_config = format_nwm_configuration_name(
+            nwm_configuration_name=nwm_configuration,
+            nwm_version=nwm_version
+        )
         nwm_to_parquet(
             configuration=nwm_configuration,
             output_type=output_type,
@@ -637,8 +658,8 @@ class Fetch:
             json_dir=self.kerchunk_cache_dir,
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
-                schema_configuration_name,
-                schema_variable_name
+                ev_config["configuration_name"],
+                ev_variable_name
             ),
             nwm_version=nwm_version,
             data_source=data_source,
@@ -653,12 +674,19 @@ class Fetch:
             timeseries_type=timeseries_type
         )
 
+        self.ev.configurations.add(
+            Configuration(
+                name=ev_config["configuration_name"],
+                type=timeseries_type,
+                description=f"{nwm_version} operational forecasts"
+            )
+        )
+
         validate_and_insert_timeseries(
             ev=self.ev,
             in_path=Path(
                 self.nwm_cache_dir
             ),
-            # dataset_path=self.ev.dataset_dir,
             timeseries_type=timeseries_type,
         )
 
@@ -811,10 +839,11 @@ class Fetch:
         :func:`teehr.fetching.nwm.nwm_grids.nwm_grids_to_parquet`
         """ # noqa
 
-        # TODO: Get timeseries_type from the configurations table?
-
-        schema_variable_name = get_schema_variable_name(variable_name)
-        schema_configuration_name = f"{nwm_version}_{nwm_configuration}"
+        ev_variable_name = format_nwm_variable_name(variable_name)
+        ev_config = format_nwm_configuration_name(
+            nwm_configuration_name=nwm_configuration,
+            nwm_version=nwm_version
+        )
         nwm_grids_to_parquet(
             configuration=nwm_configuration,
             output_type=output_type,
@@ -825,8 +854,8 @@ class Fetch:
             json_dir=self.kerchunk_cache_dir,
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
-                schema_configuration_name,
-                schema_variable_name
+                ev_config["configuration_name"],
+                ev_variable_name
             ),
             nwm_version=nwm_version,
             data_source=data_source,
@@ -839,13 +868,18 @@ class Fetch:
             variable_mapper=NWM_VARIABLE_MAPPER
         )
 
-        pass
+        self.ev.configurations.add(
+            Configuration(
+                name=ev_config["configuration_name"],
+                type=timeseries_type,
+                description=f"{nwm_version} operational forecasts"
+            )
+        )
 
         validate_and_insert_timeseries(
             ev=self.ev,
             in_path=Path(
                 self.nwm_cache_dir
             ),
-            # dataset_path=self.ev.dataset_dir,
             timeseries_type=timeseries_type,
         )

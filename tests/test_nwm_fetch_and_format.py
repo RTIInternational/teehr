@@ -101,6 +101,47 @@ def test_nwm30_point_fetch_and_format(tmpdir):
     assert test_df.compare(bench_df).index.size == 0
 
 
+def test_nwm30_point_fetch_and_format_medium_range_member(tmpdir):
+    """Test NWM30 point fetch and formatting medium range ensemble."""
+    test_data_dir = Path("tests", "data", "nwm30")
+
+    json_paths = [Path(
+        test_data_dir,
+        "nwm.20240222.nwm.t00z.medium_range.channel_rt_1.f001.conus.nc.json"
+    ).as_posix()]
+
+    location_ids = [
+        7086109,
+        7040481,
+        7053819,
+        7111205,
+    ]
+
+    fetch_and_format_nwm_points(
+        json_paths=json_paths,
+        location_ids=location_ids,
+        configuration="medium_range_mem1",
+        variable_name="streamflow",
+        output_parquet_dir=tmpdir,
+        nwm_version="nwm30",
+        process_by_z_hour=True,
+        stepsize=100,
+        ignore_missing_file=False,
+        overwrite_output=True,
+        variable_mapper=TEST_NWM_VARIABLE_MAPPER,
+        timeseries_type="secondary"
+    )
+
+    parquet_file = Path(tmpdir, "20240222T00.parquet")
+    # benchmark_file = Path(test_data_dir, "point_benchmark.parquet")
+
+    # bench_df = pd.read_parquet(benchmark_file)
+    test_df = pd.read_parquet(parquet_file)
+
+    # assert test_df.compare(bench_df).index.size == 0
+    assert test_df.shape[0] == 4
+
+
 def test_nwm22_grid_fetch_and_format(tmpdir):
     """Test NWM22 grid fetch and format."""
     test_data_dir = Path("tests", "data", "nwm22")
@@ -240,6 +281,7 @@ if __name__ == "__main__":
         test_nwm30_point_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
         test_nwm22_grid_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
         test_nwm30_grid_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
+        test_nwm30_point_fetch_and_format_medium_range_member(tempfile.mkdtemp(dir=tempdir))  # noqa
         test_replace_location_id_prefix()
         test_prepend_location_id_prefix()
         test_raise_location_id_prefix_error()
