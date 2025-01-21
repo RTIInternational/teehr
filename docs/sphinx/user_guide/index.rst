@@ -16,7 +16,7 @@ Before starting, make sure you have installed TEEHR and its dependencies as desc
 
 :doc:`Introduction to the Schema </user_guide/notebooks/01_introduction_schema>`  :download:`(download notebook) </user_guide/notebooks/01_introduction_schema.ipynb>`
 
-:doc:`Loading Data </user_guide/notebooks/02_loading_local_data>`  :download:`(download notebook) </user_guide/notebooks/02_loading_local_data.ipynb>`
+:doc:`Loading Local Data </user_guide/notebooks/02_loading_local_data>`  :download:`(download notebook) </user_guide/notebooks/02_loading_local_data.ipynb>`
 
 :doc:`Introduction to the Evaluation Class </user_guide/notebooks/03_introduction_class>`  :download:`(download notebook) </user_guide/notebooks/03_introduction_class.ipynb>`
 
@@ -32,12 +32,14 @@ Before starting, make sure you have installed TEEHR and its dependencies as desc
 
 :doc:`Ensemble Forecast Evaluation </user_guide/notebooks/09_ensemble_metrics>`  :download:`(download notebook) </user_guide/notebooks/09_ensemble_metrics.ipynb>`
 
+:doc:`Fetching National Water Model Streamflow Data </user_guide/notebooks/10_fetching_nwm_streamflow>`  :download:`(download notebook) </user_guide/notebooks/10_fetching_nwm_streamflow.ipynb>`
+
 .. toctree::
    :maxdepth: 2
    :hidden:
 
    Introduction to the Schema </user_guide/notebooks/01_introduction_schema>
-   Loading Data </user_guide/notebooks/02_loading_local_data>
+   Loading Local Data </user_guide/notebooks/02_loading_local_data>
    Introduction to the Evaluation Class </user_guide/notebooks/03_introduction_class>
    Setting-up a Simple Example </user_guide/notebooks/04_setup_simple_example>
    Clone an Evaluation from S3 </user_guide/notebooks/05_clone_from_s3>
@@ -46,4 +48,5 @@ Before starting, make sure you have installed TEEHR and its dependencies as desc
    Grouping and Filtering </user_guide/notebooks/06_grouping_and_filtering>
    Adding calculated fields </user_guide/notebooks/08_adding_calculated_fields>
    Ensemble Forecast Evaluation </user_guide/notebooks/09_ensemble_metrics>
+   Fetching National Water Model Streamflow Data </user_guide/notebooks/10_fetching_nwm_streamflow>
    Metrics </user_guide/metrics/metrics>

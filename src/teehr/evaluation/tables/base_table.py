@@ -76,8 +76,12 @@ class BaseTable():
 
         path = path_to_spark(path, pattern)
 
-        # May need to deal with empty files here.
-        df = self.ev.spark.read.format(self.format).options(**options).load(path)
+        try:
+            # May need a better way to deal with empty files here.
+            df = self.ev.spark.read.format(self.format).options(**options).load(path)
+        except Exception as e:
+            df = None
+            logger.warning(f"Error reading files from {path}: {e}.")
 
         return df
 
@@ -128,9 +132,10 @@ class BaseTable():
         if partition_by is None:
             partition_by = []
 
-        df.write.partitionBy(partition_by).format(self.format).mode(self.save_mode).options(**kwargs).save(str(self.dir))
+        if df is not None:
+            df.write.partitionBy(partition_by).format(self.format).mode(self.save_mode).options(**kwargs).save(str(self.dir))
 
-        self._load_table()
+            self._load_table()
 
     def _get_schema(self, type: str = "pyspark"):
         """Get the primary timeseries schema.

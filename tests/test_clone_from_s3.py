@@ -24,7 +24,8 @@ def test_get_s3_evaluations_list():
 def test_clone_example_from_s3(tmpdir):
     """Test filter string."""
     ev = Evaluation(tmpdir)
-    ev.clone_from_s3("e0_2_location_example")
+    # ev.clone_from_s3("e0_2_location_example")
+    ev.clone_from_s3("e5_nwm_streamflow_fetching_example")
 
     assert ev.units.to_sdf().count() == 4
     assert ev.variables.to_sdf().count() == 3
@@ -68,8 +69,8 @@ def test_clone_and_subset_example_from_s3(tmpdir):
 
 
 if __name__ == "__main__":
-    test_get_s3_evaluations_dataframe()
-    test_get_s3_evaluations_list()
+    # test_get_s3_evaluations_dataframe()
+    # test_get_s3_evaluations_list()
 
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
