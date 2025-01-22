@@ -32,7 +32,7 @@ Before starting, make sure you have installed TEEHR and its dependencies as desc
 
 :doc:`Ensemble Forecast Evaluation </user_guide/notebooks/09_ensemble_metrics>`  :download:`(download notebook) </user_guide/notebooks/09_ensemble_metrics.ipynb>`
 
-:doc:`Fetching National Water Model Streamflow Data </user_guide/notebooks/10_fetching_nwm_streamflow>`  :download:`(download notebook) </user_guide/notebooks/10_fetching_nwm_streamflow.ipynb>`
+:doc:`Fetching USGS and NWM Streamflow Data </user_guide/notebooks/10_fetching_nwm_streamflow>`  :download:`(download notebook) </user_guide/notebooks/10_fetching_nwm_streamflow.ipynb>`
 
 .. toctree::
    :maxdepth: 2
@@ -48,5 +48,5 @@ Before starting, make sure you have installed TEEHR and its dependencies as desc
    Grouping and Filtering </user_guide/notebooks/06_grouping_and_filtering>
    Adding calculated fields </user_guide/notebooks/08_adding_calculated_fields>
    Ensemble Forecast Evaluation </user_guide/notebooks/09_ensemble_metrics>
-   Fetching National Water Model Streamflow Data </user_guide/notebooks/10_fetching_nwm_streamflow>
+   Fetching USGS and NWM Streamflow Data </user_guide/notebooks/10_fetching_nwm_streamflow>
    Metrics </user_guide/metrics/metrics>
