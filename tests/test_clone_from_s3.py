@@ -68,8 +68,8 @@ def test_clone_and_subset_example_from_s3(tmpdir):
 
 
 if __name__ == "__main__":
-    # test_get_s3_evaluations_dataframe()
-    # test_get_s3_evaluations_list()
+    test_get_s3_evaluations_dataframe()
+    test_get_s3_evaluations_list()
 
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
