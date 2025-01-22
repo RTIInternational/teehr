@@ -10,22 +10,21 @@ from teehr.loading.s3.clone_from_s3 import list_s3_evaluations
 def test_get_s3_evaluations_dataframe():
     """Test get_s3_evaluations as a dataframe."""
     df = list_s3_evaluations()
-    assert len(df) == 5
+    assert len(df) == 6
     assert isinstance(df, pd.DataFrame)
 
 
 def test_get_s3_evaluations_list():
     """Test get_s3_evaluations as a list."""
     l = list_s3_evaluations(format="list")
-    assert len(l) == 5
+    assert len(l) == 6
     assert isinstance(l, list)
 
 
 def test_clone_example_from_s3(tmpdir):
     """Test filter string."""
     ev = Evaluation(tmpdir)
-    # ev.clone_from_s3("e0_2_location_example")
-    ev.clone_from_s3("e5_nwm_streamflow_fetching_example")
+    ev.clone_from_s3("e0_2_location_example")
 
     assert ev.units.to_sdf().count() == 4
     assert ev.variables.to_sdf().count() == 3
