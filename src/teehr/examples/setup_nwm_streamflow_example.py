@@ -2,7 +2,7 @@
 from pathlib import Path
 
 import teehr
-import teehr.example_data.fetch_nwm_streamflow as fetch_nwm_streamflow_data
+import teehr.example_data.nwm_streamflow_example_data as fetch_nwm_streamflow_data
 
 
 def setup_nwm_example(tmpdir):
@@ -25,7 +25,6 @@ def setup_nwm_example(tmpdir):
 
     secondary_timeseries_path = Path(tmpdir, "nwm_forecasts.parquet")
     fetch_nwm_streamflow_data.fetch_file("nwm_forecasts.parquet", secondary_timeseries_path)
-
 
     # Load the data into the Evaluation
     ev.locations.load_spatial(in_path=location_data_path)
