@@ -26,12 +26,6 @@ def setup_hefs_example(tmpdir):
     secondary_timeseries_path = Path(tmpdir, "secondary_timeseries.parquet")
     ensemble_example_data.fetch_file("secondary_timeseries.parquet", secondary_timeseries_path)
 
-    # Load the data into the Evaluation
-    ev.locations.load_spatial(in_path=location_data_path)
-    ev.location_crosswalks.load_parquet(in_path=crosswalk_data_path)
-    ev.primary_timeseries.load_parquet(in_path=primary_timeseries_path)
-    ev.secondary_timeseries.load_parquet(in_path=secondary_timeseries_path)
-
     ev.configurations.add(
         teehr.Configuration(
             name="CNRFC_HEFS",
@@ -39,6 +33,12 @@ def setup_hefs_example(tmpdir):
             description="CNRFC HEFS Extended Forecast"
         )
     )
+
+    # Load the data into the Evaluation
+    ev.locations.load_spatial(in_path=location_data_path)
+    ev.location_crosswalks.load_parquet(in_path=crosswalk_data_path)
+    ev.primary_timeseries.load_parquet(in_path=primary_timeseries_path)
+    ev.secondary_timeseries.load_parquet(in_path=secondary_timeseries_path)
 
 
 if __name__ == "__main__":
