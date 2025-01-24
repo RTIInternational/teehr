@@ -34,10 +34,10 @@ class BaseTable():
         self.validate_filter_field_types = True
 
     @staticmethod
-    def _raise_missing_table_error():
+    def _raise_missing_table_error(table_name: str):
         """Raise an error if the table does not exist."""
         err_msg = (
-            "The requested table does not exist in the dataset."
+            f"The '{table_name}' table does not exist in the dataset."
             " Please load it first."
         )
         logger.error(err_msg)
@@ -105,7 +105,7 @@ class BaseTable():
         if self.df is None:
             self._load_table()
         if self.df is None:
-            self._raise_missing_table_error()
+            self._raise_missing_table_error(table_name=self.name)
 
     def _write_spark_df(self, df: ps.DataFrame, **kwargs):
         """Write spark dataframe to directory.
