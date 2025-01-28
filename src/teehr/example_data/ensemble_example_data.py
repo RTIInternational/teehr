@@ -6,19 +6,19 @@ import requests
 files = [
     {
         "name": "two_locations.parquet",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/352-set-up-template-evaluations-for-fetching-operational-nwm-data/tests/data/hefs_example/two_locations.parquet"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/tests/data/hefs_example/two_locations.parquet"
     },
     {
         "name": "primary_timeseries.parquet",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/352-set-up-template-evaluations-for-fetching-operational-nwm-data/tests/data/hefs_example/primary_timeseries.parquet"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/tests/data/hefs_example/primary_timeseries.parquet"
     },
     {
         "name": "secondary_timeseries.parquet",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/352-set-up-template-evaluations-for-fetching-operational-nwm-data/tests/data/hefs_example/secondary_timeseries.parquet"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/tests/data/hefs_example/secondary_timeseries.parquet"
     },
     {
         "name": "location_crosswalks.parquet",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/352-set-up-template-evaluations-for-fetching-operational-nwm-data/tests/data/hefs_example/location_crosswalks.parquet"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/tests/data/hefs_example/location_crosswalks.parquet"
     }
 ]
 

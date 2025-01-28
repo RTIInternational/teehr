@@ -6,19 +6,19 @@ import requests
 files = [
     {
         "name": "usgs_at_radford_location.parquet",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/352-set-up-template-evaluations-for-fetching-operational-nwm-data/tests/data/fetch_nwm_streamflow/usgs_at_radford_location.parquet"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/tests/data/fetch_nwm_streamflow/usgs_at_radford_location.parquet"
     },
     {
         "name": "usgs_timeseries.parquet",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/352-set-up-template-evaluations-for-fetching-operational-nwm-data/tests/data/fetch_nwm_streamflow/usgs_timeseries.parquet"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/tests/data/fetch_nwm_streamflow/usgs_timeseries.parquet"
     },
     {
         "name": "nwm_forecasts.parquet",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/352-set-up-template-evaluations-for-fetching-operational-nwm-data/tests/data/fetch_nwm_streamflow/nwm_forecasts.parquet"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/tests/data/fetch_nwm_streamflow/nwm_forecasts.parquet"
     },
     {
         "name": "location_crosswalks.parquet",
-        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/352-set-up-template-evaluations-for-fetching-operational-nwm-data/tests/data/fetch_nwm_streamflow/location_crosswalks.parquet"
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/main/tests/data/fetch_nwm_streamflow/location_crosswalks.parquet"
     }
 ]
 
