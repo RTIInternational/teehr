@@ -47,6 +47,7 @@ class BaseTable():
             self,
             path: Union[str, Path, S3Path],
             pattern: str = None,
+            use_table_schema: bool = False,
             **options
     ) -> ps.DataFrame:
         """Read data from table directory as a spark dataframe.
@@ -57,6 +58,10 @@ class BaseTable():
             The path to the directory containing the files.
         pattern : str, optional
             The pattern to match files.
+        use_table_schema : bool, optional
+            If True, use the table schema to read the files.
+            Missing files will be ignored with 'ignoreMissingFiles'
+            set to True (default).
         **options
             Additional options to pass to the spark read method.
 
@@ -76,12 +81,13 @@ class BaseTable():
 
         path = path_to_spark(path, pattern)
 
-        try:
-            # May need a better way to deal with empty files here.
+        if use_table_schema is True:
+            schema = self.schema_func().to_structtype()
+            df = self.ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
+            if len(df.head(1)) == 0:
+                logger.warning(f"An empty dataframe was returned for '{self.name}'.")
+        else:
             df = self.ev.spark.read.format(self.format).options(**options).load(path)
-        except Exception as e:
-            df = None
-            logger.warning(f"Error reading files from {path}: {e}.")
 
         return df
 
