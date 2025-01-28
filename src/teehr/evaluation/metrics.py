@@ -7,7 +7,8 @@ import pyspark.sql as ps
 from teehr.models.filters import (
     JoinedTimeseriesFilter
 )
-from teehr.models.metrics.metric_models import MetricsBasemodel
+from teehr.models.metrics.basemodels import MetricsBasemodel
+from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
 from teehr.models.table_enums import (
     JoinedTimeseriesFields
 )
@@ -173,3 +174,34 @@ class Metrics:
     def to_sdf(self) -> ps.DataFrame:
         """Return the Spark DataFrame."""
         return self.df
+
+    def add_calculated_fields(self, cfs: Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]):
+            """Add calculated fields to the joined timeseries DataFrame before running metrics.
+
+            Parameters
+            ----------
+            cfs : Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]
+                The CFs to apply to the DataFrame.
+
+            Returns
+            -------
+            self
+                The Metrics object with the CFs applied to the DataFrame.
+
+            Examples
+            --------
+            >>> import teehr
+            >>> from teehr import RowLevelCalculatedFields as rcf
+            >>> ev.join_timeseries.add_calculated_fields([
+            >>>     rcf.Month()
+            >>> ]).write()
+            """
+            # self._check_load_table()
+
+            if not isinstance(cfs, List):
+                cfs = [cfs]
+
+            for cf in cfs:
+                self.df = cf.apply_to(self.df)
+
+            return self

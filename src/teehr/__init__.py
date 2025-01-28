@@ -1,15 +1,18 @@
-__version__ = "0.4.6"
+"""Initialize the TEEHR package."""
+__version__ = "0.4.7"
 
 from teehr.evaluation.evaluation import Evaluation  # noqa
-from teehr.models.metrics.metric_models import Metrics  # noqa
-from teehr.models.metrics.metric_enums import Operators  # noqa
+from teehr.models.metrics.deterministic_models import DeterministicMetrics  # noqa
+from teehr.models.metrics.probabilistic_models import ProbabilisticMetrics  # noqa
+from teehr.models.metrics.signature_models import SignatureMetrics  # noqa
+from teehr.models.metrics.bootstrap_models import Bootstrappers  # noqa
+from teehr.models.metrics.basemodels import Operators  # noqa
 from teehr.models.pydantic_table_models import (  # noqa
     Configuration,
     Attribute,
     Unit,
     Variable
 )
-from teehr.models.metrics.bootstrap_models import Bootstrappers  # noqa
 from teehr.models.filters import (  # noqa
     UnitFilter,
     ConfigurationFilter,
@@ -21,6 +24,9 @@ from teehr.models.filters import (  # noqa
     TimeseriesFilter,
     JoinedTimeseriesFilter
 )
+
+from teehr.models.calculated_fields.row_level import RowLevelCalculatedFields # noqa
+from teehr.models.calculated_fields.timeseries_aware import TimeseriesAwareCalculatedFields # noqa
 
 # For docs
 from teehr.evaluation.tables.base_table import (  # noqa
@@ -38,6 +44,5 @@ from teehr.evaluation.tables.unit_table import UnitTable
 from teehr.evaluation.tables.variable_table import VariableTable
 from teehr.evaluation.fetch import Fetch  # noqa
 from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor  # noqa
-from teehr.models.metrics import metric_models, bootstrap_models  # noqa
-from teehr.metrics import metric_funcs # noqa
-from teehr.metrics.metric_funcs import count  # noqa
+from teehr.metrics import deterministic_funcs, signature_funcs, probabilistic_funcs # noqa
+from teehr.metrics.signature_funcs import count  # noqa
