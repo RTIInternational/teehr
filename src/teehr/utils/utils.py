@@ -1,5 +1,6 @@
 """Module contains utility functions."""
 from pathlib import Path
+import shutil
 from typing import Union, Tuple
 from teehr.utils.s3path import S3Path
 import logging
@@ -62,5 +63,4 @@ def remove_dir_if_exists(path: Union[str, Path]):
     if isinstance(path, str):
         path = Path(path)
     if path.is_dir():
-        logger.info(f"Removing directory: {path}")
-        path.rmdir()
+        shutil.rmtree(path)
