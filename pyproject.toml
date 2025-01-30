@@ -40,6 +40,7 @@ netcdf4 = "1.6.5"
 bokeh = "^3.5.0"
 scoringrules = "^0.7.1"
 hvplot = "^0.11.1"
+exactextract = "^0.2.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"
