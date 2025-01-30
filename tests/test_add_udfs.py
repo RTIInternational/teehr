@@ -8,6 +8,7 @@ from setup_v0_3_study import setup_v0_3_study
 
 import pyspark.sql.types as T
 
+
 def test_add_row_udfs(tmpdir):
     """Test adding row level UDFs."""
     ev = setup_v0_3_study(tmpdir)
@@ -23,12 +24,18 @@ def test_add_row_udfs(tmpdir):
 
     sdf = rcf.Seasons().apply_to(sdf)
 
+    sdf = rcf.ForecastLeadTime().apply_to(sdf)
+
+    sdf = rcf.ThresholdValueExceeded().apply_to(sdf)
+
     cols = sdf.columns
     assert "month" in cols
     assert "year" in cols
     assert "water_year" in cols
     assert "normalized_flow" in cols
     assert "season" in cols
+    assert "forecast_lead_time" in cols
+    assert "threshold_value_exceeded" in cols
 
     ev.spark.stop()
 
@@ -54,13 +61,19 @@ def test_add_udfs_write(tmpdir):
 
     ped = tcf.PercentileEventDetection()
     ev.joined_timeseries.add_calculated_fields(ped).write()
+
+    flt = rcf.ForecastLeadTime()
+    ev.joined_timeseries.add_calculated_fields(flt).write()
+
     new_sdf = ev.joined_timeseries.to_sdf()
 
     cols = new_sdf.columns
     assert "event" in cols
     assert "event_id" in cols
+    assert "forecast_lead_time" in cols
 
     ev.spark.stop()
+
 
 def test_location_event_detection(tmpdir):
     """Test event detection and metrics per event."""

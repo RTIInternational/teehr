@@ -6,7 +6,8 @@ import pandas as pd
 import pyspark.sql.types as T
 from pyspark.sql.functions import pandas_udf
 import pyspark.sql as ps
-from teehr.models.calculated_fields.base import CalculatedFieldABC, CalculatedFieldBaseModel
+from teehr.models.calculated_fields.base import CalculatedFieldABC
+from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
 
 
 class Month(CalculatedFieldABC, CalculatedFieldBaseModel):
@@ -31,6 +32,7 @@ class Month(CalculatedFieldABC, CalculatedFieldBaseModel):
     )
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
+        """Apply the calculated field to the Spark DataFrame."""
         @pandas_udf(returnType=T.IntegerType())
         def func(col: pd.Series) -> pd.Series:
             return col.dt.month
@@ -55,6 +57,7 @@ class Year(CalculatedFieldABC, CalculatedFieldBaseModel):
         Default: "year"
 
     """
+
     input_field_name: str = Field(
         default="value_time"
     )
@@ -63,6 +66,7 @@ class Year(CalculatedFieldABC, CalculatedFieldBaseModel):
     )
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
+        """Apply the calculated field to the Spark DataFrame."""
         @pandas_udf(returnType=T.IntegerType())
         def func(col: pd.Series) -> pd.Series:
             return col.dt.year
@@ -86,8 +90,10 @@ class WaterYear(CalculatedFieldABC, CalculatedFieldBaseModel):
         The name of the column to store the water year.
         Default: "water_year"
 
-    Water year is defined as the year of the date plus one if the month is October or later.
+    Water year is defined as the year of the date plus one if the month is
+    October or later.
     """
+
     input_field_name: str = Field(
         default="value_time"
     )
@@ -96,6 +102,7 @@ class WaterYear(CalculatedFieldABC, CalculatedFieldBaseModel):
     )
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
+        """Apply the calculated field to the Spark DataFrame."""
         @pandas_udf(returnType=T.IntegerType())
         def func(col: pd.Series) -> pd.Series:
             return col.dt.year + (col.dt.month >= 10).astype(int)
@@ -123,6 +130,7 @@ class NormalizedFlow(CalculatedFieldABC, CalculatedFieldBaseModel):
         Default: "normalized_flow"
 
     """
+
     primary_value_field_name: str = Field(
         default="primary_value"
     )
@@ -134,7 +142,7 @@ class NormalizedFlow(CalculatedFieldABC, CalculatedFieldBaseModel):
     )
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
-
+        """Apply the calculated field to the Spark DataFrame."""
         @pandas_udf(returnType=T.FloatType())
         def func(value: pd.Series, area: pd.Series) -> pd.Series:
             return value.astype(float) / area.astype(float)
@@ -144,6 +152,7 @@ class NormalizedFlow(CalculatedFieldABC, CalculatedFieldBaseModel):
             func(self.primary_value_field_name, self.drainage_area_field_name)
         )
         return sdf
+
 
 class Seasons(CalculatedFieldABC, CalculatedFieldBaseModel):
     """Adds the season from a timestamp column.
@@ -170,6 +179,7 @@ class Seasons(CalculatedFieldABC, CalculatedFieldBaseModel):
         Default: "season"
 
     """
+
     value_time_field_name: str = Field(
         default="value_time"
     )
@@ -186,7 +196,7 @@ class Seasons(CalculatedFieldABC, CalculatedFieldBaseModel):
     )
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
-
+        """Apply the calculated field to the Spark DataFrame."""
         @pandas_udf(returnType=T.StringType())
         def func(value_time: pd.Series) -> pd.Series:
             return value_time.dt.month.apply(
@@ -203,16 +213,102 @@ class Seasons(CalculatedFieldABC, CalculatedFieldBaseModel):
         return sdf
 
 
+class ForecastLeadTime(CalculatedFieldABC, CalculatedFieldBaseModel):
+    """Adds the forecast lead time from a timestamp column.
+
+    Properties
+    ----------
+    - value_time_field_name:
+        The name of the column containing the timestamp.
+        Default: "value_time"
+    - reference_time_field_name:
+        The name of the column containing the forecast time.
+        Default: "reference_time"
+    - output_field_name:
+        The name of the column to store the forecast lead time.
+        Default: "forecast_lead_time"
+
+    """
+
+    value_time_field_name: str = Field(
+        default="value_time"
+    )
+    reference_time_field_name: str = Field(
+        default="reference_time"
+    )
+    output_field_name: str = Field(
+        default="forecast_lead_time"
+    )
+
+    def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
+        """Apply the calculated field to the Spark DataFrame."""
+        @pandas_udf(returnType=T.DayTimeIntervalType())
+        def func(value_time: pd.Series,
+                 reference_time: pd.Series
+                 ) -> pd.Series:
+            difference = value_time - reference_time
+            return difference
+
+        sdf = sdf.withColumn(
+            self.output_field_name,
+            func(self.value_time_field_name, self.reference_time_field_name)
+        )
+        return sdf
+
+
+class ThresholdValueExceeded(CalculatedFieldABC, CalculatedFieldBaseModel):
+    """Adds boolean column indicating if the primary value exceeds a threshold.
+
+    Properties
+    ----------
+    - primary_value_field_name:
+        The name of the column containing the primary value.
+        Default: "primary_value"
+    - threshold:
+        The threshold value.
+        Default: 0
+    - output_field_name:
+        The name of the column to store the boolean value.
+        Default: "threshold_value_exceeded"
+
+    """
+
+    primary_value_field_name: str = Field(
+        default="primary_value"
+    )
+    threshold: float = Field(
+        default=0.0
+    )
+    output_field_name: str = Field(
+        default="threshold_value_exceeded"
+    )
+
+    def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
+        """Apply the calculated field to the Spark DataFrame."""
+        @pandas_udf(returnType=T.BooleanType())
+        def func(value: pd.Series) -> pd.Series:
+            mask = value > self.threshold
+            return mask
+
+        sdf = sdf.withColumn(
+            self.output_field_name,
+            func(self.primary_value_field_name)
+        )
+        return sdf
+
+
 class RowLevelCalculatedFields:
     """Row level Calculated Fields.
 
     Notes
     -----
-    Row level CFs are applied to each row in the table based on data that is in one or more
-    existing fields.  These are applied per row and are not aware of the data in any other
-    row (e.g., are not aware of any other timeseries values in a "timeseries").  This can be
-    used for adding fields such as a field based on the data/time (e.g., month, year, season, etc.)
-    or based on the value field (e.g., normalized flow, log flow, etc.) and many other uses.
+    Row level CFs are applied to each row in the table based on data that is
+    in one or more existing fields.  These are applied per row and are not
+    aware of the data in any other row (e.g., are not aware of any other
+    timeseries values in a "timeseries").  This can be used for adding fields
+    such as a field based on the data/time (e.g., month, year, season, etc.)
+    or based on the value field (e.g., normalized flow, log flow, etc.) and
+    many other uses.
 
     Available Calculated Fields:
 
@@ -228,3 +324,5 @@ class RowLevelCalculatedFields:
     WaterYear = WaterYear
     NormalizedFlow = NormalizedFlow
     Seasons = Seasons
+    ForecastLeadTime = ForecastLeadTime
+    ThresholdValueExceeded = ThresholdValueExceeded
