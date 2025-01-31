@@ -28,6 +28,8 @@ def test_add_row_udfs(tmpdir):
 
     sdf = rcf.ThresholdValueExceeded().apply_to(sdf)
 
+    sdf = rcf.DayOFYear().apply_to(sdf)
+
     cols = sdf.columns
     assert "month" in cols
     assert "year" in cols
@@ -36,6 +38,7 @@ def test_add_row_udfs(tmpdir):
     assert "season" in cols
     assert "forecast_lead_time" in cols
     assert "threshold_value_exceeded" in cols
+    assert "day_of_year" in cols
 
     ev.spark.stop()
 

@@ -276,8 +276,8 @@ class ThresholdValueExceeded(CalculatedFieldABC, CalculatedFieldBaseModel):
     primary_value_field_name: str = Field(
         default="primary_value"
     )
-    threshold: float = Field(
-        default=0.0
+    secondary_value_field_name: str = Field(
+        default="secondary_value"
     )
     output_field_name: str = Field(
         default="threshold_value_exceeded"
@@ -286,13 +286,63 @@ class ThresholdValueExceeded(CalculatedFieldABC, CalculatedFieldBaseModel):
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
         @pandas_udf(returnType=T.BooleanType())
-        def func(value: pd.Series) -> pd.Series:
-            mask = value > self.threshold
+        def func(primary_value: pd.Series,
+                 secondary_value: pd.Series
+                 ) -> pd.Series:
+            mask = primary_value > secondary_value
             return mask
 
         sdf = sdf.withColumn(
             self.output_field_name,
-            func(self.primary_value_field_name)
+            func(self.primary_value_field_name,
+                 self.secondary_value_field_name)
+        )
+        return sdf
+
+
+class DayOfYear(CalculatedFieldABC, CalculatedFieldBaseModel):
+    """Adds the day of the year from a timestamp column.
+
+    Properties
+    ----------
+    - input_field_name:
+        The name of the column containing the timestamp.
+        Default: "value_time"
+    - output_field_name:
+        The name of the column to store the day of the year.
+        Default: "day_of_year"
+
+    Notes
+    -----
+    - February 29th in leap years is set to None.
+    - All days after February 29th are adjusted to correspond to the same day
+      of the year as in a non-leap year.
+    """
+
+    input_field_name: str = Field(
+        default="value_time"
+    )
+    output_field_name: str = Field(
+        default="day_of_year"
+    )
+
+    def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
+        """Apply the calculated field to the Spark DataFrame."""
+        @pandas_udf(returnType=T.IntegerType())
+        def func(col: pd.Series) -> pd.Series:
+            def adjust_day_of_year(date):
+                if date.month == 2 and date.day == 29:
+                    return None
+                elif date.month > 2 or (date.month == 2 and date.day > 28):
+                    return date.dayofyear - 1
+                else:
+                    return date.dayofyear
+
+            return col.apply(adjust_day_of_year)
+
+        sdf = sdf.withColumn(
+            self.output_field_name,
+            func(self.input_field_name)
         )
         return sdf
 
@@ -326,3 +376,4 @@ class RowLevelCalculatedFields:
     Seasons = Seasons
     ForecastLeadTime = ForecastLeadTime
     ThresholdValueExceeded = ThresholdValueExceeded
+    DayOFYear = DayOfYear
