@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 
 import pandas as pd
+from exactextract import FeatureSource, Operation
 
 import teehr.const as const
 from teehr.fetching.usgs.usgs import usgs_to_parquet
@@ -671,6 +672,9 @@ class Fetch:
         ingest_days: int,
         zonal_weights_filepath: Union[Path, str],
         nwm_version: SupportedNWMOperationalVersionsEnum,
+        features: FeatureSource,
+        unique_zone_id: str,
+        stats: List[Union[str, Operation]] = ["mean"],
         data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
         kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
         prioritize_analysis_valid_time: Optional[bool] = False,
@@ -678,7 +682,8 @@ class Fetch:
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
         location_id_prefix: Optional[Union[str, None]] = None,
-        timeseries_type: TimeseriesTypeEnum = "primary"
+        timeseries_type: TimeseriesTypeEnum = "primary",
+        **kwargs
     ):
         """
         Fetch NWM operational gridded data, calculate zonal statistics (currently only
@@ -829,6 +834,9 @@ class Fetch:
                 schema_variable_name
             ),
             nwm_version=nwm_version,
+            features=features,
+            unique_zone_id=unique_zone_id,
+            stats=stats,
             data_source=data_source,
             kerchunk_method=kerchunk_method,
             prioritize_analysis_valid_time=prioritize_analysis_valid_time,
@@ -836,7 +844,8 @@ class Fetch:
             ignore_missing_file=ignore_missing_file,
             overwrite_output=overwrite_output,
             location_id_prefix=location_id_prefix,
-            variable_mapper=NWM_VARIABLE_MAPPER
+            variable_mapper=NWM_VARIABLE_MAPPER,
+            **kwargs
         )
 
         pass

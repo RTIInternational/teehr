@@ -7,6 +7,8 @@ import dask
 import numpy as np
 import pandas as pd
 import xarray as xr
+from exactextract import exact_extract, RasterSource, Operation
+from geopandas import GeoDataFrame
 
 from teehr.fetching.utils import (
     get_dataset,
@@ -93,6 +95,89 @@ def compute_weighted_average(
     return df[[LOCATION_ID, VALUE]].copy()
 
 
+def compute_zonal_stats(
+    raster: RasterSource,
+    features: GeoDataFrame,
+    stats: List[Union[str, Operation]],
+    **kwargs
+) -> pd.DataFrame:
+    """Compute zonal statistics using exactextract."""
+    ee_result = exact_extract(raster, features, stats, **kwargs)
+    return ee_result
+
+
+def unpack_zonal_stats(ee_result: pd.DataFrame) -> pd.DataFrame:
+    """Unpack zonal statistics result into a dataframe."""
+    df = pd.DataFrame(ee_result)
+    df = df.rename(columns={"value": VALUE})
+    return df
+
+
+@dask.delayed
+def process_single_nwm_grid_file_ee(
+    row: Tuple,
+    configuration_name: str,
+    variable_name: str,
+    weights_filepath: str,
+    ignore_missing_file: bool,
+    location_id_prefix: Union[str, None],
+    variable_mapper: Dict[str, Dict[str, str]],
+    features: GeoDataFrame,
+    unique_zone_id: str,
+    stats: List[Union[str, Operation]],
+    **kwargs
+) -> pd.DataFrame:
+    """Fetch data for a single reference file and compute weighted average."""
+    ds = get_dataset(
+        row.filepath,
+        ignore_missing_file,
+        target_options={'anon': True}
+    )
+    if not ds:
+        return None
+    yrmoday = row.day
+    z_hour = row.z_hour[1:3]
+    ref_time = pd.to_datetime(yrmoday) \
+        + pd.to_timedelta(int(z_hour), unit="h")
+
+    nwm_units = ds[variable_name].attrs["units"]
+    value_time = ds.time.values[0]
+    da = ds[variable_name][0]
+
+    # TODO: Unique zone id can't be just 'id' ??
+
+    df = compute_zonal_stats(
+        raster=da,
+        features=features,
+        stats=stats,
+        include_cols="temp_id",
+        output="pandas",
+        include_geom=False,
+        **kwargs
+    )
+    df.rename(columns={"id": LOCATION_ID, "mean": "value"}, inplace=True)
+    # TODO: Combine the stat and variable names?
+    # Then stack vertically?
+
+    if not variable_mapper:
+        df.loc[:, UNIT_NAME] = nwm_units
+        df.loc[:, VARIABLE_NAME] = variable_name
+    else:
+        df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
+            get(nwm_units, nwm_units)
+        df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
+            get(variable_name, variable_name)
+
+    df.loc[:, VALUE_TIME] = value_time
+    df.loc[:, REFERENCE_TIME] = ref_time
+    df.loc[:, CONFIGURATION_NAME] = configuration_name
+
+    if location_id_prefix:
+        df = update_location_id_prefix(df, location_id_prefix)
+
+    return df
+
+
 @dask.delayed
 def process_single_nwm_grid_file(
     row: Tuple,
@@ -101,7 +186,11 @@ def process_single_nwm_grid_file(
     weights_filepath: str,
     ignore_missing_file: bool,
     location_id_prefix: Union[str, None],
-    variable_mapper: Dict[str, Dict[str, str]]
+    variable_mapper: Dict[str, Dict[str, str]],
+    features: GeoDataFrame,
+    unique_zone_id: str,
+    stats: List[Union[str, Operation]],
+    **kwargs
 ) -> pd.DataFrame:
     """Fetch data for a single reference file and compute weighted average."""
     ds = get_dataset(
@@ -171,7 +260,11 @@ def fetch_and_format_nwm_grids(
     overwrite_output: bool,
     location_id_prefix: Union[str, None],
     variable_mapper: Dict[str, Dict[str, str]],
-    timeseries_type: TimeseriesTypeEnum
+    timeseries_type: TimeseriesTypeEnum,
+    features: GeoDataFrame,
+    unique_zone_id: str,
+    stats: List[Union[str, Operation]],
+    **kwargs
 ):
     """Compute weighted average, grouping by reference time.
 
@@ -208,14 +301,18 @@ def fetch_and_format_nwm_grids(
         results = []
         for row in df.itertuples():
             results.append(
-                process_single_nwm_grid_file(
-                    row,
-                    configuration_name,
-                    variable_name,
-                    zonal_weights_filepath,
-                    ignore_missing_file,
-                    location_id_prefix,
-                    variable_mapper
+                process_single_nwm_grid_file_ee(
+                    row=row,
+                    configuration_name=configuration_name,
+                    variable_name=variable_name,
+                    weights_filepath=zonal_weights_filepath,
+                    ignore_missing_file=ignore_missing_file,
+                    location_id_prefix=location_id_prefix,
+                    variable_mapper=variable_mapper,
+                    features=features,
+                    unique_zone_id=unique_zone_id,
+                    stats=stats,
+                    **kwargs
                 )
             )
 

@@ -3,13 +3,16 @@ from typing import Union, List, Optional, Dict
 from datetime import datetime
 from pathlib import Path
 
-from pydantic import validate_call
+from pydantic import validate_call, InstanceOf
+from exactextract import Operation
+from geopandas import GeoDataFrame
 
 from teehr.fetching.nwm.grid_utils import fetch_and_format_nwm_grids
 from teehr.fetching.utils import (
     build_remote_nwm_filelist,
     generate_json_paths,
-    check_dates_against_nwm_version
+    check_dates_against_nwm_version,
+    load_gdf
 )
 from teehr.models.fetching.utils import (
     SupportedNWMOperationalVersionsEnum,
@@ -34,6 +37,9 @@ def nwm_grids_to_parquet(
     json_dir: Union[str, Path],
     output_parquet_dir: Union[str, Path],
     nwm_version: SupportedNWMOperationalVersionsEnum,
+    features: Union[str, Path, InstanceOf[GeoDataFrame]],
+    unique_zone_id: str,
+    stats: List[Union[str, InstanceOf[Operation]]] = ["mean"],
     data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
     kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
     prioritize_analysis_valid_time: Optional[bool] = False,
@@ -42,7 +48,8 @@ def nwm_grids_to_parquet(
     overwrite_output: Optional[bool] = False,
     location_id_prefix: Optional[Union[str, None]] = None,
     variable_mapper: Dict[str, Dict[str, str]] = None,
-    timeseries_type: TimeseriesTypeEnum = "primary"
+    timeseries_type: TimeseriesTypeEnum = "primary",
+    **kwargs
 ):
     """
     Fetch NWM gridded data, calculate zonal statistics (currently only
@@ -209,25 +216,34 @@ def nwm_grids_to_parquet(
         # Make sure start/end dates work with specified NWM version
         check_dates_against_nwm_version(nwm_version, start_date, ingest_days)
 
-        # Build paths to netcdf files on GCS
-        gcs_component_paths = build_remote_nwm_filelist(
-            configuration,
-            output_type,
-            start_date,
-            ingest_days,
-            analysis_config_dict,
-            t_minus_hours,
-            ignore_missing_file,
-            prioritize_analysis_valid_time
-        )
+        # # Build paths to netcdf files on GCS
+        # gcs_component_paths = build_remote_nwm_filelist(
+        #     configuration,
+        #     output_type,
+        #     start_date,
+        #     ingest_days,
+        #     analysis_config_dict,
+        #     t_minus_hours,
+        #     ignore_missing_file,
+        #     prioritize_analysis_valid_time
+        # )
 
-        # Create paths to local and/or remote kerchunk jsons
-        json_paths = generate_json_paths(
-            kerchunk_method,
-            gcs_component_paths,
-            json_dir,
-            ignore_missing_file
-        )
+        # # Create paths to local and/or remote kerchunk jsons
+        # json_paths = generate_json_paths(
+        #     kerchunk_method,
+        #     gcs_component_paths,
+        #     json_dir,
+        #     ignore_missing_file
+        # )
+
+        # TESTIING
+        import glob
+        json_paths = glob.glob("/mnt/data/ciroh/teehr/test_stuff/zonal_stats/kerchunk/*.json")
+
+        # TODO: features can be a path or a GeoDataFrame . If path, load as
+        # GeoDataFrame here for exact_extract.
+        if isinstance(features, str) or isinstance(features, Path):
+            features = load_gdf(features)
 
         # Fetch the data, saving to parquet files based on TEEHR data model
         fetch_and_format_nwm_grids(
@@ -240,7 +256,11 @@ def nwm_grids_to_parquet(
             overwrite_output=overwrite_output,
             location_id_prefix=location_id_prefix,
             variable_mapper=variable_mapper,
-            timeseries_type=timeseries_type
+            timeseries_type=timeseries_type,
+            features=features,
+            unique_zone_id=unique_zone_id,
+            stats=stats,
+            **kwargs
         )
 
 

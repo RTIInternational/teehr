@@ -158,6 +158,10 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
     ev.enable_logging()
     ev.clone_template()
 
+    # TEMP
+    ZONAL_LOCATIONS = Path("/mnt/data/ciroh/teehr/test_stuff/zonal_stats/one_huc10_conus_1016000606.parquet")
+    ZONAL_WEIGHTS = Path("/mnt/data/ciroh/teehr/test_stuff/zonal_stats/one_huc10_1016000606_teehr_weights.parquet")
+
     ev.locations.load_spatial(in_path=ZONAL_LOCATIONS)
 
     ev.fetch.nwm_forecast_grids(
@@ -168,6 +172,8 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
         ingest_days=1,
         zonal_weights_filepath=ZONAL_WEIGHTS,
         nwm_version="nwm30",
+        features=ZONAL_LOCATIONS,
+        unique_zone_id="id",
         prioritize_analysis_valid_time=True,
         t_minus_hours=[0],
         location_id_prefix="huc10"
@@ -204,29 +210,29 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_fetch_and_load_nwm_retro_points(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_fetch_and_load_nwm_retro_grids(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_fetch_and_load_nwm_forecast_points(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-
-        # # Warning: This one is slow.
-        # test_fetch_and_load_nwm_forecast_grids(
+        # test_fetch_and_load_nwm_retro_points(
         #     tempfile.mkdtemp(
-        #         prefix="4-",
+        #         prefix="1-",
         #         dir=tempdir
         #     )
         # )
+        # test_fetch_and_load_nwm_retro_grids(
+        #     tempfile.mkdtemp(
+        #         prefix="2-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_fetch_and_load_nwm_forecast_points(
+        #     tempfile.mkdtemp(
+        #         prefix="3-",
+        #         dir=tempdir
+        #     )
+        # )
+
+        # Warning: This one is slow.
+        test_fetch_and_load_nwm_forecast_grids(
+            tempfile.mkdtemp(
+                prefix="4-",
+                dir=tempdir
+            )
+        )
