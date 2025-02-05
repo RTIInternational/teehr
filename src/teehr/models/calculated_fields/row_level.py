@@ -257,15 +257,15 @@ class ForecastLeadTime(CalculatedFieldABC, CalculatedFieldBaseModel):
 
 
 class ThresholdValueExceeded(CalculatedFieldABC, CalculatedFieldBaseModel):
-    """Adds boolean column indicating if the primary value exceeds a threshold.
+    """Adds boolean column indicating if the input value exceeds a threshold.
 
     Properties
     ----------
-    - primary_value_field_name:
+    - input_field_name:
         The name of the column containing the primary value.
         Default: "primary_value"
-    - threshold:
-        The threshold value.
+    - threshold_field_name:
+        The name of the column containing the threshold value.
         Default: 0
     - output_field_name:
         The name of the column to store the boolean value.
@@ -273,10 +273,10 @@ class ThresholdValueExceeded(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     """
 
-    primary_value_field_name: str = Field(
+    input_field_name: str = Field(
         default="primary_value"
     )
-    secondary_value_field_name: str = Field(
+    threshold_field_name: str = Field(
         default="secondary_value"
     )
     output_field_name: str = Field(
@@ -286,16 +286,16 @@ class ThresholdValueExceeded(CalculatedFieldABC, CalculatedFieldBaseModel):
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
         @pandas_udf(returnType=T.BooleanType())
-        def func(primary_value: pd.Series,
-                 secondary_value: pd.Series
+        def func(input_value: pd.Series,
+                 threshold_value: pd.Series
                  ) -> pd.Series:
-            mask = primary_value > secondary_value
+            mask = input_value > threshold_value
             return mask
 
         sdf = sdf.withColumn(
             self.output_field_name,
-            func(self.primary_value_field_name,
-                 self.secondary_value_field_name)
+            func(self.input_field_name,
+                 self.threshold_field_name)
         )
         return sdf
 
@@ -331,10 +331,13 @@ class DayOfYear(CalculatedFieldABC, CalculatedFieldBaseModel):
         @pandas_udf(returnType=T.IntegerType())
         def func(col: pd.Series) -> pd.Series:
             def adjust_day_of_year(date):
-                if date.month == 2 and date.day == 29:
-                    return None
-                elif date.month > 2 or (date.month == 2 and date.day > 28):
-                    return date.dayofyear - 1
+                if (date.year % 4 == 0 and date.year % 100 != 0) or (date.year % 400 == 0):
+                    if date.month == 2 and date.day == 29:
+                        return None
+                    elif date.month > 2 or (date.month == 2 and date.day > 28):
+                        return date.dayofyear - 1
+                    else:
+                        return date.dayofyear
                 else:
                     return date.dayofyear
 
@@ -367,6 +370,9 @@ class RowLevelCalculatedFields:
     - WaterYear
     - NormalizedFlow
     - Seasons
+    - ForecastLeadTime
+    - ThresholdValueExceeded
+    - DayOfYear
     """
 
     Month = Month
@@ -376,4 +382,4 @@ class RowLevelCalculatedFields:
     Seasons = Seasons
     ForecastLeadTime = ForecastLeadTime
     ThresholdValueExceeded = ThresholdValueExceeded
-    DayOFYear = DayOfYear
+    DayOfYear = DayOfYear
