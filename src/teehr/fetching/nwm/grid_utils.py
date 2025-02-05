@@ -4,7 +4,6 @@ from typing import Dict, List, Tuple, Union
 import re
 
 import dask
-import numpy as np
 import pandas as pd
 import xarray as xr
 from exactextract import exact_extract, RasterSource, Operation
@@ -24,25 +23,6 @@ from teehr.fetching.const import (
     VARIABLE_NAME,
     CONFIGURATION_NAME
 )
-
-
-def get_weights_row_col_stats(weights_df: pd.DataFrame) -> Dict:
-    """Get row and column statistics for weights dataframe."""
-    row_min = weights_df.row.values.min()
-    col_min = weights_df.col.values.min()
-    row_max = weights_df.row.values.max()
-    col_max = weights_df.col.values.max()
-
-    rows_norm = weights_df.row.values - row_min
-    cols_norm = weights_df.col.values - col_min
-    return {
-        "row_min": row_min,
-        "row_max": row_max,
-        "col_min": col_min,
-        "col_max": col_max,
-        "rows_norm": rows_norm,
-        "cols_norm": cols_norm
-    }
 
 
 def get_nwm_grid_data(
@@ -79,22 +59,6 @@ def update_location_id_prefix(
     return df
 
 
-def compute_weighted_average(
-    grid_values: np.ndarray,
-    weights_df: pd.DataFrame
-) -> pd.DataFrame:
-    """Compute weighted average of pixels for given zones and weights."""
-    weights_df.loc[:, "weighted_value"] = grid_values * \
-        weights_df.weight.values
-
-    # Compute weighted average
-    df = weights_df.groupby(
-        by=LOCATION_ID, as_index=False)[["weighted_value", "weight"]].sum()
-    df.loc[:, VALUE] = df.weighted_value/df.weight
-
-    return df[[LOCATION_ID, VALUE]].copy()
-
-
 def compute_zonal_stats(
     raster: RasterSource,
     features: GeoDataFrame,
@@ -106,24 +70,15 @@ def compute_zonal_stats(
     return ee_result
 
 
-def unpack_zonal_stats(ee_result: pd.DataFrame) -> pd.DataFrame:
-    """Unpack zonal statistics result into a dataframe."""
-    df = pd.DataFrame(ee_result)
-    df = df.rename(columns={"value": VALUE})
-    return df
-
-
 @dask.delayed
 def process_single_nwm_grid_file_ee(
     row: Tuple,
     configuration_name: str,
     variable_name: str,
-    weights_filepath: str,
     ignore_missing_file: bool,
     location_id_prefix: Union[str, None],
     variable_mapper: Dict[str, Dict[str, str]],
     features: GeoDataFrame,
-    unique_zone_id: str,
     stats: List[Union[str, Operation]],
     **kwargs
 ) -> pd.DataFrame:
@@ -143,111 +98,46 @@ def process_single_nwm_grid_file_ee(
     nwm_units = ds[variable_name].attrs["units"]
     value_time = ds.time.values[0]
     da = ds[variable_name][0]
-
-    # TODO: Unique zone id can't be just 'id' ??
 
     df = compute_zonal_stats(
         raster=da,
         features=features,
         stats=stats,
-        include_cols="temp_id",
+        include_cols=LOCATION_ID,
         output="pandas",
         include_geom=False,
         **kwargs
     )
-    df.rename(columns={"id": LOCATION_ID, "mean": "value"}, inplace=True)
-    # TODO: Combine the stat and variable names?
-    # Then stack vertically?
 
-    if not variable_mapper:
-        df.loc[:, UNIT_NAME] = nwm_units
-        df.loc[:, VARIABLE_NAME] = variable_name
-    else:
-        df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
-            get(nwm_units, nwm_units)
-        df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
+    if variable_mapper:
+        variable_name = variable_mapper[VARIABLE_NAME].\
             get(variable_name, variable_name)
+        nwm_units = variable_mapper[UNIT_NAME].\
+            get(nwm_units, nwm_units)
 
-    df.loc[:, VALUE_TIME] = value_time
-    df.loc[:, REFERENCE_TIME] = ref_time
-    df.loc[:, CONFIGURATION_NAME] = configuration_name
+    # Note: extactextract can calculate more than one stat at a time.
+    # Combine the stat and variable name into a new variable_name, then
+    # reformat the dataframe (basically stacking vertically).
+    dfs = []
+    for stat in stats:
+        variable_name_stat = f"{variable_name}_{stat}"
+        dfs.append(pd.DataFrame(
+            {
+                LOCATION_ID: df[LOCATION_ID],
+                VALUE: df[stat],
+                VARIABLE_NAME: variable_name_stat,
+                UNIT_NAME: nwm_units,
+                VALUE_TIME: value_time,
+                REFERENCE_TIME: ref_time,
+                CONFIGURATION_NAME: configuration_name
+            }
+        ))
+    stacked_df = pd.concat(dfs, ignore_index=True)
 
     if location_id_prefix:
-        df = update_location_id_prefix(df, location_id_prefix)
+        stacked_df = update_location_id_prefix(stacked_df, location_id_prefix)
 
-    return df
-
-
-@dask.delayed
-def process_single_nwm_grid_file(
-    row: Tuple,
-    configuration_name: str,
-    variable_name: str,
-    weights_filepath: str,
-    ignore_missing_file: bool,
-    location_id_prefix: Union[str, None],
-    variable_mapper: Dict[str, Dict[str, str]],
-    features: GeoDataFrame,
-    unique_zone_id: str,
-    stats: List[Union[str, Operation]],
-    **kwargs
-) -> pd.DataFrame:
-    """Fetch data for a single reference file and compute weighted average."""
-    ds = get_dataset(
-        row.filepath,
-        ignore_missing_file,
-        target_options={'anon': True}
-    )
-    if not ds:
-        return None
-    yrmoday = row.day
-    z_hour = row.z_hour[1:3]
-    ref_time = pd.to_datetime(yrmoday) \
-        + pd.to_timedelta(int(z_hour), unit="h")
-
-    nwm_units = ds[variable_name].attrs["units"]
-    value_time = ds.time.values[0]
-    da = ds[variable_name][0]
-
-    weights_df = pd.read_parquet(
-        weights_filepath, columns=["row", "col", "weight", LOCATION_ID]
-    )
-
-    weights_bounds = get_weights_row_col_stats(weights_df)
-
-    grid_arr = get_nwm_grid_data(
-        da,
-        weights_bounds["row_min"],
-        weights_bounds["col_min"],
-        weights_bounds["row_max"],
-        weights_bounds["col_max"]
-    )
-
-    grid_values = grid_arr[
-        weights_bounds["rows_norm"],
-        weights_bounds["cols_norm"]
-    ]
-
-    # Calculate mean areal value of selected variable
-    df = compute_weighted_average(grid_values, weights_df)
-
-    if not variable_mapper:
-        df.loc[:, UNIT_NAME] = nwm_units
-        df.loc[:, VARIABLE_NAME] = variable_name
-    else:
-        df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
-            get(nwm_units, nwm_units)
-        df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
-            get(variable_name, variable_name)
-
-    df.loc[:, VALUE_TIME] = value_time
-    df.loc[:, REFERENCE_TIME] = ref_time
-    df.loc[:, CONFIGURATION_NAME] = configuration_name
-
-    if location_id_prefix:
-        df = update_location_id_prefix(df, location_id_prefix)
-
-    return df
+    return stacked_df
 
 
 def fetch_and_format_nwm_grids(
@@ -255,7 +145,6 @@ def fetch_and_format_nwm_grids(
     configuration_name: str,
     variable_name: str,
     output_parquet_dir: str,
-    zonal_weights_filepath: str,
     ignore_missing_file: bool,
     overwrite_output: bool,
     location_id_prefix: Union[str, None],
@@ -305,12 +194,10 @@ def fetch_and_format_nwm_grids(
                     row=row,
                     configuration_name=configuration_name,
                     variable_name=variable_name,
-                    weights_filepath=zonal_weights_filepath,
                     ignore_missing_file=ignore_missing_file,
                     location_id_prefix=location_id_prefix,
                     variable_mapper=variable_mapper,
                     features=features,
-                    unique_zone_id=unique_zone_id,
                     stats=stats,
                     **kwargs
                 )

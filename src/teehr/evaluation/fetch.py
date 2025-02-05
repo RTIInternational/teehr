@@ -5,8 +5,10 @@ import logging
 from pathlib import Path
 
 import pandas as pd
-from exactextract import FeatureSource, Operation
+from geopandas import GeoDataFrame
+from exactextract import Operation
 
+from teehr import Variable
 import teehr.const as const
 from teehr.fetching.usgs.usgs import usgs_to_parquet
 from teehr.fetching.nwm.nwm_points import nwm_to_parquet
@@ -446,8 +448,6 @@ class Fetch:
         nwm_configuration = f"{nwm_version}_retrospective"
         schema_variable_name = get_schema_variable_name(variable_name)
 
-        # TODO: Get timeseries_type from the configurations table?
-
         nwm_retro_grids_to_parquet(
             nwm_version=nwm_version,
             variable_name=variable_name,
@@ -472,7 +472,6 @@ class Fetch:
             in_path=Path(
                 self.nwm_cache_dir
             ),
-            # dataset_path=self.ev.dataset_dir,
             timeseries_type=timeseries_type,
         )
 
@@ -624,8 +623,6 @@ class Fetch:
             prefix=nwm_version
         )
 
-        # TODO: Read timeseries_type from the configurations table?
-
         schema_variable_name = get_schema_variable_name(variable_name)
         schema_configuration_name = f"{nwm_version}_{nwm_configuration}"
         nwm_to_parquet(
@@ -659,7 +656,6 @@ class Fetch:
             in_path=Path(
                 self.nwm_cache_dir
             ),
-            # dataset_path=self.ev.dataset_dir,
             timeseries_type=timeseries_type,
         )
 
@@ -670,9 +666,8 @@ class Fetch:
         variable_name: str,
         start_date: Union[str, datetime],
         ingest_days: int,
-        zonal_weights_filepath: Union[Path, str],
         nwm_version: SupportedNWMOperationalVersionsEnum,
-        features: FeatureSource,
+        features: Union[GeoDataFrame, str, Path],
         unique_zone_id: str,
         stats: List[Union[str, Operation]] = ["mean"],
         data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
@@ -710,12 +705,17 @@ class Fetch:
             Str formats can include YYYY-MM-DD or MM/DD/YYYY.
         ingest_days : int
             Number of days to ingest data after start date.
-        zonal_weights_filepath : str
-            Path to the array containing fraction of pixel overlap
-            for each zone.
         nwm_version : SupportedNWMOperationalVersionsEnum
             The NWM operational version.
             "nwm22", or "nwm30".
+        features : Union[GeoDataFrame, str, Path]
+            The feature data source containing the zones (polygons) in which to
+            summarize the gridded data. Can be a path to a file or a GeoDataFrame.
+        unique_zone_id : str
+            The unique zone ID field in the features data.
+        stats : List[Union[str, Operation]]
+            The statistics to calculate for each zone. Default is ["mean"]. This gets
+            passed to exactextract.
         data_source : Optional[SupportedNWMDataSourcesEnum]
             Specifies the remote location from which to fetch the data
             "GCS" (default), "NOMADS", or "DSTOR".
@@ -826,7 +826,6 @@ class Fetch:
             variable_name=variable_name,
             start_date=start_date,
             ingest_days=ingest_days,
-            zonal_weights_filepath=zonal_weights_filepath,
             json_dir=self.kerchunk_cache_dir,
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
@@ -850,11 +849,25 @@ class Fetch:
 
         pass
 
+        # Insert new varible names into the evaluation depending on the
+        # NWM variable and statistics requested.
+        variable_name = NWM_VARIABLE_MAPPER["variable_name"].\
+            get(variable_name, variable_name)
+        for stat in stats:
+            variable_name_stat = f"{variable_name}_{stat}"
+            self.ev.variables.add(
+                variable=[
+                    Variable(
+                        name=variable_name_stat,
+                        long_name=variable_name_stat
+                    ),
+                ]
+            )
+
         validate_and_insert_timeseries(
             ev=self.ev,
             in_path=Path(
                 self.nwm_cache_dir
             ),
-            # dataset_path=self.ev.dataset_dir,
             timeseries_type=timeseries_type,
         )
