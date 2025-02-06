@@ -32,23 +32,26 @@ of data transferred over the network.
 """
 from datetime import datetime
 from pathlib import Path
-from typing import Union, Optional, Tuple, Dict
+from typing import Union, Optional, Tuple, Dict, List
 import logging
 import numpy as np
 
 import pandas as pd
 import xarray as xr
 import fsspec
-from pydantic import validate_call
+from pydantic import validate_call, InstanceOf
 import dask
+from geopandas import GeoDataFrame
+from exactextract import Operation
 
 from teehr.fetching.const import (
-    VALUE_TIME,
+    # VALUE_TIME,
     REFERENCE_TIME,
     LOCATION_ID,
     UNIT_NAME,
     VARIABLE_NAME,
-    CONFIGURATION_NAME
+    CONFIGURATION_NAME,
+    CONUS_NWM_WKT,
 )
 from teehr.models.fetching.utils import (
     NWMChunkByEnum,
@@ -59,9 +62,12 @@ from teehr.models.fetching.utils import (
 from teehr.models.fetching.nwm22_grid import ForcingVariablesEnum
 from teehr.fetching.nwm.grid_utils import (
     update_location_id_prefix,
-    compute_weighted_average,
-    get_nwm_grid_data,
-    get_weights_row_col_stats
+    # compute_weighted_average,
+    # get_nwm_grid_data,
+    # get_weights_row_col_stats,
+    compute_zonal_stats_with_exactextract,
+    unpack_exactextract_results,
+    map_variable_and_unit_names
 )
 from teehr.fetching.utils import (
     write_timeseries_parquet_file,
@@ -95,11 +101,14 @@ def get_nwm21_retro_grid_data(
 
 def process_nwm30_retro_group(
     da_i: xr.DataArray,
-    weights_filepath: str,
+    # weights_filepath: str,
     variable_name: str,
     nwm_version: str,
     location_id_prefix: Union[str, None],
-    variable_mapper: Dict[str, Dict[str, str]]
+    variable_mapper: Dict[str, Dict[str, str]],
+    features: GeoDataFrame,
+    stats: List[Union[str, Operation]],
+    **kwargs
 ):
     """Compute the weighted average for a chunk of NWM v3.0 data.
 
@@ -107,50 +116,45 @@ def process_nwm30_retro_group(
     and the output is saved to parquet files.
     """
     logger.debug("Processing NWM v3.0 retro grid data chunk.")
-    weights_df = pd.read_parquet(
-        weights_filepath, columns=["row", "col", "weight", LOCATION_ID]
+
+    # TODO: Limit da_i to the bounding box of the features?
+
+    df = compute_zonal_stats_with_exactextract(
+        raster=da_i,
+        features=features,
+        stats=stats,
+        include_cols=LOCATION_ID,
+        output="pandas",
+        include_geom=False,
+        **kwargs
     )
-
-    weights_bounds = get_weights_row_col_stats(weights_df)
-
-    grid_arr = get_nwm_grid_data(
-        da_i,
-        weights_bounds["row_min"],
-        weights_bounds["col_min"],
-        weights_bounds["row_max"],
-        weights_bounds["col_max"]
-    )
-
-    hourly_dfs = []
-    for i, time in enumerate(da_i.time.values):
-        grid_values = grid_arr[
-            i,
-            weights_bounds["rows_norm"],
-            weights_bounds["cols_norm"]
-        ]
-        df = compute_weighted_average(grid_values, weights_df)
-        df.loc[:, VALUE_TIME] = pd.to_datetime(time)
-        hourly_dfs.append(df)
 
     nwm_units = da_i.attrs["units"]
-    chunk_df = pd.concat(hourly_dfs)
-    if not variable_mapper:
-        chunk_df.loc[:, UNIT_NAME] = nwm_units
-        chunk_df.loc[:, VARIABLE_NAME] = variable_name.value
-    else:
-        chunk_df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
-            get(nwm_units, nwm_units)
-        chunk_df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
-            get(variable_name, variable_name)
+    mapped_names = map_variable_and_unit_names(
+        inital_variable_name=variable_name,
+        initial_unit_name=nwm_units,
+        variable_mapper=variable_mapper
+    )
 
-    chunk_df.loc[:, REFERENCE_TIME] = np.nan
-    chunk_df.loc[:, CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
+    ee_df = unpack_exactextract_results(
+        df=df,
+        stats=stats,
+        num_locations=features.location_id.nunique(),
+        pattern=r'band_+\d+',
+        variable_name=mapped_names[VARIABLE_NAME],
+        da=da_i
+    )
+
+    # TODO: Make sure this works correctly for multiple locations
+
+    ee_df.loc[:, UNIT_NAME] = mapped_names[UNIT_NAME]
+    ee_df.loc[:, REFERENCE_TIME] = np.nan
+    ee_df.loc[:, CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
 
     if location_id_prefix:
-        chunk_df = update_location_id_prefix(chunk_df, location_id_prefix)
+        ee_df = update_location_id_prefix(ee_df, location_id_prefix)
 
-
-    return chunk_df
+    return ee_df
 
 
 def construct_nwm21_json_paths(
@@ -180,13 +184,15 @@ def construct_nwm21_json_paths(
 def process_single_nwm21_retro_grid_file(
     row: Tuple,
     variable_name: str,
-    weights_filepath: str,
     ignore_missing_file: bool,
     nwm_version: str,
     location_id_prefix: Union[str, None],
-    variable_mapper: Dict[str, Dict[str, str]]
+    variable_mapper: Dict[str, Dict[str, str]],
+    features: GeoDataFrame,
+    stats: List[Union[str, Operation]],
+    **kwargs
 ):
-    """Compute the zonal mean for a single json reference file.
+    """Compute the zonal stats for a single json reference file.
 
     Results are formatted to a dataframe using the TEEHR data model.
     """
@@ -197,66 +203,69 @@ def process_single_nwm21_retro_grid_file(
     )
     if not ds:
         return None
+    ds = ds.rename_dims({"west_east": "x", "south_north": "y", "Time": "time"})
+    ds = ds.assign_coords(coords={"x": ds.x, "y": ds.y, "time": ds.time})
+    ds = ds.rio.set_crs(CONUS_NWM_WKT)
 
     nwm_units = ds[variable_name].attrs["units"]
 
-    value_time = row.datetime
-    da = ds[variable_name].isel(Time=0)
+    da = ds[variable_name]  #.isel(Time=0)
 
-    weights_df = pd.read_parquet(
-        weights_filepath, columns=["row", "col", "weight", LOCATION_ID]
+    df = compute_zonal_stats_with_exactextract(
+        raster=da,
+        features=features,
+        stats=stats,
+        include_cols=LOCATION_ID,
+        output="pandas",
+        include_geom=False,
+        **kwargs
     )
 
-    weights_bounds = get_weights_row_col_stats(weights_df)
-
-    grid_arr = get_nwm21_retro_grid_data(
-        da,
-        weights_bounds["row_min"],
-        weights_bounds["col_min"],
-        weights_bounds["row_max"],
-        weights_bounds["col_max"]
+    nwm_units = da.attrs["units"]
+    mapped_names = map_variable_and_unit_names(
+        initial_variable_name=variable_name,
+        initial_unit_name=nwm_units,
+        variable_mapper=variable_mapper
     )
-    grid_values = grid_arr[
-        weights_bounds["rows_norm"],
-        weights_bounds["cols_norm"]
-    ]
 
-    # Calculate mean areal of selected variable
-    df = compute_weighted_average(grid_values, weights_df)
+    ee_df = unpack_exactextract_results(
+        df=df,
+        stats=stats,
+        num_locations=features.location_id.nunique(),
+        pattern=r'band_+\d+',
+        variable_name=mapped_names[VARIABLE_NAME],
+        da=da
+    )
 
-    if not variable_mapper:
-        df.loc[:, UNIT_NAME] = nwm_units
-        df.loc[:, VARIABLE_NAME] = variable_name.value
-    else:
-        df.loc[:, UNIT_NAME] = variable_mapper[UNIT_NAME].\
-            get(nwm_units, nwm_units)
-        df.loc[:, VARIABLE_NAME] = variable_mapper[VARIABLE_NAME].\
-            get(variable_name, variable_name)
+    # TODO: Make sure this works correctly for multiple locations
 
-    df.loc[:, VALUE_TIME] = value_time
-    df.loc[:, REFERENCE_TIME] = np.nan
-    df.loc[:, CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
+    ee_df.loc[:, UNIT_NAME] = mapped_names[UNIT_NAME]
+    ee_df.loc[:, REFERENCE_TIME] = np.nan
+    ee_df.loc[:, CONFIGURATION_NAME] = f"{nwm_version}_retrospective"
 
     if location_id_prefix:
-        df = update_location_id_prefix(df, location_id_prefix)
+        ee_df = update_location_id_prefix(df, location_id_prefix)
 
-    return df
+    return ee_df
 
 
 @validate_call(config=dict(arbitrary_types_allowed=True))
 def nwm_retro_grids_to_parquet(
     nwm_version: SupportedNWMRetroVersionsEnum,
     variable_name: ForcingVariablesEnum,
-    zonal_weights_filepath: Union[str, Path],
+    features: Union[str, Path, InstanceOf[GeoDataFrame]],
+    unique_zone_id: str,
     start_date: Union[str, datetime, pd.Timestamp],
     end_date: Union[str, datetime, pd.Timestamp],
     output_parquet_dir: Union[str, Path],
+    stats: List[Union[str, InstanceOf[Operation]]] = ["mean"],
     chunk_by: Union[NWMChunkByEnum, None] = None,
     overwrite_output: Optional[bool] = False,
     domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
     location_id_prefix: Optional[Union[str, None]] = None,
     variable_mapper: Dict[str, Dict[str, str]] = None,
-    timeseries_type: TimeseriesTypeEnum = "primary"
+    timeseries_type: TimeseriesTypeEnum = "primary",
+    **kwargs
 ):
     """Compute the weighted average for NWM v2.1 or v3.0 gridded data.
 
@@ -326,6 +335,10 @@ def nwm_retro_grids_to_parquet(
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
 
+    # Re-project features to match the grid projection and re-name
+    # the unique zone id column to 'location_id' for exactextract.
+    features.rename(columns={unique_zone_id: "location_id"}, inplace=True)
+
     if nwm_version == SupportedNWMRetroVersionsEnum.nwm21:
 
         # Construct Kerchunk-json paths within the selected time
@@ -335,6 +348,9 @@ def nwm_retro_grids_to_parquet(
             raise ValueError(
                 f"Chunkby '{chunk_by}' is not implemented for gridded data"
             )
+
+        # Re-project based on the NWM grid projection
+        features = features.to_crs(crs=CONUS_NWM_WKT)
 
         periods = create_periods_based_on_chunksize(
             start_date=start_date,
@@ -362,11 +378,13 @@ def nwm_retro_grids_to_parquet(
                     process_single_nwm21_retro_grid_file(
                         row=row,
                         variable_name=variable_name,
-                        weights_filepath=zonal_weights_filepath,
                         ignore_missing_file=False,
                         nwm_version=nwm_version,
                         location_id_prefix=location_id_prefix,
-                        variable_mapper=variable_mapper
+                        variable_mapper=variable_mapper,
+                        features=features,
+                        stats=stats,
+                        **kwargs
                     )
                 )
             output = dask.compute(*results)
@@ -411,6 +429,8 @@ def nwm_retro_grids_to_parquet(
             chunks={}, consolidated=True
         )[variable_name].sel(time=slice(start_date, end_date))
 
+        features = features.to_crs(crs=var_da.attrs["esri_pe_string"])
+
         if chunk_by in ["year", "location_id"]:
             raise ValueError(
                 f"Chunkby '{chunk_by}' is not implemented for gridded data"
@@ -437,11 +457,13 @@ def nwm_retro_grids_to_parquet(
 
             chunk_df = process_nwm30_retro_group(
                 da_i=da_i,
-                weights_filepath=zonal_weights_filepath,
                 variable_name=variable_name,
                 nwm_version=nwm_version,
                 location_id_prefix=location_id_prefix,
-                variable_mapper=variable_mapper
+                variable_mapper=variable_mapper,
+                features=features,
+                stats=stats,
+                **kwargs
             )
 
             fname = format_grouped_filename(da_i)

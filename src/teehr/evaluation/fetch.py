@@ -5,10 +5,10 @@ import logging
 from pathlib import Path
 
 import pandas as pd
-from geopandas import GeoDataFrame
+# from geopandas import GeoDataFrame
 from exactextract import Operation
 
-from teehr import Variable
+import teehr
 import teehr.const as const
 from teehr.fetching.usgs.usgs import usgs_to_parquet
 from teehr.fetching.nwm.nwm_points import nwm_to_parquet
@@ -339,9 +339,11 @@ class Fetch:
         self,
         nwm_version: SupportedNWMRetroVersionsEnum,
         variable_name: ForcingVariablesEnum,
-        zonal_weights_filepath: Union[str, Path],
+        # zonal_weights_filepath: Union[str, Path],
         start_date: Union[str, datetime, pd.Timestamp],
         end_date: Union[str, datetime, pd.Timestamp],
+        unique_zone_id: str,
+        stats: List[Union[str, Operation]] = ["mean"],
         chunk_by: Union[NWMChunkByEnum, None] = None,
         overwrite_output: Optional[bool] = False,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
@@ -448,10 +450,12 @@ class Fetch:
         nwm_configuration = f"{nwm_version}_retrospective"
         schema_variable_name = get_schema_variable_name(variable_name)
 
+        features = self.ev.locations.to_geopandas()
+
         nwm_retro_grids_to_parquet(
             nwm_version=nwm_version,
             variable_name=variable_name,
-            zonal_weights_filepath=zonal_weights_filepath,
+            # zonal_weights_filepath=zonal_weights_filepath,
             start_date=start_date,
             end_date=end_date,
             output_parquet_dir=Path(
@@ -464,7 +468,10 @@ class Fetch:
             domain=domain,
             location_id_prefix=location_id_prefix,
             variable_mapper=NWM_VARIABLE_MAPPER,
-            timeseries_type=timeseries_type
+            timeseries_type=timeseries_type,
+            features=features,
+            unique_zone_id=unique_zone_id,
+            stats=stats
         )
 
         validate_and_insert_timeseries(
@@ -667,7 +674,6 @@ class Fetch:
         start_date: Union[str, datetime],
         ingest_days: int,
         nwm_version: SupportedNWMOperationalVersionsEnum,
-        features: Union[GeoDataFrame, str, Path],
         unique_zone_id: str,
         stats: List[Union[str, Operation]] = ["mean"],
         data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
@@ -708,9 +714,6 @@ class Fetch:
         nwm_version : SupportedNWMOperationalVersionsEnum
             The NWM operational version.
             "nwm22", or "nwm30".
-        features : Union[GeoDataFrame, str, Path]
-            The feature data source containing the zones (polygons) in which to
-            summarize the gridded data. Can be a path to a file or a GeoDataFrame.
         unique_zone_id : str
             The unique zone ID field in the features data.
         stats : List[Union[str, Operation]]
@@ -816,10 +819,11 @@ class Fetch:
         :func:`teehr.fetching.nwm.nwm_grids.nwm_grids_to_parquet`
         """ # noqa
 
-        # TODO: Get timeseries_type from the configurations table?
-
         schema_variable_name = get_schema_variable_name(variable_name)
         schema_configuration_name = f"{nwm_version}_{nwm_configuration}"
+
+        features = self.ev.locations.to_geopandas()
+
         nwm_grids_to_parquet(
             configuration=nwm_configuration,
             output_type=output_type,
@@ -857,7 +861,7 @@ class Fetch:
             variable_name_stat = f"{variable_name}_{stat}"
             self.ev.variables.add(
                 variable=[
-                    Variable(
+                    teehr.Variable(
                         name=variable_name_stat,
                         long_name=variable_name_stat
                     ),

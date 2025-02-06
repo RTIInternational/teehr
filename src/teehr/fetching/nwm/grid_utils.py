@@ -2,12 +2,14 @@
 from pathlib import Path
 from typing import Dict, List, Tuple, Union
 import re
+import logging
 
 import dask
 import pandas as pd
 import xarray as xr
 from exactextract import exact_extract, RasterSource, Operation
 from geopandas import GeoDataFrame
+import numpy as np
 
 from teehr.fetching.utils import (
     get_dataset,
@@ -23,6 +25,8 @@ from teehr.fetching.const import (
     VARIABLE_NAME,
     CONFIGURATION_NAME
 )
+
+logger = logging.getLogger(__name__)
 
 
 def get_nwm_grid_data(
@@ -59,7 +63,7 @@ def update_location_id_prefix(
     return df
 
 
-def compute_zonal_stats(
+def compute_zonal_stats_with_exactextract(
     raster: RasterSource,
     features: GeoDataFrame,
     stats: List[Union[str, Operation]],
@@ -68,6 +72,65 @@ def compute_zonal_stats(
     """Compute zonal statistics using exactextract."""
     ee_result = exact_extract(raster, features, stats, **kwargs)
     return ee_result
+
+
+def unpack_exactextract_results(
+    df: pd.DataFrame,
+    stats: List[str],
+    num_locations: int,
+    variable_name: str,
+    da: xr.DataArray,
+    pattern: Union[str, None] = None,
+) -> pd.DataFrame:
+    """Unpack the exactextract results from a dataframe.
+
+    Returns a dataframe with columns:
+    - location_id
+    - variable_name
+    - value
+    - value_time
+    """
+    logger.debug("Unpacking exactextract results.")
+    df = df.copy()
+
+    temp_srs = df.set_index(LOCATION_ID).stack()
+    temp_srs.name = "value"
+    chunk_df = temp_srs.to_frame().reset_index(
+        names=[LOCATION_ID, VARIABLE_NAME]
+    )
+    chunk_df["value_time"] = np.tile(
+        da.time.values, (len(stats) * num_locations)
+    )
+    if pattern:
+        pattern = r'band_+\d+'
+        chunk_df[VARIABLE_NAME] = chunk_df[VARIABLE_NAME].str.replace(
+            pattern, variable_name, regex=True
+        )
+    else:
+        chunk_df[VARIABLE_NAME] = variable_name + "_" + chunk_df[VARIABLE_NAME]
+    return chunk_df
+
+
+def map_variable_and_unit_names(
+    initial_variable_name: str,
+    initial_unit_name: str,
+    variable_mapper: Dict[str, Dict[str, str]] = None
+) -> Dict[str, str]:
+    """Map variable and unit names using a dictionary."""
+    if not variable_mapper:
+        return {
+            VARIABLE_NAME: initial_variable_name,
+            UNIT_NAME: initial_unit_name
+        }
+    else:
+        unit_name = variable_mapper[UNIT_NAME].\
+            get(initial_unit_name, initial_unit_name)
+        variable_name = variable_mapper[VARIABLE_NAME].\
+            get(initial_variable_name, initial_variable_name)
+    return {
+        VARIABLE_NAME: variable_name,
+        UNIT_NAME: unit_name
+    }
 
 
 @dask.delayed
@@ -96,10 +159,11 @@ def process_single_nwm_grid_file_ee(
         + pd.to_timedelta(int(z_hour), unit="h")
 
     nwm_units = ds[variable_name].attrs["units"]
-    value_time = ds.time.values[0]
     da = ds[variable_name][0]
 
-    df = compute_zonal_stats(
+    # TODO: Limit da to features.total_bounds?
+
+    df = compute_zonal_stats_with_exactextract(
         raster=da,
         features=features,
         stats=stats,
@@ -109,35 +173,29 @@ def process_single_nwm_grid_file_ee(
         **kwargs
     )
 
-    if variable_mapper:
-        variable_name = variable_mapper[VARIABLE_NAME].\
-            get(variable_name, variable_name)
-        nwm_units = variable_mapper[UNIT_NAME].\
-            get(nwm_units, nwm_units)
+    mapped_names = map_variable_and_unit_names(
+        initial_variable_name=variable_name,
+        initial_unit_name=nwm_units,
+        variable_mapper=variable_mapper
+    )
 
-    # Note: extactextract can calculate more than one stat at a time.
-    # Combine the stat and variable name into a new variable_name, then
-    # reformat the dataframe (basically stacking vertically).
-    dfs = []
-    for stat in stats:
-        variable_name_stat = f"{variable_name}_{stat}"
-        dfs.append(pd.DataFrame(
-            {
-                LOCATION_ID: df[LOCATION_ID],
-                VALUE: df[stat],
-                VARIABLE_NAME: variable_name_stat,
-                UNIT_NAME: nwm_units,
-                VALUE_TIME: value_time,
-                REFERENCE_TIME: ref_time,
-                CONFIGURATION_NAME: configuration_name
-            }
-        ))
-    stacked_df = pd.concat(dfs, ignore_index=True)
+    ee_df = unpack_exactextract_results(
+        df=df,
+        stats=stats,
+        num_locations=len(features),
+        pattern=None,
+        variable_name=mapped_names["variable_name"],
+        da=da
+    )
+
+    ee_df[REFERENCE_TIME] = ref_time
+    ee_df[CONFIGURATION_NAME] = configuration_name
+    ee_df[UNIT_NAME] = mapped_names["unit_name"]
 
     if location_id_prefix:
-        stacked_df = update_location_id_prefix(stacked_df, location_id_prefix)
+        ee_df = update_location_id_prefix(ee_df, location_id_prefix)
 
-    return stacked_df
+    return ee_df
 
 
 def fetch_and_format_nwm_grids(

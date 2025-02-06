@@ -84,12 +84,13 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
     ev.locations.load_spatial(in_path=ZONAL_LOCATIONS)
 
     ev.fetch.nwm_retrospective_grids(
-        nwm_version="nwm30",
+        nwm_version="nwm21",
         variable_name="RAINRATE",
-        zonal_weights_filepath=ZONAL_WEIGHTS,
         start_date="2008-05-23 09:00",
         end_date="2008-05-23 10:00",
-        location_id_prefix="huc10"
+        location_id_prefix="huc10",
+        unique_zone_id="id",
+        stats=["mean", "median"]
     )
     ts_df = ev.primary_timeseries.to_pandas()
 
@@ -160,7 +161,7 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
 
     # TEMP
     ZONAL_LOCATIONS = Path("/mnt/data/ciroh/teehr/test_stuff/zonal_stats/one_huc10_conus_1016000606.parquet")
-    ZONAL_WEIGHTS = Path("/mnt/data/ciroh/teehr/test_stuff/zonal_stats/one_huc10_1016000606_teehr_weights.parquet")
+    # ZONAL_WEIGHTS = Path("/mnt/data/ciroh/teehr/test_stuff/zonal_stats/one_huc10_1016000606_teehr_weights.parquet")
 
     ev.locations.load_spatial(in_path=ZONAL_LOCATIONS)
 
@@ -170,9 +171,7 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
         variable_name="RAINRATE",
         start_date=datetime(2023, 8, 5),
         ingest_days=1,
-        zonal_weights_filepath=ZONAL_WEIGHTS,
         nwm_version="nwm22",
-        features=ZONAL_LOCATIONS,
         unique_zone_id="id",
         prioritize_analysis_valid_time=True,
         t_minus_hours=[0],
@@ -217,12 +216,12 @@ if __name__ == "__main__":
         #         dir=tempdir
         #     )
         # )
-        # test_fetch_and_load_nwm_retro_grids(
-        #     tempfile.mkdtemp(
-        #         prefix="2-",
-        #         dir=tempdir
-        #     )
-        # )
+        test_fetch_and_load_nwm_retro_grids(
+            tempfile.mkdtemp(
+                prefix="2-",
+                dir=tempdir
+            )
+        )
         # test_fetch_and_load_nwm_forecast_points(
         #     tempfile.mkdtemp(
         #         prefix="3-",
@@ -230,10 +229,10 @@ if __name__ == "__main__":
         #     )
         # )
 
-        # Warning: This one is slow.
-        test_fetch_and_load_nwm_forecast_grids(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
+        # # Warning: This one is slow.
+        # test_fetch_and_load_nwm_forecast_grids(
+        #     tempfile.mkdtemp(
+        #         prefix="4-",
+        #         dir=tempdir
+        #     )
+        # )

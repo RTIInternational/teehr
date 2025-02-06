@@ -72,9 +72,6 @@ def nwm_grids_to_parquet(
         Str formats can include YYYY-MM-DD or MM/DD/YYYY.
     ingest_days : int
         Number of days to ingest data after start date.
-    zonal_weights_filepath : str
-        Path to the array containing fraction of pixel overlap
-        for each zone.
     json_dir : str
         Directory path for saving json reference files.
     output_parquet_dir : str
