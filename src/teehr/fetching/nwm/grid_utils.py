@@ -187,6 +187,10 @@ def fetch_and_format_nwm_grids(
     for gp in gps:
         _, df = gp
 
+        # Note: Instead of looping over each individual file, we can use kerchunk to
+        # combine several files into a single dataset, and reduce the number of times
+        # exactextract needs to calculate the weights?
+
         results = []
         for row in df.itertuples():
             results.append(
