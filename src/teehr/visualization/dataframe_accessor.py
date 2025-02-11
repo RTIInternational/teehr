@@ -903,7 +903,7 @@ class TEEHRDataFrameAccessor:
             x_axis_type="mercator",
             y_axis_type="mercator",
             tooltips=tooltips,
-            tools="pan, wheel_zoom, reset"
+            tools="pan, wheel_zoom, box_zoom, reset"
             )
         p.add_tile(xyz.OpenStreetMap.Mapnik)
 
@@ -1031,7 +1031,7 @@ class TEEHRDataFrameAccessor:
             x_axis_type="mercator",
             y_axis_type="mercator",
             tooltips=tooltips,
-            tools="pan, wheel_zoom, reset"
+            tools="pan, wheel_zoom, box_zoom, reset"
             )
         p.add_tile(xyz.OpenStreetMap.Mapnik)
 
