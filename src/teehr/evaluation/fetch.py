@@ -475,7 +475,7 @@ class Fetch:
             timeseries_type=timeseries_type,
         )
 
-    def nwm_forecast_points(
+    def nwm_operational_points(
         self,
         nwm_configuration: str,
         output_type: str,
@@ -574,7 +574,7 @@ class Fetch:
         >>> import teehr
         >>> ev = teehr.Evaluation()
 
-        >>> ev.fetch.nwm_forecast_points(
+        >>> ev.fetch.nwm_operational_points(
         >>>     nwm_configuration="short_range",
         >>>     output_type="channel_rt",
         >>>     variable_name="streamflow",

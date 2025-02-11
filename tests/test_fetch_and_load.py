@@ -109,8 +109,8 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
     assert ts_df.value_time.max() == pd.Timestamp("2008-05-23 23:00:00")
 
 
-def test_fetch_and_load_nwm_forecast_points(tmpdir):
-    """Test the NWM forecast point fetch and load."""
+def test_fetch_and_load_nwm_operational_points(tmpdir):
+    """Test the NWM operational point fetch and load."""
     ev = Evaluation(dir_path=tmpdir)
     ev.enable_logging()
     ev.clone_template()
@@ -121,7 +121,7 @@ def test_fetch_and_load_nwm_forecast_points(tmpdir):
         in_path=CROSSWALK_FILEPATH
     )
 
-    ev.fetch.nwm_forecast_points(
+    ev.fetch.nwm_operational_points(
         nwm_configuration="analysis_assim",
         output_type="channel_rt",
         variable_name="streamflow",
@@ -216,7 +216,7 @@ if __name__ == "__main__":
                 dir=tempdir
             )
         )
-        test_fetch_and_load_nwm_forecast_points(
+        test_fetch_and_load_nwm_operational_points(
             tempfile.mkdtemp(
                 prefix="3-",
                 dir=tempdir
