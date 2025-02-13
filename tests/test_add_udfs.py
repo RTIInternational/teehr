@@ -7,6 +7,8 @@ from teehr import TimeseriesAwareCalculatedFields as tcf
 from setup_v0_3_study import setup_v0_3_study
 
 import pyspark.sql.types as T
+import numpy as np
+
 
 def test_add_row_udfs(tmpdir):
     """Test adding row level UDFs."""
@@ -23,12 +25,61 @@ def test_add_row_udfs(tmpdir):
 
     sdf = rcf.Seasons().apply_to(sdf)
 
+    sdf = rcf.ForecastLeadTime().apply_to(sdf)
+
+    sdf = rcf.ThresholdValueExceeded().apply_to(sdf)
+
+    sdf = rcf.DayOfYear().apply_to(sdf)
+
     cols = sdf.columns
+    check_sdf = sdf[sdf["primary_location_id"] == "gage-A"]
+
     assert "month" in cols
+    assert sdf.schema["month"].dataType == T.IntegerType()
+    check_vals = check_sdf.select("month").distinct().collect()
+    for row in check_vals:
+        assert row["month"] == 1
+
     assert "year" in cols
+    assert sdf.schema["year"].dataType == T.IntegerType()
+    check_vals = check_sdf.select("year").distinct().collect()
+    for row in check_vals:
+        assert row["year"] == 2022
+
     assert "water_year" in cols
+    assert sdf.schema["water_year"].dataType == T.IntegerType()
+    check_vals = check_sdf.select("water_year").distinct().collect()
+    for row in check_vals:
+        assert row["water_year"] == 2022
+
     assert "normalized_flow" in cols
+    assert sdf.schema["normalized_flow"].dataType == T.FloatType()
+    check_vals = check_sdf.select("normalized_flow").collect()
+    assert np.round(check_vals[0]["normalized_flow"], 3) == 0.002
+
     assert "season" in cols
+    assert sdf.schema["season"].dataType == T.StringType()
+    check_vals = check_sdf.select("season").distinct().collect()
+    for row in check_vals:
+        assert row["season"] in ["winter", "spring", "summer", "fall"]
+
+    assert "forecast_lead_time" in cols
+    assert sdf.schema["forecast_lead_time"].dataType == T.DayTimeIntervalType()
+    row = check_sdf.collect()[1]
+    expected_val = row["value_time"] - row["reference_time"]
+    test_val = row["forecast_lead_time"]
+    assert expected_val == test_val
+
+    assert "threshold_value_exceeded" in cols
+    assert sdf.schema["threshold_value_exceeded"].dataType == T.BooleanType()
+    check_vals = check_sdf.select("threshold_value_exceeded").distinct().collect()
+    assert check_vals[0]["threshold_value_exceeded"] is True
+
+    assert "day_of_year" in cols
+    assert sdf.schema["day_of_year"].dataType == T.IntegerType()
+    check_vals = check_sdf.select("day_of_year").distinct().collect()
+    for row in check_vals:
+        assert row["day_of_year"] in [1, 2]
 
     ev.spark.stop()
 
@@ -54,13 +105,19 @@ def test_add_udfs_write(tmpdir):
 
     ped = tcf.PercentileEventDetection()
     ev.joined_timeseries.add_calculated_fields(ped).write()
+
+    flt = rcf.ForecastLeadTime()
+    ev.joined_timeseries.add_calculated_fields(flt).write()
+
     new_sdf = ev.joined_timeseries.to_sdf()
 
     cols = new_sdf.columns
     assert "event" in cols
     assert "event_id" in cols
+    assert "forecast_lead_time" in cols
 
     ev.spark.stop()
+
 
 def test_location_event_detection(tmpdir):
     """Test event detection and metrics per event."""
