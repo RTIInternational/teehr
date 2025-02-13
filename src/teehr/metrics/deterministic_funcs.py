@@ -124,7 +124,13 @@ def nash_sutcliffe_efficiency_normalized(p: pd.Series, s: pd.Series) -> float:
     return 1.0 / (1.0 + numerator/denominator)
 
 
-def kling_gupta_efficiency(p: pd.Series, s: pd.Series) -> float:
+def kling_gupta_efficiency(
+        p: pd.Series,
+        s: pd.Series,
+        sr: float = 1.0,
+        sa: float = 1.0,
+        sb: float = 1.0
+        ) -> float:
     """Kling-Gupta Efficiency (2009)."""
     # if len(p) == 0 or len(s) == 0:
     #     return np.nan
@@ -134,7 +140,7 @@ def kling_gupta_efficiency(p: pd.Series, s: pd.Series) -> float:
         return np.nan
 
     # Pearson correlation coefficient
-    linear_correlation = np.corrcoef(s, p)[0,1]
+    linear_correlation = np.corrcoef(s, p)[0, 1]
 
     # Relative variability
     relative_variability = np.std(s) / np.std(p)
@@ -144,9 +150,9 @@ def kling_gupta_efficiency(p: pd.Series, s: pd.Series) -> float:
 
     # Scaled Euclidean distance
     euclidean_distance = np.sqrt(
-        (1.0 * (linear_correlation - 1.0)) ** 2.0 +
-        (1.0  * (relative_variability - 1.0)) ** 2.0 +
-        (1.0  * (relative_mean - 1.0)) ** 2.0
+        (sr * (linear_correlation - 1.0)) ** 2.0 +
+        (sa * (relative_variability - 1.0)) ** 2.0 +
+        (sb * (relative_mean - 1.0)) ** 2.0
     )
 
     # Return KGE
