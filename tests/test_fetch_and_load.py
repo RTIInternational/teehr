@@ -152,7 +152,7 @@ def test_fetch_and_load_nwm_operational_points(tmpdir):
 
 
 @pytest.mark.skip(reason="This takes forever!")
-def test_fetch_and_load_nwm_forecast_grids(tmpdir):
+def test_fetch_and_load_nwm_operational_grids(tmpdir):
     """Test the NWM forecast grids fetch and load."""
     ev = Evaluation(dir_path=tmpdir)
     ev.enable_logging()
@@ -160,7 +160,7 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
 
     ev.locations.load_spatial(in_path=ZONAL_LOCATIONS)
 
-    ev.fetch.nwm_forecast_grids(
+    ev.fetch.nwm_operational_grids(
         nwm_configuration="forcing_analysis_assim",
         output_type="forcing",
         variable_name="RAINRATE",
@@ -222,11 +222,10 @@ if __name__ == "__main__":
                 dir=tempdir
             )
         )
-
-        # # Warning: This one is slow.
-        # test_fetch_and_load_nwm_forecast_grids(
-        #     tempfile.mkdtemp(
-        #         prefix="4-",
-        #         dir=tempdir
-        #     )
-        # )
+        # Warning: This one is slow.
+        test_fetch_and_load_nwm_operational_grids(
+            tempfile.mkdtemp(
+                prefix="4-",
+                dir=tempdir
+            )
+        )

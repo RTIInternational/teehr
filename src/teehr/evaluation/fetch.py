@@ -662,7 +662,7 @@ class Fetch:
             timeseries_type=timeseries_type,
         )
 
-    def nwm_forecast_grids(
+    def nwm_operational_grids(
         self,
         nwm_configuration: str,
         output_type: str,
@@ -768,7 +768,7 @@ class Fetch:
         >>> import teehr
         >>> ev = teehr.Evaluation()
 
-        >>> ev.fetch.nwm_forecast_grids(
+        >>> ev.fetch.nwm_operational_grids(
         >>>     nwm_configuration="forcing_short_range",
         >>>     output_type="forcing",
         >>>     variable_name="RAINRATE",
