@@ -297,7 +297,9 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
         in_path=usgs_location
     )
     eval.location_crosswalks.load_csv(
-        in_path=Path(TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv")
+        in_path=Path(
+            TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv"
+        )
     )
     eval.configurations.add(
         Configuration(
