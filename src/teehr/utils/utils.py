@@ -1,7 +1,12 @@
 """Module contains utility functions."""
 from pathlib import Path
+import shutil
 from typing import Union, Tuple
 from teehr.utils.s3path import S3Path
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def to_path_or_s3path(path: Union[str, Path, S3Path], *args: Tuple[str, ...]) -> Union[Path, S3Path]:
     """Concatenate string(s) to Path or S3Path.
@@ -35,18 +40,27 @@ def to_path_or_s3path(path: Union[str, Path, S3Path], *args: Tuple[str, ...]) ->
     path = Path(path, *args)
     return path
 
+
 def path_to_spark(path: Union[str, Path, S3Path], pattern: str = None) -> str:
-        """Convert a Path or S3Path to a string or list of strings."""
-        if isinstance(path, S3Path):
+    """Convert a Path or S3Path to a string or list of strings."""
+    if isinstance(path, S3Path):
+        path = str(path)
+
+    if isinstance(path, Path):
+        if path.is_dir():
+            if pattern is None:
+                path = str(path)
+            else:
+                path = [str(f) for f in path.glob(pattern)]
+        else:
             path = str(path)
 
-        if isinstance(path, Path):
-            if path.is_dir():
-                if pattern is None:
-                    path = str(path)
-                else:
-                    path = [str(f) for f in path.glob(pattern)]
-            else:
-                path = str(path)
+    return path
 
-        return path
+
+def remove_dir_if_exists(path: Union[str, Path]):
+    """Remove directory if it exists."""
+    if isinstance(path, str):
+        path = Path(path)
+    if path.is_dir():
+        shutil.rmtree(path)
