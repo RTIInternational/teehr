@@ -8,7 +8,7 @@ import teehr.models.pandera_dataframe_schemas as schemas
 from pathlib import Path
 from typing import Union
 import logging
-from teehr.utils.utils import to_path_or_s3path
+from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
 
 
 logger = logging.getLogger(__name__)
@@ -93,6 +93,9 @@ class LocationTable(BaseTable):
             const.LOADING_CACHE_DIR,
             const.LOCATIONS_DIR
         )
+        # Clear the cache directory if it exists.
+        remove_dir_if_exists(cache_dir)
+
         convert_locations(
             in_path,
             cache_dir,
