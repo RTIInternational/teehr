@@ -1,6 +1,6 @@
 """Test the import_timeseries function in the Evaluation class."""
 from pathlib import Path
-from teehr import Evaluation
+from teehr import Evaluation, Configuration
 from teehr.models.pydantic_table_models import (
     Attribute
 )
@@ -20,19 +20,27 @@ GEO_FILEPATH = Path(TEST_DATA_DIR, "geo")
 
 def test_create_joined_timeseries(tmpdir):
     """Test the validate_locations function."""
-    eval = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir)
 
     # Enable logging
-    eval.enable_logging()
+    ev.enable_logging()
 
     # Clone the template
-    eval.clone_template()
+    ev.clone_template()
 
     # Load the location data
-    eval.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
+    ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
+
+    ev.configurations.add(
+        Configuration(
+            name="usgs_observations",
+            type="primary",
+            description="test primary configuration"
+        )
+    )
 
     # Load the timeseries data and map over the fields and set constants
-    eval.primary_timeseries.load_parquet(
+    ev.primary_timeseries.load_parquet(
         in_path=PRIMARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
@@ -51,13 +59,21 @@ def test_create_joined_timeseries(tmpdir):
     )
 
     # Load the crosswalk data
-    eval.location_crosswalks.load_csv(
+    ev.location_crosswalks.load_csv(
         in_path=CROSSWALK_FILEPATH
+    )
+
+    ev.configurations.add(
+        Configuration(
+            name="nwm30_retrospective",
+            type="secondary",
+            description="test secondary configuration"
+        )
     )
 
     # Load the secondary timeseries data and map over the fields
     #  and set constants
-    eval.secondary_timeseries.load_parquet(
+    ev.secondary_timeseries.load_parquet(
         in_path=SECONDARY_TIMESERIES_FILEPATH,
         field_mapping={
             "reference_time": "reference_time",
@@ -76,7 +92,7 @@ def test_create_joined_timeseries(tmpdir):
     )
 
     # Add some attributes
-    eval.attributes.add(
+    ev.attributes.add(
         [
             Attribute(
                 name="drainage_area",
@@ -97,16 +113,16 @@ def test_create_joined_timeseries(tmpdir):
     )
 
     # Load the location attribute data
-    eval.location_attributes.load_parquet(
+    ev.location_attributes.load_parquet(
         in_path=GEO_FILEPATH,
         field_mapping={"attribute_value": "value"},
         pattern="test_attr_*.parquet",
     )
 
     # Create the joined timeseries
-    eval.joined_timeseries.create(add_attrs=True, execute_scripts=True)
+    ev.joined_timeseries.create(add_attrs=True, execute_scripts=True)
 
-    columns = eval.joined_timeseries.to_sdf().columns
+    columns = ev.joined_timeseries.to_sdf().columns
     expected_columns = [
         'reference_time',
         'value_time',

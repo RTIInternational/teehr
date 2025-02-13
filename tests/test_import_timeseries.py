@@ -118,6 +118,21 @@ def test_validate_and_insert_timeseries_set_const(tmpdir):
 
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
 
+    ev.configurations.add(
+        [
+            Configuration(
+                name="usgs_observations",
+                type="primary",
+                description="USGS Data"
+            ),
+            Configuration(
+                name="nwm30_retrospective",
+                type="secondary",
+                description="NWM Data"
+            )
+        ]
+    )
+
     ev.primary_timeseries.load_parquet(
         in_path=PRIMARY_TIMESERIES_FILEPATH,
         field_mapping={
@@ -289,38 +304,44 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
         "usgs_hefs_06711565.parquet"
     )
 
-    eval = Evaluation(dir_path=tmpdir)
-    eval.enable_logging()
-    eval.clone_template()
+    ev = Evaluation(dir_path=tmpdir)
+    ev.enable_logging()
+    ev.clone_template()
 
-    eval.locations.load_spatial(
+    ev.locations.load_spatial(
         in_path=usgs_location
     )
-    eval.location_crosswalks.load_csv(
+    ev.location_crosswalks.load_csv(
         in_path=Path(
             TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv"
         )
     )
-    eval.configurations.add(
-        Configuration(
-            name="MEFP",
-            type="secondary",
-            description="MBRFC HEFS Data"
-        )
+    ev.configurations.add(
+        [
+            Configuration(
+                name="MEFP",
+                type="secondary",
+                description="MBRFC HEFS Data"
+            ),
+            Configuration(
+                name="usgs_observations",
+                type="primary",
+                description="USGS Data"
+            )
+        ]
     )
     constant_field_values = {
         "unit_name": "ft^3/s",
         "variable_name": "streamflow_hourly_inst"
     }
-    eval.secondary_timeseries.load_fews_xml(
+    ev.secondary_timeseries.load_fews_xml(
         in_path=secondary_filepath,
         constant_field_values=constant_field_values
     )
-    eval.primary_timeseries.load_parquet(
+    ev.primary_timeseries.load_parquet(
         in_path=primary_filepath
     )
-    eval.joined_timeseries.create(execute_scripts=False)
-    # df = eval.joined_timeseries.to_pandas()
+    ev.joined_timeseries.create(execute_scripts=False)
 
     # Now, metrics.
     kge = m.KlingGuptaEfficiency()
@@ -328,7 +349,7 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
 
     # Define some filters?
 
-    metrics_df = eval.metrics.query(
+    metrics_df = ev.metrics.query(
         include_metrics=include_metrics,
         group_by=["primary_location_id", "reference_time"],
         order_by=["primary_location_id"],

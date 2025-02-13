@@ -440,8 +440,15 @@ def test_ensemble_metrics(tmpdir):
     ev.configurations.add(
         Configuration(
             name="MEFP",
-            type="primary",
+            type="secondary",
             description="MBRFC HEFS Data"
+        )
+    )
+    ev.configurations.add(
+        Configuration(
+            name="usgs_observations",
+            type="primary",
+            description="USGS observed test data"
         )
     )
     constant_field_values = {
