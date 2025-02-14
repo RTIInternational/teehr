@@ -69,7 +69,7 @@ def subset_the_table(
     elif table.name == "joined_timeseries":
         if primary_location_ids is not None:
             sdf_in = sdf_in.filter(
-                sdf_in.location_id.isin(primary_location_ids)
+                sdf_in.primary_location_id.isin(primary_location_ids)
             )
     if (
         table.name == "primary_timeseries"
@@ -174,7 +174,14 @@ def clone_from_s3(
 
         logger.debug(f"Cloning {table.name} from {s3_dataset_path}/{table.name}/ to {table.dir}")
 
-        sdf_in = table._read_files(path=f"{s3_dataset_path}/{table.name}/")
+        use_table_schema = True
+        if table.name == "joined_timeseries":
+            use_table_schema = False
+
+        sdf_in = table._read_files(
+            path=f"{s3_dataset_path}/{table.name}/",
+            use_table_schema=use_table_schema
+        )
 
         sdf_in = subset_the_table(
             ev=ev,
@@ -186,7 +193,6 @@ def clone_from_s3(
         )
 
         table._write_spark_df(sdf_in)
-
 
     # copy scripts path to ev.scripts_dir
     source = f"{url}/scripts/user_defined_fields.py"

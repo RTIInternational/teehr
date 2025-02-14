@@ -69,9 +69,9 @@ Methods for fetching NWM and USGS data from external sources.
 
    Fetch.usgs_streamflow
    Fetch.nwm_retrospective_points
-   Fetch.nwm_forecast_points
+   Fetch.nwm_operational_points
    Fetch.nwm_retrospective_grids
-   Fetch.nwm_forecast_grids
+   Fetch.nwm_operational_grids
 
 
 Metric Functions
@@ -84,9 +84,9 @@ Functions for calculating metrics.
    :template: custom-module-template.rst
    :recursive:
 
-   deterministic_funcs
-   signature_funcs
-   probabilistic_funcs
+   teehr.metrics.deterministic_funcs
+   teehr.metrics.signature_funcs
+   teehr.metrics.probabilistic_funcs
 
 
 Metric and Bootstrap Models

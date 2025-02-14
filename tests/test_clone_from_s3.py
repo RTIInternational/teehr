@@ -10,14 +10,14 @@ from teehr.loading.s3.clone_from_s3 import list_s3_evaluations
 def test_get_s3_evaluations_dataframe():
     """Test get_s3_evaluations as a dataframe."""
     df = list_s3_evaluations()
-    assert len(df) == 5
+    assert len(df) == 4
     assert isinstance(df, pd.DataFrame)
 
 
 def test_get_s3_evaluations_list():
     """Test get_s3_evaluations as a list."""
     l = list_s3_evaluations(format="list")
-    assert len(l) == 5
+    assert len(l) == 4
     assert isinstance(l, list)
 
 

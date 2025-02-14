@@ -109,8 +109,8 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
     assert ts_df.value_time.max() == pd.Timestamp("2008-05-23 23:00:00")
 
 
-def test_fetch_and_load_nwm_forecast_points(tmpdir):
-    """Test the NWM forecast point fetch and load."""
+def test_fetch_and_load_nwm_operational_points(tmpdir):
+    """Test the NWM operational point fetch and load."""
     ev = Evaluation(dir_path=tmpdir)
     ev.enable_logging()
     ev.clone_template()
@@ -121,7 +121,7 @@ def test_fetch_and_load_nwm_forecast_points(tmpdir):
         in_path=CROSSWALK_FILEPATH
     )
 
-    ev.fetch.nwm_forecast_points(
+    ev.fetch.nwm_operational_points(
         nwm_configuration="analysis_assim",
         output_type="channel_rt",
         variable_name="streamflow",
@@ -152,7 +152,7 @@ def test_fetch_and_load_nwm_forecast_points(tmpdir):
 
 
 @pytest.mark.skip(reason="This takes forever!")
-def test_fetch_and_load_nwm_forecast_grids(tmpdir):
+def test_fetch_and_load_nwm_operational_grids(tmpdir):
     """Test the NWM forecast grids fetch and load."""
     ev = Evaluation(dir_path=tmpdir)
     ev.enable_logging()
@@ -160,7 +160,7 @@ def test_fetch_and_load_nwm_forecast_grids(tmpdir):
 
     ev.locations.load_spatial(in_path=ZONAL_LOCATIONS)
 
-    ev.fetch.nwm_forecast_grids(
+    ev.fetch.nwm_operational_grids(
         nwm_configuration="forcing_analysis_assim",
         output_type="forcing",
         variable_name="RAINRATE",
@@ -216,17 +216,16 @@ if __name__ == "__main__":
                 dir=tempdir
             )
         )
-        test_fetch_and_load_nwm_forecast_points(
+        test_fetch_and_load_nwm_operational_points(
             tempfile.mkdtemp(
                 prefix="3-",
                 dir=tempdir
             )
         )
-
-        # # Warning: This one is slow.
-        # test_fetch_and_load_nwm_forecast_grids(
-        #     tempfile.mkdtemp(
-        #         prefix="4-",
-        #         dir=tempdir
-        #     )
-        # )
+        # Warning: This one is slow.
+        test_fetch_and_load_nwm_operational_grids(
+            tempfile.mkdtemp(
+                prefix="4-",
+                dir=tempdir
+            )
+        )
