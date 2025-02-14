@@ -13,7 +13,7 @@ from teehr.evaluation.tables.unit_table import UnitTable
 from teehr.evaluation.tables.variable_table import VariableTable
 from teehr.evaluation.tables.joined_timeseries_table import JoinedTimeseriesTable
 from teehr.utils.s3path import S3Path
-from teehr.utils.utils import to_path_or_s3path
+from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
 import logging
@@ -277,7 +277,7 @@ class Evaluation:
             raise Exception("Cannot clean cache on S3.")
 
         logger.info(f"Removing temporary files from {self.cache_dir}")
-        self.cache_dir.rmdir()
+        remove_dir_if_exists(self.cache_dir)
         self.cache_dir.mkdir()
 
     def sql(self, query: str, create_temp_views: List[str] = None):
