@@ -34,6 +34,14 @@ def setup_hefs_example(tmpdir):
         )
     )
 
+    ev.configurations.add(
+        teehr.Configuration(
+            name="usgs_observations",
+            type="primary",
+            description="USGS Observations"
+        )
+    )
+
     # Load the data into the Evaluation
     ev.locations.load_spatial(in_path=location_data_path)
     ev.location_crosswalks.load_parquet(in_path=crosswalk_data_path)
