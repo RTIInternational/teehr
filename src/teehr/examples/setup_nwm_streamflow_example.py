@@ -26,6 +26,22 @@ def setup_nwm_example(tmpdir):
     secondary_timeseries_path = Path(tmpdir, "nwm_forecasts.parquet")
     fetch_nwm_streamflow_data.fetch_file("nwm_forecasts.parquet", secondary_timeseries_path)
 
+    ev.configurations.add(
+        teehr.Configuration(
+            name="nwm30_medium_range",
+            type="secondary",
+            description="NWM Medium Range Streamflow Ensemble"
+        )
+    )
+
+    ev.configurations.add(
+        teehr.Configuration(
+            name="usgs_observations",
+            type="primary",
+            description="USGS Observations"
+        )
+    )
+
     # Load the data into the Evaluation
     ev.locations.load_spatial(in_path=location_data_path)
     ev.location_crosswalks.load_parquet(in_path=crosswalk_data_path)
