@@ -84,9 +84,9 @@ Functions for calculating metrics.
    :template: custom-module-template.rst
    :recursive:
 
-   deterministic_funcs
-   signature_funcs
-   probabilistic_funcs
+   teehr.metrics.deterministic_funcs
+   teehr.metrics.signature_funcs
+   teehr.metrics.probabilistic_funcs
 
 
 Metric and Bootstrap Models

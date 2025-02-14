@@ -231,8 +231,8 @@ def locations_schema(type: str = "pyspark") -> ps.DataFrameSchema:
         )
 
 def location_attributes_schema(
-        location_ids: List[str] = None,
-        attr_names: List[str] = None,
+        location_ids: List[str] = [None],
+        attr_names: List[str] = [None],
         type: str = "pyspark",
 ) -> ps.DataFrameSchema:
     if type == "pandas":
@@ -278,7 +278,7 @@ def location_attributes_schema(
         )
 
 def location_crosswalks_schema(
-        location_ids: List[str] = None,
+        location_ids: List[str] = [None],
         type: str = "pyspark",
 ) -> ps.DataFrameSchema:
     if type == "pandas":
@@ -319,10 +319,10 @@ pyspark_value_type = T.FloatType()
 
 # PySpark Pandera Models
 def primary_timeseries_schema(
-        location_ids: List[str] = None,
-        variable_names: List[str] = None,
-        configuration_names: List[str] = None,
-        unit_names: List[str] = None,
+        location_ids: List[str] = [None],
+        variable_names: List[str] = [None],
+        configuration_names: List[str] = [None],
+        unit_names: List[str] = [None],
         type: str = "pyspark",
 ) -> ps.DataFrameSchema:
     if type == "pandas":
@@ -412,10 +412,10 @@ def primary_timeseries_schema(
 
 
 def secondary_timeseries_schema(
-        location_ids: List[str] = None,
-        variable_names: List[str] = None,
-        configuration_names: List[str] = None,
-        unit_names: List[str] = None,
+        location_ids: List[str] = [None],
+        variable_names: List[str] = [None],
+        configuration_names: List[str] = [None],
+        unit_names: List[str] = [None],
         type: str = "pyspark",
 ) -> ps.DataFrameSchema:
     if type == "pandas":

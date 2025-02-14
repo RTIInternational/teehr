@@ -34,10 +34,10 @@ class BaseTable():
         self.validate_filter_field_types = True
 
     @staticmethod
-    def _raise_missing_table_error():
+    def _raise_missing_table_error(table_name: str):
         """Raise an error if the table does not exist."""
         err_msg = (
-            "The requested table does not exist in the dataset."
+            f"The '{table_name}' table does not exist in the dataset."
             " Please load it first."
         )
         logger.error(err_msg)
@@ -47,6 +47,7 @@ class BaseTable():
             self,
             path: Union[str, Path, S3Path],
             pattern: str = None,
+            use_table_schema: bool = False,
             **options
     ) -> ps.DataFrame:
         """Read data from table directory as a spark dataframe.
@@ -57,6 +58,10 @@ class BaseTable():
             The path to the directory containing the files.
         pattern : str, optional
             The pattern to match files.
+        use_table_schema : bool, optional
+            If True, use the table schema to read the files.
+            Missing files will be ignored with 'ignoreMissingFiles'
+            set to True (default).
         **options
             Additional options to pass to the spark read method.
 
@@ -76,8 +81,13 @@ class BaseTable():
 
         path = path_to_spark(path, pattern)
 
-        # May need to deal with empty files here.
-        df = self.ev.spark.read.format(self.format).options(**options).load(path)
+        if use_table_schema is True:
+            schema = self.schema_func().to_structtype()
+            df = self.ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
+            if len(df.head(1)) == 0:
+                logger.warning(f"An empty dataframe was returned for '{self.name}'.")
+        else:
+            df = self.ev.spark.read.format(self.format).options(**options).load(path)
 
         return df
 
@@ -101,7 +111,7 @@ class BaseTable():
         if self.df is None:
             self._load_table()
         if self.df is None:
-            self._raise_missing_table_error()
+            self._raise_missing_table_error(table_name=self.name)
 
     def _write_spark_df(self, df: ps.DataFrame, **kwargs):
         """Write spark dataframe to directory.
@@ -128,9 +138,10 @@ class BaseTable():
         if partition_by is None:
             partition_by = []
 
-        df.write.partitionBy(partition_by).format(self.format).mode(self.save_mode).options(**kwargs).save(str(self.dir))
+        if df is not None:
+            df.write.partitionBy(partition_by).format(self.format).mode(self.save_mode).options(**kwargs).save(str(self.dir))
 
-        self._load_table()
+            self._load_table()
 
     def _get_schema(self, type: str = "pyspark"):
         """Get the primary timeseries schema.
