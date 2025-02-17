@@ -2,12 +2,13 @@ Release Notes
 =============
 
 0.4.8 - 2025-02-17
---------------------
+------------------
 
 Added
 ^^^^^
 - Adds box zoom to location plots.
 - Adds User Guide page for fetching NWM point data.
+- Adds new row level calculated fields, DayOfYear, ThresholdValueExceeded, ForecastLeadTime.
 
 
 Changed
@@ -24,7 +25,7 @@ Changed
 
 
 0.4.7 - 2025-01-08
---------------------
+------------------
 
 Added
 ^^^^^
