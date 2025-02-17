@@ -44,5 +44,3 @@ from teehr.evaluation.tables.unit_table import UnitTable
 from teehr.evaluation.tables.variable_table import VariableTable
 from teehr.evaluation.fetch import Fetch  # noqa
 from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor  # noqa
-from teehr.metrics import deterministic_funcs, signature_funcs, probabilistic_funcs # noqa
-from teehr.metrics.signature_funcs import count  # noqa
