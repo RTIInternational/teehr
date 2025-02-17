@@ -127,9 +127,9 @@ def nash_sutcliffe_efficiency_normalized(p: pd.Series, s: pd.Series) -> float:
 def kling_gupta_efficiency(
         p: pd.Series,
         s: pd.Series,
-        sr: float = 1.0,
-        sa: float = 1.0,
-        sb: float = 1.0
+        sr: float,
+        sa: float,
+        sb: float
         ) -> float:
     """Kling-Gupta Efficiency (2009)."""
     # if len(p) == 0 or len(s) == 0:

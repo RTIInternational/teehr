@@ -118,4 +118,3 @@ class MetricCategories(StrEnum):
     Categorical = "Categorical"
     Signature = "Signature"
     Probabilistic = "Probabilistic"
-

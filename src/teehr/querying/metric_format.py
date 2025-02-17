@@ -6,6 +6,9 @@ import pandas as pd
 from pyspark.sql import GroupedData
 from pyspark.sql.functions import pandas_udf
 
+from pyspark.sql.functions import lit
+from pyspark.sql.functions import udf as pyspark_udf
+
 from teehr.models.metrics.basemodels import MetricsBasemodel
 from teehr.models.metrics.basemodels import MetricCategories as mc
 from teehr.querying.utils import validate_fields_exist, parse_fields_to_list
@@ -47,11 +50,21 @@ def apply_aggregation_metrics(
             if model.attrs["category"] == mc.Probabilistic:
                 func_pd = pandas_udf(model.func(model), model.return_type)
             else:
-                func_pd = pandas_udf(model.func, model.return_type)
+                if hasattr(model, 'constants'):
+                    func_ps = pyspark_udf(model.func, model.return_type)
+                else:
+                    func_pd = pandas_udf(model.func, model.return_type)
 
-        func_list.append(
-            func_pd(*input_field_names).alias(alias)
-        )
+        if hasattr(model, 'constants'):
+            # constants = [lit(model.constants.get(const, getattr(model, const))) for const in model.constants]
+            func_list.append(
+                # func_ps(*input_field_names, *constants).alias(alias)
+                func_ps(*input_field_names).alias(alias)
+            )
+        else:
+            func_list.append(
+                func_pd(*input_field_names).alias(alias)
+            )
 
     sdf = gp.agg(*func_list)
 

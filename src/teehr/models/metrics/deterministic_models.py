@@ -383,6 +383,16 @@ class KlingGuptaEfficiency(DeterministicBasemodel):
         default=["primary_value", "secondary_value"]
     )
     attrs: Dict = Field(default=tma.KGE_ATTRS, frozen=True)
+    sr: float = 1.0
+    sa: float = 1.0
+    sb: float = 1.0
+    constants: Dict = Field(
+        default={
+            "sr": sr,
+            "sa": sa,
+            "sb": sb
+        },
+    )
 
 
 class KlingGuptaEfficiencyMod1(DeterministicBasemodel):
