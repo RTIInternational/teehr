@@ -715,8 +715,10 @@ class Fetch:
         variable_name: str,
         start_date: Union[str, datetime],
         ingest_days: int,
-        zonal_weights_filepath: Union[Path, str],
         nwm_version: SupportedNWMOperationalVersionsEnum,
+        calculate_zonal_weights: bool = False,
+        zonal_weights_filepath: Optional[Union[Path, str]] = None,
+        unique_zone_id: Optional[str] = None,
         data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
         kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
         prioritize_analysis_valid_time: Optional[bool] = False,
@@ -725,7 +727,7 @@ class Fetch:
         overwrite_output: Optional[bool] = False,
         location_id_prefix: Optional[Union[str, None]] = None,
         timeseries_type: TimeseriesTypeEnum = "primary",
-        add_configuration_name: bool = True
+        add_configuration_name: bool = True,
     ):
         """
         Fetch NWM operational gridded data, calculate zonal statistics (currently only
@@ -752,12 +754,17 @@ class Fetch:
             Str formats can include YYYY-MM-DD or MM/DD/YYYY.
         ingest_days : int
             Number of days to ingest data after start date.
-        zonal_weights_filepath : str
-            Path to the array containing fraction of pixel overlap
-            for each zone.
         nwm_version : SupportedNWMOperationalVersionsEnum
             The NWM operational version.
             "nwm22", or "nwm30".
+        calculate_zonal_weights : bool
+            Flag specifying whether or not to calculate zonal weights.
+            True = calculate; False = use existing file. Default is False.
+        zonal_weights_filepath : str
+            Path to the array containing fraction of pixel overlap
+            for each zone.
+        unique_zone_id : Optional[str]
+            Unique zone ID to use for the zonal weights file.
         data_source : Optional[SupportedNWMDataSourcesEnum]
             Specifies the remote location from which to fetch the data
             "GCS" (default), "NOMADS", or "DSTOR".
@@ -886,7 +893,10 @@ class Fetch:
             ignore_missing_file=ignore_missing_file,
             overwrite_output=overwrite_output,
             location_id_prefix=location_id_prefix,
-            variable_mapper=NWM_VARIABLE_MAPPER
+            variable_mapper=NWM_VARIABLE_MAPPER,
+            unique_zone_id=unique_zone_id,
+            calculate_zonal_weights=calculate_zonal_weights,
+            zone_polygons=self.ev.locations.to_geopandas()
         )
 
         if add_configuration_name:
