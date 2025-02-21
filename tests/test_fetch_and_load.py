@@ -83,13 +83,19 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
     # Add locations corresponding to weights file.
     ev.locations.load_spatial(in_path=ZONAL_LOCATIONS)
 
+    test_output_weights = Path(
+        tmpdir, "onehuc10_weights_operational.parquet"
+    )
+
     ev.fetch.nwm_retrospective_grids(
-        nwm_version="nwm30",
+        nwm_version="nwm21",
         variable_name="RAINRATE",
-        zonal_weights_filepath=ZONAL_WEIGHTS,
+        zonal_weights_filepath=test_output_weights,
         start_date="2008-05-23 09:00",
         end_date="2008-05-23 10:00",
-        location_id_prefix="huc10"
+        location_id_prefix=None,
+        calculate_zonal_weights=True,
+        unique_zone_id="id"
     )
     ts_df = ev.primary_timeseries.to_pandas()
 

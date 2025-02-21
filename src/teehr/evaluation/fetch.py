@@ -360,9 +360,11 @@ class Fetch:
         self,
         nwm_version: SupportedNWMRetroVersionsEnum,
         variable_name: ForcingVariablesEnum,
-        zonal_weights_filepath: Union[str, Path],
         start_date: Union[str, datetime, pd.Timestamp],
         end_date: Union[str, datetime, pd.Timestamp],
+        calculate_zonal_weights: bool = False,
+        zonal_weights_filepath: Optional[Union[Path, str]] = None,
+        unique_zone_id: Optional[str] = None,
         chunk_by: Union[NWMChunkByEnum, None] = None,
         overwrite_output: Optional[bool] = False,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
@@ -390,10 +392,6 @@ class Fetch:
         variable_name : str
             Name of the NWM forcing data variable to download.
             (e.g., "PRECIP", "PSFC", "Q2D", ...).
-        zonal_weights_filepath : str,
-            Path to the array containing fraction of pixel overlap
-            for each zone. The values in the location_id field from
-            the zonal weights file are used in the output of this function.
         start_date : Union[str, datetime, pd.Timestamp]
             Date to begin data ingest.
             Str formats can include YYYY-MM-DD or MM/DD/YYYY.
@@ -401,6 +399,15 @@ class Fetch:
         end_date : Union[str, datetime, pd.Timestamp],
             Last date to fetch.  Rounds up to end of day.
             Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+        calculate_zonal_weights : bool
+            Flag specifying whether or not to calculate zonal weights.
+            True = calculate; False = use existing file. Default is False.
+        zonal_weights_filepath : str,
+            Path to the array containing fraction of pixel overlap
+            for each zone. The values in the location_id field from
+            the zonal weights file are used in the output of this function.
+        unique_zone_id : Optional[str]
+            Unique zone ID to use for the zonal weights file.
         chunk_by : Union[NWMChunkByEnum, None] = None,
             If None (default) saves all timeseries to a single file, otherwise
             the data is processed using the specified parameter.
@@ -489,7 +496,10 @@ class Fetch:
             domain=domain,
             location_id_prefix=location_id_prefix,
             variable_mapper=NWM_VARIABLE_MAPPER,
-            timeseries_type=timeseries_type
+            timeseries_type=timeseries_type,
+            unique_zone_id=unique_zone_id,
+            calculate_zonal_weights=calculate_zonal_weights,
+            zone_polygons=self.ev.locations.to_geopandas()
         )
 
         if add_configuration_name:
