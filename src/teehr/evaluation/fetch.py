@@ -378,8 +378,8 @@ class Fetch:
         table, and all dates and times within the files and in the
         cache file names are in UTC.
 
-        Pixel values are summarized to zones based on a pre-computed
-        zonal weights file.
+        The fraction each grid pixel overlaps each zone is calculated and saved to a
+        separate zonal weights file in the cache directory.
 
         Parameters
         ----------
@@ -734,6 +734,9 @@ class Fetch:
         Data is fetched for all location IDs in the locations
         table, and all dates and times within the files and in the
         cache file names are in UTC.
+
+        The fraction each grid pixel overlaps each zone is calculated and saved to a
+        separate zonal weights file in the cache directory.
 
         Parameters
         ----------
