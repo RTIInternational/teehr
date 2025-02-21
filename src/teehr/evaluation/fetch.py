@@ -360,13 +360,12 @@ class Fetch:
         self,
         nwm_version: SupportedNWMRetroVersionsEnum,
         variable_name: ForcingVariablesEnum,
-        zonal_weights_filepath: Union[str, Path],
         start_date: Union[str, datetime, pd.Timestamp],
         end_date: Union[str, datetime, pd.Timestamp],
-        chunk_by: Union[NWMChunkByEnum, None] = None,
+        calculate_zonal_weights: bool = True,
         overwrite_output: Optional[bool] = False,
+        chunk_by: Union[NWMChunkByEnum, None] = None,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
-        location_id_prefix: Optional[Union[str, None]] = None,
         timeseries_type: TimeseriesTypeEnum = "primary",
         add_configuration_name: bool = True
     ):
@@ -379,8 +378,8 @@ class Fetch:
         table, and all dates and times within the files and in the
         cache file names are in UTC.
 
-        Pixel values are summarized to zones based on a pre-computed
-        zonal weights file.
+        The fraction each grid pixel overlaps each zone is calculated and saved to a
+        separate zonal weights file in the cache directory.
 
         Parameters
         ----------
@@ -390,10 +389,6 @@ class Fetch:
         variable_name : str
             Name of the NWM forcing data variable to download.
             (e.g., "PRECIP", "PSFC", "Q2D", ...).
-        zonal_weights_filepath : str,
-            Path to the array containing fraction of pixel overlap
-            for each zone. The values in the location_id field from
-            the zonal weights file are used in the output of this function.
         start_date : Union[str, datetime, pd.Timestamp]
             Date to begin data ingest.
             Str formats can include YYYY-MM-DD or MM/DD/YYYY.
@@ -401,19 +396,20 @@ class Fetch:
         end_date : Union[str, datetime, pd.Timestamp],
             Last date to fetch.  Rounds up to end of day.
             Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+        calculate_zonal_weights : bool
+            Flag specifying whether or not to calculate zonal weights.
+            True = calculate; False = use existing file. Default is True.
+        overwrite_output : bool
+            Flag specifying whether or not to overwrite output files if they already
+            exist.  True = overwrite; False = fail.
         chunk_by : Union[NWMChunkByEnum, None] = None,
             If None (default) saves all timeseries to a single file, otherwise
             the data is processed using the specified parameter.
             Can be: 'week' or 'month' for gridded data.
-        overwrite_output : bool = False,
-            Whether output should overwrite files if they exist.
-            Default is False.
         domain : str = "CONUS"
             Geographical domain when NWM version is v3.0.
             Acceptable values are "Alaska", "CONUS" (default), "Hawaii",
             and "PR". Only relevant when NWM version equals v3.0.
-        location_id_prefix : Union[str, None]
-            Optional location ID prefix to add (prepend) or replace.
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
@@ -421,18 +417,12 @@ class Fetch:
             If True, adds the configuration name to the Evaluation.
             Default is True.
 
-        Notes
-        -----
-        The location_id values in the zonal weights file are used as
-        location ids in the output of this function, unless a prefix is
-        specified which will be prepended to the location_id values if none
-        exists, or it will replace the existing prefix. It is assumed that
-        the location_id follows the pattern '[prefix]-[unique id]'.
-
         Examples
         --------
         Here we will calculate mean areal precipitation using NWM forcing data for
-        some watersheds (polygons) a using pre-calculated weights file
+        the polygons in the locations table. Pixel weights (fraction of pixel overlap)
+        are calculated for each polygon and stored in the evaluation cache directory.
+
         (see: :func:`generate_weights_file()
         <teehr.utilities.generate_weights.generate_weights_file>` for weights calculation).
 
@@ -442,7 +432,7 @@ class Fetch:
         >>> ev.fetch.nwm_retrospective_grids(
         >>>     nwm_configuration="forcing_short_range",
         >>>     variable_name="RAINRATE",
-        >>>     zonal_weights_filepath = Path(Path.home(), "nextgen_03S_weights.parquet"),
+        >>>     calculate_zonal_weights=True,
         >>>     start_date=datetime(2000, 1, 1),
         >>>     end_date=datetime(2001, 1, 1)
         >>> )
@@ -472,11 +462,18 @@ class Fetch:
         """ # noqa
         ev_configuration_name = f"{nwm_version}_retrospective"
         ev_variable_name = format_nwm_variable_name(variable_name)
+        ev_weights_cache_dir = Path(
+            self.weights_cache_dir, ev_configuration_name
+        )
+        ev_weights_cache_dir.mkdir(parents=True, exist_ok=True)
 
         nwm_retro_grids_to_parquet(
             nwm_version=nwm_version,
             variable_name=variable_name,
-            zonal_weights_filepath=zonal_weights_filepath,
+            zonal_weights_filepath=Path(
+                ev_weights_cache_dir,
+                f"{ev_configuration_name}_pixel_weights.parquet"
+            ),
             start_date=start_date,
             end_date=end_date,
             output_parquet_dir=Path(
@@ -487,9 +484,12 @@ class Fetch:
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
             domain=domain,
-            location_id_prefix=location_id_prefix,
+            location_id_prefix=None,
             variable_mapper=NWM_VARIABLE_MAPPER,
-            timeseries_type=timeseries_type
+            timeseries_type=timeseries_type,
+            unique_zone_id="id",
+            calculate_zonal_weights=calculate_zonal_weights,
+            zone_polygons=self.ev.locations.to_geopandas()
         )
 
         if add_configuration_name:
@@ -715,17 +715,16 @@ class Fetch:
         variable_name: str,
         start_date: Union[str, datetime],
         ingest_days: int,
-        zonal_weights_filepath: Union[Path, str],
         nwm_version: SupportedNWMOperationalVersionsEnum,
+        calculate_zonal_weights: bool = True,
         data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
         kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
         prioritize_analysis_valid_time: Optional[bool] = False,
         t_minus_hours: Optional[List[int]] = None,
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
-        location_id_prefix: Optional[Union[str, None]] = None,
         timeseries_type: TimeseriesTypeEnum = "primary",
-        add_configuration_name: bool = True
+        add_configuration_name: bool = True,
     ):
         """
         Fetch NWM operational gridded data, calculate zonal statistics (currently only
@@ -735,6 +734,9 @@ class Fetch:
         Data is fetched for all location IDs in the locations
         table, and all dates and times within the files and in the
         cache file names are in UTC.
+
+        The fraction each grid pixel overlaps each zone is calculated and saved to a
+        separate zonal weights file in the cache directory.
 
         Parameters
         ----------
@@ -752,12 +754,12 @@ class Fetch:
             Str formats can include YYYY-MM-DD or MM/DD/YYYY.
         ingest_days : int
             Number of days to ingest data after start date.
-        zonal_weights_filepath : str
-            Path to the array containing fraction of pixel overlap
-            for each zone.
         nwm_version : SupportedNWMOperationalVersionsEnum
             The NWM operational version.
             "nwm22", or "nwm30".
+        calculate_zonal_weights : bool
+            Flag specifying whether or not to calculate zonal weights.
+            True = calculate; False = use existing file. Default is True.
         data_source : Optional[SupportedNWMDataSourcesEnum]
             Specifies the remote location from which to fetch the data
             "GCS" (default), "NOMADS", or "DSTOR".
@@ -783,8 +785,6 @@ class Fetch:
         overwrite_output : bool
             Flag specifying whether or not to overwrite output files if they already
             exist.  True = overwrite; False = fail.
-        location_id_prefix : Union[str, None]
-            Optional location ID prefix to add (prepend) or replace.
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
@@ -799,18 +799,14 @@ class Fetch:
         The cached forecast and assimilation data is grouped and saved one file
         per reference time, using the file name convention "YYYYMMDDTHH".
 
-        Additionally, the location_id values in the zonal weights file are used as
-        location ids in the output of this function, unless a prefix is specified which
-        will be prepended to the location_id values if none exists, or will it replace
-        the existing prefix. It is assumed that the location_id follows the pattern
-        '[prefix]-[unique id]'.
-
         All dates and times within the files and in the file names are in UTC.
 
         Examples
         --------
-        Here we will calculate mean areal precipitation using NWM forcing data for
-        some watersheds (polygons) a using pre-calculated weights file
+        Here we will calculate mean areal precipitation using operational NWM forcing data
+        for the polygons in the locations table. Pixel weights (fraction of pixel overlap)
+        are calculated for each polygon and stored in the evaluation cache directory.
+
         (see: :func:`generate_weights_file()
         <teehr.utilities.generate_weights.generate_weights_file>` for weights calculation).
 
@@ -865,13 +861,21 @@ class Fetch:
             nwm_configuration_name=nwm_configuration,
             nwm_version=nwm_version
         )
+        ev_weights_cache_dir = Path(
+            self.weights_cache_dir, ev_config["configuration_name"]
+        )
+        ev_weights_cache_dir.mkdir(parents=True, exist_ok=True)
+
         nwm_grids_to_parquet(
             configuration=nwm_configuration,
             output_type=output_type,
             variable_name=variable_name,
             start_date=start_date,
             ingest_days=ingest_days,
-            zonal_weights_filepath=zonal_weights_filepath,
+            zonal_weights_filepath=Path(
+                ev_weights_cache_dir,
+                f"{ev_config['configuration_name']}_pixel_weights.parquet"
+            ),
             json_dir=self.kerchunk_cache_dir,
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
@@ -885,8 +889,11 @@ class Fetch:
             t_minus_hours=t_minus_hours,
             ignore_missing_file=ignore_missing_file,
             overwrite_output=overwrite_output,
-            location_id_prefix=location_id_prefix,
-            variable_mapper=NWM_VARIABLE_MAPPER
+            location_id_prefix=None,
+            variable_mapper=NWM_VARIABLE_MAPPER,
+            unique_zone_id="id",
+            calculate_zonal_weights=calculate_zonal_weights,
+            zone_polygons=self.ev.locations.to_geopandas()
         )
 
         if add_configuration_name:

@@ -2,8 +2,10 @@
 from typing import Union, Dict
 from pathlib import Path
 import warnings
+import logging
 
 import geopandas as gpd
+from geopandas import GeoDataFrame
 import numpy as np
 import xarray as xr
 from rasterio.transform import rowcol
@@ -14,6 +16,8 @@ import shapely
 
 from teehr.fetching.utils import load_gdf
 from teehr.fetching.const import LOCATION_ID
+
+logger = logging.getLogger(__name__)
 
 
 @dask.delayed
@@ -162,12 +166,12 @@ def calculate_weights(
 
 
 def generate_weights_file(
-    zone_polygon_filepath: Union[Path, str],
-    template_dataset: Union[str, Path],
+    zone_polygons: Union[Path, str, GeoDataFrame],
+    template_dataset: Union[str, Path, xr.Dataset],
     variable_name: str,
     output_weights_filepath: Union[str, Path],
     crs_wkt: str,
-    unique_zone_id: str = None,
+    unique_zone_id: str,
     location_id_prefix: str = None,
     **read_args: Dict,
 ) -> None:
@@ -175,10 +179,10 @@ def generate_weights_file(
 
     Parameters
     ----------
-    zone_polygon_filepath : str
-        Path to the polygons geoparquet file.
-    template_dataset : str
-        Path to the grid dataset to use as a template.
+    zone_polygon_filepath : Union[Path, str, GeoDataFrame]
+        Path to the polygons geoparquet file or GeoDataFrame.
+    template_dataset : Union[str, Path, xr.Dataset]
+        Path to the grid dataset or an xarray Dataset to use as a template.
     variable_name : str
         Name of the variable within the dataset.
     output_weights_filepath : str
@@ -227,11 +231,26 @@ def generate_weights_file(
     >>>     unique_zone_id="id",
     >>> )
     """
-    zone_gdf = load_gdf(zone_polygon_filepath, **read_args)
-    zone_gdf = zone_gdf.to_crs(crs_wkt)
+    if unique_zone_id is None:
+        logger.error("unique_zone_id must be provided.")
+        raise ValueError("unique_zone_id must be provided.")
 
-    ds = xr.open_dataset(template_dataset)
-    src_da = ds[variable_name]
+    if isinstance(zone_polygons, (str, Path)):
+        zone_gdf = load_gdf(zone_polygons, **read_args)
+        zone_gdf = zone_gdf.to_crs(crs_wkt)
+    elif isinstance(zone_polygons, GeoDataFrame):
+        zone_gdf = zone_polygons.to_crs(crs_wkt)
+    else:
+        logger.error(
+            "zone_polygons must be a path to a file or a GeoDataFrame."
+        )
+        raise ValueError(
+            "zone_polygons must be a path to a file or a GeoDataFrame."
+        )
+
+    if isinstance(template_dataset, (str, Path)):
+        template_dataset = xr.open_dataset(template_dataset)
+    src_da = template_dataset[variable_name]
     src_da = src_da.rio.write_crs(crs_wkt, inplace=True)
     grid_transform = src_da.rio.transform()
     nodata_val = src_da.rio.nodata
@@ -241,6 +260,9 @@ def generate_weights_file(
     src_da = src_da.sel(x=slice(bbox[0], bbox[2]), y=slice(bbox[1], bbox[3]))[
         0
     ]
+    if 0 in src_da.shape:
+        logger.error("No grid cells intersect the zone polygons.")
+        raise ValueError("No grid cells intersect the zone polygons.")
     src_da = src_da.astype("float32")
     src_da["x"] = np.float32(src_da.x.values)
     src_da["y"] = np.float32(src_da.y.values)
@@ -275,28 +297,6 @@ def generate_weights_file(
     if location_id_prefix:
         df.loc[:, LOCATION_ID] = location_id_prefix + "-" + df[LOCATION_ID]
 
-    if output_weights_filepath:
-        df.to_parquet(output_weights_filepath)
-        df = None
+    df.to_parquet(output_weights_filepath)
 
-    return df
-
-
-# if __name__ == "__main__":
-#     # Local testing
-#     zone_polygon_filepath = "/mnt/data/wbd/one_alaska_huc10.parquet"
-#     template_dataset = "/mnt/data/ciroh/nwm_temp/nwm.20231101_forcing_analysis_assim_alaska_nwm.t00z.analysis_assim.forcing.tm01.alaska.nc"  # noqa
-#     variable_name = "RAINRATE"
-#     unique_zone_id = "huc10"
-#     output_weights_filepath = (
-#         "/mnt/sf_shared/data/ciroh/one_huc10_alaska_weights.parquet"
-#     )
-
-#     generate_weights_file(
-#         zone_polygon_filepath=zone_polygon_filepath,
-#         template_dataset=template_dataset,
-#         variable_name=variable_name,
-#         output_weights_filepath=output_weights_filepath,
-#         crs_wkt=AL_NWM_WKT,
-#         unique_zone_id=unique_zone_id
-#     )
+    return
