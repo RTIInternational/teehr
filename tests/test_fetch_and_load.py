@@ -88,7 +88,7 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
     )
 
     ev.fetch.nwm_retrospective_grids(
-        nwm_version="nwm21",
+        nwm_version="nwm30",
         variable_name="RAINRATE",
         zonal_weights_filepath=test_output_weights,
         start_date="2008-05-23 09:00",
@@ -110,7 +110,7 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
             "variable_name"
             ])
     assert ts_df.unit_name.iloc[0] == "mm/s"
-    assert np.isclose(ts_df.value.sum(), np.float32(0.00028747512))
+    assert np.isclose(ts_df.value.sum(), np.float32(0.0002836702))
     assert ts_df.value_time.min() == pd.Timestamp("2008-05-23 09:00:00")
     assert ts_df.value_time.max() == pd.Timestamp("2008-05-23 23:00:00")
 

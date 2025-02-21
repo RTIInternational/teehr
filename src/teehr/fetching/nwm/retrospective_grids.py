@@ -360,7 +360,17 @@ def nwm_retro_grids_to_parquet(
                 target_options={'anon': True}
             )
 
-            template_ds = template_ds.rename_dims(
+            # Get spatial information from the zarr store. (limited data)
+            tmp_s3_zarr_url = "s3://noaa-nwm-retrospective-2-1-zarr-pds/precip.zarr"
+            tmp_ds = xr.open_zarr(fsspec.get_mapper(tmp_s3_zarr_url, anon=True))
+            nwm21_crs = tmp_ds.crs.attrs["esri_pe_string"]
+            x_dim = tmp_ds.x.values
+            y_dim = tmp_ds.y.values
+
+            # Need to rename x and y dimensions in the template dataset.
+            template_ds["west_east"] = x_dim
+            template_ds["south_north"] = y_dim
+            template_ds = template_ds.rename(
                 {"west_east": "x", "south_north": "y"}
             )
 
@@ -368,7 +378,7 @@ def nwm_retro_grids_to_parquet(
                 zone_polygons=zone_polygons,
                 template_dataset=template_ds,
                 variable_name=variable_name,
-                crs_wkt=CONUS_NWM_WKT,
+                crs_wkt=nwm21_crs,
                 output_weights_filepath=zonal_weights_filepath,
                 location_id_prefix=location_id_prefix,
                 unique_zone_id=unique_zone_id
