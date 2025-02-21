@@ -80,22 +80,14 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
     ev.enable_logging()
     ev.clone_template()
 
-    # Add locations corresponding to weights file.
     ev.locations.load_spatial(in_path=ZONAL_LOCATIONS)
-
-    test_output_weights = Path(
-        tmpdir, "onehuc10_weights_operational.parquet"
-    )
 
     ev.fetch.nwm_retrospective_grids(
         nwm_version="nwm30",
         variable_name="RAINRATE",
-        zonal_weights_filepath=test_output_weights,
         start_date="2008-05-23 09:00",
         end_date="2008-05-23 10:00",
-        location_id_prefix=None,
         calculate_zonal_weights=True,
-        unique_zone_id="id"
     )
     ts_df = ev.primary_timeseries.to_pandas()
 
@@ -166,23 +158,16 @@ def test_fetch_and_load_nwm_operational_grids(tmpdir):
 
     ev.locations.load_spatial(in_path=ZONAL_LOCATIONS)
 
-    test_output_weights = Path(
-        tmpdir, "onehuc10_weights_operational.parquet"
-    )
-
     ev.fetch.nwm_operational_grids(
         nwm_configuration="forcing_analysis_assim",
         output_type="forcing",
         variable_name="RAINRATE",
         start_date=datetime(2024, 2, 22),
         ingest_days=1,
-        zonal_weights_filepath=test_output_weights,
         nwm_version="nwm30",
         prioritize_analysis_valid_time=True,
         t_minus_hours=[0],
-        location_id_prefix=None,
         calculate_zonal_weights=True,
-        unique_zone_id="id"
     )
     ts_df = ev.primary_timeseries.to_pandas()
 
