@@ -1,9 +1,31 @@
 Release Notes
 =============
 
+0.4.8 - 2025-02-17
+------------------
+
+Added
+^^^^^
+- Adds box zoom to location plots.
+- Adds User Guide page for fetching NWM point data.
+- Adds new row level calculated fields, DayOfYear, ThresholdValueExceeded, ForecastLeadTime.
+
+
+Changed
+^^^^^^^
+- Changes NWM fetching methods from ``nwm_forecast_<xxxx>`` to ``nwm_operational_<xxxx>``.
+
+- Set ``use_table_schema`` to False when cloning the ``joined_timeseries`` table from s3,
+  so that extra fields will not be dropped. Note, this will raise an error if the table is
+  empty or does not exist.
+
+- Made auto-adding of configuration_name in NWM and USGS fetching optional.
+
+- Removed 2 evaluations from s3 (HEFS, NWM fetching), using TEEHR data module instead.
+
 
 0.4.7 - 2025-01-08
---------------------
+------------------
 
 Added
 ^^^^^
@@ -11,7 +33,7 @@ Added
 
 * Adds a User Guide page to describe what they are and how to use them.
 
-* Adds hvplot dependency to poerty
+* Adds hvplot dependency to poetry
 
 * Adds add_calculated_fields() methods to joined_timeseries and metrics "tables"
 

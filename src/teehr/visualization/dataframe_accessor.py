@@ -15,6 +15,9 @@ import teehr.models.pandera_dataframe_schemas as schemas
 
 logger = logging.getLogger(__name__)
 
+LOCATION_TOOLS = "pan, wheel_zoom, box_zoom, reset"
+TIMESERIES_TOOLS = "xwheel_zoom, box_zoom, reset"
+
 
 @pd.api.extensions.register_dataframe_accessor("teehr")
 class TEEHRDataFrameAccessor:
@@ -415,7 +418,7 @@ class TEEHRDataFrameAccessor:
             y_axis_label=f"{variable} [{unique_units[0]}]",
             x_axis_label="Datetime",
             x_axis_type='datetime',
-            tools=['xwheel_zoom', 'reset'],
+            tools=TIMESERIES_TOOLS,
             height=800
             )
 
@@ -716,7 +719,7 @@ class TEEHRDataFrameAccessor:
             x_axis_type="mercator",
             y_axis_type="mercator",
             tooltips=tooltips,
-            tools="pan, wheel_zoom, reset"
+            tools=LOCATION_TOOLS
             )
         p.add_tile(xyz.OpenStreetMap.Mapnik)
 
@@ -903,7 +906,7 @@ class TEEHRDataFrameAccessor:
             x_axis_type="mercator",
             y_axis_type="mercator",
             tooltips=tooltips,
-            tools="pan, wheel_zoom, reset"
+            tools=LOCATION_TOOLS
             )
         p.add_tile(xyz.OpenStreetMap.Mapnik)
 
@@ -1031,7 +1034,7 @@ class TEEHRDataFrameAccessor:
             x_axis_type="mercator",
             y_axis_type="mercator",
             tooltips=tooltips,
-            tools="pan, wheel_zoom, reset"
+            tools=LOCATION_TOOLS
             )
         p.add_tile(xyz.OpenStreetMap.Mapnik)
 

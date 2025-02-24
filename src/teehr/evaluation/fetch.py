@@ -15,8 +15,9 @@ from teehr.fetching.nwm.retrospective_grids import nwm_retro_grids_to_parquet
 from teehr.loading.timeseries import (
     validate_and_insert_timeseries,
 )
-from teehr.evaluation.utils import (
-    get_schema_variable_name,
+from teehr.fetching.utils import (
+    format_nwm_variable_name,
+    format_nwm_configuration_name
 )
 from teehr.models.fetching.nwm22_grid import ForcingVariablesEnum
 from teehr.models.fetching.utils import (
@@ -36,6 +37,9 @@ from teehr.fetching.const import (
     USGS_VARIABLE_MAPPER,
     VARIABLE_NAME,
     NWM_VARIABLE_MAPPER
+)
+from teehr.models.pydantic_table_models import (
+    Configuration
 )
 
 logger = logging.getLogger(__name__)
@@ -96,7 +100,8 @@ class Fetch:
         filter_no_data: bool = True,
         convert_to_si: bool = True,
         overwrite_output: Optional[bool] = False,
-        timeseries_type: TimeseriesTypeEnum = "primary"
+        timeseries_type: TimeseriesTypeEnum = "primary",
+        add_configuration_name: bool = True
     ):
         """Fetch USGS gage data and load into the TEEHR dataset.
 
@@ -135,6 +140,9 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
+        add_configuration_name : bool
+            If True, adds the configuration name ``usgs_observations`` to the
+            Evaluation. Default is True.
 
         Examples
         --------
@@ -183,8 +191,6 @@ class Fetch:
 
         usgs_variable_name = USGS_VARIABLE_MAPPER[VARIABLE_NAME][service]
 
-        # TODO: Get timeseries_type from the configurations table?
-
         usgs_to_parquet(
             sites=sites,
             start_date=start_date,
@@ -201,6 +207,15 @@ class Fetch:
             overwrite_output=overwrite_output,
             timeseries_type=timeseries_type
         )
+
+        if add_configuration_name:
+            self.ev.configurations.add(
+                Configuration(
+                    name="usgs_observations",
+                    type="primary",
+                    description="USGS Observations"
+                )
+            )
 
         validate_and_insert_timeseries(
             ev=self.ev,
@@ -219,7 +234,8 @@ class Fetch:
         chunk_by: Union[NWMChunkByEnum, None] = None,
         overwrite_output: Optional[bool] = False,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
-        timeseries_type: TimeseriesTypeEnum = "secondary"
+        timeseries_type: TimeseriesTypeEnum = "secondary",
+        add_configuration_name: bool = True
     ):
         """Fetch NWM retrospective point data and load into the TEEHR dataset.
 
@@ -256,6 +272,8 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
+        add_configuration_name : bool
+            If True, adds the configuration name to the Evaluation. Default is True.
 
         Examples
         --------
@@ -295,10 +313,8 @@ class Fetch:
         --------
         :func:`teehr.fetching.nwm.retrospective_points.nwm_retro_to_parquet`
         """ # noqa
-        nwm_configuration = f"{nwm_version}_retrospective"
-        schema_variable_name = get_schema_variable_name(variable_name)
-
-        # TODO: Get timeseries_type from the configurations table?
+        ev_configuration_name = f"{nwm_version}_retrospective"
+        ev_variable_name = format_nwm_variable_name(variable_name)
 
         logger.info("Getting secondary location IDs.")
         location_ids = self._get_secondary_location_ids(
@@ -313,8 +329,8 @@ class Fetch:
             location_ids=location_ids,
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
-                nwm_configuration,
-                schema_variable_name
+                ev_configuration_name,
+                ev_variable_name
             ),
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
@@ -323,12 +339,20 @@ class Fetch:
             timeseries_type=timeseries_type
         )
 
+        if add_configuration_name:
+            self.ev.configurations.add(
+                Configuration(
+                    name=ev_configuration_name,
+                    type=timeseries_type,
+                    description=f"{nwm_version} retrospective"
+                )
+            )
+
         validate_and_insert_timeseries(
             ev=self.ev,
             in_path=Path(
                 self.nwm_cache_dir
             ),
-            # dataset_path=self.ev.dataset_dir,
             timeseries_type=timeseries_type,
         )
 
@@ -343,7 +367,8 @@ class Fetch:
         overwrite_output: Optional[bool] = False,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
         location_id_prefix: Optional[Union[str, None]] = None,
-        timeseries_type: TimeseriesTypeEnum = "primary"
+        timeseries_type: TimeseriesTypeEnum = "primary",
+        add_configuration_name: bool = True
     ):
         """
         Fetch NWM retrospective gridded data, calculate zonal statistics (currently only
@@ -392,6 +417,9 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
+        add_configuration_name : bool
+            If True, adds the configuration name to the Evaluation.
+            Default is True.
 
         Notes
         -----
@@ -442,10 +470,8 @@ class Fetch:
         --------
         :func:`teehr.fetching.nwm.nwm_grids.nwm_grids_to_parquet`
         """ # noqa
-        nwm_configuration = f"{nwm_version}_retrospective"
-        schema_variable_name = get_schema_variable_name(variable_name)
-
-        # TODO: Get timeseries_type from the configurations table?
+        ev_configuration_name = f"{nwm_version}_retrospective"
+        ev_variable_name = format_nwm_variable_name(variable_name)
 
         nwm_retro_grids_to_parquet(
             nwm_version=nwm_version,
@@ -455,8 +481,8 @@ class Fetch:
             end_date=end_date,
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
-                nwm_configuration,
-                schema_variable_name
+                ev_configuration_name,
+                ev_variable_name
             ),
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
@@ -466,16 +492,24 @@ class Fetch:
             timeseries_type=timeseries_type
         )
 
+        if add_configuration_name:
+            self.ev.configurations.add(
+                Configuration(
+                    name=ev_configuration_name,
+                    type=timeseries_type,
+                    description=f"{nwm_version} retrospective"
+                )
+            )
+
         validate_and_insert_timeseries(
             ev=self.ev,
             in_path=Path(
                 self.nwm_cache_dir
             ),
-            # dataset_path=self.ev.dataset_dir,
             timeseries_type=timeseries_type,
         )
 
-    def nwm_forecast_points(
+    def nwm_operational_points(
         self,
         nwm_configuration: str,
         output_type: str,
@@ -491,7 +525,8 @@ class Fetch:
         stepsize: Optional[int] = 100,
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
-        timeseries_type: TimeseriesTypeEnum = "secondary"
+        timeseries_type: TimeseriesTypeEnum = "secondary",
+        add_configuration_name: bool = True
     ):
         """Fetch operational NWM point data and load into the TEEHR dataset.
 
@@ -557,6 +592,8 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "secondary".
+        add_configuration_name : bool
+            If True, adds the configuration name to the Evaluation. Default is True.
 
         Notes
         -----
@@ -574,7 +611,7 @@ class Fetch:
         >>> import teehr
         >>> ev = teehr.Evaluation()
 
-        >>> ev.fetch.nwm_forecast_points(
+        >>> ev.fetch.nwm_operational_points(
         >>>     nwm_configuration="short_range",
         >>>     output_type="channel_rt",
         >>>     variable_name="streamflow",
@@ -623,10 +660,11 @@ class Fetch:
             prefix=nwm_version
         )
 
-        # TODO: Read timeseries_type from the configurations table?
-
-        schema_variable_name = get_schema_variable_name(variable_name)
-        schema_configuration_name = f"{nwm_version}_{nwm_configuration}"
+        ev_variable_name = format_nwm_variable_name(variable_name)
+        ev_config = format_nwm_configuration_name(
+            nwm_configuration_name=nwm_configuration,
+            nwm_version=nwm_version
+        )
         nwm_to_parquet(
             configuration=nwm_configuration,
             output_type=output_type,
@@ -637,8 +675,8 @@ class Fetch:
             json_dir=self.kerchunk_cache_dir,
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
-                schema_configuration_name,
-                schema_variable_name
+                ev_config["configuration_name"],
+                ev_variable_name
             ),
             nwm_version=nwm_version,
             data_source=data_source,
@@ -653,16 +691,24 @@ class Fetch:
             timeseries_type=timeseries_type
         )
 
+        if add_configuration_name:
+            self.ev.configurations.add(
+                Configuration(
+                    name=ev_config["configuration_name"],
+                    type=timeseries_type,
+                    description=f"{nwm_version} operational forecasts"
+                )
+            )
+
         validate_and_insert_timeseries(
             ev=self.ev,
             in_path=Path(
                 self.nwm_cache_dir
             ),
-            # dataset_path=self.ev.dataset_dir,
             timeseries_type=timeseries_type,
         )
 
-    def nwm_forecast_grids(
+    def nwm_operational_grids(
         self,
         nwm_configuration: str,
         output_type: str,
@@ -678,7 +724,8 @@ class Fetch:
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
         location_id_prefix: Optional[Union[str, None]] = None,
-        timeseries_type: TimeseriesTypeEnum = "primary"
+        timeseries_type: TimeseriesTypeEnum = "primary",
+        add_configuration_name: bool = True
     ):
         """
         Fetch NWM operational gridded data, calculate zonal statistics (currently only
@@ -741,6 +788,8 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
+        add_configuration_name : bool
+            If True, adds the configuration name to the Evaluation. Default is True.
 
         Notes
         -----
@@ -768,7 +817,7 @@ class Fetch:
         >>> import teehr
         >>> ev = teehr.Evaluation()
 
-        >>> ev.fetch.nwm_forecast_grids(
+        >>> ev.fetch.nwm_operational_grids(
         >>>     nwm_configuration="forcing_short_range",
         >>>     output_type="forcing",
         >>>     variable_name="RAINRATE",
@@ -811,10 +860,11 @@ class Fetch:
         :func:`teehr.fetching.nwm.nwm_grids.nwm_grids_to_parquet`
         """ # noqa
 
-        # TODO: Get timeseries_type from the configurations table?
-
-        schema_variable_name = get_schema_variable_name(variable_name)
-        schema_configuration_name = f"{nwm_version}_{nwm_configuration}"
+        ev_variable_name = format_nwm_variable_name(variable_name)
+        ev_config = format_nwm_configuration_name(
+            nwm_configuration_name=nwm_configuration,
+            nwm_version=nwm_version
+        )
         nwm_grids_to_parquet(
             configuration=nwm_configuration,
             output_type=output_type,
@@ -825,8 +875,8 @@ class Fetch:
             json_dir=self.kerchunk_cache_dir,
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
-                schema_configuration_name,
-                schema_variable_name
+                ev_config["configuration_name"],
+                ev_variable_name
             ),
             nwm_version=nwm_version,
             data_source=data_source,
@@ -839,13 +889,19 @@ class Fetch:
             variable_mapper=NWM_VARIABLE_MAPPER
         )
 
-        pass
+        if add_configuration_name:
+            self.ev.configurations.add(
+                Configuration(
+                    name=ev_config["configuration_name"],
+                    type=timeseries_type,
+                    description=f"{nwm_version} operational forecasts"
+                )
+            )
 
         validate_and_insert_timeseries(
             ev=self.ev,
             in_path=Path(
                 self.nwm_cache_dir
             ),
-            # dataset_path=self.ev.dataset_dir,
             timeseries_type=timeseries_type,
         )

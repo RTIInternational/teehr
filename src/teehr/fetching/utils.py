@@ -5,6 +5,7 @@ from datetime import datetime
 from datetime import timedelta
 from dateutil.parser import parse
 import logging
+import re
 
 import dask
 import fsspec
@@ -27,13 +28,43 @@ from teehr.models.fetching.utils import (
 from teehr.fetching.const import (
     NWM_BUCKET,
     NWM_S3_JSON_PATH,
-    NWM30_START_DATE
+    NWM30_START_DATE,
+    NWM_VARIABLE_MAPPER,
+    VARIABLE_NAME
 )
 import teehr.models.pandera_dataframe_schemas as schemas
 
 
 logger = logging.getLogger(__name__)
 
+
+def format_nwm_configuration_name(
+    nwm_configuration_name: str,
+    nwm_version: str
+) -> Dict[str, str]:
+    """Format the NWM configuration name and member for the Evaluation.
+
+    Returns a dictionary with the formatted configuration name and member,
+    which is parsed from the NWM configuration name if it's an ensemble
+    (ie., medium range or long range streamflow).
+    """
+    logger.info(
+        f"Formatting configuration name for {nwm_configuration_name}."
+    )
+    ev_member = None
+    if bool(re.search(r"_mem[0-9]+", nwm_configuration_name)):
+        ev_configuration, ev_member = nwm_configuration_name.split("_mem")
+    else:
+        ev_configuration = nwm_configuration_name
+    ev_configuration = nwm_version + "_" + ev_configuration
+    return {"configuration_name": ev_configuration, "member": ev_member}
+
+
+def format_nwm_variable_name(variable_name: str) -> str:
+    """Format the NWM variable name for the Evaluation."""
+    logger.info(f"Getting schema variable name for {variable_name}.")
+    return NWM_VARIABLE_MAPPER[VARIABLE_NAME]. \
+        get(variable_name, variable_name)
 
 
 def check_dates_against_nwm_version(
