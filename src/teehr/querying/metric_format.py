@@ -50,16 +50,15 @@ def apply_aggregation_metrics(
             if model.attrs["category"] == mc.Probabilistic:
                 func_pd = pandas_udf(model.func(model), model.return_type)
             else:
-                if hasattr(model, 'constants'):
-                    func_ps = pyspark_udf(model.func, model.return_type)
-                else:
-                    func_pd = pandas_udf(model.func, model.return_type)
+                func_pd = pandas_udf(model.func, model.return_type)
 
         if hasattr(model, 'constants'):
-            # constants = [lit(model.constants.get(const, getattr(model, const))) for const in model.constants]
+            constant_cols = [lit(model.constants.get(const, getattr(model, const))) for const in model.constants]
+            for col in constant_cols:
+                gp = gp.withColumn(col)
             func_list.append(
-                # func_ps(*input_field_names, *constants).alias(alias)
-                func_ps(*input_field_names).alias(alias)
+                # func_pd(*input_field_names, *constants).alias(alias)
+                func_pd(*input_field_names, *model.constants).alias(alias)
             )
         else:
             func_list.append(
