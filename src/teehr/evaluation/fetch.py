@@ -363,6 +363,7 @@ class Fetch:
         start_date: Union[str, datetime, pd.Timestamp],
         end_date: Union[str, datetime, pd.Timestamp],
         calculate_zonal_weights: bool = True,
+        location_id_prefix: str = None,
         overwrite_output: Optional[bool] = False,
         chunk_by: Union[NWMChunkByEnum, None] = None,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
@@ -399,6 +400,8 @@ class Fetch:
         calculate_zonal_weights : bool
             Flag specifying whether or not to calculate zonal weights.
             True = calculate; False = use existing file. Default is True.
+        location_id_prefix : str
+            Prefix to add to the location_id field.
         overwrite_output : bool
             Flag specifying whether or not to overwrite output files if they already
             exist.  True = overwrite; False = fail.
@@ -484,7 +487,7 @@ class Fetch:
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
             domain=domain,
-            location_id_prefix=None,
+            location_id_prefix=location_id_prefix,
             variable_mapper=NWM_VARIABLE_MAPPER,
             timeseries_type=timeseries_type,
             unique_zone_id="id",
@@ -717,6 +720,7 @@ class Fetch:
         ingest_days: int,
         nwm_version: SupportedNWMOperationalVersionsEnum,
         calculate_zonal_weights: bool = True,
+        location_id_prefix: str = None,
         data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
         kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
         prioritize_analysis_valid_time: Optional[bool] = False,
@@ -760,6 +764,8 @@ class Fetch:
         calculate_zonal_weights : bool
             Flag specifying whether or not to calculate zonal weights.
             True = calculate; False = use existing file. Default is True.
+        location_id_prefix : str
+            Prefix to add to the location_id field.
         data_source : Optional[SupportedNWMDataSourcesEnum]
             Specifies the remote location from which to fetch the data
             "GCS" (default), "NOMADS", or "DSTOR".
@@ -889,7 +895,7 @@ class Fetch:
             t_minus_hours=t_minus_hours,
             ignore_missing_file=ignore_missing_file,
             overwrite_output=overwrite_output,
-            location_id_prefix=None,
+            location_id_prefix=location_id_prefix,
             variable_mapper=NWM_VARIABLE_MAPPER,
             unique_zone_id="id",
             calculate_zonal_weights=calculate_zonal_weights,
