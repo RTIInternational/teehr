@@ -3,13 +3,15 @@ from typing import Union, List, Optional, Dict
 from datetime import datetime
 from pathlib import Path
 
-from pydantic import validate_call
+from pydantic import validate_call, InstanceOf
+from geopandas import GeoDataFrame
 
 from teehr.fetching.nwm.grid_utils import fetch_and_format_nwm_grids
 from teehr.fetching.utils import (
     build_remote_nwm_filelist,
     generate_json_paths,
-    check_dates_against_nwm_version
+    check_dates_against_nwm_version,
+    get_dataset
 )
 from teehr.models.fetching.utils import (
     SupportedNWMOperationalVersionsEnum,
@@ -21,6 +23,7 @@ from teehr.fetching.const import (
     NWM22_ANALYSIS_CONFIG,
     NWM30_ANALYSIS_CONFIG,
 )
+from teehr.utilities.generate_weights import generate_weights_file
 
 
 @validate_call()
@@ -42,7 +45,10 @@ def nwm_grids_to_parquet(
     overwrite_output: Optional[bool] = False,
     location_id_prefix: Optional[Union[str, None]] = None,
     variable_mapper: Dict[str, Dict[str, str]] = None,
-    timeseries_type: TimeseriesTypeEnum = "primary"
+    timeseries_type: TimeseriesTypeEnum = "primary",
+    calculate_zonal_weights: bool = False,
+    zone_polygons: Optional[Union[Path, str, InstanceOf[GeoDataFrame]]] = None,
+    unique_zone_id: Optional[str] = None,
 ):
     """
     Fetch NWM gridded data, calculate zonal statistics (currently only
@@ -102,6 +108,18 @@ def nwm_grids_to_parquet(
         exist.  True = overwrite; False = fail.
     location_id_prefix : Union[str, None]
         Optional location ID prefix to add (prepend) or replace.
+    variable_mapper : Dict[str, Dict[str, str]]
+        A dictionary of dictionaries to map NWM variable names to new names.
+    timeseries_type : TimeseriesTypeEnum
+        The type of timeseries to generate.
+        "primary" (default) or "secondary".
+    calculate_zonal_weights : bool
+        Flag to calculate zonal weights.
+    zone_polygons : Union[Path, str, InstanceOf[GeoDataFrame]]
+        Path to the polygons file or a GeoDataFrame.
+    unique_zone_id : Optional[str]
+        Name of the field in the zone polygon file containing unique IDs.
+
 
     See Also
     --------
@@ -229,6 +247,32 @@ def nwm_grids_to_parquet(
             ignore_missing_file
         )
 
+        # If specified, generate zonal weights file here.
+        if calculate_zonal_weights:
+            if zone_polygons is None:
+                raise ValueError(
+                    "The zone polygons must be provided"
+                    " to calculate zonal weights. Can be a GeoDataFame"
+                    " or a filepath."
+                )
+
+            # Get a single timestep to use as a template grid.
+            template_ds = get_dataset(
+                json_paths[0],
+                ignore_missing_file=False,
+                target_options={'anon': True}
+            )
+
+            generate_weights_file(
+                zone_polygons=zone_polygons,
+                template_dataset=template_ds,
+                variable_name=variable_name,
+                crs_wkt=template_ds.crs.esri_pe_string,
+                output_weights_filepath=zonal_weights_filepath,
+                location_id_prefix=location_id_prefix,
+                unique_zone_id=unique_zone_id
+            )
+
         # Fetch the data, saving to parquet files based on TEEHR data model
         fetch_and_format_nwm_grids(
             json_paths=json_paths,
@@ -242,31 +286,3 @@ def nwm_grids_to_parquet(
             variable_mapper=variable_mapper,
             timeseries_type=timeseries_type
         )
-
-
-# if __name__ == "__main__":
-#     # Local testing
-#     weights_parquet = "/mnt/data/ciroh/onehuc10_weights.parquet"
-
-#     import time
-#     t1 = time.time()
-
-#     nwm_grids_to_parquet(
-#         configuration="forcing_analysis_assim",
-#         output_type="forcing",
-#         variable_name="RAINRATE",
-#         start_date="2023-11-28",
-#         ingest_days=1,
-#         zonal_weights_filepath=weights_parquet,
-#         json_dir="/mnt/data/ciroh/jsons",
-#         output_parquet_dir="/mnt/data/ciroh/parquet",
-#         nwm_version="nwm30",
-#         data_source="GCS",
-#         kerchunk_method="auto",
-#         t_minus_hours=[0],
-#         ignore_missing_file=False,
-#         overwrite_output=True,
-#         location_id_prefix="wbd10"
-#     )
-
-#     print(f"elapsed: {time.time() - t1:.2f} s")
