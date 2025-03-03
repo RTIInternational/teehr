@@ -188,7 +188,8 @@ def generate_weights_file(
     output_weights_filepath : str
         Path to the resultant weights file.
     crs_wkt : str
-        Coordinate system for given domain as WKT string.
+        Coordinate system for given template gridded dataset as WKT string.
+        The zone_polygons will be reprojected to this CRS.
     unique_zone_id : str
         Name of the field in the zone polygon file containing unique IDs.
     location_id_prefix : str

@@ -101,13 +101,14 @@ class Fetch:
         convert_to_si: bool = True,
         overwrite_output: Optional[bool] = False,
         timeseries_type: TimeseriesTypeEnum = "primary",
-        add_configuration_name: bool = True
+        add_configuration_name: bool = True,
+        location_id_prefix: str = "usgs",
     ):
         """Fetch USGS gage data and load into the TEEHR dataset.
 
-        Data is fetched for all IDs in the locations table, and all
-        dates and times within the files and in the cached file names are
-        in UTC.
+        Data is fetched for the location IDs in the locations
+        table having a given location_id_prefix. All dates and times within the files
+        and in the cache file names are in UTC.
 
         Parameters
         ----------
@@ -143,6 +144,9 @@ class Fetch:
         add_configuration_name : bool
             If True, adds the configuration name ``usgs_observations`` to the
             Evaluation. Default is True.
+        location_id_prefix : str
+            Prefix to include when filtering for primary_location_id.
+            Default is "usgs".
 
         Examples
         --------
@@ -184,10 +188,10 @@ class Fetch:
             filters={
                 "column": "id",
                 "operator": "like",
-                "value": "usgs-%"
+                "value": f"{location_id_prefix}-%"
             }
         ).to_pandas()
-        sites = locations_df["id"].str.removeprefix("usgs-").to_list()
+        sites = locations_df["id"].str.removeprefix(f"{location_id_prefix}-").to_list()
 
         usgs_variable_name = USGS_VARIABLE_MAPPER[VARIABLE_NAME][service]
 
@@ -235,13 +239,14 @@ class Fetch:
         overwrite_output: Optional[bool] = False,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
         timeseries_type: TimeseriesTypeEnum = "secondary",
-        add_configuration_name: bool = True
+        add_configuration_name: bool = True,
+        location_id_prefix: str = None,
     ):
         """Fetch NWM retrospective point data and load into the TEEHR dataset.
 
-        Data is fetched for all secondary location IDs in the locations
-        crosswalk table, and all dates and times within the files and in the
-        cache file names are in UTC.
+        Data is fetched for the location IDs in the locations
+        table having a given location_id_prefix. All dates and times within the files
+        and in the cache file names are in UTC.
 
         Parameters
         ----------
@@ -274,6 +279,10 @@ class Fetch:
             Default is "primary".
         add_configuration_name : bool
             If True, adds the configuration name to the Evaluation. Default is True.
+        location_id_prefix : str
+            Prefix to include when filtering for secondary_location_id's.
+            Default is None, in which case the nwm_version is used as the
+            location_id_prefix.
 
         Examples
         --------
@@ -316,9 +325,12 @@ class Fetch:
         ev_configuration_name = f"{nwm_version}_retrospective"
         ev_variable_name = format_nwm_variable_name(variable_name)
 
+        if location_id_prefix is None:
+            location_id_prefix = nwm_version
+
         logger.info("Getting secondary location IDs.")
         location_ids = self._get_secondary_location_ids(
-            prefix=nwm_version
+            prefix=location_id_prefix
         )
 
         nwm_retro_to_parquet(
@@ -363,6 +375,7 @@ class Fetch:
         start_date: Union[str, datetime, pd.Timestamp],
         end_date: Union[str, datetime, pd.Timestamp],
         calculate_zonal_weights: bool = True,
+        location_id_prefix: str = None,
         overwrite_output: Optional[bool] = False,
         chunk_by: Union[NWMChunkByEnum, None] = None,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
@@ -374,12 +387,13 @@ class Fetch:
         mean is available) of selected variable for given zones, and load
         into the TEEHR dataset.
 
-        Data is fetched for all location IDs in the locations
-        table, and all dates and times within the files and in the
-        cache file names are in UTC.
+        Data is fetched for the location IDs in the locations
+        table having a given location_id_prefix. All dates and times within the files
+        and in the cache file names are in UTC.
 
-        The fraction each grid pixel overlaps each zone is calculated and saved to a
-        separate zonal weights file in the cache directory.
+        The zonal weights file, which contains the fraction each grid pixel overlaps each
+        zone is necessary, and can be calculated and saved to the cache directory
+        if it does not already exist.
 
         Parameters
         ----------
@@ -399,6 +413,9 @@ class Fetch:
         calculate_zonal_weights : bool
             Flag specifying whether or not to calculate zonal weights.
             True = calculate; False = use existing file. Default is True.
+        location_id_prefix : str
+            Prefix to include when filtering the locations table for
+            primary_location_id. Default is None, all locations are included.
         overwrite_output : bool
             Flag specifying whether or not to overwrite output files if they already
             exist.  True = overwrite; False = fail.
@@ -467,6 +484,21 @@ class Fetch:
         )
         ev_weights_cache_dir.mkdir(parents=True, exist_ok=True)
 
+        # Note: If the weights file will be generated, use the location ID
+        # prefix to filter the locations table for the correct locations,
+        # defining the zone_polygons argument.
+        logger.info("Getting primary location IDs.")
+        if location_id_prefix is None:
+            locations_gdf = self.ev.locations.to_geopandas()
+        else:
+            locations_gdf = self.ev.locations.query(
+                filters={
+                    "column": "id",
+                    "operator": "like",
+                    "value": f"{location_id_prefix}-%"
+                }
+            ).to_geopandas()
+
         nwm_retro_grids_to_parquet(
             nwm_version=nwm_version,
             variable_name=variable_name,
@@ -484,12 +516,12 @@ class Fetch:
             chunk_by=chunk_by,
             overwrite_output=overwrite_output,
             domain=domain,
-            location_id_prefix=None,
+            location_id_prefix=location_id_prefix,
             variable_mapper=NWM_VARIABLE_MAPPER,
             timeseries_type=timeseries_type,
             unique_zone_id="id",
             calculate_zonal_weights=calculate_zonal_weights,
-            zone_polygons=self.ev.locations.to_geopandas()
+            zone_polygons=locations_gdf  # self.ev.locations.to_geopandas()
         )
 
         if add_configuration_name:
@@ -526,13 +558,14 @@ class Fetch:
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
         timeseries_type: TimeseriesTypeEnum = "secondary",
-        add_configuration_name: bool = True
+        add_configuration_name: bool = True,
+        location_id_prefix: str = None,
     ):
         """Fetch operational NWM point data and load into the TEEHR dataset.
 
-        Data is fetched for all secondary location IDs in the locations
-        crosswalk table, and all dates and times within the files and in the
-        cache file names are in UTC.
+        Data is fetched for the location IDs in the locations
+        table having a given location_id_prefix. All dates and times within the files
+        and in the cache file names are in UTC.
 
         Parameters
         ----------
@@ -594,6 +627,10 @@ class Fetch:
             Default is "secondary".
         add_configuration_name : bool
             If True, adds the configuration name to the Evaluation. Default is True.
+        location_id_prefix : str
+            Prefix to include when filtering for secondary_location_id's.
+            Default is None, in which case the nwm_version is used as the
+            location_id_prefix.
 
         Notes
         -----
@@ -655,9 +692,13 @@ class Fetch:
         --------
         :func:`teehr.fetching.nwm.nwm_points.nwm_to_parquet`
         """ # noqa
-        logger.info("Getting primary location IDs.")
+        logger.info("Getting secondary location IDs.")
+
+        if location_id_prefix is None:
+            location_id_prefix = nwm_version
+
         location_ids = self._get_secondary_location_ids(
-            prefix=nwm_version
+            prefix=location_id_prefix
         )
 
         ev_variable_name = format_nwm_variable_name(variable_name)
@@ -717,6 +758,7 @@ class Fetch:
         ingest_days: int,
         nwm_version: SupportedNWMOperationalVersionsEnum,
         calculate_zonal_weights: bool = True,
+        location_id_prefix: str = None,
         data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
         kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
         prioritize_analysis_valid_time: Optional[bool] = False,
@@ -731,12 +773,13 @@ class Fetch:
         mean is available) of selected variable for given zones, and load into
         the TEEHR dataset.
 
-        Data is fetched for all location IDs in the locations
-        table, and all dates and times within the files and in the
-        cache file names are in UTC.
+        Data is fetched for the location IDs in the locations
+        table having a given location_id_prefix. All dates and times within the files
+        and in the cache file names are in UTC.
 
-        The fraction each grid pixel overlaps each zone is calculated and saved to a
-        separate zonal weights file in the cache directory.
+        The zonal weights file, which contains the fraction each grid pixel overlaps each
+        zone is necessary, and can be calculated and saved to the cache directory
+        if it does not already exist.
 
         Parameters
         ----------
@@ -760,6 +803,8 @@ class Fetch:
         calculate_zonal_weights : bool
             Flag specifying whether or not to calculate zonal weights.
             True = calculate; False = use existing file. Default is True.
+        location_id_prefix : str
+            Prefix to add to the location_id field.
         data_source : Optional[SupportedNWMDataSourcesEnum]
             Specifies the remote location from which to fetch the data
             "GCS" (default), "NOMADS", or "DSTOR".
@@ -855,7 +900,6 @@ class Fetch:
         --------
         :func:`teehr.fetching.nwm.nwm_grids.nwm_grids_to_parquet`
         """ # noqa
-
         ev_variable_name = format_nwm_variable_name(variable_name)
         ev_config = format_nwm_configuration_name(
             nwm_configuration_name=nwm_configuration,
@@ -865,6 +909,21 @@ class Fetch:
             self.weights_cache_dir, ev_config["configuration_name"]
         )
         ev_weights_cache_dir.mkdir(parents=True, exist_ok=True)
+
+        # Note: If the weights file will be generated, use the location ID
+        # prefix to filter the locations table for the correct locations,
+        # defining the zone_polygons argument.
+        logger.info("Getting primary location IDs.")
+        if location_id_prefix is None:
+            locations_gdf = self.ev.locations.to_geopandas()
+        else:
+            locations_gdf = self.ev.locations.query(
+                filters={
+                    "column": "id",
+                    "operator": "like",
+                    "value": f"{location_id_prefix}-%"
+                }
+            ).to_geopandas()
 
         nwm_grids_to_parquet(
             configuration=nwm_configuration,
@@ -889,11 +948,11 @@ class Fetch:
             t_minus_hours=t_minus_hours,
             ignore_missing_file=ignore_missing_file,
             overwrite_output=overwrite_output,
-            location_id_prefix=None,
+            location_id_prefix=location_id_prefix,
             variable_mapper=NWM_VARIABLE_MAPPER,
             unique_zone_id="id",
             calculate_zonal_weights=calculate_zonal_weights,
-            zone_polygons=self.ev.locations.to_geopandas()
+            zone_polygons=locations_gdf
         )
 
         if add_configuration_name:
