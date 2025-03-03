@@ -101,7 +101,8 @@ class Fetch:
         convert_to_si: bool = True,
         overwrite_output: Optional[bool] = False,
         timeseries_type: TimeseriesTypeEnum = "primary",
-        add_configuration_name: bool = True
+        add_configuration_name: bool = True,
+        location_id_prefix: str = "usgs",
     ):
         """Fetch USGS gage data and load into the TEEHR dataset.
 
@@ -143,6 +144,9 @@ class Fetch:
         add_configuration_name : bool
             If True, adds the configuration name ``usgs_observations`` to the
             Evaluation. Default is True.
+        location_id_prefix : str
+            Prefix to include when filtering for primary_location_id.
+            Default is "usgs".
 
         Examples
         --------
@@ -184,10 +188,10 @@ class Fetch:
             filters={
                 "column": "id",
                 "operator": "like",
-                "value": "usgs-%"
+                "value": f"{location_id_prefix}-%"
             }
         ).to_pandas()
-        sites = locations_df["id"].str.removeprefix("usgs-").to_list()
+        sites = locations_df["id"].str.removeprefix(f"{location_id_prefix}-").to_list()
 
         usgs_variable_name = USGS_VARIABLE_MAPPER[VARIABLE_NAME][service]
 
@@ -235,7 +239,8 @@ class Fetch:
         overwrite_output: Optional[bool] = False,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
         timeseries_type: TimeseriesTypeEnum = "secondary",
-        add_configuration_name: bool = True
+        add_configuration_name: bool = True,
+        location_id_prefix: str = None,
     ):
         """Fetch NWM retrospective point data and load into the TEEHR dataset.
 
@@ -274,6 +279,10 @@ class Fetch:
             Default is "primary".
         add_configuration_name : bool
             If True, adds the configuration name to the Evaluation. Default is True.
+        location_id_prefix : str
+            Prefix to include when filtering for secondary_location_id's.
+            Default is None, in which case the nwm_version is used as the
+            location_id_prefix.
 
         Examples
         --------
@@ -316,9 +325,12 @@ class Fetch:
         ev_configuration_name = f"{nwm_version}_retrospective"
         ev_variable_name = format_nwm_variable_name(variable_name)
 
+        if location_id_prefix is None:
+            location_id_prefix = nwm_version
+
         logger.info("Getting secondary location IDs.")
         location_ids = self._get_secondary_location_ids(
-            prefix=nwm_version
+            prefix=location_id_prefix
         )
 
         nwm_retro_to_parquet(
@@ -529,7 +541,8 @@ class Fetch:
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
         timeseries_type: TimeseriesTypeEnum = "secondary",
-        add_configuration_name: bool = True
+        add_configuration_name: bool = True,
+        location_id_prefix: str = None,
     ):
         """Fetch operational NWM point data and load into the TEEHR dataset.
 
@@ -597,6 +610,10 @@ class Fetch:
             Default is "secondary".
         add_configuration_name : bool
             If True, adds the configuration name to the Evaluation. Default is True.
+        location_id_prefix : str
+            Prefix to include when filtering for secondary_location_id's.
+            Default is None, in which case the nwm_version is used as the
+            location_id_prefix.
 
         Notes
         -----
@@ -659,8 +676,12 @@ class Fetch:
         :func:`teehr.fetching.nwm.nwm_points.nwm_to_parquet`
         """ # noqa
         logger.info("Getting primary location IDs.")
+
+        if location_id_prefix is None:
+            location_id_prefix = nwm_version
+
         location_ids = self._get_secondary_location_ids(
-            prefix=nwm_version
+            prefix=location_id_prefix
         )
 
         ev_variable_name = format_nwm_variable_name(variable_name)
