@@ -378,10 +378,14 @@ class KlingGuptaEfficiency(DeterministicBasemodel):
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency")
-    func: Callable = metric_funcs.kling_gupta_efficiency
+    func: Callable = Field(metric_funcs.kge_wrapper, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
     )
+    requires_wrapper: bool = Field(default=True)
+    sr: float = Field(default=1.0)
+    sa: float = Field(default=1.0)
+    sb: float = Field(default=1.0)
     attrs: Dict = Field(default=tma.KGE_ATTRS, frozen=True)
 
 
@@ -408,10 +412,14 @@ class KlingGuptaEfficiencyMod1(DeterministicBasemodel):
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency_mod1")
-    func: Callable = metric_funcs.kling_gupta_efficiency_mod1
+    func: Callable = Field(metric_funcs.kge_mod1_wrapper, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
     )
+    requires_wrapper: bool = Field(default=True)
+    sr: float = Field(default=1.0)
+    sa: float = Field(default=1.0)
+    sb: float = Field(default=1.0)
     attrs: Dict = Field(default=tma.KGE1_ATTRS, frozen=True)
 
 
@@ -438,10 +446,14 @@ class KlingGuptaEfficiencyMod2(DeterministicBasemodel):
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency_mod2")
-    func: Callable = metric_funcs.kling_gupta_efficiency_mod2
+    func: Callable = Field(metric_funcs.kge_mod2_wrapper, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
     )
+    requires_wrapper: bool = Field(default=True)
+    sr: float = Field(default=1.0)
+    sa: float = Field(default=1.0)
+    sb: float = Field(default=1.0)
     attrs: Dict = Field(default=tma.KGE2_ATTRS, frozen=True)
 
 

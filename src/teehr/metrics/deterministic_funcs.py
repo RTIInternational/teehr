@@ -3,6 +3,11 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
+from teehr.models.metrics.basemodels import MetricsBasemodel
+from typing import Callable
+import logging
+logger = logging.getLogger(__name__)
+
 
 def mean_error(p: pd.Series, s: pd.Series) -> float:
     """Mean Error."""
@@ -124,98 +129,118 @@ def nash_sutcliffe_efficiency_normalized(p: pd.Series, s: pd.Series) -> float:
     return 1.0 / (1.0 + numerator/denominator)
 
 
-def kling_gupta_efficiency(p: pd.Series, s: pd.Series) -> float:
-    """Kling-Gupta Efficiency (2009)."""
-    # if len(p) == 0 or len(s) == 0:
-    #     return np.nan
-    # if np.sum(p) == 0 or np.sum(s) == 0:
-    #     return np.nan
-    if np.std(s) == 0 or np.std(p) == 0:
-        return np.nan
+def kge_wrapper(model: MetricsBasemodel) -> Callable:
+    """Create the KGE metric function."""
+    logger.debug("Building the KGE metric function")
 
-    # Pearson correlation coefficient
-    linear_correlation = np.corrcoef(s, p)[0,1]
+    def kling_gupta_efficiency(p: pd.Series,
+                               s: pd.Series,
+                               ) -> float:
+        """Kling-Gupta Efficiency (2009)."""
+        # if len(p) == 0 or len(s) == 0:
+        #     return np.nan
+        # if np.sum(p) == 0 or np.sum(s) == 0:
+        #     return np.nan
+        if np.std(s) == 0 or np.std(p) == 0:
+            return np.nan
 
-    # Relative variability
-    relative_variability = np.std(s) / np.std(p)
+        # Pearson correlation coefficient
+        linear_correlation = np.corrcoef(s, p)[0,1]
 
-    # Relative mean
-    relative_mean = np.mean(s) / np.mean(p)
+        # Relative variability
+        relative_variability = np.std(s) / np.std(p)
 
-    # Scaled Euclidean distance
-    euclidean_distance = np.sqrt(
-        (1.0 * (linear_correlation - 1.0)) ** 2.0 +
-        (1.0  * (relative_variability - 1.0)) ** 2.0 +
-        (1.0  * (relative_mean - 1.0)) ** 2.0
-    )
+        # Relative mean
+        relative_mean = np.mean(s) / np.mean(p)
 
-    # Return KGE
-    return 1.0 - euclidean_distance
-
-
-def kling_gupta_efficiency_mod1(p: pd.Series, s: pd.Series) -> float:
-    """Kling-Gupta Efficiency - modified 1 (2012)."""
-    # if len(p) == 0 or len(s) == 0:
-    #     return np.nan
-    # if np.sum(p) == 0 or np.sum(s) == 0:
-    #     return np.nan
-    # if np.min(p) == np.max(p) == 0 or np.min(s) == np.max(s) == 0:
-    #     return np.nan
-    if np.std(s) == 0 or np.std(p) == 0:
-        return np.nan
-
-    # Pearson correlation coefficient (same as kge)
-    linear_correlation = np.corrcoef(s, p)[0, 1]
-
-    # Variability_ratio
-    variability_ratio = (
-        (np.std(s) / np.mean(s))
-        / (np.std(p) / np.mean(p))
-    )
-
-    # Relative mean (same as kge)
-    relative_mean = (np.mean(s) / np.mean(p))
-
-    # Scaled Euclidean distance
-    euclidean_distance = np.sqrt(
-        ((linear_correlation - 1.0)) ** 2.0 +
-        ((variability_ratio - 1.0)) ** 2.0 +
-        ((relative_mean - 1.0)) ** 2.0
+        # Scaled Euclidean distance
+        euclidean_distance = np.sqrt(
+            (model.sr * ((linear_correlation - 1.0) ** 2.0)) +
+            (model.sa * ((relative_variability - 1.0) ** 2.0)) +
+            (model.sb * ((relative_mean - 1.0) ** 2.0))
         )
 
-    return 1.0 - euclidean_distance
+        # Return KGE
+        return 1.0 - euclidean_distance
+
+    return kling_gupta_efficiency
 
 
-def kling_gupta_efficiency_mod2(p: pd.Series, s: pd.Series) -> float:
-    """Kling-Gupta Efficiency - modified 2 (2021)."""
-    # if len(p) == 0 or len(s) == 0:
-    #     return np.nan
-    # if np.sum(p) == 0 or np.sum(s) == 0:
-    #     return np.nan
-    if np.std(s) == 0 or np.std(p) == 0:
-        return np.nan
+def kge_mod1_wrapper(model: MetricsBasemodel) -> Callable:
+    """Create the KGE modified 1 metric function."""
+    logger.debug("Building the KGE modified 1 metric function")
 
-    # Pearson correlation coefficient (same as kge)
-    linear_correlation = np.corrcoef(s, p)[0, 1]
+    def kling_gupta_efficiency_mod1(p: pd.Series, s: pd.Series) -> float:
+        """Kling-Gupta Efficiency - modified 1 (2012)."""
+        # if len(p) == 0 or len(s) == 0:
+        #     return np.nan
+        # if np.sum(p) == 0 or np.sum(s) == 0:
+        #     return np.nan
+        # if np.min(p) == np.max(p) == 0 or np.min(s) == np.max(s) == 0:
+        #     return np.nan
+        if np.std(s) == 0 or np.std(p) == 0:
+            return np.nan
 
-    # Relative variability (same as kge)
-    relative_variability = (np.std(s) / np.std(p))
+        # Pearson correlation coefficient (same as kge)
+        linear_correlation = np.corrcoef(s, p)[0, 1]
 
-    # bias component
-    bias_component = (
-        ((np.mean(s) - np.mean(p)) ** 2)
-        /
-        (np.std(p) ** 2)
-    )
-
-    # Scaled Euclidean distance
-    euclidean_distance = np.sqrt(
-        ((linear_correlation - 1.0)) ** 2.0 +
-        ((relative_variability - 1.0)) ** 2.0 +
-        bias_component
+        # Variability_ratio
+        variability_ratio = (
+            (np.std(s) / np.mean(s))
+            / (np.std(p) / np.mean(p))
         )
 
-    return 1.0 - euclidean_distance
+        # Relative mean (same as kge)
+        relative_mean = (np.mean(s) / np.mean(p))
+
+        # Scaled Euclidean distance
+        euclidean_distance = np.sqrt(
+            (model.sr * ((linear_correlation - 1.0) ** 2.0)) +
+            (model.sa * ((variability_ratio - 1.0) ** 2.0)) +
+            (model.sb * ((relative_mean - 1.0) ** 2.0))
+        )
+
+        return 1.0 - euclidean_distance
+
+    return kling_gupta_efficiency_mod1
+
+
+def kge_mod2_wrapper(model: MetricsBasemodel) -> Callable:
+    """Create the KGE modified 2 metric function."""
+    logger.debug("Building the KGE modified 2 metric function")
+
+    def kling_gupta_efficiency_mod2(p: pd.Series, s: pd.Series) -> float:
+        """Kling-Gupta Efficiency - modified 2 (2021)."""
+        # if len(p) == 0 or len(s) == 0:
+        #     return np.nan
+        # if np.sum(p) == 0 or np.sum(s) == 0:
+        #     return np.nan
+        if np.std(s) == 0 or np.std(p) == 0:
+            return np.nan
+
+        # Pearson correlation coefficient (same as kge)
+        linear_correlation = np.corrcoef(s, p)[0, 1]
+
+        # Relative variability (same as kge)
+        relative_variability = (np.std(s) / np.std(p))
+
+        # bias component
+        bias_component = (
+            ((np.mean(s) - np.mean(p)) ** 2)
+            /
+            (np.std(p) ** 2)
+        )
+
+        # Scaled Euclidean distance
+        euclidean_distance = np.sqrt(
+            (model.sr * ((linear_correlation - 1.0) ** 2.0)) +
+            (model.sa * ((relative_variability - 1.0) ** 2.0)) +
+            (model.sb * bias_component)
+        )
+
+        return 1.0 - euclidean_distance
+
+    return kling_gupta_efficiency_mod2
 
 
 def mean_absolute_error(p: pd.Series, s: pd.Series) -> float:

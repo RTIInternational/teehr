@@ -44,8 +44,14 @@ def apply_aggregation_metrics(
                 input_field_names.append("value_time")
         else:
             logger.debug(f"Applying metric: {alias}")
+            # existing (can be removed if we refactor the metric functions)
             if model.attrs["category"] == mc.Probabilistic:
                 func_pd = pandas_udf(model.func(model), model.return_type)
+            # temporary until we can refactor the metric functions
+            elif hasattr(model, "requires_wrapper"):
+                if model.requires_wrapper:
+                    func_pd = pandas_udf(model.func(model), model.return_type)
+            # existing
             else:
                 func_pd = pandas_udf(model.func, model.return_type)
 
