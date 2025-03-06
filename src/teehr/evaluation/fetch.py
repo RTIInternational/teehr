@@ -90,6 +90,23 @@ class Fetch:
 
         return location_ids
 
+    def _configuration_name_exists(
+        self, configuration_name: str
+    ) -> bool:
+        """Check if a configuration name exists in the configurations table.
+
+        True: Configuration name exists in the table.
+        False: Configuration name does not exist in the table.
+        """
+        sdf = self.ev.configurations.filter(
+            {
+                "column": "name",
+                "operator": "=",
+                "value": configuration_name
+            }
+        ).to_sdf()
+        return not sdf.rdd.isEmpty()
+
     def usgs_streamflow(
         self,
         start_date: Union[str, datetime, pd.Timestamp],
@@ -208,10 +225,13 @@ class Fetch:
             timeseries_type=timeseries_type
         )
 
-        if add_configuration_name:
+        if (
+            add_configuration_name and
+            not self._configuration_name_exists(USGS_CONFIGURATION_NAME)
+        ):
             self.ev.configurations.add(
                 Configuration(
-                    name="usgs_observations",
+                    name=USGS_CONFIGURATION_NAME,
                     type="primary",
                     description="USGS Observations"
                 )
@@ -339,7 +359,10 @@ class Fetch:
             timeseries_type=timeseries_type
         )
 
-        if add_configuration_name:
+        if (
+            add_configuration_name and
+            not self._configuration_name_exists(ev_configuration_name)
+        ):
             self.ev.configurations.add(
                 Configuration(
                     name=ev_configuration_name,
@@ -492,7 +515,10 @@ class Fetch:
             timeseries_type=timeseries_type
         )
 
-        if add_configuration_name:
+        if (
+            add_configuration_name and
+            not self._configuration_name_exists(ev_configuration_name)
+        ):
             self.ev.configurations.add(
                 Configuration(
                     name=ev_configuration_name,
@@ -691,7 +717,12 @@ class Fetch:
             timeseries_type=timeseries_type
         )
 
-        if add_configuration_name:
+        if (
+            add_configuration_name and
+            not self._configuration_name_exists(
+                ev_config["configuration_name"]
+            )
+        ):
             self.ev.configurations.add(
                 Configuration(
                     name=ev_config["configuration_name"],
@@ -889,7 +920,12 @@ class Fetch:
             variable_mapper=NWM_VARIABLE_MAPPER
         )
 
-        if add_configuration_name:
+        if (
+            add_configuration_name and
+            not self._configuration_name_exists(
+                ev_config["configuration_name"]
+            )
+        ):
             self.ev.configurations.add(
                 Configuration(
                     name=ev_config["configuration_name"],
