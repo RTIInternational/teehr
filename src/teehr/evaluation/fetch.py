@@ -117,8 +117,7 @@ class Fetch:
         filter_no_data: bool = True,
         convert_to_si: bool = True,
         overwrite_output: Optional[bool] = False,
-        timeseries_type: TimeseriesTypeEnum = "primary",
-        add_configuration_name: bool = True
+        timeseries_type: TimeseriesTypeEnum = "primary"
     ):
         """Fetch USGS gage data and load into the TEEHR dataset.
 
@@ -157,9 +156,6 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
-        add_configuration_name : bool
-            If True, adds the configuration name ``usgs_observations`` to the
-            Evaluation. Default is True.
 
         Examples
         --------
@@ -226,7 +222,6 @@ class Fetch:
         )
 
         if (
-            add_configuration_name and
             not self._configuration_name_exists(USGS_CONFIGURATION_NAME)
         ):
             self.ev.configurations.add(
@@ -254,8 +249,7 @@ class Fetch:
         chunk_by: Union[NWMChunkByEnum, None] = None,
         overwrite_output: Optional[bool] = False,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
-        timeseries_type: TimeseriesTypeEnum = "secondary",
-        add_configuration_name: bool = True
+        timeseries_type: TimeseriesTypeEnum = "secondary"
     ):
         """Fetch NWM retrospective point data and load into the TEEHR dataset.
 
@@ -292,8 +286,6 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
-        add_configuration_name : bool
-            If True, adds the configuration name to the Evaluation. Default is True.
 
         Examples
         --------
@@ -360,7 +352,6 @@ class Fetch:
         )
 
         if (
-            add_configuration_name and
             not self._configuration_name_exists(ev_configuration_name)
         ):
             self.ev.configurations.add(
@@ -390,8 +381,7 @@ class Fetch:
         overwrite_output: Optional[bool] = False,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
         location_id_prefix: Optional[Union[str, None]] = None,
-        timeseries_type: TimeseriesTypeEnum = "primary",
-        add_configuration_name: bool = True
+        timeseries_type: TimeseriesTypeEnum = "primary"
     ):
         """
         Fetch NWM retrospective gridded data, calculate zonal statistics (currently only
@@ -440,9 +430,6 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
-        add_configuration_name : bool
-            If True, adds the configuration name to the Evaluation.
-            Default is True.
 
         Notes
         -----
@@ -516,7 +503,6 @@ class Fetch:
         )
 
         if (
-            add_configuration_name and
             not self._configuration_name_exists(ev_configuration_name)
         ):
             self.ev.configurations.add(
@@ -551,8 +537,7 @@ class Fetch:
         stepsize: Optional[int] = 100,
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
-        timeseries_type: TimeseriesTypeEnum = "secondary",
-        add_configuration_name: bool = True
+        timeseries_type: TimeseriesTypeEnum = "secondary"
     ):
         """Fetch operational NWM point data and load into the TEEHR dataset.
 
@@ -618,8 +603,6 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "secondary".
-        add_configuration_name : bool
-            If True, adds the configuration name to the Evaluation. Default is True.
 
         Notes
         -----
@@ -718,7 +701,6 @@ class Fetch:
         )
 
         if (
-            add_configuration_name and
             not self._configuration_name_exists(
                 ev_config["configuration_name"]
             )
@@ -755,8 +737,7 @@ class Fetch:
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
         location_id_prefix: Optional[Union[str, None]] = None,
-        timeseries_type: TimeseriesTypeEnum = "primary",
-        add_configuration_name: bool = True
+        timeseries_type: TimeseriesTypeEnum = "primary"
     ):
         """
         Fetch NWM operational gridded data, calculate zonal statistics (currently only
@@ -819,8 +800,6 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
-        add_configuration_name : bool
-            If True, adds the configuration name to the Evaluation. Default is True.
 
         Notes
         -----
@@ -921,7 +900,6 @@ class Fetch:
         )
 
         if (
-            add_configuration_name and
             not self._configuration_name_exists(
                 ev_config["configuration_name"]
             )
