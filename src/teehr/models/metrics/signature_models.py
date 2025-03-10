@@ -33,7 +33,7 @@ class Count(DeterministicBasemodel):
     """
 
     output_field_name: str = Field(default="count")
-    func: Callable = sig_funcs.count
+    func: Callable = Field(default=sig_funcs.count_wrapper, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value"]
     )
@@ -62,7 +62,7 @@ class Minimum(DeterministicBasemodel):
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="minimum")
-    func: Callable = sig_funcs.minimum
+    func: Callable = Field(default=sig_funcs.min_wrapper, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value"]
     )
@@ -91,7 +91,7 @@ class Maximum(DeterministicBasemodel):
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="maximum")
-    func: Callable = sig_funcs.maximum
+    func: Callable = Field(default=sig_funcs.max_wrapper, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value"]
     )
@@ -120,7 +120,7 @@ class Average(DeterministicBasemodel):
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="average")
-    func: Callable = sig_funcs.average
+    func: Callable = Field(default=sig_funcs.avg_wrapper, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value"]
     )
@@ -149,7 +149,7 @@ class Sum(DeterministicBasemodel):
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="sum")
-    func: Callable = sig_funcs.sum
+    func: Callable = Field(default=sig_funcs.sum_wrapper, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value"]
     )
@@ -179,7 +179,7 @@ class Variance(DeterministicBasemodel):
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="variance")
-    func: Callable = sig_funcs.variance
+    func: Callable = Field(default=sig_funcs.variance_wrapper, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value"]
     )
@@ -208,7 +208,7 @@ class MaxValueTime(DeterministicBasemodel):
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="max_value_time")
-    func: Callable = sig_funcs.max_value_time
+    func: Callable = Field(default=sig_funcs.mvt_wrapper, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "value_time"]
     )

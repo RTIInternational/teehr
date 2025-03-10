@@ -40,16 +40,12 @@ def create_circularblock_func(model: MetricsBasemodel) -> Callable:
             seed=model.bootstrap.seed,
             random_state=model.bootstrap.random_state
         )
-        if hasattr(model, "requires_wrapper") and model.requires_wrapper:
-            results = bs.apply(
-                model.func(model),
-                model.bootstrap.reps
-            )
-        else:
-            results = bs.apply(
-                model.func,
-                model.bootstrap.reps
-            )
+
+        results = bs.apply(
+            model.func(model),
+            model.bootstrap.reps
+        )
+
         if model.bootstrap.quantiles is not None:
             return _calculate_quantiles(
                 model.output_field_name,
@@ -75,16 +71,12 @@ def create_gumboot_func(model: MetricsBasemodel) -> Callable:
             water_year_month=model.bootstrap.water_year_month,
             boot_year_file=model.bootstrap.boot_year_file
         )
-        if hasattr(model, "requires_wrapper") and model.requires_wrapper:
-            results = bs.apply(
-                model.func(model),
-                model.bootstrap.reps
-            )
-        else:
-            results = bs.apply(
-                model.func,
-                model.bootstrap.reps
-            )
+
+        results = bs.apply(
+            model.func(model),
+            model.bootstrap.reps
+        )
+
         if model.bootstrap.quantiles is not None:
             return _calculate_quantiles(
                 model.output_field_name,
@@ -109,16 +101,12 @@ def create_stationary_func(model: MetricsBasemodel) -> Callable:
             seed=model.bootstrap.seed,
             random_state=model.bootstrap.random_state
         )
-        if hasattr(model, "requires_wrapper") and model.requires_wrapper:
-            results = bs.apply(
-                model.func(model),
-                model.bootstrap.reps
-            )
-        else:
-            results = bs.apply(
-                model.func,
-                model.bootstrap.reps
-            )
+
+        results = bs.apply(
+            model.func(model),
+            model.bootstrap.reps
+        )
+
         if model.bootstrap.quantiles is not None:
             return _calculate_quantiles(
                 model.output_field_name,
