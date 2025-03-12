@@ -138,7 +138,7 @@ def process_chunk_of_files(
     output = dask.compute(*results)
 
     if not any(output):
-        raise FileNotFoundError("No NWM files for specified input"
+        raise FileNotFoundError("No NWM files for specified input "
                                 "configuration were found in GCS!")
 
     output = [tbl for tbl in output if tbl is not None]

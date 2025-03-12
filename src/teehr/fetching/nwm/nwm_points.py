@@ -21,6 +21,7 @@ from teehr.models.fetching.utils import (
     TimeseriesTypeEnum
 )
 from teehr.fetching.const import (
+    NWM20_ANALYSIS_CONFIG,
     NWM22_ANALYSIS_CONFIG,
     NWM30_ANALYSIS_CONFIG,
 )
@@ -76,7 +77,7 @@ def nwm_to_parquet(
         Path to the directory for the final parquet files.
     nwm_version : SupportedNWMOperationalVersionsEnum
         The NWM operational version
-        "nwm21", "nwm22", or "nwm30".
+        "nwm20", "nwm21", "nwm22", or "nwm30".
     data_source : Optional[SupportedNWMDataSourcesEnum]
         Specifies the remote location from which to fetch the data
         "GCS" (default), "NOMADS", or "DSTOR"
@@ -181,7 +182,10 @@ def nwm_to_parquet(
     logger.info(f"Fetching {configuration} data. Version: {nwm_version}")
 
     # Import appropriate config model and dicts based on NWM version
-    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm21:
+    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm20:
+        from teehr.models.fetching.nwm20_point import PointConfigurationModel
+        analysis_config_dict = NWM20_ANALYSIS_CONFIG
+    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm21:
         from teehr.models.fetching.nwm22_point import PointConfigurationModel
         analysis_config_dict = NWM22_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
@@ -191,7 +195,9 @@ def nwm_to_parquet(
         from teehr.models.fetching.nwm30_point import PointConfigurationModel
         analysis_config_dict = NWM30_ANALYSIS_CONFIG
     else:
-        raise ValueError("nwm_version must equal 'nwm22' or 'nwm30'")
+        raise ValueError(
+            "nwm_version must equal 'nwm20', 'nwm21', 'nwm22' or 'nwm30'"
+        )
 
     # Parse input parameters to validate configuration
     vars = {

@@ -83,6 +83,16 @@ class Fetch:
             }
         ).to_pandas()
 
+        if lcw_df.empty:
+            logger.error(
+                "No secondary location IDs were found in the crosswalk table"
+                f" with the specified prefix: '{prefix}'"
+            )
+            raise ValueError(
+                "No secondary location IDs were found in the crosswalk table"
+                f" with the specified prefix: '{prefix}'"
+            )
+
         location_ids = (
             lcw_df.secondary_location_id.
             str.removeprefix(f"{prefix}-").to_list()
@@ -655,7 +665,7 @@ class Fetch:
         --------
         :func:`teehr.fetching.nwm.nwm_points.nwm_to_parquet`
         """ # noqa
-        logger.info("Getting primary location IDs.")
+        logger.info("Getting secondary location IDs.")
         location_ids = self._get_secondary_location_ids(
             prefix=nwm_version
         )

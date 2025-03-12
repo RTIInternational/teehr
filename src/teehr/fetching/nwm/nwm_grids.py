@@ -18,6 +18,7 @@ from teehr.models.fetching.utils import (
     TimeseriesTypeEnum
 )
 from teehr.fetching.const import (
+    NWM20_ANALYSIS_CONFIG,
     NWM22_ANALYSIS_CONFIG,
     NWM30_ANALYSIS_CONFIG,
 )
@@ -173,7 +174,10 @@ def nwm_grids_to_parquet(
     >>> )
     """ # noqa
     # Import appropriate config model and dicts based on NWM version
-    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm21:
+    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm20:
+        from teehr.models.fetching.nwm20_grid import GridConfigurationModel
+        analysis_config_dict = NWM20_ANALYSIS_CONFIG
+    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm21:
         from teehr.models.fetching.nwm22_grid import GridConfigurationModel
         analysis_config_dict = NWM22_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
@@ -183,7 +187,9 @@ def nwm_grids_to_parquet(
         from teehr.models.fetching.nwm30_grid import GridConfigurationModel
         analysis_config_dict = NWM30_ANALYSIS_CONFIG
     else:
-        raise ValueError("nwm_version must equal 'nwm22' or 'nwm30'")
+        raise ValueError(
+            "nwm_version must equal 'nwm20', 'nwm21', 'nwm22' or 'nwm30'"
+        )
 
     # Parse input parameters to validate configuration
     vars = {
