@@ -76,7 +76,7 @@ def nwm_to_parquet(
         Path to the directory for the final parquet files.
     nwm_version : SupportedNWMOperationalVersionsEnum
         The NWM operational version
-        "nwm22", or "nwm30".
+        "nwm21", "nwm22", or "nwm30".
     data_source : Optional[SupportedNWMDataSourcesEnum]
         Specifies the remote location from which to fetch the data
         "GCS" (default), "NOMADS", or "DSTOR"
@@ -181,7 +181,10 @@ def nwm_to_parquet(
     logger.info(f"Fetching {configuration} data. Version: {nwm_version}")
 
     # Import appropriate config model and dicts based on NWM version
-    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
+    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm21:
+        from teehr.models.fetching.nwm22_point import PointConfigurationModel
+        analysis_config_dict = NWM22_ANALYSIS_CONFIG
+    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
         from teehr.models.fetching.nwm22_point import PointConfigurationModel
         analysis_config_dict = NWM22_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm30:

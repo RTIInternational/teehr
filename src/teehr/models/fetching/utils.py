@@ -58,6 +58,7 @@ class SupportedNWMRetroVersionsEnum(StrEnum):
 class SupportedNWMOperationalVersionsEnum(StrEnum):
     """SupportedNWMOperationalVersionsEnum."""
 
+    nwm21 = "nwm21"
     nwm22 = "nwm22"
     nwm30 = "nwm30"
 

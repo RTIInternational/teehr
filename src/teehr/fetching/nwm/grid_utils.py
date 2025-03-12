@@ -10,7 +10,8 @@ import xarray as xr
 
 from teehr.fetching.utils import (
     get_dataset,
-    write_timeseries_parquet_file
+    write_timeseries_parquet_file,
+    parse_nwm_json_paths
 )
 from teehr.models.fetching.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
@@ -184,22 +185,15 @@ def fetch_and_format_nwm_grids(
         output_parquet_dir.mkdir(parents=True)
 
     # Format file list into a dataframe and group by reference time
-    pattern = re.compile(r'[0-9]+')
-    days = []
-    z_hours = []
-    for path in json_paths:
-        filename = Path(path).name
-        if path.split(":")[0] == "s3":
-            # If it's a remote json day and z-hour are in the path
-            res = re.findall(pattern, path)
-            days.append(res[1])
-            z_hours.append(f"t{res[2]}z")
-        else:
-            days.append(filename.split(".")[1])
-            z_hours.append(filename.split(".")[3])
-    df_refs = pd.DataFrame(
-        {"day": days, "z_hour": z_hours, "filepath": json_paths}
+    day_pattern = re.compile(r'nwm.[0-9]+')
+    tz_pattern = re.compile(r't[0-9]+z')
+
+    df_refs = parse_nwm_json_paths(
+        day_pattern=day_pattern,
+        tz_pattern=tz_pattern,
+        json_paths=json_paths
     )
+
     gps = df_refs.groupby(["day", "z_hour"])
 
     for gp in gps:

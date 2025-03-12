@@ -38,6 +38,31 @@ import teehr.models.pandera_dataframe_schemas as schemas
 logger = logging.getLogger(__name__)
 
 
+def parse_nwm_json_paths(
+    day_pattern: re.Pattern,
+    tz_pattern: re.Pattern,
+    json_paths: List[str]
+) -> pd.DataFrame:
+    """Parse the day and z-hour from the json paths, returning a DataFrame."""
+    logger.debug("Parsing day and z-hour from json paths.")
+
+    days = []
+    z_hours = []
+    for path in json_paths:
+        filename = Path(path).name
+        if path.split(":")[0] == "s3":
+            res = re.search(day_pattern, path).group()
+            days.append(res.split(".")[1])
+            z_hours.append(re.search(tz_pattern, filename).group())
+        else:
+            days.append(filename.split(".")[1])
+            z_hours.append(filename.split(".")[3])
+
+    return pd.DataFrame(
+        {"day": days, "z_hour": z_hours, "filepath": json_paths}
+    )
+
+
 def format_nwm_configuration_name(
     nwm_configuration_name: str,
     nwm_version: str

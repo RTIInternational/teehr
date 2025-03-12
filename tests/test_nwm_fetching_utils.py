@@ -1,5 +1,6 @@
 """Test NWM fetching utils."""
 from pathlib import Path
+import re
 
 import tempfile
 import pytest
@@ -10,7 +11,9 @@ from teehr.fetching.utils import (
     build_remote_nwm_filelist,
     generate_json_paths,
     get_dataset,
-    create_periods_based_on_chunksize
+    create_periods_based_on_chunksize,
+    parse_nwm_json_paths
+
 )
 from teehr.fetching.const import (
     NWM22_ANALYSIS_CONFIG,
@@ -18,6 +21,36 @@ from teehr.fetching.const import (
 )
 
 TIMEFORMAT = "%Y-%m-%d %H:%M:%S"
+
+
+def test_parsing_remote_json_paths(tmpdir):
+    """Test parsing z_hour and date from remote json paths."""
+    json_paths = [
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/analysis_assim_extend_no_da/nwm.t06z.analysis_assim_extend_no_da.channel_rt.tm00.conus.nc.json", # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/analysis_assim_hawaii/nwm.t06z.analysis_assim.channel_rt.tm0100.hawaii.nc.json", # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/long_range_mem1/nwm.t06z.long_range.channel_rt_1.f102.conus.nc.json", # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/medium_range_mem1/nwm.t06z.medium_range.channel_rt_1.f009.conus.nc.json", # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/medium_range_no_da/nwm.t06z.medium_range_no_da.channel_rt.f063.conus.nc.json", # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/short_range/nwm.t06z.short_range.channel_rt.f010.conus.nc.json", # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/short_range_puertorico/nwm.t06z.short_range.channel_rt.f020.puertorico.nc.json", # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/short_range_puertorico_no_da/nwm.t06z.short_range_no_da.channel_rt.f029.puertorico.nc.json", # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/forcing_short_range/nwm.t06z.short_range.forcing.f005.conus.nc.json",  # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/forcing_analysis_assim/nwm.t06z.analysis_assim.forcing.tm02.conus.nc.json",  # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/forcing_analysis_assim_puertorico/nwm.t06z.analysis_assim.forcing.tm00.puertorico.nc.json",  # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/forcing_medium_range/nwm.t06z.medium_range.forcing.f039.conus.nc.json"  # noqa
+    ]
+
+    day_pattern = re.compile(r'nwm.[0-9]+')
+    tz_pattern = re.compile(r't[0-9]+z')
+    df = parse_nwm_json_paths(
+        day_pattern=day_pattern,
+        tz_pattern=tz_pattern,
+        json_paths=json_paths
+    )
+
+    assert df["day"].eq("20220101").all()
+    assert df["z_hour"].eq("t06z").all()
+    assert df["filepath"].eq(json_paths).all()
 
 
 def test_point_zarr_reference_file(tmpdir):
@@ -199,6 +232,7 @@ def test_create_periods_based_on_year():
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(prefix="teehr-") as tempdir:
+        test_parsing_remote_json_paths(tempdir)
         test_point_zarr_reference_file(tempdir)
     test_building_nwm30_gcs_paths()
     test_building_nwm22_gcs_paths()
