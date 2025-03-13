@@ -43,6 +43,21 @@ NWM_VARIABLE_MAPPER = {
     },
 }
 
+NWM12_ANALYSIS_CONFIG = {
+    "analysis_assim": {
+        "num_lookback_hrs": 3,
+        "cycle_z_hours": np.arange(0, 24, 1),
+        "domain": "conus",
+        "configuration_name_in_filepath": "analysis_assim",
+    },
+    "forcing_analysis_assim": {
+        "num_lookback_hrs": 3,
+        "cycle_z_hours": np.arange(0, 24, 1),
+        "domain": "conus",
+        "configuration_name_in_filepath": "analysis_assim",
+    }
+}
+
 NWM20_ANALYSIS_CONFIG = {
     "analysis_assim": {
         "num_lookback_hrs": 3,
