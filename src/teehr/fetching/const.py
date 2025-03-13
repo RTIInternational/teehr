@@ -21,7 +21,7 @@ NWM22_UNIT_LOOKUP = {"m3 s-1": "m^3/s"}
 NWM30_START_DATE = datetime(2023, 9, 19, 0)
 NWM21_START_DATE = datetime(2021, 4, 20, 0)  # v2.1 and 2.2 are the same
 NWM20_START_DATE = datetime(2019, 6, 19, 0)
-NWM12_START_DATE = datetime(2018, 3, 6, 0)
+NWM12_START_DATE = datetime(2018, 9, 17, 0)
 
 NWM_S3_JSON_PATH = "s3://ciroh-nwm-zarr-copy"
 

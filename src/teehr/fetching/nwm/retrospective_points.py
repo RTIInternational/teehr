@@ -214,9 +214,17 @@ def nwm_retro_to_parquet(
         Date to begin data ingest.
         Str formats can include YYYY-MM-DD or MM/DD/YYYY
         Rounds down to beginning of day.
+
+        - v2.0: 1993-01-01
+        - v2.1: 1979-01-01
+        - v3.0: 1979-02-01
     end_date : Union[str, datetime, pd.Timestamp],
         Last date to fetch.  Rounds up to end of day.
         Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+
+        - v2.0: 2018-12-31
+        - v2.1: 2020-12-31
+        - v3.0: 2023-01-31
     output_parquet_dir : Union[str, Path],
         Directory where output will be saved.
     chunk_by : Union[NWMChunkByEnum, None] = None,

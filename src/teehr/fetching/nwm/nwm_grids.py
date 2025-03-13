@@ -77,6 +77,16 @@ def nwm_grids_to_parquet(
     nwm_version : SupportedNWMOperationalVersionsEnum
         The NWM operational version.
         "nwm12", "nwm20", "nwm21", "nwm22", or "nwm30".
+        Note that there is no change in NWM configuration between
+        version 2.1 and 2.2, and they are treated as the same version.
+        They are both allowed here for convenience.
+
+        Availability of each version:
+
+        - v1.2: 2018-09-17 - 2019-06-18
+        - v2.0: 2019-06-19 - 2021-04-19
+        - v2.1/2.2: 2021-04-20 - 2023-09-18
+        - v3.0: 2023-09-19 - present
     data_source : Optional[SupportedNWMDataSourcesEnum]
         Specifies the remote location from which to fetch the data
         "GCS" (default), "NOMADS", or "DSTOR".
@@ -158,7 +168,7 @@ def nwm_grids_to_parquet(
     Perform the calculations, writing to the specified directory.
 
     >>> tlg.nwm_grids_to_parquet(
-    >>>     configuration=CONFIGURATION,
+    >>>     nwm_configuration=CONFIGURATION,
     >>>     output_type=OUTPUT_TYPE,
     >>>     variable_name=VARIABLE_NAME,
     >>>     start_date=START_DATE,
