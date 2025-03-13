@@ -73,7 +73,7 @@ NWM30_MAX_DATE = pd.Timestamp(2023, 1, 31, 23)
 logger = logging.getLogger(__name__)
 
 
-def validate_start_end_date(
+def validate_retrospective_start_end_date(
     nwm_version: SupportedNWMRetroVersionsEnum,
     start_date: Union[str, datetime],
     end_date: Union[str, datetime]
@@ -283,7 +283,7 @@ def nwm_retro_to_parquet(
     start_date = pd.Timestamp(start_date)
     end_date = pd.Timestamp(end_date)
 
-    validate_start_end_date(nwm_version, start_date, end_date)
+    validate_retrospective_start_end_date(nwm_version, start_date, end_date)
 
     # Include the entirety of the specified end day
     end_date = end_date.to_period(freq="D").end_time

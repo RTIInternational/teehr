@@ -18,6 +18,10 @@ USGS_CONFIGURATION_NAME = "usgs_observations"
 NWM_BUCKET = "national-water-model"
 NWM22_UNIT_LOOKUP = {"m3 s-1": "m^3/s"}
 NWM30_START_DATE = datetime(2023, 9, 19, 0)
+NWM22_START_DATE = datetime(2021, 4, 20, 0)  # TODO: Update this date
+NWM21_START_DATE = datetime(2021, 4, 20, 0)
+NWM20_START_DATE = datetime(2019, 6, 19, 0)
+NWM12_START_DATE = datetime(2018, 3, 6, 0)
 NWM_S3_JSON_PATH = "s3://ciroh-nwm-zarr-copy"
 
 USGS_VARIABLE_MAPPER = {

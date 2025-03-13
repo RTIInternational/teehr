@@ -29,6 +29,10 @@ from teehr.fetching.const import (
     NWM_BUCKET,
     NWM_S3_JSON_PATH,
     NWM30_START_DATE,
+    NWM22_START_DATE,
+    NWM21_START_DATE,
+    NWM20_START_DATE,
+    NWM12_START_DATE,
     NWM_VARIABLE_MAPPER,
     VARIABLE_NAME
 )
@@ -92,7 +96,7 @@ def format_nwm_variable_name(variable_name: str) -> str:
         get(variable_name, variable_name)
 
 
-def check_dates_against_nwm_version(
+def validate_operational_start_end_date(
     nwm_version: str,
     start_date: Union[str, datetime],
     ingest_days: int
@@ -102,25 +106,47 @@ def check_dates_against_nwm_version(
 
     if isinstance(start_date, str):
         start_date = parse(start_date)
+    end_date = start_date + timedelta(days=ingest_days)
+
+    err_msg = (
+        f"The specified start and end dates ({start_date}-{end_date}) "
+        f"fall outside {nwm_version} operational data availability."
+    )
+    v3_err_msg = (
+        f"The specified start date ({start_date}) is before the NWM "
+        f"v3.0 release date ({NWM30_START_DATE})"
+    )
 
     if (
         (nwm_version == SupportedNWMOperationalVersionsEnum.nwm30) &
         (start_date < NWM30_START_DATE)
     ):
-        raise ValueError(
-            f"The specified start date ({start_date}) is before the NWM "
-            f"v3.0 release date ({NWM30_START_DATE})"
-        )
-
-    end_date = start_date + timedelta(days=ingest_days)
-    if (
+        raise ValueError(v3_err_msg)
+    elif (
         (nwm_version == SupportedNWMOperationalVersionsEnum.nwm22) &
-        (end_date > NWM30_START_DATE)
+        (end_date >= NWM30_START_DATE) |
+        (start_date < NWM22_START_DATE)
     ):
-        raise ValueError(
-            f"The specified end date ({end_date}) is after the NWM "
-            f"v2.2 to v3.0 transition date ({NWM30_START_DATE})"
-        )
+        raise ValueError(err_msg)
+    elif (
+        (nwm_version == SupportedNWMOperationalVersionsEnum.nwm21) &
+        (end_date >= NWM22_START_DATE) |
+        (start_date < NWM21_START_DATE)
+    ):
+        raise ValueError(err_msg)
+    elif (
+        (nwm_version == SupportedNWMOperationalVersionsEnum.nwm20) &
+        (end_date >= NWM21_START_DATE) |
+        (start_date < NWM20_START_DATE)
+    ):
+        raise ValueError(err_msg)
+    elif (
+        (nwm_version == SupportedNWMOperationalVersionsEnum.nwm12) &
+        (end_date >= NWM20_START_DATE) |
+        (start_date < NWM12_START_DATE)
+    ):
+        raise ValueError(err_msg)
+    raise ValueError(f"Invalid NWM version: {nwm_version}")
 
 
 def generate_json_paths(

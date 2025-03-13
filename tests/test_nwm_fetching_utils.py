@@ -7,7 +7,7 @@ import pytest
 
 from teehr.fetching.utils import (
     build_zarr_references,
-    check_dates_against_nwm_version,
+    validate_operational_start_end_date,
     build_remote_nwm_filelist,
     generate_json_paths,
     get_dataset,
@@ -83,11 +83,11 @@ def test_dates_and_nwm_version():
     nwm_version = "nwm30"
     start_date = "2023-11-20"
     ingest_days = 1
-    check_dates_against_nwm_version(nwm_version, start_date, ingest_days)
+    validate_operational_start_end_date(nwm_version, start_date, ingest_days)
 
     try:
         nwm_version = "nwm22"
-        check_dates_against_nwm_version(nwm_version, start_date, ingest_days)
+        validate_operational_start_end_date(nwm_version, start_date, ingest_days)
     except ValueError:
         failed = True
     assert failed

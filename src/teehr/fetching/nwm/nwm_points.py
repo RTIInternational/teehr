@@ -12,7 +12,7 @@ from teehr.fetching.nwm.point_utils import (
 from teehr.fetching.utils import (
     generate_json_paths,
     build_remote_nwm_filelist,
-    check_dates_against_nwm_version
+    validate_operational_start_end_date
 )
 from teehr.models.fetching.utils import (
     SupportedNWMOperationalVersionsEnum,
@@ -21,6 +21,7 @@ from teehr.models.fetching.utils import (
     TimeseriesTypeEnum
 )
 from teehr.fetching.const import (
+    NWM12_ANALYSIS_CONFIG,
     NWM20_ANALYSIS_CONFIG,
     NWM22_ANALYSIS_CONFIG,
     NWM30_ANALYSIS_CONFIG,
@@ -77,7 +78,7 @@ def nwm_to_parquet(
         Path to the directory for the final parquet files.
     nwm_version : SupportedNWMOperationalVersionsEnum
         The NWM operational version
-        "nwm20", "nwm21", "nwm22", or "nwm30".
+        "nwm12", "nwm20", "nwm21", "nwm22", or "nwm30".
     data_source : Optional[SupportedNWMDataSourcesEnum]
         Specifies the remote location from which to fetch the data
         "GCS" (default), "NOMADS", or "DSTOR"
@@ -182,7 +183,10 @@ def nwm_to_parquet(
     logger.info(f"Fetching {configuration} data. Version: {nwm_version}")
 
     # Import appropriate config model and dicts based on NWM version
-    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm20:
+    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm12:
+        from teehr.models.fetching.nwm12_point import PointConfigurationModel
+        analysis_config_dict = NWM12_ANALYSIS_CONFIG
+    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm20:
         from teehr.models.fetching.nwm20_point import PointConfigurationModel
         analysis_config_dict = NWM20_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm21:
@@ -196,7 +200,8 @@ def nwm_to_parquet(
         analysis_config_dict = NWM30_ANALYSIS_CONFIG
     else:
         raise ValueError(
-            "nwm_version must equal 'nwm20', 'nwm21', 'nwm22' or 'nwm30'"
+            "nwm_version must equal "
+            "'nwm12', 'nwm20', 'nwm21', 'nwm22' or 'nwm30'"
         )
 
     # Parse input parameters to validate configuration
@@ -223,7 +228,11 @@ def nwm_to_parquet(
     else:
 
         # Make sure start/end dates work with specified NWM version
-        check_dates_against_nwm_version(nwm_version, start_date, ingest_days)
+        validate_operational_start_end_date(
+            nwm_version,
+            start_date,
+            ingest_days
+        )
 
         # Build paths to netcdf files on GCS
         gcs_component_paths = build_remote_nwm_filelist(
