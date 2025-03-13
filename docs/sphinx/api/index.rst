@@ -61,8 +61,23 @@ Classes for creating, describing, and querying the Evaluation dataset tables.
    SecondaryTimeseriesTable
    JoinedTimeseriesTable
 
+Calculating Metrics
+-------------------
 
-Fetching NWM and USGS data
+Methods related to metric calculations.
+
+.. autosummary::
+   :toctree: generated
+   :nosignatures:
+
+   Metrics.query
+   Metrics.add_calculated_fields
+   Metrics.to_pandas
+   Metrics.to_geopandas
+   Metrics.to_sdf
+
+
+Fetching NWM and USGS Data
 --------------------------
 
 Methods for fetching NWM and USGS data from external sources.

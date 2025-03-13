@@ -43,4 +43,5 @@ from teehr.evaluation.tables.secondary_timeseries_table import SecondaryTimeseri
 from teehr.evaluation.tables.unit_table import UnitTable
 from teehr.evaluation.tables.variable_table import VariableTable
 from teehr.evaluation.fetch import Fetch  # noqa
+from teehr.evaluation.metrics import Metrics  # noqa
 from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor  # noqa
