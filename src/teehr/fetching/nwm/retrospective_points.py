@@ -154,7 +154,6 @@ def da_to_df(
     if (nwm_version == "nwm21") or (nwm_version == "nwm30"):
         df.drop(columns=["elevation", "gage_id", "order"], inplace=True)
 
-
     return df
 
 

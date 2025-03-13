@@ -78,7 +78,7 @@ def test_point_zarr_reference_file(tmpdir):
     assert test_ds.identical(built_ds)
 
 
-def test_dates_and_nwm_version():
+def test_dates_and_nwm30_version():
     """Make sure start/end dates work with specified NWM version."""
     nwm_version = "nwm30"
     start_date = "2023-11-20"
@@ -86,8 +86,93 @@ def test_dates_and_nwm_version():
     validate_operational_start_end_date(nwm_version, start_date, ingest_days)
 
     try:
-        nwm_version = "nwm22"
-        validate_operational_start_end_date(nwm_version, start_date, ingest_days)
+        failed = False
+        start_date = "2022-11-20"
+        validate_operational_start_end_date(
+            nwm_version,
+            start_date,
+            ingest_days
+        )
+    except ValueError:
+        failed = True
+    assert failed
+
+
+def test_dates_and_nwm22_version():
+    """Make sure start/end dates work with specified NWM version."""
+    nwm_version = "nwm22"
+    start_date = "2022-11-20"
+    ingest_days = 1
+    validate_operational_start_end_date(nwm_version, start_date, ingest_days)
+
+    try:
+        failed = False
+        start_date = "2023-11-20"
+        validate_operational_start_end_date(
+            nwm_version,
+            start_date,
+            ingest_days
+        )
+    except ValueError:
+        failed = True
+    assert failed
+
+
+def test_dates_and_nwm21_version():
+    """Make sure start/end dates work with specified NWM version."""
+    nwm_version = "nwm21"
+    start_date = "2021-04-30"
+    ingest_days = 1
+    validate_operational_start_end_date(nwm_version, start_date, ingest_days)
+
+    try:
+        failed = False
+        start_date = "2019-11-20"
+        validate_operational_start_end_date(
+            nwm_version,
+            start_date,
+            ingest_days
+        )
+    except ValueError:
+        failed = True
+    assert failed
+
+
+def test_dates_and_nwm20_version():
+    """Make sure start/end dates work with specified NWM version."""
+    nwm_version = "nwm20"
+    start_date = "2019-06-20"
+    ingest_days = 1
+    validate_operational_start_end_date(nwm_version, start_date, ingest_days)
+
+    try:
+        failed = False
+        start_date = "2018-11-20"
+        validate_operational_start_end_date(
+            nwm_version,
+            start_date,
+            ingest_days
+        )
+    except ValueError:
+        failed = True
+    assert failed
+
+
+def test_dates_and_nwm12_version():
+    """Make sure start/end dates work with specified NWM version."""
+    nwm_version = "nwm12"
+    start_date = "2018-11-20"
+    ingest_days = 1
+    validate_operational_start_end_date(nwm_version, start_date, ingest_days)
+
+    try:
+        failed = False
+        start_date = "2017-11-20"
+        validate_operational_start_end_date(
+            nwm_version,
+            start_date,
+            ingest_days
+        )
     except ValueError:
         failed = True
     assert failed
@@ -237,7 +322,11 @@ if __name__ == "__main__":
     test_building_nwm30_gcs_paths()
     test_building_nwm22_gcs_paths()
     test_generate_json_paths()
-    test_dates_and_nwm_version()
+    test_dates_and_nwm30_version()
+    test_dates_and_nwm22_version()
+    test_dates_and_nwm21_version()
+    test_dates_and_nwm20_version()
+    test_dates_and_nwm12_version()
     test_generate_json_for_bad_file()
     test_create_periods_based_on_day()
     test_create_periods_based_on_week()
