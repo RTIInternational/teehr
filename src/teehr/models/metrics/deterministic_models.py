@@ -371,6 +371,12 @@ class KlingGuptaEfficiency(DeterministicBasemodel):
         :func:`deterministic_funcs.kling_gupta_efficiency`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
+    sr : float
+        The scaling factor for the correlation component, by default 1.0.
+    sa : float
+        The scaling factor for the variability component, by default 1.0.
+    sb : float
+        The scaling factor for the bias component, by default 1.0.
     attrs : Dict
         The static attributes for the metric.
     """
@@ -404,6 +410,12 @@ class KlingGuptaEfficiencyMod1(DeterministicBasemodel):
         :func:`kling_gupta_efficiency_mod1`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
+    sr : float
+        The scaling factor for the correlation component, by default 1.0.
+    sa : float
+        The scaling factor for the variability component, by default 1.0.
+    sb : float
+        The scaling factor for the bias component, by default 1.0.
     attrs : Dict
         The static attributes for the metric.
     """
@@ -437,6 +449,12 @@ class KlingGuptaEfficiencyMod2(DeterministicBasemodel):
         :func:`kling_gupta_efficiency_mod2`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value", "secondary_value"].
+    sr : float
+        The scaling factor for the correlation component, by default 1.0.
+    sa : float
+        The scaling factor for the variability component, by default 1.0.
+    sb : float
+        The scaling factor for the bias component, by default 1.0.
     attrs : Dict
         The static attributes for the metric.
     """
