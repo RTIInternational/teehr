@@ -66,6 +66,8 @@ master_doc = 'index'
 # Don't show class signature with the class' name.
 # autodoc_class_signature = "separated"
 
+autodoc_default_options = {'inherited-members': True}
+
 autosummary_generate = True
 
 # -- Napolean options --------------------------------------------------------
