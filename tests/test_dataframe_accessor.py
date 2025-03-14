@@ -4,7 +4,7 @@ import geopandas as gpd
 import pytest
 from pathlib import Path
 import logging
-from teehr import TEEHRDataFrameAccessor
+from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor
 import tempfile
 
 # Configure logging
