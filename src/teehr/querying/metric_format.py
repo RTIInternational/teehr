@@ -44,10 +44,7 @@ def apply_aggregation_metrics(
                 input_field_names.append("value_time")
         else:
             logger.debug(f"Applying metric: {alias}")
-            if model.attrs["category"] == mc.Probabilistic:
-                func_pd = pandas_udf(model.func(model), model.return_type)
-            else:
-                func_pd = pandas_udf(model.func, model.return_type)
+            func_pd = pandas_udf(model.func(model), model.return_type)
 
         func_list.append(
             func_pd(*input_field_names).alias(alias)
