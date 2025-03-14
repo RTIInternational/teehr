@@ -43,7 +43,13 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
         end_date=datetime(2022, 2, 23)
     )
 
-    _ = ev.primary_timeseries.to_pandas()
+    # Make sure second fetch succeeds.
+    ev.fetch.usgs_streamflow(
+        start_date=datetime(2022, 2, 24),
+        end_date=datetime(2022, 2, 25)
+    )
+
+    pts_df = ev.primary_timeseries.to_pandas()
 
     ev.location_crosswalks.load_parquet(
         in_path=CROSSWALK_FILEPATH
@@ -57,6 +63,16 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
     )
     ts_df = ev.secondary_timeseries.to_pandas()
 
+    # Make sure second fetch succeeds.
+    ev.fetch.nwm_retrospective_points(
+        nwm_version="nwm30",
+        variable_name="streamflow",
+        start_date=datetime(2022, 2, 24),
+        end_date=datetime(2022, 2, 25)
+    )
+
+    assert pts_df.value_time.min() == pd.Timestamp("2022-02-22 00:00:00")
+    assert pts_df.value_time.max() == pd.Timestamp("2022-02-25 00:00:00")
     assert isinstance(ts_df, pd.DataFrame)
     assert set(ts_df.columns.tolist()) == set([
             "reference_time",

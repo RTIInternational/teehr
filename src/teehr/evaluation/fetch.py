@@ -90,6 +90,23 @@ class Fetch:
 
         return location_ids
 
+    def _configuration_name_exists(
+        self, configuration_name: str
+    ) -> bool:
+        """Check if a configuration name exists in the configurations table.
+
+        True: Configuration name exists in the table.
+        False: Configuration name does not exist in the table.
+        """
+        sdf = self.ev.configurations.filter(
+            {
+                "column": "name",
+                "operator": "=",
+                "value": configuration_name
+            }
+        ).to_sdf()
+        return not sdf.rdd.isEmpty()
+
     def usgs_streamflow(
         self,
         start_date: Union[str, datetime, pd.Timestamp],
@@ -100,8 +117,7 @@ class Fetch:
         filter_no_data: bool = True,
         convert_to_si: bool = True,
         overwrite_output: Optional[bool] = False,
-        timeseries_type: TimeseriesTypeEnum = "primary",
-        add_configuration_name: bool = True
+        timeseries_type: TimeseriesTypeEnum = "primary"
     ):
         """Fetch USGS gage data and load into the TEEHR dataset.
 
@@ -140,9 +156,6 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
-        add_configuration_name : bool
-            If True, adds the configuration name ``usgs_observations`` to the
-            Evaluation. Default is True.
 
         Examples
         --------
@@ -208,10 +221,12 @@ class Fetch:
             timeseries_type=timeseries_type
         )
 
-        if add_configuration_name:
+        if (
+            not self._configuration_name_exists(USGS_CONFIGURATION_NAME)
+        ):
             self.ev.configurations.add(
                 Configuration(
-                    name="usgs_observations",
+                    name=USGS_CONFIGURATION_NAME,
                     type="primary",
                     description="USGS Observations"
                 )
@@ -234,8 +249,7 @@ class Fetch:
         chunk_by: Union[NWMChunkByEnum, None] = None,
         overwrite_output: Optional[bool] = False,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
-        timeseries_type: TimeseriesTypeEnum = "secondary",
-        add_configuration_name: bool = True
+        timeseries_type: TimeseriesTypeEnum = "secondary"
     ):
         """Fetch NWM retrospective point data and load into the TEEHR dataset.
 
@@ -272,8 +286,6 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
-        add_configuration_name : bool
-            If True, adds the configuration name to the Evaluation. Default is True.
 
         Examples
         --------
@@ -339,7 +351,9 @@ class Fetch:
             timeseries_type=timeseries_type
         )
 
-        if add_configuration_name:
+        if (
+            not self._configuration_name_exists(ev_configuration_name)
+        ):
             self.ev.configurations.add(
                 Configuration(
                     name=ev_configuration_name,
@@ -367,8 +381,7 @@ class Fetch:
         overwrite_output: Optional[bool] = False,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
         location_id_prefix: Optional[Union[str, None]] = None,
-        timeseries_type: TimeseriesTypeEnum = "primary",
-        add_configuration_name: bool = True
+        timeseries_type: TimeseriesTypeEnum = "primary"
     ):
         """
         Fetch NWM retrospective gridded data, calculate zonal statistics (currently only
@@ -417,9 +430,6 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
-        add_configuration_name : bool
-            If True, adds the configuration name to the Evaluation.
-            Default is True.
 
         Notes
         -----
@@ -492,7 +502,9 @@ class Fetch:
             timeseries_type=timeseries_type
         )
 
-        if add_configuration_name:
+        if (
+            not self._configuration_name_exists(ev_configuration_name)
+        ):
             self.ev.configurations.add(
                 Configuration(
                     name=ev_configuration_name,
@@ -525,8 +537,7 @@ class Fetch:
         stepsize: Optional[int] = 100,
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
-        timeseries_type: TimeseriesTypeEnum = "secondary",
-        add_configuration_name: bool = True
+        timeseries_type: TimeseriesTypeEnum = "secondary"
     ):
         """Fetch operational NWM point data and load into the TEEHR dataset.
 
@@ -592,8 +603,6 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "secondary".
-        add_configuration_name : bool
-            If True, adds the configuration name to the Evaluation. Default is True.
 
         Notes
         -----
@@ -691,7 +700,11 @@ class Fetch:
             timeseries_type=timeseries_type
         )
 
-        if add_configuration_name:
+        if (
+            not self._configuration_name_exists(
+                ev_config["configuration_name"]
+            )
+        ):
             self.ev.configurations.add(
                 Configuration(
                     name=ev_config["configuration_name"],
@@ -724,8 +737,7 @@ class Fetch:
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
         location_id_prefix: Optional[Union[str, None]] = None,
-        timeseries_type: TimeseriesTypeEnum = "primary",
-        add_configuration_name: bool = True
+        timeseries_type: TimeseriesTypeEnum = "primary"
     ):
         """
         Fetch NWM operational gridded data, calculate zonal statistics (currently only
@@ -788,8 +800,6 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
-        add_configuration_name : bool
-            If True, adds the configuration name to the Evaluation. Default is True.
 
         Notes
         -----
@@ -889,7 +899,11 @@ class Fetch:
             variable_mapper=NWM_VARIABLE_MAPPER
         )
 
-        if add_configuration_name:
+        if (
+            not self._configuration_name_exists(
+                ev_config["configuration_name"]
+            )
+        ):
             self.ev.configurations.add(
                 Configuration(
                     name=ev_config["configuration_name"],
