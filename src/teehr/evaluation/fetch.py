@@ -83,6 +83,16 @@ class Fetch:
             }
         ).to_pandas()
 
+        if lcw_df.empty:
+            logger.error(
+                "No secondary location IDs were found in the crosswalk table"
+                f" with the specified prefix: '{prefix}'"
+            )
+            raise ValueError(
+                "No secondary location IDs were found in the crosswalk table"
+                f" with the specified prefix: '{prefix}'"
+            )
+
         location_ids = (
             lcw_df.secondary_location_id.
             str.removeprefix(f"{prefix}-").to_list()
@@ -262,6 +272,8 @@ class Fetch:
         nwm_version : SupportedNWMRetroVersionsEnum
             NWM retrospective version to fetch.
             Currently `nwm20`, `nwm21`, and `nwm30` supported.
+            Note that since there is no change in NWM configuration between
+            version 2.1 and 2.2, no retrospective run was produced for v2.2.
         variable_name : str
             Name of the NWM data variable to download.
             (e.g., "streamflow", "velocity", ...).
@@ -269,9 +281,17 @@ class Fetch:
             Date to begin data ingest.
             Str formats can include YYYY-MM-DD or MM/DD/YYYY
             Rounds down to beginning of day.
+
+            - v2.0: 1993-01-01
+            - v2.1: 1979-01-01
+            - v3.0: 1979-02-01
         end_date : Union[str, datetime, pd.Timestamp],
             Last date to fetch.  Rounds up to end of day.
             Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+
+            - v2.0: 2018-12-31
+            - v2.1: 2020-12-31
+            - v3.0: 2023-01-31
         chunk_by : Union[NWMChunkByEnum, None] = None,
             If None (default) saves all timeseries to a single file, otherwise
             the data is processed using the specified parameter.
@@ -315,7 +335,7 @@ class Fetch:
         >>> nwm_retro.nwm_retro_to_parquet(
         >>>     nwm_version="nwm20",
         >>>     variable_name="streamflow",
-        >>>     start_date=Sdatetime(2000, 1, 1),
+        >>>     start_date=datetime(2000, 1, 1),
         >>>     end_date=datetime(2000, 1, 2, 23),
         >>>     location_ids=[7086109, 7040481],
         >>>     output_parquet_dir=Path(Path.home(), "nwm20_retrospective")
@@ -400,6 +420,8 @@ class Fetch:
         nwm_version : SupportedNWMRetroVersionsEnum
             NWM retrospective version to fetch.
             Currently `nwm21` and `nwm30` supported.
+            Note that since there is no change in NWM configuration between
+            version 2.1 and 2.2, no retrospective run was produced for v2.2.
         variable_name : str
             Name of the NWM forcing data variable to download.
             (e.g., "PRECIP", "PSFC", "Q2D", ...).
@@ -411,9 +433,15 @@ class Fetch:
             Date to begin data ingest.
             Str formats can include YYYY-MM-DD or MM/DD/YYYY.
             Rounds down to beginning of day.
+
+            - v2.1: 1979-01-01
+            - v3.0: 1979-02-01
         end_date : Union[str, datetime, pd.Timestamp],
             Last date to fetch.  Rounds up to end of day.
             Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+
+            - v2.1: 2020-12-31
+            - v3.0: 2023-01-31
         chunk_by : Union[NWMChunkByEnum, None] = None,
             If None (default) saves all timeseries to a single file, otherwise
             the data is processed using the specified parameter.
@@ -467,7 +495,7 @@ class Fetch:
         Perform the calculations, writing to the specified directory.
 
         >>> nwm_retro_grids_to_parquet(
-        >>>     nwm_version="nwm22",
+        >>>     nwm_version="nwm30",
         >>>     nwm_configuration="forcing_short_range",
         >>>     variable_name="RAINRATE",
         >>>     zonal_weights_filepath=Path(Path.home(), "nextgen_03S_weights.parquet"),
@@ -562,8 +590,18 @@ class Fetch:
         ingest_days : int
             Number of days to ingest data after start date.
         nwm_version : SupportedNWMOperationalVersionsEnum
-            The NWM operational version
-            "nwm22", or "nwm30".
+            The NWM operational version.
+            "nwm12", "nwm20", "nwm21", "nwm22", or "nwm30".
+            Note that there is no change in NWM configuration between
+            version 2.1 and 2.2, and they are treated as the same version.
+            They are both allowed here for convenience.
+
+            Availability of each version:
+
+            - v1.2: 2018-09-17 - 2019-06-18
+            - v2.0: 2019-06-19 - 2021-04-19
+            - v2.1/2.2: 2021-04-20 - 2023-09-18
+            - v3.0: 2023-09-19 - present
         data_source : Optional[SupportedNWMDataSourcesEnum]
             Specifies the remote location from which to fetch the data
             "GCS" (default), "NOMADS", or "DSTOR"
@@ -626,7 +664,7 @@ class Fetch:
         >>>     variable_name="streamflow",
         >>>     start_date=datetime(2000, 1, 1),
         >>>     ingest_days=1,
-        >>>     nwm_version="nwm22",
+        >>>     nwm_version="nwm21",
         >>>     data_source="GCS",
         >>>     kerchunk_method="auto"
         >>> )
@@ -649,7 +687,7 @@ class Fetch:
         >>>     location_ids=LOCATION_IDS,
         >>>     json_dir=Path(Path.home(), "temp/parquet/jsons/"),
         >>>     output_parquet_dir=Path(Path.home(), "temp/parquet"),
-        >>>     nwm_version="nwm22",
+        >>>     nwm_version="nwm21",
         >>>     data_source="GCS",
         >>>     kerchunk_method="auto",
         >>>     prioritize_analysis_valid_time=True,
@@ -664,7 +702,7 @@ class Fetch:
         --------
         :func:`teehr.fetching.nwm.nwm_points.nwm_to_parquet`
         """ # noqa
-        logger.info("Getting primary location IDs.")
+        logger.info("Getting secondary location IDs.")
         location_ids = self._get_secondary_location_ids(
             prefix=nwm_version
         )
@@ -769,7 +807,17 @@ class Fetch:
             for each zone.
         nwm_version : SupportedNWMOperationalVersionsEnum
             The NWM operational version.
-            "nwm22", or "nwm30".
+            "nwm12", "nwm20", "nwm21", "nwm22", or "nwm30".
+            Note that there is no change in NWM configuration between
+            version 2.1 and 2.2, and they are treated as the same version.
+            They are both allowed here for convenience.
+
+            Availability of each version:
+
+            - v1.2: 2018-09-17 - 2019-06-18
+            - v2.0: 2019-06-19 - 2021-04-19
+            - v2.1/2.2: 2021-04-20 - 2023-09-18
+            - v3.0: 2023-09-19 - present
         data_source : Optional[SupportedNWMDataSourcesEnum]
             Specifies the remote location from which to fetch the data
             "GCS" (default), "NOMADS", or "DSTOR".
@@ -857,7 +905,7 @@ class Fetch:
         >>>     zonal_weights_filepath=Path(Path.home(), "nextgen_03S_weights.parquet"),
         >>>     json_dir=Path(Path.home(), "temp/parquet/jsons/"),
         >>>     output_parquet_dir=Path(Path.home(), "temp/parquet"),
-        >>>     nwm_version="nwm22",
+        >>>     nwm_version="nwm21",
         >>>     data_source="GCS",
         >>>     kerchunk_method="auto",
         >>>     t_minus_hours=[0, 1, 2],
