@@ -16,7 +16,7 @@ python = "^3.10"
 geopandas = "^0.14.0"
 duckdb = "^1.0.0"
 pydantic = "^2.4.2"
-dask = {extras = ["dataframe"], version = "^2024.11.1"}
+dask = {version = "2025.*", extras = ["dataframe"]}
 fsspec = ">=2023.10.0"
 ujson = "^5.8.0"
 kerchunk = "^0.2.2"
