@@ -71,6 +71,7 @@ def test_nwm30_point_fetch_and_format(tmpdir):
     ).as_posix()]
 
     location_ids = [
+        19020190001336,  # value is NaN
         19020190009995,
         19020190009996,
         19020190009997,
@@ -98,7 +99,7 @@ def test_nwm30_point_fetch_and_format(tmpdir):
     bench_df = pd.read_parquet(benchmark_file)
     test_df = pd.read_parquet(parquet_file)
 
-    assert test_df.compare(bench_df).index.size == 0
+    assert np.array_equal(test_df.values, bench_df.values)  # ignore index
 
 
 def test_nwm30_point_fetch_and_format_medium_range_member(tmpdir):
