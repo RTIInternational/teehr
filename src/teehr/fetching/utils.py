@@ -215,8 +215,10 @@ def _drop_nan_values(
 ) -> pd.DataFrame:
     """Drop NaN values from the timeseries dataframe."""
     if df[subset_columns].isnull().values.any():
-        logger.debug("NaN values were encountered, dropping from the dataframe.")
-        return df.dropna(subset=subset_columns).copy()
+        logger.debug(
+            "NaN values were encountered, dropping from the dataframe."
+        )
+        return df.dropna(subset=subset_columns).reset_index(drop=True)
     return df
 
 

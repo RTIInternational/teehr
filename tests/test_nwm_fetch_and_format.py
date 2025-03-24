@@ -99,7 +99,7 @@ def test_nwm30_point_fetch_and_format(tmpdir):
     bench_df = pd.read_parquet(benchmark_file)
     test_df = pd.read_parquet(parquet_file)
 
-    assert np.array_equal(test_df.values, bench_df.values)  # ignore index
+    assert test_df.compare(bench_df).index.size == 0
 
 
 def test_nwm30_point_fetch_and_format_medium_range_member(tmpdir):
