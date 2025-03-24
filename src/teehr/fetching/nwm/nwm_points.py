@@ -12,7 +12,9 @@ from teehr.fetching.nwm.point_utils import (
 from teehr.fetching.utils import (
     generate_json_paths,
     build_remote_nwm_filelist,
-    validate_operational_start_end_date
+    validate_operational_start_end_date,
+    limit_start_to_z_hour,
+    limit_end_to_z_hour
 )
 from teehr.models.fetching.utils import (
     SupportedNWMOperationalVersionsEnum,
@@ -50,7 +52,9 @@ def nwm_to_parquet(
     ignore_missing_file: Optional[bool] = True,
     overwrite_output: Optional[bool] = False,
     variable_mapper: Dict[str, Dict[str, str]] = None,
-    timeseries_type: TimeseriesTypeEnum = "secondary"
+    timeseries_type: TimeseriesTypeEnum = "secondary",
+    starting_z_hour: Optional[int] = None,
+    ending_z_hour: Optional[int] = None
 ):
     """Fetch NWM point data and save as a Parquet file in TEEHR format.
 
@@ -255,6 +259,21 @@ def nwm_to_parquet(
             ignore_missing_file,
             prioritize_analysis_valid_time
         )
+
+        if starting_z_hour is not None:
+            gcs_component_paths = limit_start_to_z_hour(
+                start_date=start_date,
+                start_tz=starting_z_hour,
+                gcs_component_paths=gcs_component_paths
+            )
+
+        if ending_z_hour is not None:
+            gcs_component_paths = limit_end_to_z_hour(
+                start_date=start_date,
+                ingest_days=ingest_days,
+                end_tz=ending_z_hour,
+                gcs_component_paths=gcs_component_paths
+            )
 
         # Create paths to local and/or remote kerchunk jsons
         json_paths = generate_json_paths(
