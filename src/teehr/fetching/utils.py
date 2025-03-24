@@ -44,13 +44,13 @@ DAY_PATTERN = re.compile(r'nwm.[0-9]+')
 logger = logging.getLogger(__name__)
 
 
-def limit_start_to_z_hour(
+def start_on_z_hour(
     start_date: datetime,
-    start_tz: int,
+    start_z_hour: int,
     gcs_component_paths: List[str]
 ):
     """Limit the start date to a specified z-hour."""
-    logger.info(f"Limiting the start date to z-hour: {start_tz}.")
+    logger.info(f"Limiting the start date to z-hour: {start_z_hour}.")
     formatted_start_date = start_date.strftime("%Y%m%d")
     return_list = []
     for path in gcs_component_paths:
@@ -58,21 +58,21 @@ def limit_start_to_z_hour(
         day = res.split(".")[1]
         tz = re.search(TZ_PATTERN, path).group()
         if day == formatted_start_date:
-            if int(tz[1:-1]) >= start_tz:
+            if int(tz[1:-1]) >= start_z_hour:
                 return_list.append(path)
         else:
             return_list.append(path)
     return return_list
 
 
-def limit_end_to_z_hour(
+def end_on_z_hour(
     start_date: datetime,
     ingest_days: int,
-    end_tz: int,
+    end_z_hour: int,
     gcs_component_paths: List[str]
 ):
     """Limit the end date to a specified z-hour."""
-    logger.info(f"Limiting the end date to z-hour: {end_tz}.")
+    logger.info(f"Limiting the end date to z-hour: {end_z_hour}.")
     dates = pd.date_range(start=start_date, periods=ingest_days, freq="1d")
     formatted_end_date = dates[-1].strftime("%Y%m%d")
     return_list = []
@@ -82,7 +82,7 @@ def limit_end_to_z_hour(
         day = res.split(".")[1]
         tz = re.search(TZ_PATTERN, path).group()
         if day == formatted_end_date:
-            if int(tz[1:-1]) <= end_tz:
+            if int(tz[1:-1]) <= end_z_hour:
                 return_list.append(path)
         else:
             return_list.append(path)

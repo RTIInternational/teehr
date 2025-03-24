@@ -565,7 +565,9 @@ class Fetch:
         stepsize: Optional[int] = 100,
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
-        timeseries_type: TimeseriesTypeEnum = "secondary"
+        timeseries_type: TimeseriesTypeEnum = "secondary",
+        starting_z_hour: Optional[int] = None,
+        ending_z_hour: Optional[int] = None
     ):
         """Fetch operational NWM point data and load into the TEEHR dataset.
 
@@ -641,6 +643,12 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "secondary".
+        starting_z_hour : Optional[int]
+            The starting z_hour to include in the output. If None, all z_hours
+            are included for the first day. Default is None. Must be between 0 and 23.
+        ending_z_hour : Optional[int]
+            The ending z_hour to include in the output. If None, all z_hours
+            are included for the last day. Default is None. Must be between 0 and 23.
 
         Notes
         -----
@@ -735,7 +743,9 @@ class Fetch:
             ignore_missing_file=ignore_missing_file,
             overwrite_output=overwrite_output,
             variable_mapper=NWM_VARIABLE_MAPPER,
-            timeseries_type=timeseries_type
+            timeseries_type=timeseries_type,
+            starting_z_hour=starting_z_hour,
+            ending_z_hour=ending_z_hour
         )
 
         if (
@@ -775,7 +785,9 @@ class Fetch:
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
         location_id_prefix: Optional[Union[str, None]] = None,
-        timeseries_type: TimeseriesTypeEnum = "primary"
+        timeseries_type: TimeseriesTypeEnum = "primary",
+        starting_z_hour: Optional[int] = None,
+        ending_z_hour: Optional[int] = None
     ):
         """
         Fetch NWM operational gridded data, calculate zonal statistics (currently only
@@ -848,6 +860,12 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
+        starting_z_hour : Optional[int]
+            The starting z_hour to include in the output. If None, all z_hours
+            are included for the first day. Default is None. Must be between 0 and 23.
+        ending_z_hour : Optional[int]
+            The ending z_hour to include in the output. If None, all z_hours
+            are included for the last day. Default is None. Must be between 0 and 23.
 
         Notes
         -----
@@ -944,7 +962,9 @@ class Fetch:
             ignore_missing_file=ignore_missing_file,
             overwrite_output=overwrite_output,
             location_id_prefix=location_id_prefix,
-            variable_mapper=NWM_VARIABLE_MAPPER
+            variable_mapper=NWM_VARIABLE_MAPPER,
+            starting_z_hour=starting_z_hour,
+            ending_z_hour=ending_z_hour,
         )
 
         if (

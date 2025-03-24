@@ -1,10 +1,10 @@
 """Module for fetchning and processing NWM point data."""
-from typing import Union, Optional, List, Dict
+from typing import Union, Optional, List, Dict, Annotated
 from datetime import datetime
 from pathlib import Path
 import logging
 
-from pydantic import validate_call
+from pydantic import validate_call, Field
 
 from teehr.fetching.nwm.point_utils import (
     fetch_and_format_nwm_points,
@@ -13,8 +13,8 @@ from teehr.fetching.utils import (
     generate_json_paths,
     build_remote_nwm_filelist,
     validate_operational_start_end_date,
-    limit_start_to_z_hour,
-    limit_end_to_z_hour
+    start_on_z_hour,
+    end_on_z_hour
 )
 from teehr.models.fetching.utils import (
     SupportedNWMOperationalVersionsEnum,
@@ -53,8 +53,8 @@ def nwm_to_parquet(
     overwrite_output: Optional[bool] = False,
     variable_mapper: Dict[str, Dict[str, str]] = None,
     timeseries_type: TimeseriesTypeEnum = "secondary",
-    starting_z_hour: Optional[int] = None,
-    ending_z_hour: Optional[int] = None
+    starting_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
+    ending_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None
 ):
     """Fetch NWM point data and save as a Parquet file in TEEHR format.
 
@@ -132,6 +132,12 @@ def nwm_to_parquet(
     timeseries_type : str
         Whether to consider as the "primary" or "secondary" timeseries.
         Default is "secondary".
+    starting_z_hour : Optional[int]
+        The starting z_hour to include in the output. If None, all z_hours
+        are included for the first day. Default is None. Must be between 0 and 23.
+    ending_z_hour : Optional[int]
+        The ending z_hour to include in the output. If None, all z_hours
+        are included for the last day. Default is None. Must be between 0 and 23.
 
     Notes
     -----
@@ -261,17 +267,17 @@ def nwm_to_parquet(
         )
 
         if starting_z_hour is not None:
-            gcs_component_paths = limit_start_to_z_hour(
+            gcs_component_paths = start_on_z_hour(
                 start_date=start_date,
-                start_tz=starting_z_hour,
+                start_z_hour=starting_z_hour,
                 gcs_component_paths=gcs_component_paths
             )
 
         if ending_z_hour is not None:
-            gcs_component_paths = limit_end_to_z_hour(
+            gcs_component_paths = end_on_z_hour(
                 start_date=start_date,
                 ingest_days=ingest_days,
-                end_tz=ending_z_hour,
+                end_z_hour=ending_z_hour,
                 gcs_component_paths=gcs_component_paths
             )
 

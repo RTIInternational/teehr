@@ -146,7 +146,7 @@ def test_fetch_and_load_nwm_operational_points(tmpdir):
         nwm_version="nwm30",
         prioritize_analysis_valid_time=True,
         t_minus_hours=[0],
-        process_by_z_hour=False
+        process_by_z_hour=False,
     )
     ts_df = ev.secondary_timeseries.to_pandas()
 

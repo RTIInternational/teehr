@@ -1,6 +1,7 @@
 """Test NWM fetching utils."""
 from pathlib import Path
 import re
+from datetime import datetime
 
 import tempfile
 import pytest
@@ -12,7 +13,9 @@ from teehr.fetching.utils import (
     generate_json_paths,
     get_dataset,
     create_periods_based_on_chunksize,
-    parse_nwm_json_paths
+    parse_nwm_json_paths,
+    start_on_z_hour,
+    end_on_z_hour
 
 )
 from teehr.fetching.const import (
@@ -315,6 +318,35 @@ def test_create_periods_based_on_year():
     assert periods[0].end_time.strftime(TIMEFORMAT) == "2023-12-31 23:59:59"
 
 
+def test_start_end_z_hours():
+    """Test building NWM30 GCS paths and specifying start/end z-hour."""
+    gcs_component_paths = build_remote_nwm_filelist(
+        configuration="short_range",
+        output_type="channel_rt",
+        start_dt="2023-11-28",
+        ingest_days=2,
+        analysis_config_dict=NWM30_ANALYSIS_CONFIG,
+        t_minus_hours=[0],
+        ignore_missing_file=False,
+        prioritize_analysis_valid_time=False
+    )
+
+    gcs_component_paths = start_on_z_hour(
+        gcs_component_paths=gcs_component_paths,
+        start_z_hour=3,
+        start_date=datetime.strptime("2023-11-28", "%Y-%m-%d")
+    )
+    gcs_component_paths = end_on_z_hour(
+        gcs_component_paths=gcs_component_paths,
+        end_z_hour=12,
+        ingest_days=2,
+        start_date=datetime.strptime("2023-11-28", "%Y-%m-%d")
+    )
+
+    gcs_component_paths[-1] == 'gcs://national-water-model/nwm.20231129/short_range/nwm.t12z.short_range.channel_rt.f018.conus.nc'  # noqa
+    gcs_component_paths[0] == 'gcs://national-water-model/nwm.20231128/short_range/nwm.t03z.short_range.channel_rt.f001.conus.nc'  # noqa
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(prefix="teehr-") as tempdir:
         test_parsing_remote_json_paths(tempdir)
@@ -332,3 +364,4 @@ if __name__ == "__main__":
     test_create_periods_based_on_week()
     test_create_periods_based_on_month()
     test_create_periods_based_on_year()
+    test_start_end_z_hours()
