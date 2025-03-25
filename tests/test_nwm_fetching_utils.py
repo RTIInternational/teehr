@@ -1,6 +1,5 @@
 """Test NWM fetching utils."""
 from pathlib import Path
-import re
 from datetime import datetime
 
 import tempfile
@@ -43,11 +42,7 @@ def test_parsing_remote_json_paths(tmpdir):
         "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/forcing_medium_range/nwm.t06z.medium_range.forcing.f039.conus.nc.json"  # noqa
     ]
 
-    day_pattern = re.compile(r'nwm.[0-9]+')
-    tz_pattern = re.compile(r't[0-9]+z')
     df = parse_nwm_json_paths(
-        day_pattern=day_pattern,
-        tz_pattern=tz_pattern,
         json_paths=json_paths
     )
 
@@ -343,8 +338,9 @@ def test_start_end_z_hours():
         start_date=datetime.strptime("2023-11-28", "%Y-%m-%d")
     )
 
-    gcs_component_paths[-1] == 'gcs://national-water-model/nwm.20231129/short_range/nwm.t12z.short_range.channel_rt.f018.conus.nc'  # noqa
-    gcs_component_paths[0] == 'gcs://national-water-model/nwm.20231128/short_range/nwm.t03z.short_range.channel_rt.f001.conus.nc'  # noqa
+    assert gcs_component_paths[-1] == 'gcs://national-water-model/nwm.20231129/short_range/nwm.t12z.short_range.channel_rt.f018.conus.nc'  # noqa
+    assert gcs_component_paths[0] == 'gcs://national-water-model/nwm.20231128/short_range/nwm.t03z.short_range.channel_rt.f001.conus.nc'  # noqa
+    assert len(gcs_component_paths) == 612
 
 
 if __name__ == "__main__":
