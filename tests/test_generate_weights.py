@@ -1,5 +1,6 @@
 """Test the generation of weights."""
 import pandas as pd
+import numpy as np
 from pathlib import Path
 from teehr.utilities.generate_weights import generate_weights_file
 from teehr.fetching.const import CONUS_NWM_WKT
@@ -22,11 +23,10 @@ def test_weights():
         unique_zone_id="id",
     )
 
-    df_test = pd.read_parquet(WEIGHTS_FILEPATH)
+    df_test = pd.read_parquet(WEIGHTS_FILEPATH).astype({"weight": np.float32})
 
     assert df.equals(df_test)
 
 
 if __name__ == "__main__":
     test_weights()
-    pass
