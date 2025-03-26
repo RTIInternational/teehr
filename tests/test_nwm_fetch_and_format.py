@@ -71,6 +71,7 @@ def test_nwm30_point_fetch_and_format(tmpdir):
     ).as_posix()]
 
     location_ids = [
+        19020190001336,  # value is NaN
         19020190009995,
         19020190009996,
         19020190009997,

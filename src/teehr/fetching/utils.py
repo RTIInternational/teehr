@@ -6,6 +6,7 @@ from datetime import timedelta
 from dateutil.parser import parse
 import logging
 import re
+import json
 
 import dask
 import fsspec
@@ -16,6 +17,7 @@ import numpy as np
 import xarray as xr
 import geopandas as gpd
 import pyarrow as pa
+import pandera
 
 from teehr.models.fetching.utils import (
     SupportedKerchunkMethod,
@@ -207,6 +209,19 @@ def generate_json_paths(
     return json_paths
 
 
+def _drop_nan_values(
+    df: pd.DataFrame,
+    subset_columns=["value"]
+) -> pd.DataFrame:
+    """Drop NaN values from the timeseries dataframe."""
+    if df[subset_columns].isnull().values.any():
+        logger.debug(
+            "NaN values were encountered, dropping from the dataframe."
+        )
+        return df.dropna(subset=subset_columns).reset_index(drop=True)
+    return df
+
+
 def write_timeseries_parquet_file(
     filepath: Path,
     overwrite_output: bool,
@@ -233,11 +248,22 @@ def write_timeseries_parquet_file(
     else:
         df = data
 
+    df = _drop_nan_values(df)
+
     if timeseries_type == TimeseriesTypeEnum.primary:
         schema = schemas.primary_timeseries_schema(type="pandas")
     elif timeseries_type == TimeseriesTypeEnum.secondary:
         schema = schemas.secondary_timeseries_schema(type="pandas")
-    validated_df = schema.validate(df)
+
+    try:
+        validated_df = schema.validate(df, lazy=True)
+    except pandera.errors.SchemaErrors as exc:
+        msg = json.dumps(exc.message, indent=2)
+        logger.error(
+            f"Validation error: {msg}"
+            f"\nThis file '{filepath}' will be skipped."
+        )
+        return
 
     if not filepath.is_file():
         validated_df.to_parquet(filepath)
