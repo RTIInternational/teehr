@@ -39,26 +39,71 @@ from teehr.fetching.const import (
 )
 import teehr.models.pandera_dataframe_schemas as schemas
 
+TZ_PATTERN = re.compile(r't[0-9]+z')
+DAY_PATTERN = re.compile(r'nwm.[0-9]+')
+
 
 logger = logging.getLogger(__name__)
 
 
+def start_on_z_hour(
+    start_date: datetime,
+    start_z_hour: int,
+    gcs_component_paths: List[str]
+):
+    """Limit the start date to a specified z-hour."""
+    logger.info(f"Limiting the start date to z-hour: {start_z_hour}.")
+    formatted_start_date = start_date.strftime("%Y%m%d")
+    return_list = []
+    for path in gcs_component_paths:
+        res = re.search(DAY_PATTERN, path).group()
+        day = res.split(".")[1]
+        tz = re.search(TZ_PATTERN, path).group()
+        if day == formatted_start_date:
+            if int(tz[1:-1]) >= start_z_hour:
+                return_list.append(path)
+        else:
+            return_list.append(path)
+    return return_list
+
+
+def end_on_z_hour(
+    start_date: datetime,
+    ingest_days: int,
+    end_z_hour: int,
+    gcs_component_paths: List[str]
+):
+    """Limit the end date to a specified z-hour."""
+    logger.info(f"Limiting the end date to z-hour: {end_z_hour}.")
+    dates = pd.date_range(start=start_date, periods=ingest_days, freq="1d")
+    formatted_end_date = dates[-1].strftime("%Y%m%d")
+    return_list = []
+    reversed_list = sorted(gcs_component_paths, reverse=True)
+    for path in reversed_list:
+        res = re.search(DAY_PATTERN, path).group()
+        day = res.split(".")[1]
+        tz = re.search(TZ_PATTERN, path).group()
+        if day == formatted_end_date:
+            if int(tz[1:-1]) <= end_z_hour:
+                return_list.append(path)
+        else:
+            return_list.append(path)
+    return sorted(return_list)
+
+
 def parse_nwm_json_paths(
-    day_pattern: re.Pattern,
-    tz_pattern: re.Pattern,
     json_paths: List[str]
 ) -> pd.DataFrame:
     """Parse the day and z-hour from the json paths, returning a DataFrame."""
     logger.debug("Parsing day and z-hour from json paths.")
-
     days = []
     z_hours = []
     for path in json_paths:
         filename = Path(path).name
         if path.split(":")[0] == "s3":
-            res = re.search(day_pattern, path).group()
+            res = re.search(DAY_PATTERN, path).group()
             days.append(res.split(".")[1])
-            z_hours.append(re.search(tz_pattern, filename).group())
+            z_hours.append(re.search(TZ_PATTERN, filename).group())
         else:
             days.append(filename.split(".")[1])
             z_hours.append(filename.split(".")[3])

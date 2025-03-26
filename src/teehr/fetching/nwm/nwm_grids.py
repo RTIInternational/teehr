@@ -1,15 +1,17 @@
 """Module for fetching and processing NWM gridded data."""
-from typing import Union, List, Optional, Dict
+from typing import Union, List, Optional, Dict, Annotated
 from datetime import datetime
 from pathlib import Path
 
-from pydantic import validate_call
+from pydantic import validate_call, Field
 
 from teehr.fetching.nwm.grid_utils import fetch_and_format_nwm_grids
 from teehr.fetching.utils import (
     build_remote_nwm_filelist,
     generate_json_paths,
-    validate_operational_start_end_date
+    validate_operational_start_end_date,
+    start_on_z_hour,
+    end_on_z_hour
 )
 from teehr.models.fetching.utils import (
     SupportedNWMOperationalVersionsEnum,
@@ -44,7 +46,9 @@ def nwm_grids_to_parquet(
     overwrite_output: Optional[bool] = False,
     location_id_prefix: Optional[Union[str, None]] = None,
     variable_mapper: Dict[str, Dict[str, str]] = None,
-    timeseries_type: TimeseriesTypeEnum = "primary"
+    timeseries_type: TimeseriesTypeEnum = "primary",
+    starting_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
+    ending_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None
 ):
     """
     Fetch NWM gridded data, calculate zonal statistics (currently only
@@ -114,6 +118,12 @@ def nwm_grids_to_parquet(
         exist.  True = overwrite; False = fail.
     location_id_prefix : Union[str, None]
         Optional location ID prefix to add (prepend) or replace.
+    starting_z_hour : Optional[int]
+        The starting z_hour to include in the output. If None, all z_hours
+        are included for the first day. Default is None. Must be between 0 and 23.
+    ending_z_hour : Optional[int]
+        The ending z_hour to include in the output. If None, all z_hours
+        are included for the last day. Default is None. Must be between 0 and 23.
 
     See Also
     --------
@@ -248,6 +258,21 @@ def nwm_grids_to_parquet(
             ignore_missing_file,
             prioritize_analysis_valid_time
         )
+
+        if starting_z_hour is not None:
+            gcs_component_paths = start_on_z_hour(
+                start_date=start_date,
+                start_z_hour=starting_z_hour,
+                gcs_component_paths=gcs_component_paths
+            )
+
+        if ending_z_hour is not None:
+            gcs_component_paths = end_on_z_hour(
+                start_date=start_date,
+                ingest_days=ingest_days,
+                end_z_hour=ending_z_hour,
+                gcs_component_paths=gcs_component_paths
+            )
 
         # Create paths to local and/or remote kerchunk jsons
         json_paths = generate_json_paths(

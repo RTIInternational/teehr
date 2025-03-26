@@ -218,12 +218,7 @@ def fetch_and_format_nwm_points(
         output_parquet_dir.mkdir(parents=True)
 
     # Format file list into a dataframe and group by specified method
-    day_pattern = re.compile(r'nwm.[0-9]+')
-    tz_pattern = re.compile(r't[0-9]+z')
-
     df_refs = parse_nwm_json_paths(
-        day_pattern=day_pattern,
-        tz_pattern=tz_pattern,
         json_paths=json_paths
     )
 

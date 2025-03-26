@@ -146,7 +146,9 @@ def test_fetch_and_load_nwm_operational_points(tmpdir):
         nwm_version="nwm30",
         prioritize_analysis_valid_time=True,
         t_minus_hours=[0],
-        process_by_z_hour=False
+        process_by_z_hour=False,
+        starting_z_hour=3,
+        ending_z_hour=20
     )
     ts_df = ev.secondary_timeseries.to_pandas()
 
@@ -162,9 +164,9 @@ def test_fetch_and_load_nwm_operational_points(tmpdir):
             "member"
             ])
     assert ts_df.unit_name.iloc[0] == "m^3/s"
-    assert np.isclose(ts_df.value.sum(), np.float32(658.14))
-    assert ts_df.value_time.min() == pd.Timestamp("2024-02-22 00:00:00")
-    assert ts_df.value_time.max() == pd.Timestamp("2024-02-22 23:00:00")
+    assert np.isclose(ts_df.value.sum(), np.float32(492.21))
+    assert ts_df.value_time.min() == pd.Timestamp("2024-02-22 03:00:00")
+    assert ts_df.value_time.max() == pd.Timestamp("2024-02-22 20:00:00")
 
 
 @pytest.mark.skip(reason="This takes forever!")
@@ -186,7 +188,9 @@ def test_fetch_and_load_nwm_operational_grids(tmpdir):
         nwm_version="nwm30",
         prioritize_analysis_valid_time=True,
         t_minus_hours=[0],
-        location_id_prefix="huc10"
+        location_id_prefix="huc10",
+        starting_z_hour=2,
+        ending_z_hour=22
     )
     ts_df = ev.primary_timeseries.to_pandas()
 
@@ -202,8 +206,8 @@ def test_fetch_and_load_nwm_operational_grids(tmpdir):
             ])
     assert ts_df.unit_name.iloc[0] == "mm/s"
     assert np.isclose(ts_df.value.sum(), np.float32(0.0))
-    assert ts_df.value_time.min() == pd.Timestamp("2024-02-22 00:00:00")
-    assert ts_df.value_time.max() == pd.Timestamp("2024-02-22 23:00:00")
+    assert ts_df.value_time.min() == pd.Timestamp("2024-02-22 02:00:00")
+    assert ts_df.value_time.max() == pd.Timestamp("2024-02-22 22:00:00")
     file_list = list(
         Path(
             tmpdir,
@@ -213,7 +217,7 @@ def test_fetch_and_load_nwm_operational_grids(tmpdir):
             "variable_name=rainfall_hourly_rate"
             ).glob("*.parquet")
     )
-    assert len(file_list) == 8
+    assert len(file_list) == 7
 
 
 if __name__ == "__main__":
