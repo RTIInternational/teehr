@@ -263,6 +263,7 @@ def write_timeseries_parquet_file(
             f"Validation error: {msg}"
             f"\nThis file '{filepath}' will be skipped."
         )
+        return
 
     if not filepath.is_file():
         validated_df.to_parquet(filepath)
