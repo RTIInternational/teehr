@@ -478,11 +478,12 @@ class Fetch:
         >>> ev = teehr.Evaluation()
 
         >>> ev.fetch.nwm_retrospective_grids(
-        >>>     nwm_configuration="forcing_short_range",
+        >>>     nwm_version="nwm30",
         >>>     variable_name="RAINRATE",
         >>>     zonal_weights_filepath = Path(Path.home(), "nextgen_03S_weights.parquet"),
         >>>     start_date=datetime(2000, 1, 1),
-        >>>     end_date=datetime(2001, 1, 1)
+        >>>     end_date=datetime(2001, 1, 1),
+        >>>     location_id_prefix="huc10"
         >>> )
 
         .. note::
@@ -496,12 +497,12 @@ class Fetch:
 
         >>> nwm_retro_grids_to_parquet(
         >>>     nwm_version="nwm30",
-        >>>     nwm_configuration="forcing_short_range",
         >>>     variable_name="RAINRATE",
         >>>     zonal_weights_filepath=Path(Path.home(), "nextgen_03S_weights.parquet"),
         >>>     start_date=2020-12-18,
         >>>     end_date=2022-12-18,
-        >>>     output_parquet_dir=Path(Path.home(), "temp/parquet")
+        >>>     output_parquet_dir=Path(Path.home(), "temp/parquet"),
+        >>>     location_id_prefix="huc10",
         >>> )
 
         See Also
