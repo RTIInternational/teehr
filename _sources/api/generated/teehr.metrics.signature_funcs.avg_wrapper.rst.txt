@@ -1,0 +1,6 @@
+teehr.metrics.signature\_funcs.avg\_wrapper
+===========================================
+
+.. currentmodule:: teehr.metrics.signature_funcs
+
+.. autofunction:: avg_wrapper

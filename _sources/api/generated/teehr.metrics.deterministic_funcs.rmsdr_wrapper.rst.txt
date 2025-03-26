@@ -1,0 +1,6 @@
+teehr.metrics.deterministic\_funcs.rmsdr\_wrapper
+=================================================
+
+.. currentmodule:: teehr.metrics.deterministic_funcs
+
+.. autofunction:: rmsdr_wrapper
