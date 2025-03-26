@@ -1,6 +1,33 @@
 Release Notes
 =============
 
+
+0.4.9 - 2025-03-26
+------------------
+
+Added
+^^^^^
+- Adds pandera schema for the weights file and validates weights dataframe on read and write, coercing values into schema data types
+- Adds ``starting_z_hour`` and ``ending_z_hour`` arguments to operational NWM fetching methods (point, gridded)
+- Adds function to drop NaN values (from value field) when fetching NWM and USGS data
+- Adds a check so that if schema validation fails, the current file is skipped and fetching continues
+- Adds versions 1.2 and 2.0 to operational NWM fetching (version 2.2 (nwm22) is allowed to be used with a note that it is no different from 2.1)
+- Adds a test notebook for testing on remote teehr-hub kernel
+- Adds wrapper functions for deterministic and signature metrics
+
+
+Changed
+^^^^^^^
+- Fixes doc strings for fetch.nwm_retrospective_grids()
+- Removes ``add_configuration_name`` in fetching and automatically adds if it doesn't exist
+- Updates dask version
+- Fixes a bug in parsing the z_hour and day from the remote json paths when an ensemble configuration is selected
+- Removes the imports in ``__init__.py`` that were for documentation purposes
+- Removes hydrotools as a dependency
+- Updates API documentation, adding evaluation.metrics.Metrics methods
+- Changes base docker image to ``base-notebook:2025.01.24``
+
+
 0.4.8 - 2025-02-17
 ------------------
 
