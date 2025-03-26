@@ -14,6 +14,7 @@ import shapely
 
 from teehr.fetching.utils import load_gdf
 from teehr.fetching.const import LOCATION_ID
+import teehr.models.pandera_dataframe_schemas as schemas
 
 
 @dask.delayed
@@ -238,9 +239,14 @@ def generate_weights_file(
 
     # Get the subset of the grid that intersects the total zone bounds
     bbox = tuple(zone_gdf.total_bounds)
-    src_da = src_da.sel(x=slice(bbox[0], bbox[2]), y=slice(bbox[1], bbox[3]))[
-        0
-    ]
+    if len(ds.dims) == 2:
+        src_da = src_da.sel(
+            x=slice(bbox[0], bbox[2]), y=slice(bbox[1], bbox[3])
+        )
+    else:
+        src_da = src_da.sel(
+            x=slice(bbox[0], bbox[2]), y=slice(bbox[1], bbox[3])
+        )[0]
     src_da = src_da.astype("float32")
     src_da["x"] = np.float32(src_da.x.values)
     src_da["y"] = np.float32(src_da.y.values)
@@ -275,28 +281,11 @@ def generate_weights_file(
     if location_id_prefix:
         df.loc[:, LOCATION_ID] = location_id_prefix + "-" + df[LOCATION_ID]
 
+    schema = schemas.weights_file_schema()
+    validated_df = schema.validate(df)
+
     if output_weights_filepath:
-        df.to_parquet(output_weights_filepath)
-        df = None
+        validated_df.to_parquet(output_weights_filepath)
+        validated_df = None
 
-    return df
-
-
-# if __name__ == "__main__":
-#     # Local testing
-#     zone_polygon_filepath = "/mnt/data/wbd/one_alaska_huc10.parquet"
-#     template_dataset = "/mnt/data/ciroh/nwm_temp/nwm.20231101_forcing_analysis_assim_alaska_nwm.t00z.analysis_assim.forcing.tm01.alaska.nc"  # noqa
-#     variable_name = "RAINRATE"
-#     unique_zone_id = "huc10"
-#     output_weights_filepath = (
-#         "/mnt/sf_shared/data/ciroh/one_huc10_alaska_weights.parquet"
-#     )
-
-#     generate_weights_file(
-#         zone_polygon_filepath=zone_polygon_filepath,
-#         template_dataset=template_dataset,
-#         variable_name=variable_name,
-#         output_weights_filepath=output_weights_filepath,
-#         crs_wkt=AL_NWM_WKT,
-#         unique_zone_id=unique_zone_id
-#     )
+    return validated_df
