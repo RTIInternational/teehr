@@ -1,5 +1,5 @@
 """Initialize the TEEHR package."""
-__version__ = "0.4.8"
+__version__ = "0.4.9"
 
 from teehr.evaluation.evaluation import Evaluation  # noqa
 from teehr.models.metrics.deterministic_models import DeterministicMetrics  # noqa
