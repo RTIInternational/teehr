@@ -237,6 +237,9 @@ def generate_weights_file(
     grid_transform = src_da.rio.transform()
     nodata_val = src_da.rio.nodata
 
+    if not all([dim in src_da.dims for dim in ["x", "y"]]):
+        raise ValueError("Template dataset must have x and y dimensions.")
+
     # Get the subset of the grid that intersects the total zone bounds
     bbox = tuple(zone_gdf.total_bounds)
     if len(ds.dims) == 2:
