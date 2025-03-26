@@ -45,7 +45,6 @@ import dask
 from teehr.fetching.const import (
     VALUE_TIME,
     REFERENCE_TIME,
-    LOCATION_ID,
     UNIT_NAME,
     VARIABLE_NAME,
     CONFIGURATION_NAME
@@ -61,7 +60,8 @@ from teehr.fetching.nwm.grid_utils import (
     update_location_id_prefix,
     compute_weighted_average,
     get_nwm_grid_data,
-    get_weights_row_col_stats
+    get_weights_row_col_stats,
+    read_and_validate_weights_file
 )
 from teehr.fetching.utils import (
     write_timeseries_parquet_file,
@@ -107,9 +107,7 @@ def process_nwm30_retro_group(
     and the output is saved to parquet files.
     """
     logger.debug("Processing NWM v3.0 retro grid data chunk.")
-    weights_df = pd.read_parquet(
-        weights_filepath, columns=["row", "col", "weight", LOCATION_ID]
-    )
+    weights_df = read_and_validate_weights_file(weights_filepath)
 
     weights_bounds = get_weights_row_col_stats(weights_df)
 
@@ -148,7 +146,6 @@ def process_nwm30_retro_group(
 
     if location_id_prefix:
         chunk_df = update_location_id_prefix(chunk_df, location_id_prefix)
-
 
     return chunk_df
 
@@ -203,9 +200,7 @@ def process_single_nwm21_retro_grid_file(
     value_time = row.datetime
     da = ds[variable_name].isel(Time=0)
 
-    weights_df = pd.read_parquet(
-        weights_filepath, columns=["row", "col", "weight", LOCATION_ID]
-    )
+    weights_df = read_and_validate_weights_file(weights_filepath)
 
     weights_bounds = get_weights_row_col_stats(weights_df)
 

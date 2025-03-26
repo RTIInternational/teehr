@@ -295,31 +295,3 @@ def nwm_grids_to_parquet(
             variable_mapper=variable_mapper,
             timeseries_type=timeseries_type
         )
-
-
-# if __name__ == "__main__":
-#     # Local testing
-#     weights_parquet = "/mnt/data/ciroh/onehuc10_weights.parquet"
-
-#     import time
-#     t1 = time.time()
-
-#     nwm_grids_to_parquet(
-#         configuration="forcing_analysis_assim",
-#         output_type="forcing",
-#         variable_name="RAINRATE",
-#         start_date="2023-11-28",
-#         ingest_days=1,
-#         zonal_weights_filepath=weights_parquet,
-#         json_dir="/mnt/data/ciroh/jsons",
-#         output_parquet_dir="/mnt/data/ciroh/parquet",
-#         nwm_version="nwm30",
-#         data_source="GCS",
-#         kerchunk_method="auto",
-#         t_minus_hours=[0],
-#         ignore_missing_file=False,
-#         overwrite_output=True,
-#         location_id_prefix="wbd10"
-#     )
-
-#     print(f"elapsed: {time.time() - t1:.2f} s")

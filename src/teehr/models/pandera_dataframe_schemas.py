@@ -313,6 +313,36 @@ def location_crosswalks_schema(
             coerce=True
         )
 
+
+def weights_file_schema() -> pa.DataFrameSchema:
+    """Return the schema for a weights file."""
+    return pa.DataFrameSchema(
+        columns={
+            "row": pa.Column(
+                pa.Int32,
+                nullable=False,
+                coerce=True
+            ),
+            "col": pa.Column(
+                pa.Int32,
+                nullable=False,
+                coerce=True
+            ),
+            "weight": pa.Column(
+                pa.Float32,
+                nullable=False,
+                coerce=True
+            ),
+            "location_id": pa.Column(
+                pa.String,
+                nullable=False,
+                coerce=True
+            )
+        },
+        strict="filter"
+    )
+
+
 # Timeseries
 pandas_value_type = pa.Float32()
 pyspark_value_type = T.FloatType()

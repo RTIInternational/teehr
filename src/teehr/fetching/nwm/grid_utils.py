@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
+import teehr.models.pandera_dataframe_schemas as schemas
 from teehr.fetching.utils import (
     get_dataset,
     write_timeseries_parquet_file,
@@ -94,6 +95,17 @@ def compute_weighted_average(
     return df[[LOCATION_ID, VALUE]].copy()
 
 
+def read_and_validate_weights_file(
+    weights_filepath: str
+) -> pd.DataFrame:
+    """Read weights file from parquet, validating data types."""
+    schema = schemas.weights_file_schema()
+    weights_df = pd.read_parquet(
+        weights_filepath, columns=list(schema.columns.keys())
+    )
+    return schema.validate(weights_df)
+
+
 @dask.delayed
 def process_single_nwm_grid_file(
     row: Tuple,
@@ -121,9 +133,7 @@ def process_single_nwm_grid_file(
     value_time = ds.time.values[0]
     da = ds[variable_name][0]
 
-    weights_df = pd.read_parquet(
-        weights_filepath, columns=["row", "col", "weight", LOCATION_ID]
-    )
+    weights_df = read_and_validate_weights_file(weights_filepath)
 
     weights_bounds = get_weights_row_col_stats(weights_df)
 
