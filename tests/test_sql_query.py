@@ -20,13 +20,13 @@ def test_sql_query(tmpdir):
     """)
     sdf_cols = sdf.columns
     expected_cols = [
-        'reference_time',
         'value_time',
         'value',
         'unit_name',
         'location_id',
         'configuration_name',
         'variable_name',
+        'reference_time',
         'name',
         'long_name',
         'name',

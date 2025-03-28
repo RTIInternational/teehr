@@ -127,18 +127,21 @@ class BaseTable():
         if partition_by is None:
             partition_by = []
 
-        existing_sdf = self._read_files(
-            self.dir,
-            use_table_schema=True,
-            **kwargs
-        )
+        if self.name != "joined_timeseries":
 
-        df = df.select(*existing_sdf.columns)
+            existing_sdf = self._read_files(
+                self.dir,
+                use_table_schema=True,
+                **kwargs
+            )
 
-        if not existing_sdf.isEmpty():
-            df = df.union(existing_sdf)
-            df = df.dropDuplicates(self.schema_func().unique)
-            pass
+            df = df.select(*existing_sdf.columns)
+
+            if not existing_sdf.isEmpty():
+                df = df.union(existing_sdf)
+                # df = df.dropDuplicates(self.schema_func().unique)
+                df = df.dropDuplicates()  # do we need to define a subset?
+                pass
 
         (
             df.

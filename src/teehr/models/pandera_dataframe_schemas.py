@@ -275,7 +275,6 @@ def location_attributes_schema(
             },
             strict=True,
             coerce=True,
-            unique=["location_id", "attribute_name", "value"]
         )
 
 def location_crosswalks_schema(
@@ -312,7 +311,6 @@ def location_crosswalks_schema(
             },
             strict=True,
             coerce=True,
-            unique=["primary_location_id", "secondary_location_id"]
         )
 
 
@@ -338,7 +336,6 @@ def weights_file_schema() -> pa.DataFrameSchema:
             )
         },
         strict="filter",
-        unique=["row", "col", "weight", "location_id"],
         coerce=True
     )
 
@@ -438,15 +435,6 @@ def primary_timeseries_schema(
             },
             strict=True,
             coerce=True,
-            unique=[
-                "reference_time",
-                "value_time",
-                "value",
-                "variable_name",
-                "configuration_name",
-                "unit_name",
-                "location_id"
-            ]
         )
 
 
@@ -548,16 +536,6 @@ def secondary_timeseries_schema(
             },
             strict=True,
             coerce=True,
-            unique=[
-                "reference_time",
-                "value_time",
-                "value",
-                "variable_name",
-                "configuration_name",
-                "unit_name",
-                "location_id",
-                "member"
-            ]
         )
 
 def joined_timeseries_schema(
@@ -657,16 +635,4 @@ def joined_timeseries_schema(
                 )
             },
             coerce=True,
-            unique=[
-                "reference_time",
-                "value_time",
-                "primary_value",
-                "secondary_value",
-                "variable_name",
-                "configuration_name",
-                "unit_name",
-                "primary_location_id",
-                "secondary_location_id",
-                "member"
-            ]
         )
