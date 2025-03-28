@@ -274,7 +274,8 @@ def location_attributes_schema(
                 )
             },
             strict=True,
-            coerce=True
+            coerce=True,
+            unique=["location_id", "attribute_name", "value"]
         )
 
 def location_crosswalks_schema(
@@ -310,7 +311,8 @@ def location_crosswalks_schema(
                 )
             },
             strict=True,
-            coerce=True
+            coerce=True,
+            unique=["primary_location_id", "secondary_location_id"]
         )
 
 
@@ -321,25 +323,23 @@ def weights_file_schema() -> pa.DataFrameSchema:
             "row": pa.Column(
                 pa.Int32,
                 nullable=False,
-                coerce=True
             ),
             "col": pa.Column(
                 pa.Int32,
                 nullable=False,
-                coerce=True
             ),
             "weight": pa.Column(
                 pa.Float32,
                 nullable=False,
-                coerce=True
             ),
             "location_id": pa.Column(
                 pa.String,
                 nullable=False,
-                coerce=True
             )
         },
-        strict="filter"
+        strict="filter",
+        unique=["row", "col", "weight", "location_id"],
+        coerce=True
     )
 
 
@@ -437,7 +437,16 @@ def primary_timeseries_schema(
                 )
             },
             strict=True,
-            coerce=True
+            coerce=True,
+            unique=[
+                "reference_time",
+                "value_time",
+                "value",
+                "variable_name",
+                "configuration_name",
+                "unit_name",
+                "location_id"
+            ]
         )
 
 
@@ -493,7 +502,7 @@ def secondary_timeseries_schema(
             },
             strict="filter",
             coerce=True,
-            add_missing_columns=True
+            add_missing_columns=True,
         )
     if type == "pyspark":
         return ps.DataFrameSchema(
@@ -538,7 +547,17 @@ def secondary_timeseries_schema(
                 )
             },
             strict=True,
-            coerce=True
+            coerce=True,
+            unique=[
+                "reference_time",
+                "value_time",
+                "value",
+                "variable_name",
+                "configuration_name",
+                "unit_name",
+                "location_id",
+                "member"
+            ]
         )
 
 def joined_timeseries_schema(
@@ -637,5 +656,17 @@ def joined_timeseries_schema(
                     nullable=True
                 )
             },
-            coerce=True
+            coerce=True,
+            unique=[
+                "reference_time",
+                "value_time",
+                "primary_value",
+                "secondary_value",
+                "variable_name",
+                "configuration_name",
+                "unit_name",
+                "primary_location_id",
+                "secondary_location_id",
+                "member"
+            ]
         )

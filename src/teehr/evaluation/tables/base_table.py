@@ -137,7 +137,7 @@ class BaseTable():
 
         if not existing_sdf.isEmpty():
             df = df.union(existing_sdf)
-            df = df.dropDuplicates()  # subset?
+            df = df.dropDuplicates(self.schema_func().unique)
             pass
 
         (

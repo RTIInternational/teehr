@@ -215,9 +215,9 @@ def test_fetch_and_load_nwm_operational_grids(tmpdir):
             "primary_timeseries",
             "configuration_name=nwm30_forcing_analysis_assim",
             "variable_name=rainfall_hourly_rate"
-            ).glob("*.parquet")
+            ).rglob("*.parquet")
     )
-    assert len(file_list) == 7
+    assert len(file_list) == 21
 
 
 if __name__ == "__main__":
