@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from teehr.utils.utils import remove_dir_if_exists
 import teehr.const as const
 from teehr.fetching.usgs.usgs import usgs_to_parquet
 from teehr.fetching.nwm.nwm_points import nwm_to_parquet
@@ -214,6 +215,9 @@ class Fetch:
 
         usgs_variable_name = USGS_VARIABLE_MAPPER[VARIABLE_NAME][service]
 
+        # Clear out cache
+        remove_dir_if_exists(self.usgs_cache_dir)
+
         usgs_to_parquet(
             sites=sites,
             start_date=start_date,
@@ -352,6 +356,9 @@ class Fetch:
         location_ids = self._get_secondary_location_ids(
             prefix=nwm_version
         )
+
+        # Clear out cache
+        remove_dir_if_exists(self.nwm_cache_dir)
 
         nwm_retro_to_parquet(
             nwm_version=nwm_version,
@@ -511,6 +518,9 @@ class Fetch:
         """ # noqa
         ev_configuration_name = f"{nwm_version}_retrospective"
         ev_variable_name = format_nwm_variable_name(variable_name)
+
+        # Clear out cache
+        remove_dir_if_exists(self.nwm_cache_dir)
 
         nwm_retro_grids_to_parquet(
             nwm_version=nwm_version,
@@ -721,6 +731,10 @@ class Fetch:
             nwm_configuration_name=nwm_configuration,
             nwm_version=nwm_version
         )
+
+        # Clear out cache
+        remove_dir_if_exists(self.nwm_cache_dir)
+
         nwm_to_parquet(
             configuration=nwm_configuration,
             output_type=output_type,
@@ -942,6 +956,10 @@ class Fetch:
             nwm_configuration_name=nwm_configuration,
             nwm_version=nwm_version
         )
+
+        # Clear out cache
+        remove_dir_if_exists(self.nwm_cache_dir)
+
         nwm_grids_to_parquet(
             configuration=nwm_configuration,
             output_type=output_type,

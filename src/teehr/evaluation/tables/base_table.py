@@ -113,6 +113,43 @@ class BaseTable():
         if self.df is None:
             self._raise_missing_table_error(table_name=self.name)
 
+    def _drop_possible_duplicates_and_write(
+        self,
+        df,
+        **kwargs
+    ):
+        """Drop duplicates and rewrite the table if duplicates exist."""
+        logger.info(
+            f"Dropping potential duplicates from {self.name} and re-writing."
+        )
+
+        partition_by = self.partition_by
+        if partition_by is None:
+            partition_by = []
+
+        existing_sdf = self._read_files(
+            self.dir,
+            use_table_schema=True,
+            **kwargs
+        )
+
+        df = df.select(*existing_sdf.columns)
+
+        if not existing_sdf.isEmpty():
+            df = df.union(existing_sdf)
+            df = df.dropDuplicates()  # subset?
+            pass
+
+        (
+            df.
+            write.
+            partitionBy(partition_by).
+            format(self.format).
+            mode(self.save_mode).
+            options(**kwargs).
+            save(str(self.dir))
+        )
+
     def _write_spark_df(self, df: ps.DataFrame, **kwargs):
         """Write spark dataframe to directory.
 
@@ -139,8 +176,7 @@ class BaseTable():
             partition_by = []
 
         if df is not None:
-            df.write.partitionBy(partition_by).format(self.format).mode(self.save_mode).options(**kwargs).save(str(self.dir))
-
+            self._drop_possible_duplicates_and_write(df, **kwargs)
             self._load_table()
 
     def _get_schema(self, type: str = "pyspark"):

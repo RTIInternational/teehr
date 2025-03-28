@@ -27,7 +27,11 @@ class TimeseriesTable(BaseTable):
         super().__init__(ev)
         self.format = "parquet"
         self.save_mode = "overwrite"
-        self.partition_by = ["configuration_name", "variable_name"]
+        self.partition_by = [
+            "configuration_name",
+            "variable_name",
+            "reference_time"
+        ]
         self.filter_model = TimeseriesFilter
 
     def to_pandas(self):

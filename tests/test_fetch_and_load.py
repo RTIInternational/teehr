@@ -45,7 +45,7 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
 
     # Make sure second fetch succeeds.
     ev.fetch.usgs_streamflow(
-        start_date=datetime(2022, 2, 24),
+        start_date=datetime(2022, 2, 22),
         end_date=datetime(2022, 2, 25)
     )
 
