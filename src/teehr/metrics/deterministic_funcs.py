@@ -4,9 +4,56 @@ import numpy.typing as npt
 import pandas as pd
 
 from teehr.models.metrics.basemodels import MetricsBasemodel
+from teehr.models.metrics.basemodels import TransformEnum
 from typing import Callable
 import logging
 logger = logging.getLogger(__name__)
+
+
+def _transform(
+        p: pd.Series,
+        s: pd.Series,
+        t: pd.Series | None,
+        model: MetricsBasemodel
+) -> tuple:
+    """Apply timeseries transform for metrics calculations."""
+    if model.transform is not None:
+        match model.transform:
+            case TransformEnum.log:
+                logger.debug("Applying log transform")
+                p = np.log(p)
+                s = np.log(s)
+            case TransformEnum.sqrt:
+                logger.debug("Applying square root transform")
+                p = np.sqrt(p)
+                s = np.sqrt(s)
+            case TransformEnum.square:
+                logger.debug("Applying square transform")
+                p = np.square(p)
+                s = np.square(s)
+            case TransformEnum.cube:
+                logger.debug("Applying cube transform")
+                p = np.power(p, 3)
+                s = np.power(s, 3)
+            case TransformEnum.exp:
+                logger.debug("Applying exponential transform")
+                p = np.exp(p)
+                s = np.exp(s)
+            case TransformEnum.inv:
+                logger.debug("Applying inverse transform")
+                p = 1.0 / p
+                s = 1.0 / s
+            case TransformEnum.abs:
+                logger.debug("Applying absolute value transform")
+                p = np.abs(p)
+                s = np.abs(s)
+            case _:
+                raise ValueError(
+                    f"Unsupported transform: {model.transform}"
+                )
+    else:
+        logger.debug("No transform specified, using original values")
+    return p, s
 
 
 def _mean_error(
@@ -210,10 +257,6 @@ def kge_wrapper(model: MetricsBasemodel) -> Callable:
                                s: pd.Series,
                                ) -> float:
         """Kling-Gupta Efficiency (2009)."""
-        # if len(p) == 0 or len(s) == 0:
-        #     return np.nan
-        # if np.sum(p) == 0 or np.sum(s) == 0:
-        #     return np.nan
         if np.std(s) == 0 or np.std(p) == 0:
             return np.nan
 
@@ -245,12 +288,6 @@ def kge_mod1_wrapper(model: MetricsBasemodel) -> Callable:
 
     def kling_gupta_efficiency_mod1(p: pd.Series, s: pd.Series) -> float:
         """Kling-Gupta Efficiency - modified 1 (2012)."""
-        # if len(p) == 0 or len(s) == 0:
-        #     return np.nan
-        # if np.sum(p) == 0 or np.sum(s) == 0:
-        #     return np.nan
-        # if np.min(p) == np.max(p) == 0 or np.min(s) == np.max(s) == 0:
-        #     return np.nan
         if np.std(s) == 0 or np.std(p) == 0:
             return np.nan
 
@@ -284,10 +321,6 @@ def kge_mod2_wrapper(model: MetricsBasemodel) -> Callable:
 
     def kling_gupta_efficiency_mod2(p: pd.Series, s: pd.Series) -> float:
         """Kling-Gupta Efficiency - modified 2 (2021)."""
-        # if len(p) == 0 or len(s) == 0:
-        #     return np.nan
-        # if np.sum(p) == 0 or np.sum(s) == 0:
-        #     return np.nan
         if np.std(s) == 0 or np.std(p) == 0:
             return np.nan
 
