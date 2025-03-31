@@ -27,26 +27,30 @@ def test_validate_and_insert_locations(tmpdir):
     """Test the validate_locations function."""
     ev = Evaluation(dir_path=tmpdir)
     ev.clone_template()
-
-    # Replace existing location ID prefix
+    # Load and replace the location ID prefix
     ev.locations.load_spatial(
         in_path=GEOJSON_GAGES_FILEPATH,
         location_id_prefix="test"
     )
-
-    id_val = (
-                ev.
-                locations.
-                to_sdf().
-                select("id").
-                first().
-                asDict()["id"].
-                split("-")
-            )
-
-    assert ev.locations.to_sdf().count() == 3
-    assert id_val[0] == "test"
-    assert id_val[1] == "A"
+    # Append additional location
+    ev.locations.load_spatial(
+        in_path="tests/data/two_locations/two_locations.parquet",
+    )
+    # Now say I want to update existing locations
+    ev.locations.load_spatial(
+        in_path=GEOJSON_GAGES_FILEPATH,
+        location_id_prefix="updated",
+        write_mode="upsert",
+        update_columns=["id"]
+    )
+    assert ev.locations.to_pandas()["id"].tolist() == [
+        "usgs-14316700",
+        "usgs-14138800",
+        "updated-A",
+        "updated-B",
+        "updated-C"
+    ]
+    assert ev.locations.to_sdf().count() == 5
 
 
 def test_validate_and_insert_locations_adding_prefix(tmpdir):

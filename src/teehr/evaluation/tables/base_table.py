@@ -10,7 +10,7 @@ from teehr.utils.s3path import S3Path
 from teehr.utils.utils import to_path_or_s3path, path_to_spark
 from teehr.models.filters import FilterBaseModel
 import logging
-from pyspark.sql.functions import lit, col
+from pyspark.sql.functions import lit
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +113,57 @@ class BaseTable():
         if self.df is None:
             self._raise_missing_table_error(table_name=self.name)
 
-    def _drop_possible_duplicates_and_write(
+    def _upsert_without_duplicates(
+        self,
+        df,
+        update_columns: list[str],
+        **kwargs
+    ):
+        """Drop duplicates and rewrite the table if duplicates exist."""
+        logger.info(
+            f"Dropping potential duplicates from {self.name} and appending."
+        )
+        partition_by = self.partition_by
+        if partition_by is None:
+            partition_by = []
+
+        existing_sdf = self._read_files(
+            self.dir,
+            use_table_schema=True,
+            **kwargs
+        )
+
+        if update_columns is not None:
+            update_columns = [
+                x for x in self.unique_columns if x not in update_columns
+            ]
+
+        # Remove rows from existing_sdf that are to be updated.
+        # Concat and re-write.
+        if not existing_sdf.isEmpty():
+            existing_sdf = existing_sdf.join(
+                df,
+                how="left_anti",
+                on=update_columns,
+            )
+            df = existing_sdf.unionByName(df)
+            # Get columns in correct order
+            df = df.select([*self.schema_func().columns])
+
+        if self.name == "locations":
+            df = df.repartition(1)
+
+        (
+            df.
+            write.
+            partitionBy(partition_by).
+            format(self.format).
+            mode("overwrite").
+            options(**kwargs).
+            save(str(self.dir))
+        )
+
+    def _append_without_duplicates(
         self,
         df,
         **kwargs
@@ -122,28 +172,46 @@ class BaseTable():
         logger.info(
             f"Dropping potential duplicates from {self.name} and appending."
         )
-
         partition_by = self.partition_by
         if partition_by is None:
             partition_by = []
 
-        if self.name != "joined_timeseries":
-
-            existing_sdf = self._read_files(
-                self.dir,
-                use_table_schema=True,
-                **kwargs
+        existing_sdf = self._read_files(
+            self.dir,
+            use_table_schema=True,
+            **kwargs
+        )
+        # Anti-join: Joins rows from left df that do not have a match
+        # in right df.  This is used to drop duplicates. df gets written
+        # in append mode.
+        if not existing_sdf.isEmpty():
+            df = df.join(
+                existing_sdf,
+                how="left_anti",
+                on=self.unique_columns,
             )
+        (
+            df.
+            write.
+            partitionBy(partition_by).
+            format(self.format).
+            mode(self.save_mode).
+            options(**kwargs).
+            save(str(self.dir))
+        )
 
-            # Anti-join: Joins rows from left df that do not have a match
-            # in right df.  This is used to drop duplicates.
-            if not existing_sdf.isEmpty():
-                df = df.join(
-                    existing_sdf,
-                    how="left_anti",
-                    on=self.unique_columns,
-                )
-                pass
+    def _write_joined_timeseries(
+        self,
+        df: ps.DataFrame,
+        **kwargs
+    ):
+        """Write the joined timeseries table."""
+        logger.info(
+            "Writing the joined timeseries table to disk."
+        )
+        partition_by = self.partition_by
+        if partition_by is None:
+            partition_by = []
 
         (
             df.
@@ -155,7 +223,13 @@ class BaseTable():
             save(str(self.dir))
         )
 
-    def _write_spark_df(self, df: ps.DataFrame, **kwargs):
+    def _write_spark_df(
+        self,
+        df: ps.DataFrame,
+        write_mode: str = "append",
+        update_columns: list[str] = None,
+        **kwargs
+    ):
         """Write spark dataframe to directory.
 
         Parameters
@@ -177,7 +251,14 @@ class BaseTable():
             }
 
         if df is not None:
-            self._drop_possible_duplicates_and_write(df, **kwargs)
+            if self.name == "joined_timeseries":
+                self._write_joined_timeseries(df, **kwargs)
+                self._load_table()
+                return
+            if write_mode == "append":
+                self._append_without_duplicates(df, **kwargs)
+            elif write_mode == "upsert":
+                self._upsert_without_duplicates(df, update_columns, **kwargs)
             self._load_table()
 
     def _get_schema(self, type: str = "pyspark"):

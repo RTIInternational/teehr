@@ -10,8 +10,7 @@ from typing import Union
 import logging
 from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
 from teehr.loading.utils import add_or_replace_sdf_column_prefix
-from pyspark.sql.functions import concat, col, lit, split_part, split, explode, size, array
-# import pyspark.sql.functions as F
+from teehr.models.table_enums import TableWriteEnum
 
 
 logger = logging.getLogger(__name__)
@@ -65,6 +64,8 @@ class LocationTable(BaseTable):
         field_mapping: dict = None,
         pattern: str = "**/*.parquet",
         location_id_prefix: str = None,
+        write_mode: TableWriteEnum = "append",
+        update_columns: list[str] = None,
         **kwargs
     ):
         """Import geometry data.
@@ -83,6 +84,15 @@ class LocationTable(BaseTable):
         location_id_prefix : str, optional
             The prefix to add to location IDs.
             Used to ensure unique location IDs.
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table. Options are "append" or "upsert".
+            If "append", the table will be appended with new data that does
+            already exist.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
+        update_columns : list[str], optional
+            When ``write_mode`` is "upsert", the names of columns containing
+            data to be updated.
         **kwargs
             Additional keyword arguments are passed to GeoPandas read_file().
 
@@ -91,7 +101,6 @@ class LocationTable(BaseTable):
 
         Notes
         -----
-
         The TEEHR Location Crosswalk table schema includes fields:
 
         - id
@@ -129,7 +138,11 @@ class LocationTable(BaseTable):
             )
 
         # Write to the table
-        self._write_spark_df(validated_df.repartition(1))
+        self._write_spark_df(
+            validated_df.repartition(1),
+            write_mode=write_mode,
+            update_columns=update_columns,
+        )
 
         # Reload the table
         self._load_table()
