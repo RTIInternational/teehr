@@ -7,6 +7,9 @@ import tempfile
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
 GEOJSON_GAGES_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "gages.geojson")
+GEOJSON_NP_GAGES_FILEPATH = Path(
+    TEST_STUDY_DATA_DIR, "geo", "gages_no_prefix.geojson"
+)
 
 
 def test_convert_locations_geojson(tmpdir):
@@ -25,9 +28,51 @@ def test_validate_and_insert_locations(tmpdir):
     ev = Evaluation(dir_path=tmpdir)
     ev.clone_template()
 
-    ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
+    # Replace existing location ID prefix
+    ev.locations.load_spatial(
+        in_path=GEOJSON_GAGES_FILEPATH,
+        location_id_prefix="test"
+    )
+
+    id_val = (
+                ev.
+                locations.
+                to_sdf().
+                select("id").
+                first().
+                asDict()["id"].
+                split("-")
+            )
 
     assert ev.locations.to_sdf().count() == 3
+    assert id_val[0] == "test"
+    assert id_val[1] == "A"
+
+
+def test_validate_and_insert_locations_adding_prefix(tmpdir):
+    """Test the validate_locations function."""
+    ev = Evaluation(dir_path=tmpdir)
+    ev.clone_template()
+
+    # Add a new location ID prefix
+    ev.locations.load_spatial(
+        in_path=GEOJSON_NP_GAGES_FILEPATH,
+        location_id_prefix="test"
+    )
+
+    id_val = (
+                ev.
+                locations.
+                to_sdf().
+                select("id").
+                first().
+                asDict()["id"].
+                split("-")
+            )
+
+    assert ev.locations.to_sdf().count() == 3
+    assert id_val[0] == "test"
+    assert id_val[1] == "A"
 
 
 if __name__ == "__main__":
@@ -43,6 +88,12 @@ if __name__ == "__main__":
         test_validate_and_insert_locations(
             tempfile.mkdtemp(
                 prefix="2-",
+                dir=tempdir
+            )
+        )
+        test_validate_and_insert_locations_adding_prefix(
+            tempfile.mkdtemp(
+                prefix="3-",
                 dir=tempdir
             )
         )

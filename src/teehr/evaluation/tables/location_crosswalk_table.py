@@ -22,12 +22,15 @@ class LocationCrosswalkTable(BaseTable):
         """Initialize class."""
         super().__init__(ev)
         self.name = "location_crosswalks"
-        # self.dir = ev.location_crosswalks_dir
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.format = "parquet"
-        self.save_mode = "overwrite"
+        self.save_mode = "append"
         self.filter_model = LocationCrosswalkFilter
         self.schema_func = schemas.location_crosswalks_schema
+        self.unique_columns = [
+            "primary_location_id",
+            "secondary_location_id"
+        ]
 
     def _load(
         self,

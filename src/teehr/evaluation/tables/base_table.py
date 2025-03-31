@@ -92,7 +92,7 @@ class BaseTable():
         return df
 
     def _load_table(self, **kwargs):
-        """Load the table from the directory to self.df
+        """Load the table from the directory to self.df.
 
         Parameters
         ----------
@@ -120,7 +120,7 @@ class BaseTable():
     ):
         """Drop duplicates and rewrite the table if duplicates exist."""
         logger.info(
-            f"Dropping potential duplicates from {self.name} and re-writing."
+            f"Dropping potential duplicates from {self.name} and appending."
         )
 
         partition_by = self.partition_by
@@ -135,12 +135,14 @@ class BaseTable():
                 **kwargs
             )
 
-            df = df.select(*existing_sdf.columns)
-
+            # Anti-join: Joins rows from left df that do not have a match
+            # in right df.  This is used to drop duplicates.
             if not existing_sdf.isEmpty():
-                df = df.union(existing_sdf)
-                # df = df.dropDuplicates(self.schema_func().unique)
-                df = df.dropDuplicates()  # do we need to define a subset?
+                df = df.join(
+                    existing_sdf,
+                    how="left_anti",
+                    on=self.unique_columns,
+                )
                 pass
 
         (
@@ -173,10 +175,6 @@ class BaseTable():
             kwargs = {
                 "header": "true",
             }
-
-        partition_by = self.partition_by
-        if partition_by is None:
-            partition_by = []
 
         if df is not None:
             self._drop_possible_duplicates_and_write(df, **kwargs)

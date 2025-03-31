@@ -19,7 +19,6 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         """Initialize class."""
         super().__init__(ev)
         self.name = "secondary_timeseries"
-        # self.dir = ev.secondary_timeseries_dir
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.schema_func = schemas.secondary_timeseries_schema
 

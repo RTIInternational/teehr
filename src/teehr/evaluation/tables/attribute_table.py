@@ -14,10 +14,13 @@ class AttributeTable(DomainTable):
         """Initialize class."""
         super().__init__(ev)
         self.name = "attributes"
-        # self.dir = ev.attributes_dir
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.filter_model = AttributeFilter
         self.schema_func = schemas.attribute_schema
+        self.unique_columns = [
+            "name",
+            "type"
+        ]
 
 
     def field_enum(self) -> AttributeFields:

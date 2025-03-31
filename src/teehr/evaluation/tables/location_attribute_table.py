@@ -22,12 +22,15 @@ class LocationAttributeTable(BaseTable):
         """Initialize class."""
         super().__init__(ev)
         self.name = "location_attributes"
-        # self.dir = ev.location_attributes_dir
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.format = "parquet"
-        self.save_mode = "overwrite"
+        self.save_mode = "append"
         self.filter_model = LocationAttributeFilter
         self.schema_func = schemas.location_attributes_schema
+        self.unique_columns = [
+            "location_id",
+            "attribute_name"
+        ]
 
     def _load(
         self,

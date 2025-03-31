@@ -7,9 +7,51 @@ from typing import Union, List
 import logging
 import shutil
 from xml.dom import minidom
+from pyspark.sql import DataFrame
+import pyspark.sql.functions as F
 
 
 logger = logging.getLogger(__name__)
+
+
+def add_or_replace_sdf_column_prefix(
+    sdf: DataFrame,
+    column_name: str,
+    prefix: str,
+    delimiter: str = "-",
+) -> DataFrame:
+    """Add or replace a column in a DataFrame with a prefix.
+
+    Parameters
+    ----------
+    sdf : DataFrame
+        The DataFrame to add or replace the column in.
+    column_name : str
+        The name of the column to add or replace the prefix.
+    prefix : str
+        The prefix to add or replace.
+    """
+    if len(
+        sdf.select(column_name).first().asDict()[column_name].split("-")
+    ) > 1:
+        logger.debug(
+            "ID already has a prefix. This will be replaced."
+        )
+        sdf = sdf.withColumn(
+            column_name,
+            F.concat(
+                F.lit(prefix), F.lit("-"), F.split(F.col(column_name), delimiter).getItem(1)
+            )
+        )
+    else:
+        logger.debug(
+            "ID does not have a prefix. This will be added."
+        )
+        sdf = sdf.withColumn(
+            column_name,
+            F.concat(F.lit(prefix), F.lit(delimiter), F.col(column_name))
+        )
+    return sdf
 
 
 def read_spatial_file(

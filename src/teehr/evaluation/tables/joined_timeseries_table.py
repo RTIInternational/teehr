@@ -21,12 +21,12 @@ class JoinedTimeseriesTable(TimeseriesTable):
         """Initialize class."""
         super().__init__(ev)
         self.name = "joined_timeseries"
-        # self.dir = ev.joined_timeseries_dir
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.filter_model = JoinedTimeseriesFilter
         self.validate_filter_field_types = False
         self.strict_validation = False
         self.schema_func = schemas.joined_timeseries_schema
+        self.save_mode = "overwrite"
 
     def field_enum(self) -> JoinedTimeseriesFields:
         """Get the joined timeseries fields enum."""

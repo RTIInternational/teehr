@@ -18,10 +18,13 @@ class UnitTable(DomainTable):
         """Initialize class."""
         super().__init__(ev)
         self.name = "units"
-        # self.dir = ev.units_dir
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.filter_model = UnitFilter
         self.schema_func = schemas.unit_schema
+        self.unique_columns = [
+            "name",
+            "long_name",
+        ]
 
     def field_enum(self) -> UnitFields:
         """Get the unit fields enum."""

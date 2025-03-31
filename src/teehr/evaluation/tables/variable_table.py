@@ -18,10 +18,13 @@ class VariableTable(DomainTable):
         """Initialize class."""
         super().__init__(ev)
         self.name = "variables"
-        # self.dir = ev.variables_dir
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.filter_model = VariableFilter
         self.schema_func = schemas.variable_schema
+        self.unique_columns = [
+            "name",
+            "long_name"
+        ]
 
     def field_enum(self) -> VariableFields:
         """Get the variable fields enum."""

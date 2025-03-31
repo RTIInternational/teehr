@@ -61,7 +61,6 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
         start_date=datetime(2022, 2, 22),
         end_date=datetime(2022, 2, 23)
     )
-    ts_df = ev.secondary_timeseries.to_pandas()
 
     # Make sure second fetch succeeds.
     ev.fetch.nwm_retrospective_points(
@@ -71,10 +70,12 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
         end_date=datetime(2022, 2, 25)
     )
 
+    sts_df = ev.secondary_timeseries.to_pandas()
+
     assert pts_df.value_time.min() == pd.Timestamp("2022-02-22 00:00:00")
     assert pts_df.value_time.max() == pd.Timestamp("2022-02-25 00:00:00")
-    assert isinstance(ts_df, pd.DataFrame)
-    assert set(ts_df.columns.tolist()) == set([
+    assert isinstance(sts_df, pd.DataFrame)
+    assert set(sts_df.columns.tolist()) == set([
             "reference_time",
             "value_time",
             "value",
@@ -84,10 +85,10 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
             "variable_name",
             "member"
             ])
-    assert ts_df.unit_name.iloc[0] == "m^3/s"
-    assert np.isclose(ts_df.value.sum(), np.float32(7319.99))
-    assert ts_df.value_time.min() == pd.Timestamp("2022-02-22 00:00:00")
-    assert ts_df.value_time.max() == pd.Timestamp("2022-02-23 23:00:00")
+    assert sts_df.unit_name.iloc[0] == "m^3/s"
+    assert np.isclose(sts_df.value.sum(), np.float32(14570.21))
+    assert sts_df.value_time.min() == pd.Timestamp("2022-02-22 00:00:00")
+    assert sts_df.value_time.max() == pd.Timestamp("2022-02-25 23:00:00")
 
 
 def test_fetch_and_load_nwm_retro_grids(tmpdir):

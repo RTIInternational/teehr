@@ -9,6 +9,9 @@ from pathlib import Path
 from typing import Union
 import logging
 from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
+from teehr.loading.utils import add_or_replace_sdf_column_prefix
+from pyspark.sql.functions import concat, col, lit, split_part, split, explode, size, array
+# import pyspark.sql.functions as F
 
 
 logger = logging.getLogger(__name__)
@@ -21,12 +24,16 @@ class LocationTable(BaseTable):
         """Initialize class."""
         super().__init__(ev)
         self.name = "locations"
-        # self.dir = ev.locations_dir
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.format = "parquet"
-        self.save_mode = "overwrite"
+        self.save_mode = "append"
         self.filter_model = LocationFilter
         self.schema_func = schemas.locations_schema
+        self.unique_columns = [
+            "id",
+            "name",
+            "geometry",
+        ]
 
     def field_enum(self) -> LocationFields:
         """Get the location fields enum."""
@@ -57,6 +64,7 @@ class LocationTable(BaseTable):
         in_path: Union[Path, str],
         field_mapping: dict = None,
         pattern: str = "**/*.parquet",
+        location_id_prefix: str = None,
         **kwargs
     ):
         """Import geometry data.
@@ -72,6 +80,9 @@ class LocationTable(BaseTable):
         pattern : str, optional (default: "**/*.parquet")
             The pattern to match files.
             Only used when in_path is a directory.
+        location_id_prefix : str, optional
+            The prefix to add to location IDs.
+            Used to ensure unique location IDs.
         **kwargs
             Additional keyword arguments are passed to GeoPandas read_file().
 
@@ -108,6 +119,14 @@ class LocationTable(BaseTable):
 
         # Validate using the validate method
         validated_df = self._validate(df)
+
+        # Add location_id prefix if provided
+        if location_id_prefix:
+            validated_df = add_or_replace_sdf_column_prefix(
+                sdf=validated_df,
+                column_name="id",
+                prefix=location_id_prefix,
+            )
 
         # Write to the table
         self._write_spark_df(validated_df.repartition(1))
