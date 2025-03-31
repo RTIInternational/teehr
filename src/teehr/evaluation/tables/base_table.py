@@ -117,6 +117,7 @@ class BaseTable():
         self,
         df,
         update_columns: list[str],
+        num_partitions: int = None,
         **kwargs
     ):
         """Drop duplicates and rewrite the table if duplicates exist."""
@@ -150,8 +151,8 @@ class BaseTable():
             # Get columns in correct order
             df = df.select([*self.schema_func().columns])
 
-        if self.name == "locations":
-            df = df.repartition(1)
+        if num_partitions is not None:
+            df = df.repartition(num_partitions)
 
         (
             df.
@@ -166,6 +167,7 @@ class BaseTable():
     def _append_without_duplicates(
         self,
         df,
+        num_partitions: int = None,
         **kwargs
     ):
         """Drop duplicates and rewrite the table if duplicates exist."""
@@ -190,6 +192,8 @@ class BaseTable():
                 how="left_anti",
                 on=self.unique_columns,
             )
+        if num_partitions is not None:
+            df = df.repartition(num_partitions)
         (
             df.
             write.
@@ -212,7 +216,6 @@ class BaseTable():
         partition_by = self.partition_by
         if partition_by is None:
             partition_by = []
-
         (
             df.
             write.
@@ -228,6 +231,7 @@ class BaseTable():
         df: ps.DataFrame,
         write_mode: str = "append",
         update_columns: list[str] = None,
+        num_partitions: int = None,
         **kwargs
     ):
         """Write spark dataframe to directory.
@@ -256,9 +260,18 @@ class BaseTable():
                 self._load_table()
                 return
             if write_mode == "append":
-                self._append_without_duplicates(df, **kwargs)
+                self._append_without_duplicates(
+                    df=df,
+                    num_partitions=num_partitions,
+                    **kwargs
+                )
             elif write_mode == "upsert":
-                self._upsert_without_duplicates(df, update_columns, **kwargs)
+                self._upsert_without_duplicates(
+                    df=df,
+                    update_columns=update_columns,
+                    num_partitions=num_partitions,
+                    **kwargs
+                )
             self._load_table()
 
     def _get_schema(self, type: str = "pyspark"):

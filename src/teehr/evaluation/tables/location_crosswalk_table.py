@@ -64,7 +64,10 @@ class LocationCrosswalkTable(BaseTable):
         validated_df = self._validate(df)
 
         # Write to the table df.rdd.getNumPartitions()
-        self._write_spark_df(validated_df.repartition(df.rdd.getNumPartitions()))
+        self._write_spark_df(
+            df=validated_df,
+            num_partitions=df.rdd.getNumPartitions()
+        )
 
         # Reload the table
         self._load_table()

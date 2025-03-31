@@ -83,7 +83,7 @@ class LocationTable(BaseTable):
             Only used when in_path is a directory.
         location_id_prefix : str, optional
             The prefix to add to location IDs.
-            Used to ensure unique location IDs.
+            Used to ensure unique location IDs across configurations.
         write_mode : TableWriteEnum, optional (default: "append")
             The write mode for the table. Options are "append" or "upsert".
             If "append", the table will be appended with new data that does
@@ -139,9 +139,10 @@ class LocationTable(BaseTable):
 
         # Write to the table
         self._write_spark_df(
-            validated_df.repartition(1),
+            validated_df,
             write_mode=write_mode,
             update_columns=update_columns,
+            num_partitions=1
         )
 
         # Reload the table
