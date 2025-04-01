@@ -34,8 +34,22 @@ def test_validate_and_insert_crosswalks(tmpdir):
     )
 
     ev.location_crosswalks.load_csv(
-        in_path=CROSSWALK_FILEPATH
+        in_path=CROSSWALK_FILEPATH,
+        primary_location_id_prefix="usgs",
+        secondary_location_id_prefix="nwm30",
     )
+
+    df = ev.location_crosswalks.to_pandas()
+    assert df["primary_location_id"].tolist() == [
+        "usgs-A",
+        "usgs-B",
+        "usgs-C",
+    ]
+    assert df["secondary_location_id"].tolist() == [
+        "nwm30-1",
+        "nwm30-2",
+        "nwm30-3",
+    ]
 
     assert True
 

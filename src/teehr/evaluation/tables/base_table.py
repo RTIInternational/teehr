@@ -139,7 +139,12 @@ class BaseTable():
                 x for x in self.unique_column_set if x not in update_columns
             ]
         else:
-            update_columns = self.unique_column_set
+            logger.error(
+                "No update columns provided.  Cannot perform upsert."
+            )
+            raise ValueError(
+                "No update columns provided.  Cannot perform upsert."
+            )
 
         # Remove rows from existing_sdf that are to be updated.
         # Concat and re-write.
