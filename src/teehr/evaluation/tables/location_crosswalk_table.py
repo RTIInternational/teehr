@@ -66,24 +66,24 @@ class LocationCrosswalkTable(BaseTable):
         # Read the converted files to Spark DataFrame
         df = self._read_files(cache_dir)
 
-        # Validate using the validate method
-        validated_df = self._validate(df)
-
         # Add or replace primary location_id prefix if provided
         if primary_location_id_prefix:
-            validated_df = add_or_replace_sdf_column_prefix(
-                sdf=validated_df,
+            df = add_or_replace_sdf_column_prefix(
+                sdf=df,
                 column_name="primary_location_id",
                 prefix=primary_location_id_prefix,
             )
 
         # Add or replace secondary location_id prefix if provided
         if secondary_location_id_prefix:
-            validated_df = add_or_replace_sdf_column_prefix(
-                sdf=validated_df,
+            df = add_or_replace_sdf_column_prefix(
+                sdf=df,
                 column_name="secondary_location_id",
                 prefix=secondary_location_id_prefix,
             )
+
+        # Validate using the validate method
+        validated_df = self._validate(df)
 
         # Write to the table df.rdd.getNumPartitions()
         self._write_spark_df(

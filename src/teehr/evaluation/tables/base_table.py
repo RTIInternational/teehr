@@ -158,11 +158,14 @@ class BaseTable():
             # Get columns in correct order
             df = df.select([*self.schema_func().columns])
 
+        # Re-validate since the table was changed
+        validated_df = self._validate(df)
+
         if num_partitions is not None:
-            df = df.repartition(num_partitions)
+            validated_df = validated_df.repartition(num_partitions)
 
         (
-            df.
+            validated_df.
             write.
             partitionBy(partition_by).
             format(self.format).
@@ -199,10 +202,15 @@ class BaseTable():
                 how="left_anti",
                 on=self.unique_column_set,
             )
+
+        # Re-validate since the table was changed
+        validated_df = self._validate(df)
+
         if num_partitions is not None:
-            df = df.repartition(num_partitions)
+            validated_df = validated_df.repartition(num_partitions)
+
         (
-            df.
+            validated_df.
             write.
             partitionBy(partition_by).
             format(self.format).

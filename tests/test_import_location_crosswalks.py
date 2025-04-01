@@ -30,7 +30,8 @@ def test_validate_and_insert_crosswalks(tmpdir):
     ev.clone_template()
 
     ev.locations.load_spatial(
-        in_path=GEOJSON_GAGES_FILEPATH
+        in_path=GEOJSON_GAGES_FILEPATH,
+        location_id_prefix="usgs"
     )
 
     ev.location_crosswalks.load_csv(
