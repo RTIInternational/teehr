@@ -138,6 +138,8 @@ class BaseTable():
             update_columns = [
                 x for x in self.unique_columns if x not in update_columns
             ]
+        else:
+            update_columns = self.unique_columns
 
         # Remove rows from existing_sdf that are to be updated.
         # Concat and re-write.

@@ -84,6 +84,9 @@ class LocationTable(BaseTable):
         location_id_prefix : str, optional
             The prefix to add to location IDs.
             Used to ensure unique location IDs across configurations.
+            Note, the methods for fetching USGS and NWM data expect
+            location IDs to be prefixed with "usgs" or the nwm version
+            ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
         write_mode : TableWriteEnum, optional (default: "append")
             The write mode for the table. Options are "append" or "upsert".
             If "append", the table will be appended with new data that does
@@ -106,6 +109,11 @@ class LocationTable(BaseTable):
         - id
         - name
         - geometry
+
+        ..note::
+          The methods for fetching USGS and NWM data expect
+          location IDs to be prefixed with "usgs" or the nwm version
+          ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
         """
         cache_dir = Path(
             self.ev.dir_path,
