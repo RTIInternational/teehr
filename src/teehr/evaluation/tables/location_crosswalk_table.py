@@ -10,6 +10,8 @@ from pathlib import Path
 from typing import Union
 import logging
 from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
+from teehr.models.table_enums import TableWriteEnum
+from teehr.loading.utils import add_or_replace_sdf_column_prefix
 
 
 logger = logging.getLogger(__name__)
@@ -37,6 +39,10 @@ class LocationCrosswalkTable(BaseTable):
         in_path: Union[Path, str],
         field_mapping: dict = None,
         pattern: str = None,
+        primary_location_id_prefix: str = None,
+        secondary_location_id_prefix: str = None,
+        write_mode: TableWriteEnum = "append",
+        update_columns: list[str] = None,
         **kwargs
     ):
         """Load location crosswalks helper."""
@@ -63,10 +69,28 @@ class LocationCrosswalkTable(BaseTable):
         # Validate using the validate method
         validated_df = self._validate(df)
 
+        # Add or replace primary location_id prefix if provided
+        if primary_location_id_prefix:
+            validated_df = add_or_replace_sdf_column_prefix(
+                sdf=validated_df,
+                column_name="primary_location_id",
+                prefix=primary_location_id_prefix,
+            )
+
+        # Add or replace secondary location_id prefix if provided
+        if secondary_location_id_prefix:
+            validated_df = add_or_replace_sdf_column_prefix(
+                sdf=validated_df,
+                column_name="secondary_location_id",
+                prefix=secondary_location_id_prefix,
+            )
+
         # Write to the table df.rdd.getNumPartitions()
         self._write_spark_df(
             df=validated_df,
-            num_partitions=df.rdd.getNumPartitions()
+            num_partitions=df.rdd.getNumPartitions(),
+            write_mode=write_mode,
+            update_columns=update_columns
         )
 
         # Reload the table
@@ -112,6 +136,10 @@ class LocationCrosswalkTable(BaseTable):
         in_path: Union[Path, str],
         pattern: str = "**/*.parquet",
         field_mapping: dict = None,
+        primary_location_id_prefix: str = None,
+        secondary_location_id_prefix: str = None,
+        write_mode: TableWriteEnum = "append",
+        update_columns: list[str] = None,
         **kwargs
     ):
         """Import location crosswalks from parquet file format.
@@ -124,6 +152,21 @@ class LocationCrosswalkTable(BaseTable):
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
+        location_id_prefix : str, optional
+            The prefix to add to location IDs.
+            Used to ensure unique location IDs across configurations.
+            Note, the methods for fetching USGS and NWM data expect
+            location IDs to be prefixed with "usgs" or the nwm version
+            ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table. Options are "append" or "upsert".
+            If "append", the table will be appended with new data that does
+            already exist.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
+        update_columns : list[str], optional
+            When ``write_mode`` is "upsert", the names of columns containing
+            data to be updated.
         **kwargs
             Additional keyword arguments are passed to pd.read_csv()
             or pd.read_parquet().
@@ -141,6 +184,10 @@ class LocationCrosswalkTable(BaseTable):
             in_path=in_path,
             field_mapping=field_mapping,
             pattern=pattern,
+            primary_location_id_prefix=primary_location_id_prefix,
+            secondary_location_id_prefix=secondary_location_id_prefix,
+            write_mode=write_mode,
+            update_columns=update_columns,
             **kwargs
         )
         self._load_table()
@@ -150,6 +197,10 @@ class LocationCrosswalkTable(BaseTable):
         in_path: Union[Path, str],
         pattern: str = "**/*.csv",
         field_mapping: dict = None,
+        primary_location_id_prefix: str = None,
+        secondary_location_id_prefix: str = None,
+        write_mode: TableWriteEnum = "append",
+        update_columns: list[str] = None,
         **kwargs
     ):
         """Import location crosswalks from CSV file format.
@@ -162,13 +213,33 @@ class LocationCrosswalkTable(BaseTable):
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
+        primary_location_id_prefix : str, optional
+            The prefix to add to the primary location IDs.
+            Used to ensure unique location IDs across configurations.
+            Note, the methods for fetching USGS and NWM data expect
+            location IDs to be prefixed with "usgs" or the nwm version
+            ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
+        secondary_location_id_prefix : str, optional
+            The prefix to add to the secondary location IDs.
+            Used to ensure unique location IDs across configurations.
+            Note, the methods for fetching USGS and NWM data expect
+            location IDs to be prefixed with "usgs" or the nwm version
+            ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table. Options are "append" or "upsert".
+            If "append", the table will be appended with new data that does
+            already exist.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
+        update_columns : list[str], optional
+            When ``write_mode`` is "upsert", the names of columns containing
+            data to be updated.
         **kwargs
             Additional keyword arguments are passed to pd.read_csv()
             or pd.read_parquet().
 
         Notes
         -----
-
         The TEEHR Location Crosswalk table schema includes fields:
 
         - primary_location_id
@@ -179,6 +250,10 @@ class LocationCrosswalkTable(BaseTable):
             in_path=in_path,
             field_mapping=field_mapping,
             pattern=pattern,
+            primary_location_id_prefix=primary_location_id_prefix,
+            secondary_location_id_prefix=secondary_location_id_prefix,
+            write_mode=write_mode,
+            update_columns=update_columns,
             **kwargs
         )
         self._load_table()

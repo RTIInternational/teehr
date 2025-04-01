@@ -137,7 +137,7 @@ class LocationTable(BaseTable):
         # Validate using the validate method
         validated_df = self._validate(df)
 
-        # Add location_id prefix if provided
+        # Add or replace location_id prefix if provided
         if location_id_prefix:
             validated_df = add_or_replace_sdf_column_prefix(
                 sdf=validated_df,
