@@ -7,8 +7,71 @@ import numpy as np
 import scoringrules as sr
 
 from teehr.models.metrics.basemodels import MetricsBasemodel
+from teehr.models.metrics.basemodels import TransformEnum
 
 logger = logging.getLogger(__name__)
+
+
+def _transform(
+        p: pd.Series,
+        s: pd.Series,
+        t: pd.Series | None,
+        model: MetricsBasemodel
+) -> tuple:
+    """Apply timeseries transform for metrics calculations."""
+    # Apply transform
+    if model.transform is not None:
+        match model.transform:
+            case TransformEnum.log:
+                logger.debug("Applying log transform")
+                p = np.log(p)
+                s = np.log(s)
+            case TransformEnum.sqrt:
+                logger.debug("Applying square root transform")
+                p = np.sqrt(p)
+                s = np.sqrt(s)
+            case TransformEnum.square:
+                logger.debug("Applying square transform")
+                p = np.square(p)
+                s = np.square(s)
+            case TransformEnum.cube:
+                logger.debug("Applying cube transform")
+                p = np.power(p, 3)
+                s = np.power(s, 3)
+            case TransformEnum.exp:
+                logger.debug("Applying exponential transform")
+                p = np.exp(p)
+                s = np.exp(s)
+            case TransformEnum.inv:
+                logger.debug("Applying inverse transform")
+                p = 1.0 / p
+                s = 1.0 / s
+            case TransformEnum.abs:
+                logger.debug("Applying absolute value transform")
+                p = np.abs(p)
+                s = np.abs(s)
+            case _:
+                raise ValueError(
+                    f"Unsupported transform: {model.transform}"
+                )
+    else:
+        logger.debug("No transform specified, using original values")
+
+    # Remove invalid values and align series
+    if t is not None:
+        valid_mask = np.isfinite(p) & np.isfinite(s)
+        p = p[valid_mask]
+        s = s[valid_mask]
+        t = t[valid_mask]
+    else:
+        valid_mask = np.isfinite(p) & np.isfinite(s)
+        p = p[valid_mask]
+        s = s[valid_mask]
+
+    if t is not None:
+        return p, s, t
+    else:
+        return p, s
 
 
 def _pivot_by_value_time(
@@ -62,6 +125,7 @@ def create_crps_func(model: MetricsBasemodel) -> Callable:
             The mean Continuous Ranked Probability Score (CRPS) for the
             ensemble, either as a single value or array of values.
         """
+        p, s, value_time = _transform(p, s, value_time, model)
         pivoted_dict = _pivot_by_value_time(p, s, value_time)
 
         if model.summary_func is not None:
