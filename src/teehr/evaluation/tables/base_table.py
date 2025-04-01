@@ -136,10 +136,10 @@ class BaseTable():
 
         if update_columns is not None:
             update_columns = [
-                x for x in self.unique_columns if x not in update_columns
+                x for x in self.unique_column_set if x not in update_columns
             ]
         else:
-            update_columns = self.unique_columns
+            update_columns = self.unique_column_set
 
         # Remove rows from existing_sdf that are to be updated.
         # Concat and re-write.
@@ -192,7 +192,7 @@ class BaseTable():
             df = df.join(
                 existing_sdf,
                 how="left_anti",
-                on=self.unique_columns,
+                on=self.unique_column_set,
             )
         if num_partitions is not None:
             df = df.repartition(num_partitions)

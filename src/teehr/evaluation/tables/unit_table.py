@@ -21,7 +21,7 @@ class UnitTable(DomainTable):
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.filter_model = UnitFilter
         self.schema_func = schemas.unit_schema
-        self.unique_columns = [
+        self.unique_column_set = [
             "name",
             "long_name",
         ]

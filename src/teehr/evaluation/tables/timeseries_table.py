@@ -33,7 +33,7 @@ class TimeseriesTable(BaseTable):
             "reference_time"
         ]
         self.filter_model = TimeseriesFilter
-        self.unique_columns = [
+        self.unique_column_set = [
             "reference_time",
             "location_id",
             "value_time",

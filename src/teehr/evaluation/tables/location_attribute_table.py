@@ -27,7 +27,7 @@ class LocationAttributeTable(BaseTable):
         self.save_mode = "append"
         self.filter_model = LocationAttributeFilter
         self.schema_func = schemas.location_attributes_schema
-        self.unique_columns = [
+        self.unique_column_set = [
             "location_id",
             "attribute_name"
         ]

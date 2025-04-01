@@ -28,7 +28,7 @@ class LocationTable(BaseTable):
         self.save_mode = "append"
         self.filter_model = LocationFilter
         self.schema_func = schemas.locations_schema
-        self.unique_columns = [
+        self.unique_column_set = [
             "id",
             "name",
             "geometry",
