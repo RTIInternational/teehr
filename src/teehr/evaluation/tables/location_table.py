@@ -1,3 +1,4 @@
+"""Location table class."""
 import teehr.const as const
 from teehr.evaluation.tables.base_table import BaseTable
 from teehr.loading.locations import convert_locations
@@ -79,8 +80,8 @@ class LocationTable(BaseTable):
         location_id_prefix : str, optional
             The prefix to add to location IDs.
             Used to ensure unique location IDs across configurations.
-            Note, the methods for fetching USGS and NWM data expect
-            location IDs to be prefixed with "usgs" or the nwm version
+            Note, the methods for fetching USGS and NWM data automatically
+            prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
         write_mode : TableWriteEnum, optional (default: "append")
             The write mode for the table. Options are "append" or "upsert".
@@ -126,16 +127,16 @@ class LocationTable(BaseTable):
         # Read the converted files to Spark DataFrame
         df = self._read_files(cache_dir)
 
-        # Validate using the validate method
-        validated_df = self._validate(df)
-
         # Add or replace location_id prefix if provided
         if location_id_prefix:
             validated_df = add_or_replace_sdf_column_prefix(
-                sdf=validated_df,
+                sdf=df,
                 column_name="id",
                 prefix=location_id_prefix,
             )
+
+        # Validate using the validate method
+        validated_df = self._validate(df)
 
         # Write to the table
         self._write_spark_df(

@@ -1,4 +1,4 @@
-import teehr.const as const
+"""Timeseries table base class."""
 from teehr.evaluation.tables.base_table import BaseTable
 from teehr.loading.utils import (
     validate_input_is_xml,
@@ -7,9 +7,8 @@ from teehr.loading.utils import (
     validate_input_is_parquet
 )
 from teehr.models.filters import TimeseriesFilter
-# from teehr.models.table_enums import TimeseriesFields
-# from teehr.models.pydantic_table_models import Timeseries
 from teehr.querying.utils import join_geometry
+from teehr.models.table_enums import TableWriteEnum
 
 from pathlib import Path
 from typing import Union
@@ -59,6 +58,8 @@ class TimeseriesTable(BaseTable):
         pattern: str = "**/*.parquet",
         field_mapping: dict = None,
         constant_field_values: dict = None,
+        location_id_prefix: str = None,
+        write_mode: TableWriteEnum = "append",
         **kwargs
     ):
         """Import primary timeseries parquet data.
@@ -74,6 +75,18 @@ class TimeseriesTable(BaseTable):
         constant_field_values : dict, optional
             A dictionary mapping field names to constant values.
             Format: {field_name: value}
+        location_id_prefix : str, optional
+            The prefix to add to location IDs.
+            Used to ensure unique location IDs across configurations.
+            Note, the methods for fetching USGS and NWM data automatically
+            prefix location IDs with "usgs" or the nwm version
+            ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table. Options are "append" or "upsert".
+            If "append", the table will be appended with new data that does
+            already exist.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
         **kwargs
             Additional keyword arguments are passed to pd.read_parquet().
 
@@ -81,7 +94,6 @@ class TimeseriesTable(BaseTable):
 
         Notes
         -----
-
         The TEEHR Timeseries table schema includes fields:
 
         - reference_time
@@ -100,6 +112,8 @@ class TimeseriesTable(BaseTable):
             pattern=pattern,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
+            location_id_prefix=location_id_prefix,
+            write_mode=write_mode,
             **kwargs
         )
         self._load_table()
@@ -110,6 +124,8 @@ class TimeseriesTable(BaseTable):
         pattern: str = "**/*.csv",
         field_mapping: dict = None,
         constant_field_values: dict = None,
+        location_id_prefix: str = None,
+        write_mode: TableWriteEnum = "append",
         **kwargs
     ):
         """Import primary timeseries csv data.
@@ -125,6 +141,18 @@ class TimeseriesTable(BaseTable):
         constant_field_values : dict, optional
             A dictionary mapping field names to constant values.
             Format: {field_name: value}
+        location_id_prefix : str, optional
+            The prefix to add to location IDs.
+            Used to ensure unique location IDs across configurations.
+            Note, the methods for fetching USGS and NWM data automatically
+            prefix location IDs with "usgs" or the nwm version
+            ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table. Options are "append" or "upsert".
+            If "append", the table will be appended with new data that does
+            already exist.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
         **kwargs
             Additional keyword arguments are passed to pd.read_csv().
 
@@ -132,7 +160,6 @@ class TimeseriesTable(BaseTable):
 
         Notes
         -----
-
         The TEEHR Timeseries table schema includes fields:
 
         - reference_time
@@ -151,6 +178,8 @@ class TimeseriesTable(BaseTable):
             pattern=pattern,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
+            location_id_prefix=location_id_prefix,
+            write_mode=write_mode,
             **kwargs
         )
         self._load_table()
@@ -161,6 +190,8 @@ class TimeseriesTable(BaseTable):
         pattern: str = "**/*.nc",
         field_mapping: dict = None,
         constant_field_values: dict = None,
+        location_id_prefix: str = None,
+        write_mode: TableWriteEnum = "append",
         **kwargs
     ):
         """Import primary timeseries netcdf data.
@@ -176,6 +207,18 @@ class TimeseriesTable(BaseTable):
         constant_field_values : dict, optional
             A dictionary mapping field names to constant values.
             Format: {field_name: value}
+        location_id_prefix : str, optional
+            The prefix to add to location IDs.
+            Used to ensure unique location IDs across configurations.
+            Note, the methods for fetching USGS and NWM data automatically
+            prefix location IDs with "usgs" or the nwm version
+            ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table. Options are "append" or "upsert".
+            If "append", the table will be appended with new data that does
+            already exist.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
         **kwargs
             Additional keyword arguments are passed to xr.open_dataset().
 
@@ -183,7 +226,6 @@ class TimeseriesTable(BaseTable):
 
         Notes
         -----
-
         The TEEHR Timeseries table schema includes fields:
 
         - reference_time
@@ -202,6 +244,8 @@ class TimeseriesTable(BaseTable):
             pattern=pattern,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
+            location_id_prefix=location_id_prefix,
+            write_mode=write_mode,
             **kwargs
         )
         self._load_table()
@@ -220,6 +264,8 @@ class TimeseriesTable(BaseTable):
             "forecastDate": "reference_time"
         },
         constant_field_values: dict = None,
+        location_id_prefix: str = None,
+        write_mode: TableWriteEnum = "append",
     ):
         """Import timeseries from XML data format.
 
@@ -246,6 +292,18 @@ class TimeseriesTable(BaseTable):
         constant_field_values : dict, optional
             A dictionary mapping field names to constant values.
             Format: {field_name: value}.
+        location_id_prefix : str, optional
+            The prefix to add to location IDs.
+            Used to ensure unique location IDs across configurations.
+            Note, the methods for fetching USGS and NWM data automatically
+            prefix location IDs with "usgs" or the nwm version
+            ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table. Options are "append" or "upsert".
+            If "append", the table will be appended with new data that does
+            already exist.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
 
         Includes validation and importing data to database.
 
@@ -277,5 +335,7 @@ class TimeseriesTable(BaseTable):
             pattern=pattern,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
+            location_id_prefix=location_id_prefix,
+            write_mode=write_mode,
         )
         self._load_table()

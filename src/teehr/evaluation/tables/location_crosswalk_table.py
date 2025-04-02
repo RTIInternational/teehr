@@ -149,11 +149,17 @@ class LocationCrosswalkTable(BaseTable):
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
-        location_id_prefix : str, optional
-            The prefix to add to location IDs.
+        primary_location_id_prefix : str, optional
+            The prefix to add to primary location IDs.
             Used to ensure unique location IDs across configurations.
-            Note, the methods for fetching USGS and NWM data expect
-            location IDs to be prefixed with "usgs" or the nwm version
+            Note, the methods for fetching USGS and NWM data automatically
+            prefix location IDs with "usgs" or the nwm version
+            ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
+        secondary_location_id_prefix : str, optional
+            The prefix to add to secondary location IDs.
+            Used to ensure unique location IDs across configurations.
+            Note, the methods for fetching USGS and NWM data automatically
+            prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
         write_mode : TableWriteEnum, optional (default: "append")
             The write mode for the table. Options are "append" or "upsert".
@@ -206,16 +212,16 @@ class LocationCrosswalkTable(BaseTable):
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
         primary_location_id_prefix : str, optional
-            The prefix to add to the primary location IDs.
+            The prefix to add to primary location IDs.
             Used to ensure unique location IDs across configurations.
-            Note, the methods for fetching USGS and NWM data expect
-            location IDs to be prefixed with "usgs" or the nwm version
+            Note, the methods for fetching USGS and NWM data automatically
+            prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
         secondary_location_id_prefix : str, optional
-            The prefix to add to the secondary location IDs.
+            The prefix to add to secondary location IDs.
             Used to ensure unique location IDs across configurations.
-            Note, the methods for fetching USGS and NWM data expect
-            location IDs to be prefixed with "usgs" or the nwm version
+            Note, the methods for fetching USGS and NWM data automatically
+            prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
         write_mode : TableWriteEnum, optional (default: "append")
             The write mode for the table. Options are "append" or "upsert".

@@ -1,3 +1,4 @@
+"""Secondary timeseries table class."""
 import teehr.const as const
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
 from teehr.loading.timeseries import convert_timeseries
@@ -7,6 +8,8 @@ from pathlib import Path
 from typing import Union
 import logging
 from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
+from teehr.models.table_enums import TableWriteEnum
+from teehr.loading.utils import add_or_replace_sdf_column_prefix
 
 
 logger = logging.getLogger(__name__)
@@ -35,7 +38,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         if type == "pandas":
             return self.schema_func(type="pandas")
 
-        location_ids = self.ev.location_crosswalks.distinct_values("secondary_location_id")
+        location_ids = self.ev.location_crosswalks.distinct_values("secondary_location_id")  # noqa
         variable_names = self.ev.variables.distinct_values("name")
         configuration_names = self.ev.configurations.distinct_values("name")
         unit_names = self.ev.units.distinct_values("name")
@@ -52,6 +55,8 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         pattern="**/*.parquet",
         field_mapping: dict = None,
         constant_field_values: dict = None,
+        location_id_prefix: str = None,
+        write_mode: TableWriteEnum = "append",
         **kwargs
     ):
         """Import timeseries helper."""
@@ -77,11 +82,19 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         # Read the converted files to Spark DataFrame
         df = self._read_files(cache_dir)
 
+        # Add or replace location_id prefix if provided
+        if location_id_prefix:
+            validated_df = add_or_replace_sdf_column_prefix(
+                sdf=df,
+                column_name="location_id",
+                prefix=location_id_prefix,
+            )
+
         # Validate using the _validate() method
         validated_df = self._validate(df)
 
         # Write to the table
-        self._write_spark_df(validated_df)
+        self._write_spark_df(validated_df, write_mode=write_mode)
 
         # Reload the table
         self._load_table()
