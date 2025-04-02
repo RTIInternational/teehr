@@ -33,6 +33,7 @@ class Count(DeterministicBasemodel):
     """
 
     output_field_name: str = Field(default="count")
+    transform: TransformEnum = Field(default=None)
     func: Callable = Field(default=sig_funcs.count_wrapper, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value"]

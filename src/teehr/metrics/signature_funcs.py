@@ -3,9 +3,62 @@ import pandas as pd
 import numpy as np
 
 from teehr.models.metrics.basemodels import MetricsBasemodel
+from teehr.models.metrics.basemodels import TransformEnum
 from typing import Callable
 import logging
 logger = logging.getLogger(__name__)
+
+
+def _transform(
+        p: pd.Series,
+        t: pd.Series | None,
+        model: MetricsBasemodel
+) -> tuple:
+    """Apply timeseries transform for metrics calculations."""
+    # Apply transform
+    if model.transform is not None:
+        match model.transform:
+            case TransformEnum.log:
+                logger.debug("Applying log transform")
+                p = np.log(p)
+            case TransformEnum.sqrt:
+                logger.debug("Applying square root transform")
+                p = np.sqrt(p)
+            case TransformEnum.square:
+                logger.debug("Applying square transform")
+                p = np.square(p)
+            case TransformEnum.cube:
+                logger.debug("Applying cube transform")
+                p = np.power(p, 3)
+            case TransformEnum.exp:
+                logger.debug("Applying exponential transform")
+                p = np.exp(p)
+            case TransformEnum.inv:
+                logger.debug("Applying inverse transform")
+                p = 1.0 / p
+            case TransformEnum.abs:
+                logger.debug("Applying absolute value transform")
+                p = np.abs(p)
+            case _:
+                raise ValueError(
+                    f"Unsupported transform: {model.transform}"
+                )
+    else:
+        logger.debug("No transform specified, using original values")
+
+    # Remove invalid values and align series
+    if t is not None:
+        valid_mask = np.isfinite(p)
+        p = p[valid_mask]
+        t = t[valid_mask]
+    else:
+        valid_mask = np.isfinite(p)
+        p = p[valid_mask]
+
+    if t is not None:
+        return p, t
+    else:
+        return p
 
 
 def mvt_wrapper(model: MetricsBasemodel) -> Callable:
@@ -17,6 +70,7 @@ def mvt_wrapper(model: MetricsBasemodel) -> Callable:
         value_time: pd.Series
     ) -> pd.Timestamp:
         """Max value time."""
+        p, value_time = _transform(p, value_time, model)
         return value_time[p.idxmax()]
 
     return max_value_time
@@ -28,6 +82,7 @@ def variance_wrapper(model: MetricsBasemodel) -> Callable:
 
     def variance(p: pd.Series) -> float:
         """Variance."""
+        p = _transform(p, None, model)
         return np.var(p)
 
     return variance
@@ -39,6 +94,7 @@ def count_wrapper(model: MetricsBasemodel) -> Callable:
 
     def count(p: pd.Series) -> float:
         """Count."""
+        p = _transform(p, None, model)
         return len(p)
 
     return count
@@ -50,6 +106,7 @@ def min_wrapper(model: MetricsBasemodel) -> Callable:
 
     def minimum(p: pd.Series) -> float:
         """Minimum."""
+        p = _transform(p, None, model)
         return np.min(p)
 
     return minimum
@@ -61,6 +118,7 @@ def max_wrapper(model: MetricsBasemodel) -> Callable:
 
     def maximum(p: pd.Series) -> float:
         """Maximum."""
+        p = _transform(p, None, model)
         return np.max(p)
 
     return maximum
@@ -72,6 +130,7 @@ def avg_wrapper(model: MetricsBasemodel) -> Callable:
 
     def average(p: pd.Series) -> float:
         """Average."""
+        p = _transform(p, None, model)
         return np.mean(p)
 
     return average
@@ -83,6 +142,7 @@ def sum_wrapper(model: MetricsBasemodel) -> Callable:
 
     def sum(p: pd.Series) -> float:
         """Sum."""
+        p = _transform(p, None, model)
         return np.sum(p)
 
     return sum

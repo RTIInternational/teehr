@@ -8,6 +8,7 @@ from teehr.metrics import probabilistic_funcs
 import teehr.models.metrics.metric_attributes as tma
 from teehr.models.metrics.basemodels import CRPSEstimators
 from teehr.models.str_enum import StrEnum
+from teehr.models.metrics.basemodels import TransformEnum
 
 
 class CRPS(ProbabilisticBasemodel):
@@ -34,6 +35,7 @@ class CRPS(ProbabilisticBasemodel):
     """
 
     estimator: CRPSEstimators = Field(default="pwm")
+    transform: TransformEnum = Field(default=None)
     backend: str = Field(default="numba")
     output_field_name: str = Field(default="mean_crps_ensemble")
     func: Callable = Field(probabilistic_funcs.create_crps_func, frozen=True)
