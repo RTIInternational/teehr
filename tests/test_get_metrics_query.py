@@ -531,6 +531,69 @@ def test_metrics_transforms(tmpdir):
     assert result_kge != result_kge_t
     assert result_mvtd == result_mvtd_t
 
+def test_bootstrapping_transforms(tmpdir):
+    """Test applying metric transforms (bootstrap)."""
+    # Define the evaluation object.
+    eval = setup_v0_3_study(tmpdir)
+
+    # Define a bootstrapper.
+    boot = Bootstrappers.CircularBlock(
+        seed=40,
+        block_size=100,
+        quantiles=None,
+        reps=500
+    )
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge.bootstrap = boot
+    kge.transform = 'log'
+
+    # Manual bootstrapping.
+    df = eval.joined_timeseries.to_pandas()
+    df_gageA = df.groupby("primary_location_id").get_group("gage-A")
+
+    p = df_gageA.primary_value
+    s = df_gageA.secondary_value
+
+    bs = CircularBlockBootstrap(
+        kge.bootstrap.block_size,
+        p,
+        s,
+        seed=kge.bootstrap.seed,
+        random_state=kge.bootstrap.random_state
+    )
+    results = bs.apply(
+        kge.func(kge),
+        kge.bootstrap.reps,
+    )
+
+    # TEEHR bootstrapping.
+    flds = eval.joined_timeseries.field_enum()
+
+    filters = [
+        JoinedTimeseriesFilter(
+            column=flds.primary_location_id,
+            operator=ops.eq,
+            value="gage-A"
+        )
+    ]
+
+    metrics_df = eval.metrics.query(
+        include_metrics=[kge],
+        filters=filters,
+        group_by=[flds.primary_location_id],
+    ).to_pandas()
+
+    # Unpack and compare the results.
+    teehr_results = np.sort(
+        np.array(metrics_df.kling_gupta_efficiency.values[0])
+    )
+    manual_results = np.sort(results.ravel()).astype(np.float32)
+
+    assert (teehr_results == manual_results).all()
+    assert isinstance(metrics_df, pd.DataFrame)
+    assert metrics_df.index.size == 1
+    assert metrics_df.columns.size == 2
+
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
@@ -593,5 +656,10 @@ if __name__ == "__main__":
         test_metrics_transforms(
             tempfile.mkdtemp(
                 prefix="10-",
+                dir=tempdir)
+        )
+        test_bootstrapping_transforms(
+            tempfile.mkdtemp(
+                prefix="11-",
                 dir=tempdir)
         )
