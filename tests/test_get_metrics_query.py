@@ -489,6 +489,49 @@ def test_ensemble_metrics(tmpdir):
     assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 35.627174)
 
 
+def test_metrics_transforms(tmpdir):
+    """Test applying metric transforms (non-bootstrap)."""
+    # Define the evaluation object.
+    eval = setup_v0_3_study(tmpdir)
+
+    # define metric requiring p,s
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge_t = DeterministicMetrics.KlingGuptaEfficiency()
+    kge_t.transform = 'log'
+
+    # define metric requiring p,s,t
+    mvtd = DeterministicMetrics.MaxValueTimeDelta()
+    mvtd_t = DeterministicMetrics.MaxValueTimeDelta()
+    mvtd_t.transform = 'log'
+
+    # get metrics_df
+    metrics_df_transformed = eval.metrics.query(
+        group_by=["primary_location_id", "configuration_name"],
+        include_metrics=[
+            kge_t,
+            mvtd_t
+        ]
+    ).to_pandas()
+    metrics_df = eval.metrics.query(
+        group_by=["primary_location_id", "configuration_name"],
+        include_metrics=[
+            kge,
+            mvtd
+        ]
+    ).to_pandas()
+
+    # get results for comparison
+    result_kge = metrics_df.kling_gupta_efficiency.values[0]
+    result_kge_t = metrics_df_transformed.kling_gupta_efficiency.values[0]
+    result_mvtd = metrics_df.max_value_time_delta.values[0]
+    result_mvtd_t = metrics_df_transformed.max_value_time_delta.values[0]
+
+    # metrics_df_transformed is created, transforms are applied
+    assert isinstance(metrics_df_transformed, pd.DataFrame)
+    assert result_kge != result_kge_t
+    assert result_mvtd == result_mvtd_t
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
@@ -546,4 +589,9 @@ if __name__ == "__main__":
                 prefix="9-",
                 dir=tempdir
             )
+        )
+        test_metrics_transforms(
+            tempfile.mkdtemp(
+                prefix="10-",
+                dir=tempdir)
         )
