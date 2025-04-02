@@ -137,11 +137,12 @@ class BaseTable():
         # Limit the dataframe to the partitions that are being updated.
         # TODO: Make sure this works correctly with reference time.
         for partition in partition_by:
-            vals_to_check = df.select(partition).distinct(). \
+            partition_values = df.select(partition).distinct(). \
                 rdd.flatMap(lambda x: x).collect()
-            existing_sdf = existing_sdf.filter(
-                col(partition).isin(vals_to_check)
-            )
+            if partition_values[0] is not None:  # null reference time
+                existing_sdf = existing_sdf.filter(
+                    col(partition).isin(partition_values)
+                )
 
         # Remove rows from existing_sdf that are to be updated.
         # Concat and re-write.
