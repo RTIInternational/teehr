@@ -1,0 +1,13 @@
+{
+"type": "FeatureCollection",
+"name": "extended_v03_gages",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "id": "gage-A", "name": "cool site A" }, "geometry": { "type": "Point", "coordinates": [ -80.719184317999975, 35.176113478111198 ] } },
+{ "type": "Feature", "properties": { "id": "gage-B", "name": "cool site B" }, "geometry": { "type": "Point", "coordinates": [ -80.71308451799996, 35.158390611111336 ] } },
+{ "type": "Feature", "properties": { "id": "gage-C", "name": "cool site C" }, "geometry": { "type": "Point", "coordinates": [ -80.736772517999952, 35.186932211111149 ] } },
+{ "type": "Feature", "properties": { "id": "gage-D", "name": "cool site D" }, "geometry": { "type": "Point", "coordinates": [ -80.719184317999975, 35.176113478111198 ] } },
+{ "type": "Feature", "properties": { "id": "gage-E", "name": "cool site E" }, "geometry": { "type": "Point", "coordinates": [ -80.71308451799996, 35.158390611111336 ] } },
+{ "type": "Feature", "properties": { "id": "gage-F", "name": "cool site F" }, "geometry": { "type": "Point", "coordinates": [ -80.736772517999952, 35.186932211111149 ] } }
+]
+}

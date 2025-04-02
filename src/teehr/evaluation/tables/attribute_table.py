@@ -17,11 +17,7 @@ class AttributeTable(DomainTable):
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.filter_model = AttributeFilter
         self.schema_func = schemas.attribute_schema
-        self.unique_column_set = [
-            "name",
-            "type"
-        ]
-
+        self.unique_column_set = ["name"]
 
     def field_enum(self) -> AttributeFields:
         """Get the attribute fields enum."""

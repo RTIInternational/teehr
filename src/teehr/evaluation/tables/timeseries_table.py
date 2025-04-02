@@ -34,12 +34,10 @@ class TimeseriesTable(BaseTable):
         ]
         self.filter_model = TimeseriesFilter
         self.unique_column_set = [
-            "reference_time",
             "location_id",
             "value_time",
-            "value",
             "variable_name",
-            "configuration_name"
+            "unit_name",
         ]
 
     def to_pandas(self):

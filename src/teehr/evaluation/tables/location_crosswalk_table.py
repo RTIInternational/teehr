@@ -42,7 +42,6 @@ class LocationCrosswalkTable(BaseTable):
         primary_location_id_prefix: str = None,
         secondary_location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
-        update_columns: list[str] = None,
         **kwargs
     ):
         """Load location crosswalks helper."""
@@ -90,7 +89,6 @@ class LocationCrosswalkTable(BaseTable):
             df=validated_df,
             num_partitions=df.rdd.getNumPartitions(),
             write_mode=write_mode,
-            update_columns=update_columns
         )
 
         # Reload the table
@@ -139,7 +137,6 @@ class LocationCrosswalkTable(BaseTable):
         primary_location_id_prefix: str = None,
         secondary_location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
-        update_columns: list[str] = None,
         **kwargs
     ):
         """Import location crosswalks from parquet file format.
@@ -164,9 +161,6 @@ class LocationCrosswalkTable(BaseTable):
             already exist.
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
-        update_columns : list[str], optional
-            When ``write_mode`` is "upsert", the names of columns containing
-            data to be updated.
         **kwargs
             Additional keyword arguments are passed to pd.read_csv()
             or pd.read_parquet().
@@ -187,7 +181,6 @@ class LocationCrosswalkTable(BaseTable):
             primary_location_id_prefix=primary_location_id_prefix,
             secondary_location_id_prefix=secondary_location_id_prefix,
             write_mode=write_mode,
-            update_columns=update_columns,
             **kwargs
         )
         self._load_table()
@@ -200,7 +193,6 @@ class LocationCrosswalkTable(BaseTable):
         primary_location_id_prefix: str = None,
         secondary_location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
-        update_columns: list[str] = None,
         **kwargs
     ):
         """Import location crosswalks from CSV file format.
@@ -231,9 +223,6 @@ class LocationCrosswalkTable(BaseTable):
             already exist.
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
-        update_columns : list[str], optional
-            When ``write_mode`` is "upsert", the names of columns containing
-            data to be updated.
         **kwargs
             Additional keyword arguments are passed to pd.read_csv()
             or pd.read_parquet().
@@ -253,7 +242,6 @@ class LocationCrosswalkTable(BaseTable):
             primary_location_id_prefix=primary_location_id_prefix,
             secondary_location_id_prefix=secondary_location_id_prefix,
             write_mode=write_mode,
-            update_columns=update_columns,
             **kwargs
         )
         self._load_table()

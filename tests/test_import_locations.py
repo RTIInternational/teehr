@@ -36,21 +36,24 @@ def test_validate_and_insert_locations(tmpdir):
     ev.locations.load_spatial(
         in_path="tests/data/two_locations/two_locations.parquet",
     )
-    # Now say I want to update existing locations
+    # Now update existing 'test' locations with new names
+    # and add a few more (upsert).
     ev.locations.load_spatial(
-        in_path=GEOJSON_GAGES_FILEPATH,
-        location_id_prefix="updated",
+        in_path=Path(TEST_STUDY_DATA_DIR, "geo", "extended_v03_gages.geojson"),
+        location_id_prefix="test",
         write_mode="upsert",
-        update_columns=["id"]
     )
     assert ev.locations.to_pandas()["id"].tolist() == [
         "usgs-14316700",
         "usgs-14138800",
-        "updated-A",
-        "updated-B",
-        "updated-C"
+        "test-A",
+        "test-B",
+        "test-C",
+        "test-D",
+        "test-E",
+        "test-F"
     ]
-    assert ev.locations.to_sdf().count() == 5
+    assert ev.locations.to_sdf().count() == 8
 
 
 def test_validate_and_insert_locations_adding_prefix(tmpdir):

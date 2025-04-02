@@ -28,11 +28,7 @@ class LocationTable(BaseTable):
         self.save_mode = "append"
         self.filter_model = LocationFilter
         self.schema_func = schemas.locations_schema
-        self.unique_column_set = [
-            "id",
-            "name",
-            "geometry",
-        ]
+        self.unique_column_set = ["id"]
 
     def field_enum(self) -> LocationFields:
         """Get the location fields enum."""
@@ -65,7 +61,6 @@ class LocationTable(BaseTable):
         pattern: str = "**/*.parquet",
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
-        update_columns: list[str] = None,
         **kwargs
     ):
         """Import geometry data.
@@ -93,9 +88,6 @@ class LocationTable(BaseTable):
             already exist.
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
-        update_columns : list[str], optional
-            When ``write_mode`` is "upsert", the names of columns containing
-            data to be updated.
         **kwargs
             Additional keyword arguments are passed to GeoPandas read_file().
 
@@ -147,10 +139,9 @@ class LocationTable(BaseTable):
 
         # Write to the table
         self._write_spark_df(
-            validated_df,
+            df=validated_df,
             write_mode=write_mode,
-            update_columns=update_columns,
-            num_partitions=1
+            num_partitions=1,
         )
 
         # Reload the table

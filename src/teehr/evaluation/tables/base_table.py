@@ -10,7 +10,8 @@ from teehr.utils.s3path import S3Path
 from teehr.utils.utils import to_path_or_s3path, path_to_spark
 from teehr.models.filters import FilterBaseModel
 import logging
-from pyspark.sql.functions import lit
+from pyspark.sql.functions import lit, col
+
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +117,6 @@ class BaseTable():
     def _upsert_without_duplicates(
         self,
         df,
-        update_columns: list[str],
         num_partitions: int = None,
         **kwargs
     ):
@@ -134,16 +134,13 @@ class BaseTable():
             **kwargs
         )
 
-        if update_columns is not None:
-            update_columns = [
-                x for x in self.unique_column_set if x not in update_columns
-            ]
-        else:
-            logger.error(
-                "No update columns provided.  Cannot perform upsert."
-            )
-            raise ValueError(
-                "No update columns provided.  Cannot perform upsert."
+        # Limit the dataframe to the partitions that are being updated.
+        # TODO: Make sure this works correctly with reference time.
+        for partition in partition_by:
+            vals_to_check = df.select(partition).distinct(). \
+                rdd.flatMap(lambda x: x).collect()
+            existing_sdf = existing_sdf.filter(
+                col(partition).isin(vals_to_check)
             )
 
         # Remove rows from existing_sdf that are to be updated.
@@ -152,7 +149,7 @@ class BaseTable():
             existing_sdf = existing_sdf.join(
                 df,
                 how="left_anti",
-                on=update_columns,
+                on=self.unique_column_set,
             )
             df = existing_sdf.unionByName(df)
             # Get columns in correct order
@@ -163,7 +160,6 @@ class BaseTable():
 
         if num_partitions is not None:
             validated_df = validated_df.repartition(num_partitions)
-
         (
             validated_df.
             write.
@@ -245,7 +241,6 @@ class BaseTable():
         self,
         df: ps.DataFrame,
         write_mode: str = "append",
-        update_columns: list[str] = None,
         num_partitions: int = None,
         **kwargs
     ):
@@ -283,7 +278,6 @@ class BaseTable():
             elif write_mode == "upsert":
                 self._upsert_without_duplicates(
                     df=df,
-                    update_columns=update_columns,
                     num_partitions=num_partitions,
                     **kwargs
                 )
