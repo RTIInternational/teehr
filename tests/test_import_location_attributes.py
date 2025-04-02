@@ -36,7 +36,8 @@ def test_validate_and_insert_location_attributes(tmpdir):
     ev.enable_logging()
 
     ev.locations.load_spatial(
-        in_path=GEOJSON_GAGES_FILEPATH
+        in_path=GEOJSON_GAGES_FILEPATH,
+        location_id_prefix="usgs"
     )
     ev.attributes.add(
         [
@@ -61,6 +62,7 @@ def test_validate_and_insert_location_attributes(tmpdir):
         in_path=GEO_FILEPATH,
         field_mapping={"attribute_value": "value"},
         pattern="test_attr_*.parquet",
+        location_id_prefix="usgs",
     )
 
     assert True
