@@ -33,6 +33,7 @@ from teehr.models.fetching.utils import (
     SupportedKerchunkMethod,
     TimeseriesTypeEnum
 )
+from teehr.models.table_enums import TableWriteEnum
 from teehr.fetching.const import (
     USGS_CONFIGURATION_NAME,
     USGS_VARIABLE_MAPPER,
@@ -128,11 +129,12 @@ class Fetch:
         filter_no_data: bool = True,
         convert_to_si: bool = True,
         overwrite_output: Optional[bool] = False,
-        timeseries_type: TimeseriesTypeEnum = "primary"
+        timeseries_type: TimeseriesTypeEnum = "primary",
+        write_mode: TableWriteEnum = "append"
     ):
         """Fetch USGS gage data and load into the TEEHR dataset.
 
-        Data is fetched for all IDs in the locations table, and all
+        Data is fetched for all USGS IDs in the locations table, and all
         dates and times within the files and in the cached file names are
         in UTC.
 
@@ -167,6 +169,20 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table. Options are "append" or "upsert".
+            If "append", the Evaluation table will be appended with new data
+            that does not already exist.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
+
+
+        .. note::
+
+            Data in the cache is cleared before each call to the fetch method. So if a
+            long-running fetch is interrupted before the data is automatically loaded
+            into the Evaluation, it should be loaded or cached manually. This will
+            prevent it from being deleted when the fetch job is resumed.
 
         Examples
         --------
@@ -202,7 +218,7 @@ class Fetch:
         >>>     chunk_by="day",
         >>>     overwrite_output=True
         >>> )
-        """
+        """  # noqa
         logger.info("Getting primary location IDs.")
         locations_df = self.ev.locations.query(
             filters={
@@ -252,6 +268,7 @@ class Fetch:
                 self.usgs_cache_dir
             ),
             timeseries_type=timeseries_type,
+            write_mode=write_mode
         )
 
     def nwm_retrospective_points(
@@ -263,13 +280,14 @@ class Fetch:
         chunk_by: Union[NWMChunkByEnum, None] = None,
         overwrite_output: Optional[bool] = False,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
-        timeseries_type: TimeseriesTypeEnum = "secondary"
+        timeseries_type: TimeseriesTypeEnum = "secondary",
+        write_mode: TableWriteEnum = "append"
     ):
         """Fetch NWM retrospective point data and load into the TEEHR dataset.
 
         Data is fetched for all secondary location IDs in the locations
-        crosswalk table, and all dates and times within the files and in the
-        cache file names are in UTC.
+        crosswalk table that are prefixed by the NWM version, and all dates
+        and times within the files and in the cache file names are in UTC.
 
         Parameters
         ----------
@@ -310,6 +328,20 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table. Options are "append" or "upsert".
+            If "append", the Evaluation table will be appended with new data
+            that does not already exist.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
+
+
+        .. note::
+
+            Data in the cache is cleared before each call to the fetch method. So if a
+            long-running fetch is interrupted before the data is automatically loaded
+            into the Evaluation, it should be loaded or cached manually. This will
+            prevent it from being deleted when the fetch job is resumed.
 
         Examples
         --------
@@ -395,6 +427,7 @@ class Fetch:
                 self.nwm_cache_dir
             ),
             timeseries_type=timeseries_type,
+            write_mode=write_mode
         )
 
     def nwm_retrospective_grids(
@@ -408,7 +441,8 @@ class Fetch:
         overwrite_output: Optional[bool] = False,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
         location_id_prefix: Optional[Union[str, None]] = None,
-        timeseries_type: TimeseriesTypeEnum = "primary"
+        timeseries_type: TimeseriesTypeEnum = "primary",
+        write_mode: TableWriteEnum = "append"
     ):
         """
         Fetch NWM retrospective gridded data, calculate zonal statistics (currently only
@@ -465,6 +499,20 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table. Options are "append" or "upsert".
+            If "append", the Evaluation table will be appended with new data
+            that does not already exist.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
+
+
+        .. note::
+
+            Data in the cache is cleared before each call to the fetch method. So if a
+            long-running fetch is interrupted before the data is automatically loaded
+            into the Evaluation, it should be loaded or cached manually. This will
+            prevent it from being deleted when the fetch job is resumed.
 
         Notes
         -----
@@ -558,6 +606,7 @@ class Fetch:
                 self.nwm_cache_dir
             ),
             timeseries_type=timeseries_type,
+            write_mode=write_mode
         )
 
     def nwm_operational_points(
@@ -578,13 +627,14 @@ class Fetch:
         overwrite_output: Optional[bool] = False,
         timeseries_type: TimeseriesTypeEnum = "secondary",
         starting_z_hour: Optional[int] = None,
-        ending_z_hour: Optional[int] = None
+        ending_z_hour: Optional[int] = None,
+        write_mode: TableWriteEnum = "append"
     ):
         """Fetch operational NWM point data and load into the TEEHR dataset.
 
         Data is fetched for all secondary location IDs in the locations
-        crosswalk table, and all dates and times within the files and in the
-        cache file names are in UTC.
+        crosswalk table that are prefixed by the NWM version, and all dates
+        and times within the files and in the cache file names are in UTC.
 
         Parameters
         ----------
@@ -660,6 +710,20 @@ class Fetch:
         ending_z_hour : Optional[int]
             The ending z_hour to include in the output. If None, all z_hours
             are included for the last day. Default is None. Must be between 0 and 23.
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table. Options are "append" or "upsert".
+            If "append", the Evaluation table will be appended with new data
+            that does not already exist.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
+
+
+        .. note::
+
+            Data in the cache is cleared before each call to the fetch method. So if a
+            long-running fetch is interrupted before the data is automatically loaded
+            into the Evaluation, it should be loaded or cached manually. This will
+            prevent it from being deleted when the fetch job is resumed.
 
         Notes
         -----
@@ -782,6 +846,7 @@ class Fetch:
                 self.nwm_cache_dir
             ),
             timeseries_type=timeseries_type,
+            write_mode=write_mode
         )
 
     def nwm_operational_grids(
@@ -802,7 +867,8 @@ class Fetch:
         location_id_prefix: Optional[Union[str, None]] = None,
         timeseries_type: TimeseriesTypeEnum = "primary",
         starting_z_hour: Optional[int] = None,
-        ending_z_hour: Optional[int] = None
+        ending_z_hour: Optional[int] = None,
+        write_mode: TableWriteEnum = "append"
     ):
         """
         Fetch NWM operational gridded data, calculate zonal statistics (currently only
@@ -881,6 +947,20 @@ class Fetch:
         ending_z_hour : Optional[int]
             The ending z_hour to include in the output. If None, all z_hours
             are included for the last day. Default is None. Must be between 0 and 23.
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table. Options are "append" or "upsert".
+            If "append", the Evaluation table will be appended with new data
+            that does not already exist.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
+
+
+        .. note::
+
+            Data in the cache is cleared before each call to the fetch method. So if a
+            long-running fetch is interrupted before the data is automatically loaded
+            into the Evaluation, it should be loaded or cached manually. This will
+            prevent it from being deleted when the fetch job is resumed.
 
         Notes
         -----
@@ -1005,4 +1085,5 @@ class Fetch:
                 self.nwm_cache_dir
             ),
             timeseries_type=timeseries_type,
+            write_mode=write_mode
         )
