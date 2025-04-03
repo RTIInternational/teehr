@@ -153,6 +153,14 @@ def test_fetch_and_load_nwm_operational_points(tmpdir):
     )
     ts_df = ev.secondary_timeseries.to_pandas()
 
+    filepath = Path(
+        TEST_STUDY_DATA_DIR,
+        "timeseries",
+        "nwm_ana_timeseries_for_upsert.parquet"
+    )
+    ev.secondary_timeseries.load_parquet(in_path=filepath, write_mode="upsert")
+    updated_df = ev.secondary_timeseries.to_pandas()
+
     assert isinstance(ts_df, pd.DataFrame)
     assert set(ts_df.columns.tolist()) == set([
             "reference_time",
@@ -168,6 +176,10 @@ def test_fetch_and_load_nwm_operational_points(tmpdir):
     assert np.isclose(ts_df.value.sum(), np.float32(492.21))
     assert ts_df.value_time.min() == pd.Timestamp("2024-02-22 03:00:00")
     assert ts_df.value_time.max() == pd.Timestamp("2024-02-22 20:00:00")
+    assert updated_df.value_time.min() == pd.Timestamp("2024-02-22 03:00:00")
+    assert updated_df.value_time.max() == pd.Timestamp("2024-02-23 06:00:00")
+    assert np.isclose(updated_df.value.sum(), np.float32(492485.03))
+
 
 
 @pytest.mark.skip(reason="This takes forever!")

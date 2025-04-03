@@ -122,7 +122,7 @@ class BaseTable():
     ):
         """Drop duplicates and rewrite the table if duplicates exist."""
         logger.info(
-            f"Dropping potential duplicates from {self.name} and appending."
+            f"Dropping potential duplicates from {self.name} and upserting."
         )
         partition_by = self.partition_by
         if partition_by is None:
