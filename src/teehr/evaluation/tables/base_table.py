@@ -120,9 +120,9 @@ class BaseTable():
         num_partitions: int = None,
         **kwargs
     ):
-        """Drop duplicates and rewrite the table if duplicates exist."""
+        """Update existing data and append new data without duplicates."""
         logger.info(
-            f"Dropping potential duplicates from {self.name} and upserting."
+            f"Upserting to {self.name} without duplicates."
         )
         partition_by = self.partition_by
         if partition_by is None:
@@ -135,11 +135,10 @@ class BaseTable():
         )
 
         # Limit the dataframe to the partitions that are being updated.
-        # TODO: Make sure this works correctly with reference time.
         for partition in partition_by:
             partition_values = df.select(partition).distinct(). \
                 rdd.flatMap(lambda x: x).collect()
-            if partition_values[0] is not None:  # null reference time
+            if partition_values[0] is not None:  # all null partition values
                 existing_sdf = existing_sdf.filter(
                     col(partition).isin(partition_values)
                 )
@@ -177,9 +176,9 @@ class BaseTable():
         num_partitions: int = None,
         **kwargs
     ):
-        """Drop duplicates and rewrite the table if duplicates exist."""
+        """Append new data without duplicates."""
         logger.info(
-            f"Dropping potential duplicates from {self.name} and appending."
+            f"Appending to {self.name} without duplicates."
         )
         partition_by = self.partition_by
         if partition_by is None:
@@ -238,6 +237,17 @@ class BaseTable():
             save(str(self.dir))
         )
 
+    def _check_for_null_reference_time(self, df: ps.DataFrame):
+        """Check if the reference time column is all null."""
+        if "reference_time" in df.columns:
+            if len(df.filter(df.reference_time.isNotNull()).collect()) == 0:
+                logger.debug(
+                    "All reference_time values are null. "
+                    "reference_time will be removed as a partition column."
+                )
+                if "reference_time" in self.partition_by:
+                    self.partition_by.remove("reference_time")
+
     def _write_spark_df(
         self,
         df: ps.DataFrame,
@@ -266,6 +276,8 @@ class BaseTable():
             }
 
         if df is not None:
+            self._check_for_null_reference_time(df)
+
             if self.name == "joined_timeseries":
                 self._write_joined_timeseries(df, **kwargs)
                 self._load_table()
