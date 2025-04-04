@@ -141,12 +141,14 @@ if __name__ == "__main__":
 
     # Re-write the primary timeseries with reference time as a partition,
     # if it is not null.
-    # This will overwrite the existing data in the directory.
     rewrite_primary_timeseries(ev)
 
     # Re-write the secondary timeseries with reference time as a partition,
     # if it is not null.
-    # This will overwrite the existing data in the directory.
     rewrite_secondary_timeseries(ev)
+
+    # Re-write the joined timeseries with reference time as a partition,
+    # if it is not null.
+    rewrite_joined_timeseries(ev)
 
     pass
