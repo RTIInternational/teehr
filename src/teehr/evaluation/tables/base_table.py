@@ -49,6 +49,7 @@ class BaseTable():
             path: Union[str, Path, S3Path],
             pattern: str = None,
             use_table_schema: bool = False,
+            show_missing_table_warning: bool = True,
             **options
     ) -> ps.DataFrame:
         """Read data from table directory as a spark dataframe.
@@ -63,6 +64,9 @@ class BaseTable():
             If True, use the table schema to read the files.
             Missing files will be ignored with 'ignoreMissingFiles'
             set to True (default).
+        show_missing_table_warning : bool, optional
+            If True, show the warning an empty table was returned.
+            The default is True.
         **options
             Additional options to pass to the spark read method.
 
@@ -85,7 +89,7 @@ class BaseTable():
         if use_table_schema is True:
             schema = self.schema_func().to_structtype()
             df = self.ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
-            if len(df.head(1)) == 0:
+            if len(df.head(1)) == 0 and show_missing_table_warning:
                 logger.warning(f"An empty dataframe was returned for '{self.name}'.")
         else:
             df = self.ev.spark.read.format(self.format).options(**options).load(path)
@@ -131,6 +135,7 @@ class BaseTable():
         existing_sdf = self._read_files(
             self.dir,
             use_table_schema=True,
+            show_missing_table_warning=False,
             **kwargs
         )
 
@@ -187,6 +192,7 @@ class BaseTable():
         existing_sdf = self._read_files(
             self.dir,
             use_table_schema=True,
+            show_missing_table_warning=False,
             **kwargs
         )
         # Anti-join: Joins rows from left df that do not have a match
