@@ -12,6 +12,7 @@ from teehr.models.filters import FilterBaseModel
 import logging
 from pyspark.sql.functions import lit, col
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -48,6 +49,7 @@ class BaseTable():
             path: Union[str, Path, S3Path],
             pattern: str = None,
             use_table_schema: bool = False,
+            show_missing_table_warning: bool = True,
             **options
     ) -> ps.DataFrame:
         """Read data from table directory as a spark dataframe.
@@ -62,6 +64,9 @@ class BaseTable():
             If True, use the table schema to read the files.
             Missing files will be ignored with 'ignoreMissingFiles'
             set to True (default).
+        show_missing_table_warning : bool, optional
+            If True, show the warning an empty table was returned.
+            The default is True.
         **options
             Additional options to pass to the spark read method.
 
@@ -84,7 +89,7 @@ class BaseTable():
         if use_table_schema is True:
             schema = self.schema_func().to_structtype()
             df = self.ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
-            if len(df.head(1)) == 0:
+            if len(df.head(1)) == 0 and show_missing_table_warning:
                 logger.warning(f"An empty dataframe was returned for '{self.name}'.")
         else:
             df = self.ev.spark.read.format(self.format).options(**options).load(path)
@@ -92,7 +97,7 @@ class BaseTable():
         return df
 
     def _load_table(self, **kwargs):
-        """Load the table from the directory to self.df
+        """Load the table from the directory to self.df.
 
         Parameters
         ----------
@@ -113,7 +118,149 @@ class BaseTable():
         if self.df is None:
             self._raise_missing_table_error(table_name=self.name)
 
-    def _write_spark_df(self, df: ps.DataFrame, **kwargs):
+    def _upsert_without_duplicates(
+        self,
+        df,
+        num_partitions: int = None,
+        **kwargs
+    ):
+        """Update existing data and append new data without duplicates."""
+        logger.info(
+            f"Upserting to {self.name} without duplicates."
+        )
+        partition_by = self.partition_by
+        if partition_by is None:
+            partition_by = []
+
+        existing_sdf = self._read_files(
+            self.dir,
+            use_table_schema=True,
+            show_missing_table_warning=False,
+            **kwargs
+        )
+
+        # Limit the dataframe to the partitions that are being updated.
+        for partition in partition_by:
+            partition_values = df.select(partition).distinct(). \
+                rdd.flatMap(lambda x: x).collect()
+            if partition_values[0] is not None:  # all null partition values
+                existing_sdf = existing_sdf.filter(
+                    col(partition).isin(partition_values)
+                )
+
+        # Remove rows from existing_sdf that are to be updated.
+        # Concat and re-write.
+        if not existing_sdf.isEmpty():
+            existing_sdf = existing_sdf.join(
+                df,
+                how="left_anti",
+                on=self.unique_column_set,
+            )
+            df = existing_sdf.unionByName(df)
+            # Get columns in correct order
+            df = df.select([*self.schema_func().columns])
+
+        # Re-validate since the table was changed
+        validated_df = self._validate(df)
+
+        if num_partitions is not None:
+            validated_df = validated_df.repartition(num_partitions)
+        (
+            validated_df.
+            write.
+            partitionBy(partition_by).
+            format(self.format).
+            mode("overwrite").
+            options(**kwargs).
+            save(str(self.dir))
+        )
+
+    def _append_without_duplicates(
+        self,
+        df,
+        num_partitions: int = None,
+        **kwargs
+    ):
+        """Append new data without duplicates."""
+        logger.info(
+            f"Appending to {self.name} without duplicates."
+        )
+        partition_by = self.partition_by
+        if partition_by is None:
+            partition_by = []
+
+        existing_sdf = self._read_files(
+            self.dir,
+            use_table_schema=True,
+            show_missing_table_warning=False,
+            **kwargs
+        )
+        # Anti-join: Joins rows from left df that do not have a match
+        # in right df.  This is used to drop duplicates. df gets written
+        # in append mode.
+        if not existing_sdf.isEmpty():
+            df = df.join(
+                existing_sdf,
+                how="left_anti",
+                on=self.unique_column_set,
+            )
+
+        # Re-validate since the table was changed
+        validated_df = self._validate(df)
+
+        if num_partitions is not None:
+            validated_df = validated_df.repartition(num_partitions)
+
+        (
+            validated_df.
+            write.
+            partitionBy(partition_by).
+            format(self.format).
+            mode(self.save_mode).
+            options(**kwargs).
+            save(str(self.dir))
+        )
+
+    def _write_joined_timeseries(
+        self,
+        df: ps.DataFrame,
+        **kwargs
+    ):
+        """Write the joined timeseries table."""
+        logger.info(
+            "Writing the joined timeseries table to disk."
+        )
+        partition_by = self.partition_by
+        if partition_by is None:
+            partition_by = []
+        (
+            df.
+            write.
+            partitionBy(partition_by).
+            format(self.format).
+            mode(self.save_mode).
+            options(**kwargs).
+            save(str(self.dir))
+        )
+
+    def _check_for_null_reference_time(self, df: ps.DataFrame):
+        """Check if the reference time column is all null."""
+        if "reference_time" in df.columns:
+            if len(df.filter(df.reference_time.isNotNull()).collect()) == 0:
+                logger.debug(
+                    "All reference_time values are null. "
+                    "reference_time will be removed as a partition column."
+                )
+                if "reference_time" in self.partition_by:
+                    self.partition_by.remove("reference_time")
+
+    def _write_spark_df(
+        self,
+        df: ps.DataFrame,
+        write_mode: str = "append",
+        num_partitions: int = None,
+        **kwargs
+    ):
         """Write spark dataframe to directory.
 
         Parameters
@@ -134,13 +281,25 @@ class BaseTable():
                 "header": "true",
             }
 
-        partition_by = self.partition_by
-        if partition_by is None:
-            partition_by = []
-
         if df is not None:
-            df.write.partitionBy(partition_by).format(self.format).mode(self.save_mode).options(**kwargs).save(str(self.dir))
+            self._check_for_null_reference_time(df)
 
+            if self.name == "joined_timeseries":
+                self._write_joined_timeseries(df, **kwargs)
+                self._load_table()
+                return
+            if write_mode == "append":
+                self._append_without_duplicates(
+                    df=df,
+                    num_partitions=num_partitions,
+                    **kwargs
+                )
+            elif write_mode == "upsert":
+                self._upsert_without_duplicates(
+                    df=df,
+                    num_partitions=num_partitions,
+                    **kwargs
+                )
             self._load_table()
 
     def _get_schema(self, type: str = "pyspark"):
