@@ -24,6 +24,14 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         self.name = "secondary_timeseries"
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.schema_func = schemas.secondary_timeseries_schema
+        self.unique_column_set = [
+            "location_id",
+            "value_time",
+            "reference_time",
+            "variable_name",
+            "unit_name",
+            "member"
+        ]
 
     def field_enum(self) -> TimeseriesFields:
         """Get the timeseries fields enum."""

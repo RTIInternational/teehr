@@ -10,7 +10,8 @@ from teehr.utils.s3path import S3Path
 from teehr.utils.utils import to_path_or_s3path, path_to_spark
 from teehr.models.filters import FilterBaseModel
 import logging
-from pyspark.sql.functions import lit, col
+from pyspark.sql.functions import lit, col, row_number, asc
+from pyspark.sql.window import Window
 
 
 logger = logging.getLogger(__name__)
@@ -43,6 +44,19 @@ class BaseTable():
         )
         logger.error(err_msg)
         raise ValueError(err_msg)
+
+    def _drop_duplicates(
+        self,
+        sdf: ps.DataFrame,
+    ) -> ps.DataFrame:
+        """Drop duplicates from the DataFrame."""
+        logger.info(f"Dropping duplicates from {self.name}.")
+        window_spec = Window.partitionBy(*self.unique_column_set)
+        ordering_expr = [asc(col) for col in self.unique_column_set]
+        window_spec = window_spec.orderBy(*ordering_expr)
+        sdf_with_row_num = sdf.withColumn("row_num", row_number().over(window_spec))
+        deduplicated_sdf = sdf_with_row_num.filter("row_num == 1").drop("row_num")
+        return deduplicated_sdf
 
     def _read_files(
             self,
@@ -163,6 +177,9 @@ class BaseTable():
         # Re-validate since the table was changed
         validated_df = self._validate(df)
 
+        # Drop potential duplicates
+        validated_df = self._drop_duplicates(validated_df)
+
         if num_partitions is not None:
             validated_df = validated_df.repartition(num_partitions)
         (
@@ -195,6 +212,9 @@ class BaseTable():
             show_missing_table_warning=False,
             **kwargs
         )
+
+        # existing_sdf = existing_sdf.persist()
+
         # Anti-join: Joins rows from left df that do not have a match
         # in right df.  This is used to drop duplicates. df gets written
         # in append mode.
@@ -210,6 +230,9 @@ class BaseTable():
 
         if num_partitions is not None:
             validated_df = validated_df.repartition(num_partitions)
+
+        # Drop potential duplicates
+        validated_df = self._drop_duplicates(validated_df)
 
         (
             validated_df.
@@ -243,16 +266,30 @@ class BaseTable():
             save(str(self.dir))
         )
 
-    def _check_for_null_reference_time(self, df: ps.DataFrame):
-        """Check if the reference time column is all null."""
-        if "reference_time" in df.columns:
-            if len(df.filter(df.reference_time.isNotNull()).collect()) == 0:
-                logger.debug(
-                    "All reference_time values are null. "
-                    "reference_time will be removed as a partition column."
-                )
-                if "reference_time" in self.partition_by:
-                    self.partition_by.remove("reference_time")
+    def _check_for_null_partition_by_values(self, df: ps.DataFrame):
+        """Remove a field from partition_by if all values are null."""
+        partition_by = self.partition_by
+        if partition_by is None:
+            partition_by = []
+        for field_name in partition_by:
+            if field_name in df.columns:
+                if len(df.filter(df[field_name].isNotNull()).collect()) == 0:
+                    logger.debug(
+                        f"All {field_name} values are null. "
+                        f"{field_name} will be removed as a partition column."
+                    )
+                    self.partition_by.remove(field_name)
+
+    def _check_for_null_unique_column_values(self, df: ps.DataFrame):
+        """Remove a field from self.unique_column_set if all values are null."""
+        for field_name in self.unique_column_set:
+            if field_name in df.columns:
+                if len(df.filter(df[field_name].isNotNull()).collect()) == 0:
+                    logger.debug(
+                        f"All {field_name} values are null. "
+                        f"{field_name} will be removed as a partition column."
+                    )
+                    self.unique_column_set.remove(field_name)
 
     def _write_spark_df(
         self,
@@ -282,7 +319,9 @@ class BaseTable():
             }
 
         if df is not None:
-            self._check_for_null_reference_time(df)
+
+            self._check_for_null_partition_by_values(df)
+            self._check_for_null_unique_column_values(df)
 
             if self.name == "joined_timeseries":
                 self._write_joined_timeseries(df, **kwargs)
@@ -657,5 +696,4 @@ class BaseTable():
         """
         self._check_load_table()
         return self.df
-
 

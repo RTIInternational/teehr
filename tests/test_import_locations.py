@@ -43,15 +43,15 @@ def test_validate_and_insert_locations(tmpdir):
         location_id_prefix="test",
         write_mode="upsert",
     )
-    assert ev.locations.to_pandas()["id"].tolist() == [
-        "usgs-14316700",
-        "usgs-14138800",
+    assert sorted(ev.locations.to_pandas()["id"].tolist()) == [
         "test-A",
         "test-B",
         "test-C",
         "test-D",
         "test-E",
-        "test-F"
+        "test-F",
+        "usgs-14138800",
+        "usgs-14316700"
     ]
     assert ev.locations.to_sdf().count() == 8
 

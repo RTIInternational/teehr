@@ -35,6 +35,7 @@ class TimeseriesTable(BaseTable):
         self.unique_column_set = [
             "location_id",
             "value_time",
+            "reference_time",
             "variable_name",
             "unit_name",
         ]
