@@ -92,7 +92,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
 
         # Add or replace location_id prefix if provided
         if location_id_prefix:
-            validated_df = add_or_replace_sdf_column_prefix(
+            df = add_or_replace_sdf_column_prefix(
                 sdf=df,
                 column_name="location_id",
                 prefix=location_id_prefix,
