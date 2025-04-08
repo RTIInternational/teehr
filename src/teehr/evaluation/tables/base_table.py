@@ -252,17 +252,15 @@ class BaseTable():
                 "Nothing will be written."
             )
 
-    def _delete_and_write(
+    def _dynamic_overwrite(
         self,
         df: ps.DataFrame,
         **kwargs
     ):
-        """Delete all existing table data and write."""
+        """Overwrite partitions contained in the dataframe."""
         logger.info(
-            f"Deleting existing table data and writing to {self.name}."
+            f"Overwriting table partitions in {self.name}."
         )
-        # Deletes the entire directory first.
-        shutil.rmtree(str(self.dir))
         partition_by = self.partition_by
         if partition_by is None:
             partition_by = []
@@ -334,7 +332,7 @@ class BaseTable():
             self._check_for_null_unique_column_values(df)
 
             if write_mode == "overwrite":
-                self._delete_and_write(df, **kwargs)
+                self._dynamic_overwrite(df, **kwargs)
                 self._load_table()
             elif write_mode == "append":
                 self._append_without_duplicates(

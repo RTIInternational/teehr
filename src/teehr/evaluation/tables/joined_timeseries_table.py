@@ -26,6 +26,14 @@ class JoinedTimeseriesTable(TimeseriesTable):
         self.validate_filter_field_types = False
         self.strict_validation = False
         self.schema_func = schemas.joined_timeseries_schema
+        self.unique_column_set = [
+            "primary_location_id",
+            "secondary_location_id",
+            "value_time",
+            "reference_time",
+            "variable_name",
+            "unit_name",
+        ]
 
     def field_enum(self) -> JoinedTimeseriesFields:
         """Get the joined timeseries fields enum."""
@@ -141,19 +149,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
         return self
 
     def write(self, write_mode: TableWriteEnum = "overwrite"):
-        """Write the joined timeseries table to disk.
-
-        Parameters
-        ----------
-        write_mode : TableWriteEnum, optional (default: "overwrite")
-            The write mode for the table.
-            Options are "append", "upsert", and "overwrite".
-            If "append", the table will be appended with new data that does
-            already exist.
-            If "upsert", existing data will be replaced and new data that
-            does not exist will be appended.
-            If "overwrite", all data is deleted before new data is written.
-        """
+        """Write the joined timeseries table to disk."""
         self._write_spark_df(self.df, write_mode=write_mode)
         logger.info("Joined timeseries table written to disk.")
         self._load_table()
@@ -194,7 +190,8 @@ class JoinedTimeseriesTable(TimeseriesTable):
             already exist.
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
-            If "overwrite", all data is deleted before new data is written.
+            If "overwrite", existing partitions receiving new data are
+            overwritten.
         """
         joined_df = self._join()
 

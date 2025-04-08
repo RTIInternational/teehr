@@ -152,7 +152,8 @@ class LocationAttributeTable(BaseTable):
             already exist.
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
-            If "overwrite", all data is deleted before new data is written.
+            If "overwrite", existing partitions receiving new data are
+            overwritten.
         **kwargs
             Additional keyword arguments are passed to pd.read_parquet().
 
@@ -207,7 +208,7 @@ class LocationAttributeTable(BaseTable):
             already exist.
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
-            If "overwrite", all data is deleted before new data is written.
+            If "overwrite", existing partitions receiving new data are overwritten
         **kwargs
             Additional keyword arguments are passed to pd.read_parquet().
 
