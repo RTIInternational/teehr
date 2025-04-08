@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
 from teehr.models.filters import JoinedTimeseriesFilter
-from teehr.models.table_enums import JoinedTimeseriesFields
+from teehr.models.table_enums import JoinedTimeseriesFields, TableWriteEnum
 from teehr.querying.utils import join_geometry
 import teehr.models.pandera_dataframe_schemas as schemas
 import pyspark.sql as ps
@@ -26,7 +26,6 @@ class JoinedTimeseriesTable(TimeseriesTable):
         self.validate_filter_field_types = False
         self.strict_validation = False
         self.schema_func = schemas.joined_timeseries_schema
-        self.save_mode = "overwrite"
 
     def field_enum(self) -> JoinedTimeseriesFields:
         """Get the joined timeseries fields enum."""
@@ -141,15 +140,26 @@ class JoinedTimeseriesTable(TimeseriesTable):
 
         return self
 
-    def write(self):
-        """Write the joined timeseries table to disk."""
-        self._write_spark_df(self.df)
+    def write(self, write_mode: TableWriteEnum = "overwrite"):
+        """Write the joined timeseries table to disk.
+
+        Parameters
+        ----------
+        write_mode : TableWriteEnum, optional (default: "overwrite")
+            The write mode for the table.
+            Options are "append", "upsert", and "overwrite".
+            If "append", the table will be appended with new data that does
+            already exist.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
+            If "overwrite", all data is deleted before new data is written.
+        """
+        self._write_spark_df(self.df, write_mode=write_mode)
         logger.info("Joined timeseries table written to disk.")
         self._load_table()
 
     def _run_script(self, joined_df: ps.DataFrame) -> ps.DataFrame:
         """Add UDFs to the joined timeseries dataframe."""
-
         try:
             sys.path.append(str(Path(self.ev.scripts_dir).resolve()))
             import user_defined_fields as udf # noqa
@@ -163,7 +173,12 @@ class JoinedTimeseriesTable(TimeseriesTable):
 
         return joined_df
 
-    def create(self, add_attrs: bool = False, execute_scripts: bool = False):
+    def create(
+        self,
+        add_attrs: bool = False,
+        execute_scripts: bool = False,
+        write_mode: TableWriteEnum = "overwrite"
+    ):
         """Create joined timeseries table.
 
         Parameters
@@ -172,6 +187,14 @@ class JoinedTimeseriesTable(TimeseriesTable):
             Execute UDFs, by default False
         add_attrs : bool, optional
             Add attributes, by default False
+        write_mode : TableWriteEnum, optional (default: "overwrite")
+            The write mode for the table.
+            Options are "append", "upsert", and "overwrite".
+            If "append", the table will be appended with new data that does
+            already exist.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
+            If "overwrite", all data is deleted before new data is written.
         """
         joined_df = self._join()
 
@@ -182,6 +205,6 @@ class JoinedTimeseriesTable(TimeseriesTable):
             joined_df = self._run_script(joined_df)
 
         validated_df = self._validate(joined_df, False)
-        self._write_spark_df(validated_df)
+        self._write_spark_df(validated_df, write_mode=write_mode)
         logger.info("Joined timeseries table created.")
         self._load_table()

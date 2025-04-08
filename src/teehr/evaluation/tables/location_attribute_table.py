@@ -27,7 +27,6 @@ class LocationAttributeTable(BaseTable):
         self.name = "location_attributes"
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.format = "parquet"
-        self.save_mode = "append"
         self.filter_model = LocationAttributeFilter
         self.schema_func = schemas.location_attributes_schema
         self.unique_column_set = [
@@ -147,11 +146,13 @@ class LocationAttributeTable(BaseTable):
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
         write_mode : TableWriteEnum, optional (default: "append")
-            The write mode for the table. Options are "append" or "upsert".
+            The write mode for the table.
+            Options are "append", "upsert", and "overwrite".
             If "append", the table will be appended with new data that does
             already exist.
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
+            If "overwrite", all data is deleted before new data is written.
         **kwargs
             Additional keyword arguments are passed to pd.read_parquet().
 
@@ -200,11 +201,13 @@ class LocationAttributeTable(BaseTable):
             prefix location IDs with "usgs" or the nwm version
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
         write_mode : TableWriteEnum, optional (default: "append")
-            The write mode for the table. Options are "append" or "upsert".
+            The write mode for the table.
+            Options are "append", "upsert", and "overwrite".
             If "append", the table will be appended with new data that does
             already exist.
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
+            If "overwrite", all data is deleted before new data is written.
         **kwargs
             Additional keyword arguments are passed to pd.read_parquet().
 

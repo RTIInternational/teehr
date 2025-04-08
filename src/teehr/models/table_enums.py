@@ -7,6 +7,7 @@ class TableWriteEnum(StrEnum):
 
     append = "append"
     upsert = "upsert"
+    overwrite = "overwrite"
 
 
 class ConfigurationFields(StrEnum):

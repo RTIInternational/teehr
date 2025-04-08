@@ -14,7 +14,6 @@ class DomainTable(BaseTable):
         """Initialize class."""
         super().__init__(ev)
         self.format = "csv"
-        self.save_mode = "append"
 
     def _add(
         self,

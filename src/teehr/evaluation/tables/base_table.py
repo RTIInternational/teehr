@@ -9,9 +9,11 @@ from teehr.querying.utils import order_df
 from teehr.utils.s3path import S3Path
 from teehr.utils.utils import to_path_or_s3path, path_to_spark
 from teehr.models.filters import FilterBaseModel
+from teehr.models.table_enums import TableWriteEnum
 import logging
 from pyspark.sql.functions import lit, col, row_number, asc
 from pyspark.sql.window import Window
+import shutil
 
 
 logger = logging.getLogger(__name__)
@@ -27,7 +29,6 @@ class BaseTable():
         self.dir = None
         self.schema_func = None
         self.format = None
-        self.save_mode = "error"
         self.partition_by = None
         self.spark = ev.spark
         self.df: ps.DataFrame = None
@@ -59,12 +60,12 @@ class BaseTable():
         return deduplicated_sdf
 
     def _read_files(
-            self,
-            path: Union[str, Path, S3Path],
-            pattern: str = None,
-            use_table_schema: bool = False,
-            show_missing_table_warning: bool = True,
-            **options
+        self,
+        path: Union[str, Path, S3Path],
+        pattern: str = None,
+        use_table_schema: bool = False,
+        show_missing_table_warning: bool = True,
+        **options
     ) -> ps.DataFrame:
         """Read data from table directory as a spark dataframe.
 
@@ -225,34 +226,43 @@ class BaseTable():
                 on=self.unique_column_set,
             )
 
-        # Re-validate since the table was changed
-        validated_df = self._validate(df)
+        # Only continue if there is new data to write.
+        if not df.isEmpty():
+            # Re-validate since the table was changed
+            validated_df = self._validate(df)
 
-        if num_partitions is not None:
-            validated_df = validated_df.repartition(num_partitions)
+            if num_partitions is not None:
+                validated_df = validated_df.repartition(num_partitions)
 
-        # Drop potential duplicates
-        validated_df = self._drop_duplicates(validated_df)
+            # Drop potential duplicates
+            validated_df = self._drop_duplicates(validated_df)
 
-        (
-            validated_df.
-            write.
-            partitionBy(partition_by).
-            format(self.format).
-            mode(self.save_mode).
-            options(**kwargs).
-            save(str(self.dir))
-        )
+            (
+                validated_df.
+                write.
+                partitionBy(partition_by).
+                format(self.format).
+                mode("append").
+                options(**kwargs).
+                save(str(self.dir))
+            )
+        else:
+            logger.info(
+                f"No new data to append to {self.name}. "
+                "Nothing will be written."
+            )
 
-    def _write_joined_timeseries(
+    def _delete_and_write(
         self,
         df: ps.DataFrame,
         **kwargs
     ):
-        """Write the joined timeseries table."""
+        """Delete all existing table data and write."""
         logger.info(
-            "Writing the joined timeseries table to disk."
+            f"Deleting existing table data and writing to {self.name}."
         )
+        # Deletes the entire directory first.
+        shutil.rmtree(str(self.dir))
         partition_by = self.partition_by
         if partition_by is None:
             partition_by = []
@@ -261,7 +271,7 @@ class BaseTable():
             write.
             partitionBy(partition_by).
             format(self.format).
-            mode(self.save_mode).
+            mode("overwrite").
             options(**kwargs).
             save(str(self.dir))
         )
@@ -294,7 +304,7 @@ class BaseTable():
     def _write_spark_df(
         self,
         df: ps.DataFrame,
-        write_mode: str = "append",
+        write_mode: TableWriteEnum = "append",
         num_partitions: int = None,
         **kwargs
     ):
@@ -323,11 +333,10 @@ class BaseTable():
             self._check_for_null_partition_by_values(df)
             self._check_for_null_unique_column_values(df)
 
-            if self.name == "joined_timeseries":
-                self._write_joined_timeseries(df, **kwargs)
+            if write_mode == "overwrite":
+                self._delete_and_write(df, **kwargs)
                 self._load_table()
-                return
-            if write_mode == "append":
+            elif write_mode == "append":
                 self._append_without_duplicates(
                     df=df,
                     num_partitions=num_partitions,
@@ -338,6 +347,11 @@ class BaseTable():
                     df=df,
                     num_partitions=num_partitions,
                     **kwargs
+                )
+            else:
+                raise ValueError(
+                    f"Invalid write mode: {write_mode}. "
+                    "Valid values are 'append', 'overwrite' and 'upsert'."
                 )
             self._load_table()
 
