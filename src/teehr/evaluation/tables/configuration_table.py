@@ -14,10 +14,10 @@ class ConfigurationTable(DomainTable):
         """Initialize class."""
         super().__init__(ev)
         self.name = "configurations"
-        # self.dir = ev.configurations_dir
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.filter_model = ConfigurationFilter
         self.schema_func = schemas.configuration_schema
+        self.unique_column_set = ["name"]
 
     def field_enum(self) -> ConfigurationFields:
         """Get the configuration fields enum."""

@@ -2,6 +2,14 @@
 from teehr.models.str_enum import StrEnum
 
 
+class TableWriteEnum(StrEnum):
+    """Methods to write or update Evaluation tables."""
+
+    append = "append"
+    upsert = "upsert"
+    overwrite = "overwrite"
+
+
 class ConfigurationFields(StrEnum):
     """Empty class for ConfigurationFieldEnum."""
 
