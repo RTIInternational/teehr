@@ -1,0 +1,10 @@
+{
+"type": "FeatureCollection",
+"name": "gages_no_prefix",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "id": "A", "name": "Site A" }, "geometry": { "type": "Point", "coordinates": [ -80.719184317999975, 35.176113478111198 ] } },
+{ "type": "Feature", "properties": { "id": "B", "name": "Site B" }, "geometry": { "type": "Point", "coordinates": [ -80.71308451799996, 35.158390611111336 ] } },
+{ "type": "Feature", "properties": { "id": "C", "name": "Bite C" }, "geometry": { "type": "Point", "coordinates": [ -80.736772517999952, 35.186932211111149 ] } }
+]
+}

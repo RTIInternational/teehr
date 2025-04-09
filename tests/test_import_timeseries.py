@@ -9,6 +9,7 @@ from teehr.models.pydantic_table_models import (
 )
 import tempfile
 import xarray as xr
+import pandas as pd
 
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
@@ -38,9 +39,7 @@ MIZU_LOCATIONS = Path(
 def test_validate_and_insert_timeseries(tmpdir):
     """Test the validate_locations function."""
     ev = Evaluation(dir_path=tmpdir)
-
     ev.enable_logging()
-
     ev.clone_template()
 
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
@@ -52,21 +51,18 @@ def test_validate_and_insert_timeseries(tmpdir):
             description="Test Observations Data"
         )
     )
-
     ev.units.add(
         Unit(
             name="cfd",
             long_name="Cubic Feet per Day"
         )
     )
-
     ev.variables.add(
         Variable(
             name="streamflow",
             long_name="Streamflow"
         )
     )
-
     ev.primary_timeseries.load_parquet(
         in_path=PRIMARY_TIMESERIES_FILEPATH,
         field_mapping={
@@ -79,11 +75,27 @@ def test_validate_and_insert_timeseries(tmpdir):
             "location_id": "location_id"
         }
     )
-
+    # Test upserting timeseries
+    ev.primary_timeseries.load_parquet(
+        in_path=Path(
+            TEST_STUDY_DATA_DIR,
+            "timeseries",
+            "test_short_obs_upsert.parquet"
+        ),
+        field_mapping={
+            "reference_time": "reference_time",
+            "value_time": "value_time",
+            "configuration": "configuration_name",
+            "measurement_unit": "unit_name",
+            "variable_name": "variable_name",
+            "value": "value",
+            "location_id": "location_id"
+        },
+        write_mode="upsert"
+    )
     ev.location_crosswalks.load_csv(
         in_path=CROSSWALK_FILEPATH
     )
-
     ev.configurations.add(
         Configuration(
             name="test_short",
@@ -91,7 +103,6 @@ def test_validate_and_insert_timeseries(tmpdir):
             description="Test Forecast Data"
         )
     )
-
     ev.secondary_timeseries.load_parquet(
         in_path=SECONDARY_TIMESERIES_FILEPATH,
         field_mapping={
@@ -104,8 +115,10 @@ def test_validate_and_insert_timeseries(tmpdir):
             "location_id": "location_id"
         }
     )
-
-    assert True
+    prim_df = ev.primary_timeseries.to_pandas()
+    assert prim_df.value_time.min() == pd.Timestamp("2022-01-01 00:00:00")
+    assert prim_df.value_time.max() == pd.Timestamp("2022-01-02 13:00:00")
+    assert prim_df.index.size == 114
 
 
 def test_validate_and_insert_timeseries_set_const(tmpdir):

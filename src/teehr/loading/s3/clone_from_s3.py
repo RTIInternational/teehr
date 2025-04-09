@@ -192,7 +192,7 @@ def clone_from_s3(
             end_date=end_date
         )
 
-        table._write_spark_df(sdf_in)
+        table._write_spark_df(sdf_in, write_mode="overwrite")
 
     # copy scripts path to ev.scripts_dir
     source = f"{url}/scripts/user_defined_fields.py"
