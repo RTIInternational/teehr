@@ -131,7 +131,6 @@ class Fetch:
         overwrite_output: Optional[bool] = False,
         timeseries_type: TimeseriesTypeEnum = "primary",
         write_mode: TableWriteEnum = "append",
-        location_id_prefix: str = "usgs",
     ):
         """Fetch USGS gage data and load into the TEEHR dataset.
 
@@ -225,10 +224,10 @@ class Fetch:
             filters={
                 "column": "id",
                 "operator": "like",
-                "value": f"{location_id_prefix}-%"
+                "value": f"usgs-%"
             }
         ).to_pandas()
-        sites = locations_df["id"].str.removeprefix(f"{location_id_prefix}-").to_list()
+        sites = locations_df["id"].str.removeprefix(f"usgs-").to_list()
 
         usgs_variable_name = USGS_VARIABLE_MAPPER[VARIABLE_NAME][service]
 
@@ -385,12 +384,9 @@ class Fetch:
         ev_configuration_name = f"{nwm_version}_retrospective"
         ev_variable_name = format_nwm_variable_name(variable_name)
 
-        if location_id_prefix is None:
-            location_id_prefix = nwm_version
-
         logger.info("Getting secondary location IDs.")
         location_ids = self._get_secondary_location_ids(
-            prefix=location_id_prefix
+            prefix=nwm_version
         )
 
         # Clear out cache
@@ -441,11 +437,10 @@ class Fetch:
         start_date: Union[str, datetime, pd.Timestamp],
         end_date: Union[str, datetime, pd.Timestamp],
         calculate_zonal_weights: bool = True,
-        location_id_prefix: str = None,
         overwrite_output: Optional[bool] = False,
-        chunk_by: Union[NWMChunkByEnum, None] = None,
+        chunk_by: Optional[NWMChunkByEnum] = None,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
-        location_id_prefix: Optional[Union[str, None]] = None,
+        location_id_prefix: Optional[str] = None,
         timeseries_type: TimeseriesTypeEnum = "primary",
         write_mode: TableWriteEnum = "append"
     ):
@@ -490,13 +485,13 @@ class Fetch:
         calculate_zonal_weights : bool
             Flag specifying whether or not to calculate zonal weights.
             True = calculate; False = use existing file. Default is True.
-        location_id_prefix : str
-            Prefix to include when filtering the locations table for
+        location_id_prefix : Optional[str]
+            Prefix to include when filtering the locations table for polygon
             primary_location_id. Default is None, all locations are included.
         overwrite_output : bool
             Flag specifying whether or not to overwrite output files if they already
             exist.  True = overwrite; False = fail.
-        chunk_by : Union[NWMChunkByEnum, None] = None,
+        chunk_by : Optional[NWMChunkByEnum] = None,
             If None (default) saves all timeseries to a single file, otherwise
             the data is processed using the specified parameter.
             Can be: 'week' or 'month' for gridded data.
@@ -599,7 +594,7 @@ class Fetch:
             timeseries_type=timeseries_type,
             unique_zone_id="id",
             calculate_zonal_weights=calculate_zonal_weights,
-            zone_polygons=locations_gdf  # self.ev.locations.to_geopandas()
+            zone_polygons=locations_gdf
         )
 
         if (
@@ -800,11 +795,8 @@ class Fetch:
         """ # noqa
         logger.info("Getting secondary location IDs.")
 
-        if location_id_prefix is None:
-            location_id_prefix = nwm_version
-
         location_ids = self._get_secondary_location_ids(
-            prefix=location_id_prefix
+            prefix=nwm_version
         )
 
         ev_variable_name = format_nwm_variable_name(variable_name)
@@ -875,7 +867,7 @@ class Fetch:
         ingest_days: int,
         nwm_version: SupportedNWMOperationalVersionsEnum,
         calculate_zonal_weights: bool = True,
-        location_id_prefix: str = None,
+        location_id_prefix: Optional[str] = None,
         data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
         kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
         prioritize_analysis_valid_time: Optional[bool] = False,
@@ -932,8 +924,9 @@ class Fetch:
         calculate_zonal_weights : bool
             Flag specifying whether or not to calculate zonal weights.
             True = calculate; False = use existing file. Default is True.
-        location_id_prefix : str
-            Prefix to add to the location_id field.
+        location_id_prefix : Optional[str]
+            Prefix to include when filtering the locations table for polygon
+            primary_location_id. Default is None, all locations are included.
         data_source : Optional[SupportedNWMDataSourcesEnum]
             Specifies the remote location from which to fetch the data
             "GCS" (default), "NOMADS", or "DSTOR".
