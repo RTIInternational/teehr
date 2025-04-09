@@ -7,6 +7,7 @@ import numpy as np
 import scoringrules as sr
 
 from teehr.models.metrics.basemodels import MetricsBasemodel
+from teehr.metrics.deterministic_funcs import _transform
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +63,7 @@ def create_crps_func(model: MetricsBasemodel) -> Callable:
             The mean Continuous Ranked Probability Score (CRPS) for the
             ensemble, either as a single value or array of values.
         """
+        p, s, value_time = _transform(p, s, model, value_time)
         pivoted_dict = _pivot_by_value_time(p, s, value_time)
 
         if model.summary_func is not None:
