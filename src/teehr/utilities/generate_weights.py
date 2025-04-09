@@ -306,8 +306,6 @@ def generate_weights_file(
 
     schema = schemas.weights_file_schema()
     validated_df = schema.validate(df)
-
     validated_df.to_parquet(output_weights_filepath)
-    validated_df = None
 
     return
