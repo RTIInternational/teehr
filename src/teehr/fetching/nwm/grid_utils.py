@@ -8,9 +8,11 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
+import teehr.models.pandera_dataframe_schemas as schemas
 from teehr.fetching.utils import (
     get_dataset,
-    write_timeseries_parquet_file
+    write_timeseries_parquet_file,
+    parse_nwm_json_paths
 )
 from teehr.models.fetching.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
@@ -93,6 +95,17 @@ def compute_weighted_average(
     return df[[LOCATION_ID, VALUE]].copy()
 
 
+def read_and_validate_weights_file(
+    weights_filepath: str
+) -> pd.DataFrame:
+    """Read weights file from parquet, validating data types."""
+    schema = schemas.weights_file_schema()
+    weights_df = pd.read_parquet(
+        weights_filepath, columns=list(schema.columns.keys())
+    )
+    return schema.validate(weights_df)
+
+
 @dask.delayed
 def process_single_nwm_grid_file(
     row: Tuple,
@@ -120,9 +133,7 @@ def process_single_nwm_grid_file(
     value_time = ds.time.values[0]
     da = ds[variable_name][0]
 
-    weights_df = pd.read_parquet(
-        weights_filepath, columns=["row", "col", "weight", LOCATION_ID]
-    )
+    weights_df = read_and_validate_weights_file(weights_filepath)
 
     weights_bounds = get_weights_row_col_stats(weights_df)
 
@@ -184,22 +195,10 @@ def fetch_and_format_nwm_grids(
         output_parquet_dir.mkdir(parents=True)
 
     # Format file list into a dataframe and group by reference time
-    pattern = re.compile(r'[0-9]+')
-    days = []
-    z_hours = []
-    for path in json_paths:
-        filename = Path(path).name
-        if path.split(":")[0] == "s3":
-            # If it's a remote json day and z-hour are in the path
-            res = re.findall(pattern, path)
-            days.append(res[1])
-            z_hours.append(f"t{res[2]}z")
-        else:
-            days.append(filename.split(".")[1])
-            z_hours.append(filename.split(".")[3])
-    df_refs = pd.DataFrame(
-        {"day": days, "z_hour": z_hours, "filepath": json_paths}
+    df_refs = parse_nwm_json_paths(
+        json_paths=json_paths
     )
+
     gps = df_refs.groupby(["day", "z_hour"])
 
     for gp in gps:

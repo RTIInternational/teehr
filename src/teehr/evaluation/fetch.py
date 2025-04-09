@@ -83,12 +83,39 @@ class Fetch:
             }
         ).to_pandas()
 
+        if lcw_df.empty:
+            logger.error(
+                "No secondary location IDs were found in the crosswalk table"
+                f" with the specified prefix: '{prefix}'"
+            )
+            raise ValueError(
+                "No secondary location IDs were found in the crosswalk table"
+                f" with the specified prefix: '{prefix}'"
+            )
+
         location_ids = (
             lcw_df.secondary_location_id.
             str.removeprefix(f"{prefix}-").to_list()
         )
 
         return location_ids
+
+    def _configuration_name_exists(
+        self, configuration_name: str
+    ) -> bool:
+        """Check if a configuration name exists in the configurations table.
+
+        True: Configuration name exists in the table.
+        False: Configuration name does not exist in the table.
+        """
+        sdf = self.ev.configurations.filter(
+            {
+                "column": "name",
+                "operator": "=",
+                "value": configuration_name
+            }
+        ).to_sdf()
+        return not sdf.rdd.isEmpty()
 
     def usgs_streamflow(
         self,
@@ -101,7 +128,6 @@ class Fetch:
         convert_to_si: bool = True,
         overwrite_output: Optional[bool] = False,
         timeseries_type: TimeseriesTypeEnum = "primary",
-        add_configuration_name: bool = True,
         location_id_prefix: str = "usgs",
     ):
         """Fetch USGS gage data and load into the TEEHR dataset.
@@ -141,9 +167,6 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
-        add_configuration_name : bool
-            If True, adds the configuration name ``usgs_observations`` to the
-            Evaluation. Default is True.
         location_id_prefix : str
             Prefix to include when filtering for primary_location_id.
             Default is "usgs".
@@ -212,10 +235,12 @@ class Fetch:
             timeseries_type=timeseries_type
         )
 
-        if add_configuration_name:
+        if (
+            not self._configuration_name_exists(USGS_CONFIGURATION_NAME)
+        ):
             self.ev.configurations.add(
                 Configuration(
-                    name="usgs_observations",
+                    name=USGS_CONFIGURATION_NAME,
                     type="primary",
                     description="USGS Observations"
                 )
@@ -253,6 +278,8 @@ class Fetch:
         nwm_version : SupportedNWMRetroVersionsEnum
             NWM retrospective version to fetch.
             Currently `nwm20`, `nwm21`, and `nwm30` supported.
+            Note that since there is no change in NWM configuration between
+            version 2.1 and 2.2, no retrospective run was produced for v2.2.
         variable_name : str
             Name of the NWM data variable to download.
             (e.g., "streamflow", "velocity", ...).
@@ -260,9 +287,17 @@ class Fetch:
             Date to begin data ingest.
             Str formats can include YYYY-MM-DD or MM/DD/YYYY
             Rounds down to beginning of day.
+
+            - v2.0: 1993-01-01
+            - v2.1: 1979-01-01
+            - v3.0: 1979-02-01
         end_date : Union[str, datetime, pd.Timestamp],
             Last date to fetch.  Rounds up to end of day.
             Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+
+            - v2.0: 2018-12-31
+            - v2.1: 2020-12-31
+            - v3.0: 2023-01-31
         chunk_by : Union[NWMChunkByEnum, None] = None,
             If None (default) saves all timeseries to a single file, otherwise
             the data is processed using the specified parameter.
@@ -312,7 +347,7 @@ class Fetch:
         >>> nwm_retro.nwm_retro_to_parquet(
         >>>     nwm_version="nwm20",
         >>>     variable_name="streamflow",
-        >>>     start_date=Sdatetime(2000, 1, 1),
+        >>>     start_date=datetime(2000, 1, 1),
         >>>     end_date=datetime(2000, 1, 2, 23),
         >>>     location_ids=[7086109, 7040481],
         >>>     output_parquet_dir=Path(Path.home(), "nwm20_retrospective")
@@ -351,7 +386,9 @@ class Fetch:
             timeseries_type=timeseries_type
         )
 
-        if add_configuration_name:
+        if (
+            not self._configuration_name_exists(ev_configuration_name)
+        ):
             self.ev.configurations.add(
                 Configuration(
                     name=ev_configuration_name,
@@ -379,8 +416,7 @@ class Fetch:
         overwrite_output: Optional[bool] = False,
         chunk_by: Union[NWMChunkByEnum, None] = None,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
-        timeseries_type: TimeseriesTypeEnum = "primary",
-        add_configuration_name: bool = True
+        timeseries_type: TimeseriesTypeEnum = "primary"
     ):
         """
         Fetch NWM retrospective gridded data, calculate zonal statistics (currently only
@@ -400,6 +436,8 @@ class Fetch:
         nwm_version : SupportedNWMRetroVersionsEnum
             NWM retrospective version to fetch.
             Currently `nwm21` and `nwm30` supported.
+            Note that since there is no change in NWM configuration between
+            version 2.1 and 2.2, no retrospective run was produced for v2.2.
         variable_name : str
             Name of the NWM forcing data variable to download.
             (e.g., "PRECIP", "PSFC", "Q2D", ...).
@@ -407,6 +445,9 @@ class Fetch:
             Date to begin data ingest.
             Str formats can include YYYY-MM-DD or MM/DD/YYYY.
             Rounds down to beginning of day.
+
+            - v2.1: 1979-01-01
+            - v3.0: 1979-02-01
         end_date : Union[str, datetime, pd.Timestamp],
             Last date to fetch.  Rounds up to end of day.
             Str formats can include YYYY-MM-DD or MM/DD/YYYY.
@@ -419,6 +460,9 @@ class Fetch:
         overwrite_output : bool
             Flag specifying whether or not to overwrite output files if they already
             exist.  True = overwrite; False = fail.
+
+            - v2.1: 2020-12-31
+            - v3.0: 2023-01-31
         chunk_by : Union[NWMChunkByEnum, None] = None,
             If None (default) saves all timeseries to a single file, otherwise
             the data is processed using the specified parameter.
@@ -447,11 +491,12 @@ class Fetch:
         >>> ev = teehr.Evaluation()
 
         >>> ev.fetch.nwm_retrospective_grids(
-        >>>     nwm_configuration="forcing_short_range",
+        >>>     nwm_version="nwm30",
         >>>     variable_name="RAINRATE",
         >>>     calculate_zonal_weights=True,
         >>>     start_date=datetime(2000, 1, 1),
-        >>>     end_date=datetime(2001, 1, 1)
+        >>>     end_date=datetime(2001, 1, 1),
+        >>>     location_id_prefix="huc10"
         >>> )
 
         .. note::
@@ -464,13 +509,13 @@ class Fetch:
         Perform the calculations, writing to the specified directory.
 
         >>> nwm_retro_grids_to_parquet(
-        >>>     nwm_version="nwm22",
-        >>>     nwm_configuration="forcing_short_range",
+        >>>     nwm_version="nwm30",
         >>>     variable_name="RAINRATE",
         >>>     zonal_weights_filepath=Path(Path.home(), "nextgen_03S_weights.parquet"),
         >>>     start_date=2020-12-18,
         >>>     end_date=2022-12-18,
-        >>>     output_parquet_dir=Path(Path.home(), "temp/parquet")
+        >>>     output_parquet_dir=Path(Path.home(), "temp/parquet"),
+        >>>     location_id_prefix="huc10",
         >>> )
 
         See Also
@@ -524,7 +569,9 @@ class Fetch:
             zone_polygons=locations_gdf  # self.ev.locations.to_geopandas()
         )
 
-        if add_configuration_name:
+        if (
+            not self._configuration_name_exists(ev_configuration_name)
+        ):
             self.ev.configurations.add(
                 Configuration(
                     name=ev_configuration_name,
@@ -558,7 +605,8 @@ class Fetch:
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
         timeseries_type: TimeseriesTypeEnum = "secondary",
-        add_configuration_name: bool = True,
+        starting_z_hour: Optional[int] = None,
+        ending_z_hour: Optional[int] = None,
         location_id_prefix: str = None,
     ):
         """Fetch operational NWM point data and load into the TEEHR dataset.
@@ -584,8 +632,18 @@ class Fetch:
         ingest_days : int
             Number of days to ingest data after start date.
         nwm_version : SupportedNWMOperationalVersionsEnum
-            The NWM operational version
-            "nwm22", or "nwm30".
+            The NWM operational version.
+            "nwm12", "nwm20", "nwm21", "nwm22", or "nwm30".
+            Note that there is no change in NWM configuration between
+            version 2.1 and 2.2, and they are treated as the same version.
+            They are both allowed here for convenience.
+
+            Availability of each version:
+
+            - v1.2: 2018-09-17 - 2019-06-18
+            - v2.0: 2019-06-19 - 2021-04-19
+            - v2.1/2.2: 2021-04-20 - 2023-09-18
+            - v3.0: 2023-09-19 - present
         data_source : Optional[SupportedNWMDataSourcesEnum]
             Specifies the remote location from which to fetch the data
             "GCS" (default), "NOMADS", or "DSTOR"
@@ -625,8 +683,12 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "secondary".
-        add_configuration_name : bool
-            If True, adds the configuration name to the Evaluation. Default is True.
+        starting_z_hour : Optional[int]
+            The starting z_hour to include in the output. If None, all z_hours
+            are included for the first day. Default is None. Must be between 0 and 23.
+        ending_z_hour : Optional[int]
+            The ending z_hour to include in the output. If None, all z_hours
+            are included for the last day. Default is None. Must be between 0 and 23.
         location_id_prefix : str
             Prefix to include when filtering for secondary_location_id's.
             Default is None, in which case the nwm_version is used as the
@@ -654,7 +716,7 @@ class Fetch:
         >>>     variable_name="streamflow",
         >>>     start_date=datetime(2000, 1, 1),
         >>>     ingest_days=1,
-        >>>     nwm_version="nwm22",
+        >>>     nwm_version="nwm21",
         >>>     data_source="GCS",
         >>>     kerchunk_method="auto"
         >>> )
@@ -677,7 +739,7 @@ class Fetch:
         >>>     location_ids=LOCATION_IDS,
         >>>     json_dir=Path(Path.home(), "temp/parquet/jsons/"),
         >>>     output_parquet_dir=Path(Path.home(), "temp/parquet"),
-        >>>     nwm_version="nwm22",
+        >>>     nwm_version="nwm21",
         >>>     data_source="GCS",
         >>>     kerchunk_method="auto",
         >>>     prioritize_analysis_valid_time=True,
@@ -729,10 +791,16 @@ class Fetch:
             ignore_missing_file=ignore_missing_file,
             overwrite_output=overwrite_output,
             variable_mapper=NWM_VARIABLE_MAPPER,
-            timeseries_type=timeseries_type
+            timeseries_type=timeseries_type,
+            starting_z_hour=starting_z_hour,
+            ending_z_hour=ending_z_hour
         )
 
-        if add_configuration_name:
+        if (
+            not self._configuration_name_exists(
+                ev_config["configuration_name"]
+            )
+        ):
             self.ev.configurations.add(
                 Configuration(
                     name=ev_config["configuration_name"],
@@ -766,7 +834,8 @@ class Fetch:
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
         timeseries_type: TimeseriesTypeEnum = "primary",
-        add_configuration_name: bool = True,
+        starting_z_hour: Optional[int] = None,
+        ending_z_hour: Optional[int] = None
     ):
         """
         Fetch NWM operational gridded data, calculate zonal statistics (currently only
@@ -799,7 +868,17 @@ class Fetch:
             Number of days to ingest data after start date.
         nwm_version : SupportedNWMOperationalVersionsEnum
             The NWM operational version.
-            "nwm22", or "nwm30".
+            "nwm12", "nwm20", "nwm21", "nwm22", or "nwm30".
+            Note that there is no change in NWM configuration between
+            version 2.1 and 2.2, and they are treated as the same version.
+            They are both allowed here for convenience.
+
+            Availability of each version:
+
+            - v1.2: 2018-09-17 - 2019-06-18
+            - v2.0: 2019-06-19 - 2021-04-19
+            - v2.1/2.2: 2021-04-20 - 2023-09-18
+            - v3.0: 2023-09-19 - present
         calculate_zonal_weights : bool
             Flag specifying whether or not to calculate zonal weights.
             True = calculate; False = use existing file. Default is True.
@@ -833,8 +912,12 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
-        add_configuration_name : bool
-            If True, adds the configuration name to the Evaluation. Default is True.
+        starting_z_hour : Optional[int]
+            The starting z_hour to include in the output. If None, all z_hours
+            are included for the first day. Default is None. Must be between 0 and 23.
+        ending_z_hour : Optional[int]
+            The ending z_hour to include in the output. If None, all z_hours
+            are included for the last day. Default is None. Must be between 0 and 23.
 
         Notes
         -----
@@ -888,7 +971,7 @@ class Fetch:
         >>>     zonal_weights_filepath=Path(Path.home(), "nextgen_03S_weights.parquet"),
         >>>     json_dir=Path(Path.home(), "temp/parquet/jsons/"),
         >>>     output_parquet_dir=Path(Path.home(), "temp/parquet"),
-        >>>     nwm_version="nwm22",
+        >>>     nwm_version="nwm21",
         >>>     data_source="GCS",
         >>>     kerchunk_method="auto",
         >>>     t_minus_hours=[0, 1, 2],
@@ -950,12 +1033,18 @@ class Fetch:
             overwrite_output=overwrite_output,
             location_id_prefix=location_id_prefix,
             variable_mapper=NWM_VARIABLE_MAPPER,
+            starting_z_hour=starting_z_hour,
+            ending_z_hour=ending_z_hour,,
             unique_zone_id="id",
             calculate_zonal_weights=calculate_zonal_weights,
             zone_polygons=locations_gdf
         )
 
-        if add_configuration_name:
+        if (
+            not self._configuration_name_exists(
+                ev_config["configuration_name"]
+            )
+        ):
             self.ev.configurations.add(
                 Configuration(
                     name=ev_config["configuration_name"],

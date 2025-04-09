@@ -12,7 +12,7 @@ RUN TEEHR_VERSION=$(cat /teehr/version.txt) && \
     mv dist/teehr-${TEEHR_VERSION}.tar.gz dist/teehr-build.tar.gz
 
 # Install TEEHR in the Pangeo Image
-FROM pangeo/pangeo-notebook:2024.10.01
+FROM pangeo/base-notebook:2025.01.24
 
 USER root
 ENV DEBIAN_FRONTEND=noninteractive

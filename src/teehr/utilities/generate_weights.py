@@ -16,6 +16,7 @@ import shapely
 
 from teehr.fetching.utils import load_gdf
 from teehr.fetching.const import LOCATION_ID
+import teehr.models.pandera_dataframe_schemas as schemas
 
 logger = logging.getLogger(__name__)
 
@@ -256,14 +257,19 @@ def generate_weights_file(
     grid_transform = src_da.rio.transform()
     nodata_val = src_da.rio.nodata
 
+    if not all([dim in src_da.dims for dim in ["x", "y"]]):
+        raise ValueError("Template dataset must have x and y dimensions.")
+
     # Get the subset of the grid that intersects the total zone bounds
     bbox = tuple(zone_gdf.total_bounds)
-    src_da = src_da.sel(x=slice(bbox[0], bbox[2]), y=slice(bbox[1], bbox[3]))[
-        0
-    ]
-    if 0 in src_da.shape:
-        logger.error("No grid cells intersect the zone polygons.")
-        raise ValueError("No grid cells intersect the zone polygons.")
+    if len(ds.dims) == 2:
+        src_da = src_da.sel(
+            x=slice(bbox[0], bbox[2]), y=slice(bbox[1], bbox[3])
+        )
+    else:
+        src_da = src_da.sel(
+            x=slice(bbox[0], bbox[2]), y=slice(bbox[1], bbox[3])
+        )[0]
     src_da = src_da.astype("float32")
     src_da["x"] = np.float32(src_da.x.values)
     src_da["y"] = np.float32(src_da.y.values)
@@ -298,6 +304,11 @@ def generate_weights_file(
     if location_id_prefix:
         df.loc[:, LOCATION_ID] = location_id_prefix + "-" + df[LOCATION_ID]
 
-    df.to_parquet(output_weights_filepath)
+    schema = schemas.weights_file_schema()
+    validated_df = schema.validate(df)
 
-    return
+    if output_weights_filepath:
+        validated_df.to_parquet(output_weights_filepath)
+        validated_df = None
+
+    return validated_df

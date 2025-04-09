@@ -132,7 +132,8 @@ def test_unpacking_bootstrap_results(tmpdir):
         quantiles=[0.05, 0.5, 0.95],
         reps=500
     )
-    kge = DeterministicMetrics.KlingGuptaEfficiency(bootstrap=boot)
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge.bootstrap = boot
     kge.unpack_results = True
     flds = ev.joined_timeseries.field_enum()
     filters = [
@@ -170,7 +171,8 @@ def test_circularblock_bootstrapping(tmpdir):
         quantiles=None,
         reps=500
     )
-    kge = DeterministicMetrics.KlingGuptaEfficiency(bootstrap=boot)
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge.bootstrap = boot
     # kge.unpack_results = True
 
     # Manual bootstrapping.
@@ -188,7 +190,7 @@ def test_circularblock_bootstrapping(tmpdir):
         random_state=kge.bootstrap.random_state
     )
     results = bs.apply(
-        kge.func,
+        kge.func(kge),
         kge.bootstrap.reps,
     )
 
@@ -233,7 +235,8 @@ def test_stationary_bootstrapping(tmpdir):
         quantiles=None,
         reps=500
     )
-    kge = DeterministicMetrics.KlingGuptaEfficiency(bootstrap=boot)
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge.bootstrap = boot
 
     # Manual bootstrapping.
     df = eval.joined_timeseries.to_pandas()
@@ -250,7 +253,7 @@ def test_stationary_bootstrapping(tmpdir):
         random_state=kge.bootstrap.random_state
     )
     results = bs.apply(
-        kge.func,
+        kge.func(kge),
         kge.bootstrap.reps,
     )
 
@@ -318,7 +321,8 @@ def test_gumboot_bootstrapping(tmpdir):
         reps=500,
         boot_year_file=BOOT_YEAR_FILE
     )
-    kge = DeterministicMetrics.KlingGuptaEfficiency(bootstrap=boot)
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+    kge.bootstrap = boot
     nse = DeterministicMetrics.NashSutcliffeEfficiency(bootstrap=boot)
 
     # Manually calling Gumboot.
@@ -338,7 +342,7 @@ def test_gumboot_bootstrapping(tmpdir):
         boot_year_file=kge.bootstrap.boot_year_file
     )
     results = bs.apply(
-        kge.func,
+        kge.func(kge),
         kge.bootstrap.reps,
     )
 

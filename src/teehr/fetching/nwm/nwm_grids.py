@@ -1,16 +1,18 @@
 """Module for fetching and processing NWM gridded data."""
-from typing import Union, List, Optional, Dict
+from typing import Union, List, Optional, Dict, Annotated
 from datetime import datetime
 from pathlib import Path
 
-from pydantic import validate_call, InstanceOf
+from pydantic import validate_call, Field, InstanceOf
 from geopandas import GeoDataFrame
 
 from teehr.fetching.nwm.grid_utils import fetch_and_format_nwm_grids
 from teehr.fetching.utils import (
     build_remote_nwm_filelist,
     generate_json_paths,
-    check_dates_against_nwm_version,
+    validate_operational_start_end_date,
+    start_on_z_hour,
+    end_on_z_hour,
     get_dataset
 )
 from teehr.models.fetching.utils import (
@@ -20,6 +22,8 @@ from teehr.models.fetching.utils import (
     TimeseriesTypeEnum
 )
 from teehr.fetching.const import (
+    NWM12_ANALYSIS_CONFIG,
+    NWM20_ANALYSIS_CONFIG,
     NWM22_ANALYSIS_CONFIG,
     NWM30_ANALYSIS_CONFIG,
 )
@@ -46,6 +50,8 @@ def nwm_grids_to_parquet(
     location_id_prefix: Optional[Union[str, None]] = None,
     variable_mapper: Dict[str, Dict[str, str]] = None,
     timeseries_type: TimeseriesTypeEnum = "primary",
+    starting_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
+    ending_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
     calculate_zonal_weights: bool = False,
     zone_polygons: Optional[Union[Path, str, InstanceOf[GeoDataFrame]]] = None,
     unique_zone_id: Optional[str] = None,
@@ -80,7 +86,17 @@ def nwm_grids_to_parquet(
         Path to the directory for the final parquet files.
     nwm_version : SupportedNWMOperationalVersionsEnum
         The NWM operational version.
-        "nwm22", or "nwm30".
+        "nwm12", "nwm20", "nwm21", "nwm22", or "nwm30".
+        Note that there is no change in NWM configuration between
+        version 2.1 and 2.2, and they are treated as the same version.
+        They are both allowed here for convenience.
+
+        Availability of each version:
+
+        - v1.2: 2018-09-17 - 2019-06-18
+        - v2.0: 2019-06-19 - 2021-04-19
+        - v2.1/2.2: 2021-04-20 - 2023-09-18
+        - v3.0: 2023-09-19 - present
     data_source : Optional[SupportedNWMDataSourcesEnum]
         Specifies the remote location from which to fetch the data
         "GCS" (default), "NOMADS", or "DSTOR".
@@ -108,6 +124,12 @@ def nwm_grids_to_parquet(
         exist.  True = overwrite; False = fail.
     location_id_prefix : Union[str, None]
         Optional location ID prefix to add (prepend) or replace.
+    starting_z_hour : Optional[int]
+        The starting z_hour to include in the output. If None, all z_hours
+        are included for the first day. Default is None. Must be between 0 and 23.
+    ending_z_hour : Optional[int]
+        The ending z_hour to include in the output. If None, all z_hours
+        are included for the last day. Default is None. Must be between 0 and 23.
     variable_mapper : Dict[str, Dict[str, str]]
         A dictionary of dictionaries to map NWM variable names to new names.
     timeseries_type : TimeseriesTypeEnum
@@ -174,7 +196,7 @@ def nwm_grids_to_parquet(
     Perform the calculations, writing to the specified directory.
 
     >>> tlg.nwm_grids_to_parquet(
-    >>>     configuration=CONFIGURATION,
+    >>>     nwm_configuration=CONFIGURATION,
     >>>     output_type=OUTPUT_TYPE,
     >>>     variable_name=VARIABLE_NAME,
     >>>     start_date=START_DATE,
@@ -191,14 +213,26 @@ def nwm_grids_to_parquet(
     >>> )
     """ # noqa
     # Import appropriate config model and dicts based on NWM version
-    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
+    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm12:
+        from teehr.models.fetching.nwm12_grid import GridConfigurationModel
+        analysis_config_dict = NWM12_ANALYSIS_CONFIG
+    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm20:
+        from teehr.models.fetching.nwm20_grid import GridConfigurationModel
+        analysis_config_dict = NWM20_ANALYSIS_CONFIG
+    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm21:
+        from teehr.models.fetching.nwm22_grid import GridConfigurationModel
+        analysis_config_dict = NWM22_ANALYSIS_CONFIG
+    elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
         from teehr.models.fetching.nwm22_grid import GridConfigurationModel
         analysis_config_dict = NWM22_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm30:
         from teehr.models.fetching.nwm30_grid import GridConfigurationModel
         analysis_config_dict = NWM30_ANALYSIS_CONFIG
     else:
-        raise ValueError("nwm_version must equal 'nwm22' or 'nwm30'")
+        raise ValueError(
+            "nwm_version must equal "
+            "'nwm12', 'nwm20', 'nwm21', 'nwm22' or 'nwm30'"
+        )
 
     # Parse input parameters to validate configuration
     vars = {
@@ -225,7 +259,11 @@ def nwm_grids_to_parquet(
     else:
 
         # Make sure start/end dates work with specified NWM version
-        check_dates_against_nwm_version(nwm_version, start_date, ingest_days)
+        validate_operational_start_end_date(
+            nwm_version,
+            start_date,
+            ingest_days
+        )
 
         # Build paths to netcdf files on GCS
         gcs_component_paths = build_remote_nwm_filelist(
@@ -238,6 +276,21 @@ def nwm_grids_to_parquet(
             ignore_missing_file,
             prioritize_analysis_valid_time
         )
+
+        if starting_z_hour is not None:
+            gcs_component_paths = start_on_z_hour(
+                start_date=start_date,
+                start_z_hour=starting_z_hour,
+                gcs_component_paths=gcs_component_paths
+            )
+
+        if ending_z_hour is not None:
+            gcs_component_paths = end_on_z_hour(
+                start_date=start_date,
+                ingest_days=ingest_days,
+                end_z_hour=ending_z_hour,
+                gcs_component_paths=gcs_component_paths
+            )
 
         # Create paths to local and/or remote kerchunk jsons
         json_paths = generate_json_paths(

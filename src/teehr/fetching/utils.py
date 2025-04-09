@@ -6,6 +6,7 @@ from datetime import timedelta
 from dateutil.parser import parse
 import logging
 import re
+import json
 
 import dask
 import fsspec
@@ -16,6 +17,7 @@ import numpy as np
 import xarray as xr
 import geopandas as gpd
 import pyarrow as pa
+import pandera
 
 from teehr.models.fetching.utils import (
     SupportedKerchunkMethod,
@@ -29,13 +31,86 @@ from teehr.fetching.const import (
     NWM_BUCKET,
     NWM_S3_JSON_PATH,
     NWM30_START_DATE,
+    NWM21_START_DATE,
+    NWM20_START_DATE,
+    NWM12_START_DATE,
     NWM_VARIABLE_MAPPER,
     VARIABLE_NAME
 )
 import teehr.models.pandera_dataframe_schemas as schemas
 
+TZ_PATTERN = re.compile(r't[0-9]+z')
+DAY_PATTERN = re.compile(r'nwm.[0-9]+')
+
 
 logger = logging.getLogger(__name__)
+
+
+def start_on_z_hour(
+    start_date: datetime,
+    start_z_hour: int,
+    gcs_component_paths: List[str]
+):
+    """Limit the start date to a specified z-hour."""
+    logger.info(f"Limiting the start date to z-hour: {start_z_hour}.")
+    formatted_start_date = start_date.strftime("%Y%m%d")
+    return_list = []
+    for path in gcs_component_paths:
+        res = re.search(DAY_PATTERN, path).group()
+        day = res.split(".")[1]
+        tz = re.search(TZ_PATTERN, path).group()
+        if day == formatted_start_date:
+            if int(tz[1:-1]) >= start_z_hour:
+                return_list.append(path)
+        else:
+            return_list.append(path)
+    return return_list
+
+
+def end_on_z_hour(
+    start_date: datetime,
+    ingest_days: int,
+    end_z_hour: int,
+    gcs_component_paths: List[str]
+):
+    """Limit the end date to a specified z-hour."""
+    logger.info(f"Limiting the end date to z-hour: {end_z_hour}.")
+    dates = pd.date_range(start=start_date, periods=ingest_days, freq="1d")
+    formatted_end_date = dates[-1].strftime("%Y%m%d")
+    return_list = []
+    reversed_list = sorted(gcs_component_paths, reverse=True)
+    for path in reversed_list:
+        res = re.search(DAY_PATTERN, path).group()
+        day = res.split(".")[1]
+        tz = re.search(TZ_PATTERN, path).group()
+        if day == formatted_end_date:
+            if int(tz[1:-1]) <= end_z_hour:
+                return_list.append(path)
+        else:
+            return_list.append(path)
+    return sorted(return_list)
+
+
+def parse_nwm_json_paths(
+    json_paths: List[str]
+) -> pd.DataFrame:
+    """Parse the day and z-hour from the json paths, returning a DataFrame."""
+    logger.debug("Parsing day and z-hour from json paths.")
+    days = []
+    z_hours = []
+    for path in json_paths:
+        filename = Path(path).name
+        if path.split(":")[0] == "s3":
+            res = re.search(DAY_PATTERN, path).group()
+            days.append(res.split(".")[1])
+            z_hours.append(re.search(TZ_PATTERN, filename).group())
+        else:
+            days.append(filename.split(".")[1])
+            z_hours.append(filename.split(".")[3])
+
+    return pd.DataFrame(
+        {"day": days, "z_hour": z_hours, "filepath": json_paths}
+    )
 
 
 def format_nwm_configuration_name(
@@ -67,7 +142,7 @@ def format_nwm_variable_name(variable_name: str) -> str:
         get(variable_name, variable_name)
 
 
-def check_dates_against_nwm_version(
+def validate_operational_start_end_date(
     nwm_version: str,
     start_date: Union[str, datetime],
     ingest_days: int
@@ -77,25 +152,32 @@ def check_dates_against_nwm_version(
 
     if isinstance(start_date, str):
         start_date = parse(start_date)
-
-    if (
-        (nwm_version == SupportedNWMOperationalVersionsEnum.nwm30) &
-        (start_date < NWM30_START_DATE)
-    ):
-        raise ValueError(
-            f"The specified start date ({start_date}) is before the NWM "
-            f"v3.0 release date ({NWM30_START_DATE})"
-        )
-
     end_date = start_date + timedelta(days=ingest_days)
-    if (
-        (nwm_version == SupportedNWMOperationalVersionsEnum.nwm22) &
-        (end_date > NWM30_START_DATE)
-    ):
-        raise ValueError(
-            f"The specified end date ({end_date}) is after the NWM "
-            f"v2.2 to v3.0 transition date ({NWM30_START_DATE})"
-        )
+
+    err_msg = (
+        f"The specified start and end dates ({start_date} - {end_date}) "
+        f"fall outside {nwm_version} operational data availability."
+    )
+    v3_err_msg = (
+        f"The specified start date ({start_date}) is before the NWM "
+        f"v3.0 release date ({NWM30_START_DATE})"
+    )
+
+    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm30:
+        if start_date < NWM30_START_DATE:
+            raise ValueError(v3_err_msg)
+    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
+        if (end_date >= NWM30_START_DATE) | (start_date < NWM21_START_DATE):
+            raise ValueError(err_msg)
+    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm21:
+        if (end_date >= NWM30_START_DATE) | (start_date < NWM21_START_DATE):
+            raise ValueError(err_msg)
+    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm20:
+        if (end_date >= NWM21_START_DATE) | (start_date < NWM20_START_DATE):
+            raise ValueError(err_msg)
+    if nwm_version == SupportedNWMOperationalVersionsEnum.nwm12:
+        if (end_date >= NWM20_START_DATE) | (start_date < NWM12_START_DATE):
+            raise ValueError(err_msg)
 
 
 def generate_json_paths(
@@ -172,6 +254,19 @@ def generate_json_paths(
     return json_paths
 
 
+def _drop_nan_values(
+    df: pd.DataFrame,
+    subset_columns=["value"]
+) -> pd.DataFrame:
+    """Drop NaN values from the timeseries dataframe."""
+    if df[subset_columns].isnull().values.any():
+        logger.debug(
+            "NaN values were encountered, dropping from the dataframe."
+        )
+        return df.dropna(subset=subset_columns).reset_index(drop=True)
+    return df
+
+
 def write_timeseries_parquet_file(
     filepath: Path,
     overwrite_output: bool,
@@ -198,11 +293,22 @@ def write_timeseries_parquet_file(
     else:
         df = data
 
+    df = _drop_nan_values(df)
+
     if timeseries_type == TimeseriesTypeEnum.primary:
         schema = schemas.primary_timeseries_schema(type="pandas")
     elif timeseries_type == TimeseriesTypeEnum.secondary:
         schema = schemas.secondary_timeseries_schema(type="pandas")
-    validated_df = schema.validate(df)
+
+    try:
+        validated_df = schema.validate(df, lazy=True)
+    except pandera.errors.SchemaErrors as exc:
+        msg = json.dumps(exc.message, indent=2)
+        logger.error(
+            f"Validation error: {msg}"
+            f"\nThis file '{filepath}' will be skipped."
+        )
+        return
 
     if not filepath.is_file():
         validated_df.to_parquet(filepath)

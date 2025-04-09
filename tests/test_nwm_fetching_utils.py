@@ -1,16 +1,21 @@
 """Test NWM fetching utils."""
 from pathlib import Path
+from datetime import datetime
 
 import tempfile
 import pytest
 
 from teehr.fetching.utils import (
     build_zarr_references,
-    check_dates_against_nwm_version,
+    validate_operational_start_end_date,
     build_remote_nwm_filelist,
     generate_json_paths,
     get_dataset,
-    create_periods_based_on_chunksize
+    create_periods_based_on_chunksize,
+    parse_nwm_json_paths,
+    start_on_z_hour,
+    end_on_z_hour
+
 )
 from teehr.fetching.const import (
     NWM22_ANALYSIS_CONFIG,
@@ -18,6 +23,32 @@ from teehr.fetching.const import (
 )
 
 TIMEFORMAT = "%Y-%m-%d %H:%M:%S"
+
+
+def test_parsing_remote_json_paths(tmpdir):
+    """Test parsing z_hour and date from remote json paths."""
+    json_paths = [
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/analysis_assim_extend_no_da/nwm.t06z.analysis_assim_extend_no_da.channel_rt.tm00.conus.nc.json", # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/analysis_assim_hawaii/nwm.t06z.analysis_assim.channel_rt.tm0100.hawaii.nc.json", # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/long_range_mem1/nwm.t06z.long_range.channel_rt_1.f102.conus.nc.json", # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/medium_range_mem1/nwm.t06z.medium_range.channel_rt_1.f009.conus.nc.json", # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/medium_range_no_da/nwm.t06z.medium_range_no_da.channel_rt.f063.conus.nc.json", # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/short_range/nwm.t06z.short_range.channel_rt.f010.conus.nc.json", # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/short_range_puertorico/nwm.t06z.short_range.channel_rt.f020.puertorico.nc.json", # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/short_range_puertorico_no_da/nwm.t06z.short_range_no_da.channel_rt.f029.puertorico.nc.json", # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/forcing_short_range/nwm.t06z.short_range.forcing.f005.conus.nc.json",  # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/forcing_analysis_assim/nwm.t06z.analysis_assim.forcing.tm02.conus.nc.json",  # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/forcing_analysis_assim_puertorico/nwm.t06z.analysis_assim.forcing.tm00.puertorico.nc.json",  # noqa
+        "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/forcing_medium_range/nwm.t06z.medium_range.forcing.f039.conus.nc.json"  # noqa
+    ]
+
+    df = parse_nwm_json_paths(
+        json_paths=json_paths
+    )
+
+    assert df["day"].eq("20220101").all()
+    assert df["z_hour"].eq("t06z").all()
+    assert df["filepath"].eq(json_paths).all()
 
 
 def test_point_zarr_reference_file(tmpdir):
@@ -45,16 +76,101 @@ def test_point_zarr_reference_file(tmpdir):
     assert test_ds.identical(built_ds)
 
 
-def test_dates_and_nwm_version():
+def test_dates_and_nwm30_version():
     """Make sure start/end dates work with specified NWM version."""
     nwm_version = "nwm30"
     start_date = "2023-11-20"
     ingest_days = 1
-    check_dates_against_nwm_version(nwm_version, start_date, ingest_days)
+    validate_operational_start_end_date(nwm_version, start_date, ingest_days)
 
     try:
-        nwm_version = "nwm22"
-        check_dates_against_nwm_version(nwm_version, start_date, ingest_days)
+        failed = False
+        start_date = "2022-11-20"
+        validate_operational_start_end_date(
+            nwm_version,
+            start_date,
+            ingest_days
+        )
+    except ValueError:
+        failed = True
+    assert failed
+
+
+def test_dates_and_nwm22_version():
+    """Make sure start/end dates work with specified NWM version."""
+    nwm_version = "nwm22"
+    start_date = "2022-11-20"
+    ingest_days = 1
+    validate_operational_start_end_date(nwm_version, start_date, ingest_days)
+
+    try:
+        failed = False
+        start_date = "2023-11-20"
+        validate_operational_start_end_date(
+            nwm_version,
+            start_date,
+            ingest_days
+        )
+    except ValueError:
+        failed = True
+    assert failed
+
+
+def test_dates_and_nwm21_version():
+    """Make sure start/end dates work with specified NWM version."""
+    nwm_version = "nwm21"
+    start_date = "2021-04-30"
+    ingest_days = 1
+    validate_operational_start_end_date(nwm_version, start_date, ingest_days)
+
+    try:
+        failed = False
+        start_date = "2019-11-20"
+        validate_operational_start_end_date(
+            nwm_version,
+            start_date,
+            ingest_days
+        )
+    except ValueError:
+        failed = True
+    assert failed
+
+
+def test_dates_and_nwm20_version():
+    """Make sure start/end dates work with specified NWM version."""
+    nwm_version = "nwm20"
+    start_date = "2019-06-20"
+    ingest_days = 1
+    validate_operational_start_end_date(nwm_version, start_date, ingest_days)
+
+    try:
+        failed = False
+        start_date = "2018-11-20"
+        validate_operational_start_end_date(
+            nwm_version,
+            start_date,
+            ingest_days
+        )
+    except ValueError:
+        failed = True
+    assert failed
+
+
+def test_dates_and_nwm12_version():
+    """Make sure start/end dates work with specified NWM version."""
+    nwm_version = "nwm12"
+    start_date = "2018-11-20"
+    ingest_days = 1
+    validate_operational_start_end_date(nwm_version, start_date, ingest_days)
+
+    try:
+        failed = False
+        start_date = "2017-11-20"
+        validate_operational_start_end_date(
+            nwm_version,
+            start_date,
+            ingest_days
+        )
     except ValueError:
         failed = True
     assert failed
@@ -197,15 +313,51 @@ def test_create_periods_based_on_year():
     assert periods[0].end_time.strftime(TIMEFORMAT) == "2023-12-31 23:59:59"
 
 
+def test_start_end_z_hours():
+    """Test building NWM30 GCS paths and specifying start/end z-hour."""
+    gcs_component_paths = build_remote_nwm_filelist(
+        configuration="short_range",
+        output_type="channel_rt",
+        start_dt="2023-11-28",
+        ingest_days=2,
+        analysis_config_dict=NWM30_ANALYSIS_CONFIG,
+        t_minus_hours=[0],
+        ignore_missing_file=False,
+        prioritize_analysis_valid_time=False
+    )
+
+    gcs_component_paths = start_on_z_hour(
+        gcs_component_paths=gcs_component_paths,
+        start_z_hour=3,
+        start_date=datetime.strptime("2023-11-28", "%Y-%m-%d")
+    )
+    gcs_component_paths = end_on_z_hour(
+        gcs_component_paths=gcs_component_paths,
+        end_z_hour=12,
+        ingest_days=2,
+        start_date=datetime.strptime("2023-11-28", "%Y-%m-%d")
+    )
+
+    assert gcs_component_paths[-1] == 'gcs://national-water-model/nwm.20231129/short_range/nwm.t12z.short_range.channel_rt.f018.conus.nc'  # noqa
+    assert gcs_component_paths[0] == 'gcs://national-water-model/nwm.20231128/short_range/nwm.t03z.short_range.channel_rt.f001.conus.nc'  # noqa
+    assert len(gcs_component_paths) == 612
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(prefix="teehr-") as tempdir:
+        test_parsing_remote_json_paths(tempdir)
         test_point_zarr_reference_file(tempdir)
     test_building_nwm30_gcs_paths()
     test_building_nwm22_gcs_paths()
     test_generate_json_paths()
-    test_dates_and_nwm_version()
+    test_dates_and_nwm30_version()
+    test_dates_and_nwm22_version()
+    test_dates_and_nwm21_version()
+    test_dates_and_nwm20_version()
+    test_dates_and_nwm12_version()
     test_generate_json_for_bad_file()
     test_create_periods_based_on_day()
     test_create_periods_based_on_week()
     test_create_periods_based_on_month()
     test_create_periods_based_on_year()
+    test_start_end_z_hours()

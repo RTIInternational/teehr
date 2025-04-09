@@ -1,8 +1,8 @@
 """Module for fetching and processing USGS streamflow data.
 
 The function ``usgs_to_parquet`` fetches USGS streamflow data and saves it to
-parquet files following the TEEHR data model.  The OWP tool ``HydroTools`` is
-used to fetch the data from the USGS API.  Several ``chunk_by`` options are
+parquet files following the TEEHR data model.  The USGS tool ``dataretrieval``
+is used to fetch the data from the USGS API.  Several ``chunk_by`` options are
 included to allow for the data to be fetched by location_id, day, week, month,
 and year (or None).
 
@@ -47,6 +47,8 @@ from teehr.fetching.const import (
 DATETIME_STR_FMT = "%Y-%m-%dT%H:%M:00+0000"
 DAYLIGHT_SAVINGS_PAD = timedelta(hours=2)
 
+pd.options.mode.copy_on_write = True
+
 logger = logging.getLogger(__name__)
 
 
@@ -66,7 +68,7 @@ def _filter_to_hourly(df: pd.DataFrame) -> pd.DataFrame:
 def _filter_no_data(df: pd.DataFrame) -> pd.DataFrame:
     """Filter out no data values."""
     logger.debug("Filtering out no data values.")
-    df2 = df[~df[VALUE].isin(USGS_NODATA_VALUES)]
+    df2 = df.loc[~df[VALUE].isin(USGS_NODATA_VALUES), :]
     df2.dropna(subset=[VALUE], inplace=True)
     return df2
 
