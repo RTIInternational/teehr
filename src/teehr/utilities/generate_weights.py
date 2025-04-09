@@ -262,7 +262,7 @@ def generate_weights_file(
 
     # Get the subset of the grid that intersects the total zone bounds
     bbox = tuple(zone_gdf.total_bounds)
-    if len(ds.dims) == 2:
+    if len(template_dataset.dims) == 2:
         src_da = src_da.sel(
             x=slice(bbox[0], bbox[2]), y=slice(bbox[1], bbox[3])
         )
@@ -307,8 +307,7 @@ def generate_weights_file(
     schema = schemas.weights_file_schema()
     validated_df = schema.validate(df)
 
-    if output_weights_filepath:
-        validated_df.to_parquet(output_weights_filepath)
-        validated_df = None
+    validated_df.to_parquet(output_weights_filepath)
+    validated_df = None
 
-    return validated_df
+    return

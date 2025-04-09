@@ -264,7 +264,6 @@ class Fetch:
         overwrite_output: Optional[bool] = False,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
         timeseries_type: TimeseriesTypeEnum = "secondary",
-        add_configuration_name: bool = True,
         location_id_prefix: str = None,
     ):
         """Fetch NWM retrospective point data and load into the TEEHR dataset.
@@ -312,8 +311,6 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
-        add_configuration_name : bool
-            If True, adds the configuration name to the Evaluation. Default is True.
         location_id_prefix : str
             Prefix to include when filtering for secondary_location_id's.
             Default is None, in which case the nwm_version is used as the
@@ -446,11 +443,16 @@ class Fetch:
             Str formats can include YYYY-MM-DD or MM/DD/YYYY.
             Rounds down to beginning of day.
 
+            - v2.0: 1993-01-01
             - v2.1: 1979-01-01
             - v3.0: 1979-02-01
         end_date : Union[str, datetime, pd.Timestamp],
             Last date to fetch.  Rounds up to end of day.
             Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+
+            - v2.0: 2018-12-31
+            - v2.1: 2020-12-31
+            - v3.0: 2023-01-31
         calculate_zonal_weights : bool
             Flag specifying whether or not to calculate zonal weights.
             True = calculate; False = use existing file. Default is True.
@@ -460,9 +462,6 @@ class Fetch:
         overwrite_output : bool
             Flag specifying whether or not to overwrite output files if they already
             exist.  True = overwrite; False = fail.
-
-            - v2.1: 2020-12-31
-            - v3.0: 2023-01-31
         chunk_by : Union[NWMChunkByEnum, None] = None,
             If None (default) saves all timeseries to a single file, otherwise
             the data is processed using the specified parameter.
@@ -474,9 +473,6 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
-        add_configuration_name : bool
-            If True, adds the configuration name to the Evaluation.
-            Default is True.
 
         Examples
         --------
@@ -1034,7 +1030,7 @@ class Fetch:
             location_id_prefix=location_id_prefix,
             variable_mapper=NWM_VARIABLE_MAPPER,
             starting_z_hour=starting_z_hour,
-            ending_z_hour=ending_z_hour,,
+            ending_z_hour=ending_z_hour,
             unique_zone_id="id",
             calculate_zonal_weights=calculate_zonal_weights,
             zone_polygons=locations_gdf

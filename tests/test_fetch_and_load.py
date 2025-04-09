@@ -185,6 +185,7 @@ def test_fetch_and_load_nwm_operational_grids(tmpdir):
         nwm_version="nwm30",
         prioritize_analysis_valid_time=True,
         t_minus_hours=[0],
+        location_id_prefix="huc10",
         calculate_zonal_weights=True,
         starting_z_hour=2,
         ending_z_hour=22
