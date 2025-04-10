@@ -14,6 +14,7 @@ import pandas as pd
 import dask
 import shapely
 
+from teehr.fetching.nwm.grid_utils import update_location_id_prefix
 from teehr.fetching.utils import load_gdf
 from teehr.fetching.const import LOCATION_ID
 import teehr.models.pandera_dataframe_schemas as schemas
@@ -302,7 +303,9 @@ def generate_weights_file(
         df[LOCATION_ID] = weights_gdf.index.values
 
     if location_id_prefix:
-        df.loc[:, LOCATION_ID] = location_id_prefix + "-" + df[LOCATION_ID]
+        df = update_location_id_prefix(
+            df, new_prefix=location_id_prefix
+        )
 
     schema = schemas.weights_file_schema()
     validated_df = schema.validate(df)

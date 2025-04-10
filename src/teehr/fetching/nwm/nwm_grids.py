@@ -329,7 +329,8 @@ def nwm_grids_to_parquet(
         # Fetch the data, saving to parquet files based on TEEHR data model
         fetch_and_format_nwm_grids(
             json_paths=json_paths,
-            configuration_name=f"{nwm_version}_{configuration}",
+            nwm_configuration_name=configuration,
+            nwm_version=nwm_version,
             variable_name=variable_name,
             output_parquet_dir=output_parquet_dir,
             zonal_weights_filepath=zonal_weights_filepath,

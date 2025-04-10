@@ -442,7 +442,8 @@ class Fetch:
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
         location_id_prefix: Optional[str] = None,
         timeseries_type: TimeseriesTypeEnum = "primary",
-        write_mode: TableWriteEnum = "append"
+        write_mode: TableWriteEnum = "append",
+        zonal_weights_filepath: Optional[Union[Path, str]] = None
     ):
         """
         Fetch NWM retrospective gridded data, calculate zonal statistics (currently only
@@ -502,6 +503,10 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
+        zonal_weights_filepath : Optional[Union[Path, str]]
+            The path to the zonal weights file. If None and calculate_zonal_weights
+            is False, the weights file must exist in the cache for the configuration.
+            Default is None.
 
         Examples
         --------
@@ -572,13 +577,16 @@ class Fetch:
                 }
             ).to_geopandas()
 
-        nwm_retro_grids_to_parquet(
-            nwm_version=nwm_version,
-            variable_name=variable_name,
-            zonal_weights_filepath=Path(
+        if zonal_weights_filepath is None:
+            zonal_weights_filepath = Path(
                 ev_weights_cache_dir,
                 f"{ev_configuration_name}_pixel_weights.parquet"
             ),
+
+        nwm_retro_grids_to_parquet(
+            nwm_version=nwm_version,
+            variable_name=variable_name,
+            zonal_weights_filepath=zonal_weights_filepath,
             start_date=start_date,
             end_date=end_date,
             output_parquet_dir=Path(
@@ -877,7 +885,8 @@ class Fetch:
         timeseries_type: TimeseriesTypeEnum = "primary",
         starting_z_hour: Optional[int] = None,
         ending_z_hour: Optional[int] = None,
-        write_mode: TableWriteEnum = "append"
+        write_mode: TableWriteEnum = "append",
+        zonal_weights_filepath: Optional[Union[Path, str]] = None,
     ):
         """
         Fetch NWM operational gridded data, calculate zonal statistics (currently only
@@ -967,6 +976,10 @@ class Fetch:
             that does not already exist.
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
+        zonal_weights_filepath : Optional[Union[Path, str]]
+            The path to the zonal weights file. If None and calculate_zonal_weights
+            is False, the weights file must exist in the cache for the configuration.
+            Default is None.
 
 
         .. note::
@@ -1069,16 +1082,19 @@ class Fetch:
                 }
             ).to_geopandas()
 
+        if zonal_weights_filepath is None:
+            zonal_weights_filepath = Path(
+                ev_weights_cache_dir,
+                f"{ev_config['configuration_name']}_pixel_weights.parquet"
+            )
+
         nwm_grids_to_parquet(
             configuration=nwm_configuration,
             output_type=output_type,
             variable_name=variable_name,
             start_date=start_date,
             ingest_days=ingest_days,
-            zonal_weights_filepath=Path(
-                ev_weights_cache_dir,
-                f"{ev_config['configuration_name']}_pixel_weights.parquet"
-            ),
+            zonal_weights_filepath=zonal_weights_filepath,
             json_dir=self.kerchunk_cache_dir,
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
@@ -1098,7 +1114,8 @@ class Fetch:
             ending_z_hour=ending_z_hour,
             unique_zone_id="id",
             calculate_zonal_weights=calculate_zonal_weights,
-            zone_polygons=locations_gdf
+            zone_polygons=locations_gdf,
+            timeseries_type=timeseries_type
         )
 
         if (
@@ -1116,9 +1133,7 @@ class Fetch:
 
         validate_and_insert_timeseries(
             ev=self.ev,
-            in_path=Path(
-                self.nwm_cache_dir
-            ),
+            in_path=Path(self.nwm_cache_dir),
             timeseries_type=timeseries_type,
             write_mode=write_mode
         )

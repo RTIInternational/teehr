@@ -274,20 +274,6 @@ class BaseTable():
             save(str(self.dir))
         )
 
-    def _check_for_null_partition_by_values(self, df: ps.DataFrame):
-        """Remove a field from partition_by if all values are null."""
-        partition_by = self.partition_by
-        if partition_by is None:
-            partition_by = []
-        for field_name in partition_by:
-            if field_name in df.columns:
-                if len(df.filter(df[field_name].isNotNull()).collect()) == 0:
-                    logger.debug(
-                        f"All {field_name} values are null. "
-                        f"{field_name} will be removed as a partition column."
-                    )
-                    self.partition_by.remove(field_name)
-
     def _check_for_null_unique_column_values(self, df: ps.DataFrame):
         """Remove a field from self.unique_column_set if all values are null."""
         for field_name in self.unique_column_set:
@@ -328,7 +314,6 @@ class BaseTable():
 
         if df is not None:
 
-            self._check_for_null_partition_by_values(df)
             self._check_for_null_unique_column_values(df)
 
             if write_mode == "overwrite":
