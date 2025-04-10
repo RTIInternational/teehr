@@ -7,7 +7,6 @@ from teehr import Evaluation
 import pandas as pd
 import numpy as np
 import pytest
-import teehr
 
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "test_study")
@@ -240,34 +239,28 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_temp(
+        test_fetch_and_load_nwm_retro_points(
             tempfile.mkdtemp(
-                prefix="0-",
+                prefix="1-",
                 dir=tempdir
             )
         )
-        # test_fetch_and_load_nwm_retro_points(
-        #     tempfile.mkdtemp(
-        #         prefix="1-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_fetch_and_load_nwm_retro_grids(
-        #     tempfile.mkdtemp(
-        #         prefix="2-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_fetch_and_load_nwm_operational_points(
-        #     tempfile.mkdtemp(
-        #         prefix="3-",
-        #         dir=tempdir
-        #     )
-        # )
-        # # Warning: This one is slow.
-        # test_fetch_and_load_nwm_operational_grids(
-        #     tempfile.mkdtemp(
-        #         prefix="4-",
-        #         dir=tempdir
-        #     )
-        # )
+        test_fetch_and_load_nwm_retro_grids(
+            tempfile.mkdtemp(
+                prefix="2-",
+                dir=tempdir
+            )
+        )
+        test_fetch_and_load_nwm_operational_points(
+            tempfile.mkdtemp(
+                prefix="3-",
+                dir=tempdir
+            )
+        )
+        # Warning: This one is slow.
+        test_fetch_and_load_nwm_operational_grids(
+            tempfile.mkdtemp(
+                prefix="4-",
+                dir=tempdir
+            )
+        )
