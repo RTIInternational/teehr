@@ -581,7 +581,7 @@ class Fetch:
             zonal_weights_filepath = Path(
                 ev_weights_cache_dir,
                 f"{ev_configuration_name}_pixel_weights.parquet"
-            ),
+            )
 
         nwm_retro_grids_to_parquet(
             nwm_version=nwm_version,

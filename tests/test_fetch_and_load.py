@@ -179,7 +179,6 @@ def test_fetch_and_load_nwm_operational_points(tmpdir):
     assert np.isclose(updated_df.value.sum(), np.float32(492485.03))
 
 
-
 @pytest.mark.skip(reason="This takes forever!")
 def test_fetch_and_load_nwm_operational_grids(tmpdir):
     """Test the NWM forecast grids fetch and load."""
