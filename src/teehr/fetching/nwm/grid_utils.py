@@ -1,7 +1,6 @@
 """Module defining shared functions for processing NWM grid data."""
 from pathlib import Path
 from typing import Dict, List, Tuple, Union
-import re
 
 import dask
 import numpy as np
@@ -12,7 +11,8 @@ import teehr.models.pandera_dataframe_schemas as schemas
 from teehr.fetching.utils import (
     get_dataset,
     write_timeseries_parquet_file,
-    parse_nwm_json_paths
+    parse_nwm_json_paths,
+    format_nwm_configuration_name
 )
 from teehr.models.fetching.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
@@ -174,7 +174,8 @@ def process_single_nwm_grid_file(
 
 def fetch_and_format_nwm_grids(
     json_paths: List[str],
-    configuration_name: str,
+    nwm_configuration_name: str,
+    nwm_version: str,
     variable_name: str,
     output_parquet_dir: str,
     zonal_weights_filepath: str,
@@ -201,6 +202,11 @@ def fetch_and_format_nwm_grids(
 
     gps = df_refs.groupby(["day", "z_hour"])
 
+    teehr_config = format_nwm_configuration_name(
+        nwm_configuration_name=nwm_configuration_name,
+        nwm_version=nwm_version
+    )
+
     for gp in gps:
         _, df = gp
 
@@ -209,7 +215,7 @@ def fetch_and_format_nwm_grids(
             results.append(
                 process_single_nwm_grid_file(
                     row,
-                    configuration_name,
+                    teehr_config["configuration_name"],
                     variable_name,
                     zonal_weights_filepath,
                     ignore_missing_file,
@@ -225,6 +231,9 @@ def fetch_and_format_nwm_grids(
             raise FileNotFoundError("No NWM files for specified input"
                                     "configuration were found in GCS!")
         z_hour_df = pd.concat(output)
+
+        if timeseries_type == TimeseriesTypeEnum.secondary:
+            z_hour_df.loc[:, "member"] = teehr_config["member"]
 
         # Save to parquet.
         yrmoday = df.day.iloc[0]

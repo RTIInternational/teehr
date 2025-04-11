@@ -38,6 +38,7 @@ netcdf4 = "1.6.5"
 bokeh = "^3.5.0"
 scoringrules = "^0.7.1"
 hvplot = "^0.11.1"
+geoviews = "^1.14.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.3"

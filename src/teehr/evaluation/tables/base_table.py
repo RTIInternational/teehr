@@ -9,8 +9,12 @@ from teehr.querying.utils import order_df
 from teehr.utils.s3path import S3Path
 from teehr.utils.utils import to_path_or_s3path, path_to_spark
 from teehr.models.filters import FilterBaseModel
+from teehr.models.table_enums import TableWriteEnum
 import logging
-from pyspark.sql.functions import lit, col
+from pyspark.sql.functions import lit, col, row_number, asc
+from pyspark.sql.window import Window
+import shutil
+
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +29,6 @@ class BaseTable():
         self.dir = None
         self.schema_func = None
         self.format = None
-        self.save_mode = "error"
         self.partition_by = None
         self.spark = ev.spark
         self.df: ps.DataFrame = None
@@ -43,12 +46,26 @@ class BaseTable():
         logger.error(err_msg)
         raise ValueError(err_msg)
 
+    def _drop_duplicates(
+        self,
+        sdf: ps.DataFrame,
+    ) -> ps.DataFrame:
+        """Drop duplicates from the DataFrame."""
+        logger.info(f"Dropping duplicates from {self.name}.")
+        window_spec = Window.partitionBy(*self.unique_column_set)
+        ordering_expr = [asc(col) for col in self.unique_column_set]
+        window_spec = window_spec.orderBy(*ordering_expr)
+        sdf_with_row_num = sdf.withColumn("row_num", row_number().over(window_spec))
+        deduplicated_sdf = sdf_with_row_num.filter("row_num == 1").drop("row_num")
+        return deduplicated_sdf
+
     def _read_files(
-            self,
-            path: Union[str, Path, S3Path],
-            pattern: str = None,
-            use_table_schema: bool = False,
-            **options
+        self,
+        path: Union[str, Path, S3Path],
+        pattern: str = None,
+        use_table_schema: bool = False,
+        show_missing_table_warning: bool = True,
+        **options
     ) -> ps.DataFrame:
         """Read data from table directory as a spark dataframe.
 
@@ -62,6 +79,9 @@ class BaseTable():
             If True, use the table schema to read the files.
             Missing files will be ignored with 'ignoreMissingFiles'
             set to True (default).
+        show_missing_table_warning : bool, optional
+            If True, show the warning an empty table was returned.
+            The default is True.
         **options
             Additional options to pass to the spark read method.
 
@@ -84,7 +104,7 @@ class BaseTable():
         if use_table_schema is True:
             schema = self.schema_func().to_structtype()
             df = self.ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
-            if len(df.head(1)) == 0:
+            if len(df.head(1)) == 0 and show_missing_table_warning:
                 logger.warning(f"An empty dataframe was returned for '{self.name}'.")
         else:
             df = self.ev.spark.read.format(self.format).options(**options).load(path)
@@ -92,7 +112,7 @@ class BaseTable():
         return df
 
     def _load_table(self, **kwargs):
-        """Load the table from the directory to self.df
+        """Load the table from the directory to self.df.
 
         Parameters
         ----------
@@ -113,7 +133,165 @@ class BaseTable():
         if self.df is None:
             self._raise_missing_table_error(table_name=self.name)
 
-    def _write_spark_df(self, df: ps.DataFrame, **kwargs):
+    def _upsert_without_duplicates(
+        self,
+        df,
+        num_partitions: int = None,
+        **kwargs
+    ):
+        """Update existing data and append new data without duplicates."""
+        logger.info(
+            f"Upserting to {self.name} without duplicates."
+        )
+        partition_by = self.partition_by
+        if partition_by is None:
+            partition_by = []
+
+        existing_sdf = self._read_files(
+            self.dir,
+            use_table_schema=True,
+            show_missing_table_warning=False,
+            **kwargs
+        )
+
+        # Limit the dataframe to the partitions that are being updated.
+        for partition in partition_by:
+            partition_values = df.select(partition).distinct(). \
+                rdd.flatMap(lambda x: x).collect()
+            if partition_values[0] is not None:  # all null partition values
+                existing_sdf = existing_sdf.filter(
+                    col(partition).isin(partition_values)
+                )
+
+        # Remove rows from existing_sdf that are to be updated.
+        # Concat and re-write.
+        if not existing_sdf.isEmpty():
+            existing_sdf = existing_sdf.join(
+                df,
+                how="left_anti",
+                on=self.unique_column_set,
+            )
+            df = existing_sdf.unionByName(df)
+            # Get columns in correct order
+            df = df.select([*self.schema_func().columns])
+
+        # Re-validate since the table was changed
+        validated_df = self._validate(df)
+
+        # Drop potential duplicates
+        validated_df = self._drop_duplicates(validated_df)
+
+        if num_partitions is not None:
+            validated_df = validated_df.repartition(num_partitions)
+        (
+            validated_df.
+            write.
+            partitionBy(partition_by).
+            format(self.format).
+            mode("overwrite").
+            options(**kwargs).
+            save(str(self.dir))
+        )
+
+    def _append_without_duplicates(
+        self,
+        df,
+        num_partitions: int = None,
+        **kwargs
+    ):
+        """Append new data without duplicates."""
+        logger.info(
+            f"Appending to {self.name} without duplicates."
+        )
+        partition_by = self.partition_by
+        if partition_by is None:
+            partition_by = []
+
+        existing_sdf = self._read_files(
+            self.dir,
+            use_table_schema=True,
+            show_missing_table_warning=False,
+            **kwargs
+        )
+
+        # existing_sdf = existing_sdf.persist()
+
+        # Anti-join: Joins rows from left df that do not have a match
+        # in right df.  This is used to drop duplicates. df gets written
+        # in append mode.
+        if not existing_sdf.isEmpty():
+            df = df.join(
+                existing_sdf,
+                how="left_anti",
+                on=self.unique_column_set,
+            )
+
+        # Only continue if there is new data to write.
+        if not df.isEmpty():
+            # Re-validate since the table was changed
+            validated_df = self._validate(df)
+
+            if num_partitions is not None:
+                validated_df = validated_df.repartition(num_partitions)
+
+            # Drop potential duplicates
+            validated_df = self._drop_duplicates(validated_df)
+
+            (
+                validated_df.
+                write.
+                partitionBy(partition_by).
+                format(self.format).
+                mode("append").
+                options(**kwargs).
+                save(str(self.dir))
+            )
+        else:
+            logger.info(
+                f"No new data to append to {self.name}. "
+                "Nothing will be written."
+            )
+
+    def _dynamic_overwrite(
+        self,
+        df: ps.DataFrame,
+        **kwargs
+    ):
+        """Overwrite partitions contained in the dataframe."""
+        logger.info(
+            f"Overwriting table partitions in {self.name}."
+        )
+        partition_by = self.partition_by
+        if partition_by is None:
+            partition_by = []
+        (
+            df.
+            write.
+            partitionBy(partition_by).
+            format(self.format).
+            mode("overwrite").
+            options(**kwargs).
+            save(str(self.dir))
+        )
+
+    def _check_for_null_unique_column_values(self, df: ps.DataFrame):
+        """Remove a field from self.unique_column_set if all values are null."""
+        for field_name in self.unique_column_set:
+            if field_name in df.columns:
+                if len(df.filter(df[field_name].isNotNull()).collect()) == 0:
+                    logger.debug(
+                        f"All {field_name} values are null. "
+                        f"{field_name} will be removed as a partition column."
+                    )
+                    self.unique_column_set.remove(field_name)
+
+    def _write_spark_df(
+        self,
+        df: ps.DataFrame,
+        write_mode: TableWriteEnum = "append",
+        num_partitions: int = None,
+        **kwargs
+    ):
         """Write spark dataframe to directory.
 
         Parameters
@@ -134,13 +312,30 @@ class BaseTable():
                 "header": "true",
             }
 
-        partition_by = self.partition_by
-        if partition_by is None:
-            partition_by = []
-
         if df is not None:
-            df.write.partitionBy(partition_by).format(self.format).mode(self.save_mode).options(**kwargs).save(str(self.dir))
 
+            self._check_for_null_unique_column_values(df)
+
+            if write_mode == "overwrite":
+                self._dynamic_overwrite(df, **kwargs)
+                self._load_table()
+            elif write_mode == "append":
+                self._append_without_duplicates(
+                    df=df,
+                    num_partitions=num_partitions,
+                    **kwargs
+                )
+            elif write_mode == "upsert":
+                self._upsert_without_duplicates(
+                    df=df,
+                    num_partitions=num_partitions,
+                    **kwargs
+                )
+            else:
+                raise ValueError(
+                    f"Invalid write mode: {write_mode}. "
+                    "Valid values are 'append', 'overwrite' and 'upsert'."
+                )
             self._load_table()
 
     def _get_schema(self, type: str = "pyspark"):
@@ -498,5 +693,4 @@ class BaseTable():
         """
         self._check_load_table()
         return self.df
-
 
