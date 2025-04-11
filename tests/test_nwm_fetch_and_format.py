@@ -214,7 +214,6 @@ def test_nwm30_grid_fetch_and_format(tmpdir):
     bench_df = pd.read_parquet(benchmark_file)
     test_df = pd.read_parquet(parquet_file)
     # Match the column order.
-    # TODO: fix bench df
     bench_df = bench_df[[
         'location_id',
         'value',
