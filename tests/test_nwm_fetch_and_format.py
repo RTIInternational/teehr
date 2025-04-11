@@ -154,7 +154,8 @@ def test_nwm22_grid_fetch_and_format(tmpdir):
 
     fetch_and_format_nwm_grids(
         json_paths=json_paths,
-        configuration_name="forcing_analysis_assim",
+        nwm_configuration_name="forcing_analysis_assim",
+        nwm_version="nwm22",
         variable_name="RAINRATE",
         output_parquet_dir=tmpdir,
         zonal_weights_filepath=weights_filepath,
@@ -195,7 +196,8 @@ def test_nwm30_grid_fetch_and_format(tmpdir):
 
     fetch_and_format_nwm_grids(
         json_paths=json_paths,
-        configuration_name="forcing_analysis_assim_alaska",
+        nwm_configuration_name="forcing_analysis_assim_alaska",
+        nwm_version="nwm30",
         variable_name="RAINRATE",
         output_parquet_dir=tmpdir,
         zonal_weights_filepath=weights_filepath,
