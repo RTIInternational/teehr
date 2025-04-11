@@ -35,6 +35,10 @@ files = [
     {
         "name": "nwm30_forcing_analysis_assim_pixel_weights.parquet",
         "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/388-combine-generate_weightspy-with-nwm-grid-fetching-methods/tests/data/fetch_nwm_grids/nwm30_forcing_analysis_assim_pixel_weights.parquet"
+    },
+    {
+        "name": "three_huc10s_radford.parquet",
+        "url": "https://github.com/RTIInternational/teehr/raw/refs/heads/388-combine-generate_weightspy-with-nwm-grid-fetching-methods/tests/data/fetch_nwm_grids/three_huc10s_radford.parquet"
     }
 ]
 
