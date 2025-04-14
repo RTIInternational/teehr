@@ -216,7 +216,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
         df: ps.DataFrame,
         **kwargs
     ):
-        """Write spark dataframe to directory.
+        """Write spark dataframe to directory in overwrite mode.
 
         Parameters
         ----------
