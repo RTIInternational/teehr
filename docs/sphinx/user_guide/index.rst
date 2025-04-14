@@ -52,4 +52,4 @@ Before starting, make sure you have installed TEEHR and its dependencies as desc
    Ensemble Forecast Evaluation </user_guide/notebooks/09_ensemble_metrics>
    Fetching USGS and NWM Streamflow Data </user_guide/notebooks/10_fetching_nwm_streamflow>
    Fetching NWM Gridded Data </user_guide/notebooks/11_fetching_nwm_gridded_data>
-   Metrics </user_guide/metrics/metrics>
+   Available Metrics </user_guide/metrics/metrics>
