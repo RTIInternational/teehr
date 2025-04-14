@@ -27,7 +27,7 @@ RUN apt-get update \
  && apt-get install -y wget curl bzip2 libxtst6 libgtk-3-0 libx11-xcb-dev libdbus-glib-1-2 libxt6 libpci-dev libasound2 firefox openjdk-17-jdk
 
 # RUN conda install -y -c conda-forge nodejs
-RUN mamba install -n ${CONDA_ENV} -y -c conda-forge nodejs selenium geckodriver pyspark
+RUN mamba install -n ${CONDA_ENV} -y -c conda-forge nodejs selenium geckodriver pyspark awscli htop
 
 # Set up the environment for pyspark
 ENV SPARK_HOME=${NB_PYTHON_PREFIX}/lib/python3.12/site-packages/pyspark
@@ -39,7 +39,7 @@ COPY spark-defaults.conf ${SPARK_HOME}/conf/spark-defaults.conf
 
 WORKDIR /teehr
 
-RUN pip install duckdb spatialpandas easydev colormap colorcet hydrotools
+RUN pip install duckdb spatialpandas easydev colormap colorcet hydrotools datashader
 
 COPY --from=builder /teehr/dist/teehr-build.tar.gz /teehr/dist/teehr-build.tar.gz
 
