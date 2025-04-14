@@ -2,8 +2,10 @@
 from typing import Union, Dict
 from pathlib import Path
 import warnings
+import logging
 
 import geopandas as gpd
+from geopandas import GeoDataFrame
 import numpy as np
 import xarray as xr
 from rasterio.transform import rowcol
@@ -12,9 +14,12 @@ import pandas as pd
 import dask
 import shapely
 
+from teehr.fetching.nwm.grid_utils import update_location_id_prefix
 from teehr.fetching.utils import load_gdf
 from teehr.fetching.const import LOCATION_ID
 import teehr.models.pandera_dataframe_schemas as schemas
+
+logger = logging.getLogger(__name__)
 
 
 @dask.delayed
@@ -163,12 +168,12 @@ def calculate_weights(
 
 
 def generate_weights_file(
-    zone_polygon_filepath: Union[Path, str],
-    template_dataset: Union[str, Path],
+    zone_polygons: Union[Path, str, GeoDataFrame],
+    template_dataset: Union[str, Path, xr.Dataset],
     variable_name: str,
     output_weights_filepath: Union[str, Path],
     crs_wkt: str,
-    unique_zone_id: str = None,
+    unique_zone_id: str,
     location_id_prefix: str = None,
     **read_args: Dict,
 ) -> None:
@@ -176,16 +181,17 @@ def generate_weights_file(
 
     Parameters
     ----------
-    zone_polygon_filepath : str
-        Path to the polygons geoparquet file.
-    template_dataset : str
-        Path to the grid dataset to use as a template.
+    zone_polygon_filepath : Union[Path, str, GeoDataFrame]
+        Path to the polygons geoparquet file or GeoDataFrame.
+    template_dataset : Union[str, Path, xr.Dataset]
+        Path to the grid dataset or an xarray Dataset to use as a template.
     variable_name : str
         Name of the variable within the dataset.
     output_weights_filepath : str
         Path to the resultant weights file.
     crs_wkt : str
-        Coordinate system for given domain as WKT string.
+        Coordinate system for given template gridded dataset as WKT string.
+        The zone_polygons will be reprojected to this CRS.
     unique_zone_id : str
         Name of the field in the zone polygon file containing unique IDs.
     location_id_prefix : str
@@ -228,11 +234,26 @@ def generate_weights_file(
     >>>     unique_zone_id="id",
     >>> )
     """
-    zone_gdf = load_gdf(zone_polygon_filepath, **read_args)
-    zone_gdf = zone_gdf.to_crs(crs_wkt)
+    if unique_zone_id is None:
+        logger.error("unique_zone_id must be provided.")
+        raise ValueError("unique_zone_id must be provided.")
 
-    ds = xr.open_dataset(template_dataset)
-    src_da = ds[variable_name]
+    if isinstance(zone_polygons, (str, Path)):
+        zone_gdf = load_gdf(zone_polygons, **read_args)
+        zone_gdf = zone_gdf.to_crs(crs_wkt)
+    elif isinstance(zone_polygons, GeoDataFrame):
+        zone_gdf = zone_polygons.to_crs(crs_wkt)
+    else:
+        logger.error(
+            "zone_polygons must be a path to a file or a GeoDataFrame."
+        )
+        raise ValueError(
+            "zone_polygons must be a path to a file or a GeoDataFrame."
+        )
+
+    if isinstance(template_dataset, (str, Path)):
+        template_dataset = xr.open_dataset(template_dataset)
+    src_da = template_dataset[variable_name]
     src_da = src_da.rio.write_crs(crs_wkt, inplace=True)
     grid_transform = src_da.rio.transform()
     nodata_val = src_da.rio.nodata
@@ -242,7 +263,7 @@ def generate_weights_file(
 
     # Get the subset of the grid that intersects the total zone bounds
     bbox = tuple(zone_gdf.total_bounds)
-    if len(ds.dims) == 2:
+    if len(template_dataset.dims) == 2:
         src_da = src_da.sel(
             x=slice(bbox[0], bbox[2]), y=slice(bbox[1], bbox[3])
         )
@@ -282,13 +303,12 @@ def generate_weights_file(
         df[LOCATION_ID] = weights_gdf.index.values
 
     if location_id_prefix:
-        df.loc[:, LOCATION_ID] = location_id_prefix + "-" + df[LOCATION_ID]
+        df = update_location_id_prefix(
+            df, new_prefix=location_id_prefix
+        )
 
     schema = schemas.weights_file_schema()
     validated_df = schema.validate(df)
+    validated_df.to_parquet(output_weights_filepath)
 
-    if output_weights_filepath:
-        validated_df.to_parquet(output_weights_filepath)
-        validated_df = None
-
-    return validated_df
+    return

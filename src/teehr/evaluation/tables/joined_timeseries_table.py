@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
 from teehr.models.filters import JoinedTimeseriesFilter
-from teehr.models.table_enums import JoinedTimeseriesFields
+from teehr.models.table_enums import JoinedTimeseriesFields, TableWriteEnum
 from teehr.querying.utils import join_geometry
 import teehr.models.pandera_dataframe_schemas as schemas
 import pyspark.sql as ps
@@ -21,12 +21,19 @@ class JoinedTimeseriesTable(TimeseriesTable):
         """Initialize class."""
         super().__init__(ev)
         self.name = "joined_timeseries"
-        # self.dir = ev.joined_timeseries_dir
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.filter_model = JoinedTimeseriesFilter
         self.validate_filter_field_types = False
         self.strict_validation = False
         self.schema_func = schemas.joined_timeseries_schema
+        self.unique_column_set = [
+            "primary_location_id",
+            "secondary_location_id",
+            "value_time",
+            "reference_time",
+            "variable_name",
+            "unit_name",
+        ]
 
     def field_enum(self) -> JoinedTimeseriesFields:
         """Get the joined timeseries fields enum."""
@@ -149,7 +156,6 @@ class JoinedTimeseriesTable(TimeseriesTable):
 
     def _run_script(self, joined_df: ps.DataFrame) -> ps.DataFrame:
         """Add UDFs to the joined timeseries dataframe."""
-
         try:
             sys.path.append(str(Path(self.ev.scripts_dir).resolve()))
             import user_defined_fields as udf # noqa
@@ -163,7 +169,11 @@ class JoinedTimeseriesTable(TimeseriesTable):
 
         return joined_df
 
-    def create(self, add_attrs: bool = False, execute_scripts: bool = False):
+    def create(
+        self,
+        add_attrs: bool = False,
+        execute_scripts: bool = False,
+    ):
         """Create joined timeseries table.
 
         Parameters
@@ -185,3 +195,57 @@ class JoinedTimeseriesTable(TimeseriesTable):
         self._write_spark_df(validated_df)
         logger.info("Joined timeseries table created.")
         self._load_table()
+
+    def _check_for_null_partition_by_values(self, df: ps.DataFrame) -> ps.DataFrame:
+        """Remove a field from partition_by if all values are null."""
+        partition_by = self.partition_by
+        if partition_by is None:
+            partition_by = []
+        for field_name in partition_by:
+            if field_name in df.columns:
+                if len(df.filter(df[field_name].isNotNull()).collect()) == 0:
+                    logger.debug(
+                        f"All {field_name} values are null. "
+                        f"{field_name} will be set to a default value."
+                    )
+                    self.partition_by.remove(field_name)
+        return df
+
+    def _write_spark_df(
+        self,
+        df: ps.DataFrame,
+        **kwargs
+    ):
+        """Write spark dataframe to directory in overwrite mode.
+
+        Parameters
+        ----------
+        df : ps.DataFrame
+            The spark dataframe to write.
+        **kwargs
+            Additional options to pass to the spark write method.
+        """
+        if self.ev.is_s3:
+            logger.error("Writing to S3 is not supported.")
+            raise ValueError("Writing to S3 is not supported.")
+
+        logger.info(f"Writing files to {self.dir}.")
+
+        self._check_for_null_partition_by_values(df)
+
+        if len(kwargs) == 0:
+            kwargs = {
+                "header": "true",
+            }
+        partition_by = self.partition_by
+        if partition_by is None:
+            partition_by = []
+        (
+            df.
+            write.
+            partitionBy(partition_by).
+            format(self.format).
+            mode("overwrite").
+            options(**kwargs).
+            save(str(self.dir))
+        )

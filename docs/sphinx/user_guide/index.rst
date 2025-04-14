@@ -34,6 +34,8 @@ Before starting, make sure you have installed TEEHR and its dependencies as desc
 
 :doc:`Fetching USGS and NWM Streamflow Data </user_guide/notebooks/10_fetching_nwm_streamflow>`  :download:`(download notebook) </user_guide/notebooks/10_fetching_nwm_streamflow.ipynb>`
 
+:doc:`Fetching NWM Gridded Data </user_guide/notebooks/11_fetching_nwm_gridded_data>`  :download:`(download notebook) </user_guide/notebooks/11_fetching_nwm_gridded_data.ipynb>`
+
 .. toctree::
    :maxdepth: 2
    :hidden:
@@ -49,4 +51,5 @@ Before starting, make sure you have installed TEEHR and its dependencies as desc
    Adding calculated fields </user_guide/notebooks/08_adding_calculated_fields>
    Ensemble Forecast Evaluation </user_guide/notebooks/09_ensemble_metrics>
    Fetching USGS and NWM Streamflow Data </user_guide/notebooks/10_fetching_nwm_streamflow>
-   Metrics </user_guide/metrics/metrics>
+   Fetching NWM Gridded Data </user_guide/notebooks/11_fetching_nwm_gridded_data>
+   Available Metrics </user_guide/metrics/metrics>

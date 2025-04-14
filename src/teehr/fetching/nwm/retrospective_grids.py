@@ -39,7 +39,8 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import fsspec
-from pydantic import validate_call
+from pydantic import validate_call, InstanceOf
+from geopandas import GeoDataFrame
 import dask
 
 from teehr.fetching.const import (
@@ -69,10 +70,13 @@ from teehr.fetching.utils import (
     get_period_start_end_times,
     create_periods_based_on_chunksize
 )
+from teehr.fetching.const import CONUS_NWM_WKT
 from teehr.fetching.nwm.retrospective_points import (
     format_grouped_filename,
     validate_retrospective_start_end_date,
 )
+from teehr.utilities.generate_weights import generate_weights_file
+
 
 logger = logging.getLogger(__name__)
 
@@ -251,7 +255,10 @@ def nwm_retro_grids_to_parquet(
     domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
     location_id_prefix: Optional[Union[str, None]] = None,
     variable_mapper: Dict[str, Dict[str, str]] = None,
-    timeseries_type: TimeseriesTypeEnum = "primary"
+    timeseries_type: TimeseriesTypeEnum = "primary",
+    calculate_zonal_weights: bool = False,
+    zone_polygons: Optional[Union[Path, str, InstanceOf[GeoDataFrame]]] = None,
+    unique_zone_id: Optional[str] = None,
 ):
     """Compute the weighted average for NWM v2.1 or v3.0 gridded data.
 
@@ -296,6 +303,12 @@ def nwm_retro_grids_to_parquet(
     variable_mapper : Dict[str, Dict[str, str]]
         Dictionary mapping NWM variable and unit names to TEEHR variable
         and unit names.
+    calculate_zonal_weights : bool
+        Flag to calculate zonal weights.
+    zone_polygons : Union[Path, str, InstanceOf[GeoDataFrame]]
+        Path to the polygons file or a GeoDataFrame.
+    unique_zone_id : Optional[str]
+        Name of the field in the zone polygon file containing unique IDs.
 
     Notes
     -----
@@ -325,6 +338,46 @@ def nwm_retro_grids_to_parquet(
 
         # Construct Kerchunk-json paths within the selected time
         nwm21_paths = construct_nwm21_json_paths(start_date, end_date)
+
+        # If specified, generate zonal weights file here.
+        if calculate_zonal_weights:
+            if zone_polygons is None:
+                raise ValueError(
+                    "The zone polygons must be provided"
+                    " to calculate zonal weights. Can be a GeoDataFame"
+                    " or a filepath."
+                )
+
+            # Get a single timestep to use as a template grid.
+            template_ds = get_dataset(
+                nwm21_paths.filepath[0],
+                ignore_missing_file=False,
+                target_options={'anon': True}
+            )
+
+            # Get spatial information from the zarr store. (limited data)
+            tmp_s3_zarr_url = "s3://noaa-nwm-retrospective-2-1-zarr-pds/precip.zarr"
+            tmp_ds = xr.open_zarr(fsspec.get_mapper(tmp_s3_zarr_url, anon=True))
+            nwm21_crs = tmp_ds.crs.attrs["esri_pe_string"]
+            x_dim = tmp_ds.x.values
+            y_dim = tmp_ds.y.values
+
+            # Need to rename x and y dimensions in the template dataset.
+            template_ds["west_east"] = x_dim
+            template_ds["south_north"] = y_dim
+            template_ds = template_ds.rename(
+                {"west_east": "x", "south_north": "y"}
+            )
+
+            generate_weights_file(
+                zone_polygons=zone_polygons,
+                template_dataset=template_ds,
+                variable_name=variable_name,
+                crs_wkt=nwm21_crs,
+                output_weights_filepath=zonal_weights_filepath,
+                location_id_prefix=location_id_prefix,
+                unique_zone_id=unique_zone_id
+            )
 
         if chunk_by in ["year"]:
             raise ValueError(
@@ -401,10 +454,29 @@ def nwm_retro_grids_to_parquet(
             f"zarr/forcing/{zarr_name}.zarr"
         )
 
-        var_da = xr.open_zarr(
+        ds = xr.open_zarr(
             fsspec.get_mapper(s3_zarr_url, anon=True),
             chunks={}, consolidated=True
-        )[variable_name].sel(time=slice(start_date, end_date))
+        ).sel(time=slice(start_date, end_date))
+
+        # If specified, generate zonal weights file here.
+        if calculate_zonal_weights:
+            if zone_polygons is None:
+                raise ValueError(
+                    "The zone polygons must be provided"
+                    " to calculate zonal weights. Can be a GeoDataFame"
+                    " or a filepath."
+                )
+
+            generate_weights_file(
+                zone_polygons=zone_polygons,
+                template_dataset=ds,
+                variable_name=variable_name,
+                crs_wkt=ds[variable_name].attrs["esri_pe_string"],
+                output_weights_filepath=zonal_weights_filepath,
+                location_id_prefix=location_id_prefix,
+                unique_zone_id=unique_zone_id
+            )
 
         if chunk_by in ["year", "location_id"]:
             raise ValueError(
@@ -417,6 +489,7 @@ def nwm_retro_grids_to_parquet(
             chunk_by=chunk_by
         )
 
+        var_da = ds[variable_name]
         for period in periods:
 
             if period is not None:

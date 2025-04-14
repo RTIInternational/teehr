@@ -1,3 +1,4 @@
+"""Location table class."""
 import teehr.const as const
 from teehr.evaluation.tables.base_table import BaseTable
 from teehr.loading.locations import convert_locations
@@ -9,6 +10,8 @@ from pathlib import Path
 from typing import Union
 import logging
 from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
+from teehr.loading.utils import add_or_replace_sdf_column_prefix
+from teehr.models.table_enums import TableWriteEnum
 
 
 logger = logging.getLogger(__name__)
@@ -21,12 +24,11 @@ class LocationTable(BaseTable):
         """Initialize class."""
         super().__init__(ev)
         self.name = "locations"
-        # self.dir = ev.locations_dir
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.format = "parquet"
-        self.save_mode = "overwrite"
         self.filter_model = LocationFilter
         self.schema_func = schemas.locations_schema
+        self.unique_column_set = ["id"]
 
     def field_enum(self) -> LocationFields:
         """Get the location fields enum."""
@@ -57,6 +59,8 @@ class LocationTable(BaseTable):
         in_path: Union[Path, str],
         field_mapping: dict = None,
         pattern: str = "**/*.parquet",
+        location_id_prefix: str = None,
+        write_mode: TableWriteEnum = "append",
         **kwargs
     ):
         """Import geometry data.
@@ -72,6 +76,21 @@ class LocationTable(BaseTable):
         pattern : str, optional (default: "**/*.parquet")
             The pattern to match files.
             Only used when in_path is a directory.
+        location_id_prefix : str, optional
+            The prefix to add to location IDs.
+            Used to ensure unique location IDs across configurations.
+            Note, the methods for fetching USGS and NWM data automatically
+            prefix location IDs with "usgs" or the nwm version
+            ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table.
+            Options are "append", "upsert", and "overwrite".
+            If "append", the table will be appended with new data that does
+            already exist.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
+            If "overwrite", existing partitions receiving new data are
+            overwritten.
         **kwargs
             Additional keyword arguments are passed to GeoPandas read_file().
 
@@ -80,12 +99,16 @@ class LocationTable(BaseTable):
 
         Notes
         -----
-
         The TEEHR Location Crosswalk table schema includes fields:
 
         - id
         - name
         - geometry
+
+        ..note::
+          The methods for fetching USGS and NWM data expect
+          location IDs to be prefixed with "usgs" or the nwm version
+          ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
         """
         cache_dir = Path(
             self.ev.dir_path,
@@ -106,11 +129,23 @@ class LocationTable(BaseTable):
         # Read the converted files to Spark DataFrame
         df = self._read_files(cache_dir)
 
+        # Add or replace location_id prefix if provided
+        if location_id_prefix:
+            df = add_or_replace_sdf_column_prefix(
+                sdf=df,
+                column_name="id",
+                prefix=location_id_prefix,
+            )
+
         # Validate using the validate method
         validated_df = self._validate(df)
 
         # Write to the table
-        self._write_spark_df(validated_df.repartition(1))
+        self._write_spark_df(
+            df=validated_df,
+            write_mode=write_mode,
+            num_partitions=1,
+        )
 
         # Reload the table
         self._load_table()

@@ -10,6 +10,22 @@ import pyspark.sql.types as T
 import numpy as np
 
 
+def test_add_row_udfs_null_reference(tmpdir):
+    """Test adding row level UDFs with null reference time."""
+    ev = teehr.Evaluation(dir_path=tmpdir, create_dir=True)
+    ev.clone_from_s3("e0_2_location_example")
+    ev.joined_timeseries.create(add_attrs=False, execute_scripts=False)
+
+    ev.joined_timeseries.add_calculated_fields([
+        rcf.Month(),
+        rcf.Year(),
+        rcf.WaterYear(),
+        rcf.Seasons()
+    ]).write()
+
+    ev.spark.stop()
+
+
 def test_add_row_udfs(tmpdir):
     """Test adding row level UDFs."""
     ev = setup_v0_3_study(tmpdir)
@@ -153,6 +169,12 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
+        test_add_row_udfs_null_reference(
+            tempfile.mkdtemp(
+                prefix="0-",
+                dir=tempdir
+            )
+        )
         test_add_row_udfs(
             tempfile.mkdtemp(
                 prefix="1-",

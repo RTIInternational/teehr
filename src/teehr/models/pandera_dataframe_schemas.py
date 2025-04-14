@@ -274,7 +274,7 @@ def location_attributes_schema(
                 )
             },
             strict=True,
-            coerce=True
+            coerce=True,
         )
 
 def location_crosswalks_schema(
@@ -310,7 +310,7 @@ def location_crosswalks_schema(
                 )
             },
             strict=True,
-            coerce=True
+            coerce=True,
         )
 
 
@@ -321,25 +321,22 @@ def weights_file_schema() -> pa.DataFrameSchema:
             "row": pa.Column(
                 pa.Int32,
                 nullable=False,
-                coerce=True
             ),
             "col": pa.Column(
                 pa.Int32,
                 nullable=False,
-                coerce=True
             ),
             "weight": pa.Column(
                 pa.Float32,
                 nullable=False,
-                coerce=True
             ),
             "location_id": pa.Column(
                 pa.String,
                 nullable=False,
-                coerce=True
             )
         },
-        strict="filter"
+        strict="filter",
+        coerce=True
     )
 
 
@@ -437,7 +434,7 @@ def primary_timeseries_schema(
                 )
             },
             strict=True,
-            coerce=True
+            coerce=True,
         )
 
 
@@ -493,7 +490,7 @@ def secondary_timeseries_schema(
             },
             strict="filter",
             coerce=True,
-            add_missing_columns=True
+            add_missing_columns=True,
         )
     if type == "pyspark":
         return ps.DataFrameSchema(
@@ -538,7 +535,7 @@ def secondary_timeseries_schema(
                 )
             },
             strict=True,
-            coerce=True
+            coerce=True,
         )
 
 def joined_timeseries_schema(
@@ -637,5 +634,5 @@ def joined_timeseries_schema(
                     nullable=True
                 )
             },
-            coerce=True
+            coerce=True,
         )

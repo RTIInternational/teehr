@@ -10,6 +10,7 @@ from teehr.loading.utils import (
     # convert_datetime_ns_to_ms
 )
 import teehr.models.pandera_dataframe_schemas as schemas
+from teehr.models.table_enums import TableWriteEnum
 
 import logging
 
@@ -203,6 +204,7 @@ def validate_and_insert_timeseries(
     in_path: Union[str, Path],
     timeseries_type: str,
     pattern: str = "**/*.parquet",
+    write_mode: TableWriteEnum = "append",
 ):
     """Validate and insert primary timeseries data.
 
@@ -217,6 +219,12 @@ def validate_and_insert_timeseries(
         Valid values: "primary", "secondary"
     pattern : str, optional (default: "**/*.parquet")
         The pattern to match files.
+    write_mode : TableWriteEnum, optional (default: "append")
+        The write mode for the table. Options are "append" or "upsert".
+        If "append", the Evaluation table will be appended with new data
+        that does not already exist.
+        If "upsert", existing data will be replaced and new data that
+        does not exist will be appended.
     """
     in_path = Path(in_path)
     logger.info(f"Validating and inserting timeseries data from {in_path}")
@@ -235,7 +243,10 @@ def validate_and_insert_timeseries(
     validated_df = table._validate(df)
 
     # Write to the table
-    table._write_spark_df(validated_df)
+    table._write_spark_df(
+        validated_df,
+        write_mode=write_mode
+    )
 
     # Reload the table
     table._load_table()
