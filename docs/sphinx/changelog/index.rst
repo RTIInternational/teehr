@@ -1,6 +1,30 @@
 Release Notes
 =============
 
+0.4.10 - 2025-04-14
+------------------
+
+Added
+^^^^^
+- Adds append and upsert functionality without duplicates to loading methods on tables:
+    - locations
+    - location crosswalk
+    - location attributes
+    - primary and secondary timeseries
+- Adds upsert argument to fetching methods (append is default).
+- Clears fetching cache before each call.
+- Adds ability to add or update the location id prefix during loading in above tables
+- Adds `reference_time` as a default partition for secondary and joined timeseries
+- Adds script to re-write timeseries tables partitioned on `reference_time`
+- Adds function to drop potential duplicates before writing tables (`_drop_duplicates()`)
+- Combines the script to calculate pixel weights per polygon (`generate_weights.py`) with the NWM gridded Evaluation fetching methods (retro and operational).
+    - This allows users to optionally generate the weights from within the fetching methods or to use a pre-created weights file.
+    - When run from the Evaluation, the weights file is saved to the evaluation cache and corresponds to ids in the `locations` table.
+- Adds User Guide notebook for NWM gridded fetching
+- Adds transform functions to metric calculations
+- Adds `geoviews` dependency to poetry evaluation
+- Adds aws cli and `datashader` to the TEEHR-HUB docker image
+
 
 0.4.9 - 2025-03-26
 ------------------
