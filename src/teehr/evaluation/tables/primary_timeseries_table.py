@@ -24,6 +24,10 @@ class PrimaryTimeseriesTable(TimeseriesTable):
         self.name = "primary_timeseries"
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.schema_func = schemas.primary_timeseries_schema
+        self.partition_by = [
+            "configuration_name",
+            "variable_name",
+        ]
 
     def field_enum(self) -> TimeseriesFields:
         """Get the timeseries fields enum."""

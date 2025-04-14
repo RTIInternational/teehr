@@ -148,9 +148,9 @@ class JoinedTimeseriesTable(TimeseriesTable):
 
         return self
 
-    def write(self, write_mode: TableWriteEnum = "overwrite"):
+    def write(self):
         """Write the joined timeseries table to disk."""
-        self._write_spark_df(self.df, write_mode=write_mode)
+        self._write_spark_df(self.df)
         logger.info("Joined timeseries table written to disk.")
         self._load_table()
 
@@ -173,7 +173,6 @@ class JoinedTimeseriesTable(TimeseriesTable):
         self,
         add_attrs: bool = False,
         execute_scripts: bool = False,
-        write_mode: TableWriteEnum = "overwrite"
     ):
         """Create joined timeseries table.
 
@@ -183,15 +182,6 @@ class JoinedTimeseriesTable(TimeseriesTable):
             Execute UDFs, by default False
         add_attrs : bool, optional
             Add attributes, by default False
-        write_mode : TableWriteEnum, optional (default: "overwrite")
-            The write mode for the table.
-            Options are "append", "upsert", and "overwrite".
-            If "append", the table will be appended with new data that does
-            already exist.
-            If "upsert", existing data will be replaced and new data that
-            does not exist will be appended.
-            If "overwrite", existing partitions receiving new data are
-            overwritten.
         """
         joined_df = self._join()
 
@@ -202,6 +192,60 @@ class JoinedTimeseriesTable(TimeseriesTable):
             joined_df = self._run_script(joined_df)
 
         validated_df = self._validate(joined_df, False)
-        self._write_spark_df(validated_df, write_mode=write_mode)
+        self._write_spark_df(validated_df)
         logger.info("Joined timeseries table created.")
         self._load_table()
+
+    def _check_for_null_partition_by_values(self, df: ps.DataFrame) -> ps.DataFrame:
+        """Remove a field from partition_by if all values are null."""
+        partition_by = self.partition_by
+        if partition_by is None:
+            partition_by = []
+        for field_name in partition_by:
+            if field_name in df.columns:
+                if len(df.filter(df[field_name].isNotNull()).collect()) == 0:
+                    logger.debug(
+                        f"All {field_name} values are null. "
+                        f"{field_name} will be set to a default value."
+                    )
+                    self.partition_by.remove(field_name)
+        return df
+
+    def _write_spark_df(
+        self,
+        df: ps.DataFrame,
+        **kwargs
+    ):
+        """Write spark dataframe to directory.
+
+        Parameters
+        ----------
+        df : ps.DataFrame
+            The spark dataframe to write.
+        **kwargs
+            Additional options to pass to the spark write method.
+        """
+        if self.ev.is_s3:
+            logger.error("Writing to S3 is not supported.")
+            raise ValueError("Writing to S3 is not supported.")
+
+        logger.info(f"Writing files to {self.dir}.")
+
+        self._check_for_null_partition_by_values(df)
+
+        if len(kwargs) == 0:
+            kwargs = {
+                "header": "true",
+            }
+        partition_by = self.partition_by
+        if partition_by is None:
+            partition_by = []
+        (
+            df.
+            write.
+            partitionBy(partition_by).
+            format(self.format).
+            mode("overwrite").
+            options(**kwargs).
+            save(str(self.dir))
+        )
