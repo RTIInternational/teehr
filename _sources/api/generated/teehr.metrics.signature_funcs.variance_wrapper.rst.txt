@@ -1,0 +1,6 @@
+teehr.metrics.signature\_funcs.variance\_wrapper
+================================================
+
+.. currentmodule:: teehr.metrics.signature_funcs
+
+.. autofunction:: variance_wrapper
