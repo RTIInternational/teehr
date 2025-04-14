@@ -24,6 +24,7 @@ Added
 - Adds transform functions to metric calculations
 - Adds `geoviews` dependency to poetry evaluation
 - Adds aws cli and `datashader` to the TEEHR-HUB docker image
+- Removes `duckdb` for teehr env
 
 
 0.4.9 - 2025-03-26
