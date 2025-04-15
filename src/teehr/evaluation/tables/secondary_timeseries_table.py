@@ -64,7 +64,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         field_mapping: dict = None,
         constant_field_values: dict = None,
         location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
+        write_mode: TableWriteEnum = "overwrite",
         **kwargs
     ):
         """Import timeseries helper."""
@@ -72,20 +72,21 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             self.ev.dir_path,
             const.CACHE_DIR,
             const.LOADING_CACHE_DIR,
-            const.SECONDARY_TIMESERIES_DIR
+            # const.SECONDARY_TIMESERIES_DIR
+            "secondary_timeseries_chunked"
         )
         # Clear the cache directory if it exists.
-        remove_dir_if_exists(cache_dir)
+        # remove_dir_if_exists(cache_dir)
 
-        convert_timeseries(
-            in_path=in_path,
-            out_path=cache_dir,
-            field_mapping=field_mapping,
-            constant_field_values=constant_field_values,
-            timeseries_type="secondary",
-            pattern=pattern,
-            **kwargs
-        )
+        # convert_timeseries(
+        #     in_path=in_path,
+        #     out_path=cache_dir,
+        #     field_mapping=field_mapping,
+        #     constant_field_values=constant_field_values,
+        #     timeseries_type="secondary",
+        #     pattern=pattern,
+        #     **kwargs
+        # )
 
         # Read the converted files to Spark DataFrame
         df = self._read_files(cache_dir)

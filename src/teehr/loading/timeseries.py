@@ -7,6 +7,7 @@ from teehr.loading.utils import (
     validate_constant_values_dict,
     read_and_convert_netcdf_to_df,
     read_and_convert_xml_to_df,
+    read_and_convert_xml_to_df_using_lxml
     # convert_datetime_ns_to_ms
 )
 import teehr.models.pandera_dataframe_schemas as schemas
@@ -72,7 +73,7 @@ def convert_single_timeseries(
         )
     elif in_filepath.suffix == ".xml":
         # read and convert xml file
-        timeseries = read_and_convert_xml_to_df(
+        timeseries = read_and_convert_xml_to_df_using_lxml(
             in_filepath,
             field_mapping,
             **kwargs

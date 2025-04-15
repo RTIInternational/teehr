@@ -9,9 +9,13 @@ import shutil
 from xml.dom import minidom
 from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
+from lxml import etree
+from datetime import datetime
 
 
 logger = logging.getLogger(__name__)
+
+NAMESPACE = "{http://www.wldelft.nl/fews/PI}"
 
 
 def add_or_replace_sdf_column_prefix(
@@ -265,6 +269,65 @@ def _get_element_attribute_value(
                 f"Attribute '{attribute_name}' not found for '{tag_name}'."
             )
         return attr_value
+
+
+def read_and_convert_xml_to_df_using_lxml(
+    in_filepath: Union[str, Path],
+    field_mapping: dict,
+) -> pd.DataFrame:
+    """Read an xml file and convert to pandas dataframe."""
+    logger.debug(f"Reading and converting xml file {in_filepath}")
+
+    inv_field_mapping = {v: k for k, v in field_mapping.items()}
+    location_id_kw = inv_field_mapping["location_id"]
+    variable_name_kw = inv_field_mapping["variable_name"]
+    reference_time_kw = inv_field_mapping["reference_time"]
+    unit_name_kw = inv_field_mapping["unit_name"]
+    member_kw = inv_field_mapping["member"]
+    configuration_kw = inv_field_mapping["configuration_name"]
+
+    tree = etree.parse(str(in_filepath))
+
+    root = tree.getroot()
+
+    # Get headers
+    timeseries = root.findall(NAMESPACE + "series")
+
+    timeseries_data = []
+    for series in timeseries:
+        # Get header info.
+        location_id = series.find(NAMESPACE + "header/" + NAMESPACE + location_id_kw).text
+        variable_name = series.find(NAMESPACE + "header/" + NAMESPACE + variable_name_kw).text
+        configuration = series.find(NAMESPACE + "header/" + NAMESPACE + configuration_kw).text
+        unit_name = series.find(NAMESPACE + "header/" + NAMESPACE + unit_name_kw).text
+        ensemble_member = series.find(NAMESPACE + "header/" + NAMESPACE + member_kw).text
+        forecastDate = series.find(NAMESPACE + "header/" + NAMESPACE + reference_time_kw).get("date")
+        forecastTime = series.find(NAMESPACE + "header/" + NAMESPACE + reference_time_kw).get("time")
+        reference_time = datetime.strptime(
+            forecastDate + " " + forecastTime, "%Y-%m-%d %H:%M:%S"
+        )
+        # Get timeseries data.
+        events = series.findall(NAMESPACE + "event")
+
+        for event in events:
+            event_date = event.get("date")
+            event_time = event.get("time")
+            event_value = event.get("value")
+            value_time = datetime.strptime(
+                event_date + " " + event_time, "%Y-%m-%d %H:%M:%S"
+            )
+            timeseries_data.append({
+                "value": event_value,
+                "value_time": value_time,
+                "reference_time": reference_time,
+                "unit_name": unit_name,
+                "variable_name": variable_name,
+                "location_id": location_id,
+                "member": ensemble_member,
+                "configuration_name": configuration
+            })
+
+    return pd.DataFrame(timeseries_data)
 
 
 def read_and_convert_xml_to_df(
