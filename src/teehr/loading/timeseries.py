@@ -1,5 +1,6 @@
 """Convert and insert timeseries data into the dataset."""
 from typing import Union
+import concurrent.futures
 from pathlib import Path
 import pandas as pd
 from teehr.loading.utils import (
@@ -169,21 +170,25 @@ def convert_timeseries(
 
     files_converted = 0
     if in_path.is_dir():
-        # recursively convert all files in directory
-        logger.info(f"Recursively converting all files in {in_path}/{pattern}")
-        for in_filepath in in_path.glob(f"{pattern}"):
-            relative_name = in_filepath.relative_to(in_path)
-            out_filepath = Path(out_path, relative_name)
-            out_filepath = out_filepath.with_suffix(".parquet")
-            convert_single_timeseries(
-                in_filepath,
-                out_filepath,
-                field_mapping,
-                constant_field_values,
-                timeseries_type=timeseries_type,
-                **kwargs
-            )
-            files_converted += 1
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            futures = []
+            for in_filepath in in_path.glob(f"{pattern}"):
+                relative_name = in_filepath.relative_to(in_path)
+                out_filepath = Path(out_path, relative_name)
+                out_filepath = out_filepath.with_suffix(".parquet")
+                futures.append(
+                    executor.submit(
+                        convert_single_timeseries,
+                        in_filepath,
+                        out_filepath,
+                        field_mapping,
+                        constant_field_values,
+                        timeseries_type=timeseries_type,
+                        **kwargs
+                    )
+                )
+            for future in concurrent.futures.as_completed(futures):
+                files_converted += 1
     else:
         out_filepath = Path(out_path, in_path.name)
         out_filepath = out_filepath.with_suffix(".parquet")

@@ -231,20 +231,15 @@ def read_and_convert_xml_to_df_using_lxml(
     member_kw = inv_field_mapping["member"]
     configuration_kw = inv_field_mapping["configuration_name"]
 
-    tree = etree.parse(str(in_filepath))
-
-    root = tree.getroot()
-
-    # Get timezone offset
-    utc_offset = timedelta(
-        hours=float(root.find(FEWS_XML_NAMESPACE + "timeZone").text)
-    )
-
-    # Get headers
-    timeseries = root.findall(FEWS_XML_NAMESPACE + "series")
-
     timeseries_data = []
-    for series in timeseries:
+    cntr = 0
+    for _, series in etree.iterparse(in_filepath, tag=FEWS_XML_NAMESPACE + "series"):
+        if cntr == 0:
+            utc_offset = timedelta(
+                hours=float(series.getparent().find(FEWS_XML_NAMESPACE + "timeZone").text)
+            )
+            cntr += 1
+
         # Get header info.
         location_id = series.find(FEWS_XML_NAMESPACE + "header/" + FEWS_XML_NAMESPACE + location_id_kw).text
         variable_name = series.find(FEWS_XML_NAMESPACE + "header/" + FEWS_XML_NAMESPACE + variable_name_kw).text
@@ -258,7 +253,6 @@ def read_and_convert_xml_to_df_using_lxml(
         )
         # Get timeseries data.
         events = series.findall(FEWS_XML_NAMESPACE + "event")
-
         for event in events:
             event_date = event.get("date")
             event_time = event.get("time")
@@ -276,7 +270,7 @@ def read_and_convert_xml_to_df_using_lxml(
                 "member": ensemble_member,
                 "configuration_name": configuration
             })
-
+        series.clear()  # Clear the series element to free memory
     df = pd.DataFrame(timeseries_data)
     df["value_time"] = df.value_time + utc_offset
     df["reference_time"] = df.reference_time + utc_offset
