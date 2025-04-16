@@ -60,6 +60,7 @@ class TimeseriesTable(BaseTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        max_workers: Union[int, None] = None,
         **kwargs
     ):
         """Import primary timeseries parquet data.
@@ -90,6 +91,11 @@ class TimeseriesTable(BaseTable):
             does not exist will be appended.
             If "overwrite", existing partitions receiving new data are
             overwritten.
+        max_workers : Union[int, None], optional
+            The maximum number of workers to use for parallel processing when
+            in_path is a directory. This gets passed to the concurrent.futures
+            ProcessPoolExecutor. If in_path is a file, this parameter is ignored.
+            If None (default), it defaults to os.process_cpu_count().
         **kwargs
             Additional keyword arguments are passed to pd.read_parquet().
 
@@ -117,6 +123,7 @@ class TimeseriesTable(BaseTable):
             constant_field_values=constant_field_values,
             location_id_prefix=location_id_prefix,
             write_mode=write_mode,
+            max_workers=max_workers,
             **kwargs
         )
         self._load_table()
@@ -129,6 +136,7 @@ class TimeseriesTable(BaseTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        max_workers: Union[int, None] = None,
         **kwargs
     ):
         """Import primary timeseries csv data.
@@ -158,6 +166,11 @@ class TimeseriesTable(BaseTable):
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
             If "overwrite", existing partitions receiving new data are overwritten
+        max_workers : Union[int, None], optional
+            The maximum number of workers to use for parallel processing when
+            in_path is a directory. This gets passed to the concurrent.futures
+            ProcessPoolExecutor. If in_path is a file, this parameter is ignored.
+            If None (default), it defaults to os.process_cpu_count().
         **kwargs
             Additional keyword arguments are passed to pd.read_csv().
 
@@ -185,6 +198,7 @@ class TimeseriesTable(BaseTable):
             constant_field_values=constant_field_values,
             location_id_prefix=location_id_prefix,
             write_mode=write_mode,
+            max_workers=max_workers,
             **kwargs
         )
         self._load_table()
@@ -197,6 +211,7 @@ class TimeseriesTable(BaseTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        max_workers: Union[int, None] = None,
         **kwargs
     ):
         """Import primary timeseries netcdf data.
@@ -226,6 +241,11 @@ class TimeseriesTable(BaseTable):
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
             If "overwrite", existing partitions receiving new data are overwritten
+        max_workers : Union[int, None], optional
+            The maximum number of workers to use for parallel processing when
+            in_path is a directory. This gets passed to the concurrent.futures
+            ProcessPoolExecutor. If in_path is a file, this parameter is ignored.
+            If None (default), it defaults to os.process_cpu_count().
         **kwargs
             Additional keyword arguments are passed to xr.open_dataset().
 
@@ -253,6 +273,7 @@ class TimeseriesTable(BaseTable):
             constant_field_values=constant_field_values,
             location_id_prefix=location_id_prefix,
             write_mode=write_mode,
+            max_workers=max_workers,
             **kwargs
         )
         self._load_table()
@@ -273,6 +294,7 @@ class TimeseriesTable(BaseTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        max_workers: Union[int, None] = None,
     ):
         """Import timeseries from XML data format.
 
@@ -313,6 +335,11 @@ class TimeseriesTable(BaseTable):
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
             If "overwrite", existing partitions receiving new data are overwritten
+        max_workers : Union[int, None], optional
+            The maximum number of workers to use for parallel processing when
+            in_path is a directory. This gets passed to the concurrent.futures
+            ProcessPoolExecutor. If in_path is a file, this parameter is ignored.
+            If None (default), it defaults to os.process_cpu_count().
 
         Includes validation and importing data to database.
 
@@ -346,5 +373,6 @@ class TimeseriesTable(BaseTable):
             constant_field_values=constant_field_values,
             location_id_prefix=location_id_prefix,
             write_mode=write_mode,
+            max_workers=max_workers
         )
         self._load_table()

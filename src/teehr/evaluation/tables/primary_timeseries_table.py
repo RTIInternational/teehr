@@ -61,6 +61,7 @@ class PrimaryTimeseriesTable(TimeseriesTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        max_workers: Union[int, None] = None,
         **kwargs
     ):
         """Import timeseries helper."""
@@ -80,6 +81,7 @@ class PrimaryTimeseriesTable(TimeseriesTable):
             constant_field_values=constant_field_values,
             timeseries_type="primary",
             pattern=pattern,
+            max_workers=max_workers,
             **kwargs
         )
 

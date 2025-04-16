@@ -110,6 +110,7 @@ def convert_timeseries(
     constant_field_values: dict = None,
     timeseries_type: str = None,
     pattern: str = "**/*.parquet",
+    max_workers: int = None,
     **kwargs
 ):
     """Convert timeseries data to parquet format.
@@ -128,6 +129,9 @@ def convert_timeseries(
         format: {field_name: value}
     pattern : str, optional (default: "**/*.parquet")
         The pattern to match files.
+    max_workers : int, optional
+        The maximum number of workers to use for parallel processing.
+        If None, the default value is used.
     **kwargs
         Additional keyword arguments are passed to
             pd.read_csv() or pd.read_parquet().
@@ -170,7 +174,7 @@ def convert_timeseries(
 
     files_converted = 0
     if in_path.is_dir():
-        with concurrent.futures.ProcessPoolExecutor() as executor:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
             futures = []
             for in_filepath in in_path.glob(f"{pattern}"):
                 relative_name = in_filepath.relative_to(in_path)
