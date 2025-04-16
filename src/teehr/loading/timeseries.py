@@ -6,7 +6,6 @@ from teehr.loading.utils import (
     merge_field_mappings,
     validate_constant_values_dict,
     read_and_convert_netcdf_to_df,
-    read_and_convert_xml_to_df,
     read_and_convert_xml_to_df_using_lxml
     # convert_datetime_ns_to_ms
 )

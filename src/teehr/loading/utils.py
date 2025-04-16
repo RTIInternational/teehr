@@ -216,60 +216,6 @@ def read_and_convert_netcdf_to_df(
     return df
 
 
-def _get_element_node_value(
-    element: minidom.Element,
-    tag_name: str
-) -> str:
-    """Get the node value of an element."""
-    elements_list = element.getElementsByTagName(tag_name)
-    if len(elements_list) == 0:
-        logger.error(f"'{tag_name}' not found, unable to parse this file.")
-        raise ValueError(
-            f"'{tag_name}' not found, unable to parse this XML file."
-        )
-    elif len(elements_list) > 1:
-        logger.error(
-            f"More than one entry for'{tag_name}', unable to parse this file."
-        )
-        raise ValueError(
-            f"More than one entry for'{tag_name}', unable to parse this file."
-        )
-    else:
-        node_value = elements_list[0].firstChild.nodeValue
-        return node_value
-
-
-def _get_element_attribute_value(
-    element: minidom.Element,
-    tag_name: str,
-    attribute_name: str
-) -> str:
-    """Get the attribute value of an element."""
-    elements_list = element.getElementsByTagName(tag_name)
-    if len(elements_list) == 0:
-        logger.error(f"'{tag_name}' not found, unable to parse this file.")
-        raise ValueError(
-            f"'{tag_name}' not found, unable to parse this XML file."
-        )
-    elif len(elements_list) > 1:
-        logger.error(
-            f"More than one entry for'{tag_name}', unable to parse this file."
-        )
-        raise ValueError(
-            f"More than one entry for'{tag_name}', unable to parse this file."
-        )
-    else:
-        attr_value = elements_list[0].getAttribute(attribute_name)
-        if len(attr_value) == 0:
-            logger.error(
-                f"Attribute '{attribute_name}' not found for '{tag_name}'."
-            )
-            raise ValueError(
-                f"Attribute '{attribute_name}' not found for '{tag_name}'."
-            )
-        return attr_value
-
-
 def read_and_convert_xml_to_df_using_lxml(
     in_filepath: Union[str, Path],
     field_mapping: dict,
