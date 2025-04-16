@@ -9,7 +9,7 @@ import shutil
 from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
 from lxml import etree
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 logger = logging.getLogger(__name__)
@@ -235,6 +235,11 @@ def read_and_convert_xml_to_df_using_lxml(
 
     root = tree.getroot()
 
+    # Get timezone offset
+    utc_offset = timedelta(
+        hours=float(root.find(FEWS_XML_NAMESPACE + "timeZone").text)
+    )
+
     # Get headers
     timeseries = root.findall(FEWS_XML_NAMESPACE + "series")
 
@@ -272,7 +277,10 @@ def read_and_convert_xml_to_df_using_lxml(
                 "configuration_name": configuration
             })
 
-    return pd.DataFrame(timeseries_data)
+    df = pd.DataFrame(timeseries_data)
+    df["value_time"] = df.value_time + utc_offset
+    df["reference_time"] = df.reference_time + utc_offset
+    return df
 
 
 def validate_input_is_parquet(
