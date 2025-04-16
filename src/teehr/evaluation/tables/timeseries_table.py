@@ -28,7 +28,7 @@ class TimeseriesTable(BaseTable):
         self.partition_by = [
             "configuration_name",
             "variable_name",
-            # "reference_time"
+            "reference_time"
         ]
         self.filter_model = TimeseriesFilter
         self.unique_column_set = [
@@ -338,7 +338,7 @@ class TimeseriesTable(BaseTable):
         """
         logger.info(f"Loading primary timeseries xml data: {in_path}")
 
-        # validate_input_is_xml(in_path)
+        validate_input_is_xml(in_path)
         self._load(
             in_path=in_path,
             pattern=pattern,

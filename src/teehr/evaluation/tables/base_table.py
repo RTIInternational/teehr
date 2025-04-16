@@ -278,10 +278,10 @@ class BaseTable():
         """Remove a field from self.unique_column_set if all values are null."""
         for field_name in self.unique_column_set:
             if field_name in df.columns:
-                if len(df.filter(df[field_name].isNotNull()).collect()) == 0:
+                if df.filter(col(field_name).isNotNull()).count() == 0:
                     logger.debug(
                         f"All {field_name} values are null. "
-                        f"{field_name} will be removed as a partition column."
+                        f"{field_name} will be removed as a unique column."
                     )
                     self.unique_column_set.remove(field_name)
 
