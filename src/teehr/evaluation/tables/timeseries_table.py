@@ -7,11 +7,16 @@ from teehr.loading.utils import (
     validate_input_is_parquet
 )
 from teehr.models.filters import TimeseriesFilter
-from teehr.querying.utils import join_geometry
+from teehr.querying.utils import join_geometry, group_df
 from teehr.models.table_enums import TableWriteEnum
-
+from pyspark.sql import functions as F
 from pathlib import Path
-from typing import Union
+from typing import Union, List
+# from teehr import RowLevelCalculatedFields as rcf
+from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
+from teehr.models.pydantic_table_models import (
+    Configuration
+)
 
 import logging
 
@@ -37,6 +42,7 @@ class TimeseriesTable(BaseTable):
             "reference_time",
             "variable_name",
             "unit_name",
+            "configuration_name"
         ]
 
     def to_pandas(self):
@@ -348,3 +354,79 @@ class TimeseriesTable(BaseTable):
             write_mode=write_mode,
         )
         self._load_table()
+
+    def calculate_climatology(
+        self,
+        cf: CalculatedFieldBaseModel = None,
+        stats: list = "mean",
+        configuration_name: str = "climatology",
+    ):
+        """Calculate climatology metrics and add as a new configuration.
+
+        Parameters
+        ----------
+        time_period : list, optional
+            The time period to calculate climatology for, by default "day_of_year"
+            (daily, monthly, seasonal, annual)
+        stats : list, optional
+            The statistics to calculate, by default "mean"
+        include_metrics : list, optional
+            The metrics to include, by default None
+        """
+        # TODO: This could be more generic, "calculate_configuration()"?
+        # Steps:
+        # 1. Add a calculated field used for aggregation (ie, day_of_year).
+        # 2. Aggregate value with specified stat (ie, mean)
+        # 3. Join back to original DataFrame.
+        # 4. Write to table with new configuration name, adding the new
+        #    configuration to the configurations table if it doesn't exist.
+
+        self._check_load_table()
+
+        sdf = cf.apply_to(self.df)
+
+        groupby_field_list = [
+            "location_id",
+            "variable_name",
+            "unit_name",
+            "configuration_name"
+        ]
+        groupby_field_list.append(cf.output_field_name)
+        summary_sdf = group_df(sdf, groupby_field_list).agg(F.mean("value").alias("mean_value"))
+        joined_sdf = sdf.join(summary_sdf, on=groupby_field_list, how="left")
+
+        # df = df.select([*self.schema_func().columns])
+
+        final_df = (
+            joined_sdf.
+            drop("value").
+            withColumnRenamed("mean_value", "value").
+            withColumn("configuration_name", F.lit(configuration_name))
+        )
+
+        if (
+            self.ev.configurations.filter(
+                {
+                    "column": "name",
+                    "operator": "=",
+                    "value": configuration_name
+                }
+            ).to_sdf().count() == 0
+        ):
+            self.ev.configurations.add(
+                Configuration(
+                    name=configuration_name,
+                    type=self.name.split("_")[0],
+                    description="Climatology configuration",
+                )
+            )
+
+        # TODO: Validate
+
+        self._write_spark_df(
+            final_df,
+            write_mode="append",
+            partition_by=self.partition_by
+        )
+
+        pass
