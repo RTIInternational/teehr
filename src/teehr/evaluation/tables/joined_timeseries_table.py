@@ -198,17 +198,6 @@ class JoinedTimeseriesTable(TimeseriesTable):
         logger.info("Joined timeseries table created.")
         self._load_table()
 
-    def _check_for_null_reference_time(self, df: ps.DataFrame) -> ps.DataFrame:
-        """Remove a field from partition_by if all values are null."""
-        if "reference_time" in self.partition_by:
-            if df.filter(col("reference_time").isNotNull()).count() == 0:
-                logger.debug(
-                    "All 'reference_time' values are null. "
-                    "'reference_time' will be set to a default value."
-                )
-                self.partition_by.remove("reference_time")
-        return df
-
     def _write_spark_df(
         self,
         df: ps.DataFrame,
@@ -229,7 +218,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
 
         logger.info(f"Writing files to {self.dir}.")
 
-        self._check_for_null_reference_time(df)
+        self._check_partition_by_for_null(df, field_names=["reference_time"])
 
         if len(kwargs) == 0:
             kwargs = {
