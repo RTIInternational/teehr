@@ -37,6 +37,7 @@ class TimeseriesTable(BaseTable):
             "reference_time",
             "variable_name",
             "unit_name",
+            "configuration_name"
         ]
 
     def to_pandas(self):

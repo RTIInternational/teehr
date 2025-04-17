@@ -34,6 +34,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
             "reference_time",
             "variable_name",
             "unit_name",
+            "configuration_name",
         ]
 
     def field_enum(self) -> JoinedTimeseriesFields:

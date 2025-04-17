@@ -30,7 +30,8 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             "reference_time",
             "variable_name",
             "unit_name",
-            "member"
+            "member",
+            "configuration_name",
         ]
 
     def field_enum(self) -> TimeseriesFields:
