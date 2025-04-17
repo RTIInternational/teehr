@@ -346,7 +346,7 @@ class BaseTable():
 
             self._check_unique_column_set_for_null(
                 df,
-                field_names=["reference_time"]
+                field_names=["reference_time", "member"]  # nullable timeseries fields
             )
 
             if write_mode == "overwrite":
