@@ -10,6 +10,7 @@ import logging
 from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
 from teehr.models.table_enums import TableWriteEnum
 from teehr.loading.utils import add_or_replace_sdf_column_prefix
+from teehr.const import MAX_CPUS
 
 
 logger = logging.getLogger(__name__)
@@ -66,7 +67,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
-        max_workers: Union[int, None] = None,
+        max_workers: Union[int, None] = MAX_CPUS,
         **kwargs
     ):
         """Import timeseries helper."""

@@ -12,6 +12,7 @@ from teehr.loading.utils import (
 )
 import teehr.models.pandera_dataframe_schemas as schemas
 from teehr.models.table_enums import TableWriteEnum
+from teehr.const import MAX_CPUS
 
 import logging
 
@@ -110,7 +111,7 @@ def convert_timeseries(
     constant_field_values: dict = None,
     timeseries_type: str = None,
     pattern: str = "**/*.parquet",
-    max_workers: int = None,
+    max_workers: int = MAX_CPUS,
     **kwargs
 ):
     """Convert timeseries data to parquet format.

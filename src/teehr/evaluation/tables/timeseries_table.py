@@ -9,6 +9,7 @@ from teehr.loading.utils import (
 from teehr.models.filters import TimeseriesFilter
 from teehr.querying.utils import join_geometry
 from teehr.models.table_enums import TableWriteEnum
+from teehr.const import MAX_CPUS
 
 from pathlib import Path
 from typing import Union
@@ -61,7 +62,7 @@ class TimeseriesTable(BaseTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
-        max_workers: Union[int, None] = None,
+        max_workers: Union[int, None] = MAX_CPUS,
         **kwargs
     ):
         """Import primary timeseries parquet data.
@@ -96,7 +97,8 @@ class TimeseriesTable(BaseTable):
             The maximum number of workers to use for parallel processing when
             in_path is a directory. This gets passed to the concurrent.futures
             ProcessPoolExecutor. If in_path is a file, this parameter is ignored.
-            If None (default), it defaults to os.process_cpu_count().
+            The default value is max(os.cpu_count() - 1, 1).
+            If None, os.process_cpu_count() is used.
         **kwargs
             Additional keyword arguments are passed to pd.read_parquet().
 
@@ -137,7 +139,7 @@ class TimeseriesTable(BaseTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
-        max_workers: Union[int, None] = None,
+        max_workers: Union[int, None] = MAX_CPUS,
         **kwargs
     ):
         """Import primary timeseries csv data.
@@ -171,7 +173,8 @@ class TimeseriesTable(BaseTable):
             The maximum number of workers to use for parallel processing when
             in_path is a directory. This gets passed to the concurrent.futures
             ProcessPoolExecutor. If in_path is a file, this parameter is ignored.
-            If None (default), it defaults to os.process_cpu_count().
+            The default value is max(os.cpu_count() - 1, 1).
+            If None, os.process_cpu_count() is used.
         **kwargs
             Additional keyword arguments are passed to pd.read_csv().
 
@@ -212,7 +215,7 @@ class TimeseriesTable(BaseTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
-        max_workers: Union[int, None] = None,
+        max_workers: Union[int, None] = MAX_CPUS,
         **kwargs
     ):
         """Import primary timeseries netcdf data.
@@ -246,7 +249,8 @@ class TimeseriesTable(BaseTable):
             The maximum number of workers to use for parallel processing when
             in_path is a directory. This gets passed to the concurrent.futures
             ProcessPoolExecutor. If in_path is a file, this parameter is ignored.
-            If None (default), it defaults to os.process_cpu_count().
+            The default value is max(os.cpu_count() - 1, 1).
+            If None, os.process_cpu_count() is used.
         **kwargs
             Additional keyword arguments are passed to xr.open_dataset().
 
@@ -295,7 +299,7 @@ class TimeseriesTable(BaseTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
-        max_workers: Union[int, None] = None,
+        max_workers: Union[int, None] = MAX_CPUS,
     ):
         """Import timeseries from XML data format.
 
@@ -340,7 +344,8 @@ class TimeseriesTable(BaseTable):
             The maximum number of workers to use for parallel processing when
             in_path is a directory. This gets passed to the concurrent.futures
             ProcessPoolExecutor. If in_path is a file, this parameter is ignored.
-            If None (default), it defaults to os.process_cpu_count().
+            The default value is max(os.cpu_count() - 1, 1).
+            If None, os.process_cpu_count() is used.
 
         Includes validation and importing data to database.
 
