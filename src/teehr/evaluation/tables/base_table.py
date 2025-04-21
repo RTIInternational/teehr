@@ -11,7 +11,7 @@ from teehr.utils.utils import to_path_or_s3path, path_to_spark
 from teehr.models.filters import FilterBaseModel
 from teehr.models.table_enums import TableWriteEnum
 import logging
-from pyspark.sql.functions import lit, col, row_number, asc
+from pyspark.sql.functions import lit, col, row_number, asc, first
 from pyspark.sql.window import Window
 
 
@@ -275,45 +275,41 @@ class BaseTable():
 
     def _check_partition_by_for_null(
         self,
-        df: ps.DataFrame,
-        field_names: List[str]
+        df: ps.DataFrame
     ):
         """Remove a field from partition_by if all values are null."""
         logger.debug("Checking partition for null table fields.")
-        for field_name in field_names:
-            if field_name in self.partition_by:
-                if df.filter(col(field_name).isNotNull()).count() == 0:
-                    logger.debug(
-                        f"All {field_name} values are null. "
-                        f"{field_name} will be set to a default value."
-                    )
-                    self.partition_by.remove(field_name)
-            else:
+        # Select first non-null value from each column.
+        null_df = df.select([first(x, ignorenulls=True).alias(x) for x in self.partition_by])
+        # Count the number of non-null values in each column. (returns 0 or 1)
+        num_nonnull = [(c, null_df.filter(col(c).isNotNull()).count()) for c in null_df.columns]
+        # Remove columns with all null values.
+        for field_name, count in num_nonnull:
+            if count == 0:
                 logger.debug(
-                    f"{field_name} is not in the partition_by list."
-                    " Nothing to do."
+                    f"All {field_name} values are null. "
+                    f"{field_name} will be removed as a unique column."
                 )
+                self.partition_by.remove(field_name)
 
     def _check_unique_column_set_for_null(
         self,
-        df: ps.DataFrame,
-        field_names: List[str]
+        df: ps.DataFrame
     ):
         """Remove a field from self.unique_column_set if all values are null."""
         logger.debug("Checking unique_column_set for null table fields.")
-        for field_name in field_names:
-            if field_name in self.unique_column_set:
-                if df.filter(col(field_name).isNotNull()).count() == 0:
-                    logger.debug(
-                        f"All {field_name} values are null. "
-                        f"{field_name} will be removed as a unique column."
-                    )
-                    self.unique_column_set.remove(field_name)
-            else:
+        # Select first non-null value from each column.
+        null_df = df.select([first(x, ignorenulls=True).alias(x) for x in self.unique_column_set])
+        # Count the number of non-null values in each column. (0 or 1)
+        num_nonnull = [(c, null_df.filter(col(c).isNotNull()).count()) for c in null_df.columns]
+        # Remove columns with all null values.
+        for field_name, count in num_nonnull:
+            if count == 0:
                 logger.debug(
-                    f"{field_name} is not in the unique_column_set list."
-                    " Nothing to do."
+                    f"All {field_name} values are null. "
+                    f"{field_name} will be removed as a unique column."
                 )
+                self.unique_column_set.remove(field_name)
 
     def _write_spark_df(
         self,
@@ -344,10 +340,7 @@ class BaseTable():
 
         if df is not None:
 
-            self._check_unique_column_set_for_null(
-                df,
-                field_names=["reference_time", "member"]  # nullable timeseries fields
-            )
+            self._check_unique_column_set_for_null(df)
 
             if write_mode == "overwrite":
                 self._dynamic_overwrite(df, **kwargs)

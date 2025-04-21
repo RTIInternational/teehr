@@ -218,7 +218,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
 
         logger.info(f"Writing files to {self.dir}.")
 
-        self._check_partition_by_for_null(df, field_names=["reference_time"])
+        self._check_partition_by_for_null(df)
 
         if len(kwargs) == 0:
             kwargs = {
