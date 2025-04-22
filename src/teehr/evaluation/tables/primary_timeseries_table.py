@@ -63,6 +63,7 @@ class PrimaryTimeseriesTable(TimeseriesTable):
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         max_workers: Union[int, None] = MAX_CPUS,
+        persist_dataframe: bool = True,
         **kwargs
     ):
         """Import timeseries helper."""
@@ -88,6 +89,10 @@ class PrimaryTimeseriesTable(TimeseriesTable):
 
         # Read the converted files to Spark DataFrame
         df = self._read_files(cache_dir)
+
+        if persist_dataframe:
+            df = df.repartition(*self.partition_by)
+            df = df.persist()
 
         # Add or replace location_id prefix if provided
         if location_id_prefix:
