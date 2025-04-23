@@ -333,7 +333,7 @@ class DayOfYear(CalculatedFieldABC, CalculatedFieldBaseModel):
             def adjust_day_of_year(date):
                 if (date.year % 4 == 0 and date.year % 100 != 0) or (date.year % 400 == 0):
                     if date.month == 2 and date.day == 29:
-                        return None
+                        return 59  # Assign to Feb.28 in leap years
                     elif date.month > 2 or (date.month == 2 and date.day > 28):
                         return date.dayofyear - 1
                     else:

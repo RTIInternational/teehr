@@ -28,6 +28,7 @@ def _pivot_by_value_time(
             dimension should be the ensemble member.
     """
     # TODO: Probably a better way to do this?
+    # If second dim of secondary is 1, apply ravel()
     primary = []
     secondary = []
     for vt in value_time.unique():
