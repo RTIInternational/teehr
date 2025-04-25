@@ -115,3 +115,5 @@ class SecondaryTimeseriesTable(TimeseriesTable):
 
         # Reload the table
         self._load_table()
+
+        df.unpersist()

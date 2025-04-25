@@ -18,13 +18,21 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# The target file size in bytes of cached parquet files.
+TARGET_FILE_SIZE = 128 * 1e6
+
+# The correction factor adjusts for differences in
+# in-memory and on-disk sizes. Do not change.
+CORRECTION_FACTOR = 0.735
+
 
 def convert_single_timeseries(
     in_filepath: Union[str, Path],
-    out_filepath: Union[str, Path],
+    out_filepath: Union[str, Path, None],
     field_mapping: dict,
     constant_field_values: dict = None,
     timeseries_type: str = None,
+    return_dataframe=False,
     **kwargs
 ):
     """Convert timeseries data to parquet format.
@@ -55,7 +63,6 @@ def convert_single_timeseries(
 
     """
     in_filepath = Path(in_filepath)
-    out_filepath = Path(out_filepath)
 
     logger.info(f"Converting timeseries data from: {in_filepath}")
 
@@ -99,6 +106,13 @@ def convert_single_timeseries(
 
     # validated_df = convert_datetime_ns_to_ms(validated_df)
 
+    if return_dataframe:
+        logger.info(f"Returning dataframe for: {in_filepath}")
+        return validated_df
+
+    if out_filepath is None:
+        raise ValueError("Output file path is required.")
+    out_filepath = Path(out_filepath)
     logger.info(f"Writing timeseries data to: {out_filepath}")
     out_filepath.parent.mkdir(parents=True, exist_ok=True)
     validated_df.to_parquet(out_filepath)
@@ -175,25 +189,42 @@ def convert_timeseries(
 
     files_converted = 0
     if in_path.is_dir():
+        filepaths = sorted(list(in_path.glob(f"{pattern}")))
         with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
             futures = []
-            for in_filepath in in_path.glob(f"{pattern}"):
-                relative_name = in_filepath.relative_to(in_path)
-                out_filepath = Path(out_path, relative_name)
-                out_filepath = out_filepath.with_suffix(".parquet")
+            for in_filepath in filepaths:
                 futures.append(
                     executor.submit(
                         convert_single_timeseries,
                         in_filepath,
-                        out_filepath,
+                        None,
                         field_mapping,
                         constant_field_values,
                         timeseries_type=timeseries_type,
+                        return_dataframe=True,
                         **kwargs
                     )
                 )
+            output_dfs = []
+            starting_filepath = filepaths[files_converted]
+            total_size = 0
             for future in concurrent.futures.as_completed(futures):
                 files_converted += 1
+                if (total_size * CORRECTION_FACTOR < TARGET_FILE_SIZE) & \
+                        (files_converted < len(futures)):
+                    tmp_df = future.result()
+                    total_size += tmp_df.memory_usage().sum()
+                    output_dfs.append(tmp_df)
+                else:
+                    df = pd.concat(output_dfs, ignore_index=True)
+                    ending_filepath = filepaths[files_converted - 1]
+                    output_filepath = Path(f"{starting_filepath.stem}_to_{ending_filepath.stem}").with_suffix(".parquet")
+                    out_filepath = Path(out_path, output_filepath)
+                    out_filepath.parent.mkdir(parents=True, exist_ok=True)
+                    df.to_parquet(out_filepath, index=False)
+                    output_dfs = []
+                    total_size = 0
+                    starting_filepath = filepaths[files_converted - 1]
     else:
         out_filepath = Path(out_path, in_path.name)
         out_filepath = out_filepath.with_suffix(".parquet")
