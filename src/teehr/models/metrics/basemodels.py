@@ -119,3 +119,28 @@ class MetricCategories(StrEnum):
     Signature = "Signature"
     Probabilistic = "Probabilistic"
 
+
+class BaselineMethodEnum(StrEnum):
+    """Methods for calculating baselines."""
+
+    climatology = "climatology"
+    persistence = "persistence"
+
+
+class ClimatologyResolutionEnum(StrEnum):
+    """Resolutions for calculating climatology."""
+
+    day_of_year = "day_of_year"
+    month = "month"
+    season = "season"
+    year = "year"
+    water_year = "water_year"
+
+
+class ClimatologyStatisticEnum(StrEnum):
+    """Statistics for calculating climatology."""
+
+    mean = "mean"
+    median = "median"
+    min = "min"
+    max = "max"

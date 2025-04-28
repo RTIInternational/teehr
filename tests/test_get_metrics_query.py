@@ -14,7 +14,6 @@ from teehr.models.filters import JoinedTimeseriesFilter
 from teehr.models.metrics.bootstrap_models import Bootstrappers
 from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 from teehr.evaluation.evaluation import Evaluation
-from teehr import RowLevelCalculatedFields as rcf
 
 from setup_v0_3_study import setup_v0_3_study
 TEST_STUDY_DATA_DIR_v0_4 = Path("tests", "data", "test_study")
@@ -413,56 +412,6 @@ def test_metric_chaining(tmpdir):
         metrics_df.columns == ["primary_location_id", "primary_average"]
     )
 
-# TEMPORARY:
-import scoringrules as sr
-from teehr.models.metrics.basemodels import MetricsBasemodel
-from teehr.metrics.deterministic_funcs import _transform
-from teehr.metrics.probabilistic_funcs import _pivot_by_value_time
-def ensemble_crps(
-    p: pd.Series,
-    s: pd.Series,
-    value_time: pd.Series,
-    model: MetricsBasemodel
-    ) -> float:
-    """Create a wrapper around scoringrules crps_ensemble.
-
-    Parameters
-    ----------
-    p : pd.Series
-        The primary values.
-    s : pd.Series
-        The secondary values.
-    value_time : pd.Series
-        The value time.
-
-    Returns
-    -------
-    float
-        The mean Continuous Ranked Probability Score (CRPS) for the
-        ensemble, either as a single value or array of values.
-    """
-    p, s, value_time = _transform(p, s, model, value_time)
-    pivoted_dict = _pivot_by_value_time(p, s, value_time)
-
-    if model.summary_func is not None:
-        return model.summary_func(
-            sr.crps_ensemble(
-                pivoted_dict["primary"],
-                pivoted_dict["secondary"],
-                estimator=model.estimator,
-                backend=model.backend
-            )
-        )
-    else:
-        return sr.crps_ensemble(
-            pivoted_dict["primary"],
-            pivoted_dict["secondary"],
-            estimator=model.estimator,
-            backend=model.backend
-        )
-
-    return ensemble_crps
-
 
 def test_ensemble_metrics(tmpdir):
     """Test get_metrics method with ensemble metrics."""
@@ -517,7 +466,6 @@ def test_ensemble_metrics(tmpdir):
     ev.primary_timeseries.load_parquet(
         in_path=primary_filepath
     )
-    # =======================================================
     # Add reference forecast based on climatology, matching the
     # secondary timeseries.
     ev.secondary_timeseries.create_reference_forecast(
@@ -525,31 +473,12 @@ def test_ensemble_metrics(tmpdir):
         target_configuration_name="MEFP",
         output_configuration_name="reference_forecast",
         output_configuration_description="Reference forecast for testing",
-        time_period=rcf.DayOfYear(),
-        location_id_prefix="test"
+        method="climatology",
+        summary_statistic="mean",
+        temporal_resolution="day_of_year",
+        output_location_id_prefix="test"
     )
-
     ev.joined_timeseries.create(execute_scripts=False)
-
-    # Now, metrics.
-    crps = ProbabilisticMetrics.CRPS()
-    crps.summary_func = np.mean
-    crps.estimator = "pwm"
-    crps.backend = "numba"
-
-    df = ev.joined_timeseries.to_pandas()
-    gps = df.groupby(["primary_location_id", "reference_time", "configuration_name"])  # "reference_time",
-
-    for name, group in gps:
-
-        ensemble_crps(
-            p=group.primary_value,
-            s=group.secondary_value,
-            value_time=group.value_time,
-            model=crps
-        )
-    # =======================================================
-
     # Now, metrics.
     crps = ProbabilisticMetrics.CRPS()
     crps.summary_func = np.mean
@@ -557,18 +486,17 @@ def test_ensemble_metrics(tmpdir):
     crps.backend = "numba"
 
     include_metrics = [crps]
-
     metrics_df = ev.metrics.query(
         include_metrics=include_metrics,
         group_by=[
             "primary_location_id",
-            "reference_time",
             "configuration_name"
         ],
         order_by=["primary_location_id"],
     ).to_pandas()
 
     assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 35.627174)
+    assert np.isclose(metrics_df.mean_crps_ensemble.values[1], 1.1836433)
 
 
 def test_metrics_transforms(tmpdir):
@@ -612,6 +540,7 @@ def test_metrics_transforms(tmpdir):
     assert isinstance(metrics_df_transformed, pd.DataFrame)
     assert result_kge != result_kge_t
     assert result_mvtd == result_mvtd_t
+
 
 def test_bootstrapping_transforms(tmpdir):
     """Test applying metric transforms (bootstrap)."""

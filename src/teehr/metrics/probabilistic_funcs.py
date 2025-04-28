@@ -27,15 +27,21 @@ def _pivot_by_value_time(
             The first dimension should be the time step, and the second
             dimension should be the ensemble member.
     """
-    # TODO: Probably a better way to do this?
-    # If second dim of secondary is 1, apply ravel()
-    primary = []
-    secondary = []
-    for vt in value_time.unique():
-        vt_index = value_time[value_time == vt].index
-        primary.append(p[vt_index].values[0])
-        secondary.append(s[vt_index].values)
-    return {"primary": np.array(primary), "secondary": np.array(secondary)}
+    unique_values = value_time.unique()
+    n_timesteps = len(unique_values)
+    inds = np.array([np.where(value_time == unique_values[i])[0] for i in range(n_timesteps)])
+    # If the number of ensemble members is 1, we need to
+    # flatten the array to a 1-D array.
+    # Otherwise, we need to keep it as a 2-D array.
+    if inds.shape[1] == 1:
+        return {
+            "primary": p.values[inds[:, 0]],
+            "secondary": s.values[inds].ravel()
+        }
+    return {
+        "primary": p.values[inds[:, 0]],
+        "secondary": s.values[inds]
+    }
 
 
 def create_crps_func(model: MetricsBasemodel) -> Callable:
