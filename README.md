@@ -62,7 +62,7 @@ Currently, TEEHR dependencies require users install on Linux or macOS. To use TE
 - You can launch your default WSL installation from the terminal using: `wsl`
 - You can also launch Ubuntu directly from the start menu by searching for 'Ubuntu'
 
-##### 3. Set-up Python on Linux (within WSL terminal)
+#### 3. Set-up Python on Linux (within WSL terminal)
 - Update and upgrade Ubuntu:
 ```
 sudo apt update && sudo apt upgrade
@@ -81,7 +81,7 @@ echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
 echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
 echo 'eval "$(pyenv init -)"' >> ~/.bashrc
 # Reload bashrc
-source ~/.bashrc@rti
+source ~/.bashrc
 # Confirm installation
 pyenv --version
 ```
