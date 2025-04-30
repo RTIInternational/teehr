@@ -216,11 +216,11 @@ def read_and_convert_netcdf_to_df(
     return df
 
 
-def read_and_convert_xml_to_df_using_lxml(
+def read_and_convert_xml_to_df(
     in_filepath: Union[str, Path],
     field_mapping: dict,
 ) -> pd.DataFrame:
-    """Read an xml file and convert to pandas dataframe."""
+    """Read a FEWS PI xml file and convert to pandas dataframe."""
     logger.debug(f"Reading and converting xml file {in_filepath}")
 
     inv_field_mapping = {v: k for k, v in field_mapping.items()}
