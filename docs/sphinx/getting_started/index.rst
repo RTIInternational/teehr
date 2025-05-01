@@ -36,33 +36,60 @@ The code below creates a new virtual environment and installs TEEHR in it.
 
 Installation Guide for Windows
 ------------------------------
-Currently, TEEHR dependencies require users install on Linux or macOS. To use TEEHR on Windows, we recommend Windows Subsystem for Linux (WSL). `Learn more about WSL <https://learn.microsoft.com/en-us/windows/wsl/about>`.
+Currently, TEEHR dependencies require users install on Linux or macOS. To use TEEHR on Windows, we recommend Windows Subsystem for Linux (WSL). `Learn more about WSL <https://learn.microsoft.com/en-us/windows/wsl/about>`_.
 
-1. Install Linux on Windows via WSL
-   * Detailed instructions can be found here: `How to Install Linux on Windows with WSL <https://learn.microsoft.com/en-us/windows/wsl/install>`
+1. Install Linux on Windows via WSL (in Windows terminal)
+
+   * Detailed instructions can be found here: `How to Install Linux on Windows with WSL <https://learn.microsoft.com/en-us/windows/wsl/install>`_
    * Summary:
-      * Run `wsl --install -d Ubuntu-22.04` in PowerShell or Windows Terminal. This will install necessary features to run Windows subsystem for Linux (WSL) and install the Ubuntu-22.04 Linux distribution.
-      * Restart your machine.
-   * Validate install:
-      * Check what Ubuntu version you have installed: `wsl -l -v`
 
-2. Launch Ubuntu
-   * You can launch your default WSL installation from the terminal using: `wsl`
-      * Upon entering the command, you should notice your terminal prompt/CWD update to display your current windows directory relative to your Linux file system (i.e. '/mnt/c/Users/{your_username}$'. To access your home directory in Linux, enter: `cd ~/`
+      * Run the following command in PowerShell or Windows Terminal. This will install necessary features to run Windows subsystem for Linux (WSL) and install the Ubuntu-22.04 Linux distribution.
+
+      .. code-block:: bash
+
+         wsl --install -d Ubuntu-22.04
+
+      * Restart your machine.
+
+   * Validate install:
+
+      * Check what Ubuntu version you have installed using the following command:
+
+      .. code-block:: bash
+
+         wsl -l -v
+
+2. Launch Ubuntu (in Windows terminal)
+
+   * You can launch your default WSL installation from the terminal using the following command:
+
+   .. code-block:: bash
+
+      wsl
+
+   * Upon entering the command, you should notice your terminal prompt/CWD update to display your current windows directory relative to your Linux file system (i.e. '/mnt/c/Users/{your_username}$'. To access your home directory in Linux, enter the following command:
+
+   .. code-block:: bash
+
+      cd ~/
 
 3. Set-up Python on Linux (within WSL terminal)
+
    * Update and upgrade Ubuntu:
+
    .. code-block:: bash
 
       sudo apt update && sudo apt upgrade
       sudo apt-get install wget ca-certificates
 
    * Install some key default development packages (within WSL terminal):
+
    .. code-block:: bash
 
       sudo apt install -y build-essential git curl libexpat1-dev libssl-dev zlib1g-dev libncurses5-dev libbz2-dev liblzma-dev libsqlite3-dev libffi-dev tcl-dev linux-headers-generic libgdbm-dev libreadline-dev tk tk-dev
 
    * Install pyenv to manage Python versions (within WSL terminal):
+
    .. code-block:: bash
 
       curl https://pyenv.run | bash
@@ -75,6 +102,7 @@ Currently, TEEHR dependencies require users install on Linux or macOS. To use TE
       pyenv --version
 
    * Install the required Python version [>=3.10.12] (within WSL terminal):
+
    .. code-block:: bash
 
       pyenv install 3.10.12
@@ -85,7 +113,9 @@ Currently, TEEHR dependencies require users install on Linux or macOS. To use TE
       python --version
 
 4. Set-up Linux dependencies (within WSL terminal)
+
    * Install Java 17 (within WSL terminal):
+
    .. code-block:: bash
 
       sudo apt install openjdk-17-jre-headless
@@ -93,11 +123,15 @@ Currently, TEEHR dependencies require users install on Linux or macOS. To use TE
       java -version
 
 5. Set-up VSCode in WSL
-   * Follow the official VSCode Instructions here: `VSCode for WSL <https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-vscode>`.
+
+   * Follow the official VSCode Instructions here: `VSCode for WSL <https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-vscode>`_.
+
       * NOTE: An installation of VSCode on Windows is required to utilize VSCode in your WSL distribution. The provided link details the full set-up process -- including installation on Windows.
 
 6. Set-up TEEHR (within WSL terminal)
+
    * Create a new virtual environment:
+
    .. code-block:: bash
 
       mkdir teehr_examples
