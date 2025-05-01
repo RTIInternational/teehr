@@ -16,7 +16,7 @@ NOTE: THIS PROJECT IS UNDER DEVELOPMENT - EXPECT TO FIND BROKEN AND INCOMPLETE C
 ## Documentation
 [TEEHR Documentation](https://rtiinternational.github.io/teehr/)
 
-## How to Install TEEHR
+## How to Install TEEHR (macOS/Linux)
 We do not currently push TEEHR to PyPI, so the easiest way to install it is directly from GitHub.
 If using `pip` to install TEEHR, we recommend installing TEEHR in a virtual environment.
 The code below should create a new virtual environment and install TEEHR in it.
@@ -41,83 +41,11 @@ $ docker build -t teehr:v0.4.10 .
 $ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.4.10 jupyter lab --ip 0.0.0.0 $HOME
 ```
 
-## Notes for Windows users:
-Currently, TEEHR dependencies require users install on Linux or macOS. To use TEEHR on Windows, we recommend Windows Subsystem for Linux (WSL).
-
-#### 1. Install Linux on Windows via WSL
-
-- Detailed instructions here: [How to install Linux on Windows with WSL](https://learn.microsoft.com/en-us/windows/wsl/install)
-- Summary:
-  - Run `wsl --install` in PowerShell or Windows Terminal. This will install necessary features to run Windows subsystem for Linux (WSL) and install the default Ubuntu Linux distribution.
-  - Restart your machine.
-- Validate install:
-  - Check what Ubuntu version you have installed: `wsl -l -v`
-  - If you have just "Ubuntu" installed; install a newer, full version.
-  - Check what versions are available to install: `wsl --list --online`
-  - We recommend you install Ubuntu-22.04: `wsl --install -d Ubuntu-22.04`
-  - Set Ubuntu-22.04 as default: `wsl -s Ubuntu-22.04`
-    - NOTE: If you are in the Linux system from the step above, you need to "exit" then run this back in the Windows prompt.
-
-#### 2. Launch Ubuntu.
-- You can launch your default WSL installation from the terminal using: `wsl`
-- You can also launch Ubuntu directly from the start menu by searching for 'Ubuntu'
-
-#### 3. Set-up Python on Linux (within WSL terminal)
-- Update and upgrade Ubuntu:
-```
-sudo apt update && sudo apt upgrade
-sudo apt-get install wget ca-certificates
-```
-
-- Install some key default development packages:
-```
-sudo apt install -y build-essential git curl libexpat1-dev libssl-dev zlib1g-dev libncurses5-dev libbz2-dev liblzma-dev libsqlite3-dev libffi-dev tcl-dev linux-headers-generic libgdbm-dev libreadline-dev tk tk-dev
-```
-
-- Install pyenv to manage Python versions:
-```
-curl https://pyenv.run | bash
-echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
-echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
-echo 'eval "$(pyenv init -)"' >> ~/.bashrc
-# Reload bashrc
-source ~/.bashrc
-# Confirm installation
-pyenv --version
-```
-
-- Install the required Python version (>= 3.10.12):
-```
-pyenv install 3.10.12
-pyenv rehash
-# To set your global python version
-pyenv global 3.10.12
-# To set your local python version
-pyenv local 3.10.12
-```
-
-#### 4. Set-up Linux dependencies
-- Install Java
-  - `sudo apt install openjdk-17-jre-headless`
-
-#### 5. Set-up VSCode in WSL
-- Follow the official VSCode Instructions here: [VSCode for WSL](https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-vscode)
-
-#### 6. Set-up TEEHR
-- Create a directory to store the environment:
-  - `mkdir teehr_example`
-- Navigate to the directory in the terminal and set up a new virtual environment:
-```
-cd teehr_example
-python3 -m venv .venv
-source .venv/bin/activate
-pip install teehr
-python -m teehr.utils.install_spark_jars
-```
+## How to Install TEEHR (Windows)
+Currently, TEEHR dependencies require users install on Linux or macOS. To use TEEHR on Windows, we recommend Windows Subsystem for Linux (WSL). Detailed installation instructions for Windows users are available [here](https://rtiinternational.github.io/teehr/getting_started/index.html) under 'Installation Guide for Windows'.
 
 ## Examples
-For examples of how to use TEEHR, see the [examples](examples).  We will maintain a basic set of example Jupyter Notebooks demonstrating how to use the TEEHR tools.
-
+For examples of how to use TEEHR, see the [examples](https://github.com/RTIInternational/teehr/tree/main/src/teehr/examples).  We will maintain a basic set of example Jupyter Notebooks demonstrating how to use the TEEHR tools.
 
 ## Resources
 In May of 2023 we put on a workshop at the CIROH 1st Annual Training and Developers Conference.  The workshop materials and presentation are available in the workshop GitHub repository: [teehr-may-2023-workshop](https://github.com/RTIInternational/teehr-may-2023-workshop).  This workshop was based on version 0.1.0.
