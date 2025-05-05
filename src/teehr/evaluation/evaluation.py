@@ -27,6 +27,7 @@ from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.metrics import Metrics
 import pandas as pd
 from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor # noqa
+from delta import *
 
 
 logger = logging.getLogger(__name__)
@@ -84,6 +85,18 @@ class Evaluation:
         # Create a local Spark Session if one is not provided.
         if not self.spark:
             logger.info("Creating a new Spark session.")
+            # conf = (
+            #     SparkConf()
+            #     .setAppName("TEEHR")
+            #     .setMaster("local[*]")
+            #     .set("spark.sql.sources.partitionOverwriteMode", "dynamic")
+            #     .set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+            #     .set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider")
+            #     .set("spark.sql.execution.arrow.pyspark.enabled", "true")
+            #     .set("spark.sql.session.timeZone", "UTC")
+            # )
+            # self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
+
             conf = (
                 SparkConf()
                 .setAppName("TEEHR")
@@ -93,8 +106,14 @@ class Evaluation:
                 .set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider")
                 .set("spark.sql.execution.arrow.pyspark.enabled", "true")
                 .set("spark.sql.session.timeZone", "UTC")
+                .set("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+                .set("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+                .set("spark.sql.package", "io.delta:delta-core_2.12:2.1.0")
             )
-            self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
+
+            builder = SparkSession.builder.config(conf=conf)
+            self.spark = configure_spark_with_delta_pip(builder).getOrCreate()
+
 
     @property
     def fetch(self) -> Fetch:

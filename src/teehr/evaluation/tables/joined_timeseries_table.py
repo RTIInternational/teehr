@@ -234,8 +234,12 @@ class JoinedTimeseriesTable(TimeseriesTable):
         self._check_for_null_partition_by_values(df)
 
         if len(kwargs) == 0:
+            # To overwrite your schema or change partitioning, please set:
+            # '.option("overwriteSchema", "true")'.
             kwargs = {
                 "header": "true",
+                "mergeSchema": "true",
+                # "overwriteSchema": "true",
             }
         partition_by = self.partition_by
         if partition_by is None:

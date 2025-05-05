@@ -29,6 +29,7 @@ def setup_v0_3_study(tmpdir):
     ev.clone_template()
 
     # Load the location data
+    ev.locations._create_delta_table()
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
 
     ev.configurations.add(
@@ -40,6 +41,7 @@ def setup_v0_3_study(tmpdir):
     )
 
     # Load the timeseries data and map over the fields and set constants
+    ev.primary_timeseries._create_delta_table()
     ev.primary_timeseries.load_parquet(
         in_path=PRIMARY_TIMESERIES_FILEPATH,
         field_mapping={
@@ -72,6 +74,7 @@ def setup_v0_3_study(tmpdir):
     )
 
     # Load the secondary timeseries data and map over the fields and set constants
+    ev.secondary_timeseries._create_delta_table()
     ev.secondary_timeseries.load_parquet(
         in_path=SECONDARY_TIMESERIES_FILEPATH,
         field_mapping={
@@ -119,6 +122,7 @@ def setup_v0_3_study(tmpdir):
     )
 
     # Create the joined timeseries
+    ev.joined_timeseries._create_delta_table()
     ev.joined_timeseries.create(add_attrs=True, execute_scripts=True)
 
     return ev

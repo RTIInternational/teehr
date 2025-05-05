@@ -15,6 +15,7 @@ from pyspark.sql.functions import lit, col, row_number, asc
 from pyspark.sql.window import Window
 import shutil
 
+from delta.tables import DeltaTable
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,33 @@ class BaseTable():
         self.filter_model: FilterBaseModel = None
         self.strict_validation = True
         self.validate_filter_field_types = True
+
+    def _create_delta_table(self):
+        """Create the Delta table."""
+        schema = self.schema_func(type="pyspark").to_structtype()
+        self._create_table(
+            schema=schema,
+            partition_by=self.partition_by,
+            format=self.format,
+            mode="overwrite",
+            path=self.dir,
+        )
+        self._load_table()
+
+    def _create_table(
+        self,
+        schema,
+        partition_by: list,
+        format: str,
+        mode: str,
+        path: Union[Path, str] = None,
+    ):
+        """Create the Delta table."""
+        self.df = self.spark.createDataFrame([], schema)
+        if partition_by:
+            self.df.write.partitionBy(partition_by).format(format).mode(mode).save(str(path))
+            return
+        self.df.write.format(format).mode(mode).save(str(path))
 
     @staticmethod
     def _raise_missing_table_error(table_name: str):
@@ -57,6 +85,8 @@ class BaseTable():
         window_spec = window_spec.orderBy(*ordering_expr)
         sdf_with_row_num = sdf.withColumn("row_num", row_number().over(window_spec))
         deduplicated_sdf = sdf_with_row_num.filter("row_num == 1").drop("row_num")
+        # MGD: Does this do the same thing?
+        # df = sdf.dropDuplicates(self.unique_column_set)
         return deduplicated_sdf
 
     def _read_files(
@@ -65,6 +95,7 @@ class BaseTable():
         pattern: str = None,
         use_table_schema: bool = False,
         show_missing_table_warning: bool = True,
+        format: str = None,
         **options
     ) -> ps.DataFrame:
         """Read data from table directory as a spark dataframe.
@@ -101,13 +132,16 @@ class BaseTable():
 
         path = path_to_spark(path, pattern)
 
+        if format is None:
+            format = self.format
+
         if use_table_schema is True:
             schema = self.schema_func().to_structtype()
-            df = self.ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
+            df = self.ev.spark.read.format(format).options(**options).load(path, schema=schema)
             if len(df.head(1)) == 0 and show_missing_table_warning:
                 logger.warning(f"An empty dataframe was returned for '{self.name}'.")
         else:
-            df = self.ev.spark.read.format(self.format).options(**options).load(path)
+            df = self.ev.spark.read.format(format).options(**options).load(path)
 
         return df
 
@@ -133,6 +167,29 @@ class BaseTable():
         if self.df is None:
             self._raise_missing_table_error(table_name=self.name)
 
+    def _delta_upsert(self,
+        df
+    ) -> None:
+        """Merge into the table."""
+        merge_condition = " AND ".join(
+            [f"source.{col} = target.{col}" for col in self.unique_column_set]
+        )
+
+        # Partition_by should be stored in table definition?
+
+        # Deduplicate the source dataframe should be handled by validation?
+        # df = df.dropDuplicates(self.unique_column_set)
+
+        delta_table = DeltaTable.forPath(self.spark, str(self.dir))
+        (delta_table.alias("target")
+            .merge(df.alias("source"), merge_condition)
+            .whenMatchedUpdateAll()
+            .whenNotMatchedInsertAll()
+            .execute()
+        )
+
+        self._check_load_table()
+
     def _upsert_without_duplicates(
         self,
         df,
@@ -147,6 +204,7 @@ class BaseTable():
         if partition_by is None:
             partition_by = []
 
+        # MGD: Why not get from self.df?
         existing_sdf = self._read_files(
             self.dir,
             use_table_schema=True,
@@ -312,30 +370,33 @@ class BaseTable():
                 "header": "true",
             }
 
+        # MGD: do we ever pass an empty df?
         if df is not None:
 
             self._check_for_null_unique_column_values(df)
-
-            if write_mode == "overwrite":
-                self._dynamic_overwrite(df, **kwargs)
-                self._load_table()
-            elif write_mode == "append":
-                self._append_without_duplicates(
-                    df=df,
-                    num_partitions=num_partitions,
-                    **kwargs
-                )
-            elif write_mode == "upsert":
-                self._upsert_without_duplicates(
-                    df=df,
-                    num_partitions=num_partitions,
-                    **kwargs
-                )
+            if self.format == "delta":
+                self._delta_upsert(df)
             else:
-                raise ValueError(
-                    f"Invalid write mode: {write_mode}. "
-                    "Valid values are 'append', 'overwrite' and 'upsert'."
-                )
+                if write_mode == "overwrite":
+                    self._dynamic_overwrite(df, **kwargs)
+                    self._load_table()
+                elif write_mode == "append":
+                    self._append_without_duplicates(
+                        df=df,
+                        num_partitions=num_partitions,
+                        **kwargs
+                    )
+                elif write_mode == "upsert":
+                    self._upsert_without_duplicates(
+                        df=df,
+                        num_partitions=num_partitions,
+                        **kwargs
+                    )
+                else:
+                    raise ValueError(
+                        f"Invalid write mode: {write_mode}. "
+                        "Valid values are 'append', 'overwrite' and 'upsert'."
+                    )
             self._load_table()
 
     def _get_schema(self, type: str = "pyspark"):

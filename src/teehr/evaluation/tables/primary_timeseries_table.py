@@ -84,7 +84,7 @@ class PrimaryTimeseriesTable(TimeseriesTable):
         )
 
         # Read the converted files to Spark DataFrame
-        df = self._read_files(cache_dir)
+        df = self._read_files(cache_dir, format="parquet")
 
         # Add or replace location_id prefix if provided
         if location_id_prefix:

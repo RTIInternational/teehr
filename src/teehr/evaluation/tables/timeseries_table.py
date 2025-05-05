@@ -24,7 +24,7 @@ class TimeseriesTable(BaseTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.format = "parquet"
+        self.format = "delta"
         self.partition_by = [
             "configuration_name",
             "variable_name",

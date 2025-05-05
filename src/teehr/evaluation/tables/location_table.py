@@ -25,7 +25,7 @@ class LocationTable(BaseTable):
         super().__init__(ev)
         self.name = "locations"
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
-        self.format = "parquet"
+        self.format = "delta"
         self.filter_model = LocationFilter
         self.schema_func = schemas.locations_schema
         self.unique_column_set = ["id"]
@@ -127,7 +127,7 @@ class LocationTable(BaseTable):
             **kwargs
         )
         # Read the converted files to Spark DataFrame
-        df = self._read_files(cache_dir)
+        df = self._read_files(cache_dir, format="parquet")
 
         # Add or replace location_id prefix if provided
         if location_id_prefix:
