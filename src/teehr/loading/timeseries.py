@@ -108,7 +108,7 @@ def convert_single_timeseries(
 
     if return_dataframe:
         logger.info(f"Returning dataframe for: {in_filepath}")
-        return validated_df
+        return validated_df.copy()
 
     if out_filepath is None:
         raise ValueError("Output file path is required.")
@@ -187,7 +187,6 @@ def convert_timeseries(
             field_mapping.values()
         )
 
-    files_converted = 0
     if in_path.is_dir():
         filepaths = sorted(list(in_path.glob(f"{pattern}")))
         with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
@@ -206,25 +205,25 @@ def convert_timeseries(
                     )
                 )
             output_dfs = []
-            starting_filepath = filepaths[files_converted]
             total_size = 0
+            files_converted = 0
+            starting_filepath = filepaths[files_converted]
             for future in concurrent.futures.as_completed(futures):
-                files_converted += 1
-                if (total_size * CORRECTION_FACTOR < TARGET_FILE_SIZE) & \
-                        (files_converted < len(futures)):
-                    tmp_df = future.result()
-                    total_size += tmp_df.memory_usage().sum()
-                    output_dfs.append(tmp_df)
-                else:
+                tmp_df = future.result()
+                total_size += tmp_df.memory_usage().sum()
+                output_dfs.append(tmp_df)
+                if (total_size * CORRECTION_FACTOR >= TARGET_FILE_SIZE) | \
+                        (files_converted == len(futures) - 1):
                     df = pd.concat(output_dfs, ignore_index=True)
-                    ending_filepath = filepaths[files_converted - 1]
+                    ending_filepath = filepaths[files_converted]
                     output_filepath = Path(f"{starting_filepath.stem}_to_{ending_filepath.stem}").with_suffix(".parquet")
                     out_filepath = Path(out_path, output_filepath)
                     out_filepath.parent.mkdir(parents=True, exist_ok=True)
-                    df.to_parquet(out_filepath, index=False)
+                    df.to_parquet(out_filepath)
                     output_dfs = []
                     total_size = 0
-                    starting_filepath = filepaths[files_converted - 1]
+                    starting_filepath = filepaths[files_converted]
+                files_converted += 1
     else:
         out_filepath = Path(out_path, in_path.name)
         out_filepath = out_filepath.with_suffix(".parquet")

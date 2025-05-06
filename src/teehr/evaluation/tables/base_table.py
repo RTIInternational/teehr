@@ -162,6 +162,8 @@ class BaseTable():
                     col(partition).isin(partition_values)
                 )
 
+        df = self._drop_duplicates(df)
+
         # Remove rows from existing_sdf that are to be updated.
         # Concat and re-write.
         if not existing_sdf.isEmpty():
@@ -177,11 +179,11 @@ class BaseTable():
         # Re-validate since the table was changed
         validated_df = self._validate(df)
 
-        # Drop potential duplicates
-        validated_df = self._drop_duplicates(validated_df)
-
         if num_partitions is not None:
             validated_df = validated_df.repartition(num_partitions)
+        else:
+            validated_df = validated_df.repartition(*self.partition_by)
+
         (
             validated_df.
             write.
@@ -213,7 +215,8 @@ class BaseTable():
             **kwargs
         )
 
-        # existing_sdf = existing_sdf.persist()
+        # Drop potential duplicates in the cached dataframe
+        df = self._drop_duplicates(df)
 
         # Anti-join: Joins rows from left df that do not have a match
         # in right df.  This is used to drop duplicates. df gets written
@@ -225,16 +228,15 @@ class BaseTable():
                 on=self.unique_column_set,
             )
 
+        if num_partitions is not None:
+            df = df.repartition(num_partitions)
+        else:
+            df = df.repartition(*self.partition_by)
+
         # Only continue if there is new data to write.
         if not df.isEmpty():
             # Re-validate since the table was changed
             validated_df = self._validate(df)
-
-            if num_partitions is not None:
-                validated_df = validated_df.repartition(num_partitions)
-
-            # Drop potential duplicates
-            validated_df = self._drop_duplicates(validated_df)
 
             (
                 validated_df.
@@ -263,6 +265,8 @@ class BaseTable():
         partition_by = self.partition_by
         if partition_by is None:
             partition_by = []
+        df = self._drop_duplicates(df)
+        df = df.repartition(*self.partition_by)
         (
             df.
             write.
