@@ -1,28 +1,38 @@
 """Convert and insert timeseries data into the dataset."""
 from typing import Union
+import concurrent.futures
 from pathlib import Path
 import pandas as pd
 from teehr.loading.utils import (
     merge_field_mappings,
     validate_constant_values_dict,
     read_and_convert_netcdf_to_df,
-    read_and_convert_xml_to_df,
+    read_and_convert_xml_to_df
     # convert_datetime_ns_to_ms
 )
 import teehr.models.pandera_dataframe_schemas as schemas
 from teehr.models.table_enums import TableWriteEnum
+from teehr.const import MAX_CPUS
 
 import logging
 
 logger = logging.getLogger(__name__)
 
+# The target file size in bytes of cached parquet files.
+TARGET_FILE_SIZE = 128 * 1e6
+
+# The correction factor adjusts for differences in
+# in-memory and on-disk sizes. Do not change.
+CORRECTION_FACTOR = 0.735
+
 
 def convert_single_timeseries(
     in_filepath: Union[str, Path],
-    out_filepath: Union[str, Path],
+    out_filepath: Union[str, Path, None],
     field_mapping: dict,
     constant_field_values: dict = None,
     timeseries_type: str = None,
+    return_dataframe=False,
     **kwargs
 ):
     """Convert timeseries data to parquet format.
@@ -53,7 +63,6 @@ def convert_single_timeseries(
 
     """
     in_filepath = Path(in_filepath)
-    out_filepath = Path(out_filepath)
 
     logger.info(f"Converting timeseries data from: {in_filepath}")
 
@@ -97,6 +106,13 @@ def convert_single_timeseries(
 
     # validated_df = convert_datetime_ns_to_ms(validated_df)
 
+    if return_dataframe:
+        logger.info(f"Returning dataframe for: {in_filepath}")
+        return validated_df.copy()
+
+    if out_filepath is None:
+        raise ValueError("Output file path is required.")
+    out_filepath = Path(out_filepath)
     logger.info(f"Writing timeseries data to: {out_filepath}")
     out_filepath.parent.mkdir(parents=True, exist_ok=True)
     validated_df.to_parquet(out_filepath)
@@ -109,6 +125,7 @@ def convert_timeseries(
     constant_field_values: dict = None,
     timeseries_type: str = None,
     pattern: str = "**/*.parquet",
+    max_workers: int = MAX_CPUS,
     **kwargs
 ):
     """Convert timeseries data to parquet format.
@@ -127,6 +144,9 @@ def convert_timeseries(
         format: {field_name: value}
     pattern : str, optional (default: "**/*.parquet")
         The pattern to match files.
+    max_workers : int, optional
+        The maximum number of workers to use for parallel processing.
+        If None, the default value is used.
     **kwargs
         Additional keyword arguments are passed to
             pd.read_csv() or pd.read_parquet().
@@ -167,24 +187,45 @@ def convert_timeseries(
             field_mapping.values()
         )
 
-    files_converted = 0
     if in_path.is_dir():
-        # recursively convert all files in directory
-        logger.info(f"Recursively converting all files in {in_path}/{pattern}")
-        for in_filepath in in_path.glob(f"{pattern}"):
-            relative_name = in_filepath.relative_to(in_path)
-            out_filepath = Path(out_path, relative_name)
-            out_filepath = out_filepath.with_suffix(".parquet")
-            convert_single_timeseries(
-                in_filepath,
-                out_filepath,
-                field_mapping,
-                constant_field_values,
-                timeseries_type=timeseries_type,
-                **kwargs
-            )
-            files_converted += 1
+        filepaths = sorted(list(in_path.glob(f"{pattern}")))
+        with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
+            futures = []
+            for in_filepath in filepaths:
+                futures.append(
+                    executor.submit(
+                        convert_single_timeseries,
+                        in_filepath,
+                        None,
+                        field_mapping,
+                        constant_field_values,
+                        timeseries_type=timeseries_type,
+                        return_dataframe=True,
+                        **kwargs
+                    )
+                )
+            output_dfs = []
+            total_size = 0
+            files_converted = 0
+            starting_filepath = filepaths[files_converted]
+            for future in concurrent.futures.as_completed(futures):
+                tmp_df = future.result()
+                total_size += tmp_df.memory_usage().sum()
+                output_dfs.append(tmp_df)
+                if (total_size * CORRECTION_FACTOR >= TARGET_FILE_SIZE) | \
+                        (files_converted == len(futures) - 1):
+                    df = pd.concat(output_dfs, ignore_index=True)
+                    ending_filepath = filepaths[files_converted]
+                    output_filepath = Path(f"{starting_filepath.stem}_to_{ending_filepath.stem}").with_suffix(".parquet")
+                    out_filepath = Path(out_path, output_filepath)
+                    out_filepath.parent.mkdir(parents=True, exist_ok=True)
+                    df.to_parquet(out_filepath)
+                    output_dfs = []
+                    total_size = 0
+                    starting_filepath = filepaths[files_converted]
+                files_converted += 1
     else:
+        files_converted = 0
         out_filepath = Path(out_path, in_path.name)
         out_filepath = out_filepath.with_suffix(".parquet")
         convert_single_timeseries(

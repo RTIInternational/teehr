@@ -22,6 +22,7 @@ import pyspark.sql as ps
 from teehr.models.pydantic_table_models import (
     Configuration
 )
+from teehr.const import MAX_CPUS
 
 
 logger = logging.getLogger(__name__)
@@ -42,7 +43,8 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             "reference_time",
             "variable_name",
             "unit_name",
-            "member"
+            "member",
+            "configuration_name",
         ]
 
     def field_enum(self) -> TimeseriesFields:
@@ -77,6 +79,8 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        max_workers: Union[int, None] = MAX_CPUS,
+        persist_dataframe: bool = False,
         **kwargs
     ):
         """Import timeseries helper."""
@@ -96,11 +100,16 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             constant_field_values=constant_field_values,
             timeseries_type="secondary",
             pattern=pattern,
+            max_workers=max_workers,
             **kwargs
         )
 
         # Read the converted files to Spark DataFrame
         df = self._read_files(cache_dir)
+
+        if persist_dataframe:
+            df = df.repartition(*self.partition_by)
+            df = df.persist()
 
         # Add or replace location_id prefix if provided
         if location_id_prefix:
@@ -118,6 +127,8 @@ class SecondaryTimeseriesTable(TimeseriesTable):
 
         # Reload the table
         self._load_table()
+
+        df.unpersist()
 
     @staticmethod
     def _calculate_climatology(
@@ -417,3 +428,6 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             output_configuration_description=output_configuration_description,
             output_location_id_prefix=output_location_id_prefix
         )
+
+
+

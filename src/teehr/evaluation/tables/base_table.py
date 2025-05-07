@@ -11,9 +11,8 @@ from teehr.utils.utils import to_path_or_s3path, path_to_spark
 from teehr.models.filters import FilterBaseModel
 from teehr.models.table_enums import TableWriteEnum
 import logging
-from pyspark.sql.functions import lit, col, row_number, asc
+from pyspark.sql.functions import lit, col, row_number, asc, first
 from pyspark.sql.window import Window
-import shutil
 
 
 logger = logging.getLogger(__name__)
@@ -163,6 +162,8 @@ class BaseTable():
                     col(partition).isin(partition_values)
                 )
 
+        df = self._drop_duplicates(df)
+
         # Remove rows from existing_sdf that are to be updated.
         # Concat and re-write.
         if not existing_sdf.isEmpty():
@@ -178,11 +179,11 @@ class BaseTable():
         # Re-validate since the table was changed
         validated_df = self._validate(df)
 
-        # Drop potential duplicates
-        validated_df = self._drop_duplicates(validated_df)
-
         if num_partitions is not None:
             validated_df = validated_df.repartition(num_partitions)
+        elif self.partition_by is not None:
+            validated_df = validated_df.repartition(*self.partition_by)
+
         (
             validated_df.
             write.
@@ -214,7 +215,8 @@ class BaseTable():
             **kwargs
         )
 
-        # existing_sdf = existing_sdf.persist()
+        # Drop potential duplicates in the cached dataframe
+        df = self._drop_duplicates(df)
 
         # Anti-join: Joins rows from left df that do not have a match
         # in right df.  This is used to drop duplicates. df gets written
@@ -226,16 +228,15 @@ class BaseTable():
                 on=self.unique_column_set,
             )
 
+        if num_partitions is not None:
+            df = df.repartition(num_partitions)
+        elif self.partition_by is not None:
+            df = df.repartition(*self.partition_by)
+
         # Only continue if there is new data to write.
         if not df.isEmpty():
             # Re-validate since the table was changed
             validated_df = self._validate(df)
-
-            if num_partitions is not None:
-                validated_df = validated_df.repartition(num_partitions)
-
-            # Drop potential duplicates
-            validated_df = self._drop_duplicates(validated_df)
 
             (
                 validated_df.
@@ -264,6 +265,9 @@ class BaseTable():
         partition_by = self.partition_by
         if partition_by is None:
             partition_by = []
+        df = self._drop_duplicates(df)
+        if self.partition_by is not None:
+            df = df.repartition(*self.partition_by)
         (
             df.
             write.
@@ -274,16 +278,43 @@ class BaseTable():
             save(str(self.dir))
         )
 
-    def _check_for_null_unique_column_values(self, df: ps.DataFrame):
+    def _check_partition_by_for_null(
+        self,
+        df: ps.DataFrame
+    ):
+        """Remove a field from partition_by if all values are null."""
+        logger.debug("Checking partition for null table fields.")
+        # Select first non-null value from each column.
+        null_df = df.select([first(x, ignorenulls=True).alias(x) for x in self.partition_by])
+        # Count the number of non-null values in each column. (returns 0 or 1)
+        num_nonnull = [(c, null_df.filter(col(c).isNotNull()).count()) for c in null_df.columns]
+        # Remove columns with all null values.
+        for field_name, count in num_nonnull:
+            if count == 0:
+                logger.debug(
+                    f"All {field_name} values are null. "
+                    f"{field_name} will be removed as a unique column."
+                )
+                self.partition_by.remove(field_name)
+
+    def _check_unique_column_set_for_null(
+        self,
+        df: ps.DataFrame
+    ):
         """Remove a field from self.unique_column_set if all values are null."""
-        for field_name in self.unique_column_set:
-            if field_name in df.columns:
-                if len(df.filter(df[field_name].isNotNull()).collect()) == 0:
-                    logger.debug(
-                        f"All {field_name} values are null. "
-                        f"{field_name} will be removed as a partition column."
-                    )
-                    self.unique_column_set.remove(field_name)
+        logger.debug("Checking unique_column_set for null table fields.")
+        # Select first non-null value from each column.
+        null_df = df.select([first(x, ignorenulls=True).alias(x) for x in self.unique_column_set])
+        # Count the number of non-null values in each column. (0 or 1)
+        num_nonnull = [(c, null_df.filter(col(c).isNotNull()).count()) for c in null_df.columns]
+        # Remove columns with all null values.
+        for field_name, count in num_nonnull:
+            if count == 0:
+                logger.debug(
+                    f"All {field_name} values are null. "
+                    f"{field_name} will be removed as a unique column."
+                )
+                self.unique_column_set.remove(field_name)
 
     def _write_spark_df(
         self,
@@ -314,7 +345,7 @@ class BaseTable():
 
         if df is not None:
 
-            self._check_for_null_unique_column_values(df)
+            self._check_unique_column_set_for_null(df)
 
             if write_mode == "overwrite":
                 self._dynamic_overwrite(df, **kwargs)
