@@ -225,6 +225,7 @@ def convert_timeseries(
                     starting_filepath = filepaths[files_converted]
                 files_converted += 1
     else:
+        files_converted = 0
         out_filepath = Path(out_path, in_path.name)
         out_filepath = out_filepath.with_suffix(".parquet")
         convert_single_timeseries(

@@ -63,7 +63,7 @@ class PrimaryTimeseriesTable(TimeseriesTable):
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         max_workers: Union[int, None] = MAX_CPUS,
-        persist_dataframe: bool = True,
+        persist_dataframe: bool = False,
         **kwargs
     ):
         """Import timeseries helper."""

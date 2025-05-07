@@ -63,7 +63,7 @@ class TimeseriesTable(BaseTable):
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         max_workers: Union[int, None] = MAX_CPUS,
-        persist_dataframe: bool = True,
+        persist_dataframe: bool = False,
         **kwargs
     ):
         """Import primary timeseries parquet data.
@@ -100,7 +100,7 @@ class TimeseriesTable(BaseTable):
             ProcessPoolExecutor. If in_path is a file, this parameter is ignored.
             The default value is max(os.cpu_count() - 1, 1).
             If None, os.process_cpu_count() is used.
-        persist_dataframe : bool, optional (default: True)
+        persist_dataframe : bool, optional (default: False)
             Whether to repartition and persist the pyspark dataframe after
             reading from the cache. This can improve performance when loading
             a large number of files from the cache.
@@ -146,7 +146,7 @@ class TimeseriesTable(BaseTable):
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         max_workers: Union[int, None] = MAX_CPUS,
-        persist_dataframe: bool = True,
+        persist_dataframe: bool = False,
         **kwargs
     ):
         """Import primary timeseries csv data.
@@ -182,7 +182,7 @@ class TimeseriesTable(BaseTable):
             ProcessPoolExecutor. If in_path is a file, this parameter is ignored.
             The default value is max(os.cpu_count() - 1, 1).
             If None, os.process_cpu_count() is used.
-        persist_dataframe : bool, optional (default: True)
+        persist_dataframe : bool, optional (default: False)
             Whether to repartition and persist the pyspark dataframe after
             reading from the cache. This can improve performance when loading
             a large number of files from the cache.
@@ -228,7 +228,7 @@ class TimeseriesTable(BaseTable):
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         max_workers: Union[int, None] = MAX_CPUS,
-        persist_dataframe: bool = True,
+        persist_dataframe: bool = False,
         **kwargs
     ):
         """Import primary timeseries netcdf data.
@@ -264,7 +264,7 @@ class TimeseriesTable(BaseTable):
             ProcessPoolExecutor. If in_path is a file, this parameter is ignored.
             The default value is max(os.cpu_count() - 1, 1).
             If None, os.process_cpu_count() is used.
-        persist_dataframe : bool, optional (default: True)
+        persist_dataframe : bool, optional (default: False)
             Whether to repartition and persist the pyspark dataframe after
             reading from the cache. This can improve performance when loading
             a large number of files from the cache.
@@ -318,7 +318,7 @@ class TimeseriesTable(BaseTable):
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         max_workers: Union[int, None] = MAX_CPUS,
-        persist_dataframe: bool = True,
+        persist_dataframe: bool = False,
     ):
         """Import timeseries from XML data format.
 
@@ -365,7 +365,7 @@ class TimeseriesTable(BaseTable):
             ProcessPoolExecutor. If in_path is a file, this parameter is ignored.
             The default value is max(os.cpu_count() - 1, 1).
             If None, os.process_cpu_count() is used.
-        persist_dataframe : bool, optional (default: True)
+        persist_dataframe : bool, optional (default: False)
             Whether to repartition and persist the pyspark dataframe after
             reading from the cache. This can improve performance when loading
             a large number of files from the cache.
