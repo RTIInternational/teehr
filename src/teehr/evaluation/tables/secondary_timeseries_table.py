@@ -18,6 +18,7 @@ from teehr.models.metrics.basemodels import (
     ClimatologyStatisticEnum
 )
 from pyspark.sql import functions as F
+from pyspark.sql.window import Window
 import pyspark.sql as ps
 from teehr.models.pydantic_table_models import (
     Configuration
@@ -199,22 +200,21 @@ class SecondaryTimeseriesTable(TimeseriesTable):
 
         Nptes
         -----
-        - Adds the specified prefix to the location ids.
         - Adds the configuration name to the configuration table if
           it doesn't exist.
         - Appends the data to the secondary timeseries table.
         """
-        # Update location_id prefixes.
-        ref_sdf = add_or_replace_sdf_column_prefix(
-            sdf=ref_sdf,
-            column_name="location_id",
-            prefix=output_location_id_prefix,
-        )
-        xwalk_sdf = add_or_replace_sdf_column_prefix(
-            sdf=xwalk_sdf,
-            column_name="secondary_location_id",
-            prefix=output_location_id_prefix,
-        )
+        # # Update location_id prefixes.
+        # ref_sdf = add_or_replace_sdf_column_prefix(
+        #     sdf=ref_sdf,
+        #     column_name="location_id",
+        #     prefix=output_location_id_prefix,
+        # )
+        # xwalk_sdf = add_or_replace_sdf_column_prefix(
+        #     sdf=xwalk_sdf,
+        #     column_name="secondary_location_id",
+        #     prefix=output_location_id_prefix,
+        # )
         # Update configuration_name and add to the configurations table.
         ref_sdf = ref_sdf.withColumn(
             "configuration_name",
@@ -239,11 +239,11 @@ class SecondaryTimeseriesTable(TimeseriesTable):
                     description=output_configuration_description,
                 )
             )
-        # Append to location_crosswalks and secondary_timeseries tables.
-        self.ev.location_crosswalks._write_spark_df(
-            xwalk_sdf,
-            write_mode="append"
-        )
+        # # Append to location_crosswalks and secondary_timeseries tables.
+        # self.ev.location_crosswalks._write_spark_df(
+        #     xwalk_sdf,
+        #     write_mode="append"
+        # )
         self._write_spark_df(
             ref_sdf,
             write_mode="append",
@@ -255,7 +255,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         primary_configuration_name: str,
         output_configuration_name: str,
         output_configuration_description: str,
-        output_location_id_prefix: str = "test",
+        output_location_id_prefix: str = "clim",
         temporal_resolution: ClimatologyResolutionEnum = "day_of_year",
         summary_statistic: ClimatologyStatisticEnum = "mean",
     ):
@@ -271,7 +271,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             Description of the output configuration.
         output_location_id_prefix : str, optional
             Prefix for the location IDs in the output configuration,
-            by default "test".
+            by default "clim".
         temporal_resolution : ClimatologyResolutionEnum, optional
             Temporal resolution for the climatology calculation,
             by default "day_of_year".
@@ -302,7 +302,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         target_configuration_name: str,
         output_configuration_name: str,
         output_configuration_description: str,
-        output_location_id_prefix: str = "test",
+        output_location_id_prefix: str = "ref",
         method: BaselineMethodEnum = "climatology",
         temporal_resolution: ClimatologyResolutionEnum = "day_of_year",
         summary_statistic: ClimatologyStatisticEnum = "mean",
@@ -348,7 +348,6 @@ class SecondaryTimeseriesTable(TimeseriesTable):
                 "No reference_time values found in the target configuration. "
                 "Please specify a valid target forecast configuration."
             )
-
         # Select primary config to use for reference calculation.
         primary_sdf = (
             self.
@@ -397,32 +396,58 @@ class SecondaryTimeseriesTable(TimeseriesTable):
                 f" {target_configuration_name}"
             )
 
+        # TEMP: Join the reference sdf  to the template secondary forecast.
+        ref_fcst_sdf = sec_sdf.join(
+            reference_sdf,
+            on=[
+                "value_time",
+                "variable_name",
+                "unit_name",
+                "location_id",
+            ],
+            how="left"
+        ).select(
+            sec_sdf["value_time"],
+            sec_sdf["reference_time"],
+            sec_sdf["unit_name"],
+            sec_sdf["variable_name"],
+            sec_sdf["location_id"],
+            sec_sdf["member"],
+            reference_sdf["value"],
+            # reference_sdf["location_id"],
+            reference_sdf["configuration_name"],
+        )
+
+        # TEMP fill nans
+        window_spec = Window.orderBy("value_time").rowsBetween(0, Window.unboundedFollowing)
+        ref_fcst_sdf = ref_fcst_sdf.withColumn("value", F.first("value", ignorenulls=True).over(window_spec))
+
         xwalk_sdf = self.ev.location_crosswalks.to_sdf()
-        reference_sdf.createOrReplaceTempView("primary_timeseries")
-        sec_sdf.createOrReplaceTempView("secondary_timeseries")
-        xwalk_sdf.createOrReplaceTempView("location_crosswalks")
-        query = """
-            SELECT
-                sf.reference_time
-                , sf.value_time as value_time
-                , sf.location_id as location_id
-                , pf.value as value
-                , sf.configuration_name
-                , sf.unit_name
-                , sf.variable_name
-            FROM secondary_timeseries sf
-            JOIN location_crosswalks cf
-                on cf.secondary_location_id = sf.location_id
-            JOIN primary_timeseries pf
-                on cf.primary_location_id = pf.location_id
-                and sf.value_time = pf.value_time
-                and sf.unit_name = pf.unit_name
-                and sf.variable_name = pf.variable_name
-        """
-        ref_sdf = self.ev.spark.sql(query)
+        # reference_sdf.createOrReplaceTempView("secondary_timeseries")
+        # sec_sdf.createOrReplaceTempView("primary_timeseries")
+        # xwalk_sdf.createOrReplaceTempView("location_crosswalks")
+        # query = """
+        #     SELECT
+        #         sf.reference_time
+        #         , sf.value_time as value_time
+        #         , sf.location_id as location_id
+        #         , pf.value as value
+        #         , sf.configuration_name
+        #         , sf.unit_name
+        #         , sf.variable_name
+        #     FROM secondary_timeseries sf
+        #     JOIN location_crosswalks cf
+        #         on cf.secondary_location_id = sf.location_id
+        #     JOIN primary_timeseries pf
+        #         on cf.primary_location_id = pf.location_id
+        #         and sf.value_time = pf.value_time
+        #         and sf.unit_name = pf.unit_name
+        #         and sf.variable_name = pf.variable_name
+        # """
+        # ref_sdf = self.ev.spark.sql(query)
 
         self._add_secondary_timeseries(
-            ref_sdf=ref_sdf,
+            ref_sdf=ref_fcst_sdf,
             xwalk_sdf=xwalk_sdf,
             output_configuration_name=output_configuration_name,
             output_configuration_description=output_configuration_description,
