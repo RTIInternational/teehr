@@ -12,12 +12,12 @@ from teehr.metrics.deterministic_funcs import _transform
 logger = logging.getLogger(__name__)
 
 
-def _pivot_by_value_time(
+def _pivot_by_member(
     p: pd.Series,
     s: pd.Series,
-    value_time: pd.Series
+    members: pd.Series
 ) -> Dict:
-    """Pivot the timeseries data by value_time.
+    """Pivot the timeseries data by members.
 
     Notes
     -----
@@ -27,17 +27,14 @@ def _pivot_by_value_time(
             The first dimension should be the time step, and the second
             dimension should be the ensemble member.
     """
-    unique_value_times = value_time.unique()
-    n_timesteps = len(unique_value_times)
-    inds = np.array([np.where(value_time == unique_value_times[i])[0] for i in range(n_timesteps)])
-
-    # If the number of ensemble members is 1, we need to
-    # flatten the array to a 1-D array.
-    # Otherwise, we need to keep it as a 2-D array.
-    if inds.shape[1] == 1:
+    unique_members = members.unique()
+    n_members = len(unique_members)
+    # Get the indices of the unique member IDs
+    inds = np.array([np.where(members == unique_members[i])[0] for i in range(n_members)]).T
+    if members.isna().all():  # No ensemble members
         return {
-            "primary": p.values[inds[:, 0]],
-            "secondary": s.values[inds].ravel()
+            "primary": p.values,
+            "secondary": s.values
         }
     return {
         "primary": p.values[inds[:, 0]],
@@ -52,7 +49,7 @@ def create_crps_func(model: MetricsBasemodel) -> Callable:
     def ensemble_crps(
         p: pd.Series,
         s: pd.Series,
-        value_time: pd.Series,
+        members: pd.Series,
     ) -> float:
         """Create a wrapper around scoringrules crps_ensemble.
 
@@ -62,8 +59,8 @@ def create_crps_func(model: MetricsBasemodel) -> Callable:
             The primary values.
         s : pd.Series
             The secondary values.
-        value_time : pd.Series
-            The value time.
+        members : pd.Series
+            The member IDs.
 
         Returns
         -------
@@ -71,8 +68,8 @@ def create_crps_func(model: MetricsBasemodel) -> Callable:
             The mean Continuous Ranked Probability Score (CRPS) for the
             ensemble, either as a single value or array of values.
         """
-        p, s, value_time = _transform(p, s, model, value_time)
-        pivoted_dict = _pivot_by_value_time(p, s, value_time)
+        p, s, members = _transform(p, s, model, members)
+        pivoted_dict = _pivot_by_member(p, s, members)
 
         if model.summary_func is not None:
             return model.summary_func(
