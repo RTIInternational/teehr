@@ -16,34 +16,16 @@ NOTE: THIS PROJECT IS UNDER DEVELOPMENT - EXPECT TO FIND BROKEN AND INCOMPLETE C
 ## Documentation
 [TEEHR Documentation](https://rtiinternational.github.io/teehr/)
 
-## How to Install TEEHR
+## How to Install TEEHR (macOS/Linux)
 We do not currently push TEEHR to PyPI, so the easiest way to install it is directly from GitHub.
 If using `pip` to install TEEHR, we recommend installing TEEHR in a virtual environment.
-The code below should create a new virtual environment and install TEEHR in it.
+Detailed installation instuctions for macOS/Linux users are available [here](https://rtiinternational.github.io/teehr/getting_started/index.html#installation-guide-for-macos-linux) under 'Installation Guide for macOS & Linux'.
 
-```bash
-# Create directory for your code and create a new virtual environment.
-mkdir teehr_examples
-cd teehr_examples
-python3 -m venv .venv
-source .venv/bin/activate
-
-# Install using pip.
-# Starting with version 0.4.1 TEEHR is available in PyPI
-pip install teehr
-
-# Download the required JAR files for Spark to interact with AWS S3.
-python -m teehr.utils.install_spark_jars
-```
-Use Docker
-```bash
-$ docker build -t teehr:v0.4.10 .
-$ docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.4.10 jupyter lab --ip 0.0.0.0 $HOME
-```
+## How to Install TEEHR (Windows)
+Currently, TEEHR dependencies require users install on Linux or macOS. To use TEEHR on Windows, we recommend Windows Subsystem for Linux (WSL). Detailed installation instructions for Windows users are available [here](https://rtiinternational.github.io/teehr/getting_started/index.html#installation-guide-for-windows) under 'Installation Guide for Windows'.
 
 ## Examples
-For examples of how to use TEEHR, see the [examples](examples).  We will maintain a basic set of example Jupyter Notebooks demonstrating how to use the TEEHR tools.
-
+For examples of how to use TEEHR, see the [examples](https://rtiinternational.github.io/teehr/user_guide/index.html).  We will maintain a basic set of example Jupyter Notebooks demonstrating how to use the TEEHR tools.
 
 ## Resources
 In May of 2023 we put on a workshop at the CIROH 1st Annual Training and Developers Conference.  The workshop materials and presentation are available in the workshop GitHub repository: [teehr-may-2023-workshop](https://github.com/RTIInternational/teehr-may-2023-workshop).  This workshop was based on version 0.1.0.
