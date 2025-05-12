@@ -268,8 +268,9 @@ class BaseTable():
         df = self._drop_duplicates(df)
         if self.partition_by is not None:
             df = df.repartition(*self.partition_by)
+        validated_df = self._validate(df)
         (
-            df.
+            validated_df.
             write.
             partitionBy(partition_by).
             format(self.format).

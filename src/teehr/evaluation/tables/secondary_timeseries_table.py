@@ -415,8 +415,14 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         ref_fcst_sdf = self.ev.spark.sql(query)
 
         # TODO: ffill as well. fill nans -- If there are missing primary values
-        window_spec = Window.orderBy("value_time").rowsBetween(0, Window.unboundedFollowing)
-        ref_fcst_sdf = ref_fcst_sdf.withColumn("value", F.first("value", ignorenulls=True).over(window_spec))
+        window_bfill_spec = Window.partitionBy("reference_time").orderBy("value_time").rowsBetween(Window.currentRow, Window.unboundedFollowing)
+        window_ffill_spec = Window.partitionBy("reference_time").orderBy("value_time").rowsBetween(Window.unboundedPreceding, Window.currentRow)
+
+        ref_fcst_sdf = ref_fcst_sdf.withColumn("value", F.first("value", ignorenulls=True).over(window_bfill_spec))
+        ref_fcst_sdf = ref_fcst_sdf.withColumn("value", F.last("value", ignorenulls=True).over(window_ffill_spec))
+
+        # TEMP: fill missing values with 500
+        ref_fcst_sdf = ref_fcst_sdf.na.fill({"value": 500})
 
         self._add_secondary_timeseries(
             ref_sdf=ref_fcst_sdf,
