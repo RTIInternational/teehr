@@ -10,6 +10,40 @@ from teehr.models.calculated_fields.base import CalculatedFieldABC
 from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
 
 
+class HourOfYear(CalculatedFieldABC, CalculatedFieldBaseModel):
+    """Adds the hour from a timestamp column.
+
+    Properties
+    ----------
+
+    - input_field_name:
+        The name of the column containing the timestamp.
+        Default: "value_time"
+    - output_field_name:
+        The name of the column to store the month.
+        Default: "hour_of_year"
+    """
+
+    input_field_name: str = Field(
+        default="value_time"
+    )
+    output_field_name: str = Field(
+        default="hour_of_year"
+    )
+
+    def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
+        """Apply the calculated field to the Spark DataFrame."""
+        @pandas_udf(returnType=T.IntegerType())
+        def func(col: pd.Series) -> pd.Series:
+            return (col.dt.dayofyear - 1) * 24 + col.dt.hour
+
+        sdf = sdf.withColumn(
+            self.output_field_name,
+            func(self.input_field_name)
+        )
+        return sdf
+
+
 class Month(CalculatedFieldABC, CalculatedFieldBaseModel):
     """Adds the month from a timestamp column.
 
@@ -373,6 +407,7 @@ class RowLevelCalculatedFields:
     - ForecastLeadTime
     - ThresholdValueExceeded
     - DayOfYear
+    - HourOfYear
     """
 
     Month = Month
@@ -383,3 +418,4 @@ class RowLevelCalculatedFields:
     ForecastLeadTime = ForecastLeadTime
     ThresholdValueExceeded = ThresholdValueExceeded
     DayOfYear = DayOfYear
+    HourOfYear = HourOfYear

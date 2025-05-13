@@ -130,6 +130,7 @@ class BaselineMethodEnum(StrEnum):
 class ClimatologyResolutionEnum(StrEnum):
     """Resolutions for calculating climatology."""
 
+    hour_of_year = "hour_of_year"
     day_of_year = "day_of_year"
     month = "month"
     season = "season"

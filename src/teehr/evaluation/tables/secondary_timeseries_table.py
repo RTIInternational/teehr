@@ -141,6 +141,8 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         """Calculate climatology."""
         if temporal_resolution == ClimatologyResolutionEnum.day_of_year:
             time_period = rlc.DayOfYear()
+        elif temporal_resolution == ClimatologyResolutionEnum.hour_of_year:
+            time_period = rlc.HourOfYear()
         elif temporal_resolution == ClimatologyResolutionEnum.month:
             time_period = rlc.Month()
         elif temporal_resolution == ClimatologyResolutionEnum.year:
@@ -173,20 +175,21 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             group_df(primary_sdf, groupby_field_list).
             agg(summary_func("value").alias(aggregated_field_name))
         )
-        temp_sdf = primary_sdf.join(
-            summary_sdf,
-            on=groupby_field_list,
-            how="left"
-        )
-        groupby_field_list.remove(time_period.output_field_name)
+        return summary_sdf
+        # temp_sdf = primary_sdf.join(
+        #     summary_sdf,
+        #     on=groupby_field_list,
+        #     how="left"
+        # )
+        # groupby_field_list.remove(time_period.output_field_name)
 
-        return (
-            temp_sdf.
-            drop("value").
-            drop(time_period.output_field_name).
-            withColumnRenamed(aggregated_field_name, "value").
-            withColumn("configuration_name", F.lit(output_configuration_name))
-        )
+        # return (
+        #     temp_sdf.
+        #     drop("value").
+        #     drop(time_period.output_field_name).
+        #     withColumnRenamed(aggregated_field_name, "value").
+        #     withColumn("configuration_name", F.lit(output_configuration_name))
+        # )
 
     def _add_secondary_timeseries(
         self,
@@ -368,6 +371,25 @@ class SecondaryTimeseriesTable(TimeseriesTable):
                 f" {target_configuration_name}"
             )
 
+        time_period = rlc.HourOfYear()
+        temp_sdf = time_period.apply_to(sec_sdf)
+
+        ref_fcst_sdf = temp_sdf.join(
+            reference_sdf,
+            on=[temporal_resolution]
+        ).select(
+            temp_sdf["value_time"],
+            temp_sdf["reference_time"],
+            temp_sdf["unit_name"],
+            temp_sdf["variable_name"],
+            temp_sdf["location_id"],
+            temp_sdf["member"],
+            reference_sdf["mean_primary_value"].alias("value"),
+            reference_sdf["configuration_name"],
+        )
+
+        pass
+
         # TEMP: Join the reference sdf  to the template secondary forecast.
         # ref_fcst_sdf2 = sec_sdf.join(
         #     reference_sdf,
@@ -390,39 +412,39 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         #     reference_sdf["configuration_name"],
         # )
 
-        xwalk_sdf = self.ev.location_crosswalks.to_sdf()
-        reference_sdf.createOrReplaceTempView("primary_timeseries")
-        sec_sdf.createOrReplaceTempView("secondary_timeseries")
-        xwalk_sdf.createOrReplaceTempView("location_crosswalks")
-        query = """
-            SELECT
-                sf.reference_time
-                , sf.value_time as value_time
-                , sf.location_id as location_id
-                , pf.value as value
-                , sf.configuration_name
-                , sf.unit_name
-                , sf.variable_name
-            FROM secondary_timeseries sf
-            JOIN location_crosswalks cf
-                on cf.secondary_location_id = sf.location_id
-            LEFT JOIN primary_timeseries pf
-                on cf.primary_location_id = pf.location_id
-                and sf.value_time = pf.value_time
-                and sf.unit_name = pf.unit_name
-                and sf.variable_name = pf.variable_name
-        """
-        ref_fcst_sdf = self.ev.spark.sql(query)
+        # xwalk_sdf = self.ev.location_crosswalks.to_sdf()
+        # reference_sdf.createOrReplaceTempView("primary_timeseries")
+        # sec_sdf.createOrReplaceTempView("secondary_timeseries")
+        # xwalk_sdf.createOrReplaceTempView("location_crosswalks")
+        # query = """
+        #     SELECT
+        #         sf.reference_time
+        #         , sf.value_time as value_time
+        #         , sf.location_id as location_id
+        #         , pf.value as value
+        #         , sf.configuration_name
+        #         , sf.unit_name
+        #         , sf.variable_name
+        #     FROM secondary_timeseries sf
+        #     JOIN location_crosswalks cf
+        #         on cf.secondary_location_id = sf.location_id
+        #     LEFT JOIN primary_timeseries pf
+        #         on cf.primary_location_id = pf.location_id
+        #         and sf.value_time = pf.value_time
+        #         and sf.unit_name = pf.unit_name
+        #         and sf.variable_name = pf.variable_name
+        # """
+        # ref_fcst_sdf = self.ev.spark.sql(query)
 
-        # TODO: ffill as well. fill nans -- If there are missing primary values
-        window_bfill_spec = Window.partitionBy("reference_time").orderBy("value_time").rowsBetween(Window.currentRow, Window.unboundedFollowing)
-        window_ffill_spec = Window.partitionBy("reference_time").orderBy("value_time").rowsBetween(Window.unboundedPreceding, Window.currentRow)
+        # # TODO: ffill as well. fill nans -- If there are missing primary values
+        # window_bfill_spec = Window.partitionBy("reference_time").orderBy("value_time").rowsBetween(Window.currentRow, Window.unboundedFollowing)
+        # window_ffill_spec = Window.partitionBy("reference_time").orderBy("value_time").rowsBetween(Window.unboundedPreceding, Window.currentRow)
 
-        ref_fcst_sdf = ref_fcst_sdf.withColumn("value", F.first("value", ignorenulls=True).over(window_bfill_spec))
-        ref_fcst_sdf = ref_fcst_sdf.withColumn("value", F.last("value", ignorenulls=True).over(window_ffill_spec))
+        # ref_fcst_sdf = ref_fcst_sdf.withColumn("value", F.first("value", ignorenulls=True).over(window_bfill_spec))
+        # ref_fcst_sdf = ref_fcst_sdf.withColumn("value", F.last("value", ignorenulls=True).over(window_ffill_spec))
 
-        # TEMP: fill missing values with 500
-        ref_fcst_sdf = ref_fcst_sdf.na.fill({"value": 500})
+        # # TEMP: fill missing values with 500
+        # ref_fcst_sdf = ref_fcst_sdf.na.fill({"value": 500})
 
         self._add_secondary_timeseries(
             ref_sdf=ref_fcst_sdf,
