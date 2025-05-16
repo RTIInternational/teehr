@@ -10,6 +10,7 @@ import logging
 from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
 from teehr.models.table_enums import TableWriteEnum
 from teehr.loading.utils import add_or_replace_sdf_column_prefix
+from teehr.const import MAX_CPUS
 
 
 logger = logging.getLogger(__name__)
@@ -61,6 +62,8 @@ class PrimaryTimeseriesTable(TimeseriesTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        max_workers: Union[int, None] = MAX_CPUS,
+        persist_dataframe: bool = False,
         **kwargs
     ):
         """Import timeseries helper."""
@@ -80,11 +83,16 @@ class PrimaryTimeseriesTable(TimeseriesTable):
             constant_field_values=constant_field_values,
             timeseries_type="primary",
             pattern=pattern,
+            max_workers=max_workers,
             **kwargs
         )
 
         # Read the converted files to Spark DataFrame
         df = self._read_files(cache_dir)
+
+        if persist_dataframe:
+            df = df.repartition(*self.partition_by)
+            df = df.persist()
 
         # Add or replace location_id prefix if provided
         if location_id_prefix:
@@ -102,3 +110,5 @@ class PrimaryTimeseriesTable(TimeseriesTable):
 
         # Reload the table
         self._load_table()
+
+        df.unpersist()

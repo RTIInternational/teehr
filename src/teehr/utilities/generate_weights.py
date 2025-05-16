@@ -181,7 +181,7 @@ def generate_weights_file(
 
     Parameters
     ----------
-    zone_polygon_filepath : Union[Path, str, GeoDataFrame]
+    zone_polygons : Union[Path, str, GeoDataFrame]
         Path to the polygons geoparquet file or GeoDataFrame.
     template_dataset : Union[str, Path, xr.Dataset]
         Path to the grid dataset or an xarray Dataset to use as a template.

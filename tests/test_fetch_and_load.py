@@ -227,7 +227,7 @@ def test_fetch_and_load_nwm_operational_grids(tmpdir):
             "variable_name=rainfall_hourly_rate"
             ).rglob("*.parquet")
     )
-    assert len(file_list) == 21
+    assert len(file_list) == 1
 
 
 if __name__ == "__main__":

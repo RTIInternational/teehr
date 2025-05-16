@@ -6,6 +6,7 @@ from teehr.models.table_enums import JoinedTimeseriesFields, TableWriteEnum
 from teehr.querying.utils import join_geometry
 import teehr.models.pandera_dataframe_schemas as schemas
 import pyspark.sql as ps
+from pyspark.sql.functions import col
 import logging
 from teehr.utils.utils import to_path_or_s3path
 from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
@@ -33,6 +34,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
             "reference_time",
             "variable_name",
             "unit_name",
+            "configuration_name",
         ]
 
     def field_enum(self) -> JoinedTimeseriesFields:
@@ -196,21 +198,6 @@ class JoinedTimeseriesTable(TimeseriesTable):
         logger.info("Joined timeseries table created.")
         self._load_table()
 
-    def _check_for_null_partition_by_values(self, df: ps.DataFrame) -> ps.DataFrame:
-        """Remove a field from partition_by if all values are null."""
-        partition_by = self.partition_by
-        if partition_by is None:
-            partition_by = []
-        for field_name in partition_by:
-            if field_name in df.columns:
-                if len(df.filter(df[field_name].isNotNull()).collect()) == 0:
-                    logger.debug(
-                        f"All {field_name} values are null. "
-                        f"{field_name} will be set to a default value."
-                    )
-                    self.partition_by.remove(field_name)
-        return df
-
     def _write_spark_df(
         self,
         df: ps.DataFrame,
@@ -231,7 +218,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
 
         logger.info(f"Writing files to {self.dir}.")
 
-        self._check_for_null_partition_by_values(df)
+        self._check_partition_by_for_null(df)
 
         if len(kwargs) == 0:
             kwargs = {

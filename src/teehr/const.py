@@ -1,6 +1,6 @@
 """This module contains constants
  used throughout the package."""
-
+import os
 
 # Primary evaluation directories
 DATASET_DIR = "dataset"
@@ -24,3 +24,5 @@ WEIGHTS_DIR = "weights"
 LOADING_CACHE_DIR = "loading"
 
 S3_EVALUATIONS_PATH = "s3://ciroh-rti-public-data/teehr-data-warehouse/v0_4_evaluations/evaluations.yaml"
+
+MAX_CPUS = max(os.cpu_count() - 1, 1)

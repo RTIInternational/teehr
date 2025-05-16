@@ -6,12 +6,15 @@ from pathlib import Path
 from typing import Union, List
 import logging
 import shutil
-from xml.dom import minidom
 from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
+from lxml import etree
+from datetime import datetime, timedelta
 
 
 logger = logging.getLogger(__name__)
+
+FEWS_XML_NAMESPACE = "{http://www.wldelft.nl/fews/PI}"
 
 
 def add_or_replace_sdf_column_prefix(
@@ -213,69 +216,14 @@ def read_and_convert_netcdf_to_df(
     return df
 
 
-def _get_element_node_value(
-    element: minidom.Element,
-    tag_name: str
-) -> str:
-    """Get the node value of an element."""
-    elements_list = element.getElementsByTagName(tag_name)
-    if len(elements_list) == 0:
-        logger.error(f"'{tag_name}' not found, unable to parse this file.")
-        raise ValueError(
-            f"'{tag_name}' not found, unable to parse this XML file."
-        )
-    elif len(elements_list) > 1:
-        logger.error(
-            f"More than one entry for'{tag_name}', unable to parse this file."
-        )
-        raise ValueError(
-            f"More than one entry for'{tag_name}', unable to parse this file."
-        )
-    else:
-        node_value = elements_list[0].firstChild.nodeValue
-        return node_value
-
-
-def _get_element_attribute_value(
-    element: minidom.Element,
-    tag_name: str,
-    attribute_name: str
-) -> str:
-    """Get the attribute value of an element."""
-    elements_list = element.getElementsByTagName(tag_name)
-    if len(elements_list) == 0:
-        logger.error(f"'{tag_name}' not found, unable to parse this file.")
-        raise ValueError(
-            f"'{tag_name}' not found, unable to parse this XML file."
-        )
-    elif len(elements_list) > 1:
-        logger.error(
-            f"More than one entry for'{tag_name}', unable to parse this file."
-        )
-        raise ValueError(
-            f"More than one entry for'{tag_name}', unable to parse this file."
-        )
-    else:
-        attr_value = elements_list[0].getAttribute(attribute_name)
-        if len(attr_value) == 0:
-            logger.error(
-                f"Attribute '{attribute_name}' not found for '{tag_name}'."
-            )
-            raise ValueError(
-                f"Attribute '{attribute_name}' not found for '{tag_name}'."
-            )
-        return attr_value
-
-
 def read_and_convert_xml_to_df(
     in_filepath: Union[str, Path],
     field_mapping: dict,
 ) -> pd.DataFrame:
-    """Read an xml file and convert to pandas dataframe."""
+    """Read a FEWS PI xml file and convert to pandas dataframe."""
     logger.debug(f"Reading and converting xml file {in_filepath}")
 
     inv_field_mapping = {v: k for k, v in field_mapping.items()}
-
     location_id_kw = inv_field_mapping["location_id"]
     variable_name_kw = inv_field_mapping["variable_name"]
     reference_time_kw = inv_field_mapping["reference_time"]
@@ -283,56 +231,50 @@ def read_and_convert_xml_to_df(
     member_kw = inv_field_mapping["member"]
     configuration_kw = inv_field_mapping["configuration_name"]
 
-    fews_xml = minidom.parse(str(in_filepath))
+    timeseries_data = []
+    cntr = 0
+    for _, series in etree.iterparse(in_filepath, tag=FEWS_XML_NAMESPACE + "series"):
+        if cntr == 0:
+            utc_offset = timedelta(
+                hours=float(series.getparent().find(FEWS_XML_NAMESPACE + "timeZone").text)
+            )
+            cntr += 1
 
-    utc_offset = pd.Timedelta(
-        float(
-            fews_xml.getElementsByTagName("timeZone")[0].firstChild.nodeValue
-        ),
-        format="H"
-    )
-    series = fews_xml.getElementsByTagName("series")
-
-    timeseries_list = []
-    for member in series:
-        location_id = _get_element_node_value(member, location_id_kw)
-        variable_name = _get_element_node_value(member, variable_name_kw)
-        configuration = _get_element_node_value(member, configuration_kw)
-        unit_name = _get_element_node_value(member, unit_name_kw)
-        ensemble_member = _get_element_node_value(member, member_kw)
-
-        forecastDate = _get_element_attribute_value(member, reference_time_kw, "date")
-        forecastTime = _get_element_attribute_value(member, reference_time_kw, "time")
-
-        reference_time = pd.to_datetime(
-            forecastDate + " " + forecastTime
-        ) + utc_offset
-
-        events = member.getElementsByTagName("event")
-        timeseries_data = []
+        # Get header info.
+        location_id = series.find(FEWS_XML_NAMESPACE + "header/" + FEWS_XML_NAMESPACE + location_id_kw).text
+        variable_name = series.find(FEWS_XML_NAMESPACE + "header/" + FEWS_XML_NAMESPACE + variable_name_kw).text
+        configuration = series.find(FEWS_XML_NAMESPACE + "header/" + FEWS_XML_NAMESPACE + configuration_kw).text
+        unit_name = series.find(FEWS_XML_NAMESPACE + "header/" + FEWS_XML_NAMESPACE + unit_name_kw).text
+        ensemble_member = series.find(FEWS_XML_NAMESPACE + "header/" + FEWS_XML_NAMESPACE + member_kw).text
+        forecastDate = series.find(FEWS_XML_NAMESPACE + "header/" + FEWS_XML_NAMESPACE + reference_time_kw).get("date")
+        forecastTime = series.find(FEWS_XML_NAMESPACE + "header/" + FEWS_XML_NAMESPACE + reference_time_kw).get("time")
+        reference_time = datetime.strptime(
+            forecastDate + " " + forecastTime, "%Y-%m-%d %H:%M:%S"
+        )
+        # Get timeseries data.
+        events = series.findall(FEWS_XML_NAMESPACE + "event")
         for event in events:
-            event_date = event.getAttribute("date")
-            event_time = event.getAttribute("time")
-            event_value = event.getAttribute("value")
-            value_time = pd.to_datetime(
-                event_date + " " + event_time
-            ) + utc_offset
+            event_date = event.get("date")
+            event_time = event.get("time")
+            event_value = event.get("value")
+            value_time = datetime.strptime(
+                event_date + " " + event_time, "%Y-%m-%d %H:%M:%S"
+            )
             timeseries_data.append({
                 "value": event_value,
-                "value_time": value_time
+                "value_time": value_time,
+                "reference_time": reference_time,
+                "unit_name": unit_name,
+                "variable_name": variable_name,
+                "location_id": location_id,
+                "member": ensemble_member,
+                "configuration_name": configuration
             })
-
-        timeseries_df = pd.DataFrame(timeseries_data)
-        timeseries_df["reference_time"] = reference_time
-        timeseries_df["unit_name"] = unit_name
-        timeseries_df["variable_name"] = variable_name
-        timeseries_df["location_id"] = location_id
-        timeseries_df["member"] = ensemble_member
-        timeseries_df["configuration_name"] = configuration
-
-        timeseries_list.append(timeseries_df)
-
-    return pd.concat(timeseries_list)
+        series.clear()  # Clear the series element to free memory
+    df = pd.DataFrame(timeseries_data)
+    df["value_time"] = df.value_time + utc_offset
+    df["reference_time"] = df.reference_time + utc_offset
+    return df
 
 
 def validate_input_is_parquet(

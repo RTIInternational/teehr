@@ -29,7 +29,6 @@ class LocationCrosswalkTable(BaseTable):
         self.filter_model = LocationCrosswalkFilter
         self.schema_func = schemas.location_crosswalks_schema
         self.unique_column_set = [
-            "primary_location_id",
             "secondary_location_id"
         ]
 
