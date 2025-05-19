@@ -7,6 +7,8 @@ Release Notes
 Changed
 ^^^^^^^
 - Fixes bug in _write_spark_df() method in the BaseTable class that caused writing larger dataframes to fail.
+- Parallelizes `convert_single_timeseries()` when a directory is passed to the `in_path` argument.
+- Fixes doc string in `generate_weights_file()`
 
 0.4.10 - 2025-04-14
 ------------------
