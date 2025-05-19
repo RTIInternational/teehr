@@ -64,6 +64,7 @@ class TimeseriesTable(BaseTable):
         write_mode: TableWriteEnum = "append",
         max_workers: Union[int, None] = MAX_CPUS,
         persist_dataframe: bool = False,
+        drop_duplicates: bool = True,
         **kwargs
     ):
         """Import primary timeseries parquet data.
@@ -104,6 +105,8 @@ class TimeseriesTable(BaseTable):
             Whether to repartition and persist the pyspark dataframe after
             reading from the cache. This can improve performance when loading
             a large number of files from the cache.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the dataframe.
         **kwargs
             Additional keyword arguments are passed to pd.read_parquet().
 
@@ -133,6 +136,7 @@ class TimeseriesTable(BaseTable):
             write_mode=write_mode,
             max_workers=max_workers,
             persist_dataframe=persist_dataframe,
+            drop_duplicates=drop_duplicates,
             **kwargs
         )
         self._load_table()
@@ -147,6 +151,7 @@ class TimeseriesTable(BaseTable):
         write_mode: TableWriteEnum = "append",
         max_workers: Union[int, None] = MAX_CPUS,
         persist_dataframe: bool = False,
+        drop_duplicates: bool = True,
         **kwargs
     ):
         """Import primary timeseries csv data.
@@ -186,6 +191,8 @@ class TimeseriesTable(BaseTable):
             Whether to repartition and persist the pyspark dataframe after
             reading from the cache. This can improve performance when loading
             a large number of files from the cache.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the dataframe.
         **kwargs
             Additional keyword arguments are passed to pd.read_csv().
 
@@ -215,6 +222,7 @@ class TimeseriesTable(BaseTable):
             write_mode=write_mode,
             max_workers=max_workers,
             persist_dataframe=persist_dataframe,
+            drop_duplicates=drop_duplicates,
             **kwargs
         )
         self._load_table()
@@ -229,6 +237,7 @@ class TimeseriesTable(BaseTable):
         write_mode: TableWriteEnum = "append",
         max_workers: Union[int, None] = MAX_CPUS,
         persist_dataframe: bool = False,
+        drop_duplicates: bool = True,
         **kwargs
     ):
         """Import primary timeseries netcdf data.
@@ -268,6 +277,8 @@ class TimeseriesTable(BaseTable):
             Whether to repartition and persist the pyspark dataframe after
             reading from the cache. This can improve performance when loading
             a large number of files from the cache.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the dataframe.
         **kwargs
             Additional keyword arguments are passed to xr.open_dataset().
 
@@ -297,6 +308,7 @@ class TimeseriesTable(BaseTable):
             write_mode=write_mode,
             max_workers=max_workers,
             persist_dataframe=persist_dataframe,
+            drop_duplicates=drop_duplicates,
             **kwargs
         )
         self._load_table()
@@ -319,6 +331,7 @@ class TimeseriesTable(BaseTable):
         write_mode: TableWriteEnum = "append",
         max_workers: Union[int, None] = MAX_CPUS,
         persist_dataframe: bool = False,
+        drop_duplicates: bool = True,
     ):
         """Import timeseries from XML data format.
 
@@ -369,6 +382,8 @@ class TimeseriesTable(BaseTable):
             Whether to repartition and persist the pyspark dataframe after
             reading from the cache. This can improve performance when loading
             a large number of files from the cache.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the dataframe.
 
         Includes validation and importing data to database.
 
@@ -404,5 +419,6 @@ class TimeseriesTable(BaseTable):
             write_mode=write_mode,
             max_workers=max_workers,
             persist_dataframe=persist_dataframe,
+            drop_duplicates=drop_duplicates,
         )
         self._load_table()

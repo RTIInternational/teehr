@@ -246,6 +246,7 @@ def validate_and_insert_timeseries(
     timeseries_type: str,
     pattern: str = "**/*.parquet",
     write_mode: TableWriteEnum = "append",
+    drop_duplicates: bool = True,
 ):
     """Validate and insert primary timeseries data.
 
@@ -266,6 +267,9 @@ def validate_and_insert_timeseries(
         that does not already exist.
         If "upsert", existing data will be replaced and new data that
         does not exist will be appended.
+    drop_duplicates : bool, optional (default: True)
+        Whether to drop duplicates in the dataframe before writing
+        to the table.
     """
     in_path = Path(in_path)
     logger.info(f"Validating and inserting timeseries data from {in_path}")
@@ -286,7 +290,8 @@ def validate_and_insert_timeseries(
     # Write to the table
     table._write_spark_df(
         validated_df,
-        write_mode=write_mode
+        write_mode=write_mode,
+        drop_duplicates=drop_duplicates,
     )
 
     # Reload the table

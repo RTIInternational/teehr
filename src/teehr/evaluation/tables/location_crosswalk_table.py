@@ -40,6 +40,7 @@ class LocationCrosswalkTable(BaseTable):
         primary_location_id_prefix: str = None,
         secondary_location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        drop_duplicates: bool = True,
         **kwargs
     ):
         """Load location crosswalks helper."""
@@ -87,6 +88,7 @@ class LocationCrosswalkTable(BaseTable):
             df=validated_df,
             num_partitions=df.rdd.getNumPartitions(),
             write_mode=write_mode,
+            drop_duplicates=drop_duplicates,
         )
 
         # Reload the table
@@ -135,6 +137,7 @@ class LocationCrosswalkTable(BaseTable):
         primary_location_id_prefix: str = None,
         secondary_location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        drop_duplicates: bool = True,
         **kwargs
     ):
         """Import location crosswalks from parquet file format.
@@ -168,6 +171,8 @@ class LocationCrosswalkTable(BaseTable):
             does not exist will be appended.
             If "overwrite", existing partitions receiving new data are
             overwritten.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the DataFrame.
         **kwargs
             Additional keyword arguments are passed to pd.read_csv()
             or pd.read_parquet().
@@ -188,6 +193,7 @@ class LocationCrosswalkTable(BaseTable):
             primary_location_id_prefix=primary_location_id_prefix,
             secondary_location_id_prefix=secondary_location_id_prefix,
             write_mode=write_mode,
+            drop_duplicates=drop_duplicates,
             **kwargs
         )
         self._load_table()
@@ -200,6 +206,7 @@ class LocationCrosswalkTable(BaseTable):
         primary_location_id_prefix: str = None,
         secondary_location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        drop_duplicates: bool = True,
         **kwargs
     ):
         """Import location crosswalks from CSV file format.
@@ -232,6 +239,8 @@ class LocationCrosswalkTable(BaseTable):
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
             If "overwrite", existing partitions receiving new data are overwritten
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the DataFrame.
         **kwargs
             Additional keyword arguments are passed to pd.read_csv()
             or pd.read_parquet().
@@ -251,6 +260,7 @@ class LocationCrosswalkTable(BaseTable):
             primary_location_id_prefix=primary_location_id_prefix,
             secondary_location_id_prefix=secondary_location_id_prefix,
             write_mode=write_mode,
+            drop_duplicates=drop_duplicates,
             **kwargs
         )
         self._load_table()

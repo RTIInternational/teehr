@@ -131,6 +131,7 @@ class Fetch:
         overwrite_output: Optional[bool] = False,
         timeseries_type: TimeseriesTypeEnum = "primary",
         write_mode: TableWriteEnum = "append",
+        drop_duplicates: bool = True,
     ):
         """Fetch USGS gage data and load into the TEEHR dataset.
 
@@ -175,6 +176,8 @@ class Fetch:
             that does not already exist.
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
+        drop_duplicates : bool
+            Whether to drop duplicates in the data. Default is True.
 
 
         .. note::
@@ -268,7 +271,8 @@ class Fetch:
                 self.usgs_cache_dir
             ),
             timeseries_type=timeseries_type,
-            write_mode=write_mode
+            write_mode=write_mode,
+            drop_duplicates=drop_duplicates
         )
 
     def nwm_retrospective_points(
@@ -281,7 +285,8 @@ class Fetch:
         overwrite_output: Optional[bool] = False,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
         timeseries_type: TimeseriesTypeEnum = "secondary",
-        write_mode: TableWriteEnum = "append"
+        write_mode: TableWriteEnum = "append",
+        drop_duplicates: bool = True,
     ):
         """Fetch NWM retrospective point data and load into the TEEHR dataset.
 
@@ -334,6 +339,8 @@ class Fetch:
             that does not already exist.
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
+        drop_duplicates : bool
+            Whether to drop duplicates in the data. Default is True.
 
 
         .. note::
@@ -427,7 +434,8 @@ class Fetch:
                 self.nwm_cache_dir
             ),
             timeseries_type=timeseries_type,
-            write_mode=write_mode
+            write_mode=write_mode,
+            drop_duplicates=drop_duplicates
         )
 
     def nwm_retrospective_grids(
@@ -443,7 +451,8 @@ class Fetch:
         location_id_prefix: Optional[str] = None,
         timeseries_type: TimeseriesTypeEnum = "primary",
         write_mode: TableWriteEnum = "append",
-        zonal_weights_filepath: Optional[Union[Path, str]] = None
+        zonal_weights_filepath: Optional[Union[Path, str]] = None,
+        drop_duplicates: bool = True,
     ):
         """
         Fetch NWM retrospective gridded data, calculate zonal statistics (currently only
@@ -507,6 +516,8 @@ class Fetch:
             The path to the zonal weights file. If None and calculate_zonal_weights
             is False, the weights file must exist in the cache for the configuration.
             Default is None.
+        drop_duplicates : bool
+            Whether to drop duplicates in the data. Default is True.
 
         Examples
         --------
@@ -622,7 +633,8 @@ class Fetch:
                 self.nwm_cache_dir
             ),
             timeseries_type=timeseries_type,
-            write_mode=write_mode
+            write_mode=write_mode,
+            drop_duplicates=drop_duplicates
         )
 
     def nwm_operational_points(
@@ -644,7 +656,8 @@ class Fetch:
         timeseries_type: TimeseriesTypeEnum = "secondary",
         starting_z_hour: Optional[int] = None,
         ending_z_hour: Optional[int] = None,
-        write_mode: TableWriteEnum = "append"
+        write_mode: TableWriteEnum = "append",
+        drop_duplicates: bool = True,
     ):
         """Fetch operational NWM point data and load into the TEEHR dataset.
 
@@ -732,6 +745,8 @@ class Fetch:
             that does not already exist.
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
+        drop_duplicates : bool
+            Whether to drop duplicates in the data. Default is True.
 
 
         .. note::
@@ -863,7 +878,8 @@ class Fetch:
                 self.nwm_cache_dir
             ),
             timeseries_type=timeseries_type,
-            write_mode=write_mode
+            write_mode=write_mode,
+            drop_duplicates=drop_duplicates
         )
 
     def nwm_operational_grids(
@@ -887,6 +903,7 @@ class Fetch:
         ending_z_hour: Optional[int] = None,
         write_mode: TableWriteEnum = "append",
         zonal_weights_filepath: Optional[Union[Path, str]] = None,
+        drop_duplicates: bool = True,
     ):
         """
         Fetch NWM operational gridded data, calculate zonal statistics (currently only
@@ -980,6 +997,8 @@ class Fetch:
             The path to the zonal weights file. If None and calculate_zonal_weights
             is False, the weights file must exist in the cache for the configuration.
             Default is None.
+        drop_duplicates : bool
+            Whether to drop duplicates in the data. Default is True.
 
 
         .. note::
@@ -1135,5 +1154,6 @@ class Fetch:
             ev=self.ev,
             in_path=Path(self.nwm_cache_dir),
             timeseries_type=timeseries_type,
-            write_mode=write_mode
+            write_mode=write_mode,
+            drop_duplicates=drop_duplicates
         )

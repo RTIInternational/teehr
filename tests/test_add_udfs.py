@@ -71,7 +71,7 @@ def test_add_row_udfs(tmpdir):
     assert "normalized_flow" in cols
     assert sdf.schema["normalized_flow"].dataType == T.FloatType()
     check_vals = check_sdf.select("normalized_flow").collect()
-    assert np.round(check_vals[0]["normalized_flow"], 3) == 0.001
+    assert np.round(check_vals[0]["normalized_flow"], 3) == 0.003
 
     assert "season" in cols
     assert sdf.schema["season"].dataType == T.StringType()

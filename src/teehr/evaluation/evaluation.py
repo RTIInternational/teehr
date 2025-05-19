@@ -93,6 +93,7 @@ class Evaluation:
                 .set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider")
                 .set("spark.sql.execution.arrow.pyspark.enabled", "true")
                 .set("spark.sql.session.timeZone", "UTC")
+                .set("spark.driver.host", "localhost")
             )
             self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
 
