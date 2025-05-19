@@ -64,6 +64,7 @@ class PrimaryTimeseriesTable(TimeseriesTable):
         write_mode: TableWriteEnum = "append",
         max_workers: Union[int, None] = MAX_CPUS,
         persist_dataframe: bool = False,
+        drop_duplicates: bool = True,
         **kwargs
     ):
         """Import timeseries helper."""
@@ -106,7 +107,11 @@ class PrimaryTimeseriesTable(TimeseriesTable):
         validated_df = self._validate(df)
 
         # Write to the table
-        self._write_spark_df(validated_df, write_mode=write_mode)
+        self._write_spark_df(
+            validated_df,
+            write_mode=write_mode,
+            drop_duplicates=drop_duplicates,
+        )
 
         # Reload the table
         self._load_table()

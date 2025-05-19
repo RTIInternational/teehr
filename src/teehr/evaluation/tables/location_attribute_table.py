@@ -41,6 +41,7 @@ class LocationAttributeTable(BaseTable):
         field_mapping: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        drop_duplicates: bool = True,
         **kwargs
     ):
         """Load location attributes helper."""
@@ -78,7 +79,8 @@ class LocationAttributeTable(BaseTable):
         self._write_spark_df(
             df=validated_df,
             num_partitions=df.rdd.getNumPartitions(),
-            write_mode=write_mode
+            write_mode=write_mode,
+            drop_duplicates=drop_duplicates,
         )
 
         # Reload the table
@@ -127,6 +129,7 @@ class LocationAttributeTable(BaseTable):
         field_mapping: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        drop_duplicates: bool = True,
         **kwargs
     ):
         """Import location_attributes from parquet file format.
@@ -154,6 +157,8 @@ class LocationAttributeTable(BaseTable):
             does not exist will be appended.
             If "overwrite", existing partitions receiving new data are
             overwritten.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the DataFrame.
         **kwargs
             Additional keyword arguments are passed to pd.read_parquet().
 
@@ -172,6 +177,7 @@ class LocationAttributeTable(BaseTable):
             field_mapping=field_mapping,
             location_id_prefix=location_id_prefix,
             write_mode=write_mode,
+            drop_duplicates=drop_duplicates,
             **kwargs
         )
         self._load_table()
@@ -183,6 +189,7 @@ class LocationAttributeTable(BaseTable):
         field_mapping: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        drop_duplicates: bool = True,
         **kwargs
     ):
         """Import location_attributes from CSV file format.
@@ -209,6 +216,8 @@ class LocationAttributeTable(BaseTable):
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
             If "overwrite", existing partitions receiving new data are overwritten
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the DataFrame.
         **kwargs
             Additional keyword arguments are passed to pd.read_parquet().
 
@@ -227,6 +236,7 @@ class LocationAttributeTable(BaseTable):
             field_mapping=field_mapping,
             location_id_prefix=location_id_prefix,
             write_mode=write_mode,
+            drop_duplicates=drop_duplicates,
             **kwargs
         )
         self._load_table()

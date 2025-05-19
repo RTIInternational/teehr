@@ -13,6 +13,7 @@ from teehr.models.table_enums import TableWriteEnum
 import logging
 from pyspark.sql.functions import lit, col, row_number, asc, first
 from pyspark.sql.window import Window
+from functools import reduce
 
 
 logger = logging.getLogger(__name__)
@@ -44,19 +45,6 @@ class BaseTable():
         )
         logger.error(err_msg)
         raise ValueError(err_msg)
-
-    def _drop_duplicates(
-        self,
-        sdf: ps.DataFrame,
-    ) -> ps.DataFrame:
-        """Drop duplicates from the DataFrame."""
-        logger.info(f"Dropping duplicates from {self.name}.")
-        window_spec = Window.partitionBy(*self.unique_column_set)
-        ordering_expr = [asc(col) for col in self.unique_column_set]
-        window_spec = window_spec.orderBy(*ordering_expr)
-        sdf_with_row_num = sdf.withColumn("row_num", row_number().over(window_spec))
-        deduplicated_sdf = sdf_with_row_num.filter("row_num == 1").drop("row_num")
-        return deduplicated_sdf
 
     def _read_files(
         self,
@@ -135,6 +123,7 @@ class BaseTable():
     def _upsert_without_duplicates(
         self,
         df,
+        drop_duplicates: bool,
         num_partitions: int = None,
         **kwargs
     ):
@@ -162,15 +151,22 @@ class BaseTable():
                     col(partition).isin(partition_values)
                 )
 
-        df = self._drop_duplicates(df)
+        # Drop potential duplicates in the cached dataframe
+        if drop_duplicates:
+            df = df.dropDuplicates(subset=self.unique_column_set)
 
         # Remove rows from existing_sdf that are to be updated.
         # Concat and re-write.
         if not existing_sdf.isEmpty():
+            # Create the join condition clause using eqNullSafe to treat
+            # nulls as equal.
+            join_condition = reduce(
+                lambda x, y: x & y, [df[k].eqNullSafe(existing_sdf[k]) for k in self.unique_column_set]  # noqa: E501
+            )
             existing_sdf = existing_sdf.join(
                 df,
                 how="left_anti",
-                on=self.unique_column_set,
+                on=join_condition,
             )
             df = existing_sdf.unionByName(df)
             # Get columns in correct order
@@ -197,6 +193,7 @@ class BaseTable():
     def _append_without_duplicates(
         self,
         df,
+        drop_duplicates: bool,
         num_partitions: int = None,
         **kwargs
     ):
@@ -216,16 +213,23 @@ class BaseTable():
         )
 
         # Drop potential duplicates in the cached dataframe
-        df = self._drop_duplicates(df)
+        if drop_duplicates:
+            df = df.dropDuplicates(subset=self.unique_column_set)
 
         # Anti-join: Joins rows from left df that do not have a match
         # in right df.  This is used to drop duplicates. df gets written
         # in append mode.
         if not existing_sdf.isEmpty():
+            # Create the join condition clause using eqNullSafe to treat
+            # nulls as equal.
+            join_condition = reduce(
+                lambda x, y: x & y, [df[k].eqNullSafe(existing_sdf[k]) for k in self.unique_column_set]  # noqa: E501
+            )
+
             df = df.join(
                 existing_sdf,
                 how="left_anti",
-                on=self.unique_column_set,
+                on=join_condition,
             )
 
         if num_partitions is not None:
@@ -256,6 +260,7 @@ class BaseTable():
     def _dynamic_overwrite(
         self,
         df: ps.DataFrame,
+        drop_duplicates: bool,
         **kwargs
     ):
         """Overwrite partitions contained in the dataframe."""
@@ -265,7 +270,9 @@ class BaseTable():
         partition_by = self.partition_by
         if partition_by is None:
             partition_by = []
-        df = self._drop_duplicates(df)
+        # Drop potential duplicates in the cached dataframe
+        if drop_duplicates:
+            df = df.dropDuplicates(subset=self.unique_column_set)
         if self.partition_by is not None:
             df = df.repartition(*self.partition_by)
         validated_df = self._validate(df)
@@ -279,49 +286,12 @@ class BaseTable():
             save(str(self.dir))
         )
 
-    def _check_partition_by_for_null(
-        self,
-        df: ps.DataFrame
-    ):
-        """Remove a field from partition_by if all values are null."""
-        logger.debug("Checking partition for null table fields.")
-        # Select first non-null value from each column.
-        null_df = df.select([first(x, ignorenulls=True).alias(x) for x in self.partition_by])
-        # Count the number of non-null values in each column. (returns 0 or 1)
-        num_nonnull = [(c, null_df.filter(col(c).isNotNull()).count()) for c in null_df.columns]
-        # Remove columns with all null values.
-        for field_name, count in num_nonnull:
-            if count == 0:
-                logger.debug(
-                    f"All {field_name} values are null. "
-                    f"{field_name} will be removed as a unique column."
-                )
-                self.partition_by.remove(field_name)
-
-    def _check_unique_column_set_for_null(
-        self,
-        df: ps.DataFrame
-    ):
-        """Remove a field from self.unique_column_set if all values are null."""
-        logger.debug("Checking unique_column_set for null table fields.")
-        # Select first non-null value from each column.
-        null_df = df.select([first(x, ignorenulls=True).alias(x) for x in self.unique_column_set])
-        # Count the number of non-null values in each column. (0 or 1)
-        num_nonnull = [(c, null_df.filter(col(c).isNotNull()).count()) for c in null_df.columns]
-        # Remove columns with all null values.
-        for field_name, count in num_nonnull:
-            if count == 0:
-                logger.debug(
-                    f"All {field_name} values are null. "
-                    f"{field_name} will be removed as a unique column."
-                )
-                self.unique_column_set.remove(field_name)
-
     def _write_spark_df(
         self,
         df: ps.DataFrame,
         write_mode: TableWriteEnum = "append",
         num_partitions: int = None,
+        drop_duplicates: bool = True,
         **kwargs
     ):
         """Write spark dataframe to directory.
@@ -346,20 +316,23 @@ class BaseTable():
 
         if df is not None:
 
-            self._check_unique_column_set_for_null(df)
-
             if write_mode == "overwrite":
-                self._dynamic_overwrite(df, **kwargs)
-                self._load_table()
+                self._dynamic_overwrite(
+                    df,
+                    drop_duplicates=drop_duplicates,
+                    **kwargs
+                )
             elif write_mode == "append":
                 self._append_without_duplicates(
                     df=df,
+                    drop_duplicates=drop_duplicates,
                     num_partitions=num_partitions,
                     **kwargs
                 )
             elif write_mode == "upsert":
                 self._upsert_without_duplicates(
                     df=df,
+                    drop_duplicates=drop_duplicates,
                     num_partitions=num_partitions,
                     **kwargs
                 )
@@ -469,7 +442,6 @@ class BaseTable():
 
         Examples
         --------
-
         Filters as dictionaries:
 
         >>> ts_df = ev.primary_timeseries.query(

@@ -10,6 +10,7 @@ from teehr.models.pydantic_table_models import (
 import tempfile
 import xarray as xr
 import pandas as pd
+import numpy as np
 
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
@@ -303,7 +304,7 @@ def test_validate_and_insert_summa_nc_timeseries(tmpdir):
         "averageRoutedRunoff_mean"
     ].sel(gru=170300010101).values
 
-    assert (teehr_values == nc_values).all()
+    assert (np.sort(teehr_values) == np.sort(nc_values)).all()
 
 
 def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
@@ -359,7 +360,7 @@ def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
         mizu_ds.reachID == 77000002, drop=True
     ).KWroutedRunoff.values.ravel()
 
-    assert (teehr_values == nc_values).all()
+    assert (np.sort(teehr_values) == np.sort(nc_values)).all()
 
 
 def test_validate_and_insert_fews_xml_timeseries(tmpdir):
