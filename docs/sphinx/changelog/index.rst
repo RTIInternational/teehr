@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+0.4.11 - 2025-05-19
+------------------
+
+Changed
+^^^^^^^
+- Fixes bug in _write_spark_df() method in the BaseTable class that caused writing larger dataframes to fail.
+
 0.4.10 - 2025-04-14
 ------------------
 
