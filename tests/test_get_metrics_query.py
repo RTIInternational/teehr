@@ -531,6 +531,7 @@ def test_metrics_transforms(tmpdir):
     assert result_kge != result_kge_t
     assert result_mvtd == result_mvtd_t
 
+
 def test_bootstrapping_transforms(tmpdir):
     """Test applying metric transforms (bootstrap)."""
     # Define the evaluation object.

@@ -153,7 +153,11 @@ class JoinedTimeseriesTable(TimeseriesTable):
         """Write the joined timeseries table to disk."""
         # Validate to fix 'Cannot use NullType for partition column' error.
         validated_df = self._validate(self.df, False)
-        self._write_spark_df(validated_df, drop_duplicates=drop_duplicates)
+        self._write_spark_df(
+            validated_df,
+            drop_duplicates=drop_duplicates,
+            write_mode="overwrite",
+        )
         logger.info("Joined timeseries table written to disk.")
         self._load_table()
 
