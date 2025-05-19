@@ -10,12 +10,16 @@ from teehr.models.pydantic_table_models import (
 import tempfile
 import xarray as xr
 import pandas as pd
+import numpy as np
 
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
 GEOJSON_GAGES_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "gages.geojson")
 PRIMARY_TIMESERIES_FILEPATH = Path(
     TEST_STUDY_DATA_DIR, "timeseries", "test_short_obs.parquet"
+)
+PRIMARY_TIMESERIES_DUPS_FILEPATH = Path(
+    TEST_STUDY_DATA_DIR, "timeseries", "test_short_obs_w_dups.parquet"
 )
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "crosswalk.csv")
 SECONDARY_TIMESERIES_FILEPATH = Path(
@@ -34,6 +38,64 @@ MIZU_TIMESERIES_FILEPATH_NC = Path(
 MIZU_LOCATIONS = Path(
     TEST_STUDY_DATA_DIR_v0_4, "geo", "mizu_locations.parquet"
 )
+
+
+def test_dropping_duplicates(tmpdir):
+    """Test the dropping duplicates function."""
+    ev = Evaluation(dir_path=tmpdir)
+    ev.enable_logging()
+    ev.clone_template()
+    ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
+    ev.configurations.add(
+        Configuration(
+            name="test_obs",
+            type="primary",
+            description="Test Observations Data"
+        )
+    )
+    ev.units.add(
+        Unit(
+            name="cfd",
+            long_name="Cubic Feet per Day"
+        )
+    )
+    ev.variables.add(
+        Variable(
+            name="streamflow",
+            long_name="Streamflow"
+        )
+    )
+    # Load the timeseries data
+    ev.primary_timeseries.load_parquet(
+        in_path=PRIMARY_TIMESERIES_DUPS_FILEPATH,
+        field_mapping={
+            "reference_time": "reference_time",
+            "value_time": "value_time",
+            "configuration": "configuration_name",
+            "measurement_unit": "unit_name",
+            "variable_name": "variable_name",
+            "value": "value",
+            "location_id": "location_id"
+        }
+    )
+    df = ev.primary_timeseries.to_pandas()
+    dups_df = pd.read_parquet(PRIMARY_TIMESERIES_DUPS_FILEPATH)
+
+    assert dups_df.index.size == 156
+    assert dups_df.drop_duplicates(
+        subset=[
+            "location_id",
+            "value_time",
+            "reference_time",
+            "configuration",
+            "measurement_unit",
+            "variable_name"
+        ]
+    ).index.size == 78
+    assert df.index.size == 78
+    assert df.drop_duplicates(
+        subset=ev.primary_timeseries.unique_column_set
+    ).index.size == 78
 
 
 def test_validate_and_insert_timeseries(tmpdir):
@@ -242,7 +304,7 @@ def test_validate_and_insert_summa_nc_timeseries(tmpdir):
         "averageRoutedRunoff_mean"
     ].sel(gru=170300010101).values
 
-    assert (teehr_values == nc_values).all()
+    assert (np.sort(teehr_values) == np.sort(nc_values)).all()
 
 
 def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
@@ -298,7 +360,7 @@ def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
         mizu_ds.reachID == 77000002, drop=True
     ).KWroutedRunoff.values.ravel()
 
-    assert (teehr_values == nc_values).all()
+    assert (np.sort(teehr_values) == np.sort(nc_values)).all()
 
 
 def test_validate_and_insert_fews_xml_timeseries(tmpdir):
@@ -376,6 +438,12 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
+        test_dropping_duplicates(
+            tempfile.mkdtemp(
+                prefix="0-",
+                dir=tempdir
+            )
+        )
         test_validate_and_insert_timeseries(
             tempfile.mkdtemp(
                 prefix="1-",

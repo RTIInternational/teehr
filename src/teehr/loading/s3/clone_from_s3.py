@@ -90,6 +90,7 @@ def clone_from_s3(
     primary_location_ids: Union[None, List[str]],
     start_date: Union[str, datetime, None],
     end_date: Union[str, datetime, None],
+    drop_duplicates: bool = False,
 ):
     """Clone an evaluation from s3.
 
@@ -192,10 +193,11 @@ def clone_from_s3(
             end_date=end_date
         )
 
-        if table.name == "joined_timeseries":
-            table._write_spark_df(sdf_in)
-        else:
-            table._write_spark_df(sdf_in, write_mode="overwrite")
+        table._write_spark_df(
+            sdf_in,
+            write_mode="overwrite",
+            drop_duplicates=drop_duplicates,
+        )
 
     # copy scripts path to ev.scripts_dir
     source = f"{url}/scripts/user_defined_fields.py"

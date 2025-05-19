@@ -9,6 +9,7 @@ from teehr.loading.utils import (
 from teehr.models.filters import TimeseriesFilter
 from teehr.querying.utils import join_geometry
 from teehr.models.table_enums import TableWriteEnum
+from teehr.const import MAX_CPUS
 
 from pathlib import Path
 from typing import Union
@@ -37,6 +38,7 @@ class TimeseriesTable(BaseTable):
             "reference_time",
             "variable_name",
             "unit_name",
+            "configuration_name"
         ]
 
     def to_pandas(self):
@@ -60,6 +62,9 @@ class TimeseriesTable(BaseTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        max_workers: Union[int, None] = MAX_CPUS,
+        persist_dataframe: bool = False,
+        drop_duplicates: bool = True,
         **kwargs
     ):
         """Import primary timeseries parquet data.
@@ -90,6 +95,18 @@ class TimeseriesTable(BaseTable):
             does not exist will be appended.
             If "overwrite", existing partitions receiving new data are
             overwritten.
+        max_workers : Union[int, None], optional
+            The maximum number of workers to use for parallel processing when
+            in_path is a directory. This gets passed to the concurrent.futures
+            ProcessPoolExecutor. If in_path is a file, this parameter is ignored.
+            The default value is max(os.cpu_count() - 1, 1).
+            If None, os.process_cpu_count() is used.
+        persist_dataframe : bool, optional (default: False)
+            Whether to repartition and persist the pyspark dataframe after
+            reading from the cache. This can improve performance when loading
+            a large number of files from the cache.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the dataframe.
         **kwargs
             Additional keyword arguments are passed to pd.read_parquet().
 
@@ -117,6 +134,9 @@ class TimeseriesTable(BaseTable):
             constant_field_values=constant_field_values,
             location_id_prefix=location_id_prefix,
             write_mode=write_mode,
+            max_workers=max_workers,
+            persist_dataframe=persist_dataframe,
+            drop_duplicates=drop_duplicates,
             **kwargs
         )
         self._load_table()
@@ -129,6 +149,9 @@ class TimeseriesTable(BaseTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        max_workers: Union[int, None] = MAX_CPUS,
+        persist_dataframe: bool = False,
+        drop_duplicates: bool = True,
         **kwargs
     ):
         """Import primary timeseries csv data.
@@ -158,6 +181,18 @@ class TimeseriesTable(BaseTable):
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
             If "overwrite", existing partitions receiving new data are overwritten
+        max_workers : Union[int, None], optional
+            The maximum number of workers to use for parallel processing when
+            in_path is a directory. This gets passed to the concurrent.futures
+            ProcessPoolExecutor. If in_path is a file, this parameter is ignored.
+            The default value is max(os.cpu_count() - 1, 1).
+            If None, os.process_cpu_count() is used.
+        persist_dataframe : bool, optional (default: False)
+            Whether to repartition and persist the pyspark dataframe after
+            reading from the cache. This can improve performance when loading
+            a large number of files from the cache.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the dataframe.
         **kwargs
             Additional keyword arguments are passed to pd.read_csv().
 
@@ -185,6 +220,9 @@ class TimeseriesTable(BaseTable):
             constant_field_values=constant_field_values,
             location_id_prefix=location_id_prefix,
             write_mode=write_mode,
+            max_workers=max_workers,
+            persist_dataframe=persist_dataframe,
+            drop_duplicates=drop_duplicates,
             **kwargs
         )
         self._load_table()
@@ -197,6 +235,9 @@ class TimeseriesTable(BaseTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        max_workers: Union[int, None] = MAX_CPUS,
+        persist_dataframe: bool = False,
+        drop_duplicates: bool = True,
         **kwargs
     ):
         """Import primary timeseries netcdf data.
@@ -226,6 +267,18 @@ class TimeseriesTable(BaseTable):
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
             If "overwrite", existing partitions receiving new data are overwritten
+        max_workers : Union[int, None], optional
+            The maximum number of workers to use for parallel processing when
+            in_path is a directory. This gets passed to the concurrent.futures
+            ProcessPoolExecutor. If in_path is a file, this parameter is ignored.
+            The default value is max(os.cpu_count() - 1, 1).
+            If None, os.process_cpu_count() is used.
+        persist_dataframe : bool, optional (default: False)
+            Whether to repartition and persist the pyspark dataframe after
+            reading from the cache. This can improve performance when loading
+            a large number of files from the cache.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the dataframe.
         **kwargs
             Additional keyword arguments are passed to xr.open_dataset().
 
@@ -253,6 +306,9 @@ class TimeseriesTable(BaseTable):
             constant_field_values=constant_field_values,
             location_id_prefix=location_id_prefix,
             write_mode=write_mode,
+            max_workers=max_workers,
+            persist_dataframe=persist_dataframe,
+            drop_duplicates=drop_duplicates,
             **kwargs
         )
         self._load_table()
@@ -273,6 +329,9 @@ class TimeseriesTable(BaseTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        max_workers: Union[int, None] = MAX_CPUS,
+        persist_dataframe: bool = False,
+        drop_duplicates: bool = True,
     ):
         """Import timeseries from XML data format.
 
@@ -313,6 +372,18 @@ class TimeseriesTable(BaseTable):
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
             If "overwrite", existing partitions receiving new data are overwritten
+        max_workers : Union[int, None], optional
+            The maximum number of workers to use for parallel processing when
+            in_path is a directory. This gets passed to the concurrent.futures
+            ProcessPoolExecutor. If in_path is a file, this parameter is ignored.
+            The default value is max(os.cpu_count() - 1, 1).
+            If None, os.process_cpu_count() is used.
+        persist_dataframe : bool, optional (default: False)
+            Whether to repartition and persist the pyspark dataframe after
+            reading from the cache. This can improve performance when loading
+            a large number of files from the cache.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the dataframe.
 
         Includes validation and importing data to database.
 
@@ -346,5 +417,8 @@ class TimeseriesTable(BaseTable):
             constant_field_values=constant_field_values,
             location_id_prefix=location_id_prefix,
             write_mode=write_mode,
+            max_workers=max_workers,
+            persist_dataframe=persist_dataframe,
+            drop_duplicates=drop_duplicates,
         )
         self._load_table()
