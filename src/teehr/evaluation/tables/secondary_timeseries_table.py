@@ -379,6 +379,13 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         time_period = rlc.HourOfYear()
         temp_sdf = time_period.apply_to(sec_sdf)
 
+        # Get the rolling average of previous 6 hours
+        pass
+
+        w = (Window.partitionBy("location_id").orderBy(F.col("hour_of_year")).rangeBetween(-7, 0))
+        reference_sdf = reference_sdf.withColumn('rolling_mean', F.avg("mean_primary_value").over(w))
+
+        # This works but does not account for location_id.
         ref_fcst_sdf = temp_sdf.join(
             reference_sdf,
             on=[temporal_resolution]
@@ -389,67 +396,44 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             temp_sdf["variable_name"],
             temp_sdf["location_id"],
             temp_sdf["member"],
-            reference_sdf["mean_primary_value"].alias("value"),
+            reference_sdf["rolling_mean"].alias("value"),
             reference_sdf["configuration_name"],
         )
 
         pass
 
-        # TEMP: Join the reference sdf  to the template secondary forecast.
-        # ref_fcst_sdf2 = sec_sdf.join(
-        #     reference_sdf,
-        #     on=[
-        #         "value_time",
-        #         "variable_name",
-        #         "unit_name",
-        #         # "location_id",
-        #     ],
-        #     how="left"
-        # ).select(
-        #     sec_sdf["value_time"],
-        #     sec_sdf["reference_time"],
-        #     sec_sdf["unit_name"],
-        #     sec_sdf["variable_name"],
-        #     sec_sdf["location_id"],
-        #     sec_sdf["member"],
-        #     reference_sdf["value"],
-        #     # reference_sdf["location_id"],
-        #     reference_sdf["configuration_name"],
-        # )
+        # Join the reference sdf  to the template secondary forecast
+        xwalk_sdf = self.ev.location_crosswalks.to_sdf()
+        xwalk_sdf.createOrReplaceTempView("location_crosswalks")
+        reference_sdf.createOrReplaceTempView("reference_timeseries")
+        temp_sdf.createOrReplaceTempView("template_timeseries")
 
-        # xwalk_sdf = self.ev.location_crosswalks.to_sdf()
-        # reference_sdf.createOrReplaceTempView("primary_timeseries")
-        # sec_sdf.createOrReplaceTempView("secondary_timeseries")
-        # xwalk_sdf.createOrReplaceTempView("location_crosswalks")
-        # query = """
-        #     SELECT
-        #         sf.reference_time
-        #         , sf.value_time as value_time
-        #         , sf.location_id as location_id
-        #         , pf.value as value
-        #         , sf.configuration_name
-        #         , sf.unit_name
-        #         , sf.variable_name
-        #     FROM secondary_timeseries sf
-        #     JOIN location_crosswalks cf
-        #         on cf.secondary_location_id = sf.location_id
-        #     LEFT JOIN primary_timeseries pf
-        #         on cf.primary_location_id = pf.location_id
-        #         and sf.value_time = pf.value_time
-        #         and sf.unit_name = pf.unit_name
-        #         and sf.variable_name = pf.variable_name
-        # """
-        # ref_fcst_sdf = self.ev.spark.sql(query)
+        query = """
+            SELECT
+                tf.reference_time
+                , tf.value_time as value_time
+                , tf.location_id as location_id
+                , rf.rolling_mean as value
+                , rf.configuration_name
+                , tf.unit_name
+                , tf.variable_name
+                , tf.member
+            FROM template_timeseries tf
+            JOIN location_crosswalks cf
+                on cf.secondary_location_id = tf.location_id
+            JOIN reference_timeseries rf
+                on cf.primary_location_id = rf.location_id
+                and tf.hour_of_year = rf.hour_of_year
+                and tf.unit_name = rf.unit_name
+                and tf.variable_name = rf.variable_name
+        """
+        ref_fcst_sdf2 = self.ev.spark.sql(query)
 
-        # # TODO: ffill as well. fill nans -- If there are missing primary values
-        # window_bfill_spec = Window.partitionBy("reference_time").orderBy("value_time").rowsBetween(Window.currentRow, Window.unboundedFollowing)
-        # window_ffill_spec = Window.partitionBy("reference_time").orderBy("value_time").rowsBetween(Window.unboundedPreceding, Window.currentRow)
+        self.spark.catalog.dropTempView("location_crosswalks")
+        self.spark.catalog.dropTempView("reference_timeseries")
+        self.spark.catalog.dropTempView("template_timeseries")
 
-        # ref_fcst_sdf = ref_fcst_sdf.withColumn("value", F.first("value", ignorenulls=True).over(window_bfill_spec))
-        # ref_fcst_sdf = ref_fcst_sdf.withColumn("value", F.last("value", ignorenulls=True).over(window_ffill_spec))
-
-        # # TEMP: fill missing values with 500
-        # ref_fcst_sdf = ref_fcst_sdf.na.fill({"value": 500})
+        pass
 
         self._add_secondary_timeseries(
             ref_sdf=ref_fcst_sdf,
