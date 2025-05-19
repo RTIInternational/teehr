@@ -313,34 +313,32 @@ class BaseTable():
                 "header": "true",
             }
 
-        if df is not None:
-
-            if write_mode == "overwrite":
-                self._dynamic_overwrite(
-                    df,
-                    drop_duplicates=drop_duplicates,
-                    **kwargs
-                )
-            elif write_mode == "append":
-                self._append_without_duplicates(
-                    df=df,
-                    drop_duplicates=drop_duplicates,
-                    num_partitions=num_partitions,
-                    **kwargs
-                )
-            elif write_mode == "upsert":
-                self._upsert_without_duplicates(
-                    df=df,
-                    drop_duplicates=drop_duplicates,
-                    num_partitions=num_partitions,
-                    **kwargs
-                )
-            else:
-                raise ValueError(
-                    f"Invalid write mode: {write_mode}. "
-                    "Valid values are 'append', 'overwrite' and 'upsert'."
-                )
-            self._load_table()
+        if write_mode == "overwrite":
+            self._dynamic_overwrite(
+                df,
+                drop_duplicates=drop_duplicates,
+                **kwargs
+            )
+        elif write_mode == "append":
+            self._append_without_duplicates(
+                df=df,
+                drop_duplicates=drop_duplicates,
+                num_partitions=num_partitions,
+                **kwargs
+            )
+        elif write_mode == "upsert":
+            self._upsert_without_duplicates(
+                df=df,
+                drop_duplicates=drop_duplicates,
+                num_partitions=num_partitions,
+                **kwargs
+            )
+        else:
+            raise ValueError(
+                f"Invalid write mode: {write_mode}. "
+                "Valid values are 'append', 'overwrite' and 'upsert'."
+            )
+        self._load_table()
 
     def _get_schema(self, type: str = "pyspark"):
         """Get the primary timeseries schema.
