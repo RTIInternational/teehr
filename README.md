@@ -17,9 +17,7 @@ NOTE: THIS PROJECT IS UNDER DEVELOPMENT - EXPECT TO FIND BROKEN AND INCOMPLETE C
 [TEEHR Documentation](https://rtiinternational.github.io/teehr/)
 
 ## How to Install TEEHR (macOS/Linux)
-We do not currently push TEEHR to PyPI, so the easiest way to install it is directly from GitHub.
-If using `pip` to install TEEHR, we recommend installing TEEHR in a virtual environment.
-Detailed installation instuctions for macOS/Linux users are available [here](https://rtiinternational.github.io/teehr/getting_started/index.html#installation-guide-for-macos-linux) under 'Installation Guide for macOS & Linux'.
+The easiest way to install TEEHR is from PyPI using `pip`. If using `pip` to install TEEHR, we recommend installing TEEHR in a virtual environment. Detailed installation instuctions for macOS/Linux users are available [here](https://rtiinternational.github.io/teehr/getting_started/index.html#installation-guide-for-macos-linux) under 'Installation Guide for macOS & Linux'.
 
 ## How to Install TEEHR (Windows)
 Currently, TEEHR dependencies require users install on Linux or macOS. To use TEEHR on Windows, we recommend Windows Subsystem for Linux (WSL). Detailed installation instructions for Windows users are available [here](https://rtiinternational.github.io/teehr/getting_started/index.html#installation-guide-for-windows) under 'Installation Guide for Windows'.
