@@ -97,7 +97,6 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         df = self._read_files(cache_dir)
 
         if persist_dataframe:
-            df = df.repartition(*self.partition_by)
             df = df.persist()
 
         # Add or replace location_id prefix if provided
