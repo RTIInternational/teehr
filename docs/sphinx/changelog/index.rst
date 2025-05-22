@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+0.4.12 - 2025-05-22
+------------------
+
+Changed
+^^^^^^^
+- Adds `git` and `vim` to docker image for TEEHR-HUB
+- Moves `scoringrules` and `arch` imports into the function to speed up import time
+- Removes the repartitioning by `self.partition_by` of the dataframe in the `BaseTable` class when writing to parquet
+
 0.4.11 - 2025-05-19
 ------------------
 

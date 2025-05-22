@@ -177,8 +177,6 @@ class BaseTable():
 
         if num_partitions is not None:
             validated_df = validated_df.repartition(num_partitions)
-        elif self.partition_by is not None:
-            validated_df = validated_df.repartition(*self.partition_by)
 
         (
             validated_df.
@@ -234,8 +232,6 @@ class BaseTable():
 
         if num_partitions is not None:
             df = df.repartition(num_partitions)
-        elif self.partition_by is not None:
-            df = df.repartition(*self.partition_by)
 
         # Only continue if there is new data to write.
         if not df.isEmpty():
@@ -273,8 +269,6 @@ class BaseTable():
         # Drop potential duplicates in the cached dataframe
         if drop_duplicates:
             df = df.dropDuplicates(subset=self.unique_column_set)
-        if self.partition_by is not None:
-            df = df.repartition(*self.partition_by)
         (
             df.
             write.
