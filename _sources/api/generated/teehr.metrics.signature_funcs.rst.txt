@@ -1,0 +1,37 @@
+﻿teehr.metrics.signature\_funcs
+==============================
+
+.. automodule:: teehr.metrics.signature_funcs
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      avg_wrapper
+      count_wrapper
+      max_wrapper
+      min_wrapper
+      mvt_wrapper
+      sum_wrapper
+      variance_wrapper
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

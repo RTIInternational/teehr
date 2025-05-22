@@ -1,0 +1,6 @@
+teehr.metrics.signature\_funcs.count\_wrapper
+=============================================
+
+.. currentmodule:: teehr.metrics.signature_funcs
+
+.. autofunction:: count_wrapper
