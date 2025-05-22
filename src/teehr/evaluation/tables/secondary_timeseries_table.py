@@ -234,8 +234,11 @@ class SecondaryTimeseriesTable(TimeseriesTable):
                     description=output_configuration_description,
                 )
             )
+
+        validated_df = self._validate(ref_sdf)
+
         self._write_spark_df(
-            ref_sdf,
+            validated_df,
             write_mode="overwrite",
             partition_by=self.partition_by,
         )
@@ -380,27 +383,26 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         temp_sdf = time_period.apply_to(sec_sdf)
 
         # Get the rolling average of previous 6 hours
-        pass
-
+        # TODO: Should be an argument here.
         w = (Window.partitionBy("location_id").orderBy(F.col("hour_of_year")).rangeBetween(-7, 0))
         reference_sdf = reference_sdf.withColumn('rolling_mean', F.avg("mean_primary_value").over(w))
 
-        # This works but does not account for location_id.
-        ref_fcst_sdf = temp_sdf.join(
-            reference_sdf,
-            on=[temporal_resolution]
-        ).select(
-            temp_sdf["value_time"],
-            temp_sdf["reference_time"],
-            temp_sdf["unit_name"],
-            temp_sdf["variable_name"],
-            temp_sdf["location_id"],
-            temp_sdf["member"],
-            reference_sdf["rolling_mean"].alias("value"),
-            reference_sdf["configuration_name"],
-        )
+        # # This works but does not account for location_id.
+        # ref_fcst_sdf = temp_sdf.join(
+        #     reference_sdf,
+        #     on=[temporal_resolution]
+        # ).select(
+        #     temp_sdf["value_time"],
+        #     temp_sdf["reference_time"],
+        #     temp_sdf["unit_name"],
+        #     temp_sdf["variable_name"],
+        #     temp_sdf["location_id"],
+        #     temp_sdf["member"],
+        #     reference_sdf["rolling_mean"].alias("value"),
+        #     reference_sdf["configuration_name"],
+        # )
 
-        pass
+        # pass
 
         # Join the reference sdf  to the template secondary forecast
         xwalk_sdf = self.ev.location_crosswalks.to_sdf()
@@ -427,13 +429,17 @@ class SecondaryTimeseriesTable(TimeseriesTable):
                 and tf.unit_name = rf.unit_name
                 and tf.variable_name = rf.variable_name
         """
-        ref_fcst_sdf2 = self.ev.spark.sql(query)
+        ref_fcst_sdf = self.ev.spark.sql(query)
 
         self.spark.catalog.dropTempView("location_crosswalks")
         self.spark.catalog.dropTempView("reference_timeseries")
         self.spark.catalog.dropTempView("template_timeseries")
 
         pass
+
+        ref_fcst_sdf = ref_fcst_sdf.repartition(
+            *self.partition_by
+        )
 
         self._add_secondary_timeseries(
             ref_sdf=ref_fcst_sdf,
