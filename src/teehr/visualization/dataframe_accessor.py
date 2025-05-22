@@ -191,22 +191,24 @@ class TEEHRDataFrameAccessor:
     def _validate_path(self, output_dir):
         """Validate the output directory path."""
         logger.info("Validating output directory path.")
-        if not isinstance(output_dir, Path):
-            logger.info(f"""
-                        Output directory must be a pathlib.Path object.
-                        Path was provided as type: {type(output_dir)}.
-                        Attempting to convert to pathlib.Path object.
-            """)
-            try:
-                output_dir = Path(output_dir)
-                logger.info("Path conversion successful.")
-            except TypeError:
-                logger.error("Path conversion failed.")
-
         # check for output location
         if output_dir is not None:
+            # check to ensure output_dir is a Path object
+            if not isinstance(output_dir, Path):
+                logger.info(f"""
+                            Output directory must be a pathlib.Path object.
+                            Path was provided as type: {type(output_dir)}.
+                            Attempting to convert to pathlib.Path object.
+                """)
+                try:
+                    output_dir = Path(output_dir)
+                    logger.info("Path conversion successful.")
+                except TypeError:
+                    logger.error("Path conversion failed.")
+            # check if output_dir exists, if not create it
             if output_dir.exists():
                 logger.info("Specified save directory is valid.")
+                return output_dir
             else:
                 logger.info(""""
                     Specified directory does not exist.
@@ -214,10 +216,12 @@ class TEEHRDataFrameAccessor:
                 """)
                 try:
                     Path(output_dir).mkdir(parents=True, exist_ok=True)
+                    return output_dir
                 except ValueError:
                     logger.error("Directory creation failed.")
-
-        return output_dir
+        else:
+            logger.info("No output directory specified, generating plot.")
+            return None
 
     def _timeseries_unique_values(
         self,
