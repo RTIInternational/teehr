@@ -668,12 +668,18 @@ class TEEHRDataFrameAccessor:
     def _location_format_points(self) -> dict:
         """Generate dictionary for point plotting."""
         logger.info("Assembling geodata for locations mapping...")
+        if not all(self._gdf.geometry.geom_type == "Point"):
+            logger.warning(
+                "Non-point geometries detected and excluded from mapping."
+                )
+        gdf_points = self._gdf[self._gdf.geometry.geom_type == "Point"]
         geo_data = {}
-        geo_data['id'] = self._gdf['id'].tolist()
-        geo_data['name'] = self._gdf['name'].tolist()
-        geo_data['x'] = self._gdf.geometry.x.values.tolist()
-        geo_data['y'] = self._gdf.geometry.y.values.tolist()
+        geo_data['id'] = gdf_points['id'].tolist()
+        geo_data['name'] = gdf_points['name'].tolist()
+        geo_data['x'] = gdf_points.geometry.x.values.tolist()
+        geo_data['y'] = gdf_points.geometry.y.values.tolist()
         logger.info("Locations geodata assembled.")
+        return geo_data
 
         return geo_data
 
@@ -791,11 +797,16 @@ class TEEHRDataFrameAccessor:
     def _location_attributes_format_points(self) -> dict:
         """Format location_attributes data for use in mapping method."""
         logger.info("Assembling geodata for location attributes mapping...")
+        if not all(self._gdf.geometry.geom_type == "Point"):
+            logger.warning(
+                "Non-point geometries detected and excluded from mapping."
+                )
+        gdf_points = self._gdf[self._gdf.geometry.geom_type == "Point"]
         geo_data = {}
-        locations = self._gdf['location_id'].unique()
+        locations = gdf_points['location_id'].unique()
         for location in locations:
             local_attributes = {}
-            location_gdf = self._gdf[self._gdf['location_id'] == location]
+            location_gdf = gdf_points[gdf_points['location_id'] == location]
             attributes = location_gdf['attribute_name'].unique()
             for attribute in attributes:
                 row = location_gdf[location_gdf['attribute_name'] == attribute]
@@ -808,7 +819,6 @@ class TEEHRDataFrameAccessor:
         logger.info("Location attributes geodata assembled.")
         logger.info("Checking for duplicate attributes...")
         self._location_attributes_check_duplicates(geo_data=geo_data)
-
         return geo_data
 
     def _location_attributes_check_duplicates(
@@ -1001,13 +1011,17 @@ class TEEHRDataFrameAccessor:
     def _location_crosswalks_format_points(self) -> dict:
         """Generate dictionary for point plotting."""
         logger.info("Assembling geodata for location_crosswalks mapping...")
+        if not all(self._gdf.geometry.geom_type == "Point"):
+            logger.warning(
+                "Non-point geometries detected and excluded from mapping."
+                )
+        gdf_points = self._gdf[self._gdf.geometry.geom_type == "Point"]
         geo_data = {}
-        geo_data['primary_id'] = self._gdf['primary_location_id'].tolist()
-        geo_data['secondary_id'] = self._gdf['secondary_location_id'].tolist()
-        geo_data['x'] = self._gdf.geometry.x.values.tolist()
-        geo_data['y'] = self._gdf.geometry.y.values.tolist()
+        geo_data['primary_id'] = gdf_points['primary_location_id'].tolist()
+        geo_data['secondary_id'] = gdf_points['secondary_location_id'].tolist()
+        geo_data['x'] = gdf_points.geometry.x.values.tolist()
+        geo_data['y'] = gdf_points.geometry.y.values.tolist()
         logger.info("location_crosswalks geodata assembled.")
-
         return geo_data
 
     def _location_crosswalks_generate_map(
