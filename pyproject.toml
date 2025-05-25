@@ -35,6 +35,7 @@ arch = "^7.0.0"
 pandera = {extras = ["pyspark"], version = "^0.20.4"}
 netcdf4 = "1.6.5"
 bokeh = "^3.5.0"
+apache-sedona = "^1.7.0"
 scoringrules = "^0.7.1"
 hvplot = "^0.11.1"
 geoviews = "^1.14.0"

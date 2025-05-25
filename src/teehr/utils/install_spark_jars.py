@@ -11,16 +11,34 @@ def main():
     SPARK_VERSION = pyspark.__version__
     print(f"SPARK_VERSION is: {SPARK_VERSION}")
 
+    """
+        need versions of jars that are compatible with the version of Spark
+        aws-java-sdk-bundle
+        hadoop-aws
+        sedona-spark-shaded
+        geotools-wrapper
+        Determine compatible versions based on Spark version
+    """
+
     jars = [
         {
-            "url": "https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.262/aws-java-sdk-bundle-1.12.262.jar", # noqa
-            "path": f"{SPARK_HOME}/jars/aws-java-sdk-bundle-1.12.262.jar"
+            "url": "https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.524/aws-java-sdk-bundle-1.12.524.jar", # noqa
+            "path": f"{SPARK_HOME}/jars/aws-java-sdk-bundle-1.12.524.jar"
         },
         {
             "url": "https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar", # noqa
             "path": f"{SPARK_HOME}/jars/hadoop-aws-3.3.4.jar"
+        },
+        {
+            "url": "https://repo.maven.apache.org/maven2/org/apache/sedona/sedona-spark-shaded-3.5_2.12/1.7.0/sedona-spark-shaded-3.5_2.12-1.7.0.jar",
+            "path": f"{SPARK_HOME}/jars/sedona-spark-shaded-3.5_2.12-1.7.0.jar"
+        },
+        {
+            "url": "https://repo.maven.apache.org/maven2/org/datasyslab/geotools-wrapper/1.7.0-28.5/geotools-wrapper-1.7.0-28.5.jar",
+            "path": f"{SPARK_HOME}/jars/geotools-wrapper-1.7.0-28.5.jar"
         }
     ]
+
 
     for jar in jars:
         print(f"Downloading {jar['url']} to {jar['path']}")
