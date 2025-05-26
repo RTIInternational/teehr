@@ -18,15 +18,19 @@ def get_spark_session(
   Returns:
     SparkSession: A configured Spark session.
   """
-  return SparkSession.builder \
-    .appName("IcebergLocalDevelopment") \
-    .config('spark.jars.packages', 'org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.2') \
-    .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions") \
-    .config(f"spark.sql.catalog.{catalog_name}", "org.apache.iceberg.spark.SparkCatalog") \
-    .config(f"spark.sql.catalog.{catalog_name}.type", "hadoop") \
-    .config(f"spark.sql.catalog.{catalog_name}.warehouse", f"{warehouse_path}/{catalog_name}") \
-    .config("spark.driver.host", "localhost") \
+  spark = (
+    SparkSession.builder
+    .appName("IcebergLocalDevelopment")
+    .config('spark.jars.packages', 'org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.9.0')
+    .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
+    .config(f"spark.sql.catalog.{catalog_name}", "org.apache.iceberg.spark.SparkCatalog")
+    .config(f"spark.sql.catalog.{catalog_name}.type", "hadoop")
+    .config(f"spark.sql.catalog.{catalog_name}.warehouse", f"{warehouse_path}/{catalog_name}")
+    .config("spark.driver.host", "localhost")
     .getOrCreate()
+  )
+
+  return spark
 
 
 def read_available_schema_versions(
@@ -234,6 +238,7 @@ if __name__ == "__main__":
   warehouse_path = str(Path.home() / 'temp' / 'iceberg' / 'spark-warehouse')
 
   spark = get_spark_session(catalog_name, warehouse_path=warehouse_path)
+
   evolve_catalog_schema(catalog_name, schema_name)
   print(f"Schema evolution completed for {catalog_name}.")
   spark.stop()
