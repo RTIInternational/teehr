@@ -5,8 +5,8 @@ Getting started
 ===============
 
 
-Installation
-------------
+Installation Guide for macOS & Linux
+------------------------------------
 TEEHR requires the following dependencies:
 
 * Python 3.10 or later
@@ -33,12 +33,123 @@ The code below creates a new virtual environment and installs TEEHR in it.
    # Download the required JAR files for Spark to interact with AWS S3.
    python -m teehr.utils.install_spark_jars
 
-Or, if you do not want to install TEEHR in your own virtual environment, you can use Docker:
+
+Installation Guide for Windows
+------------------------------
+Currently, TEEHR dependencies require users install on Linux or macOS. To use TEEHR on Windows, we recommend Windows Subsystem for Linux (WSL). `Learn more about WSL <https://learn.microsoft.com/en-us/windows/wsl/about>`_.
+
+1. Install Linux on Windows via WSL (in Windows terminal)
+
+   * Detailed instructions can be found here: `How to Install Linux on Windows with WSL <https://learn.microsoft.com/en-us/windows/wsl/install>`_
+   * Summary:
+
+      * Run the following command in PowerShell or Windows Terminal. This will install necessary features to run Windows subsystem for Linux (WSL) and install the Ubuntu-22.04 Linux distribution.
+
+      .. code-block:: bash
+
+         wsl --install -d Ubuntu-22.04
+
+      * Restart your machine.
+
+   * Validate install:
+
+      * Check what Ubuntu version you have installed using the following command:
+
+      .. code-block:: bash
+
+         wsl -l -v
+
+2. Launch Ubuntu (in Windows terminal)
+
+   * You can launch your default WSL installation from the terminal using the following command:
+
+   .. code-block:: bash
+
+      wsl
+
+   * Upon entering the command, you should notice your terminal prompt/CWD update to display your current windows directory relative to your Linux file system (i.e. '/mnt/c/Users/{your_username}$'. To access your home directory in Linux, enter the following command:
+
+   .. code-block:: bash
+
+      cd ~/
+
+3. Set-up Python on Linux (within WSL terminal)
+
+   * Update and upgrade Ubuntu:
+
+   .. code-block:: bash
+
+      sudo apt update && sudo apt upgrade
+      sudo apt-get install wget ca-certificates
+
+   * Install some key default development packages (within WSL terminal):
+
+   .. code-block:: bash
+
+      sudo apt install -y build-essential git curl libexpat1-dev libssl-dev zlib1g-dev libncurses5-dev libbz2-dev liblzma-dev libsqlite3-dev libffi-dev tcl-dev linux-headers-generic libgdbm-dev libreadline-dev tk tk-dev
+
+   * Install pyenv to manage Python versions (within WSL terminal):
+
+   .. code-block:: bash
+
+      curl https://pyenv.run | bash
+      echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
+      echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
+      echo 'eval "$(pyenv init -)"' >> ~/.bashrc
+      # Reload bashrc
+      source ~/.bashrc
+      # Confirm installation
+      pyenv --version
+
+   * Install the required Python version [>=3.10.12] (within WSL terminal):
+
+   .. code-block:: bash
+
+      pyenv install 3.10.12
+      pyenv rehash
+      # Set the global Python version to 3.10.12
+      pyenv global 3.10.12
+      # Confirm installation
+      python --version
+
+4. Set-up Linux dependencies (within WSL terminal)
+
+   * Install Java 17 (within WSL terminal):
+
+   .. code-block:: bash
+
+      sudo apt install openjdk-17-jre-headless
+      # Confirm installation
+      java -version
+
+5. Set-up VSCode in WSL
+
+   * Follow the official VSCode Instructions here: `VSCode for WSL <https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-vscode>`_.
+
+      * NOTE: An installation of VSCode on Windows is required to utilize VSCode in your WSL distribution. The provided link details the full set-up process -- including installation on Windows.
+
+6. Set-up TEEHR (within WSL terminal)
+
+   * Create a new virtual environment:
+
+   .. code-block:: bash
+
+      mkdir teehr_examples
+      cd teehr_examples
+      python3 -m venv .venv
+      source .venv/bin/activate
+      pip install teehr
+      python -m teehr.utils.install_spark_jars
+
+
+Set-up Guide for Docker
+-----------------------
+If you do not want to install TEEHR in your own virtual environment, you can use Docker:
 
 .. code-block:: bash
 
-   docker build -t teehr:v0.4.10 .
-   docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.4.10 jupyter lab --ip 0.0.0.0 $HOME
+   docker build -t teehr:v0.4.12 .
+   docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.4.12 jupyter lab --ip 0.0.0.0 $HOME
 
 Project Objectives
 ------------------

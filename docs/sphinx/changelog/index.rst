@@ -1,6 +1,27 @@
 Release Notes
 =============
 
+0.4.12 - 2025-05-22
+------------------
+
+Changed
+^^^^^^^
+- Adds `git` and `vim` to docker image for TEEHR-HUB
+- Moves `scoringrules` and `arch` imports into the function to speed up import time
+- Removes the repartitioning by `self.partition_by` of the dataframe in the `BaseTable` class when writing to parquet
+
+0.4.11 - 2025-05-19
+------------------
+
+Changed
+^^^^^^^
+- Fixes bug in _write_spark_df() method in the BaseTable class that caused writing larger dataframes to fail.
+- Parallelizes `convert_single_timeseries()` when a directory is passed to the `in_path` argument.
+- Fixes doc string in `generate_weights_file()`
+- Switched to the built-in dropDuplicates() method in the `BaseTable` class to drop duplicates instead of using a custom implementation.
+- Added option to specify the number of partitions when writing dataframes in the BaseTable class.
+- Added the option to skip the dropDuplicates() method when writing dataframes in the BaseTable class.
+
 0.4.10 - 2025-04-14
 ------------------
 

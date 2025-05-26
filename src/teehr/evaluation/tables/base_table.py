@@ -11,9 +11,9 @@ from teehr.utils.utils import to_path_or_s3path, path_to_spark
 from teehr.models.filters import FilterBaseModel
 from teehr.models.table_enums import TableWriteEnum
 import logging
-from pyspark.sql.functions import lit, col, row_number, asc
+from pyspark.sql.functions import lit, col, row_number, asc, first
 from pyspark.sql.window import Window
-import shutil
+from functools import reduce
 
 from delta.tables import DeltaTable
 
@@ -73,21 +73,6 @@ class BaseTable():
         )
         logger.error(err_msg)
         raise ValueError(err_msg)
-
-    def _drop_duplicates(
-        self,
-        sdf: ps.DataFrame,
-    ) -> ps.DataFrame:
-        """Drop duplicates from the DataFrame."""
-        logger.info(f"Dropping duplicates from {self.name}.")
-        window_spec = Window.partitionBy(*self.unique_column_set)
-        ordering_expr = [asc(col) for col in self.unique_column_set]
-        window_spec = window_spec.orderBy(*ordering_expr)
-        sdf_with_row_num = sdf.withColumn("row_num", row_number().over(window_spec))
-        deduplicated_sdf = sdf_with_row_num.filter("row_num == 1").drop("row_num")
-        # MGD: Does this do the same thing?
-        # df = sdf.dropDuplicates(self.unique_column_set)
-        return deduplicated_sdf
 
     def _read_files(
         self,
@@ -193,6 +178,7 @@ class BaseTable():
     def _upsert_without_duplicates(
         self,
         df,
+        drop_duplicates: bool,
         num_partitions: int = None,
         **kwargs
     ):
@@ -221,13 +207,22 @@ class BaseTable():
                     col(partition).isin(partition_values)
                 )
 
+        # Drop potential duplicates in the cached dataframe
+        if drop_duplicates:
+            df = df.dropDuplicates(subset=self.unique_column_set)
+
         # Remove rows from existing_sdf that are to be updated.
         # Concat and re-write.
         if not existing_sdf.isEmpty():
+            # Create the join condition clause using eqNullSafe to treat
+            # nulls as equal.
+            join_condition = reduce(
+                lambda x, y: x & y, [df[k].eqNullSafe(existing_sdf[k]) for k in self.unique_column_set]  # noqa: E501
+            )
             existing_sdf = existing_sdf.join(
                 df,
                 how="left_anti",
-                on=self.unique_column_set,
+                on=join_condition,
             )
             df = existing_sdf.unionByName(df)
             # Get columns in correct order
@@ -236,11 +231,9 @@ class BaseTable():
         # Re-validate since the table was changed
         validated_df = self._validate(df)
 
-        # Drop potential duplicates
-        validated_df = self._drop_duplicates(validated_df)
-
         if num_partitions is not None:
             validated_df = validated_df.repartition(num_partitions)
+
         (
             validated_df.
             write.
@@ -254,6 +247,7 @@ class BaseTable():
     def _append_without_duplicates(
         self,
         df,
+        drop_duplicates: bool,
         num_partitions: int = None,
         **kwargs
     ):
@@ -272,28 +266,33 @@ class BaseTable():
             **kwargs
         )
 
-        # existing_sdf = existing_sdf.persist()
+        # Drop potential duplicates in the cached dataframe
+        if drop_duplicates:
+            df = df.dropDuplicates(subset=self.unique_column_set)
 
         # Anti-join: Joins rows from left df that do not have a match
         # in right df.  This is used to drop duplicates. df gets written
         # in append mode.
         if not existing_sdf.isEmpty():
+            # Create the join condition clause using eqNullSafe to treat
+            # nulls as equal.
+            join_condition = reduce(
+                lambda x, y: x & y, [df[k].eqNullSafe(existing_sdf[k]) for k in self.unique_column_set]  # noqa: E501
+            )
+
             df = df.join(
                 existing_sdf,
                 how="left_anti",
-                on=self.unique_column_set,
+                on=join_condition,
             )
+
+        if num_partitions is not None:
+            df = df.repartition(num_partitions)
 
         # Only continue if there is new data to write.
         if not df.isEmpty():
             # Re-validate since the table was changed
             validated_df = self._validate(df)
-
-            if num_partitions is not None:
-                validated_df = validated_df.repartition(num_partitions)
-
-            # Drop potential duplicates
-            validated_df = self._drop_duplicates(validated_df)
 
             (
                 validated_df.
@@ -313,6 +312,7 @@ class BaseTable():
     def _dynamic_overwrite(
         self,
         df: ps.DataFrame,
+        drop_duplicates: bool,
         **kwargs
     ):
         """Overwrite partitions contained in the dataframe."""
@@ -322,6 +322,9 @@ class BaseTable():
         partition_by = self.partition_by
         if partition_by is None:
             partition_by = []
+        # Drop potential duplicates in the cached dataframe
+        if drop_duplicates:
+            df = df.dropDuplicates(subset=self.unique_column_set)
         (
             df.
             write.
@@ -332,22 +335,12 @@ class BaseTable():
             save(str(self.dir))
         )
 
-    def _check_for_null_unique_column_values(self, df: ps.DataFrame):
-        """Remove a field from self.unique_column_set if all values are null."""
-        for field_name in self.unique_column_set:
-            if field_name in df.columns:
-                if len(df.filter(df[field_name].isNotNull()).collect()) == 0:
-                    logger.debug(
-                        f"All {field_name} values are null. "
-                        f"{field_name} will be removed as a partition column."
-                    )
-                    self.unique_column_set.remove(field_name)
-
     def _write_spark_df(
         self,
         df: ps.DataFrame,
         write_mode: TableWriteEnum = "append",
         num_partitions: int = None,
+        drop_duplicates: bool = True,
         **kwargs
     ):
         """Write spark dataframe to directory.
@@ -370,34 +363,32 @@ class BaseTable():
                 "header": "true",
             }
 
-        # MGD: do we ever pass an empty df?
-        if df is not None:
-
-            self._check_for_null_unique_column_values(df)
-            if self.format == "delta":
-                self._delta_upsert(df)
-            else:
-                if write_mode == "overwrite":
-                    self._dynamic_overwrite(df, **kwargs)
-                    self._load_table()
-                elif write_mode == "append":
-                    self._append_without_duplicates(
-                        df=df,
-                        num_partitions=num_partitions,
-                        **kwargs
-                    )
-                elif write_mode == "upsert":
-                    self._upsert_without_duplicates(
-                        df=df,
-                        num_partitions=num_partitions,
-                        **kwargs
-                    )
-                else:
-                    raise ValueError(
-                        f"Invalid write mode: {write_mode}. "
-                        "Valid values are 'append', 'overwrite' and 'upsert'."
-                    )
-            self._load_table()
+        if write_mode == "overwrite":
+            self._dynamic_overwrite(
+                df,
+                drop_duplicates=drop_duplicates,
+                **kwargs
+            )
+        elif write_mode == "append":
+            self._append_without_duplicates(
+                df=df,
+                drop_duplicates=drop_duplicates,
+                num_partitions=num_partitions,
+                **kwargs
+            )
+        elif write_mode == "upsert":
+            self._upsert_without_duplicates(
+                df=df,
+                drop_duplicates=drop_duplicates,
+                num_partitions=num_partitions,
+                **kwargs
+            )
+        else:
+            raise ValueError(
+                f"Invalid write mode: {write_mode}. "
+                "Valid values are 'append', 'overwrite' and 'upsert'."
+            )
+        self._load_table()
 
     def _get_schema(self, type: str = "pyspark"):
         """Get the primary timeseries schema.
@@ -498,7 +489,6 @@ class BaseTable():
 
         Examples
         --------
-
         Filters as dictionaries:
 
         >>> ts_df = ev.primary_timeseries.query(

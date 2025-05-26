@@ -109,6 +109,7 @@ class Evaluation:
                 .set("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
                 .set("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
                 .set("spark.sql.package", "io.delta:delta-core_2.12:2.1.0")
+                .set("spark.driver.host", "localhost")
             )
 
             builder = SparkSession.builder.config(conf=conf)

@@ -61,6 +61,7 @@ class LocationTable(BaseTable):
         pattern: str = "**/*.parquet",
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        drop_duplicates: bool = True,
         **kwargs
     ):
         """Import geometry data.
@@ -91,6 +92,8 @@ class LocationTable(BaseTable):
             does not exist will be appended.
             If "overwrite", existing partitions receiving new data are
             overwritten.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the DataFrame.
         **kwargs
             Additional keyword arguments are passed to GeoPandas read_file().
 
@@ -145,6 +148,7 @@ class LocationTable(BaseTable):
             df=validated_df,
             write_mode=write_mode,
             num_partitions=1,
+            drop_duplicates=drop_duplicates,
         )
 
         # Reload the table

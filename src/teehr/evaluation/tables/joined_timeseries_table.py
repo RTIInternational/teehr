@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
 from teehr.models.filters import JoinedTimeseriesFilter
-from teehr.models.table_enums import JoinedTimeseriesFields, TableWriteEnum
+from teehr.models.table_enums import JoinedTimeseriesFields
 from teehr.querying.utils import join_geometry
 import teehr.models.pandera_dataframe_schemas as schemas
 import pyspark.sql as ps
@@ -33,6 +33,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
             "reference_time",
             "variable_name",
             "unit_name",
+            "configuration_name",
         ]
 
     def field_enum(self) -> JoinedTimeseriesFields:
@@ -148,9 +149,15 @@ class JoinedTimeseriesTable(TimeseriesTable):
 
         return self
 
-    def write(self):
+    def write(self, drop_duplicates: bool = False):
         """Write the joined timeseries table to disk."""
-        self._write_spark_df(self.df)
+        # Validate to fix 'Cannot use NullType for partition column' error.
+        validated_df = self._validate(self.df, False)
+        self._write_spark_df(
+            validated_df,
+            drop_duplicates=drop_duplicates,
+            write_mode="overwrite",
+        )
         logger.info("Joined timeseries table written to disk.")
         self._load_table()
 
@@ -173,6 +180,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
         self,
         add_attrs: bool = False,
         execute_scripts: bool = False,
+        drop_duplicates: bool = False
     ):
         """Create joined timeseries table.
 
@@ -192,64 +200,10 @@ class JoinedTimeseriesTable(TimeseriesTable):
             joined_df = self._run_script(joined_df)
 
         validated_df = self._validate(joined_df, False)
-        self._write_spark_df(validated_df)
+        self._write_spark_df(
+            validated_df,
+            drop_duplicates=drop_duplicates,
+            write_mode="overwrite",
+        )
         logger.info("Joined timeseries table created.")
         self._load_table()
-
-    def _check_for_null_partition_by_values(self, df: ps.DataFrame) -> ps.DataFrame:
-        """Remove a field from partition_by if all values are null."""
-        partition_by = self.partition_by
-        if partition_by is None:
-            partition_by = []
-        for field_name in partition_by:
-            if field_name in df.columns:
-                if len(df.filter(df[field_name].isNotNull()).collect()) == 0:
-                    logger.debug(
-                        f"All {field_name} values are null. "
-                        f"{field_name} will be set to a default value."
-                    )
-                    self.partition_by.remove(field_name)
-        return df
-
-    def _write_spark_df(
-        self,
-        df: ps.DataFrame,
-        **kwargs
-    ):
-        """Write spark dataframe to directory in overwrite mode.
-
-        Parameters
-        ----------
-        df : ps.DataFrame
-            The spark dataframe to write.
-        **kwargs
-            Additional options to pass to the spark write method.
-        """
-        if self.ev.is_s3:
-            logger.error("Writing to S3 is not supported.")
-            raise ValueError("Writing to S3 is not supported.")
-
-        logger.info(f"Writing files to {self.dir}.")
-
-        self._check_for_null_partition_by_values(df)
-
-        if len(kwargs) == 0:
-            # To overwrite your schema or change partitioning, please set:
-            # '.option("overwriteSchema", "true")'.
-            kwargs = {
-                "header": "true",
-                "mergeSchema": "true",
-                # "overwriteSchema": "true",
-            }
-        partition_by = self.partition_by
-        if partition_by is None:
-            partition_by = []
-        (
-            df.
-            write.
-            partitionBy(partition_by).
-            format(self.format).
-            mode("overwrite").
-            options(**kwargs).
-            save(str(self.dir))
-        )
