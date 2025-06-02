@@ -49,6 +49,7 @@ def read_available_schema_versions(
   return sorted(schema_versions)
 
 def create_schema_evolution_support(
+  spark: SparkSession,
   catalog_name: str
 ):
   """
@@ -74,6 +75,7 @@ def create_schema_evolution_support(
     """)
 
 def fetch_applied_catalog_schema_version(
+  spark: SparkSession,
   catalog_name: str
 ) -> int:
   """
@@ -87,7 +89,7 @@ def fetch_applied_catalog_schema_version(
   """
   applied_schema_version: int = 0
 
-  create_schema_evolution_support(catalog_name)
+  create_schema_evolution_support(spark, catalog_name)
 
   latest_applied_schema_version_df = spark.read \
     .format('iceberg') \
@@ -101,6 +103,7 @@ def fetch_applied_catalog_schema_version(
   return applied_schema_version
 
 def update_applied_schema_version(
+    spark: SparkSession,
   catalog_name: str,
   applied_schema_version: int
 ):
@@ -182,6 +185,7 @@ def load_schema_version_evolution_statements(
   return schema_version_statements
 
 def apply_schema_version_evolution_statements(
+  spark: SparkSession,
   catalog_name: str,
   schema_version: int,
   schema_name: str,
@@ -207,9 +211,10 @@ def apply_schema_version_evolution_statements(
   for stmt in evolution_statements:
     spark.sql(stmt)
 
-  update_applied_schema_version(catalog_name, schema_version)
+  update_applied_schema_version(spark, catalog_name, schema_version)
 
 def evolve_catalog_schema(
+  spark: SparkSession,
   catalog_name: str,
   schema_name: str
 ):
@@ -223,22 +228,22 @@ def evolve_catalog_schema(
     None
   """
   available_schema_versions = read_available_schema_versions(catalog_name)
-  applied_schema_version = fetch_applied_catalog_schema_version(catalog_name)
+  applied_schema_version = fetch_applied_catalog_schema_version(spark, catalog_name)
   schema_version_delta = determine_schema_version_delta(available_schema_versions, applied_schema_version)
 
   for schema_version in schema_version_delta:
     evolution_statements = load_schema_version_evolution_statements(catalog_name, schema_version)
-    apply_schema_version_evolution_statements(catalog_name, schema_version, schema_name, evolution_statements)
+    apply_schema_version_evolution_statements(spark, catalog_name, schema_version, schema_name, evolution_statements)
 
 
 if __name__ == "__main__":
   # Example usage
   catalog_name = 'local'
   schema_name = 'db'
-  warehouse_path = str(Path.home() / 'temp' / 'iceberg' / 'spark-warehouse')
+  warehouse_path = str(Path.home() / "temp" / "iceberg" / "evaluation" / "spark-warehouse")
 
   spark = get_spark_session(catalog_name, warehouse_path=warehouse_path)
 
-  evolve_catalog_schema(catalog_name, schema_name)
+  evolve_catalog_schema(spark, catalog_name, schema_name)
   print(f"Schema evolution completed for {catalog_name}.")
   spark.stop()

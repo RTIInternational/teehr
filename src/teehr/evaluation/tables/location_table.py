@@ -25,7 +25,7 @@ class LocationTable(BaseTable):
         super().__init__(ev)
         self.name = "locations"
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
-        self.format = "delta"
+        self.format = "parquet"
         self.filter_model = LocationFilter
         self.schema_func = schemas.locations_schema
         self.unique_column_set = ["id"]
