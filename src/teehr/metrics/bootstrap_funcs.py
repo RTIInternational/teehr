@@ -4,13 +4,13 @@ import logging
 
 import pandas as pd
 import numpy as np
-from arch.bootstrap import (
-    StationaryBootstrap,
-    CircularBlockBootstrap,
-)
+# from arch.bootstrap import (
+#     StationaryBootstrap,
+#     CircularBlockBootstrap,
+# )
 
 from teehr.models.metrics.basemodels import MetricsBasemodel
-from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
+# from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +30,9 @@ def _calculate_quantiles(
 def create_circularblock_func(model: MetricsBasemodel) -> Callable:
     """Create the CircularBlock bootstrap function."""
     logger.debug("Building the Circular Block bootstrap func.")
+
+    # lazy import to improve performance
+    from arch.bootstrap import CircularBlockBootstrap
 
     def bootstrap_func(p: pd.Series, s: pd.Series) -> Dict:
         """Bootstrap function."""
@@ -61,6 +64,9 @@ def create_gumboot_func(model: MetricsBasemodel) -> Callable:
     """Create the Gumboot bootstrap function."""
     logger.debug("Building the Gumboot bootstrap func.")
 
+    # lazy import to improve performance
+    from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
+
     def bootstrap_func(p: pd.Series, s: pd.Series, vt: pd.Series) -> Dict:
         """Bootstrap function."""
         bs = GumbootBootstrap(
@@ -91,6 +97,9 @@ def create_gumboot_func(model: MetricsBasemodel) -> Callable:
 def create_stationary_func(model: MetricsBasemodel) -> Callable:
     """Create the Stationary bootstrap function."""
     logger.debug("Building the Stationary bootstrap func.")
+
+    # lazy import to improve performance
+    from arch.bootstrap import StationaryBootstrap
 
     def bootstrap_func(p: pd.Series, s: pd.Series) -> Dict:
         """Bootstrap function."""

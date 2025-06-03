@@ -24,7 +24,7 @@ RUN apt-get update -qq --yes > /dev/null && \
     rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update \
- && apt-get install -y wget curl bzip2 libxtst6 libgtk-3-0 libx11-xcb-dev libdbus-glib-1-2 libxt6 libpci-dev libasound2 firefox openjdk-17-jdk
+ && apt-get install -y wget curl bzip2 libxtst6 libgtk-3-0 libx11-xcb-dev libdbus-glib-1-2 libxt6 libpci-dev libasound2 firefox openjdk-17-jdk git vim
 
 # RUN conda install -y -c conda-forge nodejs
 RUN mamba install -n ${CONDA_ENV} -y -c conda-forge nodejs selenium geckodriver pyspark awscli htop

@@ -177,8 +177,6 @@ class BaseTable():
 
         if num_partitions is not None:
             validated_df = validated_df.repartition(num_partitions)
-        elif self.partition_by is not None:
-            validated_df = validated_df.repartition(*self.partition_by)
 
         (
             validated_df.
@@ -234,8 +232,6 @@ class BaseTable():
 
         if num_partitions is not None:
             df = df.repartition(num_partitions)
-        elif self.partition_by is not None:
-            df = df.repartition(*self.partition_by)
 
         # Only continue if there is new data to write.
         if not df.isEmpty():
@@ -273,8 +269,6 @@ class BaseTable():
         # Drop potential duplicates in the cached dataframe
         if drop_duplicates:
             df = df.dropDuplicates(subset=self.unique_column_set)
-        if self.partition_by is not None:
-            df = df.repartition(*self.partition_by)
         (
             df.
             write.
@@ -313,34 +307,32 @@ class BaseTable():
                 "header": "true",
             }
 
-        if df is not None:
-
-            if write_mode == "overwrite":
-                self._dynamic_overwrite(
-                    df,
-                    drop_duplicates=drop_duplicates,
-                    **kwargs
-                )
-            elif write_mode == "append":
-                self._append_without_duplicates(
-                    df=df,
-                    drop_duplicates=drop_duplicates,
-                    num_partitions=num_partitions,
-                    **kwargs
-                )
-            elif write_mode == "upsert":
-                self._upsert_without_duplicates(
-                    df=df,
-                    drop_duplicates=drop_duplicates,
-                    num_partitions=num_partitions,
-                    **kwargs
-                )
-            else:
-                raise ValueError(
-                    f"Invalid write mode: {write_mode}. "
-                    "Valid values are 'append', 'overwrite' and 'upsert'."
-                )
-            self._load_table()
+        if write_mode == "overwrite":
+            self._dynamic_overwrite(
+                df,
+                drop_duplicates=drop_duplicates,
+                **kwargs
+            )
+        elif write_mode == "append":
+            self._append_without_duplicates(
+                df=df,
+                drop_duplicates=drop_duplicates,
+                num_partitions=num_partitions,
+                **kwargs
+            )
+        elif write_mode == "upsert":
+            self._upsert_without_duplicates(
+                df=df,
+                drop_duplicates=drop_duplicates,
+                num_partitions=num_partitions,
+                **kwargs
+            )
+        else:
+            raise ValueError(
+                f"Invalid write mode: {write_mode}. "
+                "Valid values are 'append', 'overwrite' and 'upsert'."
+            )
+        self._load_table()
 
     def _get_schema(self, type: str = "pyspark"):
         """Get the primary timeseries schema.
