@@ -441,6 +441,8 @@ class TEEHRDataFrameAccessor:
                         (df['location_id'] == combo[1]) &
                         (df['reference_time'].isnull())
                         ]
+                    temp = temp.sort_values(by='value_time')
+                    temp = temp.reset_index(drop=True)
                     if not temp.empty:
                         logger.info(f"Plotting data for combination: {combo}")
                         p.line(
@@ -460,6 +462,8 @@ class TEEHRDataFrameAccessor:
                         (df['location_id'] == combo[1]) &
                         (df['reference_time'] == combo[2])
                         ]
+                    temp = temp.sort_values(by='value_time')
+                    temp = temp.reset_index(drop=True)
                     if not temp.empty:
                         logger.info(f"Plotting data for combination: {combo}")
                         label = f"{combo[0]} - {combo[1]} - {combo[2]}"
@@ -490,6 +494,8 @@ class TEEHRDataFrameAccessor:
                         (df['reference_time'].isnull()) &
                         (df['member'].isnull())
                         ]
+                    temp = temp.sort_values(by='value_time')
+                    temp = temp.reset_index(drop=True)
                     if not temp.empty:
                         logger.info(f"Plotting data for combination: {combo}")
                         p.line(
@@ -514,6 +520,8 @@ class TEEHRDataFrameAccessor:
                         (df['reference_time'].isnull()) &
                         (df['member'] == combo[3])
                         ]
+                    temp = temp.sort_values(by='value_time')
+                    temp = temp.reset_index(drop=True)
                     if not temp.empty:
                         logger.info(f"Plotting data for combination: {combo}")
                         label = f"{combo[0]} - {combo[1]} - {combo[3]}"
@@ -539,6 +547,8 @@ class TEEHRDataFrameAccessor:
                         (df['reference_time'] == combo[2]) &
                         (df['member'].isnull())
                         ]
+                    temp = temp.sort_values(by='value_time')
+                    temp = temp.reset_index(drop=True)
                     if not temp.empty:
                         logger.info(f"Plotting data for combination: {combo}")
                         label = f"{combo[0]} - {combo[1]} - {combo[2]}"
@@ -560,6 +570,8 @@ class TEEHRDataFrameAccessor:
                         (df['reference_time'] == combo[2]) &
                         (df['member'] == combo[3])
                         ]
+                    temp = temp.sort_values(by='value_time')
+                    temp = temp.reset_index(drop=True)
                     if not temp.empty:
                         logger.info(f"Plotting data for combination: {combo}")
                         label = f"{combo[0]} - {combo[1]} - {combo[2]} - \
