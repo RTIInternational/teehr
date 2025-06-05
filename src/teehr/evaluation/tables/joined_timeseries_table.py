@@ -7,9 +7,10 @@ from teehr.querying.utils import join_geometry
 import teehr.models.pandera_dataframe_schemas as schemas
 import pyspark.sql as ps
 import logging
-from teehr.utils.utils import to_path_or_s3path
 from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
 from typing import List, Union
+from teehr.utils.s3path import S3Path
+from teehr.utils.utils import to_path_or_s3path, path_to_spark
 
 logger = logging.getLogger(__name__)
 
@@ -207,3 +208,54 @@ class JoinedTimeseriesTable(TimeseriesTable):
         )
         logger.info("Joined timeseries table created.")
         self._load_table()
+
+    def _read_files(
+        self,
+        path: Union[str, Path, S3Path],
+        pattern: str = None,
+        show_missing_table_warning: bool = True,
+        **options
+    ) -> ps.DataFrame:
+        """Read data from table directory as a spark dataframe.
+
+        Parameters
+        ----------
+        path : Union[str, Path, S3Path]
+            The path to the directory containing the files.
+        pattern : str, optional
+            The pattern to match files.
+        show_missing_table_warning : bool, optional
+            If True, show the warning an empty table was returned.
+            The default is True.
+        **options
+            Additional options to pass to the spark read method.
+
+        Returns
+        -------
+        df : ps.DataFrame
+            The spark dataframe.
+        """
+        logger.info(f"Reading files from {path}.")
+        if len(options) == 0:
+            options = {
+                "header": "true",
+                "ignoreMissingFiles": "true"
+            }
+
+        path = to_path_or_s3path(path)
+
+        path = path_to_spark(path, pattern)
+
+        # First, read the file with the schema and check if it's empty.
+        # If it's not empty and it's the joined timeseries table,
+        # read it again without the schema to ensure all fields are included.
+        # Otherwise, continue.
+        schema = self.schema_func().to_structtype()
+        df = self.ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
+        if df.isEmpty():
+            if show_missing_table_warning:
+                logger.warning(f"An empty dataframe was returned for '{self.name}'.")
+        elif ~df.isEmpty():
+            df = self.ev.spark.read.format(self.format).options(**options).load(path)
+
+        return df
