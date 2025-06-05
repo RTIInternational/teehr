@@ -175,13 +175,8 @@ def clone_from_s3(
 
         logger.debug(f"Cloning {table.name} from {s3_dataset_path}/{table.name}/ to {table.dir}")
 
-        use_table_schema = True
-        if table.name == "joined_timeseries":
-            use_table_schema = False
-
         sdf_in = table._read_files(
-            path=f"{s3_dataset_path}/{table.name}/",
-            use_table_schema=use_table_schema
+            path=f"{s3_dataset_path}/{table.name}/"
         )
 
         sdf_in = subset_the_table(

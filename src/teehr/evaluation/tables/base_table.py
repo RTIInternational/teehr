@@ -11,8 +11,7 @@ from teehr.utils.utils import to_path_or_s3path, path_to_spark
 from teehr.models.filters import FilterBaseModel
 from teehr.models.table_enums import TableWriteEnum
 import logging
-from pyspark.sql.functions import lit, col, row_number, asc, first
-from pyspark.sql.window import Window
+from pyspark.sql.functions import lit, col
 from functools import reduce
 
 
@@ -50,7 +49,6 @@ class BaseTable():
         self,
         path: Union[str, Path, S3Path],
         pattern: str = None,
-        use_table_schema: bool = False,
         show_missing_table_warning: bool = True,
         **options
     ) -> ps.DataFrame:
@@ -62,10 +60,6 @@ class BaseTable():
             The path to the directory containing the files.
         pattern : str, optional
             The pattern to match files.
-        use_table_schema : bool, optional
-            If True, use the table schema to read the files.
-            Missing files will be ignored with 'ignoreMissingFiles'
-            set to True (default).
         show_missing_table_warning : bool, optional
             If True, show the warning an empty table was returned.
             The default is True.
@@ -88,17 +82,21 @@ class BaseTable():
 
         path = path_to_spark(path, pattern)
 
-        if use_table_schema is True:
-            schema = self.schema_func().to_structtype()
-            df = self.ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
-            if len(df.head(1)) == 0 and show_missing_table_warning:
+        # First, read the file with the schema and check if it's empty.
+        # If it's not empty and it's the joined timeseries table,
+        # read it again without the schema to ensure all fields are included.
+        # Otherwise, continue.
+        schema = self.schema_func().to_structtype()
+        df = self.ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
+        if df.isEmpty():
+            if show_missing_table_warning:
                 logger.warning(f"An empty dataframe was returned for '{self.name}'.")
-        else:
+        elif ~df.isEmpty() and self.name == "joined_timeseries":
             df = self.ev.spark.read.format(self.format).options(**options).load(path)
 
         return df
 
-    def _load_table(self, **kwargs):
+    def _load_table(self, show_missing_table_warning=True, **kwargs):
         """Load the table from the directory to self.df.
 
         Parameters
@@ -107,7 +105,11 @@ class BaseTable():
             Additional options to pass to the spark read method.
         """
         logger.info(f"Loading files from {self.dir}.")
-        self.df = self._read_files(self.dir, **kwargs)
+        self.df = self._read_files(
+            self.dir,
+            show_missing_table_warning=show_missing_table_warning,
+            **kwargs
+        )
 
     def _check_load_table(self):
         """Check if the table is loaded.
@@ -332,7 +334,7 @@ class BaseTable():
                 f"Invalid write mode: {write_mode}. "
                 "Valid values are 'append', 'overwrite' and 'upsert'."
             )
-        self._load_table()
+        self._load_table(show_missing_table_warning=False)
 
     def _get_schema(self, type: str = "pyspark"):
         """Get the primary timeseries schema.
