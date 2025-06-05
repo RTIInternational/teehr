@@ -34,6 +34,7 @@ class BaseTable():
         self.filter_model: FilterBaseModel = None
         self.strict_validation = True
         self.validate_filter_field_types = True
+        self.foreign_keys = []
 
     @staticmethod
     def _raise_missing_table_error(table_name: str):
@@ -44,6 +45,31 @@ class BaseTable():
         )
         logger.error(err_msg)
         raise ValueError(err_msg)
+
+    def _enforce_foreign_keys(self, sdf: ps.DataFrame):
+        """Enforce foreign keys relationships on the timeseries tables."""
+        if len(self.foreign_keys) > 0:
+            logger.info(
+                f"Enforcing foreign key constraints for {self.name}."
+            )
+        for fk in self.foreign_keys:
+            sdf.createOrReplaceTempView("temp_table")
+            sql = f"""
+                SELECT t.* from temp_table t
+                LEFT ANTI JOIN {fk['domain_table']} d
+                ON t.{fk['column']} = d.{fk['domain_column']}
+            """
+            result_sdf = self.ev.sql(
+                query=sql, create_temp_views=[fk["domain_table"]]
+            )
+            self.spark.catalog.dropTempView("temp_table")
+            self.spark.catalog.dropTempView(fk["domain_table"])
+            if not result_sdf.isEmpty():
+                raise ValueError(
+                    f"Foreign key constraint violation: "
+                    f"A {fk['column']} entry in {self.name} is not found in "
+                    f"the {fk['domain_column']} column in {fk['domain_table']}"
+                )
 
     def _read_files(
         self,
@@ -172,14 +198,10 @@ class BaseTable():
             # Get columns in correct order
             df = df.select([*self.schema_func().columns])
 
-        # Re-validate since the table was changed
-        validated_df = self._validate(df)
-
         if num_partitions is not None:
-            validated_df = validated_df.repartition(num_partitions)
-
+            df = df.repartition(num_partitions)
         (
-            validated_df.
+            df.
             write.
             partitionBy(partition_by).
             format(self.format).
@@ -235,11 +257,8 @@ class BaseTable():
 
         # Only continue if there is new data to write.
         if not df.isEmpty():
-            # Re-validate since the table was changed
-            validated_df = self._validate(df)
-
             (
-                validated_df.
+                df.
                 write.
                 partitionBy(partition_by).
                 format(self.format).
@@ -390,6 +409,8 @@ class BaseTable():
         if len(validated_df.pandera.errors) > 0:
             logger.error(f"Validation failed: {validated_df.pandera.errors}")
             raise ValueError(f"Validation failed: {validated_df.pandera.errors}")
+
+        self._enforce_foreign_keys(validated_df)
 
         return validated_df
 

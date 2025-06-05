@@ -231,8 +231,6 @@ def locations_schema(type: str = "pyspark") -> ps.DataFrameSchema:
         )
 
 def location_attributes_schema(
-        location_ids: List[str] = [None],
-        attr_names: List[str] = [None],
         type: str = "pyspark",
 ) -> ps.DataFrameSchema:
     if type == "pandas":
@@ -240,12 +238,10 @@ def location_attributes_schema(
             columns={
                 "location_id": pa.Column(
                     pa.String,
-                    # pa.Check.isin(location_ids),
                     coerce=True
                 ),
                 "attribute_name": pa.Column(
                     pa.String,
-                    # pa.Check.isin(attr_names),
                     coerce=True
                 ),
                 "value": pa.Column(
@@ -260,12 +256,10 @@ def location_attributes_schema(
             columns={
                 "location_id": ps.Column(
                     T.StringType(),
-                    ps.Check.isin(location_ids),
                     nullable=False
                 ),
                 "attribute_name": ps.Column(
                     T.StringType(),
-                    ps.Check.isin(attr_names),
                     nullable=False
                 ),
                 "value": ps.Column(
@@ -278,7 +272,6 @@ def location_attributes_schema(
         )
 
 def location_crosswalks_schema(
-        location_ids: List[str] = [None],
         type: str = "pyspark",
 ) -> ps.DataFrameSchema:
     if type == "pandas":
@@ -286,7 +279,6 @@ def location_crosswalks_schema(
             columns={
                 "primary_location_id": pa.Column(
                     pa.String,
-                    # pa.Check.isin(location_ids),
                     coerce=True
                 ),
                 "secondary_location_id": pa.Column(
@@ -301,7 +293,6 @@ def location_crosswalks_schema(
             columns={
                 "primary_location_id": ps.Column(
                     T.StringType(),
-                    ps.Check.isin(location_ids),
                     nullable=False,
                 ),
                 "secondary_location_id": ps.Column(
@@ -346,10 +337,6 @@ pyspark_value_type = T.FloatType()
 
 # PySpark Pandera Models
 def primary_timeseries_schema(
-        location_ids: List[str] = [None],
-        variable_names: List[str] = [None],
-        configuration_names: List[str] = [None],
-        unit_names: List[str] = [None],
         type: str = "pyspark",
 ) -> ps.DataFrameSchema:
     if type == "pandas":
@@ -374,22 +361,18 @@ def primary_timeseries_schema(
                 ),
                 "variable_name": pa.Column(
                     pa.String,
-                    # checks=pa.Check.isin(variable_names),
                     nullable=False
                 ),
                 "configuration_name": pa.Column(
                     pa.String,
-                    # checks=pa.Check.isin(configuration_names),
                     nullable=False
                 ),
                 "unit_name": pa.Column(
                     pa.String,
-                    # checks=pa.Check.isin(unit_names),
                     nullable=False
                 ),
                 "location_id": pa.Column(
-                    pa.String,
-                    # checks=pa.Check.isin(location_ids),
+                    pa.String,,
                     nullable=False
                 )
             },
@@ -414,22 +397,18 @@ def primary_timeseries_schema(
                 ),
                 "variable_name": ps.Column(
                     T.StringType(),
-                    ps.Check.isin(variable_names),
                     nullable=False
                 ),
                 "configuration_name": ps.Column(
                     T.StringType(),
-                    ps.Check.isin(configuration_names),
                     nullable=False
                 ),
                 "unit_name": ps.Column(
                     T.StringType(),
-                    ps.Check.isin(unit_names),
                     nullable=False
                 ),
                 "location_id": ps.Column(
                     T.StringType(),
-                    ps.Check.isin(location_ids),
                     nullable=False
                 )
             },
@@ -437,12 +416,7 @@ def primary_timeseries_schema(
             coerce=True,
         )
 
-
 def secondary_timeseries_schema(
-        location_ids: List[str] = [None],
-        variable_names: List[str] = [None],
-        configuration_names: List[str] = [None],
-        unit_names: List[str] = [None],
         type: str = "pyspark",
 ) -> ps.DataFrameSchema:
     if type == "pandas":
@@ -465,22 +439,18 @@ def secondary_timeseries_schema(
                 ),
                 "variable_name": pa.Column(
                     pa.String,
-                    # checks=pa.Check.isin(variable_names),
                     nullable=False
                 ),
                 "configuration_name": pa.Column(
                     pa.String,
-                    # checks=pa.Check.isin(configuration_names),
                     nullable=False
                 ),
                 "unit_name": pa.Column(
                     pa.String,
-                    # checks=pa.Check.isin(unit_names),
                     nullable=False
                 ),
                 "location_id": pa.Column(
                     pa.String,
-                    # checks=pa.Check.isin(location_ids),
                     nullable=False
                 ),
                 "member": pa.Column(
@@ -510,28 +480,23 @@ def secondary_timeseries_schema(
                 ),
                 "variable_name": ps.Column(
                     T.StringType(),
-                    ps.Check.isin(variable_names),
                     nullable=False
                 ),
                 "configuration_name": ps.Column(
                     T.StringType(),
-                    ps.Check.isin(configuration_names),
                     nullable=False
                 ),
                 "unit_name": ps.Column(
                     T.StringType(),
-                    ps.Check.isin(unit_names),
                     nullable=False
                 ),
                 "location_id": ps.Column(
                     T.StringType(),
-                    ps.Check.isin(location_ids),
                     nullable=False
                 ),
                 "member": ps.Column(
                     T.StringType(),
                     nullable=True,
-
                 )
             },
             strict=True,
