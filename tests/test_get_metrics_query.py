@@ -475,8 +475,7 @@ def test_ensemble_metrics(tmpdir):
         output_configuration_description="Reference forecast for testing",
         method="climatology",
         summary_statistic="mean",
-        temporal_resolution="day_of_year",
-        output_location_id_prefix="test"
+        temporal_resolution="hour_of_year",
     )
     ev.joined_timeseries.create(execute_scripts=False)
     # Now, metrics.
@@ -610,54 +609,54 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_executing_deterministic_metrics(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_executing_signature_metrics(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_metrics_filter_and_geometry(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        test_unpacking_bootstrap_results(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
-        test_circularblock_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="5-",
-                dir=tempdir
-            )
-        )
-        test_stationary_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="6-",
-                dir=tempdir
-            )
-        )
-        test_gumboot_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="7-",
-                dir=tempdir
-            )
-        )
-        test_metric_chaining(
-            tempfile.mkdtemp(
-                prefix="8-",
-                dir=tempdir
-            )
-        )
+        # test_executing_deterministic_metrics(
+        #     tempfile.mkdtemp(
+        #         prefix="1-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_executing_signature_metrics(
+        #     tempfile.mkdtemp(
+        #         prefix="2-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_metrics_filter_and_geometry(
+        #     tempfile.mkdtemp(
+        #         prefix="3-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_unpacking_bootstrap_results(
+        #     tempfile.mkdtemp(
+        #         prefix="4-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_circularblock_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="5-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_stationary_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="6-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_gumboot_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="7-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_metric_chaining(
+        #     tempfile.mkdtemp(
+        #         prefix="8-",
+        #         dir=tempdir
+        #     )
+        # )
         test_ensemble_metrics(
             tempfile.mkdtemp(
                 prefix="9-",

@@ -105,7 +105,6 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             max_workers=max_workers,
             **kwargs
         )
-
         # Read the converted files to Spark DataFrame
         df = self._read_files(cache_dir)
 
@@ -119,29 +118,25 @@ class SecondaryTimeseriesTable(TimeseriesTable):
                 column_name="location_id",
                 prefix=location_id_prefix,
             )
-
         # Validate using the _validate() method
         validated_df = self._validate(df)
-
         # Write to the table
         self._write_spark_df(
             validated_df,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
         )
-
         # Reload the table
         self._load_table()
 
         df.unpersist()
 
-    @staticmethod
     def _calculate_climatology(
-        primary_sdf: ps.DataFrame,
+        self,
+        primary_configuration_name: str,
         temporal_resolution: ClimatologyResolutionEnum,
         summary_statistic: ClimatologyStatisticEnum = "mean",
-        output_configuration_name: str = "climatology",
-    ):
+    ) -> ps.DataFrame:
         """Calculate climatology."""
         if temporal_resolution == ClimatologyResolutionEnum.day_of_year:
             time_period = rlc.DayOfYear()
@@ -165,14 +160,20 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         elif summary_statistic == "min":
             summary_func = F.min
 
+        # Select primary config to use for reference calculation.
+        primary_sdf = (
+            self.
+            ev.
+            primary_timeseries.
+            filter(
+                f"configuration_name = '{primary_configuration_name}'"
+            ).
+            to_sdf()
+        )
+        # Add the time period as a calculated field.
         primary_sdf = time_period.apply_to(primary_sdf)
-
-        groupby_field_list = [
-            "location_id",
-            "variable_name",
-            "unit_name",
-            "configuration_name",
-        ]
+        # Aggregate values based on the time period and summary statistic.
+        groupby_field_list = self.ev.primary_timeseries.unique_column_set.copy()
         groupby_field_list.append(time_period.output_field_name)
         aggregated_field_name = f"{summary_statistic}_primary_value"
         summary_sdf = (
@@ -180,20 +181,6 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             agg(summary_func("value").alias(aggregated_field_name))
         )
         return summary_sdf
-        # temp_sdf = primary_sdf.join(
-        #     summary_sdf,
-        #     on=groupby_field_list,
-        #     how="left"
-        # )
-        # groupby_field_list.remove(time_period.output_field_name)
-
-        # return (
-        #     temp_sdf.
-        #     drop("value").
-        #     drop(time_period.output_field_name).
-        #     withColumnRenamed(aggregated_field_name, "value").
-        #     withColumn("configuration_name", F.lit(output_configuration_name))
-        # )
 
     def _add_secondary_timeseries(
         self,
@@ -235,7 +222,8 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             )
 
         validated_df = self._validate(ref_sdf)
-
+        # Write to the secondary timeseries table, overwriting any existing
+        # data with the same configuration_name.
         self._write_spark_df(
             validated_df,
             write_mode="overwrite",
@@ -268,9 +256,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             by default "mean".
         """
         clim_sdf = self._calculate_climatology(
-            primary_sdf=self.df.filter(
-                f"configuration_name = '{primary_configuration_name}'"
-            ),
+            primary_configuration_name=primary_configuration_name,
             temporal_resolution=temporal_resolution,
             summary_statistic=summary_statistic,
             output_configuration_name=output_configuration_name
@@ -314,6 +300,8 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         summary_statistic : ClimatologyStatisticEnum, optional
             Summary statistic for the climatology calculation,
             by default "mean".
+        climatology_configuration_name : str, optional
+            Name of the climatology configuration to use for the calculation.
 
         Notes
         -----
@@ -325,21 +313,11 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         # configuration (ie, it's a historical sim), we can't continue.
         if self.df.filter(
                     f"configuration_name = '{target_configuration_name}'"
-                ).filter(F.col("reference_time").isNotNull()).count() == 0:
+                ).select(F.first("reference_time", ignorenulls=True)).first()[0] is None:
             raise ValueError(
                 "No reference_time values found in the target configuration. "
                 "Please specify a valid target forecast configuration."
             )
-        # Select primary config to use for reference calculation.
-        primary_sdf = (
-            self.
-            ev.
-            primary_timeseries.
-            filter(
-                f"configuration_name = '{primary_configuration_name}'"
-            ).
-            to_sdf()
-        )
         if method == "climatology":
             if climatology_configuration_name is not None:
                 # Use the climatology configuration if provided.
@@ -349,7 +327,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             else:
                 # Calculate the climatology if not provided.
                 reference_sdf = self._calculate_climatology(
-                    primary_sdf=primary_sdf,
+                    primary_configuration_name=primary_configuration_name,
                     temporal_resolution=temporal_resolution,
                     summary_statistic=summary_statistic,
                 )
@@ -435,10 +413,6 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         self.spark.catalog.dropTempView("template_timeseries")
 
         pass
-
-        ref_fcst_sdf = ref_fcst_sdf.repartition(
-            *self.partition_by
-        )
 
         self._add_secondary_timeseries(
             ref_sdf=ref_fcst_sdf,
