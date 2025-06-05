@@ -372,7 +372,7 @@ def primary_timeseries_schema(
                     nullable=False
                 ),
                 "location_id": pa.Column(
-                    pa.String,,
+                    pa.String,
                     nullable=False
                 )
             },
