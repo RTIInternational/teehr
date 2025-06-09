@@ -1,0 +1,49 @@
+﻿teehr.metrics.deterministic\_funcs
+==================================
+
+.. automodule:: teehr.metrics.deterministic_funcs
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      aprb_wrapper
+      kge_mod1_wrapper
+      kge_mod2_wrapper
+      kge_wrapper
+      mae_wrapper
+      mare_wrapper
+      mb_wrapper
+      me_wrapper
+      mse_wrapper
+      mvd_wrapper
+      mvtd_wrapper
+      nse_norm_wrapper
+      nse_wrapper
+      pc_wrapper
+      r_squared_wrapper
+      rb_wrapper
+      rmsdr_wrapper
+      rmse_wrapper
+      spearman_wrapper
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

@@ -1,0 +1,6 @@
+﻿teehr.evaluation.metrics.Metrics.to\_sdf
+========================================
+
+.. currentmodule:: teehr.evaluation.metrics
+
+.. automethod:: Metrics.to_sdf
