@@ -148,8 +148,8 @@ If you do not want to install TEEHR in your own virtual environment, you can use
 
 .. code-block:: bash
 
-   docker build -t teehr:v0.4.12 .
-   docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.4.12 jupyter lab --ip 0.0.0.0 $HOME
+   docker build -t teehr:v0.4.13 .
+   docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.4.13 jupyter lab --ip 0.0.0.0 $HOME
 
 Project Objectives
 ------------------

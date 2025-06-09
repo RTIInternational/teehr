@@ -94,6 +94,7 @@ class Evaluation:
                 .set("spark.sql.execution.arrow.pyspark.enabled", "true")
                 .set("spark.sql.session.timeZone", "UTC")
                 .set("spark.driver.host", "localhost")
+                .set("spark.sql.parquet.enableVectorizedReader", "false")
             )
             self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
 
