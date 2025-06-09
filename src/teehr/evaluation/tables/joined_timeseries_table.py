@@ -114,7 +114,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
             FROM joined
             JOIN attrs
                 on joined.primary_location_id = attrs.location_id
-        """)
+        """).drop("location_id")
 
         self.spark.catalog.dropTempView("joined")
         self.spark.catalog.dropTempView("attrs")
