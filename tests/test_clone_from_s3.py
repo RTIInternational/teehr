@@ -10,14 +10,14 @@ from teehr.loading.s3.clone_from_s3 import list_s3_evaluations
 def test_get_s3_evaluations_dataframe():
     """Test get_s3_evaluations as a dataframe."""
     df = list_s3_evaluations()
-    assert len(df) == 6
+    assert len(df) == 5
     assert isinstance(df, pd.DataFrame)
 
 
 def test_get_s3_evaluations_list():
     """Test get_s3_evaluations as a list."""
     l = list_s3_evaluations(format="list")
-    assert len(l) == 6
+    assert len(l) == 5
     assert isinstance(l, list)
 
 
@@ -46,12 +46,12 @@ def test_clone_partial_template_from_s3(tmpdir):
     ev.clone_from_s3("e4_nwm_operational")
 
     assert ev.units.to_sdf().count() == 9
-    assert ev.variables.to_sdf().count() == 4
+    assert ev.variables.to_sdf().count() == 5
     assert ev.attributes.to_sdf().count() == 8
-    assert ev.configurations.to_sdf().count() == 0
+    assert ev.configurations.to_sdf().count() == 13
     assert ev.locations.to_sdf().count() == 146632
     assert ev.location_attributes.to_sdf().count() == 50558
-    assert ev.location_crosswalks.to_sdf().count() == 170169
+    assert ev.location_crosswalks.to_sdf().count() == 170173
     assert ev.primary_timeseries.to_sdf().count() == 0
     assert ev.secondary_timeseries.to_sdf().count() == 0
     assert ev.joined_timeseries.to_sdf().count() == 0
