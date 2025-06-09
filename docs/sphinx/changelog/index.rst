@@ -14,6 +14,9 @@ Changed
 - Sorts timeseries before plotting to fix the visualization error in the accessor.
 - Removes `add_configuration_name` from user guide doc (#450)
 - Adds `tomli` to pyproject.toml to `dev` group to support python 3.12 when building sphinx docs.
+- Drops `location_id` after joining attributes to the `joined_timeseries` table.
+- Fixes joining geometry to the secondary timeseries table.
+- Sets `timeseries_type` to `secondary` when fetching operational NWM gridded data, unless the configuration_name contains "forcing_analysis_assim" in which case `timeseries_type` is set to `primary`.
 
 
 0.4.12 - 2025-05-22
