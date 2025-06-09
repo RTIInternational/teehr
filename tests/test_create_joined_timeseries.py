@@ -5,6 +5,9 @@ from teehr.models.pydantic_table_models import (
     Attribute
 )
 import tempfile
+import geopandas as gpd
+import numpy as np
+
 
 TEST_DATA_DIR = Path("tests", "data", "v0_3_test_study")
 GEOJSON_GAGES_FILEPATH = Path(TEST_DATA_DIR, "geo", "gages.geojson")
@@ -131,7 +134,6 @@ def test_create_joined_timeseries(tmpdir):
         'primary_value',
         'secondary_value',
         'unit_name',
-        'location_id',
         'drainage_area',
         'ecoregion',
         'year_2_discharge',
@@ -143,7 +145,15 @@ def test_create_joined_timeseries(tmpdir):
         'member',
         'season'
     ]
+    # Make sure secondary geodataframe is created correctly
+    secondary_gdf = ev.secondary_timeseries.to_geopandas()
 
+    assert isinstance(secondary_gdf, gpd.GeoDataFrame)
+    assert all(np.sort(secondary_gdf["location_id"].unique()) == [
+        "fcst-1",
+        "fcst-2",
+        "fcst-3"
+    ])
     assert len(columns) == len(expected_columns)
     assert sorted(columns) == sorted(expected_columns)
 

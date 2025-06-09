@@ -11,6 +11,7 @@ from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
 from teehr.models.table_enums import TableWriteEnum
 from teehr.loading.utils import add_or_replace_sdf_column_prefix
 from teehr.const import MAX_CPUS
+from teehr.querying.utils import df_to_gdf
 
 
 logger = logging.getLogger(__name__)
@@ -127,3 +128,25 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         self._load_table()
 
         df.unpersist()
+
+    def _join_geometry(self):
+        """Join geometry."""
+        logger.debug("Joining locations geometry.")
+
+        joined_df = self.ev.sql("""
+            SELECT
+                sf.*,
+                lf.geometry as geometry
+            FROM secondary_timeseries sf
+            JOIN location_crosswalks cf
+                on cf.secondary_location_id = sf.location_id
+            JOIN locations lf
+                on cf.primary_location_id = lf.id
+        """,
+        create_temp_views=["secondary_timeseries", "location_crosswalks", "locations"])
+        return df_to_gdf(joined_df.toPandas())
+
+    def to_geopandas(self):
+        """Return GeoPandas DataFrame."""
+        self._check_load_table()
+        return self._join_geometry()
