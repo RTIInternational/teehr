@@ -544,7 +544,7 @@ def build_zarr_references(
     if not json_dir_path.exists():
         json_dir_path.mkdir(parents=True)
 
-    fs = fsspec.filesystem("gcs", anon=True)
+    fs = fsspec.filesystem("gcs", anon=True, token="anon")
 
     # Check to see if the jsons already exist locally
     existing_jsons = []
