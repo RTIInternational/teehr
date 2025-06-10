@@ -324,23 +324,35 @@ def write_timeseries_parquet_file(
 
 def load_gdf(filepath: Union[str, Path], **kwargs: str) -> gpd.GeoDataFrame:
     """Load any supported geospatial file type into a gdf using GeoPandas."""
-    logger.debug(f"Loading geospatial file: {filepath}")
-
-    try:
-        gdf = gpd.read_file(filepath, **kwargs)
-        return gdf
-    except Exception:
-        pass
-    try:
-        gdf = gpd.read_parquet(filepath, **kwargs)
-        return gdf
-    except Exception:
-        pass
-    try:
-        gdf = gpd.read_feather(filepath, **kwargs)
-        return gdf
-    except Exception:
-        raise Exception("Unsupported zone polygon file type")
+    if isinstance(filepath, str):
+        try:
+            filepath = Path(filepath)
+        except Exception:
+            raise ValueError(
+                """Invalid filepath provided. Conversion from 'str' to Path
+                object failed."""
+                )
+    if filepath.exists():
+        logger.debug(f"Loading geospatial file: {filepath}")
+        try:
+            gdf = gpd.read_file(filepath, **kwargs)
+            return gdf
+        except Exception:
+            pass
+        try:
+            gdf = gpd.read_parquet(filepath, **kwargs)
+            return gdf
+        except Exception:
+            pass
+        try:
+            gdf = gpd.read_feather(filepath, **kwargs)
+            return gdf
+        except Exception:
+            raise Exception("Unsupported zone polygon file type")
+    else:
+        raise FileNotFoundError(
+            f"The provided filepath does not exist: {filepath}"
+        )
 
 
 def parquet_to_gdf(parquet_filepath: str) -> gpd.GeoDataFrame:
