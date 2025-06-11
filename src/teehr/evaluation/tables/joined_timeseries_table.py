@@ -92,6 +92,9 @@ class JoinedTimeseriesTable(TimeseriesTable):
         """Add attributes to the joined timeseries dataframe."""
 
         location_attributes_df = self.ev.location_attributes.to_sdf()
+        if location_attributes_df.isEmpty():
+            logger.warning("No location attributes found. Skipping adding attributes to joined timeseries.")
+            return joined_df
 
         joined_df.createTempView("joined")
 
