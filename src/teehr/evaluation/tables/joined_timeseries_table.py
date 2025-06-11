@@ -179,7 +179,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
 
     def create(
         self,
-        add_attrs: bool = False,
+        add_attrs: bool = True,
         execute_scripts: bool = False,
         drop_duplicates: bool = False
     ):
@@ -190,7 +190,10 @@ class JoinedTimeseriesTable(TimeseriesTable):
         execute_scripts : bool, optional
             Execute UDFs, by default False
         add_attrs : bool, optional
-            Add attributes, by default False
+            Add location attributes, by default True
+        drop_duplicates : bool, optional
+            Drop duplicates from the joined timeseries table, by default False.
+            If duplicates exist, the first occurence is retained.
         """
         joined_df = self._join()
 
