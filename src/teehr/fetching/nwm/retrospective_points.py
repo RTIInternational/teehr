@@ -75,42 +75,33 @@ logger = logging.getLogger(__name__)
 
 def validate_retrospective_start_end_date(
     nwm_version: SupportedNWMRetroVersionsEnum,
-    start_date: Union[str, datetime],
-    end_date: Union[str, datetime]
+    start_date:  pd.Timestamp,
+    end_date:  pd.Timestamp
 ):
     """Validate the start and end dates by NWM version."""
-    if nwm_version == SupportedNWMRetroVersionsEnum.nwm20:
-        if end_date <= start_date:
-            raise ValueError("start_date must be before end_date")
+    if end_date < start_date:
+        raise ValueError("start_date must be before end_date")
 
+    if nwm_version == SupportedNWMRetroVersionsEnum.nwm20:
         if start_date < NWM21_MIN_DATE:
             raise ValueError(
                 f"start_date must be on or after {NWM20_MIN_DATE}"
             )
-
         if end_date > NWM21_MAX_DATE:
             raise ValueError(f"end_date must be on or before {NWM20_MAX_DATE}")
 
     elif nwm_version == SupportedNWMRetroVersionsEnum.nwm21:
-        if end_date <= start_date:
-            raise ValueError("start_date must be before end_date")
-
         if start_date < NWM21_MIN_DATE:
             raise ValueError(
                 f"start_date must be on or after {NWM21_MIN_DATE}"
             )
-
         if end_date > NWM21_MAX_DATE:
             raise ValueError(f"end_date must be on or before {NWM21_MAX_DATE}")
     elif nwm_version == SupportedNWMRetroVersionsEnum.nwm30:
-        if end_date <= start_date:
-            raise ValueError("start_date must be before end_date")
-
         if start_date < NWM30_MIN_DATE:
             raise ValueError(
                 f"start_date must be on or after {NWM30_MIN_DATE}"
             )
-
         if end_date > NWM30_MAX_DATE:
             raise ValueError(f"end_date must be on or before {NWM30_MAX_DATE}")
     else:

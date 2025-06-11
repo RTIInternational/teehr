@@ -106,6 +106,7 @@ def test_dates_and_nwm22_version():
     try:
         failed = False
         start_date = "2023-11-20"
+        end_date = "2025-11-20"
         validate_operational_start_end_date(
             nwm_version,
             start_date,
@@ -182,11 +183,12 @@ def test_building_nwm30_gcs_paths():
         configuration="forcing_analysis_assim_extend",
         output_type="forcing",
         start_dt="2023-11-28",
-        end_date="2023-11-29",
+        end_dt="2023-11-29",
         analysis_config_dict=NWM30_ANALYSIS_CONFIG,
-        t_minus_hours=[0],
+        t_minus_hours=None,
         ignore_missing_file=False,
-        prioritize_analysis_valid_time=False
+        prioritize_analysis_valid_time=False,
+        remove_overlapping_assimilation_values=True
     )
     assert len(gcs_component_paths) == 52
     assert (
@@ -209,16 +211,17 @@ def test_building_nwm22_gcs_paths():
         analysis_config_dict=NWM22_ANALYSIS_CONFIG,
         t_minus_hours=[0],
         ignore_missing_file=False,
-        prioritize_analysis_valid_time=True
+        prioritize_analysis_valid_time=False,
+        remove_overlapping_assimilation_values=False
     )
-    assert len(gcs_component_paths) == 26
+    assert len(gcs_component_paths) == 24
     assert (
         gcs_component_paths[-1] == \
             'gcs://national-water-model/nwm.20190112/analysis_assim/nwm.t23z.analysis_assim.channel_rt.tm00.conus.nc' # noqa
     )
     assert (
         gcs_component_paths[0] == \
-            'gcs://national-water-model/nwm.20190112/analysis_assim/nwm.t00z.analysis_assim.channel_rt.tm02.conus.nc' # noqa
+            'gcs://national-water-model/nwm.20190112/analysis_assim/nwm.t00z.analysis_assim.channel_rt.tm00.conus.nc' # noqa
     )
 
 
@@ -329,11 +332,12 @@ def test_start_end_z_hours():
         configuration="short_range",
         output_type="channel_rt",
         start_dt="2023-11-28",
-        end_date="2023-11-29",
+        end_dt="2023-11-29",
         analysis_config_dict=NWM30_ANALYSIS_CONFIG,
         t_minus_hours=[0],
         ignore_missing_file=False,
-        prioritize_analysis_valid_time=False
+        prioritize_analysis_valid_time=False,
+        remove_overlapping_assimilation_values=False
     )
 
     gcs_component_paths = start_on_z_hour(

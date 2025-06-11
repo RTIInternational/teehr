@@ -89,7 +89,7 @@ def end_on_z_hour(
     return sorted(return_list)
 
 
-def remove_overlapping_assim_validtimes(
+def parse_nwm_gcs_paths(
     component_paths: List[str],
     nwm_configuration: str,
 ) -> pd.DataFrame:
@@ -120,12 +120,20 @@ def remove_overlapping_assim_validtimes(
             "reference_time": reference_time
         })
     df = pd.DataFrame(parsed_data)
-    sorted_df = df.sort_values(by=["reference_time", "value_time"], ascending=True)
+    return df
+
+
+def remove_overlapping_assim_validtimes(
+    parsed_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """Drop overlapping value_times, keeping most recent reference time."""
+    logger.debug("Parsing day and z-hour from component paths.")
+    sorted_df = parsed_df.sort_values(by=["reference_time", "value_time"], ascending=True)
     dropped_df = sorted_df.drop_duplicates(
         subset=["value_time"],
         keep="last"
     ).reset_index(drop=True)
-    return dropped_df.filepath.tolist()
+    return dropped_df
 
 
 def parse_nwm_json_paths(
@@ -190,7 +198,12 @@ def validate_operational_start_end_date(
     if isinstance(start_date, str):
         start_date = parse(start_date)
     if isinstance(end_date, str):
-        end_date = parse(start_date)
+        end_date = parse(end_date)
+
+    if end_date < start_date:
+        raise ValueError(
+            "The end date must be greater than or equal to the start date."
+        )
 
     err_msg = (
         f"The specified start and end dates ({start_date} - {end_date}) "
@@ -779,13 +792,14 @@ def build_remote_nwm_filelist(
             logger.debug(
                 "Removing overlapping assimilation value times."
             )
-            # Remove overlapping value times
-            # (prioritizing the most recent reference_time)
-            component_paths = remove_overlapping_assim_validtimes(
+            parsed_df = parse_nwm_gcs_paths(
                 component_paths=component_paths,
                 nwm_configuration=configuration,
             )
-
+            dropped_df = remove_overlapping_assim_validtimes(
+                parsed_df=parsed_df,
+            )
+            component_paths = dropped_df["filepath"].tolist()
     else:
         component_paths = []
         for dt in dates:
@@ -799,14 +813,20 @@ def build_remote_nwm_filelist(
             component_paths.extend(result)
         component_paths = sorted([f"gcs://{path}" for path in component_paths])
 
-        if "assim" in configuration and remove_overlapping_assimilation_values is True:
-            logger.debug(
-                "Removing overlapping assimilation value times."
-            )
-            component_paths = remove_overlapping_assim_validtimes(
+        if "assim" in configuration:
+            parsed_df = parse_nwm_gcs_paths(
                 component_paths=component_paths,
                 nwm_configuration=configuration,
             )
+            if remove_overlapping_assimilation_values is True:
+                parsed_df = remove_overlapping_assim_validtimes(
+                    parsed_df=parsed_df,
+                )
+            if t_minus_hours is not None:
+                parsed_df = parsed_df[
+                    parsed_df["tm_hour"].astype(int).isin(t_minus_hours)
+                ]
+            component_paths = parsed_df["filepath"].tolist()
 
     return component_paths
 
