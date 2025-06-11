@@ -23,12 +23,6 @@ from teehr.models.fetching.utils import (
     SupportedKerchunkMethod,
     TimeseriesTypeEnum
 )
-from teehr.fetching.const import (
-    NWM12_ANALYSIS_CONFIG,
-    NWM20_ANALYSIS_CONFIG,
-    NWM22_ANALYSIS_CONFIG,
-    NWM30_ANALYSIS_CONFIG,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +40,6 @@ def nwm_to_parquet(
     nwm_version: SupportedNWMOperationalVersionsEnum,
     data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
     kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
-    prioritize_analysis_valid_time: Optional[bool] = False,
-    t_minus_hours: Optional[List[int]] = None,
     process_by_z_hour: Optional[bool] = True,
     stepsize: Optional[int] = 100,
     ignore_missing_file: Optional[bool] = True,
@@ -56,7 +48,6 @@ def nwm_to_parquet(
     timeseries_type: TimeseriesTypeEnum = "secondary",
     starting_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
     ending_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
-    remove_overlapping_assimilation_values: Optional[bool] = True
 ):
     """Fetch NWM point data and save as a Parquet file in TEEHR format.
 
@@ -109,13 +100,6 @@ def nwm_to_parquet(
         CIROH pre-generated jsons from s3, ignoring any that are unavailable.
         "auto" - read the CIROH pre-generated jsons from s3, and create any that
         are unavailable, storing locally.
-    prioritize_analysis_valid_time : Optional[bool]
-        A boolean flag that determines the method of fetching analysis data.
-        When False (default), all hours of the reference time are included in the
-        output. When True, only the hours within t_minus_hours are included.
-    t_minus_hours : Optional[List[int]]
-        Specifies the look-back hours to include if an assimilation
-        configuration is specified.
     process_by_z_hour : Optional[bool]
         A boolean flag that determines the method of grouping files
         for processing. The default is True, which groups by day and z_hour.
@@ -176,7 +160,6 @@ def nwm_to_parquet(
     >>> NWM_VERSION = "nwm22"
     >>> DATA_SOURCE = "GCS"
     >>> KERCHUNK_METHOD = "auto"
-    >>> T_MINUS = [0, 1, 2]
     >>> IGNORE_MISSING_FILE = True
     >>> OVERWRITE_OUTPUT = True
     >>> PROCESS_BY_Z_HOUR = True
@@ -197,7 +180,6 @@ def nwm_to_parquet(
     >>>     nwm_version=NWM_VERSION,
     >>>     data_source=DATA_SOURCE,
     >>>     kerchunk_method=KERCHUNK_METHOD,
-    >>>     t_minus_hours=T_MINUS,
     >>>     process_by_z_hour=PROCESS_BY_Z_HOUR,
     >>>     stepsize=STEPSIZE,
     >>>     ignore_missing_file=IGNORE_MISSING_FILE,
@@ -209,19 +191,14 @@ def nwm_to_parquet(
     # Import appropriate config model and dicts based on NWM version
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm12:
         from teehr.models.fetching.nwm12_point import PointConfigurationModel
-        analysis_config_dict = NWM12_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm20:
         from teehr.models.fetching.nwm20_point import PointConfigurationModel
-        analysis_config_dict = NWM20_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm21:
         from teehr.models.fetching.nwm22_point import PointConfigurationModel
-        analysis_config_dict = NWM22_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
         from teehr.models.fetching.nwm22_point import PointConfigurationModel
-        analysis_config_dict = NWM22_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm30:
         from teehr.models.fetching.nwm30_point import PointConfigurationModel
-        analysis_config_dict = NWM30_ANALYSIS_CONFIG
     else:
         raise ValueError(
             "nwm_version must equal "
@@ -264,11 +241,7 @@ def nwm_to_parquet(
             output_type,
             start_date,
             end_date,
-            analysis_config_dict,
-            t_minus_hours,
-            ignore_missing_file,
-            prioritize_analysis_valid_time,
-            remove_overlapping_assimilation_values
+            ignore_missing_file
         )
 
         if starting_z_hour is not None:

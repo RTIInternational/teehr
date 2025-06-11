@@ -647,8 +647,6 @@ class Fetch:
         nwm_version: SupportedNWMOperationalVersionsEnum,
         data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
         kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
-        prioritize_analysis_valid_time: Optional[bool] = False,
-        t_minus_hours: Optional[List[int]] = None,
         process_by_z_hour: Optional[bool] = True,
         stepsize: Optional[int] = 100,
         ignore_missing_file: Optional[bool] = True,
@@ -658,7 +656,6 @@ class Fetch:
         ending_z_hour: Optional[int] = None,
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True,
-        remove_overlapping_assimilation_values: Optional[bool] = True
     ):
         """Fetch operational NWM point data and load into the TEEHR dataset.
 
@@ -709,16 +706,6 @@ class Fetch:
             CIROH pre-generated jsons from s3, ignoring any that are unavailable.
             "auto" - read the CIROH pre-generated jsons from s3, and create any that
             are unavailable, storing locally.
-        prioritize_analysis_valid_time : Optional[bool]
-            A boolean flag that determines the method of fetching analysis-assimilation
-            data. When False (default), all non-overlapping value_time hours
-            (prioritizing the most recent reference_time) are included in the
-            output. When True, only the hours within t_minus_hours are included.
-        t_minus_hours : Optional[List[int]]
-            Specifies the look-back hours to include if an assimilation
-            nwm_configuration is specified.
-            Only utilized if assimilation data is requested and
-            prioritize_analysis_valid_time is True.
         process_by_z_hour : Optional[bool]
             A boolean flag that determines the method of grouping files
             for processing. The default is True, which groups by day and z_hour.
@@ -850,8 +837,6 @@ class Fetch:
             nwm_version=nwm_version,
             data_source=data_source,
             kerchunk_method=kerchunk_method,
-            prioritize_analysis_valid_time=prioritize_analysis_valid_time,
-            t_minus_hours=t_minus_hours,
             process_by_z_hour=process_by_z_hour,
             stepsize=stepsize,
             ignore_missing_file=ignore_missing_file,
@@ -859,8 +844,7 @@ class Fetch:
             variable_mapper=NWM_VARIABLE_MAPPER,
             timeseries_type=timeseries_type,
             starting_z_hour=starting_z_hour,
-            ending_z_hour=ending_z_hour,
-            remove_overlapping_assimilation_values=remove_overlapping_assimilation_values  # noqa
+            ending_z_hour=ending_z_hour
         )
 
         if (
