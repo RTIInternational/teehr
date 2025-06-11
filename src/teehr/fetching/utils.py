@@ -91,11 +91,11 @@ def end_on_z_hour(
     return sorted(return_list)
 
 
-def remove_overlapping_assimilation_values(
+def remove_overlapping_assim_validtimes(
     component_paths: List[str],
     nwm_configuration: str,
 ) -> pd.DataFrame:
-    """Parse the day and z-hour from the component paths, returning a DataFrame."""
+    """Parse the reference and valid times from the paths."""
     logger.debug("Parsing day and z-hour from component paths.")
     tz_pattern = re.compile(r't([0-9]+)z')
     tm_pattern = re.compile(r'tm([0-9]+)')
@@ -544,7 +544,7 @@ def build_zarr_references(
     if not json_dir_path.exists():
         json_dir_path.mkdir(parents=True)
 
-    fs = fsspec.filesystem("gcs", anon=True, token="anon")
+    fs = fsspec.filesystem("gcs", token="anon")
 
     # Check to see if the jsons already exist locally
     existing_jsons = []
@@ -733,7 +733,7 @@ def build_remote_nwm_filelist(
     logger.debug("Building remote NWM file list from GCS.")
 
     gcs_dir = f"gcs://{NWM_BUCKET}"
-    fs = fsspec.filesystem("gcs", anon=True, token="anon")
+    fs = fsspec.filesystem("gcs", token="anon")
     dates = pd.date_range(start=start_dt, periods=ingest_days, freq="1d")
 
     component_paths = []
@@ -749,7 +749,7 @@ def build_remote_nwm_filelist(
     component_paths = sorted([f"gcs://{path}" for path in component_paths])
 
     if "assim" in configuration:
-        component_paths = remove_overlapping_assimilation_values(
+        component_paths = remove_overlapping_assim_validtimes(
             component_paths=component_paths,
             nwm_configuration=configuration,
         )

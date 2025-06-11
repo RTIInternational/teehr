@@ -182,22 +182,27 @@ def test_building_nwm30_gcs_paths():
         configuration="forcing_analysis_assim_extend",
         output_type="forcing",
         start_dt="2023-11-28",
-        ingest_days=1,
+        ingest_days=2,
         analysis_config_dict=NWM30_ANALYSIS_CONFIG,
         t_minus_hours=[0],
         ignore_missing_file=False,
         prioritize_analysis_valid_time=False
     )
-    assert len(gcs_component_paths) == 28
-    assert all(
-        ["nwm.20231128/forcing_analysis_assim_extend/nwm.t16z.analysis_assim_extend.forcing" in path for path in gcs_component_paths]  # noqa
+    assert len(gcs_component_paths) == 52
+    assert (
+        gcs_component_paths[0] == \
+            'gcs://national-water-model/nwm.20231128/forcing_analysis_assim_extend/nwm.t16z.analysis_assim_extend.forcing.tm27.conus.nc' # noqa
+    )
+    assert (
+        gcs_component_paths[-1] == \
+            'gcs://national-water-model/nwm.20231129/forcing_analysis_assim_extend/nwm.t16z.analysis_assim_extend.forcing.tm00.conus.nc' # noqa
     )
 
 
 def test_building_nwm22_gcs_paths():
     """Test building NWM22 GCS paths."""
     gcs_component_paths = build_remote_nwm_filelist(
-        configuration="analysis_assim_extend",
+        configuration="analysis_assim",
         output_type="channel_rt",
         start_dt="2019-01-12",
         ingest_days=1,
@@ -206,9 +211,14 @@ def test_building_nwm22_gcs_paths():
         ignore_missing_file=False,
         prioritize_analysis_valid_time=True
     )
+    assert len(gcs_component_paths) == 26
     assert (
-        gcs_component_paths == \
-            ['gcs://national-water-model/nwm.20190112/analysis_assim_extend/nwm.t16z.analysis_assim_extend.channel_rt.tm00.conus.nc'] # noqa
+        gcs_component_paths[-1] == \
+            'gcs://national-water-model/nwm.20190112/analysis_assim/nwm.t23z.analysis_assim.channel_rt.tm00.conus.nc' # noqa
+    )
+    assert (
+        gcs_component_paths[0] == \
+            'gcs://national-water-model/nwm.20190112/analysis_assim/nwm.t00z.analysis_assim.channel_rt.tm02.conus.nc' # noqa
     )
 
 
