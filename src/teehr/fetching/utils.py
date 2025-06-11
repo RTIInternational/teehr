@@ -68,15 +68,13 @@ def start_on_z_hour(
 
 
 def end_on_z_hour(
-    start_date: datetime,
-    ingest_days: int,
+    end_date: datetime,
     end_z_hour: int,
     gcs_component_paths: List[str]
 ):
     """Limit the end date to a specified z-hour."""
     logger.info(f"Limiting the end date to z-hour: {end_z_hour}.")
-    dates = pd.date_range(start=start_date, periods=ingest_days, freq="1d")
-    formatted_end_date = dates[-1].strftime("%Y%m%d")
+    formatted_end_date = end_date.strftime("%Y%m%d")
     return_list = []
     reversed_list = sorted(gcs_component_paths, reverse=True)
     for path in reversed_list:
@@ -183,15 +181,16 @@ def format_nwm_variable_name(variable_name: str) -> str:
 
 def validate_operational_start_end_date(
     nwm_version: str,
-    start_date: Union[str, datetime],
-    ingest_days: int
+    start_date: Union[str, datetime, pd.Timestamp],
+    end_date: Union[str, datetime, pd.Timestamp]
 ):
     """Make sure start/end dates work with specified NWM version."""
     logger.debug("Checking dates against NWM version.")
 
     if isinstance(start_date, str):
         start_date = parse(start_date)
-    end_date = start_date + timedelta(days=ingest_days)
+    if isinstance(end_date, str):
+        end_date = parse(start_date)
 
     err_msg = (
         f"The specified start and end dates ({start_date} - {end_date}) "
@@ -633,7 +632,7 @@ def construct_assim_paths(
 
         # Add the values starting from day 1,
         # skipping value times in the previous day
-        if "hawaii" in configuration:
+        if configuration == "analysis_assim_hawaii":
             for cycle_hr in cycle_z_hours:
                 for tm in t_minus:
                     for tm2 in [0, 15, 30, 45]:
@@ -650,7 +649,7 @@ def construct_assim_paths(
                     component_paths.append(file_path)
 
         # Now add the values from the day following the end day,
-        # whose value times that fall within the end day
+        # whose value times fall within the end day
         if "extend" in configuration:
             for tm in t_minus:
                 dt_add = dt + pd.Timedelta(cycle_hr + 24, unit="hours")
@@ -660,7 +659,7 @@ def construct_assim_paths(
                     file_path = f"{gcs_dir}/nwm.{dt_add_str}/{configuration}/nwm.t{hr_add:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}.{domain}.{file_extension}"  # noqa
                     component_paths.append(file_path)
 
-        elif "hawaii" in configuration:
+        elif configuration == "analysis_assim_hawaii":
             for cycle_hr2 in cycle_z_hours:
                 for tm in t_minus:
                     for tm2 in [0, 15, 30, 45]:
@@ -692,12 +691,13 @@ def construct_assim_paths(
 def build_remote_nwm_filelist(
     configuration: str,
     output_type: str,
-    start_dt: Union[str, datetime],
-    ingest_days: int,
+    start_dt: Union[str, datetime, pd.Timestamp],
+    end_dt: Union[str, datetime, pd.Timestamp],
     analysis_config_dict: Dict,
     t_minus_hours: Optional[Iterable[int]],
     ignore_missing_file: Optional[bool],
-    prioritize_analysis_valid_time: Optional[bool]
+    prioritize_analysis_valid_time: Optional[bool],
+    remove_overlapping_assimilation_values: Optional[bool]
 ) -> List[str]:
     """Assemble a list of remote NWM files based on user parameters.
 
@@ -709,23 +709,28 @@ def build_remote_nwm_filelist(
         Output component of the configuration.
     start_dt : str “YYYY-MM-DD” or datetime
         Date to begin data ingest.
-    ingest_days : int
-        Number of days to ingest data after start date.
-    t_minus_hours : Iterable[int]
+    end_dt : str “YYYY-MM-DD” or datetime
+        Date to end data ingest.
+    t_minus_hours : Optional[Iterable[int]]
         Collection of lookback hours to include when fetching
-        assimilation data.
-        Only necessary if assimilation data is requested and
-        prioritize_analysis_valid_time is True.
-    ignore_missing_file : bool
+        assimilation data. If None (default), all available
+        t-minus hours are included.
+    ignore_missing_file : Optional[bool]
         Flag specifying whether or not to fail if a missing
         NWM file is encountered
         True = skip and continue
         False = fail.
     prioritize_analysis_valid_time : Optional[bool]
-        A boolean flag that determines the method of fetching analysis data.
-        When False (default), all non-overlapping value_time hours
-        (prioritizing the most recent reference_time) are included in the
-        output. When True, only the hours within t_minus_hours are included.
+        A boolean flag that determines the method of fetching analysis
+        assimilation data. When True, assimilation data is limited to
+        the start and end dates according to value_time. When False,
+        the data is fetched based on reference_time (value_time may fall
+        before the start date)
+    remove_overlapping_assimilation_values : Optional[bool]
+        A boolean flag that determines whether or not to remove
+        overlapping assimilation values. If True, only values corresponding
+        to the most recent reference_time are kept. If False, all values
+        are kept, even if they overlap in value_time.
 
     Returns
     -------
@@ -736,7 +741,7 @@ def build_remote_nwm_filelist(
 
     gcs_dir = f"gcs://{NWM_BUCKET}"
     fs = fsspec.filesystem("gcs", token="anon")
-    dates = pd.date_range(start=start_dt, periods=ingest_days, freq="1d")
+    dates = pd.date_range(start=start_dt, end=end_dt, freq="1d")
 
     if "assim" in configuration and prioritize_analysis_valid_time:
         cycle_z_hours = analysis_config_dict[configuration]["cycle_z_hours"]
@@ -745,6 +750,11 @@ def build_remote_nwm_filelist(
             "configuration_name_in_filepath"
         ]
         max_lookback = analysis_config_dict[configuration]["num_lookback_hrs"]
+
+        if t_minus_hours is None:
+            t_minus_hours = np.arange(
+                0, max_lookback, 1
+            ).tolist()
 
         if max(t_minus_hours) > max_lookback - 1:
             raise ValueError(
@@ -765,6 +775,17 @@ def build_remote_nwm_filelist(
             domain,
         )
 
+        if remove_overlapping_assimilation_values is True:
+            logger.debug(
+                "Removing overlapping assimilation value times."
+            )
+            # Remove overlapping value times
+            # (prioritizing the most recent reference_time)
+            component_paths = remove_overlapping_assim_validtimes(
+                component_paths=component_paths,
+                nwm_configuration=configuration,
+            )
+
     else:
         component_paths = []
         for dt in dates:
@@ -778,7 +799,10 @@ def build_remote_nwm_filelist(
             component_paths.extend(result)
         component_paths = sorted([f"gcs://{path}" for path in component_paths])
 
-        if "assim" in configuration:
+        if "assim" in configuration and remove_overlapping_assimilation_values is True:
+            logger.debug(
+                "Removing overlapping assimilation value times."
+            )
             component_paths = remove_overlapping_assim_validtimes(
                 component_paths=component_paths,
                 nwm_configuration=configuration,

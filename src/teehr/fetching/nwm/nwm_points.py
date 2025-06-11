@@ -3,6 +3,7 @@ from typing import Union, Optional, List, Dict, Annotated
 from datetime import datetime
 from pathlib import Path
 import logging
+import pandas as pd
 
 from pydantic import validate_call, Field
 
@@ -32,13 +33,13 @@ from teehr.fetching.const import (
 logger = logging.getLogger(__name__)
 
 
-@validate_call()
+@validate_call(config=dict(arbitrary_types_allowed=True))
 def nwm_to_parquet(
     configuration: str,
     output_type: str,
     variable_name: str,
-    start_date: Union[str, datetime],
-    ingest_days: int,
+    start_date: Union[str, datetime, pd.Timestamp],
+    end_date: Union[str, datetime, pd.Timestamp],
     location_ids: List[int],
     json_dir: Union[str, Path],
     output_parquet_dir: Union[str, Path],
@@ -54,7 +55,8 @@ def nwm_to_parquet(
     variable_mapper: Dict[str, Dict[str, str]] = None,
     timeseries_type: TimeseriesTypeEnum = "secondary",
     starting_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
-    ending_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None
+    ending_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
+    remove_overlapping_assimilation_values: Optional[bool] = True
 ):
     """Fetch NWM point data and save as a Parquet file in TEEHR format.
 
@@ -69,11 +71,13 @@ def nwm_to_parquet(
     variable_name : str
         Name of the NWM data variable to download.
         (e.g., "streamflow", "velocity", ...).
-    start_date : str or datetime
+    start_date : Union[str, datetime, pd.Timestamp]
         Date to begin data ingest.
+        Str formats can include YYYY-MM-DD or MM/DD/YYYY
+        Rounds down to beginning of day.
+    end_date : Union[str, datetime, pd.Timestamp],
+        Last date to fetch.  Rounds up to end of day.
         Str formats can include YYYY-MM-DD or MM/DD/YYYY.
-    ingest_days : int
-        Number of days to ingest data after start date.
     location_ids : List[int]
         Array specifying NWM IDs of interest.
     json_dir : str
@@ -166,7 +170,7 @@ def nwm_to_parquet(
     >>> OUTPUT_TYPE = "channel_rt"
     >>> VARIABLE_NAME = "streamflow"
     >>> START_DATE = "2023-03-18"
-    >>> INGEST_DAYS = 1
+    >>> END_DATE = "2023-03-18"
     >>> JSON_DIR = Path(Path.home(), "temp/parquet/jsons/")
     >>> OUTPUT_DIR = Path(Path.home(), "temp/parquet")
     >>> NWM_VERSION = "nwm22"
@@ -186,7 +190,7 @@ def nwm_to_parquet(
     >>>     output_type=OUTPUT_TYPE,
     >>>     variable_name=VARIABLE_NAME,
     >>>     start_date=START_DATE,
-    >>>     ingest_days=INGEST_DAYS,
+    >>>     end_date=END_DATE,
     >>>     location_ids=LOCATION_IDS,
     >>>     json_dir=JSON_DIR,
     >>>     output_parquet_dir=OUTPUT_DIR,
@@ -251,7 +255,7 @@ def nwm_to_parquet(
         validate_operational_start_end_date(
             nwm_version,
             start_date,
-            ingest_days
+            end_date
         )
 
         # Build paths to netcdf files on GCS
@@ -259,11 +263,12 @@ def nwm_to_parquet(
             configuration,
             output_type,
             start_date,
-            ingest_days,
+            end_date,
             analysis_config_dict,
             t_minus_hours,
             ignore_missing_file,
-            prioritize_analysis_valid_time
+            prioritize_analysis_valid_time,
+            remove_overlapping_assimilation_values
         )
 
         if starting_z_hour is not None:
@@ -275,8 +280,7 @@ def nwm_to_parquet(
 
         if ending_z_hour is not None:
             gcs_component_paths = end_on_z_hour(
-                start_date=start_date,
-                ingest_days=ingest_days,
+                end_date=end_date,
                 end_z_hour=ending_z_hour,
                 gcs_component_paths=gcs_component_paths
             )

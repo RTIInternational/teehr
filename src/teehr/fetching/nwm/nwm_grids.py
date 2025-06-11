@@ -5,6 +5,7 @@ from pathlib import Path
 
 from pydantic import validate_call, Field, InstanceOf
 from geopandas import GeoDataFrame
+import pandas as pd
 
 from teehr.fetching.nwm.grid_utils import fetch_and_format_nwm_grids
 from teehr.fetching.utils import (
@@ -30,13 +31,13 @@ from teehr.fetching.const import (
 from teehr.utilities.generate_weights import generate_weights_file
 
 
-@validate_call()
+@validate_call(config=dict(arbitrary_types_allowed=True))
 def nwm_grids_to_parquet(
     configuration: str,
     output_type: str,
     variable_name: str,
-    start_date: Union[str, datetime],
-    ingest_days: int,
+    start_date: Union[str, datetime, pd.Timestamp],
+    end_date: Union[str, datetime, pd.Timestamp],
     zonal_weights_filepath: Union[Path, str],
     json_dir: Union[str, Path],
     output_parquet_dir: Union[str, Path],
@@ -72,11 +73,13 @@ def nwm_grids_to_parquet(
     variable_name : str
         Name of the NWM data variable to download.
         (e.g., "streamflow", "velocity", ...).
-    start_date : str or datetime
+    start_date : Union[str, datetime, pd.Timestamp]
         Date to begin data ingest.
+        Str formats can include YYYY-MM-DD or MM/DD/YYYY
+        Rounds down to beginning of day.
+    end_date : Union[str, datetime, pd.Timestamp],
+        Last date to fetch.  Rounds up to end of day.
         Str formats can include YYYY-MM-DD or MM/DD/YYYY.
-    ingest_days : int
-        Number of days to ingest data after start date.
     zonal_weights_filepath : str
         Path to the array containing fraction of pixel overlap
         for each zone.
@@ -182,7 +185,7 @@ def nwm_grids_to_parquet(
     >>> OUTPUT_TYPE = "forcing"
     >>> VARIABLE_NAME = "RAINRATE"
     >>> START_DATE = "2020-12-18"
-    >>> INGEST_DAYS = 1
+    >>> END_DATE = "2020-12-18"
     >>> ZONAL_WEIGHTS_FILEPATH = Path(Path.home(), "nextgen_03S_weights.parquet")
     >>> JSON_DIR = Path(Path.home(), "temp/parquet/jsons/")
     >>> OUTPUT_DIR = Path(Path.home(), "temp/parquet")
@@ -200,7 +203,7 @@ def nwm_grids_to_parquet(
     >>>     output_type=OUTPUT_TYPE,
     >>>     variable_name=VARIABLE_NAME,
     >>>     start_date=START_DATE,
-    >>>     ingest_days=INGEST_DAYS,
+    >>>     end_date=END_DATE,
     >>>     zonal_weights_filepath=ZONAL_WEIGHTS_FILEPATH,
     >>>     json_dir=JSON_DIR,
     >>>     output_parquet_dir=OUTPUT_DIR,
@@ -262,7 +265,7 @@ def nwm_grids_to_parquet(
         validate_operational_start_end_date(
             nwm_version,
             start_date,
-            ingest_days
+            end_date
         )
 
         # Build paths to netcdf files on GCS
@@ -270,7 +273,7 @@ def nwm_grids_to_parquet(
             configuration,
             output_type,
             start_date,
-            ingest_days,
+            end_date,
             analysis_config_dict,
             t_minus_hours,
             ignore_missing_file,
@@ -286,8 +289,7 @@ def nwm_grids_to_parquet(
 
         if ending_z_hour is not None:
             gcs_component_paths = end_on_z_hour(
-                start_date=start_date,
-                ingest_days=ingest_days,
+                end_date=end_date,
                 end_z_hour=ending_z_hour,
                 gcs_component_paths=gcs_component_paths
             )
