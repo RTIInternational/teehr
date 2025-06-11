@@ -577,116 +577,116 @@ def build_zarr_references(
     return sorted(json_paths)
 
 
-# def construct_assim_paths(
-#     gcs_dir: str,
-#     configuration: str,
-#     output_type: str,
-#     dates: pd.DatetimeIndex,
-#     t_minus: Iterable[int],
-#     configuration_name_in_filepath: str,
-#     cycle_z_hours: Iterable[int],
-#     domain: str,
-#     file_extension: str = "nc"
-# ) -> list[str]:
-#     """Construct paths to NWM point assimilation data.
+def construct_assim_paths(
+    gcs_dir: str,
+    configuration: str,
+    output_type: str,
+    dates: pd.DatetimeIndex,
+    t_minus: Iterable[int],
+    configuration_name_in_filepath: str,
+    cycle_z_hours: Iterable[int],
+    domain: str,
+    file_extension: str = "nc"
+) -> list[str]:
+    """Construct paths to NWM point assimilation data.
 
-#     This function prioritizes value time over reference time so that only
-#     files with value times falling within the specified date range are included
-#     in the resulting file list.
+    This function prioritizes value time over reference time so that only
+    files with value times falling within the specified date range are included
+    in the resulting file list.
 
-#     Parameters
-#     ----------
-#     gcs_dir : str
-#         Path to the NWM data on GCS.
-#     configuration : str
-#         Configuration type.
-#     output_type : str
-#         Output component of the configuration.
-#     dates : pd.DatetimeIndex
-#         Range of days to fetch data.
-#     t_minus : Iterable[int]
-#         Collection of lookback hours to include when fetching assimilation
-#         data.
-#     configuration_name_in_filepath : str
-#         Name of the assimilation configuration as represented in the GCS file.
-#         Defined in const_nwm.py.
-#     cycle_z_hours : Iterable[int]
-#         The z-hour of the assimilation configuration per day.
-#         Defined in const_nwm.py.
-#     domain : str
-#         Geographic region covered by the assimilation configuration.
-#         Defined in const_nwm.py.
-#     file_extension : str
-#         File extension ("nc" or "nc.json" for remote kerchunk).
+    Parameters
+    ----------
+    gcs_dir : str
+        Path to the NWM data on GCS.
+    configuration : str
+        Configuration type.
+    output_type : str
+        Output component of the configuration.
+    dates : pd.DatetimeIndex
+        Range of days to fetch data.
+    t_minus : Iterable[int]
+        Collection of lookback hours to include when fetching assimilation
+        data.
+    configuration_name_in_filepath : str
+        Name of the assimilation configuration as represented in the GCS file.
+        Defined in const_nwm.py.
+    cycle_z_hours : Iterable[int]
+        The z-hour of the assimilation configuration per day.
+        Defined in const_nwm.py.
+    domain : str
+        Geographic region covered by the assimilation configuration.
+        Defined in const_nwm.py.
+    file_extension : str
+        File extension ("nc" or "nc.json" for remote kerchunk).
 
-#     Returns
-#     -------
-#     list[str]
-#         List of remote filepaths.
-#     """
-#     logger.debug("Constructing assimilation paths.")
+    Returns
+    -------
+    list[str]
+        List of remote filepaths.
+    """
+    logger.debug("Constructing assimilation paths.")
 
-#     component_paths = []
+    component_paths = []
 
-#     for dt in dates:
-#         dt_str = dt.strftime("%Y%m%d")
+    for dt in dates:
+        dt_str = dt.strftime("%Y%m%d")
 
-#         # Add the values starting from day 1,
-#         # skipping value times in the previous day
-#         if "hawaii" in configuration:
-#             for cycle_hr in cycle_z_hours:
-#                 for tm in t_minus:
-#                     for tm2 in [0, 15, 30, 45]:
-#                         if (tm * 100 + tm2) > cycle_hr * 100:
-#                             continue
-#                         file_path = f"{gcs_dir}/nwm.{dt_str}/{configuration}/nwm.t{cycle_hr:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}{tm2:02d}.{domain}.{file_extension}"  # noqa
-#                         component_paths.append(file_path)
-#         else:
-#             for cycle_hr in cycle_z_hours:
-#                 for tm in t_minus:
-#                     if tm > cycle_hr:
-#                         continue
-#                     file_path = f"{gcs_dir}/nwm.{dt_str}/{configuration}/nwm.t{cycle_hr:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}.{domain}.{file_extension}"  # noqa
-#                     component_paths.append(file_path)
+        # Add the values starting from day 1,
+        # skipping value times in the previous day
+        if "hawaii" in configuration:
+            for cycle_hr in cycle_z_hours:
+                for tm in t_minus:
+                    for tm2 in [0, 15, 30, 45]:
+                        if (tm * 100 + tm2) > cycle_hr * 100:
+                            continue
+                        file_path = f"{gcs_dir}/nwm.{dt_str}/{configuration}/nwm.t{cycle_hr:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}{tm2:02d}.{domain}.{file_extension}"  # noqa
+                        component_paths.append(file_path)
+        else:
+            for cycle_hr in cycle_z_hours:
+                for tm in t_minus:
+                    if tm > cycle_hr:
+                        continue
+                    file_path = f"{gcs_dir}/nwm.{dt_str}/{configuration}/nwm.t{cycle_hr:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}.{domain}.{file_extension}"  # noqa
+                    component_paths.append(file_path)
 
-#         # Now add the values from the day following the end day,
-#         # whose value times that fall within the end day
-#         if "extend" in configuration:
-#             for tm in t_minus:
-#                 dt_add = dt + pd.Timedelta(cycle_hr + 24, unit="hours")
-#                 hr_add = dt_add.hour
-#                 if tm > hr_add:
-#                     dt_add_str = dt_add.strftime("%Y%m%d")
-#                     file_path = f"{gcs_dir}/nwm.{dt_add_str}/{configuration}/nwm.t{hr_add:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}.{domain}.{file_extension}"  # noqa
-#                     component_paths.append(file_path)
+        # Now add the values from the day following the end day,
+        # whose value times that fall within the end day
+        if "extend" in configuration:
+            for tm in t_minus:
+                dt_add = dt + pd.Timedelta(cycle_hr + 24, unit="hours")
+                hr_add = dt_add.hour
+                if tm > hr_add:
+                    dt_add_str = dt_add.strftime("%Y%m%d")
+                    file_path = f"{gcs_dir}/nwm.{dt_add_str}/{configuration}/nwm.t{hr_add:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}.{domain}.{file_extension}"  # noqa
+                    component_paths.append(file_path)
 
-#         elif "hawaii" in configuration:
-#             for cycle_hr2 in cycle_z_hours:
-#                 for tm in t_minus:
-#                     for tm2 in [0, 15, 30, 45]:
-#                         if cycle_hr2 > 0:
-#                             dt_add = dt + pd.Timedelta(
-#                                 cycle_hr + cycle_hr2, unit="hours"
-#                             )
-#                             hr_add = dt_add.hour
-#                             if (tm * 100 + tm2) > hr_add * 100:
-#                                 dt_add_str = dt_add.strftime("%Y%m%d")
-#                                 file_path = f"{gcs_dir}/nwm.{dt_add_str}/{configuration}/nwm.t{hr_add:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}{tm2:02d}.{domain}.{file_extension}"  # noqa
-#                                 component_paths.append(file_path)
-#         else:
-#             for cycle_hr2 in cycle_z_hours:
-#                 for tm in t_minus:
-#                     if cycle_hr2 > 0:
-#                         dt_add = dt + pd.Timedelta(
-#                             cycle_hr + cycle_hr2, unit="hours"
-#                         )
-#                         hr_add = dt_add.hour
-#                         if tm > hr_add:
-#                             dt_add_str = dt_add.strftime("%Y%m%d")
-#                             file_path = f"{gcs_dir}/nwm.{dt_add_str}/{configuration}/nwm.t{hr_add:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}.{domain}.{file_extension}"  # noqa
-#                             component_paths.append(file_path)
+        elif "hawaii" in configuration:
+            for cycle_hr2 in cycle_z_hours:
+                for tm in t_minus:
+                    for tm2 in [0, 15, 30, 45]:
+                        if cycle_hr2 > 0:
+                            dt_add = dt + pd.Timedelta(
+                                cycle_hr + cycle_hr2, unit="hours"
+                            )
+                            hr_add = dt_add.hour
+                            if (tm * 100 + tm2) > hr_add * 100:
+                                dt_add_str = dt_add.strftime("%Y%m%d")
+                                file_path = f"{gcs_dir}/nwm.{dt_add_str}/{configuration}/nwm.t{hr_add:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}{tm2:02d}.{domain}.{file_extension}"  # noqa
+                                component_paths.append(file_path)
+        else:
+            for cycle_hr2 in cycle_z_hours:
+                for tm in t_minus:
+                    if cycle_hr2 > 0:
+                        dt_add = dt + pd.Timedelta(
+                            cycle_hr + cycle_hr2, unit="hours"
+                        )
+                        hr_add = dt_add.hour
+                        if tm > hr_add:
+                            dt_add_str = dt_add.strftime("%Y%m%d")
+                            file_path = f"{gcs_dir}/nwm.{dt_add_str}/{configuration}/nwm.t{hr_add:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}.{domain}.{file_extension}"  # noqa
+                            component_paths.append(file_path)
 
-#     return sorted(component_paths)
+    return sorted(component_paths)
 
 
 def build_remote_nwm_filelist(
@@ -712,9 +712,10 @@ def build_remote_nwm_filelist(
     ingest_days : int
         Number of days to ingest data after start date.
     t_minus_hours : Iterable[int]
-        Only necessary if assimilation data is requested.
         Collection of lookback hours to include when fetching
         assimilation data.
+        Only necessary if assimilation data is requested and
+        prioritize_analysis_valid_time is True.
     ignore_missing_file : bool
         Flag specifying whether or not to fail if a missing
         NWM file is encountered
@@ -722,7 +723,8 @@ def build_remote_nwm_filelist(
         False = fail.
     prioritize_analysis_valid_time : Optional[bool]
         A boolean flag that determines the method of fetching analysis data.
-        When False (default), all hours of the reference time are included in the
+        When False (default), all non-overlapping value_time hours
+        (prioritizing the most recent reference_time) are included in the
         output. When True, only the hours within t_minus_hours are included.
 
     Returns
@@ -736,23 +738,51 @@ def build_remote_nwm_filelist(
     fs = fsspec.filesystem("gcs", token="anon")
     dates = pd.date_range(start=start_dt, periods=ingest_days, freq="1d")
 
-    component_paths = []
-    for dt in dates:
-        dt_str = dt.strftime("%Y%m%d")
-        file_path = (
-            f"{gcs_dir}/nwm.{dt_str}/{configuration}/nwm.*.{output_type}*"
-        )
-        result = fs.glob(file_path)
-        if (len(result) == 0) & (not ignore_missing_file):
-            raise FileNotFoundError(f"No NWM files found in {file_path}")
-        component_paths.extend(result)
-    component_paths = sorted([f"gcs://{path}" for path in component_paths])
+    if "assim" in configuration and prioritize_analysis_valid_time:
+        cycle_z_hours = analysis_config_dict[configuration]["cycle_z_hours"]
+        domain = analysis_config_dict[configuration]["domain"]
+        configuration_name_in_filepath = analysis_config_dict[configuration][
+            "configuration_name_in_filepath"
+        ]
+        max_lookback = analysis_config_dict[configuration]["num_lookback_hrs"]
 
-    if "assim" in configuration:
-        component_paths = remove_overlapping_assim_validtimes(
-            component_paths=component_paths,
-            nwm_configuration=configuration,
+        if max(t_minus_hours) > max_lookback - 1:
+            raise ValueError(
+                f"The maximum specified t-minus hour exceeds the lookback "
+                f"period for this configuration: {configuration}; max t-minus: "  # noqa
+                f"{max(t_minus_hours)} hrs; "
+                f"look-back period: {max_lookback} hrs"
+            )
+
+        component_paths = construct_assim_paths(
+            gcs_dir,
+            configuration,
+            output_type,
+            dates,
+            t_minus_hours,
+            configuration_name_in_filepath,
+            cycle_z_hours,
+            domain,
         )
+
+    else:
+        component_paths = []
+        for dt in dates:
+            dt_str = dt.strftime("%Y%m%d")
+            file_path = (
+                f"{gcs_dir}/nwm.{dt_str}/{configuration}/nwm.*.{output_type}*"
+            )
+            result = fs.glob(file_path)
+            if (len(result) == 0) & (not ignore_missing_file):
+                raise FileNotFoundError(f"No NWM files found in {file_path}")
+            component_paths.extend(result)
+        component_paths = sorted([f"gcs://{path}" for path in component_paths])
+
+        if "assim" in configuration:
+            component_paths = remove_overlapping_assim_validtimes(
+                component_paths=component_paths,
+                nwm_configuration=configuration,
+            )
 
     return component_paths
 

@@ -707,12 +707,15 @@ class Fetch:
             "auto" - read the CIROH pre-generated jsons from s3, and create any that
             are unavailable, storing locally.
         prioritize_analysis_valid_time : Optional[bool]
-            A boolean flag that determines the method of fetching analysis data.
-            When False (default), all hours of the reference time are included in the
+            A boolean flag that determines the method of fetching analysis-assimilation
+            data. When False (default), all non-overlapping value_time hours
+            (prioritizing the most recent reference_time) are included in the
             output. When True, only the hours within t_minus_hours are included.
         t_minus_hours : Optional[List[int]]
             Specifies the look-back hours to include if an assimilation
             nwm_configuration is specified.
+            Only utilized if assimilation data is requested and
+            prioritize_analysis_valid_time is True.
         process_by_z_hour : Optional[bool]
             A boolean flag that determines the method of grouping files
             for processing. The default is True, which groups by day and z_hour.
@@ -966,12 +969,15 @@ class Fetch:
             "auto" - read the CIROH pre-generated jsons from s3, and create any that
             are unavailable, storing locally.
         prioritize_analysis_valid_time : Optional[bool]
-            A boolean flag that determines the method of fetching analysis data.
-            When False (default), all hours of the reference time are included in the
+            A boolean flag that determines the method of fetching analysis-assimilation
+            data. When False (default), all non-overlapping value_time hours
+            (prioritizing the most recent reference_time) are included in the
             output. When True, only the hours within t_minus_hours are included.
         t_minus_hours : Optional[Iterable[int]]
             Specifies the look-back hours to include if an assimilation
             nwm_configuration is specified.
+            Only utilized if assimilation data is requested and
+            prioritize_analysis_valid_time is True.
         ignore_missing_file : bool
             Flag specifying whether or not to fail if a missing NWM file is encountered
             True = skip and continue; False = fail.
