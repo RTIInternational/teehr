@@ -710,7 +710,7 @@ def build_remote_nwm_filelist(
     t_minus_hours: Optional[Iterable[int]],
     ignore_missing_file: Optional[bool],
     prioritize_analysis_valid_time: Optional[bool],
-    remove_overlapping_assimilation_values: Optional[bool]
+    drop_overlapping_assimilation_values: Optional[bool]
 ) -> List[str]:
     """Assemble a list of remote NWM files based on user parameters.
 
@@ -739,7 +739,7 @@ def build_remote_nwm_filelist(
         the start and end dates according to value_time. When False,
         the data is fetched based on reference_time (value_time may fall
         before the start date)
-    remove_overlapping_assimilation_values : Optional[bool]
+    drop_overlapping_assimilation_values : Optional[bool]
         A boolean flag that determines whether or not to remove
         overlapping assimilation values. If True, only values corresponding
         to the most recent reference_time are kept. If False, all values
@@ -788,7 +788,7 @@ def build_remote_nwm_filelist(
             domain,
         )
 
-        if remove_overlapping_assimilation_values is True:
+        if drop_overlapping_assimilation_values is True:
             logger.debug(
                 "Removing overlapping assimilation value times."
             )
@@ -818,7 +818,7 @@ def build_remote_nwm_filelist(
                 component_paths=component_paths,
                 nwm_configuration=configuration,
             )
-            if remove_overlapping_assimilation_values is True:
+            if drop_overlapping_assimilation_values is True:
                 parsed_df = remove_overlapping_assim_validtimes(
                     parsed_df=parsed_df,
                 )

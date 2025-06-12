@@ -658,7 +658,7 @@ class Fetch:
         ending_z_hour: Optional[int] = None,
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True,
-        remove_overlapping_assimilation_values: Optional[bool] = True
+        drop_overlapping_assimilation_values: Optional[bool] = True
     ):
         """Fetch operational NWM point data and load into the TEEHR dataset.
 
@@ -753,6 +753,12 @@ class Fetch:
             does not exist will be appended.
         drop_duplicates : bool
             Whether to drop duplicates in the data. Default is True.
+        drop_overlapping_assimilation_values: Optional[bool] = True
+            Whether to drop overlapping assimilation values. Default is True.
+            If True, values that overlap in value_time are dropped, keeping those with
+            the most recent reference_time. In this case, all reference_time values
+            are set to None. If False, overlapping values are kept and reference_time
+            is retained.
 
 
         .. note::
@@ -860,7 +866,7 @@ class Fetch:
             timeseries_type=timeseries_type,
             starting_z_hour=starting_z_hour,
             ending_z_hour=ending_z_hour,
-            remove_overlapping_assimilation_values=remove_overlapping_assimilation_values  # noqa
+            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values  # noqa
         )
 
         if (
@@ -883,7 +889,8 @@ class Fetch:
             ),
             timeseries_type=timeseries_type,
             write_mode=write_mode,
-            drop_duplicates=drop_duplicates
+            drop_duplicates=drop_duplicates,
+            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values  # noqa
         )
 
     def nwm_operational_grids(
@@ -908,6 +915,7 @@ class Fetch:
         write_mode: TableWriteEnum = "append",
         zonal_weights_filepath: Optional[Union[Path, str]] = None,
         drop_duplicates: bool = True,
+        drop_overlapping_assimilation_values: bool = True,
     ):
         """
         Fetch NWM operational gridded data, calculate zonal statistics (currently only
@@ -1009,6 +1017,12 @@ class Fetch:
             Default is None.
         drop_duplicates : bool
             Whether to drop duplicates in the data. Default is True.
+        drop_overlapping_assimilation_values: Optional[bool] = True
+            Whether to drop overlapping assimilation values. Default is True.
+            If True, values that overlap in value_time are dropped, keeping those with
+            the most recent reference_time. In this case, all reference_time values
+            are set to None. If False, overlapping values are kept and reference_time
+            is retained.
 
 
         .. note::
@@ -1147,7 +1161,8 @@ class Fetch:
             unique_zone_id="id",
             calculate_zonal_weights=calculate_zonal_weights,
             zone_polygons=locations_gdf,
-            timeseries_type=timeseries_type
+            timeseries_type=timeseries_type,
+            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values  # noqa
         )
 
         if (
@@ -1168,5 +1183,6 @@ class Fetch:
             in_path=Path(self.nwm_cache_dir),
             timeseries_type=timeseries_type,
             write_mode=write_mode,
-            drop_duplicates=drop_duplicates
+            drop_duplicates=drop_duplicates,
+            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values  # noqa
         )

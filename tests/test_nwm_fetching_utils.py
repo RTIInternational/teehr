@@ -188,7 +188,7 @@ def test_building_nwm30_gcs_paths():
         t_minus_hours=None,
         ignore_missing_file=False,
         prioritize_analysis_valid_time=False,
-        remove_overlapping_assimilation_values=True
+        drop_overlapping_assimilation_values=True
     )
     assert len(gcs_component_paths) == 52
     assert (
@@ -212,7 +212,7 @@ def test_building_nwm22_gcs_paths():
         t_minus_hours=[0],
         ignore_missing_file=False,
         prioritize_analysis_valid_time=False,
-        remove_overlapping_assimilation_values=False
+        drop_overlapping_assimilation_values=False
     )
     assert len(gcs_component_paths) == 24
     assert (
@@ -337,7 +337,7 @@ def test_start_end_z_hours():
         t_minus_hours=[0],
         ignore_missing_file=False,
         prioritize_analysis_valid_time=False,
-        remove_overlapping_assimilation_values=False
+        drop_overlapping_assimilation_values=False
     )
 
     gcs_component_paths = start_on_z_hour(

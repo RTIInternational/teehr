@@ -56,6 +56,7 @@ def nwm_grids_to_parquet(
     calculate_zonal_weights: bool = False,
     zone_polygons: Optional[Union[Path, str, InstanceOf[GeoDataFrame]]] = None,
     unique_zone_id: Optional[str] = None,
+    drop_overlapping_assimilation_values: Optional[bool] = True
 ):
     """
     Fetch NWM gridded data, calculate zonal statistics (currently only
@@ -277,7 +278,8 @@ def nwm_grids_to_parquet(
             analysis_config_dict,
             t_minus_hours,
             ignore_missing_file,
-            prioritize_analysis_valid_time
+            prioritize_analysis_valid_time,
+            drop_overlapping_assimilation_values
         )
 
         if starting_z_hour is not None:

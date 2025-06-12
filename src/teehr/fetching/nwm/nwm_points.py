@@ -56,7 +56,7 @@ def nwm_to_parquet(
     timeseries_type: TimeseriesTypeEnum = "secondary",
     starting_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
     ending_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
-    remove_overlapping_assimilation_values: Optional[bool] = True
+    drop_overlapping_assimilation_values: Optional[bool] = True
 ):
     """Fetch NWM point data and save as a Parquet file in TEEHR format.
 
@@ -142,6 +142,10 @@ def nwm_to_parquet(
     ending_z_hour : Optional[int]
         The ending z_hour to include in the output. If None, all z_hours
         are included for the last day. Default is None. Must be between 0 and 23.
+    drop_overlapping_assimilation_values: Optional[bool] = True
+        Whether to drop overlapping assimilation values. Default is True.
+        If True, values that overlap in value_time are dropped, keeping values with
+        the most recent reference_time. If False, overlapping values are kept.
 
     Notes
     -----
@@ -268,7 +272,7 @@ def nwm_to_parquet(
             t_minus_hours,
             ignore_missing_file,
             prioritize_analysis_valid_time,
-            remove_overlapping_assimilation_values
+            drop_overlapping_assimilation_values
         )
 
         if starting_z_hour is not None:
