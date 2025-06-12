@@ -203,10 +203,13 @@ class JoinedTimeseriesTable(TimeseriesTable):
         if execute_scripts:
             joined_df = self._run_script(joined_df)
 
-        validated_df = self._validate(joined_df, False)
+        validated_df = self._validate(
+            df=joined_df,
+            strict=False,
+            drop_duplicates=drop_duplicates
+        )
         self._write_spark_df(
             validated_df,
-            drop_duplicates=drop_duplicates,
             write_mode="overwrite",
         )
         logger.info("Joined timeseries table created.")

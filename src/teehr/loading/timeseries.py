@@ -290,8 +290,7 @@ def validate_and_insert_timeseries(
     # Write to the table
     table._write_spark_df(
         validated_df,
-        write_mode=write_mode,
-        drop_duplicates=drop_duplicates,
+        write_mode=write_mode
     )
 
     # Reload the table
