@@ -10,6 +10,8 @@ from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
 from lxml import etree
 from datetime import datetime, timedelta
+import pyarrow as pa
+import fiona.errors
 
 
 logger = logging.getLogger(__name__)
@@ -61,23 +63,69 @@ def read_spatial_file(
         filepath: Union[str, Path], **kwargs: str
 ) -> gpd.GeoDataFrame:
     """Load any supported geospatial file type into a gdf using GeoPandas."""
-    logger.info(f"Reading spatial file {filepath}")
-    try:
-        gdf = gpd.read_file(filepath, **kwargs)
-        return gdf
-    except Exception:
-        pass
+    if isinstance(filepath, str):
+        try:
+            filepath = Path(filepath)
+        except Exception:
+            raise ValueError(
+                """Invalid filepath provided. Conversion from 'str' to Path
+                object failed."""
+            )
+    if not filepath.exists():
+        raise FileNotFoundError(f"""The provided filepath does not exist:
+                                {filepath}""")
+
+    logger.debug(f"Loading geospatial file: {filepath}")
+
+    gdf = None
+    # try parquet
     try:
         gdf = gpd.read_parquet(filepath, **kwargs)
-        return gdf
-    except Exception:
-        pass
-    try:
-        gdf = gpd.read_feather(filepath, **kwargs)
-        return gdf
-    except Exception:
-        logger.error(f"Unsupported file type {filepath}")
-        raise Exception("Unsupported file type")
+    except (pa.lib.ArrowInvalid, pa.lib.ArrowIOError, ValueError) as e:
+        logger.debug(f"Parquet read failed: {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error reading parquet: {e}")
+        raise
+
+    # try file-based formats if parquet failed
+    if gdf is None:
+        try:
+            gdf = gpd.read_file(filepath, **kwargs)
+        except (fiona.errors.DriverError, ValueError, OSError) as e:
+            logger.debug(f"File-based read failed: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error reading file-based format: {e}")
+            raise
+
+    # try feather if all others failed
+    if gdf is None:
+        try:
+            gdf = gpd.read_feather(filepath, **kwargs)
+        except (pa.lib.ArrowInvalid, pa.lib.ArrowIOError, ValueError) as e:
+            logger.debug(f"Feather read failed: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error reading feather: {e}")
+            raise
+
+    if gdf is None:
+        raise ValueError(f"""Unsupported or unreadable geospatial file type:
+                         {filepath}""")
+
+    # check for empty file
+    if gdf.empty:
+        raise ValueError(f"The file '{filepath}' was loaded but is empty.")
+
+    # check for geometry column
+    if gdf.geometry is None or gdf.geometry.name not in gdf.columns:
+        raise ValueError(f"""The file '{filepath}' does not contain a valid
+                          geometry column.""")
+
+    # check for corrupt shapefile (common error: geometry all None)
+    if gdf.geometry.isnull().all():
+        raise ValueError(f"""The file '{filepath}' contains only null
+                         geometries (possibly corrupt).""")
+
+    return gdf
 
 
 def validate_dataset_structure(dataset_filepath: Union[str, Path]) -> bool:
