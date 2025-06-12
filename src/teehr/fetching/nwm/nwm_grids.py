@@ -22,6 +22,12 @@ from teehr.models.fetching.utils import (
     SupportedKerchunkMethod,
     TimeseriesTypeEnum
 )
+from teehr.fetching.const import (
+    NWM12_ANALYSIS_CONFIG,
+    NWM20_ANALYSIS_CONFIG,
+    NWM22_ANALYSIS_CONFIG,
+    NWM30_ANALYSIS_CONFIG,
+)
 from teehr.utilities.generate_weights import generate_weights_file
 
 
@@ -38,6 +44,8 @@ def nwm_grids_to_parquet(
     nwm_version: SupportedNWMOperationalVersionsEnum,
     data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
     kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
+    prioritize_analysis_valid_time: Optional[bool] = False,
+    t_minus_hours: Optional[List[int]] = None,
     ignore_missing_file: Optional[bool] = True,
     overwrite_output: Optional[bool] = False,
     location_id_prefix: Optional[Union[str, None]] = None,
@@ -210,14 +218,19 @@ def nwm_grids_to_parquet(
     # Import appropriate config model and dicts based on NWM version
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm12:
         from teehr.models.fetching.nwm12_grid import GridConfigurationModel
+        analysis_config_dict = NWM12_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm20:
         from teehr.models.fetching.nwm20_grid import GridConfigurationModel
+        analysis_config_dict = NWM20_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm21:
         from teehr.models.fetching.nwm22_grid import GridConfigurationModel
+        analysis_config_dict = NWM22_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm22:
         from teehr.models.fetching.nwm22_grid import GridConfigurationModel
+        analysis_config_dict = NWM22_ANALYSIS_CONFIG
     elif nwm_version == SupportedNWMOperationalVersionsEnum.nwm30:
         from teehr.models.fetching.nwm30_grid import GridConfigurationModel
+        analysis_config_dict = NWM30_ANALYSIS_CONFIG
     else:
         raise ValueError(
             "nwm_version must equal "
@@ -261,7 +274,10 @@ def nwm_grids_to_parquet(
             output_type,
             start_date,
             end_date,
+            analysis_config_dict,
+            t_minus_hours,
             ignore_missing_file,
+            prioritize_analysis_valid_time
         )
 
         if starting_z_hour is not None:

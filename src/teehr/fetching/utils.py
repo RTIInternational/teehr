@@ -706,7 +706,11 @@ def build_remote_nwm_filelist(
     output_type: str,
     start_dt: Union[str, datetime, pd.Timestamp],
     end_dt: Union[str, datetime, pd.Timestamp],
-    ignore_missing_file: Optional[bool]
+    analysis_config_dict: Dict,
+    t_minus_hours: Optional[Iterable[int]],
+    ignore_missing_file: Optional[bool],
+    prioritize_analysis_valid_time: Optional[bool],
+    remove_overlapping_assimilation_values: Optional[bool]
 ) -> List[str]:
     """Assemble a list of remote NWM files based on user parameters.
 
@@ -720,11 +724,26 @@ def build_remote_nwm_filelist(
         Date to begin data ingest.
     end_dt : str “YYYY-MM-DD” or datetime
         Date to end data ingest.
+    t_minus_hours : Optional[Iterable[int]]
+        Collection of lookback hours to include when fetching
+        assimilation data. If None (default), all available
+        t-minus hours are included.
     ignore_missing_file : Optional[bool]
         Flag specifying whether or not to fail if a missing
         NWM file is encountered
         True = skip and continue
         False = fail.
+    prioritize_analysis_valid_time : Optional[bool]
+        A boolean flag that determines the method of fetching analysis
+        assimilation data. When True, assimilation data is limited to
+        the start and end dates according to value_time. When False,
+        the data is fetched based on reference_time (value_time may fall
+        before the start date)
+    remove_overlapping_assimilation_values : Optional[bool]
+        A boolean flag that determines whether or not to remove
+        overlapping assimilation values. If True, only values corresponding
+        to the most recent reference_time are kept. If False, all values
+        are kept, even if they overlap in value_time.
 
     Returns
     -------
@@ -737,27 +756,77 @@ def build_remote_nwm_filelist(
     fs = fsspec.filesystem("gcs", token="anon")
     dates = pd.date_range(start=start_dt, end=end_dt, freq="1d")
 
-    component_paths = []
-    for dt in dates:
-        dt_str = dt.strftime("%Y%m%d")
-        file_path = (
-            f"{gcs_dir}/nwm.{dt_str}/{configuration}/nwm.*.{output_type}*"
-        )
-        result = fs.glob(file_path)
-        if (len(result) == 0) & (not ignore_missing_file):
-            raise FileNotFoundError(f"No NWM files found in {file_path}")
-        component_paths.extend(result)
-    component_paths = sorted([f"gcs://{path}" for path in component_paths])
+    if "assim" in configuration and prioritize_analysis_valid_time:
+        cycle_z_hours = analysis_config_dict[configuration]["cycle_z_hours"]
+        domain = analysis_config_dict[configuration]["domain"]
+        configuration_name_in_filepath = analysis_config_dict[configuration][
+            "configuration_name_in_filepath"
+        ]
+        max_lookback = analysis_config_dict[configuration]["num_lookback_hrs"]
 
-    if "assim" in configuration:
-        parsed_df = parse_nwm_gcs_paths(
-            component_paths=component_paths,
-            nwm_configuration=configuration,
+        if t_minus_hours is None:
+            t_minus_hours = np.arange(
+                0, max_lookback, 1
+            ).tolist()
+
+        if max(t_minus_hours) > max_lookback - 1:
+            raise ValueError(
+                f"The maximum specified t-minus hour exceeds the lookback "
+                f"period for this configuration: {configuration}; max t-minus: "  # noqa
+                f"{max(t_minus_hours)} hrs; "
+                f"look-back period: {max_lookback} hrs"
+            )
+
+        component_paths = construct_assim_paths(
+            gcs_dir,
+            configuration,
+            output_type,
+            dates,
+            t_minus_hours,
+            configuration_name_in_filepath,
+            cycle_z_hours,
+            domain,
         )
-        dropped_df = remove_overlapping_assim_validtimes(
-            parsed_df=parsed_df,
-        )
-        component_paths = dropped_df["filepath"].tolist()
+
+        if remove_overlapping_assimilation_values is True:
+            logger.debug(
+                "Removing overlapping assimilation value times."
+            )
+            parsed_df = parse_nwm_gcs_paths(
+                component_paths=component_paths,
+                nwm_configuration=configuration,
+            )
+            dropped_df = remove_overlapping_assim_validtimes(
+                parsed_df=parsed_df,
+            )
+            component_paths = dropped_df["filepath"].tolist()
+    else:
+        component_paths = []
+        for dt in dates:
+            dt_str = dt.strftime("%Y%m%d")
+            file_path = (
+                f"{gcs_dir}/nwm.{dt_str}/{configuration}/nwm.*.{output_type}*"
+            )
+            result = fs.glob(file_path)
+            if (len(result) == 0) & (not ignore_missing_file):
+                raise FileNotFoundError(f"No NWM files found in {file_path}")
+            component_paths.extend(result)
+        component_paths = sorted([f"gcs://{path}" for path in component_paths])
+
+        if "assim" in configuration:
+            parsed_df = parse_nwm_gcs_paths(
+                component_paths=component_paths,
+                nwm_configuration=configuration,
+            )
+            if remove_overlapping_assimilation_values is True:
+                parsed_df = remove_overlapping_assim_validtimes(
+                    parsed_df=parsed_df,
+                )
+            if t_minus_hours is not None:
+                parsed_df = parsed_df[
+                    parsed_df["tm_hour"].astype(int).isin(t_minus_hours)
+                ]
+            component_paths = parsed_df["filepath"].tolist()
 
     return component_paths
 
