@@ -553,6 +553,9 @@ class BaseTable():
 
         Examples
         --------
+        Note: The filter method is universal for all table types. When
+        repurposing this example, ensure filter arguments (e.g., column names,
+        values) are valid for the specific table type.
 
         Filters as dictionary:
 

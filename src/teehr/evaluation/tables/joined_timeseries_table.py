@@ -92,6 +92,9 @@ class JoinedTimeseriesTable(TimeseriesTable):
         """Add attributes to the joined timeseries dataframe."""
 
         location_attributes_df = self.ev.location_attributes.to_sdf()
+        if location_attributes_df.isEmpty():
+            logger.warning("No location attributes found. Skipping adding attributes to joined timeseries.")
+            return joined_df
 
         joined_df.createTempView("joined")
 
@@ -179,7 +182,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
 
     def create(
         self,
-        add_attrs: bool = False,
+        add_attrs: bool = True,
         execute_scripts: bool = False,
         drop_duplicates: bool = False
     ):
@@ -190,7 +193,10 @@ class JoinedTimeseriesTable(TimeseriesTable):
         execute_scripts : bool, optional
             Execute UDFs, by default False
         add_attrs : bool, optional
-            Add attributes, by default False
+            Add location attributes, by default True
+        drop_duplicates : bool, optional
+            Drop duplicates from the joined timeseries table, by default False.
+            If duplicates exist, the first occurence is retained.
         """
         joined_df = self._join()
 

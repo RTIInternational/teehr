@@ -161,6 +161,9 @@ class TimeseriesTable(BaseTable):
         in_path : Union[Path, str]
             Path to the timeseries data (file or directory) in
             csv file format.
+        pattern : str, optional (default: "**/*.csv")
+            The pattern to match files. Controls which files are loaded from
+            the directory. If in_path is a file, this parameter is ignored.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
@@ -247,6 +250,9 @@ class TimeseriesTable(BaseTable):
         in_path : Union[Path, str]
             Path to the timeseries data (file or directory) in
             netcdf file format.
+        pattern : str, optional (default: "**/*.nc")
+            The pattern to match files. Controls which files are loaded from
+            the directory. If in_path is a file, this parameter is ignored.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
@@ -341,7 +347,8 @@ class TimeseriesTable(BaseTable):
             Path to the timeseries data (file or directory) in
             xml file format.
         pattern : str, optional (default: "**/*.xml")
-            The pattern to match files.
+            The pattern to match files. Controls which files are loaded from
+            the directory. If in_path is a file, this parameter is ignored.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
