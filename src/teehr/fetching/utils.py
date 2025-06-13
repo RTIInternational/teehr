@@ -7,6 +7,7 @@ from dateutil.parser import parse
 import logging
 import re
 import json
+from warnings import warn
 
 import dask
 import fsspec
@@ -699,6 +700,36 @@ def construct_assim_paths(
                             component_paths.append(file_path)
 
     return sorted(component_paths)
+
+
+def get_end_date_from_ingest_days(
+    start_date: Union[str, datetime, pd.Timestamp],
+    ingest_days: Optional[int]
+) -> Union[str, datetime, pd.Timestamp]:
+    """Get the end date from the start date and ingest days.
+
+    Parameters
+    ----------
+    start_date : Union[str, datetime, pd.Timestamp]
+        The start date.
+    ingest_days : Optional[int]
+        The number of days to ingest.
+
+    Returns
+    -------
+    Union[str, datetime, pd.Timestamp]
+        The end date.
+    """
+    if ingest_days <= 0:
+        raise ValueError("ingest_days must be greater than 0")
+    warn(
+        "'ingest_days' is deprecated and "
+        "will be removed in future versions",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    end_date = start_date + timedelta(days=ingest_days - 1)
+    return end_date
 
 
 def build_remote_nwm_filelist(

@@ -14,7 +14,8 @@ from teehr.fetching.utils import (
     validate_operational_start_end_date,
     start_on_z_hour,
     end_on_z_hour,
-    get_dataset
+    get_dataset,
+    get_end_date_from_ingest_days
 )
 from teehr.models.fetching.utils import (
     SupportedNWMOperationalVersionsEnum,
@@ -36,12 +37,13 @@ def nwm_grids_to_parquet(
     configuration: str,
     output_type: str,
     variable_name: str,
-    start_date: Union[str, datetime, pd.Timestamp],
-    end_date: Union[str, datetime, pd.Timestamp],
     zonal_weights_filepath: Union[Path, str],
     json_dir: Union[str, Path],
     output_parquet_dir: Union[str, Path],
     nwm_version: SupportedNWMOperationalVersionsEnum,
+    start_date: Union[str, datetime, pd.Timestamp],
+    end_date: Optional[Union[str, datetime, pd.Timestamp]] = None,
+    ingest_days: Optional[int] = None,
     data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
     kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
     prioritize_analysis_valid_time: Optional[bool] = False,
@@ -74,13 +76,6 @@ def nwm_grids_to_parquet(
     variable_name : str
         Name of the NWM data variable to download.
         (e.g., "streamflow", "velocity", ...).
-    start_date : Union[str, datetime, pd.Timestamp]
-        Date to begin data ingest.
-        Str formats can include YYYY-MM-DD or MM/DD/YYYY
-        Rounds down to beginning of day.
-    end_date : Union[str, datetime, pd.Timestamp],
-        Last date to fetch.  Rounds up to end of day.
-        Str formats can include YYYY-MM-DD or MM/DD/YYYY.
     zonal_weights_filepath : str
         Path to the array containing fraction of pixel overlap
         for each zone.
@@ -101,6 +96,17 @@ def nwm_grids_to_parquet(
         - v2.0: 2019-06-19 - 2021-04-19
         - v2.1/2.2: 2021-04-20 - 2023-09-18
         - v3.0: 2023-09-19 - present
+    start_date : Union[str, datetime, pd.Timestamp]
+        Date to begin data ingest.
+        Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+        Rounds down to beginning of day.
+    end_date : Union[str, datetime, pd.Timestamp],
+        Last date to fetch.  Rounds up to end of day.
+        Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+    ingest_days : int
+        Number of days to ingest data after start date. This is deprecated
+        in favor of end_date, and will be removed in a future release.
+        If both are provided, ingest_days takes precedence.
     data_source : Optional[SupportedNWMDataSourcesEnum]
         Specifies the remote location from which to fetch the data
         "GCS" (default), "NOMADS", or "DSTOR".
@@ -216,6 +222,16 @@ def nwm_grids_to_parquet(
     >>>     overwrite_output=OVERWRITE_OUTPUT
     >>> )
     """ # noqa
+    if ingest_days is not None:
+        end_date = get_end_date_from_ingest_days(
+            start_date=start_date,
+            ingest_days=ingest_days
+        )
+    elif end_date is None:
+        raise ValueError(
+            "Either 'end_date' or 'ingest_days' must be specified."
+        )
+
     # Import appropriate config model and dicts based on NWM version
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm12:
         from teehr.models.fetching.nwm12_grid import GridConfigurationModel

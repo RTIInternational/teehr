@@ -642,9 +642,10 @@ class Fetch:
         nwm_configuration: str,
         output_type: str,
         variable_name: str,
-        start_date: Union[str, datetime, pd.Timestamp],
-        end_date: Union[str, datetime, pd.Timestamp],
         nwm_version: SupportedNWMOperationalVersionsEnum,
+        start_date: Union[str, datetime, pd.Timestamp],
+        end_date: Optional[Union[str, datetime, pd.Timestamp]] = None,
+        ingest_days: Optional[int] = None,
         data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
         kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
         prioritize_analysis_valid_time: Optional[bool] = False,
@@ -677,13 +678,6 @@ class Fetch:
         variable_name : str
             Name of the NWM data variable to download.
             (e.g., "streamflow", "velocity", ...).
-        start_date : Union[str, datetime, pd.Timestamp]
-            Date to begin data ingest.
-            Str formats can include YYYY-MM-DD or MM/DD/YYYY
-            Rounds down to beginning of day.
-        end_date : Union[str, datetime, pd.Timestamp],
-            Last date to fetch.  Rounds up to end of day.
-            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
         nwm_version : SupportedNWMOperationalVersionsEnum
             The NWM operational version.
             "nwm12", "nwm20", "nwm21", "nwm22", or "nwm30".
@@ -697,6 +691,17 @@ class Fetch:
             - v2.0: 2019-06-19 - 2021-04-19
             - v2.1/2.2: 2021-04-20 - 2023-09-18
             - v3.0: 2023-09-19 - present
+        start_date : Union[str, datetime, pd.Timestamp]
+            Date to begin data ingest.
+            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+            Rounds down to beginning of day.
+        end_date : Union[str, datetime, pd.Timestamp],
+            Last date to fetch.  Rounds up to end of day.
+            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+        ingest_days : int
+            Number of days to ingest data after start date. This is deprecated
+            in favor of end_date, and will be removed in a future release.
+            If both are provided, ingest_days takes precedence.
         data_source : Optional[SupportedNWMDataSourcesEnum]
             Specifies the remote location from which to fetch the data
             "GCS" (default), "NOMADS", or "DSTOR"
@@ -846,6 +851,7 @@ class Fetch:
             variable_name=variable_name,
             start_date=start_date,
             end_date=end_date,
+            ingest_days=ingest_days,
             location_ids=location_ids,
             json_dir=self.kerchunk_cache_dir,
             output_parquet_dir=Path(
@@ -898,9 +904,10 @@ class Fetch:
         nwm_configuration: str,
         output_type: str,
         variable_name: str,
-        start_date: Union[str, datetime, pd.Timestamp],
-        end_date: Union[str, datetime, pd.Timestamp],
         nwm_version: SupportedNWMOperationalVersionsEnum,
+        start_date: Union[str, datetime, pd.Timestamp],
+        end_date: Optional[Union[str, datetime, pd.Timestamp]] = None,
+        ingest_days: Optional[int] = None,
         calculate_zonal_weights: bool = True,
         location_id_prefix: Optional[str] = None,
         data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
@@ -941,13 +948,6 @@ class Fetch:
         variable_name : str
             Name of the NWM data variable to download.
             (e.g., "streamflow", "velocity", ...).
-        start_date : Union[str, datetime, pd.Timestamp]
-            Date to begin data ingest.
-            Str formats can include YYYY-MM-DD or MM/DD/YYYY
-            Rounds down to beginning of day.
-        end_date : Union[str, datetime, pd.Timestamp],
-            Last date to fetch.  Rounds up to end of day.
-            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
         nwm_version : SupportedNWMOperationalVersionsEnum
             The NWM operational version.
             "nwm12", "nwm20", "nwm21", "nwm22", or "nwm30".
@@ -961,6 +961,17 @@ class Fetch:
             - v2.0: 2019-06-19 - 2021-04-19
             - v2.1/2.2: 2021-04-20 - 2023-09-18
             - v3.0: 2023-09-19 - present
+        start_date : Union[str, datetime, pd.Timestamp]
+            Date to begin data ingest.
+            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+            Rounds down to beginning of day.
+        end_date : Union[str, datetime, pd.Timestamp],
+            Last date to fetch.  Rounds up to end of day.
+            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+        ingest_days : int
+            Number of days to ingest data after start date. This is deprecated
+            in favor of end_date, and will be removed in a future release.
+            If both are provided, ingest_days takes precedence.
         calculate_zonal_weights : bool
             Flag specifying whether or not to calculate zonal weights.
             True = calculate; False = use existing file. Default is True.
@@ -1148,6 +1159,7 @@ class Fetch:
                 ev_variable_name
             ),
             nwm_version=nwm_version,
+            ingest_days=ingest_days,
             data_source=data_source,
             kerchunk_method=kerchunk_method,
             prioritize_analysis_valid_time=prioritize_analysis_valid_time,
