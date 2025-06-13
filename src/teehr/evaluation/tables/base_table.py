@@ -107,7 +107,6 @@ class BaseTable():
         path = to_path_or_s3path(path)
 
         path = path_to_spark(path, pattern)
-
         # First, read the file with the schema and check if it's empty.
         # If it's not empty and it's the joined timeseries table,
         # read it again without the schema to ensure all fields are included.
@@ -149,7 +148,6 @@ class BaseTable():
     def _upsert_without_duplicates(
         self,
         df,
-        drop_duplicates: bool,
         num_partitions: int = None,
         **kwargs
     ):
@@ -176,11 +174,6 @@ class BaseTable():
                 existing_sdf = existing_sdf.filter(
                     col(partition).isin(partition_values)
                 )
-
-        # Drop potential duplicates in the cached dataframe
-        if drop_duplicates:
-            df = df.dropDuplicates(subset=self.unique_column_set)
-
         # Remove rows from existing_sdf that are to be updated.
         # Concat and re-write.
         if not existing_sdf.isEmpty():
@@ -213,7 +206,6 @@ class BaseTable():
     def _append_without_duplicates(
         self,
         df,
-        drop_duplicates: bool,
         num_partitions: int = None,
         **kwargs
     ):
@@ -231,11 +223,6 @@ class BaseTable():
             show_missing_table_warning=False,
             **kwargs
         )
-
-        # Drop potential duplicates in the cached dataframe
-        if drop_duplicates:
-            df = df.dropDuplicates(subset=self.unique_column_set)
-
         # Anti-join: Joins rows from left df that do not have a match
         # in right df.  This is used to drop duplicates. df gets written
         # in append mode.
@@ -245,7 +232,6 @@ class BaseTable():
             join_condition = reduce(
                 lambda x, y: x & y, [df[k].eqNullSafe(existing_sdf[k]) for k in self.unique_column_set]  # noqa: E501
             )
-
             df = df.join(
                 existing_sdf,
                 how="left_anti",
@@ -275,7 +261,6 @@ class BaseTable():
     def _dynamic_overwrite(
         self,
         df: ps.DataFrame,
-        drop_duplicates: bool,
         **kwargs
     ):
         """Overwrite partitions contained in the dataframe."""
@@ -285,9 +270,6 @@ class BaseTable():
         partition_by = self.partition_by
         if partition_by is None:
             partition_by = []
-        # Drop potential duplicates in the cached dataframe
-        if drop_duplicates:
-            df = df.dropDuplicates(subset=self.unique_column_set)
         (
             df.
             write.
@@ -303,7 +285,6 @@ class BaseTable():
         df: ps.DataFrame,
         write_mode: TableWriteEnum = "append",
         num_partitions: int = None,
-        drop_duplicates: bool = True,
         **kwargs
     ):
         """Write spark dataframe to directory.
@@ -329,20 +310,17 @@ class BaseTable():
         if write_mode == "overwrite":
             self._dynamic_overwrite(
                 df,
-                drop_duplicates=drop_duplicates,
                 **kwargs
             )
         elif write_mode == "append":
             self._append_without_duplicates(
                 df=df,
-                drop_duplicates=drop_duplicates,
                 num_partitions=num_partitions,
                 **kwargs
             )
         elif write_mode == "upsert":
             self._upsert_without_duplicates(
                 df=df,
-                drop_duplicates=drop_duplicates,
                 num_partitions=num_partitions,
                 **kwargs
             )
@@ -371,7 +349,8 @@ class BaseTable():
         self,
         df: ps.DataFrame,
         strict: bool = True,
-        add_missing_columns: bool = False
+        add_missing_columns: bool = False,
+        drop_duplicates: bool = True,
     ) -> ps.DataFrame:
         """Validate a DataFrame against the table schema.
 
@@ -403,6 +382,9 @@ class BaseTable():
 
         if strict:
             df = df.select(*schema_cols)
+
+        if drop_duplicates:
+            df = df.dropDuplicates(subset=self.unique_column_set)
 
         validated_df = schema.validate(df)
 
