@@ -176,7 +176,8 @@ def clone_from_s3(
         logger.debug(f"Cloning {table.name} from {s3_dataset_path}/{table.name}/ to {table.dir}")
 
         sdf_in = table._read_files(
-            path=f"{s3_dataset_path}/{table.name}/"
+            path=f"{s3_dataset_path}/{table.name}/",
+            show_missing_table_warning=True
         )
 
         sdf_in = subset_the_table(

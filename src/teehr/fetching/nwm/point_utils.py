@@ -65,7 +65,7 @@ def file_chunk_loop(
         + pd.to_timedelta(int(row.z_hour[1:3]), unit="h")
 
     valid_time = ds.time.values
-    feature_ids = ds.feature_id.astype("int32").values
+    feature_ids = ds.feature_id.values
     teehr_location_ids = \
         [f"{nwm_version}-{feat_id}" for feat_id in feature_ids]
     num_vals = vals.size
