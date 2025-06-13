@@ -333,7 +333,7 @@ def nwm_grids_to_parquet(
             template_ds = get_dataset(
                 json_paths[0],
                 ignore_missing_file=False,
-                target_options={'anon': True}
+                remote_options={"token": "anon"}
             )
 
             generate_weights_file(
