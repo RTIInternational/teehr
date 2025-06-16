@@ -898,7 +898,7 @@ class Fetch:
         t_minus_hours: Optional[List[int]] = None,
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
-        timeseries_type: TimeseriesTypeEnum = "primary",
+        timeseries_type: TimeseriesTypeEnum = "secondary",
         starting_z_hour: Optional[int] = None,
         ending_z_hour: Optional[int] = None,
         write_mode: TableWriteEnum = "append",
@@ -980,7 +980,8 @@ class Fetch:
             exist.  True = overwrite; False = fail.
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
-            Default is "primary".
+            Default is "secondary", unless the configuration is a analysis containing
+            assimilation, in which case the default is "primary".
         starting_z_hour : Optional[int]
             The starting z_hour to include in the output. If None, all z_hours
             are included for the first day. Default is None. Must be between 0 and 23.
@@ -1077,6 +1078,9 @@ class Fetch:
             nwm_configuration_name=nwm_configuration,
             nwm_version=nwm_version
         )
+
+        if "forcing_analysis_assim" in nwm_configuration:
+            timeseries_type = TimeseriesTypeEnum.primary
 
         # Clear out cache
         remove_dir_if_exists(self.nwm_cache_dir)

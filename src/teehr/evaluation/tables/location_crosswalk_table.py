@@ -31,6 +31,13 @@ class LocationCrosswalkTable(BaseTable):
         self.unique_column_set = [
             "secondary_location_id"
         ]
+        self.foreign_keys = [
+            {
+                "column": "primary_location_id",
+                "domain_table": "locations",
+                "domain_column": "id",
+            }
+        ]
 
     def _load(
         self,
@@ -93,14 +100,6 @@ class LocationCrosswalkTable(BaseTable):
 
         # Reload the table
         self._load_table()
-
-    def _get_schema(self, type: str = "pyspark"):
-        """Get the location crosswalk schema."""
-        if type == "pandas":
-            return self.schema_func(type="pandas")
-
-        location_ids = self.ev.locations.distinct_values("id")
-        return self.schema_func(location_ids=location_ids)
 
     def field_enum(self) -> LocationCrosswalkFields:
         """Get the location crosswalk fields enum."""
