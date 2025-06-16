@@ -80,8 +80,8 @@ def test_dates_and_nwm30_version():
     """Make sure start/end dates work with specified NWM version."""
     nwm_version = "nwm30"
     start_date = "2023-11-20"
-    ingest_days = 1
-    validate_operational_start_end_date(nwm_version, start_date, ingest_days)
+    end_date = "2023-11-20"
+    validate_operational_start_end_date(nwm_version, start_date, end_date)
 
     try:
         failed = False
@@ -89,7 +89,7 @@ def test_dates_and_nwm30_version():
         validate_operational_start_end_date(
             nwm_version,
             start_date,
-            ingest_days
+            end_date
         )
     except ValueError:
         failed = True
@@ -100,16 +100,17 @@ def test_dates_and_nwm22_version():
     """Make sure start/end dates work with specified NWM version."""
     nwm_version = "nwm22"
     start_date = "2022-11-20"
-    ingest_days = 1
-    validate_operational_start_end_date(nwm_version, start_date, ingest_days)
+    end_date = "2022-11-20"
+    validate_operational_start_end_date(nwm_version, start_date, end_date)
 
     try:
         failed = False
         start_date = "2023-11-20"
+        end_date = "2025-11-20"
         validate_operational_start_end_date(
             nwm_version,
             start_date,
-            ingest_days
+            end_date
         )
     except ValueError:
         failed = True
@@ -120,8 +121,8 @@ def test_dates_and_nwm21_version():
     """Make sure start/end dates work with specified NWM version."""
     nwm_version = "nwm21"
     start_date = "2021-04-30"
-    ingest_days = 1
-    validate_operational_start_end_date(nwm_version, start_date, ingest_days)
+    end_date = "2021-04-30"
+    validate_operational_start_end_date(nwm_version, start_date, end_date)
 
     try:
         failed = False
@@ -129,7 +130,7 @@ def test_dates_and_nwm21_version():
         validate_operational_start_end_date(
             nwm_version,
             start_date,
-            ingest_days
+            end_date
         )
     except ValueError:
         failed = True
@@ -140,8 +141,8 @@ def test_dates_and_nwm20_version():
     """Make sure start/end dates work with specified NWM version."""
     nwm_version = "nwm20"
     start_date = "2019-06-20"
-    ingest_days = 1
-    validate_operational_start_end_date(nwm_version, start_date, ingest_days)
+    end_date = "2019-06-20"
+    validate_operational_start_end_date(nwm_version, start_date, end_date)
 
     try:
         failed = False
@@ -149,7 +150,7 @@ def test_dates_and_nwm20_version():
         validate_operational_start_end_date(
             nwm_version,
             start_date,
-            ingest_days
+            end_date
         )
     except ValueError:
         failed = True
@@ -160,8 +161,8 @@ def test_dates_and_nwm12_version():
     """Make sure start/end dates work with specified NWM version."""
     nwm_version = "nwm12"
     start_date = "2018-11-20"
-    ingest_days = 1
-    validate_operational_start_end_date(nwm_version, start_date, ingest_days)
+    end_date = "2018-11-20"
+    validate_operational_start_end_date(nwm_version, start_date, end_date)
 
     try:
         failed = False
@@ -169,7 +170,7 @@ def test_dates_and_nwm12_version():
         validate_operational_start_end_date(
             nwm_version,
             start_date,
-            ingest_days
+            end_date
         )
     except ValueError:
         failed = True
@@ -182,33 +183,45 @@ def test_building_nwm30_gcs_paths():
         configuration="forcing_analysis_assim_extend",
         output_type="forcing",
         start_dt="2023-11-28",
-        ingest_days=1,
+        end_dt="2023-11-29",
         analysis_config_dict=NWM30_ANALYSIS_CONFIG,
-        t_minus_hours=[0],
+        t_minus_hours=None,
         ignore_missing_file=False,
-        prioritize_analysis_valid_time=False
+        prioritize_analysis_value_time=False,
+        drop_overlapping_assimilation_values=True
     )
-    assert len(gcs_component_paths) == 28
-    assert all(
-        ["nwm.20231128/forcing_analysis_assim_extend/nwm.t16z.analysis_assim_extend.forcing" in path for path in gcs_component_paths]  # noqa
+    assert len(gcs_component_paths) == 52
+    assert (
+        gcs_component_paths[0] == \
+            'gcs://national-water-model/nwm.20231128/forcing_analysis_assim_extend/nwm.t16z.analysis_assim_extend.forcing.tm27.conus.nc' # noqa
+    )
+    assert (
+        gcs_component_paths[-1] == \
+            'gcs://national-water-model/nwm.20231129/forcing_analysis_assim_extend/nwm.t16z.analysis_assim_extend.forcing.tm00.conus.nc' # noqa
     )
 
 
 def test_building_nwm22_gcs_paths():
     """Test building NWM22 GCS paths."""
     gcs_component_paths = build_remote_nwm_filelist(
-        configuration="analysis_assim_extend",
+        configuration="analysis_assim",
         output_type="channel_rt",
         start_dt="2019-01-12",
-        ingest_days=1,
+        end_dt="2019-01-12",
         analysis_config_dict=NWM22_ANALYSIS_CONFIG,
         t_minus_hours=[0],
         ignore_missing_file=False,
-        prioritize_analysis_valid_time=True
+        prioritize_analysis_value_time=False,
+        drop_overlapping_assimilation_values=False
+    )
+    assert len(gcs_component_paths) == 24
+    assert (
+        gcs_component_paths[-1] == \
+            'gcs://national-water-model/nwm.20190112/analysis_assim/nwm.t23z.analysis_assim.channel_rt.tm00.conus.nc' # noqa
     )
     assert (
-        gcs_component_paths == \
-            ['gcs://national-water-model/nwm.20190112/analysis_assim_extend/nwm.t16z.analysis_assim_extend.channel_rt.tm00.conus.nc'] # noqa
+        gcs_component_paths[0] == \
+            'gcs://national-water-model/nwm.20190112/analysis_assim/nwm.t00z.analysis_assim.channel_rt.tm00.conus.nc' # noqa
     )
 
 
@@ -319,11 +332,12 @@ def test_start_end_z_hours():
         configuration="short_range",
         output_type="channel_rt",
         start_dt="2023-11-28",
-        ingest_days=2,
+        end_dt="2023-11-29",
         analysis_config_dict=NWM30_ANALYSIS_CONFIG,
         t_minus_hours=[0],
         ignore_missing_file=False,
-        prioritize_analysis_valid_time=False
+        prioritize_analysis_value_time=False,
+        drop_overlapping_assimilation_values=False
     )
 
     gcs_component_paths = start_on_z_hour(
@@ -334,8 +348,7 @@ def test_start_end_z_hours():
     gcs_component_paths = end_on_z_hour(
         gcs_component_paths=gcs_component_paths,
         end_z_hour=12,
-        ingest_days=2,
-        start_date=datetime.strptime("2023-11-28", "%Y-%m-%d")
+        end_date=datetime.strptime("2023-11-29", "%Y-%m-%d")
     )
 
     assert gcs_component_paths[-1] == 'gcs://national-water-model/nwm.20231129/short_range/nwm.t12z.short_range.channel_rt.f018.conus.nc'  # noqa

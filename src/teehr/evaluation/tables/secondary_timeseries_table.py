@@ -115,13 +115,15 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             )
 
         # Validate using the _validate() method
-        validated_df = self._validate(df)
+        validated_df = self._validate(
+            df=df,
+            drop_duplicates=drop_duplicates
+        )
 
         # Write to the table
         self._write_spark_df(
             validated_df,
-            write_mode=write_mode,
-            drop_duplicates=drop_duplicates,
+            write_mode=write_mode
         )
 
         # Reload the table
