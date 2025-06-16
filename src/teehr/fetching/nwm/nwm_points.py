@@ -48,7 +48,7 @@ def nwm_to_parquet(
     ingest_days: Optional[int] = None,
     data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
     kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
-    prioritize_analysis_valid_time: Optional[bool] = False,
+    prioritize_analysis_value_time: Optional[bool] = False,
     t_minus_hours: Optional[List[int]] = None,
     process_by_z_hour: Optional[bool] = True,
     stepsize: Optional[int] = 100,
@@ -115,7 +115,7 @@ def nwm_to_parquet(
         CIROH pre-generated jsons from s3, ignoring any that are unavailable.
         "auto" - read the CIROH pre-generated jsons from s3, and create any that
         are unavailable, storing locally.
-    prioritize_analysis_valid_time : Optional[bool]
+    prioritize_analysis_value_time : Optional[bool]
         A boolean flag that determines the method of fetching analysis data.
         When False (default), all hours of the reference time are included in the
         output. When True, only the hours within t_minus_hours are included.
@@ -287,7 +287,7 @@ def nwm_to_parquet(
             analysis_config_dict,
             t_minus_hours,
             ignore_missing_file,
-            prioritize_analysis_valid_time,
+            prioritize_analysis_value_time,
             drop_overlapping_assimilation_values
         )
 

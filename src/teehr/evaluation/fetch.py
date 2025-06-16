@@ -648,7 +648,7 @@ class Fetch:
         ingest_days: Optional[int] = None,
         data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
         kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
-        prioritize_analysis_valid_time: Optional[bool] = False,
+        prioritize_analysis_value_time: Optional[bool] = False,
         t_minus_hours: Optional[List[int]] = None,
         process_by_z_hour: Optional[bool] = True,
         stepsize: Optional[int] = 100,
@@ -714,7 +714,7 @@ class Fetch:
             CIROH pre-generated jsons from s3, ignoring any that are unavailable.
             "auto" - read the CIROH pre-generated jsons from s3, and create any that
             are unavailable, storing locally.
-        prioritize_analysis_valid_time : Optional[bool]
+        prioritize_analysis_value_time : Optional[bool]
             A boolean flag that determines the method of fetching analysis-assimilation
             data. When False (default), all non-overlapping value_time hours
             (prioritizing the most recent reference_time) are included in the
@@ -723,7 +723,7 @@ class Fetch:
             Specifies the look-back hours to include if an assimilation
             nwm_configuration is specified.
             Only utilized if assimilation data is requested and
-            prioritize_analysis_valid_time is True.
+            prioritize_analysis_value_time is True.
         process_by_z_hour : Optional[bool]
             A boolean flag that determines the method of grouping files
             for processing. The default is True, which groups by day and z_hour.
@@ -862,7 +862,7 @@ class Fetch:
             nwm_version=nwm_version,
             data_source=data_source,
             kerchunk_method=kerchunk_method,
-            prioritize_analysis_valid_time=prioritize_analysis_valid_time,
+            prioritize_analysis_value_time=prioritize_analysis_value_time,
             t_minus_hours=t_minus_hours,
             process_by_z_hour=process_by_z_hour,
             stepsize=stepsize,
@@ -912,7 +912,7 @@ class Fetch:
         location_id_prefix: Optional[str] = None,
         data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
         kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
-        prioritize_analysis_valid_time: Optional[bool] = False,
+        prioritize_analysis_value_time: Optional[bool] = False,
         t_minus_hours: Optional[List[int]] = None,
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
@@ -990,7 +990,7 @@ class Fetch:
             CIROH pre-generated jsons from s3, ignoring any that are unavailable.
             "auto" - read the CIROH pre-generated jsons from s3, and create any that
             are unavailable, storing locally.
-        prioritize_analysis_valid_time : Optional[bool]
+        prioritize_analysis_value_time : Optional[bool]
             A boolean flag that determines the method of fetching analysis-assimilation
             data. When False (default), all non-overlapping value_time hours
             (prioritizing the most recent reference_time) are included in the
@@ -999,7 +999,7 @@ class Fetch:
             Specifies the look-back hours to include if an assimilation
             nwm_configuration is specified.
             Only utilized if assimilation data is requested and
-            prioritize_analysis_valid_time is True.
+            prioritize_analysis_value_time is True.
         ignore_missing_file : bool
             Flag specifying whether or not to fail if a missing NWM file is encountered
             True = skip and continue; False = fail.
@@ -1162,7 +1162,7 @@ class Fetch:
             ingest_days=ingest_days,
             data_source=data_source,
             kerchunk_method=kerchunk_method,
-            prioritize_analysis_valid_time=prioritize_analysis_valid_time,
+            prioritize_analysis_value_time=prioritize_analysis_value_time,
             t_minus_hours=t_minus_hours,
             ignore_missing_file=ignore_missing_file,
             overwrite_output=overwrite_output,

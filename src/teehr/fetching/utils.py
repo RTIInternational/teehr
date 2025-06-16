@@ -740,7 +740,7 @@ def build_remote_nwm_filelist(
     analysis_config_dict: Dict,
     t_minus_hours: Optional[Iterable[int]],
     ignore_missing_file: Optional[bool],
-    prioritize_analysis_valid_time: Optional[bool],
+    prioritize_analysis_value_time: Optional[bool],
     drop_overlapping_assimilation_values: Optional[bool]
 ) -> List[str]:
     """Assemble a list of remote NWM files based on user parameters.
@@ -764,7 +764,7 @@ def build_remote_nwm_filelist(
         NWM file is encountered
         True = skip and continue
         False = fail.
-    prioritize_analysis_valid_time : Optional[bool]
+    prioritize_analysis_value_time : Optional[bool]
         A boolean flag that determines the method of fetching analysis
         assimilation data. When True, assimilation data is limited to
         the start and end dates according to value_time. When False,
@@ -787,7 +787,7 @@ def build_remote_nwm_filelist(
     fs = fsspec.filesystem("gcs", token="anon")
     dates = pd.date_range(start=start_dt, end=end_dt, freq="1d")
 
-    if "assim" in configuration and prioritize_analysis_valid_time:
+    if "assim" in configuration and prioritize_analysis_value_time:
         cycle_z_hours = analysis_config_dict[configuration]["cycle_z_hours"]
         domain = analysis_config_dict[configuration]["domain"]
         configuration_name_in_filepath = analysis_config_dict[configuration][
