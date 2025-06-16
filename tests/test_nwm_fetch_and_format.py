@@ -81,7 +81,7 @@ def test_nwm30_point_fetch_and_format(tmpdir):
     fetch_and_format_nwm_points(
         json_paths=json_paths,
         location_ids=location_ids,
-        configuration="short_range",
+        configuration="short_range_alaska",
         variable_name="streamflow",
         output_parquet_dir=tmpdir,
         nwm_version="nwm30",
@@ -279,11 +279,11 @@ def test_raise_location_id_prefix_error():
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(prefix="teehr") as tempdir:
-        test_nwm22_point_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
+        # test_nwm22_point_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
         test_nwm30_point_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
-        test_nwm22_grid_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
-        test_nwm30_grid_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
-        test_nwm30_point_fetch_and_format_medium_range_member(tempfile.mkdtemp(dir=tempdir))  # noqa
-        test_replace_location_id_prefix()
-        test_prepend_location_id_prefix()
-        test_raise_location_id_prefix_error()
+        # test_nwm22_grid_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
+        # test_nwm30_grid_fetch_and_format(tempfile.mkdtemp(dir=tempdir))
+        # test_nwm30_point_fetch_and_format_medium_range_member(tempfile.mkdtemp(dir=tempdir))  # noqa
+        # test_replace_location_id_prefix()
+        # test_prepend_location_id_prefix()
+        # test_raise_location_id_prefix_error()

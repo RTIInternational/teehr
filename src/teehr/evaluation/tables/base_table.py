@@ -75,7 +75,7 @@ class BaseTable():
         self,
         path: Union[str, Path, S3Path],
         pattern: str = None,
-        show_missing_table_warning: bool = True,
+        show_missing_table_warning: bool = False,
         **options
     ) -> ps.DataFrame:
         """Read data from table directory as a spark dataframe.
@@ -119,7 +119,7 @@ class BaseTable():
 
         return df
 
-    def _load_table(self, show_missing_table_warning=True, **kwargs):
+    def _load_table(self, **kwargs):
         """Load the table from the directory to self.df.
 
         Parameters
@@ -130,7 +130,6 @@ class BaseTable():
         logger.info(f"Loading files from {self.dir}.")
         self.df = self._read_files(
             self.dir,
-            show_missing_table_warning=show_missing_table_warning,
             **kwargs
         )
 

@@ -219,7 +219,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
         self,
         path: Union[str, Path, S3Path],
         pattern: str = None,
-        show_missing_table_warning: bool = True,
+        show_missing_table_warning: bool = False,
         **options
     ) -> ps.DataFrame:
         """Read data from table directory as a spark dataframe.
