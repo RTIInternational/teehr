@@ -80,7 +80,7 @@ def file_chunk_loop(
             REFERENCE_TIME: np.full(vals.shape, ref_time),
             LOCATION_ID: teehr_location_ids,
             VALUE_TIME: np.full(vals.shape, valid_time),
-            CONFIGURATION_NAME: num_vals * [teehr_config["configuration_name"]],
+            CONFIGURATION_NAME: num_vals * [teehr_config["name"]],
             VARIABLE_NAME: num_vals * [teehr_variable_name],
             UNIT_NAME: num_vals * [teehr_units],
             MEMBER: num_vals * [teehr_config["member"]]

@@ -215,7 +215,7 @@ def fetch_and_format_nwm_grids(
             results.append(
                 process_single_nwm_grid_file(
                     row,
-                    teehr_config["configuration_name"],
+                    teehr_config["name"],
                     variable_name,
                     zonal_weights_filepath,
                     ignore_missing_file,
