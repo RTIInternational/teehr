@@ -344,7 +344,7 @@ def nwm_retro_grids_to_parquet(
             if zone_polygons is None:
                 raise ValueError(
                     "The zone polygons must be provided"
-                    " to calculate zonal weights. Can be a GeoDataFame"
+                    " to calculate zonal weights. Can be a GeoDataFrame"
                     " or a filepath."
                 )
 

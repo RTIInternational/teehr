@@ -444,7 +444,7 @@ class Fetch:
         variable_name: ForcingVariablesEnum,
         start_date: Union[str, datetime, pd.Timestamp],
         end_date: Union[str, datetime, pd.Timestamp],
-        calculate_zonal_weights: bool = True,
+        calculate_zonal_weights: bool = False,
         overwrite_output: Optional[bool] = False,
         chunk_by: Optional[NWMChunkByEnum] = None,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
@@ -494,7 +494,7 @@ class Fetch:
             - v3.0: 2023-01-31
         calculate_zonal_weights : bool
             Flag specifying whether or not to calculate zonal weights.
-            True = calculate; False = use existing file. Default is True.
+            True = calculate; False = use existing file. Default is False.
         location_id_prefix : Optional[str]
             Prefix to include when filtering the locations table for polygon
             primary_location_id. Default is None, all locations are included.
@@ -908,7 +908,7 @@ class Fetch:
         start_date: Union[str, datetime, pd.Timestamp],
         end_date: Optional[Union[str, datetime, pd.Timestamp]] = None,
         ingest_days: Optional[int] = None,
-        calculate_zonal_weights: bool = True,
+        calculate_zonal_weights: bool = False,
         location_id_prefix: Optional[str] = None,
         data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
         kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
@@ -974,7 +974,7 @@ class Fetch:
             If both are provided, ingest_days takes precedence.
         calculate_zonal_weights : bool
             Flag specifying whether or not to calculate zonal weights.
-            True = calculate; False = use existing file. Default is True.
+            True = calculate; False = use existing file. Default is False.
         location_id_prefix : Optional[str]
             Prefix to include when filtering the locations table for polygon
             primary_location_id. Default is None, all locations are included.
