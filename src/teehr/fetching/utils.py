@@ -315,7 +315,9 @@ def _drop_nan_values(
         logger.debug(
             "NaN values were encountered, dropping from the dataframe."
         )
-        return df.dropna(subset=subset_columns).reset_index(drop=True)
+        df = df.dropna(subset=subset_columns).reset_index(drop=True)
+        if df.index.size == 0:
+            return None
     return df
 
 
@@ -346,6 +348,13 @@ def write_timeseries_parquet_file(
         df = data
 
     df = _drop_nan_values(df)
+
+    if df is None:
+        logger.warning(
+            f"The dataframe is empty after dropping NaN values; "
+            f"skipping writing to {filepath.name}."
+        )
+        return
 
     if timeseries_type == TimeseriesTypeEnum.primary:
         schema = schemas.primary_timeseries_schema(type="pandas")
