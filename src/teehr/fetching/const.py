@@ -36,6 +36,14 @@ USGS_VARIABLE_MAPPER = {
     },
 }
 
+NWM_CONFIGURATION_DESCRIPTIONS = {
+    "analysis_assim_extend_no_da": "NWM analysis extended - no nudging - STAGE IV forcing",
+    "analysis_assim_extend": "NWM analysis extended - with nudging - STAGE IV forcing",
+    "medium_range_mem1": "NWM medium range - GFS member 1 forcing",
+    "medium_range_blend": "NWM medium range - NBM forcing",
+    "short_range": "NWM short range - HRRR forcing"
+}
+
 NWM_VARIABLE_MAPPER = {
     VARIABLE_NAME: {
         "streamflow": "streamflow_hourly_inst",

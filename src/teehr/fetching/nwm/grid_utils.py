@@ -12,7 +12,7 @@ from teehr.fetching.utils import (
     get_dataset,
     write_timeseries_parquet_file,
     parse_nwm_json_paths,
-    format_nwm_configuration_name
+    format_nwm_configuration_metadata
 )
 from teehr.models.fetching.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
@@ -202,7 +202,7 @@ def fetch_and_format_nwm_grids(
 
     gps = df_refs.groupby(["day", "z_hour"])
 
-    teehr_config = format_nwm_configuration_name(
+    teehr_config = format_nwm_configuration_metadata(
         nwm_configuration_name=nwm_configuration_name,
         nwm_version=nwm_version
     )

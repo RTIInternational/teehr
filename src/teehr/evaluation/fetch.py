@@ -18,7 +18,7 @@ from teehr.loading.timeseries import (
 )
 from teehr.fetching.utils import (
     format_nwm_variable_name,
-    format_nwm_configuration_name
+    format_nwm_configuration_metadata
 )
 from teehr.models.fetching.nwm22_grid import ForcingVariablesEnum
 from teehr.models.fetching.utils import (
@@ -261,7 +261,7 @@ class Fetch:
                 Configuration(
                     name=USGS_CONFIGURATION_NAME,
                     type="primary",
-                    description="USGS Observations"
+                    description="USGS streamflow gauge observations"
                 )
             )
 
@@ -837,7 +837,7 @@ class Fetch:
         )
 
         ev_variable_name = format_nwm_variable_name(variable_name)
-        ev_config = format_nwm_configuration_name(
+        ev_config = format_nwm_configuration_metadata(
             nwm_configuration_name=nwm_configuration,
             nwm_version=nwm_version
         )
@@ -856,7 +856,7 @@ class Fetch:
             json_dir=self.kerchunk_cache_dir,
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
-                ev_config["configuration_name"],
+                ev_config["name"],
                 ev_variable_name
             ),
             nwm_version=nwm_version,
@@ -877,14 +877,14 @@ class Fetch:
 
         if (
             not self._configuration_name_exists(
-                ev_config["configuration_name"]
+                ev_config["name"]
             )
         ):
             self.ev.configurations.add(
                 Configuration(
-                    name=ev_config["configuration_name"],
+                    name=ev_config["name"],
                     type=timeseries_type,
-                    description=f"{nwm_version} operational forecasts"
+                    description=ev_config["description"]
                 )
             )
 
@@ -1108,7 +1108,7 @@ class Fetch:
         :func:`teehr.fetching.nwm.nwm_grids.nwm_grids_to_parquet`
         """ # noqa
         ev_variable_name = format_nwm_variable_name(variable_name)
-        ev_config = format_nwm_configuration_name(
+        ev_config = format_nwm_configuration_metadata(
             nwm_configuration_name=nwm_configuration,
             nwm_version=nwm_version
         )
@@ -1120,7 +1120,7 @@ class Fetch:
         remove_dir_if_exists(self.nwm_cache_dir)
 
         ev_weights_cache_dir = Path(
-            self.weights_cache_dir, ev_config["configuration_name"]
+            self.weights_cache_dir, ev_config["name"]
         )
         ev_weights_cache_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1142,7 +1142,7 @@ class Fetch:
         if zonal_weights_filepath is None:
             zonal_weights_filepath = Path(
                 ev_weights_cache_dir,
-                f"{ev_config['configuration_name']}_pixel_weights.parquet"
+                f"{ev_config['name']}_pixel_weights.parquet"
             )
 
         nwm_grids_to_parquet(
@@ -1155,7 +1155,7 @@ class Fetch:
             json_dir=self.kerchunk_cache_dir,
             output_parquet_dir=Path(
                 self.nwm_cache_dir,
-                ev_config["configuration_name"],
+                ev_config["name"],
                 ev_variable_name
             ),
             nwm_version=nwm_version,
@@ -1179,14 +1179,14 @@ class Fetch:
 
         if (
             not self._configuration_name_exists(
-                ev_config["configuration_name"]
+                ev_config["name"]
             )
         ):
             self.ev.configurations.add(
                 Configuration(
-                    name=ev_config["configuration_name"],
+                    name=ev_config["name"],
                     type=timeseries_type,
-                    description=f"{nwm_version} operational forecasts"
+                    description=ev_config["description"]
                 )
             )
 

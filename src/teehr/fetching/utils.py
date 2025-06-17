@@ -36,7 +36,8 @@ from teehr.fetching.const import (
     NWM20_START_DATE,
     NWM12_START_DATE,
     NWM_VARIABLE_MAPPER,
-    VARIABLE_NAME
+    VARIABLE_NAME,
+    NWM_CONFIGURATION_DESCRIPTIONS
 )
 import teehr.models.pandera_dataframe_schemas as schemas
 
@@ -159,7 +160,7 @@ def parse_nwm_json_paths(
     )
 
 
-def format_nwm_configuration_name(
+def format_nwm_configuration_metadata(
     nwm_configuration_name: str,
     nwm_version: str
 ) -> Dict[str, str]:
@@ -178,7 +179,15 @@ def format_nwm_configuration_name(
     else:
         ev_configuration = nwm_configuration_name
     ev_configuration = nwm_version + "_" + ev_configuration
-    return {"configuration_name": ev_configuration, "member": ev_member}
+    if nwm_configuration_name in NWM_CONFIGURATION_DESCRIPTIONS:
+        ev_config_desc = NWM_CONFIGURATION_DESCRIPTIONS[nwm_configuration_name]
+    else:
+        ev_config_desc = "NWM operational forecasts"
+    return {
+        "name": ev_configuration,
+        "member": ev_member,
+        "description": ev_config_desc
+    }
 
 
 def format_nwm_variable_name(variable_name: str) -> str:
