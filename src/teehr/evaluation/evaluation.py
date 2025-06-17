@@ -88,7 +88,6 @@ class Evaluation:
                 SparkConf()
                 .setAppName("TEEHR")
                 .setMaster("local[*]")
-                # .set("spark.jars.packages", "org.apache.iceberg:iceberg-spark-runtime-4.x_2.12:1.x.x")
                 .set("spark.sql.sources.partitionOverwriteMode", "dynamic")
                 .set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
                 .set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider")
@@ -98,8 +97,6 @@ class Evaluation:
                 .set("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.4.1")
                 .set("spark.jars.packages", "com.amazonaws:aws-java-sdk-bundle:1.12.787")
                 .set("spark.sql.parquet.enableVectorizedReader", "false")
-                # .set("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.3.1,com.amazonaws:aws-java-sdk-bundle:1.11.375")
-
             )
             self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
 
