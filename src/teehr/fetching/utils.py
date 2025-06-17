@@ -7,6 +7,7 @@ from dateutil.parser import parse
 import logging
 import re
 import json
+from warnings import warn
 
 import dask
 import fsspec
@@ -68,15 +69,13 @@ def start_on_z_hour(
 
 
 def end_on_z_hour(
-    start_date: datetime,
-    ingest_days: int,
+    end_date: datetime,
     end_z_hour: int,
     gcs_component_paths: List[str]
 ):
     """Limit the end date to a specified z-hour."""
     logger.info(f"Limiting the end date to z-hour: {end_z_hour}.")
-    dates = pd.date_range(start=start_date, periods=ingest_days, freq="1d")
-    formatted_end_date = dates[-1].strftime("%Y%m%d")
+    formatted_end_date = end_date.strftime("%Y%m%d")
     return_list = []
     reversed_list = sorted(gcs_component_paths, reverse=True)
     for path in reversed_list:
@@ -89,6 +88,53 @@ def end_on_z_hour(
         else:
             return_list.append(path)
     return sorted(return_list)
+
+
+def parse_nwm_gcs_paths(
+    component_paths: List[str],
+    nwm_configuration: str,
+) -> pd.DataFrame:
+    """Parse the reference and valid times from the paths."""
+    logger.debug("Parsing day and z-hour from component paths.")
+    tz_pattern = re.compile(r't([0-9]+)z')
+    tm_pattern = re.compile(r'tm([0-9]+)')
+    parsed_data = []
+    for path in component_paths:
+        filename = Path(path).name
+        res = re.search(DAY_PATTERN, path).group()
+        day = res.split(".")[1]
+        z_hour = re.search(tz_pattern, filename).group(1)
+        tm_hour = re.search(tm_pattern, filename).group(1)
+        reference_time = datetime.strptime(day, "%Y%m%d") + timedelta(hours=int(z_hour))
+        # Hawaii has 15-minute intervals, so we need to account for that.
+        # (Hawaii forcing analysis has hourly intervals)
+        if nwm_configuration == "analysis_assim_hawaii":
+            value_time = reference_time - timedelta(minutes=int(tm_hour))
+        else:
+            value_time = reference_time - timedelta(hours=int(tm_hour))
+        parsed_data.append({
+            "day": day,
+            "z_hour": z_hour,
+            "tm_hour": tm_hour,
+            "filepath": path,
+            "value_time": value_time,
+            "reference_time": reference_time
+        })
+    df = pd.DataFrame(parsed_data)
+    return df
+
+
+def remove_overlapping_assim_validtimes(
+    parsed_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """Drop overlapping value_times, keeping most recent reference time."""
+    logger.debug("Parsing day and z-hour from component paths.")
+    sorted_df = parsed_df.sort_values(by=["reference_time", "value_time"], ascending=True)
+    dropped_df = sorted_df.drop_duplicates(
+        subset=["value_time"],
+        keep="last"
+    ).reset_index(drop=True)
+    return dropped_df
 
 
 def parse_nwm_json_paths(
@@ -144,15 +190,21 @@ def format_nwm_variable_name(variable_name: str) -> str:
 
 def validate_operational_start_end_date(
     nwm_version: str,
-    start_date: Union[str, datetime],
-    ingest_days: int
+    start_date: Union[str, datetime, pd.Timestamp],
+    end_date: Union[str, datetime, pd.Timestamp]
 ):
     """Make sure start/end dates work with specified NWM version."""
     logger.debug("Checking dates against NWM version.")
 
     if isinstance(start_date, str):
         start_date = parse(start_date)
-    end_date = start_date + timedelta(days=ingest_days)
+    if isinstance(end_date, str):
+        end_date = parse(end_date)
+
+    if end_date < start_date:
+        raise ValueError(
+            "The end date must be greater than or equal to the start date."
+        )
 
     err_msg = (
         f"The specified start and end dates ({start_date} - {end_date}) "
@@ -505,7 +557,7 @@ def build_zarr_references(
     if not json_dir_path.exists():
         json_dir_path.mkdir(parents=True)
 
-    fs = fsspec.filesystem("gcs", anon=True)
+    fs = fsspec.filesystem("gcs", token="anon")
 
     # Check to see if the jsons already exist locally
     existing_jsons = []
@@ -594,7 +646,7 @@ def construct_assim_paths(
 
         # Add the values starting from day 1,
         # skipping value times in the previous day
-        if "hawaii" in configuration:
+        if configuration == "analysis_assim_hawaii":
             for cycle_hr in cycle_z_hours:
                 for tm in t_minus:
                     for tm2 in [0, 15, 30, 45]:
@@ -611,7 +663,7 @@ def construct_assim_paths(
                     component_paths.append(file_path)
 
         # Now add the values from the day following the end day,
-        # whose value times that fall within the end day
+        # whose value times fall within the end day
         if "extend" in configuration:
             for tm in t_minus:
                 dt_add = dt + pd.Timedelta(cycle_hr + 24, unit="hours")
@@ -621,7 +673,7 @@ def construct_assim_paths(
                     file_path = f"{gcs_dir}/nwm.{dt_add_str}/{configuration}/nwm.t{hr_add:02d}z.{configuration_name_in_filepath}.{output_type}.tm{tm:02d}.{domain}.{file_extension}"  # noqa
                     component_paths.append(file_path)
 
-        elif "hawaii" in configuration:
+        elif configuration == "analysis_assim_hawaii":
             for cycle_hr2 in cycle_z_hours:
                 for tm in t_minus:
                     for tm2 in [0, 15, 30, 45]:
@@ -650,15 +702,46 @@ def construct_assim_paths(
     return sorted(component_paths)
 
 
+def get_end_date_from_ingest_days(
+    start_date: Union[str, datetime, pd.Timestamp],
+    ingest_days: Optional[int]
+) -> Union[str, datetime, pd.Timestamp]:
+    """Get the end date from the start date and ingest days.
+
+    Parameters
+    ----------
+    start_date : Union[str, datetime, pd.Timestamp]
+        The start date.
+    ingest_days : Optional[int]
+        The number of days to ingest.
+
+    Returns
+    -------
+    Union[str, datetime, pd.Timestamp]
+        The end date.
+    """
+    if ingest_days <= 0:
+        raise ValueError("ingest_days must be greater than 0")
+    warn(
+        "'ingest_days' is deprecated and "
+        "will be removed in future versions",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    end_date = start_date + timedelta(days=ingest_days - 1)
+    return end_date
+
+
 def build_remote_nwm_filelist(
     configuration: str,
     output_type: str,
-    start_dt: Union[str, datetime],
-    ingest_days: int,
+    start_dt: Union[str, datetime, pd.Timestamp],
+    end_dt: Union[str, datetime, pd.Timestamp],
     analysis_config_dict: Dict,
     t_minus_hours: Optional[Iterable[int]],
     ignore_missing_file: Optional[bool],
-    prioritize_analysis_valid_time: Optional[bool]
+    prioritize_analysis_value_time: Optional[bool],
+    drop_overlapping_assimilation_values: Optional[bool]
 ) -> List[str]:
     """Assemble a list of remote NWM files based on user parameters.
 
@@ -670,21 +753,28 @@ def build_remote_nwm_filelist(
         Output component of the configuration.
     start_dt : str “YYYY-MM-DD” or datetime
         Date to begin data ingest.
-    ingest_days : int
-        Number of days to ingest data after start date.
-    t_minus_hours : Iterable[int]
-        Only necessary if assimilation data is requested.
+    end_dt : str “YYYY-MM-DD” or datetime
+        Date to end data ingest.
+    t_minus_hours : Optional[Iterable[int]]
         Collection of lookback hours to include when fetching
-        assimilation data.
-    ignore_missing_file : bool
+        assimilation data. If None (default), all available
+        t-minus hours are included.
+    ignore_missing_file : Optional[bool]
         Flag specifying whether or not to fail if a missing
         NWM file is encountered
         True = skip and continue
         False = fail.
-    prioritize_analysis_valid_time : Optional[bool]
-        A boolean flag that determines the method of fetching analysis data.
-        When False (default), all hours of the reference time are included in the
-        output. When True, only the hours within t_minus_hours are included.
+    prioritize_analysis_value_time : Optional[bool]
+        A boolean flag that determines the method of fetching analysis
+        assimilation data. When True, assimilation data is limited to
+        the start and end dates according to value_time. When False,
+        the data is fetched based on reference_time (value_time may fall
+        before the start date)
+    drop_overlapping_assimilation_values : Optional[bool]
+        A boolean flag that determines whether or not to remove
+        overlapping assimilation values. If True, only values corresponding
+        to the most recent reference_time are kept. If False, all values
+        are kept, even if they overlap in value_time.
 
     Returns
     -------
@@ -694,16 +784,21 @@ def build_remote_nwm_filelist(
     logger.debug("Building remote NWM file list from GCS.")
 
     gcs_dir = f"gcs://{NWM_BUCKET}"
-    fs = fsspec.filesystem("gcs", anon=True)
-    dates = pd.date_range(start=start_dt, periods=ingest_days, freq="1d")
+    fs = fsspec.filesystem("gcs", token="anon")
+    dates = pd.date_range(start=start_dt, end=end_dt, freq="1d")
 
-    if "assim" in configuration and prioritize_analysis_valid_time:
+    if "assim" in configuration and prioritize_analysis_value_time:
         cycle_z_hours = analysis_config_dict[configuration]["cycle_z_hours"]
         domain = analysis_config_dict[configuration]["domain"]
         configuration_name_in_filepath = analysis_config_dict[configuration][
             "configuration_name_in_filepath"
         ]
         max_lookback = analysis_config_dict[configuration]["num_lookback_hrs"]
+
+        if t_minus_hours is None:
+            t_minus_hours = np.arange(
+                0, max_lookback, 1
+            ).tolist()
 
         if max(t_minus_hours) > max_lookback - 1:
             raise ValueError(
@@ -724,9 +819,20 @@ def build_remote_nwm_filelist(
             domain,
         )
 
+        if drop_overlapping_assimilation_values is True:
+            logger.debug(
+                "Removing overlapping assimilation value times."
+            )
+            parsed_df = parse_nwm_gcs_paths(
+                component_paths=component_paths,
+                nwm_configuration=configuration,
+            )
+            dropped_df = remove_overlapping_assim_validtimes(
+                parsed_df=parsed_df,
+            )
+            component_paths = dropped_df["filepath"].tolist()
     else:
         component_paths = []
-
         for dt in dates:
             dt_str = dt.strftime("%Y%m%d")
             file_path = (
@@ -737,6 +843,21 @@ def build_remote_nwm_filelist(
                 raise FileNotFoundError(f"No NWM files found in {file_path}")
             component_paths.extend(result)
         component_paths = sorted([f"gcs://{path}" for path in component_paths])
+
+        if "assim" in configuration:
+            parsed_df = parse_nwm_gcs_paths(
+                component_paths=component_paths,
+                nwm_configuration=configuration,
+            )
+            if drop_overlapping_assimilation_values is True:
+                parsed_df = remove_overlapping_assim_validtimes(
+                    parsed_df=parsed_df,
+                )
+            if t_minus_hours is not None:
+                parsed_df = parsed_df[
+                    parsed_df["tm_hour"].astype(int).isin(t_minus_hours)
+                ]
+            component_paths = parsed_df["filepath"].tolist()
 
     return component_paths
 
