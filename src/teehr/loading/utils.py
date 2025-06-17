@@ -77,53 +77,45 @@ def read_spatial_file(
 
     logger.debug(f"Loading geospatial file: {filepath}")
 
-    gdf = None
-    # try parquet
-    try:
-        gdf = gpd.read_parquet(filepath, **kwargs)
-    except (pa.lib.ArrowInvalid, pa.lib.ArrowIOError, ValueError) as e:
-        logger.debug(f"Parquet read failed: {e}")
-    except Exception as e:
-        logger.error(f"Unexpected error reading parquet: {e}")
-        raise
+    # get extension
+    ext = filepath.suffix.lower()
 
-    # try file-based formats if parquet failed
-    if gdf is None:
+    # Define extension groups
+    parquet_exts = {'.parquet', '.pq', '.parq', '.p'}
+    feather_exts = {'.feather', '.ft'}
+    file_exts = {'.gpkg', '.shp', '.geojson', '.json', '.gml', '.kml', '.csv'}
+
+    if ext in parquet_exts:
         try:
-            gdf = gpd.read_file(filepath, **kwargs)
-        except (fiona.errors.DriverError, ValueError, OSError) as e:
-            logger.debug(f"File-based read failed: {e}")
-        except Exception as e:
-            logger.error(f"Unexpected error reading file-based format: {e}")
-            raise
-
-    # try feather if all others failed
-    if gdf is None:
+            gdf = gpd.read_parquet(filepath, **kwargs)
+        except (pa.lib.ArrowInvalid, pa.lib.ArrowIOError, ValueError) as e:
+            raise ValueError(f"Failed to read parquet file: {e}")
+    elif ext in feather_exts:
         try:
             gdf = gpd.read_feather(filepath, **kwargs)
         except (pa.lib.ArrowInvalid, pa.lib.ArrowIOError, ValueError) as e:
-            logger.debug(f"Feather read failed: {e}")
-        except Exception as e:
-            logger.error(f"Unexpected error reading feather: {e}")
-            raise
+            raise ValueError(f"Failed to read feather file: {e}")
+    elif ext in file_exts:
+        try:
+            gdf = gpd.read_file(filepath, **kwargs)
+        except (fiona.errors.DriverError, ValueError, OSError) as e:
+            raise ValueError(
+                f"""Failed to read file with geopandas.read_file: {e}"""
+                )
+    else:
+        raise ValueError(f"Unsupported spatial file extension: {ext}")
 
-    if gdf is None:
-        raise ValueError(f"""Unsupported or unreadable geospatial file type:
-                         {filepath}""")
-
-    # check for empty file
     if gdf.empty:
         raise ValueError(f"The file '{filepath}' was loaded but is empty.")
-
-    # check for geometry column
     if gdf.geometry is None or gdf.geometry.name not in gdf.columns:
-        raise ValueError(f"""The file '{filepath}' does not contain a valid
-                          geometry column.""")
-
-    # check for corrupt shapefile (common error: geometry all None)
+        raise ValueError(
+            f"The file '{filepath}' does not contain a valid geometry column."
+            )
     if gdf.geometry.isnull().all():
-        raise ValueError(f"""The file '{filepath}' contains only null
-                         geometries (possibly corrupt).""")
+        raise ValueError(
+            f""""The file '{filepath}' contains only null geometries (possibly
+            corrupt)."""
+            )
 
     return gdf
 
