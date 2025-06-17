@@ -683,11 +683,7 @@ class TEEHRDataFrameAccessor:
 
     def _location_format_points(self) -> dict:
         """Generate dictionary for point plotting."""
-        logger.info("Assembling geodata for locations mapping...")
-        if not all(self._gdf.geometry.geom_type == "Point"):
-            logger.warning(
-                "Non-point geometries detected and excluded from mapping."
-                )
+        logger.info("Assembling point geodata for locations mapping...")
         gdf_points = self._gdf[self._gdf.geometry.geom_type == "Point"]
         geo_data = {}
         geo_data['id'] = gdf_points['id'].tolist()
@@ -696,6 +692,30 @@ class TEEHRDataFrameAccessor:
         geo_data['y'] = gdf_points.geometry.y.values.tolist()
         logger.info("Locations geodata assembled.")
         return geo_data
+
+    def _location_format_polygons(self) -> dict:
+        """Generate dictionary for polygon plotting."""
+        logger.info("Assembling non-point geodata for locations mapping...")
+        gdf_polys = self._gdf[self._gdf.geometry.geom_type.isin(
+            ['Polygon', 'MultiPolygon']
+            )]
+        ids, names, xs, ys = [], [], [], []
+        for _, row in gdf_polys.iterrows():
+            geom = row.geometry
+            if geom.geom_type == 'Polygon':
+                x, y = zip(*geom.exterior.coords)
+                xs.append(list(x))
+                ys.append(list(y))
+                ids.append(row.get('id', None))
+                names.append(row.get('name', None))
+            elif geom.geom_type == 'MultiPolygon':
+                for poly in geom.geoms:
+                    x, y = zip(*poly.exterior.coords)
+                    xs.append(list(x))
+                    ys.append(list(y))
+                    ids.append(row.get('id', None))
+                    names.append(row.get('name', None))
+        return {'id': ids, 'name': names, 'xs': xs, 'ys': ys}
 
     def _location_get_bounds(
         self,
@@ -716,8 +736,8 @@ class TEEHRDataFrameAccessor:
             axes_bounds['y_space'] = ((min_y - y_buffer), (max_y + y_buffer))
         else:
             logger.info("Only one point detected, using default bounds.")
-            x_buffer = abs(geo_data['x'][0]*0.1)
-            y_buffer = abs(geo_data['y'][0]*0.1)
+            x_buffer = abs(geo_data['x'][0]*0.01)
+            y_buffer = abs(geo_data['y'][0]*0.01)
             axes_bounds['x_space'] = (
                 (geo_data['x'][0] - x_buffer),
                 (geo_data['x'][0] + x_buffer)
@@ -731,7 +751,8 @@ class TEEHRDataFrameAccessor:
 
     def _location_generate_map(
         self,
-        geo_data: dict,
+        point_geo_data: dict,
+        poly_geo_data: dict,
         output_dir: None
     ) -> figure:
         """Generate location map."""
@@ -744,7 +765,7 @@ class TEEHRDataFrameAccessor:
             ]
 
         # get axes bounds
-        axes_bounds = self._location_get_bounds(geo_data=geo_data)
+        axes_bounds = self._location_get_bounds(geo_data=point_geo_data)
 
         # generate basemap
         p = figure(
@@ -757,13 +778,25 @@ class TEEHRDataFrameAccessor:
             )
         p.add_tile(xyz.OpenStreetMap.Mapnik)
 
-        # add data
-        source = ColumnDataSource(data=geo_data)
+        # add polygon data
+        poly_source = ColumnDataSource(data=poly_geo_data)
+        p.patches(
+            xs='xs',
+            ys='ys',
+            source=poly_source,
+            fill_color='lightgray',
+            line_color='black',
+            line_width=1,
+            fill_alpha=0.5
+            )
+
+        # add data point data
+        point_source = ColumnDataSource(data=point_geo_data)
         p.scatter(
             x='x',
             y='y',
             color='blue',
-            source=source,
+            source=point_source,
             size=10,
             fill_alpha=1.0
             )
@@ -817,10 +850,14 @@ class TEEHRDataFrameAccessor:
         # validate output location
         output_dir = self._validate_path(output_dir)
 
-        geo_data = self._location_format_points()
+        # assemble geodata
+        point_geo_data = self._location_format_points()
+        poly_geo_data = self._location_format_polygons()
 
         # generate map
-        self._location_generate_map(geo_data=geo_data, output_dir=output_dir)
+        self._location_generate_map(point_geo_data=point_geo_data,
+                                    poly_geo_data=poly_geo_data,
+                                    output_dir=output_dir)
 
     def _location_attributes_format_points(self) -> dict:
         """Format location_attributes data for use in mapping method."""
