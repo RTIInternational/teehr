@@ -120,7 +120,7 @@ def process_single_nwm_grid_file(
     ds = get_dataset(
         row.filepath,
         ignore_missing_file,
-        target_options={'anon': True}
+        remote_options={"token": "anon"}
     )
     if not ds:
         return None
