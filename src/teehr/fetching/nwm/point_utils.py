@@ -70,7 +70,7 @@ def file_chunk_loop(
     num_vals = vals.size
 
     teehr_config = format_nwm_configuration_metadata(
-        nwm_configuration_name=configuration,
+        nwm_config_name=configuration,
         nwm_version=nwm_version
     )
 

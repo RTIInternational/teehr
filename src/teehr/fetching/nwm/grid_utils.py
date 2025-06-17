@@ -203,7 +203,7 @@ def fetch_and_format_nwm_grids(
     gps = df_refs.groupby(["day", "z_hour"])
 
     teehr_config = format_nwm_configuration_metadata(
-        nwm_configuration_name=nwm_configuration_name,
+        nwm_config_name=nwm_configuration_name,
         nwm_version=nwm_version
     )
 

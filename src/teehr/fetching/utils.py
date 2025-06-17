@@ -161,7 +161,7 @@ def parse_nwm_json_paths(
 
 
 def format_nwm_configuration_metadata(
-    nwm_configuration_name: str,
+    nwm_config_name: str,
     nwm_version: str
 ) -> Dict[str, str]:
     """Format the NWM configuration name and member for the Evaluation.
@@ -171,20 +171,27 @@ def format_nwm_configuration_metadata(
     (ie., medium range or long range streamflow).
     """
     logger.info(
-        f"Formatting configuration name for {nwm_configuration_name}."
+        f"Formatting configuration name for {nwm_config_name}."
     )
     ev_member = None
-    if bool(re.search(r"_mem[0-9]+", nwm_configuration_name)):
-        ev_configuration, ev_member = nwm_configuration_name.split("_mem")
+    # Try to parse the member from the configuration name.
+    if bool(re.search(r"_mem[0-9]+", nwm_config_name)):
+        ev_config_name, ev_member = nwm_config_name.split("_mem")
+        ev_config_name = nwm_version + "_" + ev_config_name
+        nwm_config_name = re.sub(r'\d+', '', nwm_config_name)
     else:
-        ev_configuration = nwm_configuration_name
-    ev_configuration = nwm_version + "_" + ev_configuration
-    if nwm_configuration_name in NWM_CONFIGURATION_DESCRIPTIONS:
-        ev_config_desc = NWM_CONFIGURATION_DESCRIPTIONS[nwm_configuration_name]
+        ev_config_name = nwm_version + "_" + nwm_config_name
+    # Get the config description.
+    if nwm_config_name in NWM_CONFIGURATION_DESCRIPTIONS:
+        if ev_member is not None:
+            ev_config_desc = NWM_CONFIGURATION_DESCRIPTIONS[nwm_config_name] \
+                + f" {ev_member}"
+        else:
+            ev_config_desc = NWM_CONFIGURATION_DESCRIPTIONS[nwm_config_name]
     else:
-        ev_config_desc = "NWM operational forecasts"
+        ev_config_desc = "NWM operational forecasts"  # default description
     return {
-        "name": ev_configuration,
+        "name": ev_config_name,
         "member": ev_member,
         "description": ev_config_desc
     }

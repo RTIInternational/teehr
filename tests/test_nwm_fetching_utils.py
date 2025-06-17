@@ -14,8 +14,8 @@ from teehr.fetching.utils import (
     create_periods_based_on_chunksize,
     parse_nwm_json_paths,
     start_on_z_hour,
-    end_on_z_hour
-
+    end_on_z_hour,
+    format_nwm_configuration_metadata
 )
 from teehr.fetching.const import (
     NWM22_ANALYSIS_CONFIG,
@@ -356,6 +356,62 @@ def test_start_end_z_hours():
     assert len(gcs_component_paths) == 612
 
 
+def test_nwm_configuration_metadata():
+    """Test the NWM configuration metadata."""
+    #
+    nwm_configuration_name = "short_range"
+    nwm_version = "nwm30"
+    config_meta = format_nwm_configuration_metadata(
+        nwm_config_name=nwm_configuration_name,
+        nwm_version=nwm_version
+    )
+    assert config_meta["name"] == "nwm30_short_range"
+    assert config_meta["description"] == "NWM short range - HRRR forcing"
+    assert config_meta["member"] == None
+    #
+    nwm_configuration_name = "analysis_assim_extend_no_da"
+    config_meta = format_nwm_configuration_metadata(
+        nwm_config_name=nwm_configuration_name,
+        nwm_version=nwm_version
+    )
+    assert config_meta["name"] == "nwm30_analysis_assim_extend_no_da"
+    assert config_meta["description"] == "NWM analysis extended - no nudging - STAGE IV forcing"
+    #
+    nwm_configuration_name = "analysis_assim_extend"
+    config_meta = format_nwm_configuration_metadata(
+        nwm_config_name=nwm_configuration_name,
+        nwm_version=nwm_version
+    )
+    assert config_meta["name"] == "nwm30_analysis_assim_extend"
+    assert config_meta["description"] == "NWM analysis extended - with nudging - STAGE IV forcing"
+    #
+    nwm_configuration_name = "medium_range_mem1"
+    config_meta = format_nwm_configuration_metadata(
+        nwm_config_name=nwm_configuration_name,
+        nwm_version=nwm_version
+    )
+    assert config_meta["name"] == "nwm30_medium_range"
+    assert config_meta["description"] == "NWM medium range - GFS forcing member 1"
+    assert config_meta["member"] == "1"
+    #
+    nwm_configuration_name = "medium_range_mem6"
+    config_meta = format_nwm_configuration_metadata(
+        nwm_config_name=nwm_configuration_name,
+        nwm_version=nwm_version
+    )
+    assert config_meta["name"] == "nwm30_medium_range"
+    assert config_meta["description"] == "NWM medium range - GFS forcing member 6"
+    assert config_meta["member"] == "6"
+    #
+    nwm_configuration_name = "medium_range_blend"
+    config_meta = format_nwm_configuration_metadata(
+        nwm_config_name=nwm_configuration_name,
+        nwm_version=nwm_version
+    )
+    assert config_meta["name"] == "nwm30_medium_range_blend"
+    assert config_meta["description"] == "NWM medium range - NBM forcing"
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(prefix="teehr-") as tempdir:
         test_parsing_remote_json_paths(tempdir)
@@ -374,3 +430,4 @@ if __name__ == "__main__":
     test_create_periods_based_on_month()
     test_create_periods_based_on_year()
     test_start_end_z_hours()
+    test_nwm_configuration_metadata()

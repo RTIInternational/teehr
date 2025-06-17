@@ -838,7 +838,7 @@ class Fetch:
 
         ev_variable_name = format_nwm_variable_name(variable_name)
         ev_config = format_nwm_configuration_metadata(
-            nwm_configuration_name=nwm_configuration,
+            nwm_config_name=nwm_configuration,
             nwm_version=nwm_version
         )
 
@@ -1109,7 +1109,7 @@ class Fetch:
         """ # noqa
         ev_variable_name = format_nwm_variable_name(variable_name)
         ev_config = format_nwm_configuration_metadata(
-            nwm_configuration_name=nwm_configuration,
+            nwm_config_name=nwm_configuration,
             nwm_version=nwm_version
         )
 
