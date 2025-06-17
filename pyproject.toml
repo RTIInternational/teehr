@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "teehr"
-version = "0.4.12"
+version = "0.4.13"
 description = "Tools for Exploratory Evaluation in Hydrologic Research"
 authors = [
     "RTI International",
@@ -57,6 +57,7 @@ pickleshare = "^0.7.5"
 sphinx-autoapi = "3.0.0"
 pydata-sphinx-theme = "^0.16.0"
 sphinx-autobuild = "^2024.10.3"
+tomli = "^2.2.1"
 
 
 [tool.numpydoc_validation]

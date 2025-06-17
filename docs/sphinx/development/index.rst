@@ -93,7 +93,6 @@ This document describes the release process which has some manual steps to compl
 Create branch with the following updated to the new version (find and replace version number):
 
 - ``version.txt``
-- ``README.md``
 - ``pyproject.toml``
 - ``src/teehr/__init__.py``
 - ``docs/sphinx/getting_started/index.rst``

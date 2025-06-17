@@ -1,6 +1,24 @@
 Release Notes
 =============
 
+0.4.13 - 2025-06-09
+-------------------
+
+Changed
+^^^^^^^
+- Updates logic around reading empty tables to allow for cloning empty timeseries tables from s3. Overrides the read method in the `joined_timeseries` table class.
+- Removes the `pa.Check.isin()` pandera validation checks and replaces with the manual "foreign key" enforcement method, `_enforce_foreign_keys()` to speed up validation.
+- Removes redundant dataframe validation during the write methods.
+- Sets `.set("spark.sql.parquet.enableVectorizedReader", "false")` in pyspark config to fix type error when reading null parquet fields.
+- Fixes the path conversion error when visualizing locations in the accessor.
+- Sorts timeseries before plotting to fix the visualization error in the accessor.
+- Removes `add_configuration_name` from user guide doc (#450)
+- Adds `tomli` to pyproject.toml to `dev` group to support python 3.12 when building sphinx docs.
+- Drops `location_id` after joining attributes to the `joined_timeseries` table.
+- Fixes joining geometry to the secondary timeseries table.
+- Sets `timeseries_type` to `secondary` when fetching operational NWM gridded data, unless the configuration_name contains "forcing_analysis_assim" in which case `timeseries_type` is set to `primary`.
+
+
 0.4.12 - 2025-05-22
 ------------------
 

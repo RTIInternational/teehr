@@ -10,19 +10,19 @@ from teehr.loading.s3.clone_from_s3 import list_s3_evaluations
 def test_get_s3_evaluations_dataframe():
     """Test get_s3_evaluations as a dataframe."""
     df = list_s3_evaluations()
-    assert len(df) == 4
+    assert len(df) == 5
     assert isinstance(df, pd.DataFrame)
 
 
 def test_get_s3_evaluations_list():
     """Test get_s3_evaluations as a list."""
     l = list_s3_evaluations(format="list")
-    assert len(l) == 4
+    assert len(l) == 5
     assert isinstance(l, list)
 
 
 def test_clone_example_from_s3(tmpdir):
-    """Test filter string."""
+    """Test cloning a fully populated evaluation from s3."""
     ev = Evaluation(tmpdir)
     ev.clone_from_s3("e0_2_location_example")
 
@@ -36,6 +36,25 @@ def test_clone_example_from_s3(tmpdir):
     assert ev.primary_timeseries.to_sdf().count() == 200350
     assert ev.secondary_timeseries.to_sdf().count() == 210384
     assert ev.joined_timeseries.to_sdf().count() == 200350
+
+    assert Path(ev.scripts_dir, "user_defined_fields.py").is_file()
+
+
+def test_clone_partial_template_from_s3(tmpdir):
+    """Test cloning a partially empty evaluation from s3."""
+    ev = Evaluation(tmpdir)
+    ev.clone_from_s3("e4_nwm_operational")
+
+    assert ev.units.to_sdf().count() == 9
+    assert ev.variables.to_sdf().count() == 5
+    assert ev.attributes.to_sdf().count() == 8
+    assert ev.configurations.to_sdf().count() == 13
+    assert ev.locations.to_sdf().count() == 146632
+    assert ev.location_attributes.to_sdf().count() == 50558
+    assert ev.location_crosswalks.to_sdf().count() == 170169
+    assert ev.primary_timeseries.to_sdf().count() == 0
+    assert ev.secondary_timeseries.to_sdf().count() == 0
+    assert ev.joined_timeseries.to_sdf().count() == 0
 
     assert Path(ev.scripts_dir, "user_defined_fields.py").is_file()
 
@@ -80,13 +99,15 @@ if __name__ == "__main__":
                 dir=tempdir
             )
         )
-
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
+        test_clone_partial_template_from_s3(
+            tempfile.mkdtemp(
+                prefix="2-",
+                dir=tempdir
+            )
+        )
         test_clone_and_subset_example_from_s3(
             tempfile.mkdtemp(
-                prefix="1-",
+                prefix="3-",
                 dir=tempdir
             )
         )

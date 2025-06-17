@@ -33,6 +33,18 @@ class LocationAttributeTable(BaseTable):
             "location_id",
             "attribute_name"
         ]
+        self.foreign_keys = [
+            {
+                "column": "location_id",
+                "domain_table": "locations",
+                "domain_column": "id",
+            },
+            {
+                "column": "attribute_name",
+                "domain_table": "attributes",
+                "domain_column": "name",
+            }
+        ]
 
     def _load(
         self,
@@ -109,18 +121,6 @@ class LocationAttributeTable(BaseTable):
         gdf.attrs['table_type'] = self.name
         gdf.attrs['fields'] = self.fields()
         return gdf
-
-    def _get_schema(self, type: str = "pyspark"):
-        """Get the location attribute schema."""
-        if type == "pandas":
-            return self.schema_func(type="pandas")
-
-        location_ids = self.ev.locations.distinct_values("id")
-        attr_names = self.ev.attributes.distinct_values("name")
-        return self.schema_func(
-            location_ids=location_ids,
-            attr_names=attr_names
-        )
 
     def load_parquet(
         self,
