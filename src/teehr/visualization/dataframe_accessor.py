@@ -697,23 +697,35 @@ class TEEHRDataFrameAccessor:
         logger.info("Locations geodata assembled.")
         return geo_data
 
-        return geo_data
-
     def _location_get_bounds(
         self,
         geo_data: dict
     ) -> dict:
         """Determine axes ranges using point data."""
         logger.info("Retrieving axes ranges from geodata.")
-        min_x = min(geo_data['x'])
-        max_x = max(geo_data['x'])
-        min_y = min(geo_data['y'])
-        max_y = max(geo_data['y'])
-        x_buffer = abs((max_x - min_x)*0.1)
-        y_buffer = abs((max_y - min_y)*0.1)
         axes_bounds = {}
-        axes_bounds['x_space'] = ((min_x - x_buffer), (max_x + x_buffer))
-        axes_bounds['y_space'] = ((min_y - y_buffer), (max_y + y_buffer))
+        if len(geo_data['x']) > 1 and len(geo_data['y']) > 1:
+            logger.info("Multiple points detected, using default bounds.")
+            min_x = min(geo_data['x'])
+            max_x = max(geo_data['x'])
+            min_y = min(geo_data['y'])
+            max_y = max(geo_data['y'])
+            x_buffer = abs((max_x - min_x)*0.1)
+            y_buffer = abs((max_y - min_y)*0.1)
+            axes_bounds['x_space'] = ((min_x - x_buffer), (max_x + x_buffer))
+            axes_bounds['y_space'] = ((min_y - y_buffer), (max_y + y_buffer))
+        else:
+            logger.info("Only one point detected, using default bounds.")
+            x_buffer = abs(geo_data['x'][0]*0.1)
+            y_buffer = abs(geo_data['y'][0]*0.1)
+            axes_bounds['x_space'] = (
+                (geo_data['x'][0] - x_buffer),
+                (geo_data['x'][0] + x_buffer)
+                )
+            axes_bounds['y_space'] = (
+                (geo_data['y'][0] - y_buffer),
+                (geo_data['y'][0] + y_buffer)
+                )
 
         return axes_bounds
 
