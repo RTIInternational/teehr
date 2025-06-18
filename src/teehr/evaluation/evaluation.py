@@ -95,7 +95,6 @@ class Evaluation:
                 .set("spark.sql.session.timeZone", "UTC")
                 .set("spark.driver.host", "localhost")
                 .set("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.4.1")
-                .set("spark.jars.packages", "com.amazonaws:aws-java-sdk-bundle:1.12.787")
                 .set("spark.sql.parquet.enableVectorizedReader", "false")
             )
             self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
