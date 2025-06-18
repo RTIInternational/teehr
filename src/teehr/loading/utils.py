@@ -83,7 +83,7 @@ def read_spatial_file(
     # Define extension groups
     parquet_exts = {'.parquet', '.pq', '.parq', '.p'}
     feather_exts = {'.feather', '.ft'}
-    file_exts = {'.gpkg', '.shp', '.geojson', '.json', '.gml', '.kml', '.csv'}
+    file_exts = {'.gpkg', '.shp', '.geojson', '.json', '.gml', '.kml'}
 
     if ext in parquet_exts:
         try:
