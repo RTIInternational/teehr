@@ -37,6 +37,8 @@ netcdf4 = ">=1.6.5,<2"
 apache-sedona = ">=1.7.0,<2"
 scoringrules = ">=0.7.1,<1"
 pyiceberg = ">=0.9.1,<1"
+lxml = ">=5.4.0,<6"
+bokeh = ">=3.7.3,<4"
 
 [tool.poetry.group.test.dependencies]
 pytest = ">=7.4.3"
