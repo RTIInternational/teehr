@@ -41,6 +41,7 @@ pyiceberg = ">=0.9.1,<1"
 [tool.poetry.group.test.dependencies]
 pytest = ">=7.4.3"
 flake8 = ">=6.1.0"
+nox-poetry = "^1.2.0"
 
 [tool.poetry.group.dev.dependencies]
 sphinx = ">=7.2.6"
@@ -73,3 +74,6 @@ checks = [
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.requires-plugins]
+poetry-plugin-export = ">=1.8"
