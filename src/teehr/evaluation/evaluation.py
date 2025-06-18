@@ -96,6 +96,8 @@ class Evaluation:
                 .set("spark.driver.host", "localhost")
                 .set("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.4.1")
                 .set("spark.sql.parquet.enableVectorizedReader", "false")
+                .set("spark.driver.memory", "16g")
+                .set("spark.driver.maxResultSize", "8g")
             )
             self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
 
