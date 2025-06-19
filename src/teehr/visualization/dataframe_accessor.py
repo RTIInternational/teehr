@@ -719,9 +719,32 @@ class TEEHRDataFrameAccessor:
 
     def _location_get_bounds(
         self,
-        geo_data: dict
+        point_geo_data: dict,
+        poly_geo_data: dict
     ) -> dict:
-        """Determine axes ranges using point data."""
+        """Determine axes ranges using available geodata."""
+        logger.info(
+            "Assembling full range of coordinates from point and polygon data."
+            )
+        xs = []
+        ys = []
+
+        # Collect point coordinates
+        xs.extend(point_geo_data.get('x', []))
+        ys.extend(point_geo_data.get('y', []))
+
+        # Collect polygon coordinates
+        poly_flat_x = list(itertools.chain.from_iterable(poly_geo_data['xs']))
+        poly_flat_y = list(itertools.chain.from_iterable(poly_geo_data['ys']))
+        xs.extend(poly_flat_x)
+        ys.extend(poly_flat_y)
+
+        # assemble geodata
+        geo_data = {}
+        geo_data['x'] = xs
+        geo_data['y'] = ys
+
+        # assemble axes bounds
         logger.info("Retrieving axes ranges from geodata.")
         axes_bounds = {}
         if len(geo_data['x']) > 1 and len(geo_data['y']) > 1:
@@ -765,7 +788,8 @@ class TEEHRDataFrameAccessor:
             ]
 
         # get axes bounds
-        axes_bounds = self._location_get_bounds(geo_data=point_geo_data)
+        axes_bounds = self._location_get_bounds(point_geo_data=point_geo_data,
+                                                poly_geo_data=poly_geo_data)
 
         # generate basemap
         p = figure(
@@ -970,38 +994,61 @@ class TEEHRDataFrameAccessor:
 
     def _location_attributes_get_bounds(
             self,
-            geo_data: dict
+            point_geo_data: dict,
+            poly_geo_data: dict
     ) -> dict:
         """Obtain axes bounds for location_attributes mapping."""
-        x_list = []
-        y_list = []
-        for location in geo_data.keys():
-            attributes = geo_data[location]
-            x_list.append(attributes['x'])
-            y_list.append(attributes['y'])
-        if len(x_list) > 1 and len(y_list) > 1:
+        logger.info(
+            "Assembling full range of coordinates from point and polygon data."
+            )
+        xs = []
+        ys = []
+
+        # Collect point coordinates
+        for location in point_geo_data.keys():
+            xs.append(point_geo_data[location]['x'])
+            ys.append(point_geo_data[location]['y'])
+
+        # Collect polygon coordinates
+        for location in poly_geo_data.keys():
+            poly_flat_x = list(
+                itertools.chain.from_iterable(
+                    poly_geo_data[location]['xs']
+                    )
+                )
+            poly_flat_y = list(
+                itertools.chain.from_iterable(
+                    poly_geo_data[location]['ys']
+                    )
+                )
+            xs.extend(poly_flat_x)
+            ys.extend(poly_flat_y)
+
+        # get axes bounds
+        logger.info("Retrieving axes ranges from geodata.")
+        if len(xs) > 1 and len(ys) > 1:
             logger.info("Multiple points detected, using custom bounds.")
-            min_x = min(x_list)
-            max_x = max(x_list)
-            min_y = min(y_list)
-            max_y = max(y_list)
-            x_buffer = abs((max_x - min_x)*0.1)
-            y_buffer = abs((max_y - min_y)*0.1)
+            min_x = min(xs)
+            max_x = max(xs)
+            min_y = min(ys)
+            max_y = max(ys)
+            x_buffer = abs((max_x - min_x)*0.01)
+            y_buffer = abs((max_y - min_y)*0.01)
             axes_bounds = {}
             axes_bounds['x_space'] = ((min_x - x_buffer), (max_x + x_buffer))
             axes_bounds['y_space'] = ((min_y - y_buffer), (max_y + y_buffer))
         else:
             logger.info("Only one point detected, using default bounds.")
-            x_buffer = abs(x_list[0]*0.01)
-            y_buffer = abs(y_list[0]*0.01)
+            x_buffer = abs(xs[0]*0.01)
+            y_buffer = abs(ys[0]*0.01)
             axes_bounds = {}
             axes_bounds['x_space'] = (
-                (x_list[0] - x_buffer),
-                (x_list[0] + x_buffer)
+                (xs[0] - x_buffer),
+                (xs[0] + x_buffer)
                 )
             axes_bounds['y_space'] = (
-                (y_list[0] - y_buffer),
-                (y_list[0] + y_buffer)
+                (ys[0] - y_buffer),
+                (ys[0] + y_buffer)
                 )
 
         return axes_bounds
@@ -1031,7 +1078,8 @@ class TEEHRDataFrameAccessor:
 
         # get axes bounds
         axes_bounds = self._location_attributes_get_bounds(
-            geo_data=point_geo_data
+            point_geo_data=point_geo_data,
+            poly_geo_data=poly_geo_data
             )
 
         # generate basemap
