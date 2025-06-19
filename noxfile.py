@@ -2,8 +2,13 @@
 import nox_poetry
 
 
-@nox_poetry.session()  # local: python=["3.11", "3.12"]
+@nox_poetry.session()  # local test, ex: python=["3.11", "3.12"]
 def tests(session):
     """Run the test suite using pytest."""
     session.install(".")
-    session.run("pytest")
+    session.run(
+        "pytest",
+        "--cov=teehr",
+        "--ctrf=report.json",
+        "--cov-report=json"
+    )

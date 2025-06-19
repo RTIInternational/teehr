@@ -44,6 +44,8 @@ bokeh = ">=3.7.3,<4"
 pytest = ">=7.4.3"
 flake8 = ">=6.1.0"
 nox-poetry = "^1.2.0"
+pytest-cov = "^6.2.1"
+pytest-json-ctrf = "^0.3.5"
 
 [tool.poetry.group.dev.dependencies]
 sphinx = ">=7.2.6"

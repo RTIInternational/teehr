@@ -34,3 +34,15 @@ jobs:
 
       - name: Run tests
         run: poetry run nox
+
+      - name: Publish Test Report
+        uses: ctrf-io/github-test-reporter@v1
+        with:
+          report-path: 'report.json'
+        if: always()
+
+      - name: Publish Coverage Report
+        uses: ctrf-io/github-test-reporter@v1
+        with:
+          report-path: 'coverage.json'
+        if: always()
