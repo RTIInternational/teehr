@@ -1199,6 +1199,39 @@ class TEEHRDataFrameAccessor:
             output_dir=output_dir
             )
 
+    def _location_crosswalks_get_bounds(
+        self,
+        geo_data: dict
+    ) -> dict:
+        """Determine axes ranges using point data."""
+        logger.info("Retrieving axes ranges from geodata.")
+        if len(geo_data['x']) > 1 and len(geo_data['y']) > 1:
+            logger.info("Multiple points detected, using custom bounds.")
+            min_x = min(geo_data['x'])
+            max_x = max(geo_data['x'])
+            min_y = min(geo_data['y'])
+            max_y = max(geo_data['y'])
+            x_buffer = abs((max_x - min_x)*0.01)
+            y_buffer = abs((max_y - min_y)*0.01)
+            axes_bounds = {}
+            axes_bounds['x_space'] = ((min_x - x_buffer), (max_x + x_buffer))
+            axes_bounds['y_space'] = ((min_y - y_buffer), (max_y + y_buffer))
+        else:
+            logger.info("Only one point detected, using default bounds.")
+            x_buffer = abs(geo_data['x'][0]*0.01)
+            y_buffer = abs(geo_data['y'][0]*0.01)
+            axes_bounds = {}
+            axes_bounds['x_space'] = (
+                (geo_data['x'][0] - x_buffer),
+                (geo_data['x'][0] + x_buffer)
+                )
+            axes_bounds['y_space'] = (
+                (geo_data['y'][0] - y_buffer),
+                (geo_data['y'][0] + y_buffer)
+                )
+
+        return axes_bounds
+
     def _location_crosswalks_format_points(self) -> dict:
         """Generate dictionary for point plotting."""
         logger.info("Assembling geodata for location_crosswalks mapping...")
@@ -1230,7 +1263,7 @@ class TEEHRDataFrameAccessor:
             ]
 
         # get axes bounds
-        axes_bounds = self._location_get_bounds(geo_data=geo_data)
+        axes_bounds = self._location_crosswalks_get_bounds(geo_data=geo_data)
 
         # generate basemap
         p = figure(
