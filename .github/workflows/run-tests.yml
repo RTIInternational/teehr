@@ -1,8 +1,11 @@
 name: Python package
 
 on:
-  push:
-    branches: [475-update-python-dependencies]
+  pull_request:
+    types: [opened, reopened]
+# on:
+  # push:
+  #   branches: [475-update-python-dependencies]
 
 jobs:
   build:
@@ -39,5 +42,7 @@ jobs:
         uses: ctrf-io/github-test-reporter@v1
         with:
           report-path: 'report.json'
-          summary-report: true
+          pull-request-report: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: always()
