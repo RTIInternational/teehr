@@ -10,5 +10,5 @@ def tests(session):
         "pytest",
         "--cov=teehr",
         "--ctrf=report.json",
-        "--cov-report=json"
+        "--cov-report=term"
     )
