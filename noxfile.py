@@ -2,7 +2,8 @@
 import nox_poetry
 
 
-@nox_poetry.session()  # python=["3.11", "3.12"]
+@nox_poetry.session()  # local: python=["3.11", "3.12"]
 def tests(session):
+    """Run the test suite using pytest."""
     session.install(".")
-    session.run("pytest", "tests/test_add_udfs.py")
+    session.run("pytest")
