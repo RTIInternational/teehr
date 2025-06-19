@@ -27,9 +27,26 @@ class DomainTable(BaseTable):
         if issubclass(type(obj), TableBaseModel):
             obj = [obj]
 
-        new_df = self.spark.createDataFrame(pd.DataFrame([o.model_dump() for o in obj]))
+        # validate the data to be added
+        new_df = self.spark.createDataFrame(
+            pd.DataFrame([o.model_dump() for o in obj])
+            )
+        logger.info(
+            f"Validating {len(obj)} objects before adding to {self.name} table"
+            )
+        new_df_validated = self._validate(new_df)
 
-        combined_df = org_df.unionByName(new_df).repartition(1)
+        # warn the user if rows in added data already exist in the table
+
+        # add the validated new data to the existing data
+        logger.info(f"Adding {len(obj)} objects to {self.name} table")
+        combined_df = org_df.unionByName(new_df_validated).repartition(1)
+
+        # validate the combined data
+        logger.info(
+            f"Validating {self.name} table after adding {len(obj)} objects"
+            )
         validated_df = self._validate(combined_df)
 
+        # write the validated data to the table
         self._write_spark_df(validated_df)
