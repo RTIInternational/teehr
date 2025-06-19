@@ -63,6 +63,21 @@ def read_spatial_file(
         filepath: Union[str, Path], **kwargs: str
 ) -> gpd.GeoDataFrame:
     """Load any supported geospatial file type into a gdf using GeoPandas."""
+    # Define extension groups
+    parquet_exts = {'.parquet', '.pq', '.parq', '.pqt'}
+    feather_exts = {'.feather', '.ft'}
+    file_exts = {'.gpkg', '.shp', '.geojson', '.json', '.gml', '.kml'}
+    all_exts = parquet_exts.union(feather_exts).union(file_exts)
+
+    # get extension
+    ext = filepath.suffix.lower()
+
+    if ext not in all_exts:
+        raise ValueError(
+            f"""Unsupported file extension: {ext}. Supported extensions are:
+            {', '.join(all_exts)}"""
+        )
+
     if isinstance(filepath, str):
         try:
             filepath = Path(filepath)
@@ -76,14 +91,6 @@ def read_spatial_file(
                                 {filepath}""")
 
     logger.debug(f"Loading geospatial file: {filepath}")
-
-    # get extension
-    ext = filepath.suffix.lower()
-
-    # Define extension groups
-    parquet_exts = {'.parquet', '.pq', '.parq', '.p'}
-    feather_exts = {'.feather', '.ft'}
-    file_exts = {'.gpkg', '.shp', '.geojson', '.json', '.gml', '.kml'}
 
     if ext in parquet_exts:
         try:
