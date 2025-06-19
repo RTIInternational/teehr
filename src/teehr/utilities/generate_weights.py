@@ -15,7 +15,7 @@ import dask
 import shapely
 
 from teehr.fetching.nwm.grid_utils import update_location_id_prefix
-from teehr.fetching.utils import load_gdf
+from teehr.loading.utils import read_spatial_file
 from teehr.fetching.const import LOCATION_ID
 import teehr.models.pandera_dataframe_schemas as schemas
 
@@ -239,7 +239,7 @@ def generate_weights_file(
         raise ValueError("unique_zone_id must be provided.")
 
     if isinstance(zone_polygons, (str, Path)):
-        zone_gdf = load_gdf(zone_polygons, **read_args)
+        zone_gdf = read_spatial_file(zone_polygons, **read_args)
         zone_gdf = zone_gdf.to_crs(crs_wkt)
     elif isinstance(zone_polygons, GeoDataFrame):
         zone_gdf = zone_polygons.to_crs(crs_wkt)
