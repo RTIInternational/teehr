@@ -683,37 +683,99 @@ class TEEHRDataFrameAccessor:
 
     def _location_format_points(self) -> dict:
         """Generate dictionary for point plotting."""
-        logger.info("Assembling geodata for locations mapping...")
+        logger.info("Assembling point geodata for locations mapping...")
+        gdf_points = self._gdf[self._gdf.geometry.geom_type == "Point"]
         geo_data = {}
-        geo_data['id'] = self._gdf['id'].tolist()
-        geo_data['name'] = self._gdf['name'].tolist()
-        geo_data['x'] = self._gdf.geometry.x.values.tolist()
-        geo_data['y'] = self._gdf.geometry.y.values.tolist()
+        geo_data['id'] = gdf_points['id'].tolist()
+        geo_data['name'] = gdf_points['name'].tolist()
+        geo_data['x'] = gdf_points.geometry.x.values.tolist()
+        geo_data['y'] = gdf_points.geometry.y.values.tolist()
         logger.info("Locations geodata assembled.")
-
         return geo_data
+
+    def _location_format_polygons(self) -> dict:
+        """Generate dictionary for polygon plotting."""
+        logger.info("Assembling non-point geodata for locations mapping...")
+        gdf_polys = self._gdf[self._gdf.geometry.geom_type.isin(
+            ['Polygon', 'MultiPolygon']
+            )]
+        ids, names, xs, ys = [], [], [], []
+        for _, row in gdf_polys.iterrows():
+            geom = row.geometry
+            if geom.geom_type == 'Polygon':
+                x, y = zip(*geom.exterior.coords)
+                xs.append(list(x))
+                ys.append(list(y))
+                ids.append(row.get('id', None))
+                names.append(row.get('name', None))
+            elif geom.geom_type == 'MultiPolygon':
+                for poly in geom.geoms:
+                    x, y = zip(*poly.exterior.coords)
+                    xs.append(list(x))
+                    ys.append(list(y))
+                    ids.append(row.get('id', None))
+                    names.append(row.get('name', None))
+        return {'id': ids, 'name': names, 'xs': xs, 'ys': ys}
 
     def _location_get_bounds(
         self,
-        geo_data: dict
+        point_geo_data: dict,
+        poly_geo_data: dict
     ) -> dict:
-        """Determine axes ranges using point data."""
+        """Determine axes ranges using available geodata."""
+        logger.info(
+            "Assembling full range of coordinates from point and polygon data."
+            )
+        xs = []
+        ys = []
+
+        # Collect point coordinates
+        xs.extend(point_geo_data.get('x', []))
+        ys.extend(point_geo_data.get('y', []))
+
+        # Collect polygon coordinates
+        poly_flat_x = list(itertools.chain.from_iterable(poly_geo_data['xs']))
+        poly_flat_y = list(itertools.chain.from_iterable(poly_geo_data['ys']))
+        xs.extend(poly_flat_x)
+        ys.extend(poly_flat_y)
+
+        # assemble geodata
+        geo_data = {}
+        geo_data['x'] = xs
+        geo_data['y'] = ys
+
+        # assemble axes bounds
         logger.info("Retrieving axes ranges from geodata.")
-        min_x = min(geo_data['x'])
-        max_x = max(geo_data['x'])
-        min_y = min(geo_data['y'])
-        max_y = max(geo_data['y'])
-        x_buffer = abs((max_x - min_x)*0.1)
-        y_buffer = abs((max_y - min_y)*0.1)
         axes_bounds = {}
-        axes_bounds['x_space'] = ((min_x - x_buffer), (max_x + x_buffer))
-        axes_bounds['y_space'] = ((min_y - y_buffer), (max_y + y_buffer))
+        if len(geo_data['x']) > 1 and len(geo_data['y']) > 1:
+            logger.info("Multiple points detected, using custom bounds.")
+            min_x = min(geo_data['x'])
+            max_x = max(geo_data['x'])
+            min_y = min(geo_data['y'])
+            max_y = max(geo_data['y'])
+            x_buffer = abs((max_x - min_x)*0.1)
+            y_buffer = abs((max_y - min_y)*0.1)
+            axes_bounds['x_space'] = ((min_x - x_buffer), (max_x + x_buffer))
+            axes_bounds['y_space'] = ((min_y - y_buffer), (max_y + y_buffer))
+        else:
+            logger.info("Only one point detected, using default bounds.")
+            x_buffer = abs(geo_data['x'][0]*0.01)
+            y_buffer = abs(geo_data['y'][0]*0.01)
+            axes_bounds['x_space'] = (
+                (geo_data['x'][0] - x_buffer),
+                (geo_data['x'][0] + x_buffer)
+                )
+            axes_bounds['y_space'] = (
+                (geo_data['y'][0] - y_buffer),
+                (geo_data['y'][0] + y_buffer)
+                )
 
         return axes_bounds
 
     def _location_generate_map(
         self,
-        geo_data: dict,
+        point_geo_data: dict,
+        poly_geo_data: dict,
         output_dir: None
     ) -> figure:
         """Generate location map."""
@@ -726,7 +788,8 @@ class TEEHRDataFrameAccessor:
             ]
 
         # get axes bounds
-        axes_bounds = self._location_get_bounds(geo_data=geo_data)
+        axes_bounds = self._location_get_bounds(point_geo_data=point_geo_data,
+                                                poly_geo_data=poly_geo_data)
 
         # generate basemap
         p = figure(
@@ -739,13 +802,25 @@ class TEEHRDataFrameAccessor:
             )
         p.add_tile(xyz.OpenStreetMap.Mapnik)
 
-        # add data
-        source = ColumnDataSource(data=geo_data)
+        # add polygon data
+        poly_source = ColumnDataSource(data=poly_geo_data)
+        p.patches(
+            xs='xs',
+            ys='ys',
+            source=poly_source,
+            fill_color='lightgray',
+            line_color='black',
+            line_width=1,
+            fill_alpha=0.5
+            )
+
+        # add data point data
+        point_source = ColumnDataSource(data=point_geo_data)
         p.scatter(
             x='x',
             y='y',
             color='blue',
-            source=source,
+            source=point_source,
             size=10,
             fill_alpha=1.0
             )
@@ -799,19 +874,26 @@ class TEEHRDataFrameAccessor:
         # validate output location
         output_dir = self._validate_path(output_dir)
 
-        geo_data = self._location_format_points()
+        # assemble geodata
+        point_geo_data = self._location_format_points()
+        poly_geo_data = self._location_format_polygons()
 
         # generate map
-        self._location_generate_map(geo_data=geo_data, output_dir=output_dir)
+        self._location_generate_map(point_geo_data=point_geo_data,
+                                    poly_geo_data=poly_geo_data,
+                                    output_dir=output_dir)
 
     def _location_attributes_format_points(self) -> dict:
-        """Format location_attributes data for use in mapping method."""
-        logger.info("Assembling geodata for location attributes mapping...")
+        """Format location_attributes point data for use in mapping method."""
+        logger.info(
+            "Assembling point geodata for location attributes mapping..."
+            )
+        gdf_points = self._gdf[self._gdf.geometry.geom_type == "Point"]
         geo_data = {}
-        locations = self._gdf['location_id'].unique()
+        locations = gdf_points['location_id'].unique()
         for location in locations:
             local_attributes = {}
-            location_gdf = self._gdf[self._gdf['location_id'] == location]
+            location_gdf = gdf_points[gdf_points['location_id'] == location]
             attributes = location_gdf['attribute_name'].unique()
             for attribute in attributes:
                 row = location_gdf[location_gdf['attribute_name'] == attribute]
@@ -821,10 +903,47 @@ class TEEHRDataFrameAccessor:
                     local_attributes['y'] = row.geometry.y.values[0]
                     local_attributes['location_id'] = location
             geo_data[location] = local_attributes
-        logger.info("Location attributes geodata assembled.")
+        logger.info("Location attributes point geodata assembled.")
         logger.info("Checking for duplicate attributes...")
         self._location_attributes_check_duplicates(geo_data=geo_data)
+        return geo_data
 
+    def _location_attributes_format_polygons(self) -> dict:
+        """Format location_attributes poly. data for use in mapping method."""
+        logger.info(
+            "Assembling polygon geodata for location attributes mapping..."
+        )
+        gdf_polys = self._gdf[self._gdf.geometry.geom_type.isin(
+            ['Polygon', 'MultiPolygon']
+        )]
+
+        geo_data = {}
+        locations = gdf_polys['location_id'].unique()
+        for location in locations:
+            local_attributes = {}
+            location_gdf = gdf_polys[gdf_polys['location_id'] == location]
+            attributes = location_gdf['attribute_name'].unique()
+            for attribute in attributes:
+                row = location_gdf[location_gdf['attribute_name'] == attribute]
+                local_attributes[attribute] = row['value'].values[0]
+                if attribute == attributes[-1]:
+                    geom = row.geometry.values[0]
+                    if geom.geom_type == 'Polygon':
+                        x, y = zip(*geom.exterior.coords)
+                        local_attributes['xs'] = list(x)
+                        local_attributes['ys'] = list(y)
+                    else:
+                        xs, ys = [], []
+                        for poly in geom.geoms:
+                            x, y = zip(*poly.exterior.coords)
+                            xs.append(list(x))
+                            ys.append(list(y))
+                        local_attributes['xs'] = xs
+                        local_attributes['ys'] = ys
+                    local_attributes['location_id'] = location
+            geo_data[location] = local_attributes
+        logger.info("Location attributes polygon geodata assembled.")
+        logger.info("Checking for duplicate attributes...")
         return geo_data
 
     def _location_attributes_check_duplicates(
@@ -847,49 +966,90 @@ class TEEHRDataFrameAccessor:
 
     def _location_attributes_get_tooltips(
             self,
-            geo_data: dict
+            point_geo_data: dict,
+            poly_geo_data: dict
     ) -> list:
-        """Dynamically create tooltips for location_attributes."""
-        # extract attributes from geo_data
-        all_attributes = []
-        for location in geo_data.keys():
-            attributes = geo_data[location]
-            for attribute in attributes.keys():
-                all_attributes.append(attribute)
+        """Get tooltips for location_attributes mapping."""
+        exclude_keys = {'xs', 'ys', 'x', 'y'}
+        unique_attrs = set()
 
-        # remove duplicates and x/y
-        unique_attributes = list(set(all_attributes))
-        unique_attributes.remove('x')
-        unique_attributes.remove('y')
+        # Collect attribute keys from point data
+        for loc_dict in point_geo_data.values():
+            unique_attrs.update(
+                k for k in loc_dict.keys() if k not in exclude_keys
+                )
 
-        # format tuples for tooltips
+        # Collect attribute keys from polygon data
+        for loc_dict in poly_geo_data.values():
+            unique_attrs.update(
+                k for k in loc_dict.keys() if k not in exclude_keys
+                )
+
         tooltips = []
-        for attribute in unique_attributes:
-            entry = (f"{attribute}", f"@{attribute}")
+        for attr in unique_attrs:
+            entry = (f"{attr}", f"@{attr}")
             tooltips.append(entry)
 
         return tooltips
 
     def _location_attributes_get_bounds(
             self,
-            geo_data: dict
+            point_geo_data: dict,
+            poly_geo_data: dict
     ) -> dict:
         """Obtain axes bounds for location_attributes mapping."""
-        x_list = []
-        y_list = []
-        for location in geo_data.keys():
-            attributes = geo_data[location]
-            x_list.append(attributes['x'])
-            y_list.append(attributes['y'])
-        min_x = min(x_list)
-        max_x = max(x_list)
-        min_y = min(y_list)
-        max_y = max(y_list)
-        x_buffer = abs((max_x - min_x)*0.1)
-        y_buffer = abs((max_y - min_y)*0.1)
-        axes_bounds = {}
-        axes_bounds['x_space'] = ((min_x - x_buffer), (max_x + x_buffer))
-        axes_bounds['y_space'] = ((min_y - y_buffer), (max_y + y_buffer))
+        logger.info(
+            "Assembling full range of coordinates from point and polygon data."
+            )
+        xs = []
+        ys = []
+
+        # Collect point coordinates
+        for location in point_geo_data.keys():
+            xs.append(point_geo_data[location]['x'])
+            ys.append(point_geo_data[location]['y'])
+
+        # Collect polygon coordinates
+        for location in poly_geo_data.keys():
+            poly_flat_x = list(
+                itertools.chain.from_iterable(
+                    poly_geo_data[location]['xs']
+                    )
+                )
+            poly_flat_y = list(
+                itertools.chain.from_iterable(
+                    poly_geo_data[location]['ys']
+                    )
+                )
+            xs.extend(poly_flat_x)
+            ys.extend(poly_flat_y)
+
+        # get axes bounds
+        logger.info("Retrieving axes ranges from geodata.")
+        if len(xs) > 1 and len(ys) > 1:
+            logger.info("Multiple points detected, using custom bounds.")
+            min_x = min(xs)
+            max_x = max(xs)
+            min_y = min(ys)
+            max_y = max(ys)
+            x_buffer = abs((max_x - min_x)*0.01)
+            y_buffer = abs((max_y - min_y)*0.01)
+            axes_bounds = {}
+            axes_bounds['x_space'] = ((min_x - x_buffer), (max_x + x_buffer))
+            axes_bounds['y_space'] = ((min_y - y_buffer), (max_y + y_buffer))
+        else:
+            logger.info("Only one point detected, using default bounds.")
+            x_buffer = abs(xs[0]*0.01)
+            y_buffer = abs(ys[0]*0.01)
+            axes_bounds = {}
+            axes_bounds['x_space'] = (
+                (xs[0] - x_buffer),
+                (xs[0] + x_buffer)
+                )
+            axes_bounds['y_space'] = (
+                (ys[0] - y_buffer),
+                (ys[0] + y_buffer)
+                )
 
         return axes_bounds
 
@@ -903,17 +1063,24 @@ class TEEHRDataFrameAccessor:
 
     def _location_attributes_generate_map(
             self,
-            geo_data: dict,
+            point_geo_data: dict,
+            poly_geo_data: dict,
             output_dir=None
     ) -> figure:
         """Generate map for location_attributes table."""
         logger.info("Generating location attributes map...")
 
         # set tooltips
-        tooltips = self._location_attributes_get_tooltips(geo_data=geo_data)
+        tooltips = self._location_attributes_get_tooltips(
+            point_geo_data=point_geo_data,
+            poly_geo_data=poly_geo_data
+        )
 
         # get axes bounds
-        axes_bounds = self._location_attributes_get_bounds(geo_data=geo_data)
+        axes_bounds = self._location_attributes_get_bounds(
+            point_geo_data=point_geo_data,
+            poly_geo_data=poly_geo_data
+            )
 
         # generate basemap
         p = figure(
@@ -926,12 +1093,28 @@ class TEEHRDataFrameAccessor:
             )
         p.add_tile(xyz.OpenStreetMap.Mapnik)
 
-        # add data per location
-        for location in geo_data.keys():
-            location_dict = self._location_attributes_make_iterable(
-                geo_data[location]
+        # add data per polygon location
+        for location in poly_geo_data.keys():
+            poly_dict = self._location_attributes_make_iterable(
+                poly_geo_data[location]
+            )
+            source = ColumnDataSource(poly_dict)
+            p.patches(
+                xs='xs',
+                ys='ys',
+                source=source,
+                fill_color='lightgray',
+                line_color='black',
+                line_width=1,
+                fill_alpha=0.5
+            )
+
+        # add data per point location
+        for location in point_geo_data.keys():
+            point_dict = self._location_attributes_make_iterable(
+                point_geo_data[location]
                 )
-            source = ColumnDataSource(location_dict)
+            source = ColumnDataSource(point_dict)
             p.scatter(
                 x='x',
                 y='y',
@@ -1006,24 +1189,63 @@ class TEEHRDataFrameAccessor:
         output_dir = self._validate_path(output_dir)
 
         # format point data
-        geo_data = self._location_attributes_format_points()
+        point_geo_data = self._location_attributes_format_points()
+        poly_geo_data = self._location_attributes_format_polygons()
 
         # generate map
         self._location_attributes_generate_map(
-            geo_data=geo_data,
+            point_geo_data=point_geo_data,
+            poly_geo_data=poly_geo_data,
             output_dir=output_dir
             )
+
+    def _location_crosswalks_get_bounds(
+        self,
+        geo_data: dict
+    ) -> dict:
+        """Determine axes ranges using point data."""
+        logger.info("Retrieving axes ranges from geodata.")
+        if len(geo_data['x']) > 1 and len(geo_data['y']) > 1:
+            logger.info("Multiple points detected, using custom bounds.")
+            min_x = min(geo_data['x'])
+            max_x = max(geo_data['x'])
+            min_y = min(geo_data['y'])
+            max_y = max(geo_data['y'])
+            x_buffer = abs((max_x - min_x)*0.01)
+            y_buffer = abs((max_y - min_y)*0.01)
+            axes_bounds = {}
+            axes_bounds['x_space'] = ((min_x - x_buffer), (max_x + x_buffer))
+            axes_bounds['y_space'] = ((min_y - y_buffer), (max_y + y_buffer))
+        else:
+            logger.info("Only one point detected, using default bounds.")
+            x_buffer = abs(geo_data['x'][0]*0.01)
+            y_buffer = abs(geo_data['y'][0]*0.01)
+            axes_bounds = {}
+            axes_bounds['x_space'] = (
+                (geo_data['x'][0] - x_buffer),
+                (geo_data['x'][0] + x_buffer)
+                )
+            axes_bounds['y_space'] = (
+                (geo_data['y'][0] - y_buffer),
+                (geo_data['y'][0] + y_buffer)
+                )
+
+        return axes_bounds
 
     def _location_crosswalks_format_points(self) -> dict:
         """Generate dictionary for point plotting."""
         logger.info("Assembling geodata for location_crosswalks mapping...")
+        if not all(self._gdf.geometry.geom_type == "Point"):
+            logger.warning(
+                "Non-point geometries detected and excluded from mapping."
+                )
+        gdf_points = self._gdf[self._gdf.geometry.geom_type == "Point"]
         geo_data = {}
-        geo_data['primary_id'] = self._gdf['primary_location_id'].tolist()
-        geo_data['secondary_id'] = self._gdf['secondary_location_id'].tolist()
-        geo_data['x'] = self._gdf.geometry.x.values.tolist()
-        geo_data['y'] = self._gdf.geometry.y.values.tolist()
+        geo_data['primary_id'] = gdf_points['primary_location_id'].tolist()
+        geo_data['secondary_id'] = gdf_points['secondary_location_id'].tolist()
+        geo_data['x'] = gdf_points.geometry.x.values.tolist()
+        geo_data['y'] = gdf_points.geometry.y.values.tolist()
         logger.info("location_crosswalks geodata assembled.")
-
         return geo_data
 
     def _location_crosswalks_generate_map(
@@ -1041,7 +1263,7 @@ class TEEHRDataFrameAccessor:
             ]
 
         # get axes bounds
-        axes_bounds = self._location_get_bounds(geo_data=geo_data)
+        axes_bounds = self._location_crosswalks_get_bounds(geo_data=geo_data)
 
         # generate basemap
         p = figure(

@@ -42,7 +42,7 @@ class LocationTable(BaseTable):
         """Return Pandas DataFrame for Location Table."""
         self._check_load_table()
         df = self.df.toPandas()
-        df.attrs['table_type'] = 'locations'
+        df.attrs['table_type'] = self.name
         df.attrs['fields'] = self.fields()
         return df
 
