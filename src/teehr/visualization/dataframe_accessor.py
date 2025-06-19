@@ -970,7 +970,7 @@ class TEEHRDataFrameAccessor:
             poly_geo_data: dict
     ) -> list:
         """Get tooltips for location_attributes mapping."""
-        exclude_keys = {'xs', 'ys', 'location_id', 'x', 'y'}
+        exclude_keys = {'xs', 'ys', 'x', 'y'}
         unique_attrs = set()
 
         # Collect attribute keys from point data
