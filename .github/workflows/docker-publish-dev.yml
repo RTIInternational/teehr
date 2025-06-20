@@ -1,4 +1,4 @@
-name: Build and Push Development Version
+name: Build and Push Dev Version
 
 # on:
 #   pull_request:
