@@ -1,8 +1,9 @@
-name: Build and Push Development Version for TEEHR Hub
+name: Build and Push Release Version for TEEHR Hub
 
 on:
-  push:
-    tags: [ 'v*.*.*' ]
+  workflow_run:
+    workflows: ["publish-package"]  # Triggered by "publish-package" workflow
+    types: [completed]              # Trigger when "publish-package" completes
 
 jobs:
   call-docker-build:

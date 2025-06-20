@@ -32,7 +32,6 @@ jobs:
           virtualenvs-in-project: true
           virtualenvs-path: .venv
           installer-parallel: true
-
       #----------------------------------------------
       #       load cached venv if cache exists
       #----------------------------------------------
@@ -53,21 +52,6 @@ jobs:
       #----------------------------------------------
       - name: Install project
         run: poetry install --no-interaction
-      # #----------------------------------------------
-      # # install JARS
-      # #----------------------------------------------
-      # - name: Install JARs
-      #   run: |
-      #     source .venv/bin/activate
-      #     python -m teehr.utils.install_spark_jars
-      # #----------------------------------------------
-      # #              run test suite
-      # #----------------------------------------------
-      # - name: Run tests
-      #   run: |
-      #     source .venv/bin/activate
-      #     pytest tests/
-      # # coverage report
       #----------------------------------------------
       #              build publish package
       #----------------------------------------------

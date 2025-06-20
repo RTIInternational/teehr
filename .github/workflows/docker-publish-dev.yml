@@ -1,11 +1,11 @@
 name: Build and Push Development Version for TEEHR Hub
 
-# on:
-#   pull_request:
-#     types: [opened, reopened]  # merged? closed?
 on:
-  push:
-    branches: [475-update-python-dependencies]
+  pull_request:
+    types: [closed]  # merged? closed?
+# on:
+#   push:
+#     branches: [475-update-python-dependencies]
 
 jobs:
   call-docker-build:
