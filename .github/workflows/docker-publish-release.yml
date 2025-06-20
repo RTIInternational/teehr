@@ -1,0 +1,12 @@
+name: Build and Push Development Version for TEEHR Hub
+
+on:
+  push:
+    tags: [ 'v*.*.*' ]
+
+jobs:
+  call-docker-build:
+    uses: RTIInternational/teehr-hub/.github/workflows/build-and-push-image.yaml@update-deployment
+    secrets: inherit
+    with:
+      image-tag: ${{ github.ref_name }}
