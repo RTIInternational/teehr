@@ -1,4 +1,4 @@
-name: Build and Push Development Version
+name: Build and Push Development Version Test
 
 # on:
 #   pull_request:
