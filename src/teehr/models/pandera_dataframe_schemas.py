@@ -1,5 +1,5 @@
 import pandera.pyspark as ps
-import pandera as pa
+import pandera.pandas as pa
 import pyspark.sql.types as T
 import pandas as pd
 from typing import List, Union

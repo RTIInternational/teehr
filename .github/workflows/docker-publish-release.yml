@@ -1,0 +1,13 @@
+name: Build and Push Release Version for TEEHR Hub
+
+on:
+  workflow_run:
+    workflows: ["publish-package"]  # Triggered by "publish-package" workflow
+    types: [completed]              # Trigger when "publish-package" completes
+
+jobs:
+  call-docker-build:
+    uses: RTIInternational/teehr-hub/.github/workflows/build-and-push-image.yaml@update-deployment
+    secrets: inherit
+    with:
+      image-tag: ${{ github.ref_name }}

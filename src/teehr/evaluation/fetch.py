@@ -642,12 +642,13 @@ class Fetch:
         nwm_configuration: str,
         output_type: str,
         variable_name: str,
-        start_date: Union[str, datetime],
-        ingest_days: int,
         nwm_version: SupportedNWMOperationalVersionsEnum,
+        start_date: Union[str, datetime, pd.Timestamp],
+        end_date: Optional[Union[str, datetime, pd.Timestamp]] = None,
+        ingest_days: Optional[int] = None,
         data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
         kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
-        prioritize_analysis_valid_time: Optional[bool] = False,
+        prioritize_analysis_value_time: Optional[bool] = False,
         t_minus_hours: Optional[List[int]] = None,
         process_by_z_hour: Optional[bool] = True,
         stepsize: Optional[int] = 100,
@@ -658,6 +659,7 @@ class Fetch:
         ending_z_hour: Optional[int] = None,
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True,
+        drop_overlapping_assimilation_values: Optional[bool] = True
     ):
         """Fetch operational NWM point data and load into the TEEHR dataset.
 
@@ -676,11 +678,6 @@ class Fetch:
         variable_name : str
             Name of the NWM data variable to download.
             (e.g., "streamflow", "velocity", ...).
-        start_date : str or datetime
-            Date to begin data ingest.
-            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
-        ingest_days : int
-            Number of days to ingest data after start date.
         nwm_version : SupportedNWMOperationalVersionsEnum
             The NWM operational version.
             "nwm12", "nwm20", "nwm21", "nwm22", or "nwm30".
@@ -694,6 +691,17 @@ class Fetch:
             - v2.0: 2019-06-19 - 2021-04-19
             - v2.1/2.2: 2021-04-20 - 2023-09-18
             - v3.0: 2023-09-19 - present
+        start_date : Union[str, datetime, pd.Timestamp]
+            Date to begin data ingest.
+            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+            Rounds down to beginning of day.
+        end_date : Union[str, datetime, pd.Timestamp],
+            Last date to fetch.  Rounds up to end of day.
+            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+        ingest_days : int
+            Number of days to ingest data after start date. This is deprecated
+            in favor of end_date, and will be removed in a future release.
+            If both are provided, ingest_days takes precedence.
         data_source : Optional[SupportedNWMDataSourcesEnum]
             Specifies the remote location from which to fetch the data
             "GCS" (default), "NOMADS", or "DSTOR"
@@ -706,13 +714,16 @@ class Fetch:
             CIROH pre-generated jsons from s3, ignoring any that are unavailable.
             "auto" - read the CIROH pre-generated jsons from s3, and create any that
             are unavailable, storing locally.
-        prioritize_analysis_valid_time : Optional[bool]
-            A boolean flag that determines the method of fetching analysis data.
-            When False (default), all hours of the reference time are included in the
+        prioritize_analysis_value_time : Optional[bool]
+            A boolean flag that determines the method of fetching analysis-assimilation
+            data. When False (default), all non-overlapping value_time hours
+            (prioritizing the most recent reference_time) are included in the
             output. When True, only the hours within t_minus_hours are included.
         t_minus_hours : Optional[List[int]]
             Specifies the look-back hours to include if an assimilation
             nwm_configuration is specified.
+            Only utilized if assimilation data is requested and
+            prioritize_analysis_value_time is True.
         process_by_z_hour : Optional[bool]
             A boolean flag that determines the method of grouping files
             for processing. The default is True, which groups by day and z_hour.
@@ -747,6 +758,12 @@ class Fetch:
             does not exist will be appended.
         drop_duplicates : bool
             Whether to drop duplicates in the data. Default is True.
+        drop_overlapping_assimilation_values: Optional[bool] = True
+            Whether to drop overlapping assimilation values. Default is True.
+            If True, values that overlap in value_time are dropped, keeping those with
+            the most recent reference_time. In this case, all reference_time values
+            are set to None. If False, overlapping values are kept and reference_time
+            is retained.
 
 
         .. note::
@@ -777,7 +794,7 @@ class Fetch:
         >>>     output_type="channel_rt",
         >>>     variable_name="streamflow",
         >>>     start_date=datetime(2000, 1, 1),
-        >>>     ingest_days=1,
+        >>>     end_date=datetime(2000, 1, 2),
         >>>     nwm_version="nwm21",
         >>>     data_source="GCS",
         >>>     kerchunk_method="auto"
@@ -797,17 +814,14 @@ class Fetch:
         >>>     output_type="channel_rt",
         >>>     variable_name="streamflow",
         >>>     start_date="2023-03-18",
-        >>>     ingest_days=1,
+        >>>     end_date="2023-03-19",
         >>>     location_ids=LOCATION_IDS,
         >>>     json_dir=Path(Path.home(), "temp/parquet/jsons/"),
         >>>     output_parquet_dir=Path(Path.home(), "temp/parquet"),
         >>>     nwm_version="nwm21",
         >>>     data_source="GCS",
         >>>     kerchunk_method="auto",
-        >>>     prioritize_analysis_valid_time=True,
-        >>>     t_minus_hours=[0, 1, 2],
         >>>     process_by_z_hour=True,
-        >>>     stepsize=STEPSIZE,
         >>>     ignore_missing_file=True,
         >>>     overwrite_output=True,
         >>> )
@@ -836,6 +850,7 @@ class Fetch:
             output_type=output_type,
             variable_name=variable_name,
             start_date=start_date,
+            end_date=end_date,
             ingest_days=ingest_days,
             location_ids=location_ids,
             json_dir=self.kerchunk_cache_dir,
@@ -847,7 +862,7 @@ class Fetch:
             nwm_version=nwm_version,
             data_source=data_source,
             kerchunk_method=kerchunk_method,
-            prioritize_analysis_valid_time=prioritize_analysis_valid_time,
+            prioritize_analysis_value_time=prioritize_analysis_value_time,
             t_minus_hours=t_minus_hours,
             process_by_z_hour=process_by_z_hour,
             stepsize=stepsize,
@@ -856,7 +871,8 @@ class Fetch:
             variable_mapper=NWM_VARIABLE_MAPPER,
             timeseries_type=timeseries_type,
             starting_z_hour=starting_z_hour,
-            ending_z_hour=ending_z_hour
+            ending_z_hour=ending_z_hour,
+            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values  # noqa
         )
 
         if (
@@ -879,7 +895,8 @@ class Fetch:
             ),
             timeseries_type=timeseries_type,
             write_mode=write_mode,
-            drop_duplicates=drop_duplicates
+            drop_duplicates=drop_duplicates,
+            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values  # noqa
         )
 
     def nwm_operational_grids(
@@ -887,14 +904,15 @@ class Fetch:
         nwm_configuration: str,
         output_type: str,
         variable_name: str,
-        start_date: Union[str, datetime],
-        ingest_days: int,
         nwm_version: SupportedNWMOperationalVersionsEnum,
+        start_date: Union[str, datetime, pd.Timestamp],
+        end_date: Optional[Union[str, datetime, pd.Timestamp]] = None,
+        ingest_days: Optional[int] = None,
         calculate_zonal_weights: bool = True,
         location_id_prefix: Optional[str] = None,
         data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
         kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
-        prioritize_analysis_valid_time: Optional[bool] = False,
+        prioritize_analysis_value_time: Optional[bool] = False,
         t_minus_hours: Optional[List[int]] = None,
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
@@ -904,6 +922,7 @@ class Fetch:
         write_mode: TableWriteEnum = "append",
         zonal_weights_filepath: Optional[Union[Path, str]] = None,
         drop_duplicates: bool = True,
+        drop_overlapping_assimilation_values: bool = True,
     ):
         """
         Fetch NWM operational gridded data, calculate zonal statistics (currently only
@@ -929,11 +948,6 @@ class Fetch:
         variable_name : str
             Name of the NWM data variable to download.
             (e.g., "streamflow", "velocity", ...).
-        start_date : str or datetime
-            Date to begin data ingest.
-            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
-        ingest_days : int
-            Number of days to ingest data after start date.
         nwm_version : SupportedNWMOperationalVersionsEnum
             The NWM operational version.
             "nwm12", "nwm20", "nwm21", "nwm22", or "nwm30".
@@ -947,6 +961,17 @@ class Fetch:
             - v2.0: 2019-06-19 - 2021-04-19
             - v2.1/2.2: 2021-04-20 - 2023-09-18
             - v3.0: 2023-09-19 - present
+        start_date : Union[str, datetime, pd.Timestamp]
+            Date to begin data ingest.
+            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+            Rounds down to beginning of day.
+        end_date : Union[str, datetime, pd.Timestamp],
+            Last date to fetch.  Rounds up to end of day.
+            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+        ingest_days : int
+            Number of days to ingest data after start date. This is deprecated
+            in favor of end_date, and will be removed in a future release.
+            If both are provided, ingest_days takes precedence.
         calculate_zonal_weights : bool
             Flag specifying whether or not to calculate zonal weights.
             True = calculate; False = use existing file. Default is True.
@@ -965,13 +990,16 @@ class Fetch:
             CIROH pre-generated jsons from s3, ignoring any that are unavailable.
             "auto" - read the CIROH pre-generated jsons from s3, and create any that
             are unavailable, storing locally.
-        prioritize_analysis_valid_time : Optional[bool]
-            A boolean flag that determines the method of fetching analysis data.
-            When False (default), all hours of the reference time are included in the
+        prioritize_analysis_value_time : Optional[bool]
+            A boolean flag that determines the method of fetching analysis-assimilation
+            data. When False (default), all non-overlapping value_time hours
+            (prioritizing the most recent reference_time) are included in the
             output. When True, only the hours within t_minus_hours are included.
         t_minus_hours : Optional[Iterable[int]]
             Specifies the look-back hours to include if an assimilation
             nwm_configuration is specified.
+            Only utilized if assimilation data is requested and
+            prioritize_analysis_value_time is True.
         ignore_missing_file : bool
             Flag specifying whether or not to fail if a missing NWM file is encountered
             True = skip and continue; False = fail.
@@ -1000,6 +1028,12 @@ class Fetch:
             Default is None.
         drop_duplicates : bool
             Whether to drop duplicates in the data. Default is True.
+        drop_overlapping_assimilation_values: Optional[bool] = True
+            Whether to drop overlapping assimilation values. Default is True.
+            If True, values that overlap in value_time are dropped, keeping those with
+            the most recent reference_time. In this case, all reference_time values
+            are set to None. If False, overlapping values are kept and reference_time
+            is retained.
 
 
         .. note::
@@ -1036,7 +1070,7 @@ class Fetch:
         >>>     output_type="forcing",
         >>>     variable_name="RAINRATE",
         >>>     start_date=datetime(2000, 1, 1),
-        >>>     ingest_days=1,
+        >>>     end_date=datetime(2000, 1, 2),
         >>>     Path(Path.home(), "nextgen_03S_weights.parquet"),
         >>>     nwm_version="nwm22",
         >>>     data_source="GCS",
@@ -1056,8 +1090,8 @@ class Fetch:
         >>>     nwm_configuration=forcing_short_range,
         >>>     output_type=forcing,
         >>>     variable_name=RAINRATE,
-        >>>     start_date=2020-12-18,
-        >>>     ingest_days=1,
+        >>>     start_date="2020-12-18",
+        >>>     end_date="2020-12-19",
         >>>     zonal_weights_filepath=Path(Path.home(), "nextgen_03S_weights.parquet"),
         >>>     json_dir=Path(Path.home(), "temp/parquet/jsons/"),
         >>>     output_parquet_dir=Path(Path.home(), "temp/parquet"),
@@ -1116,7 +1150,7 @@ class Fetch:
             output_type=output_type,
             variable_name=variable_name,
             start_date=start_date,
-            ingest_days=ingest_days,
+            end_date=end_date,
             zonal_weights_filepath=zonal_weights_filepath,
             json_dir=self.kerchunk_cache_dir,
             output_parquet_dir=Path(
@@ -1125,9 +1159,10 @@ class Fetch:
                 ev_variable_name
             ),
             nwm_version=nwm_version,
+            ingest_days=ingest_days,
             data_source=data_source,
             kerchunk_method=kerchunk_method,
-            prioritize_analysis_valid_time=prioritize_analysis_valid_time,
+            prioritize_analysis_value_time=prioritize_analysis_value_time,
             t_minus_hours=t_minus_hours,
             ignore_missing_file=ignore_missing_file,
             overwrite_output=overwrite_output,
@@ -1138,7 +1173,8 @@ class Fetch:
             unique_zone_id="id",
             calculate_zonal_weights=calculate_zonal_weights,
             zone_polygons=locations_gdf,
-            timeseries_type=timeseries_type
+            timeseries_type=timeseries_type,
+            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values  # noqa
         )
 
         if (
@@ -1159,5 +1195,6 @@ class Fetch:
             in_path=Path(self.nwm_cache_dir),
             timeseries_type=timeseries_type,
             write_mode=write_mode,
-            drop_duplicates=drop_duplicates
+            drop_duplicates=drop_duplicates,
+            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values  # noqa
         )
