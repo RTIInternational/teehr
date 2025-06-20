@@ -1,4 +1,4 @@
-name: Docker Publish Latest
+name: Docker Publish Dev
 
 # on:
 #   pull_request:
