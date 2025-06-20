@@ -1,0 +1,15 @@
+name: Docker Publish Latest
+
+# on:
+#   pull_request:
+#     types: [opened, reopened]  # merged? closed?
+on:
+  push:
+    branches: [475-update-python-dependencies]
+
+jobs:
+  call-docker-build:
+    uses: RTIInternational/teehr-hub/.github/workflows/build-and-push-image.yaml@update-deployment
+    secrets: inherit
+    with:
+      image-tag: "dev"
