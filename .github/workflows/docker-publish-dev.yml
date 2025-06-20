@@ -1,4 +1,4 @@
-name: Docker Publish Development Version
+name: Build and Push Development Version
 
 # on:
 #   pull_request:
