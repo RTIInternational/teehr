@@ -30,6 +30,9 @@ class DomainTable(BaseTable):
         new_df = self.spark.createDataFrame(pd.DataFrame([o.model_dump() for o in obj]))
 
         combined_df = org_df.unionByName(new_df).repartition(1)
-        validated_df = self._validate(combined_df)
+        validated_df = self._validate(
+            df=combined_df,
+            drop_duplicates=True
+        )
 
         self._write_spark_df(validated_df)

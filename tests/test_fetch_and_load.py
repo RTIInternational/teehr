@@ -141,13 +141,14 @@ def test_fetch_and_load_nwm_operational_points(tmpdir):
         output_type="channel_rt",
         variable_name="streamflow",
         start_date=datetime(2024, 2, 22),
+        end_date=datetime(2025, 2, 22),
         ingest_days=1,
         nwm_version="nwm30",
-        prioritize_analysis_valid_time=True,
+        prioritize_analysis_value_time=True,
         t_minus_hours=[0],
         process_by_z_hour=False,
         starting_z_hour=3,
-        ending_z_hour=20
+        ending_z_hour=20,
     )
     ts_df = ev.secondary_timeseries.to_pandas()
 
@@ -193,9 +194,10 @@ def test_fetch_and_load_nwm_operational_grids(tmpdir):
         output_type="forcing",
         variable_name="RAINRATE",
         start_date=datetime(2024, 2, 22),
+        end_date=datetime(2024, 2, 22),
         ingest_days=1,
         nwm_version="nwm30",
-        prioritize_analysis_valid_time=True,
+        prioritize_analysis_value_time=True,
         t_minus_hours=[0],
         location_id_prefix="huc10",
         calculate_zonal_weights=True,

@@ -16,29 +16,39 @@ Install the prerequisites:
 
 
 1. Clone the TEEHR repository from GitHub:
-```bash
-git clone https://github.com/RTIInternational/teehr.git
-```
+
+.. code-block:: bash
+
+   git clone https://github.com/RTIInternational/teehr.git
+
 
 2. Navigate to the TEEHR directory:
-```bash
-cd teehr
-```
+
+.. code-block:: bash
+
+   cd teehr
+
 
 3. Create a new virtual environment using poetry:
-```bash
-poetry install
-```
+
+.. code-block:: bash
+
+   poetry install
+
 
 4. Activate the virtual environment:
-```bash
-poetry shell
-```
+
+.. code-block:: bash
+
+   poetry shell
+
 
 5. Install the required JAR files for Spark:
-```bash
-python download_spark_jars.py
-```
+
+.. code-block:: bash
+
+   python download_spark_jars.py
+
 
 Contributing Guidelines
 -----------------------
