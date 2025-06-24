@@ -54,8 +54,26 @@ class DomainTable(BaseTable):
             # write the validated data to the table
             self._write_spark_df(validated_df)
         else:
+            # warn the user that some rows in the added data already exist
             matched_count = df_matched.count()
             logger.warning(
                 f"{matched_count} rows in the added data already exist in the "
-                f"{self.name} table. No data has been added."
+                f"{self.name} table. No data has been added. "
                 )
+            # Include a warning detailing which values are duplicates
+            matched_values = df_matched.select(
+                self.unique_column_set
+                ).distinct()
+            matched_values_list = matched_values.collect()
+            matched_values_str = "; ".join(
+                [
+                    ", ".join(
+                        f"{col}={row[col]}" for col in self.unique_column_set
+                    )
+                    for row in matched_values_list
+                ]
+            )
+            logger.warning(
+                f"Duplicate values in {self.unique_column_set}: "
+                f"{matched_values_str}"
+            )
