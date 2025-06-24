@@ -59,4 +59,3 @@ class DomainTable(BaseTable):
                 f"{matched_count} rows in the added data already exist in the "
                 f"{self.name} table. No data has been added."
                 )
-            df_matched.show(truncate=False)
