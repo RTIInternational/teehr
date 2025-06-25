@@ -66,11 +66,11 @@ def _transform(
         return p
 
 
-def mvt_wrapper(model: MetricsBasemodel) -> Callable:
+def max_value_time(model: MetricsBasemodel) -> Callable:
     """Create max_value_time metric function."""
     logger.debug("Building the max_value_time metric function")
 
-    def max_value_time(
+    def max_value_time_inner(
         p: pd.Series,
         value_time: pd.Series
     ) -> pd.Timestamp:
@@ -78,76 +78,76 @@ def mvt_wrapper(model: MetricsBasemodel) -> Callable:
         p, value_time = _transform(p, model, value_time)
         return value_time[p.idxmax()]
 
-    return max_value_time
+    return max_value_time_inner
 
 
-def variance_wrapper(model: MetricsBasemodel) -> Callable:
+def variance(model: MetricsBasemodel) -> Callable:
     """Create variance metric function."""
     logger.debug("Building the variance metric function")
 
-    def variance(p: pd.Series) -> float:
+    def variance_inner(p: pd.Series) -> float:
         """Variance."""
         p = _transform(p, model)
         return np.var(p)
 
-    return variance
+    return variance_inner
 
 
-def count_wrapper(model: MetricsBasemodel) -> Callable:
+def count(model: MetricsBasemodel) -> Callable:
     """Create count metric function."""
     logger.debug("Building the count metric function")
 
-    def count(p: pd.Series) -> float:
+    def count_inner(p: pd.Series) -> float:
         """Count."""
         p = _transform(p, model)
         return len(p)
 
-    return count
+    return count_inner
 
 
-def min_wrapper(model: MetricsBasemodel) -> Callable:
+def minimum(model: MetricsBasemodel) -> Callable:
     """Create minimum metric function."""
     logger.debug("Building the minimum metric function")
 
-    def minimum(p: pd.Series) -> float:
+    def minimum_inner(p: pd.Series) -> float:
         """Minimum."""
         p = _transform(p, model)
         return np.min(p)
 
-    return minimum
+    return minimum_inner
 
 
-def max_wrapper(model: MetricsBasemodel) -> Callable:
+def maximum(model: MetricsBasemodel) -> Callable:
     """Create maximum metric function."""
     logger.debug("Building the maximum metric function")
 
-    def maximum(p: pd.Series) -> float:
+    def maximum_inner(p: pd.Series) -> float:
         """Maximum."""
         p = _transform(p, model)
         return np.max(p)
 
-    return maximum
+    return maximum_inner
 
 
-def avg_wrapper(model: MetricsBasemodel) -> Callable:
+def average(model: MetricsBasemodel) -> Callable:
     """Create average metric function."""
     logger.debug("Building the average metric function")
 
-    def average(p: pd.Series) -> float:
+    def average_inner(p: pd.Series) -> float:
         """Average."""
         p = _transform(p, model)
         return np.mean(p)
 
-    return average
+    return average_inner
 
 
-def sum_wrapper(model: MetricsBasemodel) -> Callable:
+def sum(model: MetricsBasemodel) -> Callable:
     """Create sum metric function."""
     logger.debug("Building the sum metric function")
 
-    def sum(p: pd.Series) -> float:
+    def sum_inner(p: pd.Series) -> float:
         """Sum."""
         p = _transform(p, model)
         return np.sum(p)
 
-    return sum
+    return sum_inner
