@@ -36,11 +36,11 @@ def _pivot_by_value_time(
     return {"primary": np.array(primary), "secondary": np.array(secondary)}
 
 
-def create_crps_func(model: MetricsBasemodel) -> Callable:
+def ensemble_crps(model: MetricsBasemodel) -> Callable:
     """Create the CRPS ensemble metric function."""
     logger.debug("Building the CRPS ensemble metric func.")
 
-    def ensemble_crps(
+    def ensemble_crps_inner(
         p: pd.Series,
         s: pd.Series,
         value_time: pd.Series,
@@ -85,4 +85,4 @@ def create_crps_func(model: MetricsBasemodel) -> Callable:
                 backend=model.backend
             )
 
-    return ensemble_crps
+    return ensemble_crps_inner

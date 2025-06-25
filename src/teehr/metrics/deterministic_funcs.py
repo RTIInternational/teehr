@@ -98,99 +98,100 @@ def _root_mean_squared_error(p: pd.Series, s: pd.Series) -> float:
     return _mean_error(p, s, power=2.0, root=True)
 
 
-def me_wrapper(model: MetricsBasemodel) -> Callable:
-    """Create the mean_error metric function."""
+def mean_error(model: MetricsBasemodel) -> Callable:
+    """Create the Mean Error metric function."""
     logger.debug("Building the mean_error metric function")
 
-    def mean_error(p: pd.Series, s: pd.Series) -> float:
+    def mean_error_inner(p: pd.Series, s: pd.Series) -> float:
         """Mean Error."""
         p, s = _transform(p, s, model)
         difference = s - p
         return np.sum(difference)/len(p)
 
-    return mean_error
+    return mean_error_inner
 
 
-def rb_wrapper(model: MetricsBasemodel) -> Callable:
-    """Create the relative_bias metric function."""
+def relative_bias(model: MetricsBasemodel) -> Callable:
+    """Create the Relative Bias metric function."""
     logger.debug("Building the relative_bias metric function")
 
-    def relative_bias(p: pd.Series, s: pd.Series) -> float:
+    def relative_bias_inner(p: pd.Series, s: pd.Series) -> float:
         """Relative Bias."""
         p, s = _transform(p, s, model)
         difference = s - p
         return np.sum(difference)/np.sum(p)
 
-    return relative_bias
+    return relative_bias_inner
 
 
-def mare_wrapper(model: MetricsBasemodel) -> Callable:
-    """Create the mean_absolute_relative_error metric function."""
+def mean_absolute_relative_error(model: MetricsBasemodel) -> Callable:
+    """Create the Absolute Relative Error metric function."""
     logger.debug("Building the mean_absolute_relative_error metric function")
 
-    def mean_absolute_relative_error(p: pd.Series, s: pd.Series) -> float:
+    def mean_absolute_relative_error_inner(p: pd.Series,
+                                           s: pd.Series) -> float:
         """Absolute Relative Error."""
         p, s = _transform(p, s, model)
         absolute_difference = np.abs(s - p)
         return np.sum(absolute_difference)/np.sum(p)
 
-    return mean_absolute_relative_error
+    return mean_absolute_relative_error_inner
 
 
-def mb_wrapper(model: MetricsBasemodel) -> Callable:
-    """Create the multiplicative_bias metric function."""
+def multiplicative_bias(model: MetricsBasemodel) -> Callable:
+    """Create the Multiplicative Bias metric function."""
     logger.debug("Building the multiplicative_bias metric function")
 
-    def multiplicative_bias(p: pd.Series, s: pd.Series) -> float:
+    def multiplicative_bias_inner(p: pd.Series, s: pd.Series) -> float:
         """Multiplicative Bias."""
         p, s = _transform(p, s, model)
         return np.mean(s)/np.mean(p)
 
-    return multiplicative_bias
+    return multiplicative_bias_inner
 
 
-def pc_wrapper(model: MetricsBasemodel) -> Callable:
-    """Create the pearson_correlation metric function."""
+def pearson_correlation(model: MetricsBasemodel) -> Callable:
+    """Create the Pearson Correlation Coefficient metric function."""
     logger.debug("Building the pearson_correlation metric function")
 
-    def pearson_correlation(p: pd.Series, s: pd.Series) -> float:
+    def pearson_correlation_inner(p: pd.Series, s: pd.Series) -> float:
         """Pearson Correlation Coefficient."""
         p, s = _transform(p, s, model)
         return np.corrcoef(s, p)[0][1]
 
-    return pearson_correlation
+    return pearson_correlation_inner
 
 
-def r_squared_wrapper(model: MetricsBasemodel) -> Callable:
+def r_squared(model: MetricsBasemodel) -> Callable:
     """Create the R-squared metric function."""
     logger.debug("Building the R-squared metric function")
 
-    def r_squared(p: pd.Series, s: pd.Series) -> float:
+    def r_squared_inner(p: pd.Series, s: pd.Series) -> float:
         """R-squared."""
         p, s = _transform(p, s, model)
         pearson_correlation_coefficient = np.corrcoef(s, p)[0][1]
         return np.power(pearson_correlation_coefficient, 2)
 
-    return r_squared
+    return r_squared_inner
 
 
-def mvd_wrapper(model: MetricsBasemodel) -> Callable:
+def max_value_delta(model: MetricsBasemodel) -> Callable:
     """Create the max_value_delta metric function."""
     logger.debug("Building the max_value_delta metric function")
 
-    def max_value_delta(p: pd.Series, s: pd.Series) -> float:
+    def max_value_delta_inner(p: pd.Series, s: pd.Series) -> float:
         """Max value delta."""
         p, s = _transform(p, s, model)
         return np.max(s) - np.max(p)
 
-    return max_value_delta
+    return max_value_delta_inner
 
 
-def aprb_wrapper(model: MetricsBasemodel) -> Callable:
+def annual_peak_relative_bias(model: MetricsBasemodel) -> Callable:
     """Create the annual_peak_relative_bias metric function."""
     logger.debug("Building the annual_peak_relative_bias metric function")
 
-    def annual_peak_relative_bias(
+    def annual_peak_relative_bias_inner(
         p: pd.Series,
         s: pd.Series,
         value_time: pd.Series
@@ -215,14 +216,14 @@ def aprb_wrapper(model: MetricsBasemodel) -> Callable:
             - primary_yearly_max_values
             ) / np.sum(primary_yearly_max_values)
 
-    return annual_peak_relative_bias
+    return annual_peak_relative_bias_inner
 
 
-def spearman_wrapper(model: MetricsBasemodel) -> Callable:
+def spearman_correlation(model: MetricsBasemodel) -> Callable:
     """Create the Spearman metric function."""
     logger.debug("Building the spearman_correlation metric function")
 
-    def spearman_correlation(p: pd.Series, s: pd.Series) -> float:
+    def spearman_correlation_inner(p: pd.Series, s: pd.Series) -> float:
         """Spearman Rank Correlation Coefficient."""
         p, s = _transform(p, s, model)
 
@@ -234,14 +235,14 @@ def spearman_wrapper(model: MetricsBasemodel) -> Callable:
             / (count * (count**2 - 1))
             )
 
-    return spearman_correlation
+    return spearman_correlation_inner
 
 
-def nse_wrapper(model: MetricsBasemodel) -> Callable:
+def nash_sutcliffe_efficiency(model: MetricsBasemodel) -> Callable:
     """Create the nash_sutcliffe_efficiency metric function."""
     logger.debug("Building the nash_sutcliffe_efficiency metric function")
 
-    def nash_sutcliffe_efficiency(p: pd.Series, s: pd.Series) -> float:
+    def nash_sutcliffe_efficiency_inner(p: pd.Series, s: pd.Series) -> float:
         """Nash-Sutcliffe Efficiency."""
         if len(p) == 0 or len(s) == 0:
             return np.nan
@@ -258,18 +259,18 @@ def nse_wrapper(model: MetricsBasemodel) -> Callable:
             return np.nan
         return 1.0 - numerator/denominator
 
-    return nash_sutcliffe_efficiency
+    return nash_sutcliffe_efficiency_inner
 
 
-def nse_norm_wrapper(model: MetricsBasemodel) -> Callable:
+def nash_sutcliffe_efficiency_normalized(model: MetricsBasemodel) -> Callable:
     """Create the nash_sutcliffe_efficiency_normalized metric function."""
     logger.debug(
         "Building the nash_sutcliffe_efficiency_normalized metric function"
         )
 
-    def nash_sutcliffe_efficiency_normalized(p: pd.Series,
-                                             s: pd.Series
-                                             ) -> float:
+    def nash_sutcliffe_efficiency_normalized_inner(p: pd.Series,
+                                                   s: pd.Series
+                                                   ) -> float:
         """Apply normalized Nash-Sutcliffe Efficiency."""
         if len(p) == 0 or len(s) == 0:
             return np.nan
@@ -286,16 +287,16 @@ def nse_norm_wrapper(model: MetricsBasemodel) -> Callable:
             return np.nan
         return 1.0 / (1.0 + numerator/denominator)
 
-    return nash_sutcliffe_efficiency_normalized
+    return nash_sutcliffe_efficiency_normalized_inner
 
 
-def kge_wrapper(model: MetricsBasemodel) -> Callable:
+def kling_gupta_efficiency(model: MetricsBasemodel) -> Callable:
     """Create the kling_gupta_efficiency metric function."""
     logger.debug("Building the kling_gupta_efficiency metric function")
 
-    def kling_gupta_efficiency(p: pd.Series,
-                               s: pd.Series,
-                               ) -> float:
+    def kling_gupta_efficiency_inner(p: pd.Series,
+                                     s: pd.Series,
+                                     ) -> float:
         """Kling-Gupta Efficiency (2009)."""
         if np.std(s) == 0 or np.std(p) == 0:
             return np.nan
@@ -321,14 +322,14 @@ def kge_wrapper(model: MetricsBasemodel) -> Callable:
         # Return KGE
         return 1.0 - euclidean_distance
 
-    return kling_gupta_efficiency
+    return kling_gupta_efficiency_inner
 
 
-def kge_mod1_wrapper(model: MetricsBasemodel) -> Callable:
+def kling_gupta_efficiency_mod1(model: MetricsBasemodel) -> Callable:
     """Create the kling_gupta_efficiency_mod1 metric function."""
     logger.debug("Building the kling_gupta_effiency_mod1 metric function")
 
-    def kling_gupta_efficiency_mod1(p: pd.Series, s: pd.Series) -> float:
+    def kling_gupta_efficiency_mod1_inner(p: pd.Series, s: pd.Series) -> float:
         """Kling-Gupta Efficiency - modified 1 (2012)."""
         if np.std(s) == 0 or np.std(p) == 0:
             return np.nan
@@ -356,14 +357,14 @@ def kge_mod1_wrapper(model: MetricsBasemodel) -> Callable:
 
         return 1.0 - euclidean_distance
 
-    return kling_gupta_efficiency_mod1
+    return kling_gupta_efficiency_mod1_inner
 
 
-def kge_mod2_wrapper(model: MetricsBasemodel) -> Callable:
+def kling_gupta_efficiency_mod2(model: MetricsBasemodel) -> Callable:
     """Create the kling_gupta_efficiency_mod2 metric function."""
     logger.debug("Building the kling_gupta_efficiency_mod2 metric function")
 
-    def kling_gupta_efficiency_mod2(p: pd.Series, s: pd.Series) -> float:
+    def kling_gupta_efficiency_mod2_inner(p: pd.Series, s: pd.Series) -> float:
         """Kling-Gupta Efficiency - modified 2 (2021)."""
         if np.std(s) == 0 or np.std(p) == 0:
             return np.nan
@@ -392,69 +393,69 @@ def kge_mod2_wrapper(model: MetricsBasemodel) -> Callable:
 
         return 1.0 - euclidean_distance
 
-    return kling_gupta_efficiency_mod2
+    return kling_gupta_efficiency_mod2_inner
 
 
-def mae_wrapper(model: MetricsBasemodel) -> Callable:
+def mean_absolute_error(model: MetricsBasemodel) -> Callable:
     """Create the mean_absolute_error metric function."""
     logger.debug("Building the mean_absolute_error metric function")
 
-    def mean_absolute_error(p: pd.Series, s: pd.Series) -> float:
+    def mean_absolute_error_inner(p: pd.Series, s: pd.Series) -> float:
         """Mean absolute error."""
         p, s = _transform(p, s, model)
         return _mean_error(p, s)
 
-    return mean_absolute_error
+    return mean_absolute_error_inner
 
 
-def mse_wrapper(model: MetricsBasemodel) -> Callable:
+def mean_squared_error(model: MetricsBasemodel) -> Callable:
     """Create the mean_squared_error metric function."""
     logger.debug("Building the mean_squared_error metric function")
 
-    def mean_squared_error(p: pd.Series, s: pd.Series) -> float:
+    def mean_squared_error_inner(p: pd.Series, s: pd.Series) -> float:
         """Mean squared error."""
         p, s = _transform(p, s, model)
         return _mean_error(p, s, power=2.0)
 
-    return mean_squared_error
+    return mean_squared_error_inner
 
 
-def rmse_wrapper(model: MetricsBasemodel) -> Callable:
+def root_mean_squared_error(model: MetricsBasemodel) -> Callable:
     """Create the root_mean_squared_error metric function."""
     logger.debug("Building the root_mean_squared_error metric function")
 
-    def root_mean_squared_error(p: pd.Series, s: pd.Series) -> float:
+    def root_mean_squared_error_inner(p: pd.Series, s: pd.Series) -> float:
         """Root mean squared error."""
         p, s = _transform(p, s, model)
         return _mean_error(p, s, power=2.0, root=True)
 
-    return root_mean_squared_error
+    return root_mean_squared_error_inner
 
 
-def rmsdr_wrapper(model: MetricsBasemodel) -> Callable:
+def root_mean_standard_deviation_ratio(model: MetricsBasemodel) -> Callable:
     """Create the root_mean_standard_deviation_ratio metric function."""
     logger.debug(
         "Building the root_mean_standard_deviation_ratio metric function"
         )
 
-    def root_mean_standard_deviation_ratio(p: pd.Series,
-                                           s: pd.Series
-                                           ) -> float:
+    def root_mean_standard_deviation_ratio_inner(p: pd.Series,
+                                                 s: pd.Series
+                                                 ) -> float:
         """Root mean standard deviation ratio."""
         p, s = _transform(p, s, model)
         rmse = _root_mean_squared_error(p, s)
         obs_std_dev = np.std(p)
         return rmse / obs_std_dev
 
-    return root_mean_standard_deviation_ratio
+    return root_mean_standard_deviation_ratio_inner
 
 
 # Time-based Metrics
-def mvtd_wrapper(model: MetricsBasemodel) -> Callable:
+def max_value_timedelta(model: MetricsBasemodel) -> Callable:
     """Create the max_value_timedelta metric function."""
     logger.debug("Building the max_value_timedelta metric function")
 
-    def max_value_timedelta(
+    def max_value_timedelta_inner(
         p: pd.Series,
         s: pd.Series,
         value_time: pd.Series
@@ -468,4 +469,4 @@ def mvtd_wrapper(model: MetricsBasemodel) -> Callable:
 
         return td.total_seconds()
 
-    return max_value_timedelta
+    return max_value_timedelta_inner
