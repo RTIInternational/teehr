@@ -295,22 +295,24 @@ def nwm_grids_to_parquet(
             t_minus_hours,
             ignore_missing_file,
             prioritize_analysis_value_time,
-            drop_overlapping_assimilation_values
+            drop_overlapping_assimilation_values,
+            ingest_days
         )
 
-        if starting_z_hour is not None:
-            gcs_component_paths = start_on_z_hour(
-                start_date=start_date,
-                start_z_hour=starting_z_hour,
-                gcs_component_paths=gcs_component_paths
-            )
+        if starting_z_hour is None:
+            starting_z_hour = start_date.hour
+        if ending_z_hour is None:
+            ending_z_hour = end_date.hour
 
-        if ending_z_hour is not None:
-            gcs_component_paths = end_on_z_hour(
-                end_date=end_date,
-                end_z_hour=ending_z_hour,
-                gcs_component_paths=gcs_component_paths
-            )
+        gcs_component_paths = start_on_z_hour(
+            start_z_hour=starting_z_hour,
+            gcs_component_paths=gcs_component_paths
+        )
+
+        gcs_component_paths = end_on_z_hour(
+            end_z_hour=ending_z_hour,
+            gcs_component_paths=gcs_component_paths
+        )
 
         # Create paths to local and/or remote kerchunk jsons
         json_paths = generate_json_paths(

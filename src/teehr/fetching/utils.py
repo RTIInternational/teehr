@@ -49,18 +49,18 @@ logger = logging.getLogger(__name__)
 
 
 def start_on_z_hour(
-    start_date: datetime,
     start_z_hour: int,
     gcs_component_paths: List[str]
 ):
     """Limit the start date to a specified z-hour."""
     logger.info(f"Limiting the start date to z-hour: {start_z_hour}.")
-    formatted_start_date = start_date.strftime("%Y%m%d")
     return_list = []
-    for path in gcs_component_paths:
+    for i, path in enumerate(gcs_component_paths):
         res = re.search(DAY_PATTERN, path).group()
         day = res.split(".")[1]
         tz = re.search(TZ_PATTERN, path).group()
+        if i == 0:
+            formatted_start_date = day
         if day == formatted_start_date:
             if int(tz[1:-1]) >= start_z_hour:
                 return_list.append(path)
@@ -70,19 +70,19 @@ def start_on_z_hour(
 
 
 def end_on_z_hour(
-    end_date: datetime,
     end_z_hour: int,
     gcs_component_paths: List[str]
 ):
     """Limit the end date to a specified z-hour."""
     logger.info(f"Limiting the end date to z-hour: {end_z_hour}.")
-    formatted_end_date = end_date.strftime("%Y%m%d")
     return_list = []
     reversed_list = sorted(gcs_component_paths, reverse=True)
-    for path in reversed_list:
+    for i, path in enumerate(reversed_list):
         res = re.search(DAY_PATTERN, path).group()
         day = res.split(".")[1]
         tz = re.search(TZ_PATTERN, path).group()
+        if i == 0:
+            formatted_end_date = day
         if day == formatted_end_date:
             if int(tz[1:-1]) <= end_z_hour:
                 return_list.append(path)
@@ -729,7 +729,7 @@ def construct_assim_paths(
 
 def get_end_date_from_ingest_days(
     start_date: Union[str, datetime, pd.Timestamp],
-    ingest_days: Optional[int]
+    ingest_days: int
 ) -> Union[str, datetime, pd.Timestamp]:
     """Get the end date from the start date and ingest days.
 
@@ -737,7 +737,7 @@ def get_end_date_from_ingest_days(
     ----------
     start_date : Union[str, datetime, pd.Timestamp]
         The start date.
-    ingest_days : Optional[int]
+    ingest_days : int
         The number of days to ingest.
 
     Returns
@@ -753,7 +753,7 @@ def get_end_date_from_ingest_days(
         DeprecationWarning,
         stacklevel=2
     )
-    end_date = start_date + timedelta(days=ingest_days - 1)
+    end_date = start_date + timedelta(days=ingest_days)
     return end_date
 
 
@@ -766,7 +766,8 @@ def build_remote_nwm_filelist(
     t_minus_hours: Optional[Iterable[int]],
     ignore_missing_file: Optional[bool],
     prioritize_analysis_value_time: Optional[bool],
-    drop_overlapping_assimilation_values: Optional[bool]
+    drop_overlapping_assimilation_values: Optional[bool],
+    ingest_days: Optional[int] = None
 ) -> List[str]:
     """Assemble a list of remote NWM files based on user parameters.
 
@@ -800,6 +801,8 @@ def build_remote_nwm_filelist(
         overlapping assimilation values. If True, only values corresponding
         to the most recent reference_time are kept. If False, all values
         are kept, even if they overlap in value_time.
+    ingest_days : int
+        The number of days to ingest.
 
     Returns
     -------
@@ -810,7 +813,10 @@ def build_remote_nwm_filelist(
 
     gcs_dir = f"gcs://{NWM_BUCKET}"
     fs = fsspec.filesystem("gcs", token="anon")
-    dates = pd.date_range(start=start_dt, end=end_dt, freq="1d")
+    if ingest_days is None:
+        dates = pd.date_range(start=start_dt.date(), end=end_dt.date(), freq="1d")
+    else:
+        dates = pd.date_range(start=start_dt.date(), end=end_dt.date(), freq="1d", inclusive="left")
 
     if "assim" in configuration and prioritize_analysis_value_time:
         cycle_z_hours = analysis_config_dict[configuration]["cycle_z_hours"]
