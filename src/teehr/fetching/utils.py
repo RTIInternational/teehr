@@ -925,17 +925,17 @@ def get_period_start_end_times(
 
 
 def create_periods_based_on_chunksize(
-    start_date: datetime,
-    end_date: datetime,
+    start_date: Union[str, datetime],
+    end_date: Union[str, datetime],
     chunk_by: Union[NWMChunkByEnum, None]
 ) -> List[pd.Period]:
     """Create a list of periods of a given frequency, start, and end time.
 
     Parameters
     ----------
-    start_date : datetime
+    start_date : datetime, str
         The start date.
-    end_date : datetime
+    end_date : datetime, str
         The end date.
     chunk_by : Union[NWMChunkByEnum, None]
         The chunk size frequency.
