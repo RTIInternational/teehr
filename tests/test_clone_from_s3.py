@@ -48,10 +48,10 @@ def test_clone_partial_template_from_s3(tmpdir):
     assert ev.units.to_sdf().count() == 9
     assert ev.variables.to_sdf().count() == 5
     assert ev.attributes.to_sdf().count() == 8
-    assert ev.configurations.to_sdf().count() == 13
-    assert ev.locations.to_sdf().count() == 146632
+    assert ev.configurations.to_sdf().count() == 1
+    assert ev.locations.to_sdf().count() == 146634
     assert ev.location_attributes.to_sdf().count() == 50558
-    assert ev.location_crosswalks.to_sdf().count() == 170169
+    assert ev.location_crosswalks.to_sdf().count() == 170377
     assert ev.primary_timeseries.to_sdf().count() == 0
     assert ev.secondary_timeseries.to_sdf().count() == 0
     assert ev.joined_timeseries.to_sdf().count() == 0
