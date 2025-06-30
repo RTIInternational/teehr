@@ -2,14 +2,19 @@
 import pandas as pd
 import geopandas as gpd
 import pytest
+import teehr
+import shutil
 from pathlib import Path
 import logging
 from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor
+from teehr.examples.setup_nwm_grid_example import setup_nwm_example
 import tempfile
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+TEST_STUDY_DATA_DIR = Path("tests", "data", "fetch_nwm_grids")
 
 
 def test_init_with_dataframe():
@@ -94,32 +99,136 @@ def test_secondary_timeseries_plot(tmpdir):
 
 
 def test_locations_map(tmpdir):
-    """Test locations table mapping."""
-    gdf = gpd.GeoDataFrame({
-        'id': [1, 2],
-        'name': ['loc1', 'loc2'],
-        'geometry': gpd.points_from_xy([0, 1], [0, 1])
-    })
-    gdf.attrs['table_type'] = 'locations'
-    gdf.crs = "EPSG:4326"
-    accessor = TEEHRDataFrameAccessor(gdf)
-    accessor.locations_map(output_dir=tmpdir)
-    assert Path(tmpdir, 'location_map.html').is_file()
+    """Test locations table mapping with test data."""
+    # Define the directory where the Evaluation will be created.
+    test_eval_dir = Path(tmpdir, 'test_eval_home')
+    if not test_eval_dir.is_dir():
+        test_eval_dir.mkdir(parents=True)
+
+    # Setup the example evaluation using data from the TEEHR repository.
+    shutil.rmtree(test_eval_dir, ignore_errors=True)
+    setup_nwm_example(tmpdir=test_eval_dir)
+
+    # Initialize the evaluation.
+    ev = teehr.Evaluation(dir_path=test_eval_dir)
+
+    # add polygons from parquet in test data
+    location_data_path = Path(test_eval_dir, "three_huc10s_radford.parquet")
+    ev.locations.load_spatial(
+        location_data_path,
+        field_mapping={
+            "huc10": "id"
+        },
+        location_id_prefix="wbd",
+        write_mode="append"  # this is the default
+    )
+
+    # output locations map w/ points and polygons
+    gdf = ev.locations.to_geopandas()
+    outDir = Path(tmpdir, 'outputs')
+    if not outDir.is_dir():
+        outDir.mkdir(parents=True)
+    gdf.teehr.locations_map(output_dir=outDir)
+    assert Path(outDir, 'location_map.html').is_file()
+    for file in outDir.glob('*'):
+        file.unlink()
+
+    # output locations map w/ points only
+    gdf = ev.locations.to_geopandas()
+    gdf = gdf[gdf.geometry.type == 'Point']
+    gdf.teehr.locations_map(output_dir=outDir)
+    assert Path(outDir, 'location_map.html').is_file()
+    for file in outDir.glob('*'):
+        file.unlink()
+
+    # output locations map w/ polygons only
+    gdf = ev.locations.to_geopandas()
+    gdf = gdf[gdf.geometry.type.isin(['Polygon', 'MultiPolygon'])]
+    gdf.teehr.locations_map(output_dir=outDir)
+    assert Path(outDir, 'location_map.html').is_file()
 
 
 def test_location_attributes_map(tmpdir):
-    """Test location_attributes table mapping."""
-    gdf = gpd.GeoDataFrame({
-        'location_id': [1, 1],
-        'attribute_name': ['attr1', 'attr2'],
-        'value': [10, 20],
-        'geometry': gpd.points_from_xy([0, 0], [0, 0])
-    })
-    gdf.attrs['table_type'] = 'location_attributes'
-    gdf.crs = "EPSG:4326"
-    accessor = TEEHRDataFrameAccessor(gdf)
-    accessor.location_attributes_map(output_dir=tmpdir)
-    assert Path(tmpdir, 'location_attributes_map.html').is_file()
+    """Test location_attributes table mapping with test data."""
+    # Define the directory where the Evaluation will be created.
+    test_eval_dir = Path(tmpdir, 'test_eval_home')
+    if not test_eval_dir.is_dir():
+        test_eval_dir.mkdir(parents=True)
+
+    # Setup the example evaluation using data from the TEEHR repository.
+    shutil.rmtree(test_eval_dir, ignore_errors=True)
+    setup_nwm_example(tmpdir=test_eval_dir)
+
+    # Initialize the evaluation.
+    ev = teehr.Evaluation(dir_path=test_eval_dir)
+
+    # add polygons from parquet in test data
+    location_data_path = Path(test_eval_dir, "three_huc10s_radford.parquet")
+    ev.locations.load_spatial(
+        location_data_path,
+        field_mapping={
+            "huc10": "id"
+        },
+        location_id_prefix="wbd",
+        write_mode="append"  # this is the default
+    )
+
+    # add dummy attributes to evaluation
+    test_attribute_polys = teehr.Attribute(
+        name='aridity',
+        type='continuous',
+        description='Aridity index based on the ratio of precipitation to potential evapotranspiration.'
+    )
+    test_attribute_points = teehr.Attribute(
+        name='tester',
+        type='continuous',
+        description='testity test test.'
+    )
+    ev.attributes.add([test_attribute_polys, test_attribute_points])
+
+    # add dummy location_attributes to evaluation
+    columns = ['location_id', 'attribute_name', 'value']
+    data = [
+        ['wbd-0505000115', 'aridity', 0.5],
+        ['wbd-0505000117', 'aridity', 0.6],
+        ['wbd-0505000118', 'aridity', 0.7],
+        ['usgs-03171000', 'tester', 0.762]
+    ]
+    location_attributes_df = pd.DataFrame(data, columns=columns)
+    outPath = Path(tmpdir, 'loc_atts', 'location_attributes.csv')
+    if not outPath.parent.is_dir():
+        outPath.parent.mkdir(parents=True)
+    location_attributes_df.to_csv(outPath, index=False)
+    ev.location_attributes.load_csv(
+        outPath,
+        write_mode="append"
+    )
+
+    # output location attributes map w/ points and polygons
+    gdf = ev.location_attributes.to_geopandas()
+    outDir = Path(tmpdir, 'outputs')
+    if not outDir.is_dir():
+        outDir.mkdir(parents=True)
+    gdf.teehr.location_attributes_map(output_dir=outDir)
+    assert Path(outDir, 'location_attributes_map.html').is_file()
+    for file in outDir.glob('*'):
+        file.unlink()
+
+    # output location attributes map w/ points only
+    gdf = ev.location_attributes.to_geopandas()
+    gdf = gdf[gdf.geometry.type == 'Point']
+    gdf.teehr.location_attributes_map(output_dir=outDir)
+    assert Path(outDir, 'location_attributes_map.html').is_file()
+    for file in outDir.glob('*'):
+        file.unlink()
+
+    # output location attributes map w/ polygons only
+    gdf = ev.location_attributes.to_geopandas()
+    gdf = gdf[gdf.geometry.type.isin(['Polygon', 'MultiPolygon'])]
+    gdf.teehr.location_attributes_map(output_dir=outDir)
+    assert Path(outDir, 'location_attributes_map.html').is_file()
+    for file in outDir.glob('*'):
+        file.unlink()
 
 
 def test_location_crosswalks_map(tmpdir):
@@ -152,25 +261,25 @@ if __name__ == "__main__":
         )
         test_secondary_timeseries_plot(
             tempfile.mkdtemp(
-                prefix="1-",
+                prefix="2-",
                 dir=tmpdir
             )
         )
         test_locations_map(
             tempfile.mkdtemp(
-                prefix="2-",
+                prefix="3-",
                 dir=tmpdir
             )
         )
         test_location_attributes_map(
             tempfile.mkdtemp(
-                prefix="3-",
+                prefix="4-",
                 dir=tmpdir
             )
         )
         test_location_crosswalks_map(
             tempfile.mkdtemp(
-                prefix="4-",
+                prefix="5-",
                 dir=tmpdir
             )
         )
