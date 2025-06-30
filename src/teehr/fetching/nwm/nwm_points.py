@@ -1,6 +1,7 @@
 """Module for fetchning and processing NWM point data."""
 from typing import Union, Optional, List, Dict, Annotated
 from datetime import datetime
+from dateutil.parser import parse
 from pathlib import Path
 import logging
 import pandas as pd
@@ -216,6 +217,9 @@ def nwm_to_parquet(
     """ # noqa
     logger.info(f"Fetching {configuration} data. Version: {nwm_version}")
 
+    if isinstance(start_date, str):
+        start_date = parse(start_date)
+
     if ingest_days is not None:
         end_date = get_end_date_from_ingest_days(
             start_date=start_date,
@@ -225,6 +229,9 @@ def nwm_to_parquet(
         raise ValueError(
             "Either 'end_date' or 'ingest_days' must be specified."
         )
+
+    if isinstance(end_date, str):
+        end_date = parse(end_date)
 
     # Import appropriate config model and dicts based on NWM version
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm12:

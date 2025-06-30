@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Union, Optional, Iterable, List, Dict
 from datetime import datetime
 from datetime import timedelta
-from dateutil.parser import parse
 import logging
 import re
 import json
@@ -206,16 +205,11 @@ def format_nwm_variable_name(variable_name: str) -> str:
 
 def validate_operational_start_end_date(
     nwm_version: str,
-    start_date: Union[str, datetime, pd.Timestamp],
-    end_date: Union[str, datetime, pd.Timestamp]
+    start_date: Union[datetime, pd.Timestamp],
+    end_date: Union[datetime, pd.Timestamp]
 ):
     """Make sure start/end dates work with specified NWM version."""
     logger.debug("Checking dates against NWM version.")
-
-    if isinstance(start_date, str):
-        start_date = parse(start_date)
-    if isinstance(end_date, str):
-        end_date = parse(end_date)
 
     if end_date < start_date:
         raise ValueError(
@@ -728,21 +722,21 @@ def construct_assim_paths(
 
 
 def get_end_date_from_ingest_days(
-    start_date: Union[str, datetime, pd.Timestamp],
+    start_date: Union[datetime, pd.Timestamp],
     ingest_days: int
-) -> Union[str, datetime, pd.Timestamp]:
+) -> datetime:
     """Get the end date from the start date and ingest days.
 
     Parameters
     ----------
-    start_date : Union[str, datetime, pd.Timestamp]
+    start_date : Union[datetime, pd.Timestamp]
         The start date.
     ingest_days : int
         The number of days to ingest.
 
     Returns
     -------
-    Union[str, datetime, pd.Timestamp]
+    datetime
         The end date.
     """
     if ingest_days <= 0:
@@ -760,8 +754,8 @@ def get_end_date_from_ingest_days(
 def build_remote_nwm_filelist(
     configuration: str,
     output_type: str,
-    start_dt: Union[str, datetime, pd.Timestamp],
-    end_dt: Union[str, datetime, pd.Timestamp],
+    start_dt: Union[datetime, pd.Timestamp],
+    end_dt: Union[datetime, pd.Timestamp],
     analysis_config_dict: Dict,
     t_minus_hours: Optional[Iterable[int]],
     ignore_missing_file: Optional[bool],
@@ -777,9 +771,9 @@ def build_remote_nwm_filelist(
         Configuration type.
     output_type : str
         Output component of the configuration.
-    start_dt : str “YYYY-MM-DD” or datetime
+    start_dt : Timestamp or datetime
         Date to begin data ingest.
-    end_dt : str “YYYY-MM-DD” or datetime
+    end_dt : Timestamp or datetime
         Date to end data ingest.
     t_minus_hours : Optional[Iterable[int]]
         Collection of lookback hours to include when fetching
