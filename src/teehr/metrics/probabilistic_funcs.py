@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 
 from teehr.models.metrics.basemodels import MetricsBasemodel
-from teehr.metrics.deterministic_funcs import _transform
+# from teehr.metrics.deterministic_funcs import _transform
 
 logger = logging.getLogger(__name__)
 
@@ -70,8 +70,9 @@ def ensemble_crps(model: MetricsBasemodel) -> Callable:
         # lazy load scoringrules
         import scoringrules as sr
 
-        p, s, value_time = _transform(p, s, model, value_time)
-        pivoted_dict = _pivot_by_value_time(p, s, value_time)
+        # p, s, value_time = _transform(p, s, model, value_time)
+        # pivoted_dict = _pivot_by_value_time(p, s, value_time)
+        pivoted_dict = _pivot_by_member(p, s, members)
 
         if model.summary_func is not None:
             return model.summary_func(

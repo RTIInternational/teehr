@@ -4,12 +4,19 @@ from teehr.loading.utils import (
     validate_input_is_xml,
     validate_input_is_csv,
     validate_input_is_netcdf,
-    validate_input_is_parquet
+    validate_input_is_parquet,
+    merge_field_mappings,
+    validate_constant_values_dict,
+    add_or_replace_sdf_column_prefix
 )
+import teehr.models.pandera_dataframe_schemas as schemas
 from teehr.models.filters import TimeseriesFilter
 from teehr.querying.utils import join_geometry
 from teehr.models.table_enums import TableWriteEnum
 from teehr.const import MAX_CPUS
+import pandas as pd
+import pyspark.sql as ps
+from pyspark.sql.functions import lit
 
 from pathlib import Path
 from typing import Union
@@ -42,7 +49,7 @@ class TimeseriesTable(BaseTable):
         ]
 
     def to_pandas(self):
-        """Return Pandas DataFrame for Primary Timeseries."""
+        """Return Pandas DataFrame for Timeseries."""
         self._check_load_table()
         df = self.df.toPandas()
         df.attrs['table_type'] = self.name
@@ -124,7 +131,7 @@ class TimeseriesTable(BaseTable):
         - value
         - location_id
         """
-        logger.info(f"Loading primary timeseries parquet data: {in_path}")
+        logger.info(f"Loading timeseries parquet data: {in_path}")
 
         validate_input_is_parquet(in_path)
         self._load(
@@ -213,7 +220,7 @@ class TimeseriesTable(BaseTable):
         - value
         - location_id
         """
-        logger.info(f"Loading primary timeseries csv data: {in_path}")
+        logger.info(f"Loading timeseries csv data: {in_path}")
 
         validate_input_is_csv(in_path)
         self._load(
@@ -302,7 +309,7 @@ class TimeseriesTable(BaseTable):
         - value
         - location_id
         """
-        logger.info(f"Loading primary timeseries netcdf data: {in_path}")
+        logger.info(f"Loading timeseries netcdf data: {in_path}")
 
         validate_input_is_netcdf(in_path)
         self._load(
@@ -414,7 +421,7 @@ class TimeseriesTable(BaseTable):
         - location_id
         - member
         """
-        logger.info(f"Loading primary timeseries xml data: {in_path}")
+        logger.info(f"Loading timeseries xml data: {in_path}")
 
         validate_input_is_xml(in_path)
         self._load(
@@ -429,3 +436,84 @@ class TimeseriesTable(BaseTable):
             drop_duplicates=drop_duplicates,
         )
         self._load_table()
+
+    def _load_dataframe(
+        self,
+        in_df: Union[pd.DataFrame, ps.DataFrame],
+        field_mapping: dict,
+        constant_field_values: dict,
+        location_id_prefix: str,
+        write_mode: TableWriteEnum,
+        persist_dataframe: bool,
+        drop_duplicates: bool,
+        timeseries_type: str
+    ):
+        """Load a timeseries from an in-memory dataframe."""
+        default_field_mapping = {}
+        if timeseries_type == "primary":
+            fields = schemas.primary_timeseries_schema(type="pandas").columns.keys()
+        elif timeseries_type == "secondary":
+            fields = schemas.secondary_timeseries_schema(type="pandas").columns.keys()
+        else:
+            raise ValueError("Invalid timeseries type.")
+        for field in fields:
+            if field not in default_field_mapping.values():
+                default_field_mapping[field] = field
+        if field_mapping:
+            logger.debug("Merging user field_mapping with default field mapping.")
+            field_mapping = merge_field_mappings(
+                default_field_mapping,
+                field_mapping
+            )
+        else:
+            logger.debug("Using default field mapping.")
+            field_mapping = default_field_mapping
+        # verify constant_field_values keys are in field_mapping values
+        if constant_field_values:
+            validate_constant_values_dict(
+                constant_field_values,
+                field_mapping.values()
+            )
+
+        # Convert the input DataFrame to Spark DataFrame
+        if isinstance(in_df, pd.DataFrame):
+            df = self.spark.createDataFrame(in_df)
+        elif isinstance(in_df, ps.DataFrame):
+            df = in_df
+        else:
+            raise TypeError(
+                "Input dataframe must be a Pandas DataFrame or a PySpark DataFrame."
+            )
+
+        # Apply field mapping and constant field values
+        df = df.withColumnsRenamed(field_mapping)
+
+        if constant_field_values:
+            for field, value in constant_field_values.items():
+                df = df.withColumn(field, lit(value))
+
+        if persist_dataframe:
+            df = df.persist()
+
+        # Add or replace location_id prefix if provided
+        if location_id_prefix:
+            df = add_or_replace_sdf_column_prefix(
+                sdf=df,
+                column_name="location_id",
+                prefix=location_id_prefix,
+            )
+        # Validate using the _validate() method
+        validated_df = self._validate(
+            df=df,
+            drop_duplicates=drop_duplicates
+        )
+
+        # Write to the table
+        self._write_spark_df(
+            validated_df,
+            write_mode=write_mode
+        )
+        # Reload the table
+        self._load_table()
+
+        df.unpersist()
