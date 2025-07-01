@@ -5,7 +5,7 @@ import pandas as pd
 import geopandas as gpd
 import logging
 from pathlib import Path
-import pandera as pa
+import pandera.pandas as pa
 
 from bokeh.plotting import figure, save, output_file, show, ColumnDataSource
 from bokeh.palettes import colorblind
