@@ -1,17 +1,14 @@
 """Functions for formatting filters for querying."""
 import pandas as pd
 import pandera as pa
-import warnings
 
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Union
 import logging
 from pyspark.sql import DataFrame
 from teehr.models.str_enum import StrEnum
-
 from teehr.models.filters import FilterBaseModel
-from teehr.models.pydantic_table_models import TableBaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +54,26 @@ def format_iterable_value(
         return f"""({",".join([f"'{str(v)}'" for v in values])})"""
 
 
+def format_timedelta_value(value: timedelta) -> str:
+    """Return a PySpark formatted string for timedelta value.
+
+    Parameters
+    ----------
+    value : timedelta
+        A timedelta object.
+
+    Returns
+    -------
+    str
+        A PySpark formatted filter string for timedelta value.
+    """
+    total_seconds = int(value.total_seconds())
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    days = value.days
+    return f"INTERVAL '{days} {hours:02d}:{minutes:02d}:{seconds:02d}' DAY TO SECOND"
+
+
 def format_filter(
     filter: FilterBaseModel,
 ) -> str:
@@ -91,6 +108,9 @@ def format_filter(
         and not isinstance(filter.value, str)
     ):
         value = format_iterable_value(filter.value)
+        return f"""{column} {operator} {value}"""
+    elif isinstance(filter.value, timedelta):
+        value = format_timedelta_value(filter.value)
         return f"""{column} {operator} {value}"""
     else:
         logger.warning(
@@ -141,7 +161,7 @@ def validate_filter(
             validate_vals.append(pd.Timestamp(v))
         else:
             logger.warning(
-                f"Treating value as string because "
+                "Treating value as string because "
                 "didn't know what else to do."
             )
             validate_vals.append(str(v))

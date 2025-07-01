@@ -604,6 +604,7 @@ class BaseTable():
             filter_model=self.filter_model,
             fields_enum=self.field_enum(),
             dataframe_schema=self._get_schema("pandas"),
+            validate=self.validate_filter_field_types
         )
         return self
 

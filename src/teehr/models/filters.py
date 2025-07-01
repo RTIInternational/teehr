@@ -3,7 +3,7 @@ from collections.abc import Iterable
 from typing import List, Union
 from pydantic import BaseModel as BaseModel
 from pydantic import FieldValidationInfo, field_validator
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from teehr.models.str_enum import StrEnum
 from teehr.models.table_enums import (
@@ -129,7 +129,12 @@ class TimeseriesFilter(FilterBaseModel):
 
     column: TimeseriesFields
     value: Union[
-        str, int, float, datetime, List[Union[str, int, float, datetime]]
+        str,
+        int,
+        float,
+        datetime,
+        timedelta,
+        List[Union[str, int, float, datetime, timedelta]]
     ]
 
 
@@ -138,5 +143,10 @@ class JoinedTimeseriesFilter(FilterBaseModel):
 
     column: JoinedTimeseriesFields
     value: Union[
-        str, int, float, datetime, List[Union[str, int, float, datetime]]
+        str,
+        int,
+        float,
+        datetime,
+        timedelta,
+        List[Union[str, int, float, datetime, timedelta]]
     ]
