@@ -87,15 +87,17 @@ class LocationCrosswalkTable(BaseTable):
                 prefix=secondary_location_id_prefix,
             )
 
-        # Validate using the validate method
-        validated_df = self._validate(df)
+        # Validate using the _validate() method
+        validated_df = self._validate(
+            df=df,
+            drop_duplicates=drop_duplicates
+        )
 
         # Write to the table df.rdd.getNumPartitions()
         self._write_spark_df(
             df=validated_df,
             num_partitions=df.rdd.getNumPartitions(),
-            write_mode=write_mode,
-            drop_duplicates=drop_duplicates,
+            write_mode=write_mode
         )
 
         # Reload the table

@@ -92,6 +92,9 @@ class JoinedTimeseriesTable(TimeseriesTable):
         """Add attributes to the joined timeseries dataframe."""
 
         location_attributes_df = self.ev.location_attributes.to_sdf()
+        if location_attributes_df.isEmpty():
+            logger.warning("No location attributes found. Skipping adding attributes to joined timeseries.")
+            return joined_df
 
         joined_df.createTempView("joined")
 
@@ -153,10 +156,13 @@ class JoinedTimeseriesTable(TimeseriesTable):
     def write(self, drop_duplicates: bool = False):
         """Write the joined timeseries table to disk."""
         # Validate to fix 'Cannot use NullType for partition column' error.
-        validated_df = self._validate(self.df, False)
+        validated_df = self._validate(
+            df=self.df,
+            strict=False,
+            drop_duplicates=drop_duplicates
+        )
         self._write_spark_df(
             validated_df,
-            drop_duplicates=drop_duplicates,
             write_mode="overwrite",
         )
         logger.info("Joined timeseries table written to disk.")
@@ -179,7 +185,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
 
     def create(
         self,
-        add_attrs: bool = False,
+        add_attrs: bool = True,
         execute_scripts: bool = False,
         drop_duplicates: bool = False
     ):
@@ -190,7 +196,10 @@ class JoinedTimeseriesTable(TimeseriesTable):
         execute_scripts : bool, optional
             Execute UDFs, by default False
         add_attrs : bool, optional
-            Add attributes, by default False
+            Add location attributes, by default True
+        drop_duplicates : bool, optional
+            Drop duplicates from the joined timeseries table, by default False.
+            If duplicates exist, the first occurence is retained.
         """
         joined_df = self._join()
 
@@ -200,10 +209,13 @@ class JoinedTimeseriesTable(TimeseriesTable):
         if execute_scripts:
             joined_df = self._run_script(joined_df)
 
-        validated_df = self._validate(joined_df, False)
+        validated_df = self._validate(
+            df=joined_df,
+            strict=False,
+            drop_duplicates=drop_duplicates
+        )
         self._write_spark_df(
             validated_df,
-            drop_duplicates=drop_duplicates,
             write_mode="overwrite",
         )
         logger.info("Joined timeseries table created.")

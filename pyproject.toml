@@ -58,6 +58,7 @@ sphinx-autoapi = "3.0.0"
 pydata-sphinx-theme = "^0.16.0"
 sphinx-autobuild = "^2024.10.3"
 tomli = "^2.2.1"
+dask = {extras = ["distributed"], version = "^2025.5.1"}
 
 
 [tool.numpydoc_validation]

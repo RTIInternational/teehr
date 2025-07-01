@@ -12,7 +12,7 @@ from teehr.fetching.utils import (
     get_dataset,
     write_timeseries_parquet_file,
     parse_nwm_json_paths,
-    format_nwm_configuration_name
+    format_nwm_configuration_metadata
 )
 from teehr.models.fetching.utils import TimeseriesTypeEnum
 from teehr.fetching.const import (
@@ -120,7 +120,7 @@ def process_single_nwm_grid_file(
     ds = get_dataset(
         row.filepath,
         ignore_missing_file,
-        target_options={'anon': True}
+        remote_options={"token": "anon"}
     )
     if not ds:
         return None
@@ -202,8 +202,8 @@ def fetch_and_format_nwm_grids(
 
     gps = df_refs.groupby(["day", "z_hour"])
 
-    teehr_config = format_nwm_configuration_name(
-        nwm_configuration_name=nwm_configuration_name,
+    teehr_config = format_nwm_configuration_metadata(
+        nwm_config_name=nwm_configuration_name,
         nwm_version=nwm_version
     )
 
@@ -215,7 +215,7 @@ def fetch_and_format_nwm_grids(
             results.append(
                 process_single_nwm_grid_file(
                     row,
-                    teehr_config["configuration_name"],
+                    teehr_config["name"],
                     variable_name,
                     zonal_weights_filepath,
                     ignore_missing_file,
