@@ -1,7 +1,6 @@
 """Module defining shared functions for processing NWM point data."""
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
-import re
 
 import dask
 import numpy as np
@@ -12,7 +11,7 @@ from teehr.fetching.utils import (
     get_dataset,
     write_timeseries_parquet_file,
     split_dataframe,
-    format_nwm_configuration_name,
+    format_nwm_configuration_metadata,
     parse_nwm_json_paths
 )
 from teehr.models.fetching.utils import TimeseriesTypeEnum
@@ -70,8 +69,8 @@ def file_chunk_loop(
         [f"{nwm_version}-{feat_id}" for feat_id in feature_ids]
     num_vals = vals.size
 
-    teehr_config = format_nwm_configuration_name(
-        nwm_configuration_name=configuration,
+    teehr_config = format_nwm_configuration_metadata(
+        nwm_config_name=configuration,
         nwm_version=nwm_version
     )
 
@@ -81,7 +80,7 @@ def file_chunk_loop(
             REFERENCE_TIME: np.full(vals.shape, ref_time),
             LOCATION_ID: teehr_location_ids,
             VALUE_TIME: np.full(vals.shape, valid_time),
-            CONFIGURATION_NAME: num_vals * [teehr_config["configuration_name"]],
+            CONFIGURATION_NAME: num_vals * [teehr_config["name"]],
             VARIABLE_NAME: num_vals * [teehr_variable_name],
             UNIT_NAME: num_vals * [teehr_units],
             MEMBER: num_vals * [teehr_config["member"]]

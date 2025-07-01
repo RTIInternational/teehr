@@ -1,6 +1,7 @@
 """Module for fetchning and processing NWM point data."""
 from typing import Union, Optional, List, Dict, Annotated
 from datetime import datetime
+from dateutil.parser import parse
 from pathlib import Path
 import logging
 import pandas as pd
@@ -93,19 +94,20 @@ def nwm_to_parquet(
         - v2.1/2.2: 2021-04-20 - 2023-09-18
         - v3.0: 2023-09-19 - present
     start_date : Union[str, datetime, pd.Timestamp]
-        Date to begin data ingest.
-        Str formats can include YYYY-MM-DD or MM/DD/YYYY.
-        Rounds down to beginning of day.
-    end_date : Union[str, datetime, pd.Timestamp],
-        Last date to fetch.  Rounds up to end of day.
-        Str formats can include YYYY-MM-DD or MM/DD/YYYY.
-    ingest_days : int
+        Date and time to begin data ingest.
+        Str formats can include YYYY-MM-DD HH:MM or MM/DD/YYYY HH:MM.
+    end_date : Optional[Union[str, datetime, pd.Timestamp]],
+        Date and time to end data ingest.
+        Str formats can include YYYY-MM-DD HH:MM or MM/DD/YYYY HH:MM.
+        If not provided, must provide ingest_days.
+    ingest_days : Optional[int]
         Number of days to ingest data after start date. This is deprecated
         in favor of end_date, and will be removed in a future release.
         If both are provided, ingest_days takes precedence.
+        If not provided, end_date must be specified.
     data_source : Optional[SupportedNWMDataSourcesEnum]
         Specifies the remote location from which to fetch the data
-        "GCS" (default), "NOMADS", or "DSTOR"
+        "GCS" (default), "NOMADS", or "DSTOR".
         Currently only "GCS" is implemented.
     kerchunk_method : Optional[SupportedKerchunkMethod]
         When data_source = "GCS", specifies the preference in creating Kerchunk
@@ -139,19 +141,31 @@ def nwm_to_parquet(
     overwrite_output : Optional[bool]
         Flag specifying whether or not to overwrite output files if they
         already exist.  True = overwrite; False = fail.
-    timeseries_type : str
+    variable_mapper : Optional[Dict[str, Dict[str, str]]]
+        A dictionary of dictionaries to map NWM variable and unit names to new names.
+        If None, no mapping is applied and the original NWM variable names
+        are used in the output.
+        For example, to map "streamflow" to "discharge", and "mm s^-1" to "mm/s" use:
+        variable_mapper = {"variable_name": {"streamflow": "discharge"},
+        "unit_name": {"mm s^-1": "mm/s"}}
+    timeseries_type : Optional[str]
         Whether to consider as the "primary" or "secondary" timeseries.
         Default is "secondary".
     starting_z_hour : Optional[int]
-        The starting z_hour to include in the output. If None, all z_hours
-        are included for the first day. Default is None. Must be between 0 and 23.
+        The starting z_hour to include in the output. If None, z_hours
+        for the first day are determined by ``start_date``. Default is None.
+        Must be between 0 and 23.
     ending_z_hour : Optional[int]
-        The ending z_hour to include in the output. If None, all z_hours
-        are included for the last day. Default is None. Must be between 0 and 23.
+        The ending z_hour to include in the output. If None, z_hours
+        for the last day are determined by ``end_date`` if provided, otherwise
+        all z_hours are included in the final day. Default is None.
+        Must be between 0 and 23.
     drop_overlapping_assimilation_values: Optional[bool] = True
-        Whether to drop overlapping assimilation values. Default is True.
-        If True, values that overlap in value_time are dropped, keeping values with
-        the most recent reference_time. If False, overlapping values are kept.
+        Whether to drop assimilation values that overlap in value_time.
+        Default is True. If True, values that overlap in value_time are dropped,
+        keeping those with the most recent reference_time. In this case, all
+        reference_time values are set to None. If False, overlapping values are
+        kept and reference_time is retained.
 
     Notes
     -----
@@ -216,6 +230,9 @@ def nwm_to_parquet(
     """ # noqa
     logger.info(f"Fetching {configuration} data. Version: {nwm_version}")
 
+    if isinstance(start_date, str):
+        start_date = parse(start_date)
+
     if ingest_days is not None:
         end_date = get_end_date_from_ingest_days(
             start_date=start_date,
@@ -225,6 +242,9 @@ def nwm_to_parquet(
         raise ValueError(
             "Either 'end_date' or 'ingest_days' must be specified."
         )
+
+    if isinstance(end_date, str):
+        end_date = parse(end_date)
 
     # Import appropriate config model and dicts based on NWM version
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm12:
@@ -288,22 +308,24 @@ def nwm_to_parquet(
             t_minus_hours,
             ignore_missing_file,
             prioritize_analysis_value_time,
-            drop_overlapping_assimilation_values
+            drop_overlapping_assimilation_values,
+            ingest_days
         )
 
-        if starting_z_hour is not None:
-            gcs_component_paths = start_on_z_hour(
-                start_date=start_date,
-                start_z_hour=starting_z_hour,
-                gcs_component_paths=gcs_component_paths
-            )
+        if starting_z_hour is None:
+            starting_z_hour = start_date.hour
+        if ending_z_hour is None:
+            ending_z_hour = end_date.hour
 
-        if ending_z_hour is not None:
-            gcs_component_paths = end_on_z_hour(
-                end_date=end_date,
-                end_z_hour=ending_z_hour,
-                gcs_component_paths=gcs_component_paths
-            )
+        gcs_component_paths = start_on_z_hour(
+            start_z_hour=starting_z_hour,
+            gcs_component_paths=gcs_component_paths
+        )
+
+        gcs_component_paths = end_on_z_hour(
+            end_z_hour=ending_z_hour,
+            gcs_component_paths=gcs_component_paths
+        )
 
         # Create paths to local and/or remote kerchunk jsons
         json_paths = generate_json_paths(

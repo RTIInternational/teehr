@@ -1,6 +1,6 @@
 """Test NWM fetching utils."""
 from pathlib import Path
-from datetime import datetime
+from dateutil.parser import parse
 
 import tempfile
 import pytest
@@ -14,8 +14,8 @@ from teehr.fetching.utils import (
     create_periods_based_on_chunksize,
     parse_nwm_json_paths,
     start_on_z_hour,
-    end_on_z_hour
-
+    end_on_z_hour,
+    format_nwm_configuration_metadata
 )
 from teehr.fetching.const import (
     NWM22_ANALYSIS_CONFIG,
@@ -67,8 +67,8 @@ def test_point_zarr_reference_file(tmpdir):
         "nwm.20231101.nwm.t00z.short_range.channel_rt.f001.alaska.nc.json"
     )
 
-    test_ds = get_dataset(str(test_file), ignore_missing_file=False)
-    built_ds = get_dataset(built_files[0], ignore_missing_file=False)
+    test_ds = get_dataset(str(test_file), ignore_missing_file=False, remote_options={"token": "anon"})
+    built_ds = get_dataset(built_files[0], ignore_missing_file=False, remote_options={"token": "anon"})
 
     # Two Datasets are identical if they have matching variables and
     # coordinates, all of which are equal, and all dataset attributes
@@ -79,13 +79,13 @@ def test_point_zarr_reference_file(tmpdir):
 def test_dates_and_nwm30_version():
     """Make sure start/end dates work with specified NWM version."""
     nwm_version = "nwm30"
-    start_date = "2023-11-20"
-    end_date = "2023-11-20"
+    start_date = parse("2023-11-20")
+    end_date = parse("2023-11-20")
     validate_operational_start_end_date(nwm_version, start_date, end_date)
 
     try:
         failed = False
-        start_date = "2022-11-20"
+        start_date = parse("2022-11-20")
         validate_operational_start_end_date(
             nwm_version,
             start_date,
@@ -99,14 +99,14 @@ def test_dates_and_nwm30_version():
 def test_dates_and_nwm22_version():
     """Make sure start/end dates work with specified NWM version."""
     nwm_version = "nwm22"
-    start_date = "2022-11-20"
-    end_date = "2022-11-20"
+    start_date = parse("2022-11-20")
+    end_date = parse("2022-11-20")
     validate_operational_start_end_date(nwm_version, start_date, end_date)
 
     try:
         failed = False
-        start_date = "2023-11-20"
-        end_date = "2025-11-20"
+        start_date = parse("2023-11-20")
+        end_date = parse("2025-11-20")
         validate_operational_start_end_date(
             nwm_version,
             start_date,
@@ -120,13 +120,13 @@ def test_dates_and_nwm22_version():
 def test_dates_and_nwm21_version():
     """Make sure start/end dates work with specified NWM version."""
     nwm_version = "nwm21"
-    start_date = "2021-04-30"
-    end_date = "2021-04-30"
+    start_date = parse("2021-04-30")
+    end_date = parse("2021-04-30")
     validate_operational_start_end_date(nwm_version, start_date, end_date)
 
     try:
         failed = False
-        start_date = "2019-11-20"
+        start_date = parse("2019-11-20")
         validate_operational_start_end_date(
             nwm_version,
             start_date,
@@ -140,13 +140,13 @@ def test_dates_and_nwm21_version():
 def test_dates_and_nwm20_version():
     """Make sure start/end dates work with specified NWM version."""
     nwm_version = "nwm20"
-    start_date = "2019-06-20"
-    end_date = "2019-06-20"
+    start_date = parse("2019-06-20")
+    end_date = parse("2019-06-20")
     validate_operational_start_end_date(nwm_version, start_date, end_date)
 
     try:
         failed = False
-        start_date = "2018-11-20"
+        start_date = parse("2018-11-20")
         validate_operational_start_end_date(
             nwm_version,
             start_date,
@@ -160,13 +160,13 @@ def test_dates_and_nwm20_version():
 def test_dates_and_nwm12_version():
     """Make sure start/end dates work with specified NWM version."""
     nwm_version = "nwm12"
-    start_date = "2018-11-20"
-    end_date = "2018-11-20"
+    start_date = parse("2018-11-20")
+    end_date = parse("2018-11-20")
     validate_operational_start_end_date(nwm_version, start_date, end_date)
 
     try:
         failed = False
-        start_date = "2017-11-20"
+        start_date = parse("2017-11-20")
         validate_operational_start_end_date(
             nwm_version,
             start_date,
@@ -182,8 +182,8 @@ def test_building_nwm30_gcs_paths():
     gcs_component_paths = build_remote_nwm_filelist(
         configuration="forcing_analysis_assim_extend",
         output_type="forcing",
-        start_dt="2023-11-28",
-        end_dt="2023-11-29",
+        start_dt=parse("2023-11-28"),
+        end_dt=parse("2023-11-29"),
         analysis_config_dict=NWM30_ANALYSIS_CONFIG,
         t_minus_hours=None,
         ignore_missing_file=False,
@@ -206,8 +206,8 @@ def test_building_nwm22_gcs_paths():
     gcs_component_paths = build_remote_nwm_filelist(
         configuration="analysis_assim",
         output_type="channel_rt",
-        start_dt="2019-01-12",
-        end_dt="2019-01-12",
+        start_dt=parse("2019-01-12"),
+        end_dt=parse("2019-01-12"),
         analysis_config_dict=NWM22_ANALYSIS_CONFIG,
         t_minus_hours=[0],
         ignore_missing_file=False,
@@ -331,8 +331,8 @@ def test_start_end_z_hours():
     gcs_component_paths = build_remote_nwm_filelist(
         configuration="short_range",
         output_type="channel_rt",
-        start_dt="2023-11-28",
-        end_dt="2023-11-29",
+        start_dt=parse("2023-11-28"),
+        end_dt=parse("2023-11-29"),
         analysis_config_dict=NWM30_ANALYSIS_CONFIG,
         t_minus_hours=[0],
         ignore_missing_file=False,
@@ -342,18 +342,72 @@ def test_start_end_z_hours():
 
     gcs_component_paths = start_on_z_hour(
         gcs_component_paths=gcs_component_paths,
-        start_z_hour=3,
-        start_date=datetime.strptime("2023-11-28", "%Y-%m-%d")
+        start_z_hour=3
     )
     gcs_component_paths = end_on_z_hour(
         gcs_component_paths=gcs_component_paths,
-        end_z_hour=12,
-        end_date=datetime.strptime("2023-11-29", "%Y-%m-%d")
+        end_z_hour=12
     )
 
     assert gcs_component_paths[-1] == 'gcs://national-water-model/nwm.20231129/short_range/nwm.t12z.short_range.channel_rt.f018.conus.nc'  # noqa
     assert gcs_component_paths[0] == 'gcs://national-water-model/nwm.20231128/short_range/nwm.t03z.short_range.channel_rt.f001.conus.nc'  # noqa
     assert len(gcs_component_paths) == 612
+
+
+def test_nwm_configuration_metadata():
+    """Test the NWM configuration metadata."""
+    #
+    nwm_configuration_name = "short_range"
+    nwm_version = "nwm30"
+    config_meta = format_nwm_configuration_metadata(
+        nwm_config_name=nwm_configuration_name,
+        nwm_version=nwm_version
+    )
+    assert config_meta["name"] == "nwm30_short_range"
+    assert config_meta["description"] == "NWM short range - HRRR forcing"
+    assert config_meta["member"] == None
+    #
+    nwm_configuration_name = "analysis_assim_extend_no_da"
+    config_meta = format_nwm_configuration_metadata(
+        nwm_config_name=nwm_configuration_name,
+        nwm_version=nwm_version
+    )
+    assert config_meta["name"] == "nwm30_analysis_assim_extend_no_da"
+    assert config_meta["description"] == "NWM analysis extended - no nudging - STAGE IV forcing"
+    #
+    nwm_configuration_name = "analysis_assim_extend"
+    config_meta = format_nwm_configuration_metadata(
+        nwm_config_name=nwm_configuration_name,
+        nwm_version=nwm_version
+    )
+    assert config_meta["name"] == "nwm30_analysis_assim_extend"
+    assert config_meta["description"] == "NWM analysis extended - with nudging - STAGE IV forcing"
+    #
+    nwm_configuration_name = "medium_range_mem1"
+    config_meta = format_nwm_configuration_metadata(
+        nwm_config_name=nwm_configuration_name,
+        nwm_version=nwm_version
+    )
+    assert config_meta["name"] == "nwm30_medium_range"
+    assert config_meta["description"] == "NWM medium range - GFS forcing member 1"
+    assert config_meta["member"] == "1"
+    #
+    nwm_configuration_name = "medium_range_mem6"
+    config_meta = format_nwm_configuration_metadata(
+        nwm_config_name=nwm_configuration_name,
+        nwm_version=nwm_version
+    )
+    assert config_meta["name"] == "nwm30_medium_range"
+    assert config_meta["description"] == "NWM medium range - GFS forcing member 6"
+    assert config_meta["member"] == "6"
+    #
+    nwm_configuration_name = "medium_range_blend"
+    config_meta = format_nwm_configuration_metadata(
+        nwm_config_name=nwm_configuration_name,
+        nwm_version=nwm_version
+    )
+    assert config_meta["name"] == "nwm30_medium_range_blend"
+    assert config_meta["description"] == "NWM medium range - NBM forcing"
 
 
 if __name__ == "__main__":
@@ -374,3 +428,4 @@ if __name__ == "__main__":
     test_create_periods_based_on_month()
     test_create_periods_based_on_year()
     test_start_end_z_hours()
+    test_nwm_configuration_metadata()

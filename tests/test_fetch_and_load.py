@@ -59,7 +59,7 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
         nwm_version="nwm30",
         variable_name="streamflow",
         start_date=datetime(2022, 2, 22),
-        end_date=datetime(2022, 2, 23)
+        end_date=datetime(2022, 2, 23, 23)
     )
 
     # Make sure second fetch succeeds.
@@ -67,7 +67,7 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
         nwm_version="nwm30",
         variable_name="streamflow",
         start_date=datetime(2022, 2, 24),
-        end_date=datetime(2022, 2, 25)
+        end_date=datetime(2022, 2, 25, 23)
     )
 
     sts_df = ev.secondary_timeseries.to_pandas()
@@ -119,9 +119,9 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
             "variable_name"
             ])
     assert ts_df.unit_name.iloc[0] == "mm/s"
-    assert np.isclose(ts_df.value.sum(), np.float32(0.0002836702))
+    assert np.isclose(ts_df.value.sum(), np.float32(0.00028349122))
     assert ts_df.value_time.min() == pd.Timestamp("2008-05-23 09:00:00")
-    assert ts_df.value_time.max() == pd.Timestamp("2008-05-23 23:00:00")
+    assert ts_df.value_time.max() == pd.Timestamp("2008-05-23 10:00:00")
 
 
 def test_fetch_and_load_nwm_operational_points(tmpdir):

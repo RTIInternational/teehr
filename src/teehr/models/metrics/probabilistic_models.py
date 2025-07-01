@@ -38,7 +38,7 @@ class CRPS(ProbabilisticBasemodel):
     transform: TransformEnum = Field(default=None)
     backend: str = Field(default="numba")
     output_field_name: str = Field(default="mean_crps_ensemble")
-    func: Callable = Field(probabilistic_funcs.create_crps_func, frozen=True)
+    func: Callable = Field(probabilistic_funcs.ensemble_crps, frozen=True)
     summary_func: Union[Callable, None] = Field(default=None)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value", "value_time"]
@@ -52,7 +52,8 @@ class ProbabilisticMetrics:
     Notes
     -----
     Probabilistic metrics compare a value against a distribution of predicted
-    values, such as ensemble forecasts. Available probabilistic metrics include:
+    values, such as ensemble forecasts. Available probabilistic metrics
+    include:
 
     - CRPS (Continuous Ranked Probability Score)
     """

@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Union, Optional, Iterable, List, Dict
 from datetime import datetime
 from datetime import timedelta
-from dateutil.parser import parse
 import logging
 import re
 import json
@@ -36,7 +35,8 @@ from teehr.fetching.const import (
     NWM20_START_DATE,
     NWM12_START_DATE,
     NWM_VARIABLE_MAPPER,
-    VARIABLE_NAME
+    VARIABLE_NAME,
+    NWM_CONFIGURATION_DESCRIPTIONS
 )
 import teehr.models.pandera_dataframe_schemas as schemas
 
@@ -48,18 +48,18 @@ logger = logging.getLogger(__name__)
 
 
 def start_on_z_hour(
-    start_date: datetime,
     start_z_hour: int,
     gcs_component_paths: List[str]
 ):
     """Limit the start date to a specified z-hour."""
     logger.info(f"Limiting the start date to z-hour: {start_z_hour}.")
-    formatted_start_date = start_date.strftime("%Y%m%d")
     return_list = []
-    for path in gcs_component_paths:
+    for i, path in enumerate(gcs_component_paths):
         res = re.search(DAY_PATTERN, path).group()
         day = res.split(".")[1]
         tz = re.search(TZ_PATTERN, path).group()
+        if i == 0:
+            formatted_start_date = day
         if day == formatted_start_date:
             if int(tz[1:-1]) >= start_z_hour:
                 return_list.append(path)
@@ -69,19 +69,19 @@ def start_on_z_hour(
 
 
 def end_on_z_hour(
-    end_date: datetime,
     end_z_hour: int,
     gcs_component_paths: List[str]
 ):
     """Limit the end date to a specified z-hour."""
     logger.info(f"Limiting the end date to z-hour: {end_z_hour}.")
-    formatted_end_date = end_date.strftime("%Y%m%d")
     return_list = []
     reversed_list = sorted(gcs_component_paths, reverse=True)
-    for path in reversed_list:
+    for i, path in enumerate(reversed_list):
         res = re.search(DAY_PATTERN, path).group()
         day = res.split(".")[1]
         tz = re.search(TZ_PATTERN, path).group()
+        if i == 0:
+            formatted_end_date = day
         if day == formatted_end_date:
             if int(tz[1:-1]) <= end_z_hour:
                 return_list.append(path)
@@ -159,8 +159,8 @@ def parse_nwm_json_paths(
     )
 
 
-def format_nwm_configuration_name(
-    nwm_configuration_name: str,
+def format_nwm_configuration_metadata(
+    nwm_config_name: str,
     nwm_version: str
 ) -> Dict[str, str]:
     """Format the NWM configuration name and member for the Evaluation.
@@ -170,15 +170,30 @@ def format_nwm_configuration_name(
     (ie., medium range or long range streamflow).
     """
     logger.info(
-        f"Formatting configuration name for {nwm_configuration_name}."
+        f"Formatting configuration name for {nwm_config_name}."
     )
     ev_member = None
-    if bool(re.search(r"_mem[0-9]+", nwm_configuration_name)):
-        ev_configuration, ev_member = nwm_configuration_name.split("_mem")
+    # Try to parse the member from the configuration name.
+    if bool(re.search(r"_mem[0-9]+", nwm_config_name)):
+        ev_config_name, ev_member = nwm_config_name.split("_mem")
+        ev_config_name = nwm_version + "_" + ev_config_name
+        nwm_config_name = re.sub(r'\d+', '', nwm_config_name)
     else:
-        ev_configuration = nwm_configuration_name
-    ev_configuration = nwm_version + "_" + ev_configuration
-    return {"configuration_name": ev_configuration, "member": ev_member}
+        ev_config_name = nwm_version + "_" + nwm_config_name
+    # Get the config description.
+    if nwm_config_name in NWM_CONFIGURATION_DESCRIPTIONS:
+        if ev_member is not None:
+            ev_config_desc = NWM_CONFIGURATION_DESCRIPTIONS[nwm_config_name] \
+                + f" {ev_member}"
+        else:
+            ev_config_desc = NWM_CONFIGURATION_DESCRIPTIONS[nwm_config_name]
+    else:
+        ev_config_desc = "NWM operational forecasts"  # default description
+    return {
+        "name": ev_config_name,
+        "member": ev_member,
+        "description": ev_config_desc
+    }
 
 
 def format_nwm_variable_name(variable_name: str) -> str:
@@ -190,16 +205,11 @@ def format_nwm_variable_name(variable_name: str) -> str:
 
 def validate_operational_start_end_date(
     nwm_version: str,
-    start_date: Union[str, datetime, pd.Timestamp],
-    end_date: Union[str, datetime, pd.Timestamp]
+    start_date: Union[datetime, pd.Timestamp],
+    end_date: Union[datetime, pd.Timestamp]
 ):
     """Make sure start/end dates work with specified NWM version."""
     logger.debug("Checking dates against NWM version.")
-
-    if isinstance(start_date, str):
-        start_date = parse(start_date)
-    if isinstance(end_date, str):
-        end_date = parse(end_date)
 
     if end_date < start_date:
         raise ValueError(
@@ -315,7 +325,9 @@ def _drop_nan_values(
         logger.debug(
             "NaN values were encountered, dropping from the dataframe."
         )
-        return df.dropna(subset=subset_columns).reset_index(drop=True)
+        df = df.dropna(subset=subset_columns).reset_index(drop=True)
+        if df.index.size == 0:
+            return None
     return df
 
 
@@ -347,6 +359,13 @@ def write_timeseries_parquet_file(
 
     df = _drop_nan_values(df)
 
+    if df is None:
+        logger.warning(
+            f"The dataframe is empty after dropping NaN values; "
+            f"skipping writing to {filepath.name}."
+        )
+        return
+
     if timeseries_type == TimeseriesTypeEnum.primary:
         schema = schemas.primary_timeseries_schema(type="pandas")
     elif timeseries_type == TimeseriesTypeEnum.secondary:
@@ -372,27 +391,6 @@ def write_timeseries_parquet_file(
             f"{filepath.name} already exists and overwrite_output=False;"
             " skipping"
         )
-
-
-def load_gdf(filepath: Union[str, Path], **kwargs: str) -> gpd.GeoDataFrame:
-    """Load any supported geospatial file type into a gdf using GeoPandas."""
-    logger.debug(f"Loading geospatial file: {filepath}")
-
-    try:
-        gdf = gpd.read_file(filepath, **kwargs)
-        return gdf
-    except Exception:
-        pass
-    try:
-        gdf = gpd.read_parquet(filepath, **kwargs)
-        return gdf
-    except Exception:
-        pass
-    try:
-        gdf = gpd.read_feather(filepath, **kwargs)
-        return gdf
-    except Exception:
-        raise Exception("Unsupported zone polygon file type")
 
 
 def parquet_to_gdf(parquet_filepath: str) -> gpd.GeoDataFrame:
@@ -703,21 +701,21 @@ def construct_assim_paths(
 
 
 def get_end_date_from_ingest_days(
-    start_date: Union[str, datetime, pd.Timestamp],
-    ingest_days: Optional[int]
-) -> Union[str, datetime, pd.Timestamp]:
+    start_date: Union[datetime, pd.Timestamp],
+    ingest_days: int
+) -> datetime:
     """Get the end date from the start date and ingest days.
 
     Parameters
     ----------
-    start_date : Union[str, datetime, pd.Timestamp]
+    start_date : Union[datetime, pd.Timestamp]
         The start date.
-    ingest_days : Optional[int]
+    ingest_days : int
         The number of days to ingest.
 
     Returns
     -------
-    Union[str, datetime, pd.Timestamp]
+    datetime
         The end date.
     """
     if ingest_days <= 0:
@@ -728,20 +726,21 @@ def get_end_date_from_ingest_days(
         DeprecationWarning,
         stacklevel=2
     )
-    end_date = start_date + timedelta(days=ingest_days - 1)
+    end_date = start_date + timedelta(days=ingest_days)
     return end_date
 
 
 def build_remote_nwm_filelist(
     configuration: str,
     output_type: str,
-    start_dt: Union[str, datetime, pd.Timestamp],
-    end_dt: Union[str, datetime, pd.Timestamp],
+    start_dt: Union[datetime, pd.Timestamp],
+    end_dt: Union[datetime, pd.Timestamp],
     analysis_config_dict: Dict,
     t_minus_hours: Optional[Iterable[int]],
     ignore_missing_file: Optional[bool],
     prioritize_analysis_value_time: Optional[bool],
-    drop_overlapping_assimilation_values: Optional[bool]
+    drop_overlapping_assimilation_values: Optional[bool],
+    ingest_days: Optional[int] = None
 ) -> List[str]:
     """Assemble a list of remote NWM files based on user parameters.
 
@@ -751,9 +750,9 @@ def build_remote_nwm_filelist(
         Configuration type.
     output_type : str
         Output component of the configuration.
-    start_dt : str “YYYY-MM-DD” or datetime
+    start_dt : Timestamp or datetime
         Date to begin data ingest.
-    end_dt : str “YYYY-MM-DD” or datetime
+    end_dt : Timestamp or datetime
         Date to end data ingest.
     t_minus_hours : Optional[Iterable[int]]
         Collection of lookback hours to include when fetching
@@ -775,6 +774,8 @@ def build_remote_nwm_filelist(
         overlapping assimilation values. If True, only values corresponding
         to the most recent reference_time are kept. If False, all values
         are kept, even if they overlap in value_time.
+    ingest_days : int
+        The number of days to ingest.
 
     Returns
     -------
@@ -785,7 +786,10 @@ def build_remote_nwm_filelist(
 
     gcs_dir = f"gcs://{NWM_BUCKET}"
     fs = fsspec.filesystem("gcs", token="anon")
-    dates = pd.date_range(start=start_dt, end=end_dt, freq="1d")
+    if ingest_days is None:
+        dates = pd.date_range(start=start_dt.date(), end=end_dt.date(), freq="1d")
+    else:
+        dates = pd.date_range(start=start_dt.date(), end=end_dt.date(), freq="1d", inclusive="left")
 
     if "assim" in configuration and prioritize_analysis_value_time:
         cycle_z_hours = analysis_config_dict[configuration]["cycle_z_hours"]
@@ -900,17 +904,17 @@ def get_period_start_end_times(
 
 
 def create_periods_based_on_chunksize(
-    start_date: datetime,
-    end_date: datetime,
+    start_date: Union[str, datetime],
+    end_date: Union[str, datetime],
     chunk_by: Union[NWMChunkByEnum, None]
 ) -> List[pd.Period]:
     """Create a list of periods of a given frequency, start, and end time.
 
     Parameters
     ----------
-    start_date : datetime
+    start_date : datetime, str
         The start date.
-    end_date : datetime
+    end_date : datetime, str
         The end date.
     chunk_by : Union[NWMChunkByEnum, None]
         The chunk size frequency.

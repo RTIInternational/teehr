@@ -16,19 +16,25 @@ Install the prerequisites:
 
 
 1. Clone the TEEHR repository from GitHub:
-```bash
-git clone https://github.com/RTIInternational/teehr.git
-```
+
+.. code-block:: bash
+
+   git clone https://github.com/RTIInternational/teehr.git
+
 
 2. Navigate to the TEEHR directory:
-```bash
-cd teehr
-```
+
+.. code-block:: bash
+
+   cd teehr
+
 
 3. Create a new virtual environment using poetry:
-```bash
-poetry install
-```
+
+.. code-block:: bash
+
+   poetry install
+
 
 4. Activate the virtual environment:
 ```bash
