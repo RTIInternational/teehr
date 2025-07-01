@@ -142,9 +142,9 @@ class Fetch:
         Parameters
         ----------
         start_date : Union[str, datetime, pd.Timestamp]
-            Start time of data to fetch.
+            Start date and time of data to fetch.
         end_date : Union[str, datetime, pd.Timestamp]
-            End time of data to fetch. Note, since start_date is inclusive for
+            End date and time of data to fetch. Note, since start_date is inclusive for
             the USGS service, we subtract 1 minute from this time so we don't
             get overlap between consecutive calls.
         service : USGSServiceEnum, default = "iv"
@@ -305,16 +305,15 @@ class Fetch:
             Name of the NWM data variable to download.
             (e.g., "streamflow", "velocity", ...).
         start_date : Union[str, datetime, pd.Timestamp]
-            Date to begin data ingest.
-            Str formats can include YYYY-MM-DD or MM/DD/YYYY
-            Rounds down to beginning of day.
+            Date and time to begin data ingest.
+            Str formats can include YYYY-MM-DD HH:MM or MM/DD/YYYY HH:MM
 
             - v2.0: 1993-01-01
             - v2.1: 1979-01-01
             - v3.0: 1979-02-01
         end_date : Union[str, datetime, pd.Timestamp],
-            Last date to fetch.  Rounds up to end of day.
-            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+            Date and time to end data ingest.
+            Str formats can include YYYY-MM-DD HH:MM or MM/DD/YYYY HH:MM
 
             - v2.0: 2018-12-31
             - v2.1: 2020-12-31
@@ -478,16 +477,15 @@ class Fetch:
             Name of the NWM forcing data variable to download.
             (e.g., "PRECIP", "PSFC", "Q2D", ...).
         start_date : Union[str, datetime, pd.Timestamp]
-            Date to begin data ingest.
-            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
-            Rounds down to beginning of day.
+            Date and time to begin data ingest.
+            Str formats can include YYYY-MM-DD HH:MM or MM/DD/YYYY HH:MM
 
             - v2.0: 1993-01-01
             - v2.1: 1979-01-01
             - v3.0: 1979-02-01
         end_date : Union[str, datetime, pd.Timestamp],
-            Last date to fetch.  Rounds up to end of day.
-            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
+            Date and time to end data ingest.
+            Str formats can include YYYY-MM-DD HH:MM or MM/DD/YYYY HH:MM
 
             - v2.0: 2018-12-31
             - v2.1: 2020-12-31
@@ -692,16 +690,17 @@ class Fetch:
             - v2.1/2.2: 2021-04-20 - 2023-09-18
             - v3.0: 2023-09-19 - present
         start_date : Union[str, datetime, pd.Timestamp]
-            Date to begin data ingest.
-            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
-            Rounds down to beginning of day.
-        end_date : Union[str, datetime, pd.Timestamp],
-            Last date to fetch.  Rounds up to end of day.
-            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
-        ingest_days : int
+            Date and time to begin data ingest.
+            Str formats can include YYYY-MM-DD HH:MM or MM/DD/YYYY HH:MM.
+        end_date : Optional[Union[str, datetime, pd.Timestamp]],
+            Date and time to end data ingest.
+            Str formats can include YYYY-MM-DD HH:MM or MM/DD/YYYY HH:MM.
+            If not provided, must provide ingest_days.
+        ingest_days : Optional[int]
             Number of days to ingest data after start date. This is deprecated
             in favor of end_date, and will be removed in a future release.
             If both are provided, ingest_days takes precedence.
+            If not provided, end_date must be specified.
         data_source : Optional[SupportedNWMDataSourcesEnum]
             Specifies the remote location from which to fetch the data
             "GCS" (default), "NOMADS", or "DSTOR"
@@ -745,11 +744,14 @@ class Fetch:
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "secondary".
         starting_z_hour : Optional[int]
-            The starting z_hour to include in the output. If None, all z_hours
-            are included for the first day. Default is None. Must be between 0 and 23.
+            The starting z_hour to include in the output. If None, z_hours
+            for the first day are determined by ``start_date``. Default is None.
+            Must be between 0 and 23.
         ending_z_hour : Optional[int]
-            The ending z_hour to include in the output. If None, all z_hours
-            are included for the last day. Default is None. Must be between 0 and 23.
+            The ending z_hour to include in the output. If None, z_hours
+            for the last day are determined by ``end_date`` if provided, otherwise
+            all z_hours are included in the final day. Default is None.
+            Must be between 0 and 23.
         write_mode : TableWriteEnum, optional (default: "append")
             The write mode for the table. Options are "append" or "upsert".
             If "append", the Evaluation table will be appended with new data
@@ -759,11 +761,12 @@ class Fetch:
         drop_duplicates : bool
             Whether to drop duplicates in the data. Default is True.
         drop_overlapping_assimilation_values: Optional[bool] = True
-            Whether to drop overlapping assimilation values. Default is True.
-            If True, values that overlap in value_time are dropped, keeping those with
-            the most recent reference_time. In this case, all reference_time values
-            are set to None. If False, overlapping values are kept and reference_time
-            is retained.
+            Whether to drop assimilation values that overlap in value_time.
+            Default is True. If True, values that overlap in value_time are dropped,
+            keeping those with the most recent reference_time. In this case, all
+            reference_time values are set to None. If False, overlapping values are
+            kept and reference_time is retained.
+
 
 
         .. note::
@@ -962,16 +965,17 @@ class Fetch:
             - v2.1/2.2: 2021-04-20 - 2023-09-18
             - v3.0: 2023-09-19 - present
         start_date : Union[str, datetime, pd.Timestamp]
-            Date to begin data ingest.
-            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
-            Rounds down to beginning of day.
-        end_date : Union[str, datetime, pd.Timestamp],
-            Last date to fetch.  Rounds up to end of day.
-            Str formats can include YYYY-MM-DD or MM/DD/YYYY.
-        ingest_days : int
+            Date and time to begin data ingest.
+            Str formats can include YYYY-MM-DD HH:MM or MM/DD/YYYY HH:MM.
+        end_date : Optional[Union[str, datetime, pd.Timestamp]],
+            Date and time to end data ingest.
+            Str formats can include YYYY-MM-DD HH:MM or MM/DD/YYYY HH:MM.
+            If not provided, must provide ingest_days.
+        ingest_days : Optional[int]
             Number of days to ingest data after start date. This is deprecated
             in favor of end_date, and will be removed in a future release.
             If both are provided, ingest_days takes precedence.
+            If not provided, end_date must be specified.
         calculate_zonal_weights : bool
             Flag specifying whether or not to calculate zonal weights.
             True = calculate; False = use existing file. Default is False.
@@ -1011,11 +1015,14 @@ class Fetch:
             Default is "secondary", unless the configuration is a analysis containing
             assimilation, in which case the default is "primary".
         starting_z_hour : Optional[int]
-            The starting z_hour to include in the output. If None, all z_hours
-            are included for the first day. Default is None. Must be between 0 and 23.
+            The starting z_hour to include in the output. If None, z_hours
+            for the first day are determined by ``start_date``. Default is None.
+            Must be between 0 and 23.
         ending_z_hour : Optional[int]
-            The ending z_hour to include in the output. If None, all z_hours
-            are included for the last day. Default is None. Must be between 0 and 23.
+            The ending z_hour to include in the output. If None, z_hours
+            for the last day are determined by ``end_date`` if provided, otherwise
+            all z_hours are included in the final day. Default is None.
+            Must be between 0 and 23.
         write_mode : TableWriteEnum, optional (default: "append")
             The write mode for the table. Options are "append" or "upsert".
             If "append", the Evaluation table will be appended with new data
@@ -1029,11 +1036,11 @@ class Fetch:
         drop_duplicates : bool
             Whether to drop duplicates in the data. Default is True.
         drop_overlapping_assimilation_values: Optional[bool] = True
-            Whether to drop overlapping assimilation values. Default is True.
-            If True, values that overlap in value_time are dropped, keeping those with
-            the most recent reference_time. In this case, all reference_time values
-            are set to None. If False, overlapping values are kept and reference_time
-            is retained.
+            Whether to drop assimilation values that overlap in value_time.
+            Default is True. If True, values that overlap in value_time are dropped,
+            keeping those with the most recent reference_time. In this case, all
+            reference_time values are set to None. If False, overlapping values are
+            kept and reference_time is retained.
 
 
         .. note::

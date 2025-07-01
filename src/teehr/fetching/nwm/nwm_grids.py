@@ -98,16 +98,17 @@ def nwm_grids_to_parquet(
         - v2.1/2.2: 2021-04-20 - 2023-09-18
         - v3.0: 2023-09-19 - present
     start_date : Union[str, datetime, pd.Timestamp]
-        Date to begin data ingest.
-        Str formats can include YYYY-MM-DD or MM/DD/YYYY.
-        Rounds down to beginning of day.
-    end_date : Union[str, datetime, pd.Timestamp],
-        Last date to fetch.  Rounds up to end of day.
-        Str formats can include YYYY-MM-DD or MM/DD/YYYY.
-    ingest_days : int
+        Date and time to begin data ingest.
+        Str formats can include YYYY-MM-DD HH:MM or MM/DD/YYYY HH:MM.
+    end_date : Optional[Union[str, datetime, pd.Timestamp]],
+        Date and time to end data ingest.
+        Str formats can include YYYY-MM-DD HH:MM or MM/DD/YYYY HH:MM.
+        If not provided, must provide ingest_days.
+    ingest_days : Optional[int]
         Number of days to ingest data after start date. This is deprecated
         in favor of end_date, and will be removed in a future release.
         If both are provided, ingest_days takes precedence.
+        If not provided, end_date must be specified.
     data_source : Optional[SupportedNWMDataSourcesEnum]
         Specifies the remote location from which to fetch the data
         "GCS" (default), "NOMADS", or "DSTOR".
@@ -136,14 +137,22 @@ def nwm_grids_to_parquet(
     location_id_prefix : Union[str, None]
         Optional location ID prefix to add (prepend) or replace.
     starting_z_hour : Optional[int]
-        The starting z_hour to include in the output. If None, all z_hours
-        are included for the first day. Default is None. Must be between 0 and 23.
+        The starting z_hour to include in the output. If None, z_hours
+        for the first day are determined by ``start_date``. Default is None.
+        Must be between 0 and 23.
     ending_z_hour : Optional[int]
-        The ending z_hour to include in the output. If None, all z_hours
-        are included for the last day. Default is None. Must be between 0 and 23.
-    variable_mapper : Dict[str, Dict[str, str]]
-        A dictionary of dictionaries to map NWM variable names to new names.
-    timeseries_type : TimeseriesTypeEnum
+        The ending z_hour to include in the output. If None, z_hours
+        for the last day are determined by ``end_date`` if provided, otherwise
+        all z_hours are included in the final day. Default is None.
+        Must be between 0 and 23.
+    variable_mapper : Optional[Dict[str, Dict[str, str]]]
+        A dictionary of dictionaries to map NWM variable and unit names to new names.
+        If None, no mapping is applied and the original NWM variable names
+        are used in the output.
+        For example, to map "streamflow" to "discharge", and "mm s^-1" to "mm/s" use:
+        variable_mapper = {"variable_name": {"streamflow": "discharge"},
+        "unit_name": {"mm s^-1": "mm/s"}}
+    timeseries_type : Optional[TimeseriesTypeEnum]
         The type of timeseries to generate.
         "primary" (default) or "secondary".
     calculate_zonal_weights : bool
@@ -152,6 +161,12 @@ def nwm_grids_to_parquet(
         Path to the polygons file or a GeoDataFrame.
     unique_zone_id : Optional[str]
         Name of the field in the zone polygon file containing unique IDs.
+    drop_overlapping_assimilation_values: Optional[bool] = True
+        Whether to drop assimilation values that overlap in value_time.
+        Default is True. If True, values that overlap in value_time are dropped,
+        keeping those with the most recent reference_time. In this case, all
+        reference_time values are set to None. If False, overlapping values are
+        kept and reference_time is retained.
 
 
     See Also
