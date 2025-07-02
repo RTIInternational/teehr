@@ -466,7 +466,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         persist_dataframe: bool = False,
         drop_duplicates: bool = True,
     ):
-        """Load a timeseries from an in-memory dataframe.
+        """Import secondary timeseries from an in-memory dataframe.
 
         Parameters
         ----------
@@ -475,16 +475,6 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
-            Default mapping:
-            {
-                "locationId": "location_id",
-                "forecastDate": "reference_time",
-                "parameterId": "variable_name",
-                "units": "unit_name",
-                "ensembleId": "configuration_name",
-                "ensembleMemberIndex": "member",
-                "forecastDate": "reference_time"
-            }
         constant_field_values : dict, optional
             A dictionary mapping field names to constant values.
             Format: {field_name: value}.
@@ -516,6 +506,5 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             location_id_prefix=location_id_prefix,
             write_mode=write_mode,
             persist_dataframe=persist_dataframe,
-            drop_duplicates=drop_duplicates,
-            timeseries_type="secondary"
+            drop_duplicates=drop_duplicates
         )

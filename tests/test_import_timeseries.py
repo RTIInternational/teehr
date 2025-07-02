@@ -442,11 +442,18 @@ def test_validate_and_insert_in_memory_timeseries(tmpdir):
 
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
     ev.configurations.add(
-        Configuration(
-            name="usgs_observations",
-            type="primary",
-            description="Test Observations Data"
-        )
+        [
+            Configuration(
+                name="usgs_observations",
+                type="primary",
+                description="USGS Data"
+            ),
+            Configuration(
+                name="nwm30_retrospective",
+                type="secondary",
+                description="NWM Data"
+            )
+        ]
     )
     ev.units.add(
         Unit(
@@ -462,7 +469,6 @@ def test_validate_and_insert_in_memory_timeseries(tmpdir):
     )
 
     df = pd.read_parquet(PRIMARY_TIMESERIES_FILEPATH)
-
     ev.primary_timeseries.load_dataframe(
         df=df,
         field_mapping={
@@ -481,6 +487,30 @@ def test_validate_and_insert_in_memory_timeseries(tmpdir):
         }
     )
     assert len(df) == len(ev.primary_timeseries.to_pandas())
+
+    ev.location_crosswalks.load_csv(
+        in_path=CROSSWALK_FILEPATH
+    )
+
+    df = pd.read_parquet(SECONDARY_TIMESERIES_FILEPATH)
+    ev.secondary_timeseries.load_dataframe(
+        df=df,
+        field_mapping={
+            "reference_time": "reference_time",
+            "value_time": "value_time",
+            "configuration": "configuration_name",
+            "measurement_unit": "unit_name",
+            "variable_name": "variable_name",
+            "value": "value",
+            "location_id": "location_id"
+        },
+        constant_field_values={
+            "unit_name": "m^3/s",
+            "variable_name": "streamflow_hourly_inst",
+            "configuration_name": "nwm30_retrospective"
+        }
+    )
+    assert len(df) == len(ev.secondary_timeseries.to_pandas())
 
     pass
 

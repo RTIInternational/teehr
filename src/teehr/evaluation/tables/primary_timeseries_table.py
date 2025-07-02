@@ -137,25 +137,15 @@ class PrimaryTimeseriesTable(TimeseriesTable):
         persist_dataframe: bool = False,
         drop_duplicates: bool = True,
     ):
-        """Load a timeseries from an in-memory dataframe.
+        """Import primary timeseries from an in-memory dataframe.
 
         Parameters
         ----------
         df : Union[pd.DataFrame, ps.DataFrame]
-            DataFrame to load into the secondary timeseries table.
+            DataFrame to load into the primary timeseries table.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
-            Default mapping:
-            {
-                "locationId": "location_id",
-                "forecastDate": "reference_time",
-                "parameterId": "variable_name",
-                "units": "unit_name",
-                "ensembleId": "configuration_name",
-                "ensembleMemberIndex": "member",
-                "forecastDate": "reference_time"
-            }
         constant_field_values : dict, optional
             A dictionary mapping field names to constant values.
             Format: {field_name: value}.
@@ -187,6 +177,5 @@ class PrimaryTimeseriesTable(TimeseriesTable):
             location_id_prefix=location_id_prefix,
             write_mode=write_mode,
             persist_dataframe=persist_dataframe,
-            drop_duplicates=drop_duplicates,
-            timeseries_type="primary"
+            drop_duplicates=drop_duplicates
         )
