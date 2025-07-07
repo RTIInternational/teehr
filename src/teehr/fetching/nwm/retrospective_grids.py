@@ -327,9 +327,6 @@ def nwm_retro_grids_to_parquet(
 
     validate_retrospective_start_end_date(nwm_version, start_date, end_date)
 
-    # Include the entirety of the specified end day
-    end_date = end_date.to_period(freq="D").end_time
-
     output_dir = Path(output_parquet_dir)
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
@@ -344,7 +341,7 @@ def nwm_retro_grids_to_parquet(
             if zone_polygons is None:
                 raise ValueError(
                     "The zone polygons must be provided"
-                    " to calculate zonal weights. Can be a GeoDataFame"
+                    " to calculate zonal weights. Can be a GeoDataFrame"
                     " or a filepath."
                 )
 

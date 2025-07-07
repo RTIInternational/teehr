@@ -191,8 +191,7 @@ def clone_from_s3(
 
         table._write_spark_df(
             sdf_in,
-            write_mode="overwrite",
-            drop_duplicates=drop_duplicates,
+            write_mode="overwrite"
         )
 
     # copy scripts path to ev.scripts_dir

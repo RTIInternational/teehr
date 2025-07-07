@@ -140,15 +140,17 @@ class LocationTable(BaseTable):
                 prefix=location_id_prefix,
             )
 
-        # Validate using the validate method
-        validated_df = self._validate(df)
+        # Validate using the _validate() method
+        validated_df = self._validate(
+            df=df,
+            drop_duplicates=drop_duplicates
+        )
 
         # Write to the table
         self._write_spark_df(
             df=validated_df,
             write_mode=write_mode,
-            num_partitions=1,
-            drop_duplicates=drop_duplicates,
+            num_partitions=1
         )
 
         # Reload the table
