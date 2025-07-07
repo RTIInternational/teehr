@@ -58,7 +58,7 @@ class DomainTable(BaseTable):
             matched_count = df_matched.count()
             logger.warning(
                 f"{matched_count} rows in the added data already exist in the "
-                f"{self.name} table. No data has been added. "
+                f"{self.name} table. Skipping these duplicates. "
                 )
             # Include a warning detailing which values are duplicates
             matched_values = df_matched.select(
@@ -77,3 +77,21 @@ class DomainTable(BaseTable):
                 f"Duplicate values in {self.unique_column_set}: "
                 f"{matched_values_str}"
             )
+
+            # add data that is not already in the original table
+            new_df_not_matched = new_df_validated.join(
+                org_df, on=self.unique_column_set, how="left_anti"
+            )
+            logger.info(
+                f"Adding {new_df_not_matched.count()} new objects to "
+                f"{self.name} table"
+            )
+            combined_df = org_df.unionByName(new_df_not_matched).repartition(1)
+            # validate the combined data
+            logger.info(
+                f"Validating {self.name} table after adding "
+                f"{new_df_not_matched.count()} new objects"
+            )
+            validated_df = self._validate(combined_df)
+            # write the validated data to the table
+            self._write_spark_df(validated_df)
