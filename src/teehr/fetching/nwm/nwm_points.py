@@ -1,8 +1,10 @@
 """Module for fetchning and processing NWM point data."""
 from typing import Union, Optional, List, Dict, Annotated
 from datetime import datetime
+from dateutil.parser import parse
 from pathlib import Path
 import logging
+import pandas as pd
 
 from pydantic import validate_call, Field
 
@@ -14,7 +16,8 @@ from teehr.fetching.utils import (
     build_remote_nwm_filelist,
     validate_operational_start_end_date,
     start_on_z_hour,
-    end_on_z_hour
+    end_on_z_hour,
+    get_end_date_from_ingest_days
 )
 from teehr.models.fetching.utils import (
     SupportedNWMOperationalVersionsEnum,
@@ -32,20 +35,21 @@ from teehr.fetching.const import (
 logger = logging.getLogger(__name__)
 
 
-@validate_call()
+@validate_call(config=dict(arbitrary_types_allowed=True))
 def nwm_to_parquet(
     configuration: str,
     output_type: str,
     variable_name: str,
-    start_date: Union[str, datetime],
-    ingest_days: int,
     location_ids: List[int],
     json_dir: Union[str, Path],
     output_parquet_dir: Union[str, Path],
     nwm_version: SupportedNWMOperationalVersionsEnum,
+    start_date: Union[str, datetime, pd.Timestamp],
+    end_date: Optional[Union[str, datetime, pd.Timestamp]] = None,
+    ingest_days: Optional[int] = None,
     data_source: Optional[SupportedNWMDataSourcesEnum] = "GCS",
     kerchunk_method: Optional[SupportedKerchunkMethod] = "local",
-    prioritize_analysis_valid_time: Optional[bool] = False,
+    prioritize_analysis_value_time: Optional[bool] = False,
     t_minus_hours: Optional[List[int]] = None,
     process_by_z_hour: Optional[bool] = True,
     stepsize: Optional[int] = 100,
@@ -54,7 +58,8 @@ def nwm_to_parquet(
     variable_mapper: Dict[str, Dict[str, str]] = None,
     timeseries_type: TimeseriesTypeEnum = "secondary",
     starting_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
-    ending_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None
+    ending_z_hour: Optional[Annotated[int, Field(ge=0, le=23)]] = None,
+    drop_overlapping_assimilation_values: Optional[bool] = True
 ):
     """Fetch NWM point data and save as a Parquet file in TEEHR format.
 
@@ -69,11 +74,6 @@ def nwm_to_parquet(
     variable_name : str
         Name of the NWM data variable to download.
         (e.g., "streamflow", "velocity", ...).
-    start_date : str or datetime
-        Date to begin data ingest.
-        Str formats can include YYYY-MM-DD or MM/DD/YYYY.
-    ingest_days : int
-        Number of days to ingest data after start date.
     location_ids : List[int]
         Array specifying NWM IDs of interest.
     json_dir : str
@@ -93,9 +93,21 @@ def nwm_to_parquet(
         - v2.0: 2019-06-19 - 2021-04-19
         - v2.1/2.2: 2021-04-20 - 2023-09-18
         - v3.0: 2023-09-19 - present
+    start_date : Union[str, datetime, pd.Timestamp]
+        Date and time to begin data ingest.
+        Str formats can include YYYY-MM-DD HH:MM or MM/DD/YYYY HH:MM.
+    end_date : Optional[Union[str, datetime, pd.Timestamp]],
+        Date and time to end data ingest.
+        Str formats can include YYYY-MM-DD HH:MM or MM/DD/YYYY HH:MM.
+        If not provided, must provide ingest_days.
+    ingest_days : Optional[int]
+        Number of days to ingest data after start date. This is deprecated
+        in favor of end_date, and will be removed in a future release.
+        If both are provided, ingest_days takes precedence.
+        If not provided, end_date must be specified.
     data_source : Optional[SupportedNWMDataSourcesEnum]
         Specifies the remote location from which to fetch the data
-        "GCS" (default), "NOMADS", or "DSTOR"
+        "GCS" (default), "NOMADS", or "DSTOR".
         Currently only "GCS" is implemented.
     kerchunk_method : Optional[SupportedKerchunkMethod]
         When data_source = "GCS", specifies the preference in creating Kerchunk
@@ -105,7 +117,7 @@ def nwm_to_parquet(
         CIROH pre-generated jsons from s3, ignoring any that are unavailable.
         "auto" - read the CIROH pre-generated jsons from s3, and create any that
         are unavailable, storing locally.
-    prioritize_analysis_valid_time : Optional[bool]
+    prioritize_analysis_value_time : Optional[bool]
         A boolean flag that determines the method of fetching analysis data.
         When False (default), all hours of the reference time are included in the
         output. When True, only the hours within t_minus_hours are included.
@@ -129,15 +141,31 @@ def nwm_to_parquet(
     overwrite_output : Optional[bool]
         Flag specifying whether or not to overwrite output files if they
         already exist.  True = overwrite; False = fail.
-    timeseries_type : str
+    variable_mapper : Optional[Dict[str, Dict[str, str]]]
+        A dictionary of dictionaries to map NWM variable and unit names to new names.
+        If None, no mapping is applied and the original NWM variable names
+        are used in the output.
+        For example, to map "streamflow" to "discharge", and "mm s^-1" to "mm/s" use:
+        variable_mapper = {"variable_name": {"streamflow": "discharge"},
+        "unit_name": {"mm s^-1": "mm/s"}}
+    timeseries_type : Optional[str]
         Whether to consider as the "primary" or "secondary" timeseries.
         Default is "secondary".
     starting_z_hour : Optional[int]
-        The starting z_hour to include in the output. If None, all z_hours
-        are included for the first day. Default is None. Must be between 0 and 23.
+        The starting z_hour to include in the output. If None, z_hours
+        for the first day are determined by ``start_date``. Default is None.
+        Must be between 0 and 23.
     ending_z_hour : Optional[int]
-        The ending z_hour to include in the output. If None, all z_hours
-        are included for the last day. Default is None. Must be between 0 and 23.
+        The ending z_hour to include in the output. If None, z_hours
+        for the last day are determined by ``end_date`` if provided, otherwise
+        all z_hours are included in the final day. Default is None.
+        Must be between 0 and 23.
+    drop_overlapping_assimilation_values: Optional[bool] = True
+        Whether to drop assimilation values that overlap in value_time.
+        Default is True. If True, values that overlap in value_time are dropped,
+        keeping those with the most recent reference_time. In this case, all
+        reference_time values are set to None. If False, overlapping values are
+        kept and reference_time is retained.
 
     Notes
     -----
@@ -166,7 +194,7 @@ def nwm_to_parquet(
     >>> OUTPUT_TYPE = "channel_rt"
     >>> VARIABLE_NAME = "streamflow"
     >>> START_DATE = "2023-03-18"
-    >>> INGEST_DAYS = 1
+    >>> END_DATE = "2023-03-18"
     >>> JSON_DIR = Path(Path.home(), "temp/parquet/jsons/")
     >>> OUTPUT_DIR = Path(Path.home(), "temp/parquet")
     >>> NWM_VERSION = "nwm22"
@@ -186,7 +214,7 @@ def nwm_to_parquet(
     >>>     output_type=OUTPUT_TYPE,
     >>>     variable_name=VARIABLE_NAME,
     >>>     start_date=START_DATE,
-    >>>     ingest_days=INGEST_DAYS,
+    >>>     end_date=END_DATE,
     >>>     location_ids=LOCATION_IDS,
     >>>     json_dir=JSON_DIR,
     >>>     output_parquet_dir=OUTPUT_DIR,
@@ -201,6 +229,22 @@ def nwm_to_parquet(
     >>> )
     """ # noqa
     logger.info(f"Fetching {configuration} data. Version: {nwm_version}")
+
+    if isinstance(start_date, str):
+        start_date = parse(start_date)
+
+    if ingest_days is not None:
+        end_date = get_end_date_from_ingest_days(
+            start_date=start_date,
+            ingest_days=ingest_days
+        )
+    elif end_date is None:
+        raise ValueError(
+            "Either 'end_date' or 'ingest_days' must be specified."
+        )
+
+    if isinstance(end_date, str):
+        end_date = parse(end_date)
 
     # Import appropriate config model and dicts based on NWM version
     if nwm_version == SupportedNWMOperationalVersionsEnum.nwm12:
@@ -251,7 +295,7 @@ def nwm_to_parquet(
         validate_operational_start_end_date(
             nwm_version,
             start_date,
-            ingest_days
+            end_date
         )
 
         # Build paths to netcdf files on GCS
@@ -259,27 +303,29 @@ def nwm_to_parquet(
             configuration,
             output_type,
             start_date,
-            ingest_days,
+            end_date,
             analysis_config_dict,
             t_minus_hours,
             ignore_missing_file,
-            prioritize_analysis_valid_time
+            prioritize_analysis_value_time,
+            drop_overlapping_assimilation_values,
+            ingest_days
         )
 
-        if starting_z_hour is not None:
-            gcs_component_paths = start_on_z_hour(
-                start_date=start_date,
-                start_z_hour=starting_z_hour,
-                gcs_component_paths=gcs_component_paths
-            )
+        if starting_z_hour is None:
+            starting_z_hour = start_date.hour
+        if ending_z_hour is None:
+            ending_z_hour = end_date.hour
 
-        if ending_z_hour is not None:
-            gcs_component_paths = end_on_z_hour(
-                start_date=start_date,
-                ingest_days=ingest_days,
-                end_z_hour=ending_z_hour,
-                gcs_component_paths=gcs_component_paths
-            )
+        gcs_component_paths = start_on_z_hour(
+            start_z_hour=starting_z_hour,
+            gcs_component_paths=gcs_component_paths
+        )
+
+        gcs_component_paths = end_on_z_hour(
+            end_z_hour=ending_z_hour,
+            gcs_component_paths=gcs_component_paths
+        )
 
         # Create paths to local and/or remote kerchunk jsons
         json_paths = generate_json_paths(

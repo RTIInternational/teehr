@@ -36,7 +36,7 @@ class MeanError(DeterministicBasemodel):
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="mean_error")
-    func: Callable = Field(metric_funcs.me_wrapper, frozen=True)
+    func: Callable = Field(metric_funcs.mean_error, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -67,7 +67,7 @@ class RelativeBias(DeterministicBasemodel):
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="relative_bias")
-    func: Callable = Field(metric_funcs.rb_wrapper, frozen=True)
+    func: Callable = Field(metric_funcs.relative_bias, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -98,7 +98,7 @@ class MultiplicativeBias(DeterministicBasemodel):
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="multiplicative_bias")
-    func: Callable = Field(metric_funcs.mb_wrapper, frozen=True)
+    func: Callable = Field(metric_funcs.multiplicative_bias, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -129,7 +129,7 @@ class MeanSquareError(DeterministicBasemodel):
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="mean_square_error")
-    func: Callable = Field(metric_funcs.mse_wrapper, frozen=True)
+    func: Callable = Field(metric_funcs.mean_squared_error, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -160,7 +160,7 @@ class RootMeanSquareError(DeterministicBasemodel):
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="root_mean_square_error")
-    func: Callable = Field(metric_funcs.rmse_wrapper, frozen=True)
+    func: Callable = Field(metric_funcs.root_mean_squared_error, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -191,7 +191,7 @@ class MeanAbsoluteError(DeterministicBasemodel):
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="mean_absolute_error")
-    func: Callable = Field(metric_funcs.mae_wrapper, frozen=True)
+    func: Callable = Field(metric_funcs.mean_absolute_error, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -222,7 +222,8 @@ class MeanAbsoluteRelativeError(DeterministicBasemodel):
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="mean_absolute_relative_error")
-    func: Callable = Field(metric_funcs.mare_wrapper, frozen=True)
+    func: Callable = Field(metric_funcs.mean_absolute_relative_error,
+                           frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -253,7 +254,7 @@ class PearsonCorrelation(DeterministicBasemodel):
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="pearson_correlation")
-    func: Callable = Field(metric_funcs.pc_wrapper, frozen=True)
+    func: Callable = Field(metric_funcs.pearson_correlation, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -284,7 +285,7 @@ class Rsquared(DeterministicBasemodel):
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="r_squared")
-    func: Callable = Field(metric_funcs.r_squared_wrapper, frozen=True)
+    func: Callable = Field(metric_funcs.r_squared, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -315,7 +316,7 @@ class NashSutcliffeEfficiency(DeterministicBasemodel):
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="nash_sutcliffe_efficiency")
-    func: Callable = Field(metric_funcs.nse_wrapper, frozen=True)
+    func: Callable = Field(metric_funcs.nash_sutcliffe_efficiency, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -348,7 +349,8 @@ class NormalizedNashSutcliffeEfficiency(DeterministicBasemodel):
     output_field_name: str = Field(
         default="nash_sutcliffe_efficiency_normalized"
     )
-    func: Callable = Field(metric_funcs.nse_norm_wrapper, frozen=True)
+    func: Callable = Field(metric_funcs.nash_sutcliffe_efficiency_normalized,
+                           frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -384,7 +386,7 @@ class KlingGuptaEfficiency(DeterministicBasemodel):
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency")
-    func: Callable = Field(metric_funcs.kge_wrapper, frozen=True)
+    func: Callable = Field(metric_funcs.kling_gupta_efficiency, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -423,7 +425,8 @@ class KlingGuptaEfficiencyMod1(DeterministicBasemodel):
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency_mod1")
-    func: Callable = Field(metric_funcs.kge_mod1_wrapper, frozen=True)
+    func: Callable = Field(metric_funcs.kling_gupta_efficiency_mod1,
+                           frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -462,7 +465,8 @@ class KlingGuptaEfficiencyMod2(DeterministicBasemodel):
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency_mod2")
-    func: Callable = Field(metric_funcs.kge_mod2_wrapper, frozen=True)
+    func: Callable = Field(metric_funcs.kling_gupta_efficiency_mod2,
+                           frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -495,7 +499,7 @@ class SpearmanCorrelation(DeterministicBasemodel):
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="spearman_correlation")
-    func: Callable = Field(metric_funcs.spearman_wrapper, frozen=True)
+    func: Callable = Field(metric_funcs.spearman_correlation, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -524,7 +528,7 @@ class MaxValueDelta(DeterministicBasemodel):
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="max_value_delta")
-    func: Callable = Field(metric_funcs.mvd_wrapper, frozen=True)
+    func: Callable = Field(metric_funcs.max_value_delta, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -554,7 +558,7 @@ class MaxValueTimeDelta(DeterministicBasemodel):
 
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="max_value_time_delta")
-    func: Callable = Field(metric_funcs.mvtd_wrapper, frozen=True)
+    func: Callable = Field(metric_funcs.max_value_timedelta, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value", "value_time"]
     )
@@ -585,7 +589,7 @@ class AnnualPeakRelativeBias(DeterministicBasemodel):
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="annual_peak_flow_bias")
-    func: Callable = Field(metric_funcs.aprb_wrapper, frozen=True)
+    func: Callable = Field(metric_funcs.annual_peak_relative_bias, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value", "value_time"]
     )
@@ -616,7 +620,8 @@ class RootMeanStandardDeviationRatio(DeterministicBasemodel):
     bootstrap: BootstrapBasemodel = Field(default=None)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="root_mean_standard_deviation_ratio")  # noqa: E501
-    func: Callable = Field(metric_funcs.rmsdr_wrapper, frozen=True)
+    func: Callable = Field(metric_funcs.root_mean_standard_deviation_ratio,
+                           frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value", "secondary_value"]
     )
@@ -628,8 +633,8 @@ class DeterministicMetrics:
 
     Notes
     -----
-    Deterministic metrics compare two timeseries, typically primary ("observed")
-    vs. secondary ("modeled") values. Available metrics include:
+    Deterministic metrics compare two timeseries, typically primary
+    ("observed") vs. secondary ("modeled") values. Available metrics include:
 
     - AnnualPeakRelativeBias
     - KlingGuptaEfficiency
