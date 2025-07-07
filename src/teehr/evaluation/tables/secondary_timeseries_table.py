@@ -9,23 +9,17 @@ from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
 from teehr.loading.utils import (
     add_or_replace_sdf_column_prefix
 )
-from teehr.querying.utils import group_df
-from teehr.models.calculated_fields.row_level import RowLevelCalculatedFields as rlc
 import teehr.models.pandera_dataframe_schemas as schemas
 from teehr.models.table_enums import TimeseriesFields
 from teehr.models.table_enums import TableWriteEnum
 from teehr.models.metrics.basemodels import (
     BaselineMethodEnum,
-    ClimatologyResolutionEnum,
-    ClimatologyStatisticEnum
+    ClimatologyResolutionEnum
 )
 from pyspark.sql import functions as F
-from pyspark.sql.window import Window
 import pyspark.sql as ps
 import pandas as pd
-from teehr.models.pydantic_table_models import (
-    Configuration
-)
+
 from teehr.const import MAX_CPUS
 from teehr.querying.utils import df_to_gdf
 
@@ -166,213 +160,12 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         self._check_load_table()
         return self._join_geometry()
 
-    def _calculate_climatology(
+    def _get_target_forecast(
         self,
-        primary_configuration_name: str,
-        temporal_resolution: ClimatologyResolutionEnum,
-        summary_statistic: ClimatologyStatisticEnum = "mean",
-    ) -> ps.DataFrame:
-        """Calculate climatology."""
-        if temporal_resolution == ClimatologyResolutionEnum.day_of_year:
-            time_period = rlc.DayOfYear()
-        elif temporal_resolution == ClimatologyResolutionEnum.hour_of_year:
-            time_period = rlc.HourOfYear()
-        elif temporal_resolution == ClimatologyResolutionEnum.month:
-            time_period = rlc.Month()
-        elif temporal_resolution == ClimatologyResolutionEnum.year:
-            time_period = rlc.Year()
-        elif temporal_resolution == ClimatologyResolutionEnum.water_year:
-            time_period = rlc.WaterYear()
-        elif temporal_resolution == ClimatologyResolutionEnum.season:
-            time_period = rlc.Seasons()
-
-        if summary_statistic == "mean":
-            summary_func = F.mean
-        elif summary_statistic == "median":
-            summary_func = F.expr("percentile_approx(value, 0.5)")
-        elif summary_statistic == "max":
-            summary_func = F.max
-        elif summary_statistic == "min":
-            summary_func = F.min
-
-        # Select primary config to use for reference calculation.
-        primary_sdf = (
-            self.
-            ev.
-            primary_timeseries.
-            filter(
-                f"configuration_name = '{primary_configuration_name}'"
-            ).
-            to_sdf()
-        )
-        # Add the time period as a calculated field.
-        primary_sdf = time_period.apply_to(primary_sdf)
-        # Aggregate values based on the time period and summary statistic.
-        groupby_field_list = self.ev.primary_timeseries.unique_column_set.copy()
-        groupby_field_list.append(time_period.output_field_name)
-        aggregated_field_name = f"{summary_statistic}_primary_value"
-        summary_sdf = (
-            group_df(primary_sdf, groupby_field_list).
-            agg(summary_func("value").alias(aggregated_field_name))
-        )
-        return summary_sdf
-
-    def _add_secondary_timeseries(
-        self,
-        ref_sdf: ps.DataFrame,
-        output_configuration_name: str,
-        output_configuration_description: str,
-    ):
-        """Add secondary timeseries to the evaluation.
-
-        Nptes
-        -----
-        - Adds the configuration name to the configuration table if
-          it doesn't exist.
-        - Appends the data to the secondary timeseries table.
-        """
-        # Update configuration_name and add to the configurations table.
-        ref_sdf = ref_sdf.withColumn(
-            "configuration_name",
-            F.lit(output_configuration_name)
-        ).withColumn(
-            "member",
-            F.lit(None)
-        )
-        if (
-            self.ev.configurations.filter(
-                {
-                    "column": "name",
-                    "operator": "=",
-                    "value": output_configuration_name
-                }
-            ).to_sdf().count() == 0
-        ):
-            self.ev.configurations.add(
-                Configuration(
-                    name=output_configuration_name,
-                    type="secondary",
-                    description=output_configuration_description,
-                )
-            )
-
-        validated_df = self._validate(ref_sdf)
-        # Write to the secondary timeseries table, overwriting any existing
-        # data with the same configuration_name.
-        self._write_spark_df(
-            validated_df,
-            write_mode="overwrite",
-            partition_by=self.partition_by,
-        )
-
-    def calculate_climatology(
-        self,
-        primary_configuration_name: str,
-        output_configuration_name: str,
-        output_configuration_description: str,
-        temporal_resolution: ClimatologyResolutionEnum = "day_of_year",
-        summary_statistic: ClimatologyStatisticEnum = "mean",
-    ):
-        """Calculate climatology and add as a new timeseries.
-
-        Parameters
-        ----------
-        primary_configuration_name : str
-            Name of the primary configuration to use for the calculation.
-        output_configuration_name : str
-            Name of the output configuration.
-        output_configuration_description : str
-            Description of the output configuration.
-        temporal_resolution : ClimatologyResolutionEnum, optional
-            Temporal resolution for the climatology calculation,
-            by default "day_of_year".
-        summary_statistic : ClimatologyStatisticEnum, optional
-            Summary statistic for the climatology calculation,
-            by default "mean".
-        """
-        clim_sdf = self._calculate_climatology(
-            primary_configuration_name=primary_configuration_name,
-            temporal_resolution=temporal_resolution,
-            summary_statistic=summary_statistic,
-            output_configuration_name=output_configuration_name
-        )
-        self._add_secondary_timeseries(
-            ref_sdf=clim_sdf,
-            output_configuration_name=output_configuration_name,
-            output_configuration_description=output_configuration_description,
-        )
-        pass
-
-    def create_reference_forecast(
-        self,
-        primary_configuration_name: str,
         target_configuration_name: str,
-        output_configuration_name: str,
-        output_configuration_description: str,
-        method: BaselineMethodEnum = "climatology",
-        temporal_resolution: ClimatologyResolutionEnum = "day_of_year",
-        summary_statistic: ClimatologyStatisticEnum = "mean",
-        climatology_configuration_name: str = None,
-    ):
-        """Calculate climatology metrics and add as a new configuration.
-
-        Parameters
-        ----------
-        primary_configuration_name : str
-            Name of the primary configuration to use for the calculation.
-        target_configuration_name : str
-            Name of the target configuration to use for the calculation.
-        output_configuration_name : str
-            Name of the output configuration.
-        output_configuration_description : str
-            Description of the output configuration.
-        method : BaselineMethodEnum, optional
-            Method for the reference calculation,
-            by default "climatology".
-        temporal_resolution : ClimatologyResolutionEnum, optional
-            Temporal resolution for the climatology calculation,
-            by default "day_of_year".
-        summary_statistic : ClimatologyStatisticEnum, optional
-            Summary statistic for the climatology calculation,
-            by default "mean".
-        climatology_configuration_name : str, optional
-            Name of the climatology configuration to use for the calculation.
-
-        Notes
-        -----
-        - This does not save the baseline (ie, climatology).
-          Call the method directly if you want to save.
-        """
-        self._check_load_table()
-        # If all reference_time values are null in the target secondary
-        # configuration (ie, it's a historical sim), we can't continue.
-        if self.df.filter(
-                    f"configuration_name = '{target_configuration_name}'"
-                ).select(F.first("reference_time", ignorenulls=True)).first()[0] is None:
-            raise ValueError(
-                "No reference_time values found in the target configuration. "
-                "Please specify a valid target forecast configuration."
-            )
-        if method == "climatology":
-            if climatology_configuration_name is not None:
-                # Use the climatology configuration if provided.
-                reference_sdf = self.df.filter(
-                    f"configuration_name = '{climatology_configuration_name}'"
-                )
-            else:
-                # Calculate the climatology if not provided.
-                reference_sdf = self._calculate_climatology(
-                    primary_configuration_name=primary_configuration_name,
-                    temporal_resolution=temporal_resolution,
-                    summary_statistic=summary_statistic,
-                )
-        elif method == "persistence":
-            # TODO: Implement persistence method.
-            raise NotImplementedError(
-                "Persistence method is not implemented yet."
-            )
-        # Join the reference with the secondary timeseries,
-        # using a single member if secondary is an ensemble.
+        member_id: str = None
+    ) -> ps.DataFrame:
+        """Get a target forecast."""
         member_id = self.df.filter(
             f"configuration_name = '{target_configuration_name}'"
         ).select(F.first("member", ignorenulls=True)).first()[0]
@@ -390,44 +183,116 @@ class SecondaryTimeseriesTable(TimeseriesTable):
                 "No secondary data found for configuration:"
                 f" {target_configuration_name}"
             )
+        return sec_sdf
 
-        time_period = rlc.HourOfYear()
-        temp_sdf = time_period.apply_to(sec_sdf)
+    def create_reference_forecast(
+        self,
+        target_configuration_name: str,
+        output_configuration_name: str,
+        output_configuration_description: str,
+        reference_configuration_name: str = None,
+        method: BaselineMethodEnum = "climatology",
+        temporal_resolution: ClimatologyResolutionEnum = "day_of_year",
+    ):
+        """Create a new forecast timeseries based on a reference configuration.
 
-        # Get the rolling average of previous 6 hours
-        # TODO: Should be an argument here.
-        w = (Window.partitionBy("location_id").orderBy(F.col("hour_of_year")).rangeBetween(-7, 0))
-        reference_sdf = reference_sdf.withColumn('rolling_mean', F.avg("mean_primary_value").over(w))
+        Parameters
+        ----------
+        reference_configuration_name : str
+            Name of the configuration to use for the calculation.
+        target_configuration_name : str
+            Name of the target configuration to use for the calculation.
+        output_configuration_name : str
+            Name of the output configuration.
+        output_configuration_description : str
+            Description of the output configuration.
+        method : BaselineMethodEnum, optional
+            Method for the reference calculation,
+            by default "climatology".
+        temporal_resolution : ClimatologyResolutionEnum, optional
+            Temporal resolution for the climatology calculation,
+            by default "day_of_year".
+        summary_statistic : ClimatologyStatisticEnum, optional
+            Summary statistic for the climatology calculation,
+            by default "mean".
 
-        # # This works but does not account for location_id.
-        # ref_fcst_sdf = temp_sdf.join(
-        #     reference_sdf,
-        #     on=[temporal_resolution]
-        # ).select(
-        #     temp_sdf["value_time"],
-        #     temp_sdf["reference_time"],
-        #     temp_sdf["unit_name"],
-        #     temp_sdf["variable_name"],
-        #     temp_sdf["location_id"],
-        #     temp_sdf["member"],
-        #     reference_sdf["rolling_mean"].alias("value"),
-        #     reference_sdf["configuration_name"],
-        # )
+        Notes
+        -----
+        - This does not save the baseline (ie, climatology).
+          Call the method directly if you want to save.
+        """
+        self._check_load_table()
+        # If all reference_time values are null in the target secondary
+        # configuration (ie, it's a historical sim), we can't continue.
+        if self.df.filter(
+                    f"configuration_name = '{target_configuration_name}'"
+                ).select(F.first("reference_time", ignorenulls=True)).first()[0] is None:
+            raise ValueError(
+                "No reference_time values found in the target configuration. "
+                "Please specify a valid target forecast configuration."
+            )
+        if method == "climatology" and reference_configuration_name is None \
+                or temporal_resolution is None:
+            raise ValueError(
+                "A reference_configuration_name and temporal_resolution must "
+                "be provided for climatology. "
+                "Please specify valid values."
+            )
+        elif method == "climatology":
+            # Use the climatology configuration if provided.
+            ref_type = self.ev.configurations.filter(
+                f"name = '{reference_configuration_name}'"
+            ).to_sdf().first()["type"]
+            if ref_type == "primary":
+                reference_sdf = self.ev.primary_timeseries.filter(
+                    f"configuration_name = '{reference_configuration_name}'"
+                ).to_sdf()
+            elif ref_type == "secondary":
+                reference_sdf = self.df.filter(
+                    f"configuration_name = '{reference_configuration_name}'"
+                )
+            if reference_sdf.isEmpty():
+                raise ValueError(
+                    f"No data found for climatology configuration: "
+                    f"{reference_configuration_name}, please calculate it first."
+                )
 
-        # pass
+            target_sdf = self._get_target_forecast(
+                target_configuration_name=target_configuration_name
+            )
+            time_period = self._get_time_period_rlc(
+                temporal_resolution=temporal_resolution
+            )
+            target_sdf = time_period.apply_to(target_sdf)
+
+            # TODO: This is redundant with climatology method?
+            reference_sdf = time_period.apply_to(reference_sdf)
+
+            # TODO: How to generalize this?
+            reference_sdf = self._calculate_rolling_average(
+                sdf=reference_sdf,
+                partition_by="location_id",
+                order_by=time_period.output_field_name,
+            )
+
+        elif method == "persistence":
+            # TODO: Implement persistence method.
+            raise NotImplementedError(
+                "Persistence method is not implemented yet."
+            )
 
         # Join the reference sdf  to the template secondary forecast
         xwalk_sdf = self.ev.location_crosswalks.to_sdf()
         xwalk_sdf.createOrReplaceTempView("location_crosswalks")
         reference_sdf.createOrReplaceTempView("reference_timeseries")
-        temp_sdf.createOrReplaceTempView("template_timeseries")
+        target_sdf.createOrReplaceTempView("template_timeseries")
 
-        query = """
+        query = f"""
             SELECT
                 tf.reference_time
                 , tf.value_time as value_time
                 , tf.location_id as location_id
-                , rf.rolling_mean as value
+                , rf.value as value
                 , rf.configuration_name
                 , tf.unit_name
                 , tf.variable_name
@@ -437,23 +302,22 @@ class SecondaryTimeseriesTable(TimeseriesTable):
                 on cf.secondary_location_id = tf.location_id
             JOIN reference_timeseries rf
                 on cf.primary_location_id = rf.location_id
-                and tf.hour_of_year = rf.hour_of_year
+                and tf.{time_period.output_field_name} = rf.{time_period.output_field_name}
                 and tf.unit_name = rf.unit_name
                 and tf.variable_name = rf.variable_name
-        """
+        """  # noqa
         ref_fcst_sdf = self.ev.spark.sql(query)
 
         self.spark.catalog.dropTempView("location_crosswalks")
         self.spark.catalog.dropTempView("reference_timeseries")
         self.spark.catalog.dropTempView("template_timeseries")
 
-        pass
-
-        # TODO: Should load_timeseries also accept a dataframe?
-        self._add_secondary_timeseries(
-            ref_sdf=ref_fcst_sdf,
-            output_configuration_name=output_configuration_name,
-            output_configuration_description=output_configuration_description,
+        self.load_dataframe(
+            df=ref_fcst_sdf,
+            constant_field_values={
+                "configuration_name": output_configuration_name,
+                "member": None,
+            }
         )
 
     def load_dataframe(
