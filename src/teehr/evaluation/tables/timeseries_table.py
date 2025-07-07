@@ -1,5 +1,6 @@
 """Timeseries table base class."""
 from teehr.evaluation.tables.base_table import BaseTable
+from teehr.evaluation.tables.configuration_table import Configuration
 from teehr.loading.utils import (
     validate_input_is_xml,
     validate_input_is_csv,
@@ -7,9 +8,18 @@ from teehr.loading.utils import (
     validate_input_is_parquet
 )
 from teehr.models.filters import TimeseriesFilter
-from teehr.querying.utils import join_geometry
+from teehr.querying.utils import join_geometry, group_df
 from teehr.models.table_enums import TableWriteEnum
 from teehr.const import MAX_CPUS
+from teehr.models.metrics.basemodels import (
+    ClimatologyResolutionEnum,
+    ClimatologyStatisticEnum
+)
+from teehr.models.calculated_fields.row_level import (
+    RowLevelCalculatedFields as rlc
+)
+from pyspark.sql import functions as F
+import pyspark.sql as ps
 
 from pathlib import Path
 from typing import Union
@@ -429,3 +439,120 @@ class TimeseriesTable(BaseTable):
             drop_duplicates=drop_duplicates,
         )
         self._load_table()
+
+    @staticmethod
+    def _calculate_rolling_average(
+        sdf: ps.DataFrame,
+        partition_by: str,
+        order_by: str,
+        window_start: int = -7,
+        window_end: int = 0,
+        input_column: str = "value",
+        output_column: str = "value"
+    ) -> ps.DataFrame:
+        """Calculate rolling average for a given time period."""
+        window = (
+            ps.Window.partitionBy(partition_by)
+            .orderBy(F.col(order_by))
+            .rangeBetween(window_start, window_end)
+        )
+        return sdf.withColumn(
+            input_column,
+            F.avg(output_column).over(window)
+        )
+
+    @staticmethod
+    def _get_time_period_rlc(
+        temporal_resolution: ClimatologyResolutionEnum
+    ) -> rlc:
+        """Get the time period row level calculated field based on resolution."""
+        if temporal_resolution == ClimatologyResolutionEnum.day_of_year:
+            return rlc.DayOfYear()
+        elif temporal_resolution == ClimatologyResolutionEnum.hour_of_year:
+            return rlc.HourOfYear()
+        elif temporal_resolution == ClimatologyResolutionEnum.month:
+            return rlc.Month()
+        elif temporal_resolution == ClimatologyResolutionEnum.year:
+            return rlc.Year()
+        elif temporal_resolution == ClimatologyResolutionEnum.water_year:
+            return rlc.WaterYear()
+        elif temporal_resolution == ClimatologyResolutionEnum.season:
+            return rlc.Seasons()
+        else:
+            raise ValueError(
+                f"Unsupported temporal resolution: {temporal_resolution}"
+            )
+
+    def _calculate_climatology(
+        self,
+        input_configuration_name: str,
+        temporal_resolution: ClimatologyResolutionEnum,
+        summary_statistic: ClimatologyStatisticEnum,
+    ) -> ps.DataFrame:
+        """Calculate climatology."""
+        time_period = self._get_time_period_rlc(temporal_resolution)
+
+        if summary_statistic == "mean":
+            summary_func = F.mean
+        elif summary_statistic == "median":
+            summary_func = F.expr("percentile_approx(value, 0.5)")
+        elif summary_statistic == "max":
+            summary_func = F.max
+        elif summary_statistic == "min":
+            summary_func = F.min
+
+        # Get the configuration to use for reference calculation.
+        input_config_sdf = (
+            self.
+            filter(
+                f"configuration_name = '{input_configuration_name}'"
+            ).
+            to_sdf()
+        )
+        groupby_field_list = self.unique_column_set.copy()
+        # Add the time period as a calculated field.
+        input_config_sdf = time_period.apply_to(input_config_sdf)
+        # Aggregate values based on the time period and summary statistic.
+        groupby_field_list.append(time_period.output_field_name)
+        summary_sdf = (
+            group_df(input_config_sdf, groupby_field_list).
+            agg(summary_func("value").alias("value"))
+        ).select(*self.unique_column_set, "value")
+
+        return summary_sdf
+
+    def calculate_climatology(
+        self,
+        input_configuration_name: str,
+        output_configuration: Configuration,
+        temporal_resolution: ClimatologyResolutionEnum = "day_of_year",
+        summary_statistic: ClimatologyStatisticEnum = "mean"
+    ):
+        """Calculate climatology and add as a new timeseries.
+
+        Parameters
+        ----------
+        input_configuration_name : str
+            Name of the primary configuration to use for the calculation.
+        output_configuration : Configuration
+            Configuration object for the output configuration.
+        temporal_resolution : ClimatologyResolutionEnum, optional
+            Temporal resolution for the climatology calculation,
+            by default "day_of_year".
+        summary_statistic : ClimatologyStatisticEnum, optional
+            Summary statistic for the climatology calculation,
+            by default "mean".
+        """
+        clim_sdf = self._calculate_climatology(
+            input_configuration_name=input_configuration_name,
+            temporal_resolution=temporal_resolution,
+            summary_statistic=summary_statistic
+        )
+        self.ev.configurations.add(output_configuration)
+        self.load_dataframe(
+            df=clim_sdf,
+            constant_field_values={
+                "configuration_name": output_configuration.name,
+            }
+        )
+        pass
