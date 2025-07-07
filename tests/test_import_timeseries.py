@@ -11,6 +11,7 @@ import tempfile
 import xarray as xr
 import pandas as pd
 import numpy as np
+import geopandas as gpd
 
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
@@ -440,7 +441,9 @@ def test_validate_and_insert_in_memory_timeseries(tmpdir):
     ev.enable_logging()
     ev.clone_template()
 
-    ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
+    gdf = gpd.read_file(GEOJSON_GAGES_FILEPATH)
+    ev.locations.load_dataframe(df=gdf)
+
     ev.configurations.add(
         [
             Configuration(
@@ -488,9 +491,8 @@ def test_validate_and_insert_in_memory_timeseries(tmpdir):
     )
     assert len(df) == len(ev.primary_timeseries.to_pandas())
 
-    ev.location_crosswalks.load_csv(
-        in_path=CROSSWALK_FILEPATH
-    )
+    df = pd.read_csv(CROSSWALK_FILEPATH)
+    ev.location_crosswalks.load_dataframe(df=df)
 
     df = pd.read_parquet(SECONDARY_TIMESERIES_FILEPATH)
     ev.secondary_timeseries.load_dataframe(

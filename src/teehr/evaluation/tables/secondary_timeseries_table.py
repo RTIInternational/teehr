@@ -498,9 +498,22 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             a large number of files from the cache.
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the dataframe.
+
+        Notes
+        -----
+        The TEEHR secondary timeseries table schema includes fields:
+
+        - reference_time
+        - value_time
+        - configuration_name
+        - unit_name
+        - variable_name
+        - value
+        - location_id
+        - member
         """
         self._load_dataframe(
-            in_df=df,
+            df=df,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
             location_id_prefix=location_id_prefix,

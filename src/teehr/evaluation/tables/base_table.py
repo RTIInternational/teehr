@@ -703,7 +703,7 @@ class BaseTable():
 
     def _load_dataframe(
         self,
-        in_df: Union[pd.DataFrame, ps.DataFrame],
+        df: Union[pd.DataFrame, ps.DataFrame],
         field_mapping: dict,
         constant_field_values: dict,
         location_id_prefix: str,
@@ -734,11 +734,9 @@ class BaseTable():
             )
 
         # Convert the input DataFrame to Spark DataFrame
-        if isinstance(in_df, pd.DataFrame):
-            df = self.spark.createDataFrame(in_df)
-        elif isinstance(in_df, ps.DataFrame):
-            df = in_df
-        else:
+        if isinstance(df, pd.DataFrame):
+            df = self.spark.createDataFrame(df)
+        elif not isinstance(df, ps.DataFrame):
             raise TypeError(
                 "Input dataframe must be a Pandas DataFrame or a PySpark DataFrame."
             )
@@ -815,7 +813,7 @@ class BaseTable():
             Whether to drop duplicates from the dataframe.
         """
         self._load_dataframe(
-            in_df=df,
+            df=df,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
             location_id_prefix=location_id_prefix,

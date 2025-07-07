@@ -67,7 +67,7 @@ class TimeseriesTable(BaseTable):
         drop_duplicates: bool = True,
         **kwargs
     ):
-        """Import primary timeseries parquet data.
+        """Import timeseries parquet data.
 
         Parameters
         ----------
@@ -154,7 +154,7 @@ class TimeseriesTable(BaseTable):
         drop_duplicates: bool = True,
         **kwargs
     ):
-        """Import primary timeseries csv data.
+        """Import timeseries csv data.
 
         Parameters
         ----------
@@ -243,7 +243,7 @@ class TimeseriesTable(BaseTable):
         drop_duplicates: bool = True,
         **kwargs
     ):
-        """Import primary timeseries netcdf data.
+        """Import timeseries netcdf data.
 
         Parameters
         ----------
