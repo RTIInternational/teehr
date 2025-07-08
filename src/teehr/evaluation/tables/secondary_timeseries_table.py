@@ -189,39 +189,45 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         self,
         target_configuration_name: str,
         output_configuration_name: str,
-        output_configuration_description: str,
         reference_configuration_name: str = None,
         method: BaselineMethodEnum = "climatology",
         temporal_resolution: ClimatologyResolutionEnum = "day_of_year",
+        upsample_reference_timeseries: bool = False,
+        downsample_reference_timeseries: bool = False,
+        start_hour: int = -7,
+        end_hour: int = 0,
     ):
         """Create a new forecast timeseries based on a reference configuration.
 
         Parameters
         ----------
         reference_configuration_name : str
-            Name of the configuration to use for the calculation.
+            Configuration name of the reference timeseries.
         target_configuration_name : str
-            Name of the target configuration to use for the calculation.
+            Configuration name of the target forecast timeseries.
         output_configuration_name : str
-            Name of the output configuration.
-        output_configuration_description : str
-            Description of the output configuration.
+            Configuration name of the output forecast timeseries.
         method : BaselineMethodEnum, optional
             Method for the reference calculation,
             by default "climatology".
         temporal_resolution : ClimatologyResolutionEnum, optional
             Temporal resolution for the climatology calculation,
             by default "day_of_year".
-        summary_statistic : ClimatologyStatisticEnum, optional
-            Summary statistic for the climatology calculation,
-            by default "mean".
-
-        Notes
-        -----
-        - This does not save the baseline (ie, climatology).
-          Call the method directly if you want to save.
+        upsample_reference_timeseries : bool, optional
+            Whether to upsample the reference timeseries,
+            by default False. [Not implemented yet.]
+        downsample_reference_timeseries : bool, optional
+            Whether to downsample the reference timeseries,
+            by default False.
+        start_hour : int, optional
+            Start hour for the rolling average calculation,
+            by default -7 (7 hours before the value_time).
+        end_hour : int, optional
+            End hour for the rolling average calculation,
+            by default 0 (the value_time itself).
         """
         self._check_load_table()
+        # 1. Get the reference timeseries and target forecast.
         # If all reference_time values are null in the target secondary
         # configuration (ie, it's a historical sim), we can't continue.
         if self.df.filter(
@@ -231,35 +237,59 @@ class SecondaryTimeseriesTable(TimeseriesTable):
                 "No reference_time values found in the target configuration. "
                 "Please specify a valid target forecast configuration."
             )
-        if method == "climatology" and reference_configuration_name is None \
-                or temporal_resolution is None:
+        target_sdf = self._get_target_forecast(
+            target_configuration_name=target_configuration_name
+        )
+
+        ref_type = self.ev.configurations.filter(
+            f"name = '{reference_configuration_name}'"
+        ).to_sdf().first()["type"]
+        if ref_type == "primary":
+            reference_sdf = self.ev.primary_timeseries.filter(
+                f"configuration_name = '{reference_configuration_name}'"
+            ).to_sdf()
+            partition_by = self.ev.primary_timeseries.unique_column_set.remove(
+                "value_time"
+            )
+        elif ref_type == "secondary":
+            reference_sdf = self.df.filter(
+                f"configuration_name = '{reference_configuration_name}'"
+            )
+            partition_by = \
+                self.ev.secondary_timeseries.unique_column_set.remove(
+                    "value_time"
+                )
+        if reference_sdf.isEmpty():
             raise ValueError(
-                "A reference_configuration_name and temporal_resolution must "
+                "No data found for the reference configuration: "
+                f"{reference_configuration_name}, please calculate or load"
+                " it first."
+            )
+
+        # 2. Resample the reference timeseries to the
+        # temporal resolution of the target forecast.
+        if downsample_reference_timeseries:
+            reference_sdf = self._calculate_rolling_average(
+                sdf=reference_sdf,
+                partition_by=partition_by,
+                order_by="value_time",
+                start_hour=start_hour,
+                end_hour=end_hour,
+            )
+        if upsample_reference_timeseries:
+            raise NotImplementedError(
+                "Upsampling reference timeseries is not implemented yet."
+            )
+
+        # 3. Map reference timeseries to the target forecast according
+        # to the method specified.
+        if method == "climatology" and temporal_resolution is None:
+            raise ValueError(
+                "A temporal_resolution must "
                 "be provided for climatology. "
-                "Please specify valid values."
+                "Please specify a valid value."
             )
         elif method == "climatology":
-            # Use the climatology configuration if provided.
-            ref_type = self.ev.configurations.filter(
-                f"name = '{reference_configuration_name}'"
-            ).to_sdf().first()["type"]
-            if ref_type == "primary":
-                reference_sdf = self.ev.primary_timeseries.filter(
-                    f"configuration_name = '{reference_configuration_name}'"
-                ).to_sdf()
-            elif ref_type == "secondary":
-                reference_sdf = self.df.filter(
-                    f"configuration_name = '{reference_configuration_name}'"
-                )
-            if reference_sdf.isEmpty():
-                raise ValueError(
-                    f"No data found for climatology configuration: "
-                    f"{reference_configuration_name}, please calculate it first."
-                )
-
-            target_sdf = self._get_target_forecast(
-                target_configuration_name=target_configuration_name
-            )
             time_period = self._get_time_period_rlc(
                 temporal_resolution=temporal_resolution
             )
@@ -268,49 +298,43 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             # TODO: This is redundant with climatology method?
             reference_sdf = time_period.apply_to(reference_sdf)
 
-            # TODO: How to generalize this?
-            reference_sdf = self._calculate_rolling_average(
-                sdf=reference_sdf,
-                partition_by="location_id",
-                order_by=time_period.output_field_name,
-            )
+            # Join the reference sdf  to the template secondary forecast
+            xwalk_sdf = self.ev.location_crosswalks.to_sdf()
+            xwalk_sdf.createOrReplaceTempView("location_crosswalks")
+            reference_sdf.createOrReplaceTempView("reference_timeseries")
+            target_sdf.createOrReplaceTempView("template_timeseries")
+
+            # TODO: Left join here then fill nulls?
+            query = f"""
+                SELECT
+                    tf.reference_time
+                    , tf.value_time as value_time
+                    , tf.location_id as location_id
+                    , rf.value as value
+                    , rf.configuration_name
+                    , tf.unit_name
+                    , tf.variable_name
+                    , tf.member
+                FROM template_timeseries tf
+                JOIN location_crosswalks cf
+                    on cf.secondary_location_id = tf.location_id
+                JOIN reference_timeseries rf
+                    on cf.primary_location_id = rf.location_id
+                    and tf.{time_period.output_field_name} = rf.{time_period.output_field_name}
+                    and tf.unit_name = rf.unit_name
+                    and tf.variable_name = rf.variable_name
+            """  # noqa
+            ref_fcst_sdf = self.ev.spark.sql(query)
+
+            self.spark.catalog.dropTempView("location_crosswalks")
+            self.spark.catalog.dropTempView("reference_timeseries")
+            self.spark.catalog.dropTempView("template_timeseries")
 
         elif method == "persistence":
             # TODO: Implement persistence method.
             raise NotImplementedError(
                 "Persistence method is not implemented yet."
             )
-
-        # Join the reference sdf  to the template secondary forecast
-        xwalk_sdf = self.ev.location_crosswalks.to_sdf()
-        xwalk_sdf.createOrReplaceTempView("location_crosswalks")
-        reference_sdf.createOrReplaceTempView("reference_timeseries")
-        target_sdf.createOrReplaceTempView("template_timeseries")
-
-        query = f"""
-            SELECT
-                tf.reference_time
-                , tf.value_time as value_time
-                , tf.location_id as location_id
-                , rf.value as value
-                , rf.configuration_name
-                , tf.unit_name
-                , tf.variable_name
-                , tf.member
-            FROM template_timeseries tf
-            JOIN location_crosswalks cf
-                on cf.secondary_location_id = tf.location_id
-            JOIN reference_timeseries rf
-                on cf.primary_location_id = rf.location_id
-                and tf.{time_period.output_field_name} = rf.{time_period.output_field_name}
-                and tf.unit_name = rf.unit_name
-                and tf.variable_name = rf.variable_name
-        """  # noqa
-        ref_fcst_sdf = self.ev.spark.sql(query)
-
-        self.spark.catalog.dropTempView("location_crosswalks")
-        self.spark.catalog.dropTempView("reference_timeseries")
-        self.spark.catalog.dropTempView("template_timeseries")
 
         self.load_dataframe(
             df=ref_fcst_sdf,
