@@ -445,21 +445,24 @@ class TimeseriesTable(BaseTable):
         sdf: ps.DataFrame,
         partition_by: str,
         order_by: str,
-        window_start: int = -7,
-        window_end: int = 0,
+        start_hour: int,
+        end_hour: int,
         input_column: str = "value",
         output_column: str = "value"
     ) -> ps.DataFrame:
         """Calculate rolling average for a given time period."""
         window = (
             ps.Window.partitionBy(partition_by)
-            .orderBy(F.col(order_by))
-            .rangeBetween(window_start, window_end)
+            .orderBy(F.col(order_by).cast("long"))
+            .rangeBetween(
+                start_hour * 3600, end_hour * 3600
+            )
         )
         return sdf.withColumn(
             input_column,
             F.avg(output_column).over(window)
         )
+        # alternative?: df = sdf.groupBy(["location_id", F.window("value_time", "6 hours")]).agg(F.avg("value")).toPandas()
 
     @staticmethod
     def _get_time_period_rlc(
@@ -524,7 +527,7 @@ class TimeseriesTable(BaseTable):
     def calculate_climatology(
         self,
         input_configuration_name: str,
-        output_configuration: Configuration,
+        output_configuration_name: str,
         temporal_resolution: ClimatologyResolutionEnum = "day_of_year",
         summary_statistic: ClimatologyStatisticEnum = "mean"
     ):
@@ -534,8 +537,8 @@ class TimeseriesTable(BaseTable):
         ----------
         input_configuration_name : str
             Name of the primary configuration to use for the calculation.
-        output_configuration : Configuration
-            Configuration object for the output configuration.
+        output_configuration_name : str
+            Name of the output configuration to create.
         temporal_resolution : ClimatologyResolutionEnum, optional
             Temporal resolution for the climatology calculation,
             by default "day_of_year".
@@ -548,11 +551,11 @@ class TimeseriesTable(BaseTable):
             temporal_resolution=temporal_resolution,
             summary_statistic=summary_statistic
         )
-        self.ev.configurations.add(output_configuration)
         self.load_dataframe(
             df=clim_sdf,
             constant_field_values={
-                "configuration_name": output_configuration.name,
-            }
+                "configuration_name": output_configuration_name,
+            },
+            write_mode="overwrite"
         )
         pass
