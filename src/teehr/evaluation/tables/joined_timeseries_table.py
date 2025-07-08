@@ -88,7 +88,9 @@ class JoinedTimeseriesTable(TimeseriesTable):
         create_temp_views=["secondary_timeseries", "location_crosswalks", "primary_timeseries"])
         return joined_df
 
-    def _add_attr(self, joined_df: ps.DataFrame) -> ps.DataFrame:
+    def _add_attr(self,
+                  joined_df: ps.DataFrame,
+                  attr_list: List[str] = None) -> ps.DataFrame:
         """Add attributes to the joined timeseries dataframe."""
 
         location_attributes_df = self.ev.location_attributes.to_sdf()
@@ -99,7 +101,14 @@ class JoinedTimeseriesTable(TimeseriesTable):
         joined_df.createTempView("joined")
 
         # Get distinct attribute names
-        distinct_attributes = self.ev.location_attributes.distinct_values("attribute_name")
+        if attr_list is not None:
+            # If attr_list is provided, filter the attributes
+            distinct_attributes = attr_list
+            location_attributes_df = location_attributes_df.filter(
+                location_attributes_df.attribute_name.isin(distinct_attributes)
+            )
+        else:
+            distinct_attributes = self.ev.location_attributes.distinct_values("attribute_name")
 
         # Pivot the table
         pivot_df = (
@@ -187,7 +196,8 @@ class JoinedTimeseriesTable(TimeseriesTable):
         self,
         add_attrs: bool = True,
         execute_scripts: bool = False,
-        drop_duplicates: bool = False
+        drop_duplicates: bool = False,
+        attr_list: List[str] = None
     ):
         """Create joined timeseries table.
 
@@ -200,11 +210,15 @@ class JoinedTimeseriesTable(TimeseriesTable):
         drop_duplicates : bool, optional
             Drop duplicates from the joined timeseries table, by default False.
             If duplicates exist, the first occurence is retained.
+        attr_list : List[str], optional
+            List of attributes to add to the joined timeseries table.
+            If None, all attributes are added. The default is None.
+            add_attrs must be True for this to work.
         """
         joined_df = self._join()
 
         if add_attrs:
-            joined_df = self._add_attr(joined_df)
+            joined_df = self._add_attr(joined_df, attr_list)
 
         if execute_scripts:
             joined_df = self._run_script(joined_df)
