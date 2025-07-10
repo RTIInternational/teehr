@@ -39,7 +39,7 @@ class TimeseriesTable(BaseTable):
         self.partition_by = [
             "configuration_name",
             "variable_name",
-            "reference_time"
+            # "reference_time"
         ]
         self.filter_model = TimeseriesFilter
         self.unique_column_set = [
@@ -512,7 +512,12 @@ class TimeseriesTable(BaseTable):
             ).
             to_sdf()
         )
-        groupby_field_list = self.unique_column_set.copy()
+        groupby_field_list = [
+            "location_id",
+            "variable_name",
+            "unit_name",
+            "configuration_name"
+        ]
         # Add the time period as a calculated field.
         input_config_sdf = time_period.apply_to(input_config_sdf)
         # Aggregate values based on the time period and summary statistic.
@@ -520,9 +525,15 @@ class TimeseriesTable(BaseTable):
         summary_sdf = (
             group_df(input_config_sdf, groupby_field_list).
             agg(summary_func("value").alias("value"))
-        ).select(*self.unique_column_set, "value")
+        )
 
-        return summary_sdf
+        clim_sdf = input_config_sdf.drop("value").join(
+            summary_sdf,
+            on=groupby_field_list,
+            how="left"
+        ).drop(time_period.output_field_name)
+
+        return clim_sdf
 
     def calculate_climatology(
         self,
