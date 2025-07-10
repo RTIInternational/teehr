@@ -3,8 +3,6 @@
 Joining Timeseries
 ==================
 
-**Note:** The schema in the images shown below are slightly out of date. We are in the process of updating them.
-
 One of the first and most important steps in comparing simulated and observed timeseries data is to join
 the two datasets together based on location and time (and potentially other fields).
 
