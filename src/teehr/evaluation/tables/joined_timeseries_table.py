@@ -103,11 +103,20 @@ class JoinedTimeseriesTable(TimeseriesTable):
         # Get distinct attribute names
         if attr_list is not None:
             # If attr_list is provided, filter the attributes
-            distinct_attributes = attr_list
+            distinct_attributes = list(set(attr_list))
             location_attributes_df = location_attributes_df.filter(
                 location_attributes_df.attribute_name.isin(distinct_attributes)
             )
+            # warn users if any attributes in attr_list are not found
+            missing_attrs = set(attr_list) - set(distinct_attributes)
+            if missing_attrs:
+                logger.warning(
+                    "The following attributes were not found in the location"
+                    f"attributes: {missing_attrs}. "
+                    "They will not be added to the joined timeseries table."
+                )
         else:
+            logger.info("No attribute list provided. Adding all attributes.")
             distinct_attributes = self.ev.location_attributes.distinct_values("attribute_name")
 
         # Pivot the table
