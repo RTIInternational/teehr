@@ -11,7 +11,7 @@ TEEHR requires the following dependencies:
 
 * Python 3.10 or later
 
-* Java 8 or later for Spark (we use 17)
+* Java 17 or later for Spark
 
 
 The easiest way to install TEEHR is from PyPI using `pip`.
@@ -29,9 +29,6 @@ The code below creates a new virtual environment and installs TEEHR in it.
    # Install using pip.
    # Starting with version 0.4.1 TEEHR is available in PyPI
    pip install teehr
-
-   # Download the required JAR files for Spark to interact with AWS S3.
-   python -m teehr.utils.install_spark_jars
 
 
 Installation Guide for Windows
@@ -139,7 +136,6 @@ Currently, TEEHR dependencies require users install on Linux or macOS. To use TE
       python3 -m venv .venv
       source .venv/bin/activate
       pip install teehr
-      python -m teehr.utils.install_spark_jars
 
 
 Set-up Guide for Docker
