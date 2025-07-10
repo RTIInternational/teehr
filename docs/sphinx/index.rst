@@ -10,7 +10,7 @@ TEEHR Documentation
 
 TEEHR (pronounced "tier") is a Python tool set for loading, storing, processing and visualizing hydrologic data, particularly National Water Model data, for the purpose of exploring and evaluating the datasets to assess their skill and performance.
 
-.. grid:: 1 2 2 2
+.. grid:: 1 2 3 3
     :gutter: 4
     :padding: 2 2 0 0
     :class-container: sd-text-center
@@ -89,6 +89,25 @@ TEEHR (pronounced "tier") is a Python tool set for loading, storing, processing 
 
             To the development guide
 
+    .. grid-item-card::  Legacy TEEHR Content
+        :img-top: _static/index_user_guide.svg
+        :class-card: intro-card
+        :shadow: md
+
+        The legacy TEEHR content is no longer maintained, but
+        it is still available for reference. It contains various materials
+        created throughout the development process.
+
+        +++
+
+        .. button-ref:: legacy_content
+            :ref-type: ref
+            :click-parent:
+            :color: secondary
+            :expand:
+
+            To the legacy content
+
 
 .. toctree::
    :hidden:
@@ -100,3 +119,4 @@ TEEHR (pronounced "tier") is a Python tool set for loading, storing, processing 
    development/index
    changelog/index
    api/index
+   legacy_content/index
