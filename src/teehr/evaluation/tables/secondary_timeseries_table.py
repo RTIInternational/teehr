@@ -220,11 +220,13 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             Whether to downsample the reference timeseries,
             by default False.
         start_hour : int, optional
-            Start hour for the rolling average calculation,
-            by default -7 (7 hours before the value_time).
+            If downsample_reference_timeseries is True, the start hour
+            for the rolling average calculation, by default -7
+            (7 hours before the value_time).
         end_hour : int, optional
-            End hour for the rolling average calculation,
-            by default 0 (the value_time itself).
+            If downsample_reference_timeseries is True, the end hour
+            for the rolling average calculation, by default 0
+            (the value_time itself).
         """
         self._check_load_table()
         # 1. Get the reference timeseries and target forecast.
@@ -304,7 +306,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             reference_sdf.createOrReplaceTempView("reference_timeseries")
             target_sdf.createOrReplaceTempView("template_timeseries")
 
-            # TODO: Left join here then fill nulls?
+            # TODO: Left join here? Would need NaN filter on metrics.
             query = f"""
                 SELECT
                     tf.reference_time
