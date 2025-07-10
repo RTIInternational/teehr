@@ -380,13 +380,13 @@ class HourOfYear(CalculatedFieldABC, CalculatedFieldBaseModel):
                 if calendar.isleap(date.year):
                     if date.month == 2 and date.day == 29:
                         # Assign to Feb.28 during leap years
-                        return (59 - 1) * 24 + col.dt.hour
+                        return 58 * 24 + date.hour
                     elif date.month > 2:
-                        return (col.dt.dayofyear - 1) * 24 + col.dt.hour - 1
+                        return (date.dayofyear - 2) * 24 + date.hour
                     else:
-                        return (col.dt.dayofyear - 1) * 24 + col.dt.hour
+                        return (date.dayofyear - 1) * 24 + date.hour
                 else:
-                    return (col.dt.dayofyear - 1) * 24 + col.dt.hour
+                    return (date.dayofyear - 1) * 24 + date.hour
 
             return col.apply(adjust_hour_of_year)
 
