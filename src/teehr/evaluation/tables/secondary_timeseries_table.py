@@ -134,7 +134,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             write_mode=write_mode
         )
         # Reload the table
-        self._load_table()
+        # self._load_table()
 
         df.unpersist()
 
@@ -411,3 +411,4 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             persist_dataframe=persist_dataframe,
             drop_duplicates=drop_duplicates
         )
+        self._load_table()

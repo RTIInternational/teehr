@@ -228,7 +228,6 @@ class LocationTable(BaseTable):
             validated_df,
             write_mode=write_mode
         )
-        self._load_table()
 
         df.unpersist()
 
@@ -284,3 +283,4 @@ class LocationTable(BaseTable):
             persist_dataframe=persist_dataframe,
             drop_duplicates=drop_duplicates
         )
+        self._load_table()

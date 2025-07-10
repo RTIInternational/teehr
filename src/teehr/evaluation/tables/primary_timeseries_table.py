@@ -123,7 +123,7 @@ class PrimaryTimeseriesTable(TimeseriesTable):
         )
 
         # Reload the table
-        self._load_table()
+        # self._load_table()
 
         df.unpersist()
 
@@ -191,3 +191,4 @@ class PrimaryTimeseriesTable(TimeseriesTable):
             persist_dataframe=persist_dataframe,
             drop_duplicates=drop_duplicates
         )
+        self._load_table()

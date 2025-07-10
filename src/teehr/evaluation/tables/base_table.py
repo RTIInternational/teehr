@@ -334,7 +334,7 @@ class BaseTable():
                 f"Invalid write mode: {write_mode}. "
                 "Valid values are 'append', 'overwrite' and 'upsert'."
             )
-        self._load_table(show_missing_table_warning=False)
+        # self._load_table(show_missing_table_warning=False)
 
     def _get_schema(self, type: str = "pyspark"):
         """Get the primary timeseries schema.
@@ -765,7 +765,7 @@ class BaseTable():
             validated_df,
             write_mode=write_mode
         )
-        self._load_table()
+        # self._load_table()
 
         df.unpersist()
 
@@ -821,3 +821,5 @@ class BaseTable():
             persist_dataframe=persist_dataframe,
             drop_duplicates=drop_duplicates
         )
+
+        self._load_table()
