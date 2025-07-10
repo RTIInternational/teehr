@@ -57,7 +57,7 @@ Schema
 ------
 There are 9 tables in the standard TEEHR dataset that users can enter data into and one table (Joined Timeseries) that acts as a materialized view to speed up analytic queries, for a total of 10 tables. They fall into three categories, domain tables, location data tables, and timeseries tables.  The domain tables are populated with values automatically and the data is stored in plain text as CSV files so that they are more easily edited by the user. These tables tend to have a relatively small amount of data compared to the timeseries data tables which tend to contain much more data and utilize the Apache Parquet format. This is managed for the user, but is provided here for reference.
 
-.. figure:: ../../images/getting_started/data_model_transparent.drawio.png
+.. figure:: ../../images/getting_started/TEEHR_schema.png
   :scale: 85%
 
 Domain Tables
