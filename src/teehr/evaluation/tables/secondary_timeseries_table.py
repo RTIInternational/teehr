@@ -192,10 +192,8 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         reference_configuration_name: str = None,
         method: BaselineMethodEnum = "climatology",
         temporal_resolution: ClimatologyResolutionEnum = "day_of_year",
-        upsample_reference_timeseries: bool = False,
-        downsample_reference_timeseries: bool = False,
-        start_hour: int = -7,
-        end_hour: int = 0,
+        aggregate_reference_timeseries: bool = False,
+        time_window: str = "6 hours",
     ):
         """Create a new forecast timeseries based on a reference configuration.
 
@@ -213,10 +211,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         temporal_resolution : ClimatologyResolutionEnum, optional
             Temporal resolution for the climatology calculation,
             by default "day_of_year".
-        upsample_reference_timeseries : bool, optional
-            Whether to upsample the reference timeseries,
-            by default False. [Not implemented yet.]
-        downsample_reference_timeseries : bool, optional
+        aggregate_reference_timeseries : bool, optional
             Whether to downsample the reference timeseries,
             by default False.
         start_hour : int, optional
@@ -250,17 +245,14 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             reference_sdf = self.ev.primary_timeseries.filter(
                 f"configuration_name = '{reference_configuration_name}'"
             ).to_sdf()
-            partition_by = self.ev.primary_timeseries.unique_column_set.remove(
-                "value_time"
-            )
+            partition_by = self.ev.primary_timeseries.unique_column_set
+            partition_by.remove("value_time")
         elif ref_type == "secondary":
             reference_sdf = self.df.filter(
                 f"configuration_name = '{reference_configuration_name}'"
             )
-            partition_by = \
-                self.ev.secondary_timeseries.unique_column_set.remove(
-                    "value_time"
-                )
+            partition_by = self.ev.secondary_timeseries.unique_column_set
+            partition_by.remove("value_time")
         if reference_sdf.isEmpty():
             raise ValueError(
                 "No data found for the reference configuration: "
@@ -268,19 +260,14 @@ class SecondaryTimeseriesTable(TimeseriesTable):
                 " it first."
             )
 
-        # 2. Resample the reference timeseries to the
-        # temporal resolution of the target forecast.
-        if downsample_reference_timeseries:
+        # 2. Aggregate the reference timeseries to the
+        # using a rolling average if aggregate_reference_timeseries is True.
+        if aggregate_reference_timeseries:
+            logger.debug("Calculating rolling average for reference timeseries.")
             reference_sdf = self._calculate_rolling_average(
                 sdf=reference_sdf,
                 partition_by=partition_by,
-                order_by="value_time",
-                start_hour=start_hour,
-                end_hour=end_hour,
-            )
-        if upsample_reference_timeseries:
-            raise NotImplementedError(
-                "Upsampling reference timeseries is not implemented yet."
+                time_window=time_window
             )
 
         # 3. Map reference timeseries to the target forecast according
@@ -306,27 +293,31 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             reference_sdf.createOrReplaceTempView("reference_timeseries")
             target_sdf.createOrReplaceTempView("template_timeseries")
 
-            # TODO: Left join here? Would need NaN filter on metrics.
+            logger.debug("Joining reference climatology timeseries to template forecast.")
             query = f"""
                 SELECT
                     tf.reference_time
                     , tf.value_time as value_time
                     , tf.location_id as location_id
                     , rf.value as value
-                    , rf.configuration_name
                     , tf.unit_name
                     , tf.variable_name
                     , tf.member
+                    , '{output_configuration_name}' as configuration_name
                 FROM template_timeseries tf
                 JOIN location_crosswalks cf
                     on cf.secondary_location_id = tf.location_id
-                JOIN reference_timeseries rf
+                LEFT JOIN reference_timeseries rf
                     on cf.primary_location_id = rf.location_id
                     and tf.{time_period.output_field_name} = rf.{time_period.output_field_name}
                     and tf.unit_name = rf.unit_name
                     and tf.variable_name = rf.variable_name
+                    and tf.value_time = rf.value_time
             """  # noqa
             ref_fcst_sdf = self.ev.spark.sql(query)
+
+            logger.debug("Filling NaNs with forward fill and backward fill.")
+            final_sdf = self._ffill_and_bfill_nans(ref_fcst_sdf)
 
             self.spark.catalog.dropTempView("location_crosswalks")
             self.spark.catalog.dropTempView("reference_timeseries")
@@ -338,10 +329,12 @@ class SecondaryTimeseriesTable(TimeseriesTable):
                 "Persistence method is not implemented yet."
             )
 
+        # TODO: Remove when we update NaN handling?
+        final_sdf = final_sdf.dropna(subset=["value"])
+
         self.load_dataframe(
-            df=ref_fcst_sdf,
+            df=final_sdf,
             constant_field_values={
-                "configuration_name": output_configuration_name,
                 "member": None,
             }
         )

@@ -20,10 +20,11 @@ from teehr.models.calculated_fields.row_level import (
 )
 from pyspark.sql import functions as F
 import pyspark.sql as ps
+from pyspark.sql import Window
 
 from pathlib import Path
-from typing import Union
-
+from typing import Union, List
+import sys
 import logging
 
 logger = logging.getLogger(__name__)
@@ -440,29 +441,61 @@ class TimeseriesTable(BaseTable):
         )
         self._load_table()
 
-    @staticmethod
     def _calculate_rolling_average(
+        self,
         sdf: ps.DataFrame,
-        partition_by: str,
-        order_by: str,
-        start_hour: int,
-        end_hour: int,
+        partition_by: List[str],
+        statistic: str = "mean",
+        time_window: str = "6 hours",
         input_column: str = "value",
-        output_column: str = "value"
+        output_column: str = "agg_value"
     ) -> ps.DataFrame:
         """Calculate rolling average for a given time period."""
-        window = (
-            ps.Window.partitionBy(partition_by)
-            .orderBy(F.col(order_by).cast("long"))
-            .rangeBetween(
-                start_hour * 3600, end_hour * 3600
+        sdf.createOrReplaceTempView("temp_df")
+        col_list = sdf.columns
+        col_list.remove(input_column)
+        return self.ev.spark.sql(
+            f"""
+            WITH cte AS (
+                SELECT *, {statistic}({input_column}) OVER (
+                    PARTITION BY {", ".join(partition_by)}
+                    ORDER BY CAST(value_time AS timestamp)
+                    RANGE BETWEEN INTERVAL {time_window} PRECEDING AND CURRENT ROW
+                ) AS {output_column} FROM temp_df
+            )
+            SELECT
+                {", ".join(col_list)},
+                {output_column} AS {input_column}
+            FROM cte
+            """
+        )
+
+    @staticmethod
+    def _ffill_and_bfill_nans(
+        sdf: ps.DataFrame,
+        partition_by: List[str] = ["location_id", "variable_name", "unit_name", "configuration_name", "reference_time"],
+        order_by: str = "value_time"
+    ) -> ps.DataFrame:
+        """Forward fill and backward fill NaN values in the DataFrame."""
+        sdf = sdf.withColumn(
+            "value",
+            F.last("value", ignorenulls=True).
+            over(
+                Window.partitionBy(*partition_by).
+                orderBy(order_by).
+                rowsBetween(-sys.maxsize, 0)
             )
         )
-        return sdf.withColumn(
-            input_column,
-            F.avg(output_column).over(window)
+        sdf = sdf.withColumn(
+            "value",
+            F.first("value", ignorenulls=True).
+            over(
+                Window.partitionBy(*partition_by).
+                orderBy(order_by).
+                rowsBetween(0, sys.maxsize)
+            )
         )
-        # alternative?: df = sdf.groupBy(["location_id", F.window("value_time", "6 hours")]).agg(F.avg("value")).toPandas()
+        return sdf
 
     @staticmethod
     def _get_time_period_rlc(

@@ -364,7 +364,6 @@ class HourOfYear(CalculatedFieldABC, CalculatedFieldBaseModel):
         The name of the column to store the month.
         Default: "hour_of_year"
     """
-
     input_field_name: str = Field(
         default="value_time"
     )
