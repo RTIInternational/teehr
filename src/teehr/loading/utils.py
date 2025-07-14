@@ -307,7 +307,7 @@ def read_and_convert_xml_to_df(
             event_value = event.get("value")
             if event_value == missing_value:
                 # TODO: Remove this when we have a better way to handle NaNs.
-                logger.warning(
+                logger.debug(
                     f"Missing value found in series for {location_id} at {event_date} {event_time}. Skipping."
                 )
                 event_value = None
