@@ -4,11 +4,11 @@ name: Build and Push Development Version for TEEHR Hub
 #   pull_request:
 #     types: [closed]  # merged? closed?
 on:
-  # push:
-  #   branches: [475-update-python-dependencies]
-  workflow_run:
-    workflows: ["run-tests"]     # Triggered by "run-tests" workflow
-    types: [completed]           # Trigger when "run-tests" completes
+  push:
+    branches: [475-update-python-dependencies]
+  # workflow_run:
+  #   workflows: ["run-tests"]     # Triggered by "run-tests" workflow
+  #   types: [completed]           # Trigger when "run-tests" completes
 
 jobs:
   call-docker-build:
