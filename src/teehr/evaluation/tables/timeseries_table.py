@@ -1,13 +1,13 @@
 """Timeseries table base class."""
 from teehr.evaluation.tables.base_table import BaseTable
-from teehr.evaluation.tables.configuration_table import Configuration
+# from teehr.evaluation.tables.configuration_table import Configuration
 from teehr.loading.utils import (
     validate_input_is_xml,
     validate_input_is_csv,
     validate_input_is_netcdf,
     validate_input_is_parquet
 )
-from teehr.models.filters import TimeseriesFilter
+from teehr.models.filters import TimeseriesFilter, FilterBaseModel
 from teehr.querying.utils import join_geometry, group_df
 from teehr.models.table_enums import TableWriteEnum
 from teehr.const import MAX_CPUS
@@ -521,7 +521,10 @@ class TimeseriesTable(BaseTable):
 
     def _calculate_climatology(
         self,
-        input_configuration_name: str,
+        input_timeseries_filter: Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]
+        ],
         temporal_resolution: ClimatologyResolutionEnum,
         summary_statistic: ClimatologyStatisticEnum,
     ) -> ps.DataFrame:
@@ -538,11 +541,9 @@ class TimeseriesTable(BaseTable):
             summary_func = F.min
 
         # Get the configuration to use for reference calculation.
-        input_config_sdf = (
+        input_timeseries_sdf = (
             self.
-            filter(
-                f"configuration_name = '{input_configuration_name}'"
-            ).
+            query(filters=input_timeseries_filter).
             to_sdf()
         )
         groupby_field_list = [
@@ -552,26 +553,28 @@ class TimeseriesTable(BaseTable):
             "configuration_name"
         ]
         # Add the time period as a calculated field.
-        input_config_sdf = time_period.apply_to(input_config_sdf)
+        input_timeseries_sdf = time_period.apply_to(input_timeseries_sdf)
         # Aggregate values based on the time period and summary statistic.
         groupby_field_list.append(time_period.output_field_name)
         summary_sdf = (
-            group_df(input_config_sdf, groupby_field_list).
+            group_df(input_timeseries_sdf, groupby_field_list).
             agg(summary_func("value").alias("value"))
         )
-
-        clim_sdf = input_config_sdf.drop("value").join(
+        clim_sdf = input_timeseries_sdf.drop("value").join(
             summary_sdf,
             on=groupby_field_list,
             how="left"
         ).drop(time_period.output_field_name)
-
         return clim_sdf
 
     def calculate_climatology(
         self,
-        input_configuration_name: str,
+        input_timeseries_filter: Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]
+        ],
         output_configuration_name: str,
+        output_variable_name: str = "streamflow_hourly_climatology",
         temporal_resolution: ClimatologyResolutionEnum = "day_of_year",
         summary_statistic: ClimatologyStatisticEnum = "mean"
     ):
@@ -579,10 +582,10 @@ class TimeseriesTable(BaseTable):
 
         Parameters
         ----------
-        input_configuration_name : str
-            Name of the primary configuration to use for the calculation.
-        output_configuration_name : str
-            Name of the output configuration to create.
+        input_timeseries_filter : Union[str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]]
+            Filter to apply to the input timeseries to use in the
+            climatology calculation.
         temporal_resolution : ClimatologyResolutionEnum, optional
             Temporal resolution for the climatology calculation,
             by default "day_of_year".
@@ -591,7 +594,7 @@ class TimeseriesTable(BaseTable):
             by default "mean".
         """
         clim_sdf = self._calculate_climatology(
-            input_configuration_name=input_configuration_name,
+            input_timeseries_filter=input_timeseries_filter,
             temporal_resolution=temporal_resolution,
             summary_statistic=summary_statistic
         )
@@ -599,6 +602,7 @@ class TimeseriesTable(BaseTable):
             df=clim_sdf,
             constant_field_values={
                 "configuration_name": output_configuration_name,
+                "variable_name": output_variable_name
             },
             write_mode="overwrite"
         )

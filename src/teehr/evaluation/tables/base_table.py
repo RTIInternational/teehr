@@ -712,6 +712,12 @@ class BaseTable():
         drop_duplicates: bool
     ):
         """Load a timeseries from an in-memory dataframe."""
+        if df.isEmpty():
+            logger.warning(
+                "The input dataframe is empty. "
+                "No data will be loaded into the table."
+            )
+            return
         default_field_mapping = {}
         fields = self.schema_func(type="pandas").columns.keys()
         for field in fields:

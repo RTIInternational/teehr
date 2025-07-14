@@ -3,7 +3,7 @@ import teehr.const as const
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
 from teehr.loading.timeseries import convert_timeseries
 from pathlib import Path
-from typing import Union
+from typing import Union, List
 import logging
 from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
 from teehr.loading.utils import (
@@ -16,6 +16,7 @@ from teehr.models.metrics.basemodels import (
     BaselineMethodEnum,
     ClimatologyResolutionEnum
 )
+from teehr.models.filters import FilterBaseModel
 from pyspark.sql import functions as F
 import pyspark.sql as ps
 import pandas as pd
@@ -160,36 +161,118 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         self._check_load_table()
         return self._join_geometry()
 
-    def _get_target_forecast(
+    def _get_template_forecast(
         self,
-        target_configuration_name: str,
+        template_forecast_filter: Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]
+        ],
         member_id: str = None
     ) -> ps.DataFrame:
-        """Get a target forecast."""
-        member_id = self.df.filter(
-            f"configuration_name = '{target_configuration_name}'"
-        ).select(F.first("member", ignorenulls=True)).first()[0]
+        """Get a template forecast."""
+        template_sdf = self.query(filters=template_forecast_filter).to_sdf()
+        member_id = template_sdf.select(F.first("member", ignorenulls=True)).first()[0]
+        # If it's an ensemble get the first member.
         if member_id is not None:
-            sec_sdf = self.df.filter(
-                (f"configuration_name = '{target_configuration_name}'") and
-                (f"member = '{member_id}'")
+            template_sdf = template_sdf.filter(
+                f"member = '{member_id}'"
             )
-        else:
-            sec_sdf = self.df.filter(
-                f"configuration_name = '{target_configuration_name}'"
-            )
-        if sec_sdf.isEmpty():
+        if template_sdf.isEmpty():
             raise ValueError(
-                "No secondary data found for configuration:"
-                f" {target_configuration_name}"
+                "No template forecast found for the provided filter. "
+                "Please specify a valid filter."
             )
-        return sec_sdf
+        return template_sdf
+
+    def _create_reference_climatology_forecast(
+        self,
+        reference_timeseries_filter: Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]
+        ],
+        template_sdf: pd.DataFrame,
+        output_configuration_name: str,
+        temporal_resolution: ClimatologyResolutionEnum,
+        aggregate_reference_timeseries: bool,
+        time_window: str,
+    ):
+        """Create a new forecast timeseries based on climatology."""
+        # Get the reference timeseries ("climatology") based on the filter.
+        reference_sdf = self.ev.primary_timeseries.query(
+            filters=reference_timeseries_filter
+        ).to_sdf()
+        partition_by = self.ev.primary_timeseries.unique_column_set
+        if reference_sdf.isEmpty():
+            reference_sdf = self.ev.secondary_timeseries.query(
+                filters=reference_timeseries_filter
+            ).to_sdf()
+            partition_by = self.ev.secondary_timeseries.unique_column_set
+        if reference_sdf.isEmpty():
+            raise ValueError(
+                "No data found for the reference timeseries filter: "
+                "Please specify a valid filter or calculate or load"
+                " the reference timeseries first."
+            )
+        partition_by.remove("value_time")
+        # Aggregate the reference timeseries to the
+        # using a rolling average if aggregate_reference_timeseries is True.
+        if aggregate_reference_timeseries:
+            logger.debug("Calculating rolling average for reference timeseries.")
+            reference_sdf = self._calculate_rolling_average(
+                sdf=reference_sdf,
+                partition_by=partition_by,
+                time_window=time_window
+            )
+        time_period = self._get_time_period_rlc(
+            temporal_resolution=temporal_resolution
+        )
+        template_sdf = time_period.apply_to(template_sdf)
+        # TODO: This is redundant with climatology method?
+        reference_sdf = time_period.apply_to(reference_sdf)
+        # Join the reference sdf  to the template secondary forecast
+        xwalk_sdf = self.ev.location_crosswalks.to_sdf()
+        xwalk_sdf.createOrReplaceTempView("location_crosswalks")
+        reference_sdf.createOrReplaceTempView("reference_timeseries")
+        template_sdf.createOrReplaceTempView("template_timeseries")
+        logger.debug(
+            "Joining reference climatology timeseries to template forecast."
+        )
+        query = f"""
+            SELECT
+                tf.reference_time
+                , tf.value_time as value_time
+                , tf.location_id as location_id
+                , rf.value as value
+                , tf.unit_name
+                , tf.variable_name
+                , tf.member
+                , '{output_configuration_name}' as configuration_name
+            FROM template_timeseries tf
+            JOIN location_crosswalks cf
+                on cf.secondary_location_id = tf.location_id
+            LEFT JOIN reference_timeseries rf
+                on cf.primary_location_id = rf.location_id
+                and tf.{time_period.output_field_name} = rf.{time_period.output_field_name}
+                and tf.unit_name = rf.unit_name
+                and tf.value_time = rf.value_time
+        """  # noqa
+        results_sdf = self.ev.spark.sql(query)
+        self.spark.catalog.dropTempView("location_crosswalks")
+        self.spark.catalog.dropTempView("reference_timeseries")
+        self.spark.catalog.dropTempView("template_timeseries")
+        return results_sdf
 
     def create_reference_forecast(
         self,
-        target_configuration_name: str,
+        reference_timeseries_filter: Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]
+        ],
+        template_forecast_filter: Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]
+        ],
         output_configuration_name: str,
-        reference_configuration_name: str = None,
         method: BaselineMethodEnum = "climatology",
         temporal_resolution: ClimatologyResolutionEnum = "day_of_year",
         aggregate_reference_timeseries: bool = False,
@@ -199,10 +282,12 @@ class SecondaryTimeseriesTable(TimeseriesTable):
 
         Parameters
         ----------
-        reference_configuration_name : str
-            Configuration name of the reference timeseries.
-        target_configuration_name : str
-            Configuration name of the target forecast timeseries.
+        reference_timeseries_filter : Union[str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]
+            The filter to apply to the reference timeseries.
+        template_forecast_filter : Union[str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]
+            Filter to apply to the template forecast timeseries.
         output_configuration_name : str
             Configuration name of the output forecast timeseries.
         method : BaselineMethodEnum, optional
@@ -224,53 +309,19 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             (the value_time itself).
         """
         self._check_load_table()
-        # 1. Get the reference timeseries and target forecast.
+        # Get the reference timeseries and target forecast.
         # If all reference_time values are null in the target secondary
         # configuration (ie, it's a historical sim), we can't continue.
-        if self.df.filter(
-                    f"configuration_name = '{target_configuration_name}'"
-                ).select(F.first("reference_time", ignorenulls=True)).first()[0] is None:
+        if self.query(filters=template_forecast_filter).to_sdf() \
+                .select(F.first("reference_time", ignorenulls=True)).first()[0] is None:
             raise ValueError(
                 "No reference_time values found in the target configuration. "
-                "Please specify a valid target forecast configuration."
+                "Please specify a valid template forecast configuration."
             )
-        target_sdf = self._get_target_forecast(
-            target_configuration_name=target_configuration_name
+        template_sdf = self._get_template_forecast(
+            template_forecast_filter=template_forecast_filter
         )
-
-        ref_type = self.ev.configurations.filter(
-            f"name = '{reference_configuration_name}'"
-        ).to_sdf().first()["type"]
-        if ref_type == "primary":
-            reference_sdf = self.ev.primary_timeseries.filter(
-                f"configuration_name = '{reference_configuration_name}'"
-            ).to_sdf()
-            partition_by = self.ev.primary_timeseries.unique_column_set
-            partition_by.remove("value_time")
-        elif ref_type == "secondary":
-            reference_sdf = self.df.filter(
-                f"configuration_name = '{reference_configuration_name}'"
-            )
-            partition_by = self.ev.secondary_timeseries.unique_column_set
-            partition_by.remove("value_time")
-        if reference_sdf.isEmpty():
-            raise ValueError(
-                "No data found for the reference configuration: "
-                f"{reference_configuration_name}, please calculate or load"
-                " it first."
-            )
-
-        # 2. Aggregate the reference timeseries to the
-        # using a rolling average if aggregate_reference_timeseries is True.
-        if aggregate_reference_timeseries:
-            logger.debug("Calculating rolling average for reference timeseries.")
-            reference_sdf = self._calculate_rolling_average(
-                sdf=reference_sdf,
-                partition_by=partition_by,
-                time_window=time_window
-            )
-
-        # 3. Map reference timeseries to the target forecast according
+        # Map reference timeseries to the target forecast according
         # to the method specified.
         if method == "climatology" and temporal_resolution is None:
             raise ValueError(
@@ -279,55 +330,21 @@ class SecondaryTimeseriesTable(TimeseriesTable):
                 "Please specify a valid value."
             )
         elif method == "climatology":
-            time_period = self._get_time_period_rlc(
-                temporal_resolution=temporal_resolution
+            final_sdf = self._create_reference_climatology_forecast(
+                reference_timeseries_filter=reference_timeseries_filter,
+                template_sdf=template_sdf,
+                output_configuration_name=output_configuration_name,
+                temporal_resolution=temporal_resolution,
+                aggregate_reference_timeseries=aggregate_reference_timeseries,
+                time_window=time_window
             )
-            target_sdf = time_period.apply_to(target_sdf)
-
-            # TODO: This is redundant with climatology method?
-            reference_sdf = time_period.apply_to(reference_sdf)
-
-            # Join the reference sdf  to the template secondary forecast
-            xwalk_sdf = self.ev.location_crosswalks.to_sdf()
-            xwalk_sdf.createOrReplaceTempView("location_crosswalks")
-            reference_sdf.createOrReplaceTempView("reference_timeseries")
-            target_sdf.createOrReplaceTempView("template_timeseries")
-
-            logger.debug("Joining reference climatology timeseries to template forecast.")
-            query = f"""
-                SELECT
-                    tf.reference_time
-                    , tf.value_time as value_time
-                    , tf.location_id as location_id
-                    , rf.value as value
-                    , tf.unit_name
-                    , tf.variable_name
-                    , tf.member
-                    , '{output_configuration_name}' as configuration_name
-                FROM template_timeseries tf
-                JOIN location_crosswalks cf
-                    on cf.secondary_location_id = tf.location_id
-                LEFT JOIN reference_timeseries rf
-                    on cf.primary_location_id = rf.location_id
-                    and tf.{time_period.output_field_name} = rf.{time_period.output_field_name}
-                    and tf.unit_name = rf.unit_name
-                    and tf.variable_name = rf.variable_name
-                    and tf.value_time = rf.value_time
-            """  # noqa
-            ref_fcst_sdf = self.ev.spark.sql(query)
-
-            logger.debug("Filling NaNs with forward fill and backward fill.")
-            final_sdf = self._ffill_and_bfill_nans(ref_fcst_sdf)
-
-            self.spark.catalog.dropTempView("location_crosswalks")
-            self.spark.catalog.dropTempView("reference_timeseries")
-            self.spark.catalog.dropTempView("template_timeseries")
-
         elif method == "persistence":
             # TODO: Implement persistence method.
             raise NotImplementedError(
                 "Persistence method is not implemented yet."
             )
+        logger.debug("Filling NaNs with forward fill and backward fill.")
+        final_sdf = self._ffill_and_bfill_nans(final_sdf)
 
         # TODO: Remove when we update NaN handling?
         final_sdf = final_sdf.dropna(subset=["value"])
