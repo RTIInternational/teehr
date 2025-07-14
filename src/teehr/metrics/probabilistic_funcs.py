@@ -26,18 +26,25 @@ def _pivot_by_member(
             The first dimension should be the time step, and the second
             dimension should be the ensemble member.
     """
-    unique_members = members.unique()
-    n_members = len(unique_members)
-    # Get the indices of the unique member IDs
-    inds = np.array([np.where(members == unique_members[i])[0] for i in range(n_members)]).T
     if members.isna().all():  # No ensemble members
         return {
             "primary": p.values,
             "secondary": s.values
         }
+    unique_members, member_indices = np.unique(
+        members.values, return_inverse=True
+    )
+    # Assumes all members are same length.
+    forecast_length = member_indices[member_indices == member_indices[0]].size
+    n_members = unique_members.size
+    secondary_arr = np.full((forecast_length, n_members), np.nan)
+    for i in range(n_members):
+        mask = (member_indices == i)
+        secondary_arr[:, i] = s[mask]
+
     return {
-        "primary": p.values[inds[:, 0]],
-        "secondary": s.values[inds]
+        "primary": p.values[member_indices == 0],
+        "secondary": secondary_arr
     }
 
 
