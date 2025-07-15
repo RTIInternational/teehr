@@ -53,3 +53,4 @@ Before starting, make sure you have installed TEEHR and its dependencies as desc
    Fetching USGS and NWM Streamflow Data </user_guide/notebooks/10_fetching_nwm_streamflow>
    Fetching NWM Gridded Data </user_guide/notebooks/11_fetching_nwm_gridded_data>
    Available Metrics </user_guide/metrics/metrics>
+   Legacy Content </user_guide/legacy_content/legacy_content>

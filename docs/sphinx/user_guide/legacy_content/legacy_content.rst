@@ -24,7 +24,7 @@ usage of TEEHR.
 
   * A repository containing materials for the CIROH DevCon 2025 workshop, including notebooks and other examples.
 
-* `NGIAB TEEHR <https://github.com/RTIInternational/ngiab-teehr>`__
+* `NGIAB TEEHR <https://github.com/CIROH-UA/ngiab-teehr>`__
 
   * A repository containing materials for coupling Nextgen-in-a-Box (NGIAB) with TEEHR.
 
