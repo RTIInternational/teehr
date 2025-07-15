@@ -1,0 +1,25 @@
+name: Temp test for getting PyPI version
+
+on:
+  push:
+    branches: [475-update-python-dependencies]
+
+jobs:
+  job1:
+    runs-on: ubuntu-latest
+    outputs:
+      pypi_version: ${{ steps.get_pypi_version.outputs.package_version }}
+    steps:
+      - name: Get Package Version from PyPI
+        id: get_pypi_version
+        run: |
+          PACKAGE_VERSION=$(curl -s https://pypi.org/pypi/<your-package-name>/json | jq -r '.info.version')
+          echo "package_version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
+
+  job2:
+    needs: job1
+    runs-on: ubuntu-latest
+    steps:
+      - name: Use PyPI Version in Next Job
+        run: |
+          echo "PyPI Version from previous job: ${{ needs.job1.outputs.pypi_version }}"
