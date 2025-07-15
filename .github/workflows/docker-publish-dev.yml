@@ -1,11 +1,8 @@
 name: Build and Push Development Version for TEEHR Hub
 
 on:
-  pull_request:
-    types: [closed]
-# on:
-#   push:
-#     branches: [475-update-python-dependencies]
+  push:
+    branches: [main]  # 475-update-python-dependencies
   # workflow_run:
   #   workflows: ["run-tests"]     # Triggered by "run-tests" workflow
   #   types: [completed]           # Trigger when "run-tests" completes
@@ -16,3 +13,4 @@ jobs:
     secrets: inherit
     with:
       image-tag: "dev"
+      previous-image-tag: "dev"  # does nothing in this case
