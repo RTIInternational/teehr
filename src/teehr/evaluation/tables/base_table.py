@@ -712,8 +712,10 @@ class BaseTable():
         drop_duplicates: bool
     ):
         """Load a timeseries from an in-memory dataframe."""
-        if df.isEmpty():
-            logger.warning(
+        if (isinstance(df, ps.DataFrame) and df.isEmpty()) or (
+            isinstance(df, pd.DataFrame) and df.empty
+        ):
+            logger.debug(
                 "The input dataframe is empty. "
                 "No data will be loaded into the table."
             )
