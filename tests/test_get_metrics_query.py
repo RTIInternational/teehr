@@ -1,5 +1,5 @@
 """Test evaluation class."""
-from teehr import Configuration
+from teehr import Configuration, Variable
 from teehr import DeterministicMetrics, ProbabilisticMetrics, SignatureMetrics
 from teehr import Operators as ops
 import tempfile
@@ -466,16 +466,60 @@ def test_ensemble_metrics(tmpdir):
     ev.primary_timeseries.load_parquet(
         in_path=primary_filepath
     )
-    # Add reference forecast based on climatology, matching the
-    # secondary timeseries.
-    ev.secondary_timeseries.create_reference_forecast(
-        primary_configuration_name="usgs_observations",
-        target_configuration_name="MEFP",
-        output_configuration_name="reference_forecast",
-        output_configuration_description="Reference forecast for testing",
-        method="climatology",
-        summary_statistic="mean",
+
+    # Calculate climatology from USGS observations.
+    ev.configurations.add(
+        [
+            Configuration(
+                name="usgs_climatology",
+                type="primary",
+                description="Climatology of USGS streamflow"
+            )
+        ]
+    )
+    ev.variables.add(
+        [
+            Variable(
+                name="streamflow_hourly_climatology",
+                long_name="Climatology of USGS streamflow for hour of year"
+            )
+        ]
+    )
+    ev.primary_timeseries.calculate_climatology(
+        input_timeseries_filter=[
+            "configuration_name = 'usgs_observations'",
+            "variable_name = 'streamflow_hourly_inst'"
+        ],
+        output_configuration_name="usgs_climatology",
+        output_variable_name="streamflow_hourly_climatology",
         temporal_resolution="hour_of_year",
+        summary_statistic="mean",
+    )
+
+
+    # Add reference forecast based on climatology.
+    ev.configurations.add(
+        [
+            Configuration(
+                name="reference_climatology_forecast",
+                type="secondary",
+                description="Reference forecast based on USGS climatology summarized by hour of year"
+            )
+        ]
+    )
+    ev.secondary_timeseries.create_reference_forecast(
+        reference_timeseries_filter=[
+            "configuration_name = 'usgs_climatology'",
+            "variable_name = 'streamflow_hourly_climatology'"
+        ],
+        template_forecast_filter=[
+            "configuration_name = 'MEFP'",
+            "variable_name = 'streamflow_hourly_inst'"
+        ],
+        output_configuration_name="reference_climatology_forecast",
+        method="climatology",
+        temporal_resolution="hour_of_year",
+        aggregate_reference_timeseries=True
     )
     ev.joined_timeseries.create(execute_scripts=False)
     # Now, metrics.
@@ -483,6 +527,7 @@ def test_ensemble_metrics(tmpdir):
     crps.summary_func = np.mean
     crps.estimator = "pwm"
     crps.backend = "numba"
+    crps.reference_configuration = "reference_climatology_forecast"
 
     include_metrics = [crps]
     metrics_df = ev.metrics.query(
@@ -494,8 +539,14 @@ def test_ensemble_metrics(tmpdir):
         order_by=["primary_location_id"],
     ).to_pandas()
 
-    assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 35.627174)
-    assert np.isclose(metrics_df.mean_crps_ensemble.values[1], 1.1836433)
+    assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 35.555721)
+    assert np.isclose(metrics_df.mean_crps_ensemble.values[1], 1.073679)
+    assert np.isclose(
+        metrics_df.mean_crps_ensemble_skill_score.values[0], -32.115792
+    )
+    assert np.isclose(
+        metrics_df.mean_crps_ensemble_skill_score.values[1], 0
+    )
 
 
 def test_metrics_transforms(tmpdir):
@@ -609,54 +660,54 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        # test_executing_deterministic_metrics(
-        #     tempfile.mkdtemp(
-        #         prefix="1-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_executing_signature_metrics(
-        #     tempfile.mkdtemp(
-        #         prefix="2-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_metrics_filter_and_geometry(
-        #     tempfile.mkdtemp(
-        #         prefix="3-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_unpacking_bootstrap_results(
-        #     tempfile.mkdtemp(
-        #         prefix="4-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_circularblock_bootstrapping(
-        #     tempfile.mkdtemp(
-        #         prefix="5-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_stationary_bootstrapping(
-        #     tempfile.mkdtemp(
-        #         prefix="6-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_gumboot_bootstrapping(
-        #     tempfile.mkdtemp(
-        #         prefix="7-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_metric_chaining(
-        #     tempfile.mkdtemp(
-        #         prefix="8-",
-        #         dir=tempdir
-        #     )
-        # )
+        test_executing_deterministic_metrics(
+            tempfile.mkdtemp(
+                prefix="1-",
+                dir=tempdir
+            )
+        )
+        test_executing_signature_metrics(
+            tempfile.mkdtemp(
+                prefix="2-",
+                dir=tempdir
+            )
+        )
+        test_metrics_filter_and_geometry(
+            tempfile.mkdtemp(
+                prefix="3-",
+                dir=tempdir
+            )
+        )
+        test_unpacking_bootstrap_results(
+            tempfile.mkdtemp(
+                prefix="4-",
+                dir=tempdir
+            )
+        )
+        test_circularblock_bootstrapping(
+            tempfile.mkdtemp(
+                prefix="5-",
+                dir=tempdir
+            )
+        )
+        test_stationary_bootstrapping(
+            tempfile.mkdtemp(
+                prefix="6-",
+                dir=tempdir
+            )
+        )
+        test_gumboot_bootstrapping(
+            tempfile.mkdtemp(
+                prefix="7-",
+                dir=tempdir
+            )
+        )
+        test_metric_chaining(
+            tempfile.mkdtemp(
+                prefix="8-",
+                dir=tempdir
+            )
+        )
         test_ensemble_metrics(
             tempfile.mkdtemp(
                 prefix="9-",
