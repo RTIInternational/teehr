@@ -123,7 +123,8 @@ def test_create_joined_timeseries(tmpdir):
     )
 
     # Create the joined timeseries with only specified attributes
-    attr_list = ['drainage_area', 'ecoregion']
+    # include one invalid attribute 'tester' alongside valid attributes
+    attr_list = ['drainage_area', 'ecoregion', 'tester']
     ev.joined_timeseries.create(add_attrs=True,
                                 execute_scripts=True,
                                 attr_list=attr_list)

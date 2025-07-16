@@ -94,8 +94,8 @@ class JoinedTimeseriesTable(TimeseriesTable):
                   joined_df: ps.DataFrame,
                   attr_list: List[str] = None) -> ps.DataFrame:
         """Add attributes to the joined timeseries dataframe."""
-        location_attributes_df = self.ev.location_attributes.to_sdf()
-        if location_attributes_df.isEmpty():
+        location_attributes_sdf = self.ev.location_attributes.to_sdf()
+        if location_attributes_sdf.isEmpty():
             logger.warning(
                 "No location attributes found. Skipping adding attributes to "
                 "joined timeseries.")
@@ -103,30 +103,37 @@ class JoinedTimeseriesTable(TimeseriesTable):
 
         joined_df.createTempView("joined")
 
-        # Get distinct attribute names
         if attr_list is not None:
-            # If attr_list is provided, filter the attributes
-            distinct_attributes = list(set(attr_list))
-            location_attributes_df = location_attributes_df.filter(
-                location_attributes_df.attribute_name.isin(distinct_attributes)
+            # get unique attributes and drop those not in attribute table
+            distinct_atts = list(set(attr_list))
+            existing_atts = [
+                row['attribute_name'] for row in
+                location_attributes_sdf.select('attribute_name')
+                .distinct().collect()
+            ]
+            # filter distinct to those that exist in the attribute table
+            valid_atts = [att for att in distinct_atts if att in existing_atts]
+            # filter input dataframe to just valid attributes
+            location_attributes_sdf = location_attributes_sdf.filter(
+                location_attributes_sdf.attribute_name.isin(valid_atts)
             )
             # warn users if any attributes in attr_list are not found
-            missing_attrs = set(attr_list) - set(distinct_attributes)
-            if missing_attrs:
+            invalid_atts = set(distinct_atts) - set(valid_atts)
+            if invalid_atts:
                 logger.warning(
-                    "The following attributes were not found in the location"
-                    f"attributes: {missing_attrs}. "
+                    "The following attributes were not found in the location "
+                    f"attributes table: {invalid_atts}. "
                     "They will not be added to the joined timeseries table."
                 )
         else:
             logger.info("No attribute list provided. Adding all attributes.")
-            distinct_attributes = self.ev.location_attributes.distinct_values(
+            valid_atts = self.ev.location_attributes.distinct_values(
                 "attribute_name")
 
         # Pivot the table
         pivot_df = (
-            location_attributes_df.groupBy("location_id")
-            .pivot("attribute_name", distinct_attributes).agg({"value": "max"})
+            location_attributes_sdf.groupBy("location_id")
+            .pivot("attribute_name", valid_atts).agg({"value": "max"})
         )
 
         # Create a view
