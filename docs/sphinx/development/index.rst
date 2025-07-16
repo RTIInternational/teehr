@@ -37,18 +37,9 @@ Install the prerequisites:
 
 
 4. Activate the virtual environment:
-
-.. code-block:: bash
-
-   poetry shell
-
-
-5. Install the required JAR files for Spark:
-
-.. code-block:: bash
-
-   python download_spark_jars.py
-
+```bash
+poetry shell
+```
 
 Contributing Guidelines
 -----------------------

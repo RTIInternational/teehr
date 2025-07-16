@@ -2,7 +2,7 @@
 from collections.abc import Iterable
 from typing import List, Union
 from pydantic import BaseModel as BaseModel
-from pydantic import FieldValidationInfo, field_validator
+from pydantic import ValidationInfo, field_validator
 from datetime import datetime
 import logging
 from teehr.models.str_enum import StrEnum
@@ -55,7 +55,7 @@ class FilterBaseModel(BaseModel):
         return False
 
     @field_validator("value")
-    def in_operator_must_have_iterable(cls, v, info: FieldValidationInfo):
+    def in_operator_must_have_iterable(cls, v, info: ValidationInfo):
         """Ensure that an 'in' operator has an iterable type."""
         if cls.is_iterable_not_str(v) and info.data["operator"] != "in":
             raise ValueError("iterable value must be used with 'in' operator")
@@ -67,7 +67,7 @@ class FilterBaseModel(BaseModel):
         return v
 
     @field_validator("column", mode='before')
-    def coerce_column_to_enum(cls, v, info: FieldValidationInfo):
+    def coerce_column_to_enum(cls, v, info: ValidationInfo):
         """Column name must exist in the database table."""
         if not isinstance(v, StrEnum):
             fields = info.context.get("fields_enum")
