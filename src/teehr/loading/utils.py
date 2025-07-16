@@ -292,6 +292,7 @@ def read_and_convert_xml_to_df(
         variable_name = series.find(FEWS_XML_NAMESPACE + "header/" + FEWS_XML_NAMESPACE + variable_name_kw).text
         configuration = series.find(FEWS_XML_NAMESPACE + "header/" + FEWS_XML_NAMESPACE + configuration_kw).text
         unit_name = series.find(FEWS_XML_NAMESPACE + "header/" + FEWS_XML_NAMESPACE + unit_name_kw).text
+        missing_value = series.find(FEWS_XML_NAMESPACE + "header/" + FEWS_XML_NAMESPACE + "missVal").text
         ensemble_member = series.find(FEWS_XML_NAMESPACE + "header/" + FEWS_XML_NAMESPACE + member_kw).text
         forecastDate = series.find(FEWS_XML_NAMESPACE + "header/" + FEWS_XML_NAMESPACE + reference_time_kw).get("date")
         forecastTime = series.find(FEWS_XML_NAMESPACE + "header/" + FEWS_XML_NAMESPACE + reference_time_kw).get("time")
@@ -304,6 +305,13 @@ def read_and_convert_xml_to_df(
             event_date = event.get("date")
             event_time = event.get("time")
             event_value = event.get("value")
+            if event_value == missing_value:
+                # TODO: Remove this when we have a better way to handle NaNs.
+                logger.debug(
+                    f"Missing value found in series for {location_id} at {event_date} {event_time}. Skipping."
+                )
+                event_value = None
+                continue
             value_time = datetime.strptime(
                 event_date + " " + event_time, "%Y-%m-%d %H:%M:%S"
             )

@@ -7,8 +7,11 @@ from pyspark.sql import GroupedData
 from pyspark.sql.functions import pandas_udf
 
 from teehr.models.metrics.basemodels import MetricsBasemodel
-from teehr.models.metrics.basemodels import MetricCategories as mc
-from teehr.querying.utils import validate_fields_exist, parse_fields_to_list
+from teehr.querying.utils import (
+    validate_fields_exist,
+    parse_fields_to_list,
+    calculate_skill_score
+)
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +57,14 @@ def apply_aggregation_metrics(
 
     # Note: Test exploding multiple columns
     for model in include_metrics:
+
+        if model.reference_configuration is not None:
+            sdf = calculate_skill_score(
+                sdf,
+                model.output_field_name,
+                model.reference_configuration
+            )
+
         if model.unpack_results:
             sdf = model.unpack_function(sdf, model.output_field_name)
 
