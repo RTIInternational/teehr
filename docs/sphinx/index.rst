@@ -89,7 +89,6 @@ TEEHR (pronounced "tier") is a Python tool set for loading, storing, processing 
 
             To the development guide
 
-
 .. toctree::
    :hidden:
    :titlesonly:
