@@ -2,8 +2,8 @@ name: documentation
 
 on:
   push:
-    # tags: [ 'v*.*.*' ]
-    branches: [348-add-past-teehr-resources-to-docs]
+    tags: [ 'v*.*.*' ]
+    # branches: [348-add-past-teehr-resources-to-docs]
 
 permissions:
   contents: write
