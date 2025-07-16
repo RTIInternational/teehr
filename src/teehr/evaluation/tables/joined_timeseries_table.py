@@ -104,7 +104,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
         joined_df.createTempView("joined")
 
         if attr_list is not None:
-            # get unique attributes and drop those not in attribute table
+            # get unique attributes
             distinct_atts = list(set(attr_list))
             existing_atts = [
                 row['attribute_name'] for row in
