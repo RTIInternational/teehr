@@ -1,9 +1,11 @@
 name: documentation
 
 on:
-  push:
-    tags: [ 'v*.*.*' ]
-    # branches: [368-fix-user-guide-docs]
+  # push:
+  #   tags: [ 'v*.*.*' ]
+  workflow_run:
+    workflows: ["run-tests"]     # Triggered by "run-tests" workflow
+    types: [completed]           # Trigger when "run-tests" completes
 
 permissions:
   contents: write
