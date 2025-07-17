@@ -89,6 +89,12 @@ def _format_df_column_names(
     """Format dataretrieval dataframe columns to TEEHR data model."""
     logger.debug("Formatting column names.")
     df.reset_index(inplace=True)
+    if "00060" not in df.columns:
+        logger.error(
+            "The requested USGS gage(s) does not contain parameter code"
+            "'00060' ('Discharge, cubic feet per second'). "
+        )
+        return None
     df.rename(
         columns={
             "site_no": LOCATION_ID,
@@ -143,6 +149,9 @@ def _fetch_usgs_streamflow(
     unit_name = variable_mapper[UNIT_NAME]["Imperial"]
 
     usgs_df = _format_df_column_names(usgs_df, variable_name, unit_name)
+
+    if usgs_df is None or usgs_df.empty:
+        return None
 
     if filter_to_hourly is True:
         usgs_df = _filter_to_hourly(usgs_df)
@@ -270,10 +279,17 @@ def usgs_to_parquet(
                 convert_to_si=convert_to_si,
             )
 
-            usgs_df = usgs_df[(usgs_df[VALUE_TIME] >= start_date.tz_localize("UTC")) &
-                              (usgs_df[VALUE_TIME] < end_date.tz_localize("UTC"))]
+            if usgs_df is None or usgs_df.empty:
+                logger.warning(
+                    f"No USGS streamflow data returned for the specified site: {site}"
+                    f" and date range: {start_date} to {end_date}."
+                    " This site will be skipped."
+                )
+                continue
+            else:
+                usgs_df = usgs_df[(usgs_df[VALUE_TIME] >= start_date.tz_localize("UTC")) &
+                                (usgs_df[VALUE_TIME] < end_date.tz_localize("UTC"))]
 
-            if len(usgs_df) > 0:
                 output_filepath = Path(
                     output_parquet_dir,
                     f"{site}.parquet"
@@ -315,10 +331,15 @@ def usgs_to_parquet(
             convert_to_si=convert_to_si
         )
 
-        usgs_df = usgs_df[(usgs_df[VALUE_TIME] >= dts["start_dt"].tz_localize("UTC")) &
-                          (usgs_df[VALUE_TIME] <= dts["end_dt"].tz_localize("UTC"))]
-
-        if len(usgs_df) > 0:
+        if usgs_df is None or usgs_df.empty:
+            logger.warning(
+                "No data returned from USGS for the specified sites and date range: "
+                f"{dts['start_dt']} to {dts['end_dt']}, skipping period."
+            )
+            continue
+        else:
+            usgs_df = usgs_df[(usgs_df[VALUE_TIME] >= dts["start_dt"].tz_localize("UTC")) &
+                            (usgs_df[VALUE_TIME] <= dts["end_dt"].tz_localize("UTC"))]
 
             output_filename = _format_output_filename(
                 chunk_by, dts["start_dt"], dts["end_dt"]
@@ -332,41 +353,3 @@ def usgs_to_parquet(
                 timeseries_type=timeseries_type
             )
 
-
-# if __name__ == "__main__":
-#     # Examples
-#     usgs_to_parquet(
-#         sites=[
-#             "02449838",
-#             "02450825"
-#         ],
-#         start_date=datetime(2023, 2, 20),
-#         end_date=datetime(2023, 2, 25),
-#         output_parquet_dir=Path(Path().home(), "temp", "usgs"),
-#         chunk_by="location_id",
-#         overwrite_output=True
-#     )
-
-#     usgs_to_parquet(
-#         sites=[
-#             "02449838",
-#             "02450825"
-#         ],
-#         start_date=datetime(2023, 2, 20),
-#         end_date=datetime(2023, 2, 25),
-#         output_parquet_dir=Path(Path().home(), "temp", "usgs"),
-#         chunk_by="day",
-#         overwrite_output=True
-#     )
-
-#     usgs_to_parquet(
-#         sites=[
-#             "02449838",
-#             "02450825"
-#         ],
-#         start_date=datetime(2023, 2, 20),
-#         end_date=datetime(2023, 2, 25),
-#         output_parquet_dir=Path(Path().home(), "temp", "usgs"),
-#         overwrite_output=True
-#     )
-#     pass

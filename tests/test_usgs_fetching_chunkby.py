@@ -10,8 +10,24 @@ from teehr.fetching.usgs.usgs import usgs_to_parquet
 
 def test_chunkby_location_id(tmpdir):
     """Test chunkby location id."""
+    # See gage 08025360 from April 1-9
+    # usgs_to_parquet(
+    #     sites=[
+    #         "08025360",
+    #         "02449838"
+    #     ],
+    #     start_date=datetime(2023, 4, 1),
+    #     end_date=datetime(2023, 4, 9),
+    #     output_parquet_dir=Path(tmpdir),
+    #     chunk_by="location_id",
+    #     overwrite_output=True
+    # )
+
+    # pass
+
     usgs_to_parquet(
         sites=[
+            "08025360",
             "02449838",
             "02450825"
         ],
