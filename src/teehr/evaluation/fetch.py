@@ -179,6 +179,14 @@ class Fetch:
         drop_duplicates : bool
             Whether to drop duplicates in the data. Default is True.
 
+        .. note::
+
+           Only codes '00060' (Discharge, cubic feet per second, service='iv')
+           and '00060_Mean' (Discharge, Mean cubic feet per second, service='dv')
+           are supported. If data is returned from NWIS with a different field name,
+           such as '00060_total spillway releases' in the case of a reservoir,
+           the function will return None and log an error message.
+
 
         .. note::
 

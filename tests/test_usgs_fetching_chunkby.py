@@ -12,6 +12,7 @@ def test_chunkby_location_id(tmpdir):
     """Test chunkby location id."""
     usgs_to_parquet(
         sites=[
+            "08025360",  # Reservoir will be skipped
             "02449838",
             "02450825"
         ],
