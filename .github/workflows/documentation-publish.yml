@@ -3,7 +3,7 @@ name: documentation
 on:
   push:
     tags: [ 'v*.*.*' ]
-    # branches: [348-add-past-teehr-resources-to-docs]
+    # branches: [264-create-method-to-add-all-attributes-from-a-location_attributes]
 
 permissions:
   contents: write
