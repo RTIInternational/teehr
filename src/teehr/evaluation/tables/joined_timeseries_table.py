@@ -84,27 +84,56 @@ class JoinedTimeseriesTable(TimeseriesTable):
                 and sf.value_time = pf.value_time
                 and sf.unit_name = pf.unit_name
                 and sf.variable_name = pf.variable_name
-        """,
-        create_temp_views=["secondary_timeseries", "location_crosswalks", "primary_timeseries"])
+            """,
+            create_temp_views=["secondary_timeseries",
+                               "location_crosswalks",
+                               "primary_timeseries"])
         return joined_df
 
-    def _add_attr(self, joined_df: ps.DataFrame) -> ps.DataFrame:
+    def _add_attr(self,
+                  joined_df: ps.DataFrame,
+                  attr_list: List[str] = None) -> ps.DataFrame:
         """Add attributes to the joined timeseries dataframe."""
-
-        location_attributes_df = self.ev.location_attributes.to_sdf()
-        if location_attributes_df.isEmpty():
-            logger.warning("No location attributes found. Skipping adding attributes to joined timeseries.")
+        location_attributes_sdf = self.ev.location_attributes.to_sdf()
+        if location_attributes_sdf.isEmpty():
+            logger.warning(
+                "No location attributes found. Skipping adding attributes to "
+                "joined timeseries.")
             return joined_df
 
         joined_df.createTempView("joined")
 
-        # Get distinct attribute names
-        distinct_attributes = self.ev.location_attributes.distinct_values("attribute_name")
+        if attr_list is not None:
+            # get unique attributes
+            distinct_atts = list(set(attr_list))
+            existing_atts = [
+                row['attribute_name'] for row in
+                location_attributes_sdf.select('attribute_name')
+                .distinct().collect()
+            ]
+            # filter distinct to those that exist in the attribute table
+            valid_atts = [att for att in distinct_atts if att in existing_atts]
+            # filter input dataframe to just valid attributes
+            location_attributes_sdf = location_attributes_sdf.filter(
+                location_attributes_sdf.attribute_name.isin(valid_atts)
+            )
+            # warn users if any attributes in attr_list are not found
+            invalid_atts = set(distinct_atts) - set(valid_atts)
+            if invalid_atts:
+                logger.warning(
+                    "The following attributes were not found in the location "
+                    f"attributes table: {invalid_atts}. "
+                    "They will not be added to the joined timeseries table."
+                )
+        else:
+            logger.info("No attribute list provided. Adding all attributes.")
+            valid_atts = self.ev.location_attributes.distinct_values(
+                "attribute_name")
 
         # Pivot the table
         pivot_df = (
-            location_attributes_df.groupBy("location_id")
-            .pivot("attribute_name", distinct_attributes).agg({"value": "max"})
+            location_attributes_sdf.groupBy("location_id")
+            .pivot("attribute_name", valid_atts).agg({"value": "max"})
         )
 
         # Create a view
@@ -124,11 +153,14 @@ class JoinedTimeseriesTable(TimeseriesTable):
 
         return joined_df
 
-    def add_calculated_fields(self, cfs: Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]):
+    def add_calculated_fields(self,
+                              cfs: Union[CalculatedFieldBaseModel,
+                                         List[CalculatedFieldBaseModel]]):
         """Add calculated fields to the joined timeseries table.
 
-        Note this does not persist the CFs to the table. It only applies them to the DataFrame.
-        To persist the CFs to the table, use the `write` method.
+        Note this does not persist the CFs to the table. It only applies them
+        to the DataFrame. To persist the CFs to the table, use the `write`
+        method.
 
         Parameters
         ----------
@@ -187,7 +219,8 @@ class JoinedTimeseriesTable(TimeseriesTable):
         self,
         add_attrs: bool = True,
         execute_scripts: bool = False,
-        drop_duplicates: bool = False
+        drop_duplicates: bool = False,
+        attr_list: List[str] = None
     ):
         """Create joined timeseries table.
 
@@ -200,11 +233,15 @@ class JoinedTimeseriesTable(TimeseriesTable):
         drop_duplicates : bool, optional
             Drop duplicates from the joined timeseries table, by default False.
             If duplicates exist, the first occurence is retained.
+        attr_list : List[str], optional
+            List of attributes to add to the joined timeseries table.
+            If None, all attributes are added. The default is None.
+            add_attrs must be True for this to work.
         """
         joined_df = self._join()
 
         if add_attrs:
-            joined_df = self._add_attr(joined_df)
+            joined_df = self._add_attr(joined_df, attr_list)
 
         if execute_scripts:
             joined_df = self._run_script(joined_df)
@@ -263,7 +300,8 @@ class JoinedTimeseriesTable(TimeseriesTable):
         # read it again without the schema to ensure all fields are included.
         # Otherwise, continue.
         schema = self.schema_func().to_structtype()
-        df = self.ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
+        df = self.ev.spark.read.format(self.format).options(**options).load(
+            path, schema=schema)
         if df.isEmpty():
             if show_missing_table_warning:
                 logger.warning(f"An empty dataframe was returned for '{self.name}'.")
