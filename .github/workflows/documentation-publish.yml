@@ -3,7 +3,7 @@ name: documentation
 on:
   push:
     tags: [ 'v*.*.*' ]
-    # branches: [368-fix-user-guide-docs]
+    # branches: [348-add-past-teehr-resources-to-docs]
 
 permissions:
   contents: write

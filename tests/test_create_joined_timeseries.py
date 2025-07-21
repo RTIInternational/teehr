@@ -122,8 +122,12 @@ def test_create_joined_timeseries(tmpdir):
         pattern="test_attr_*.parquet",
     )
 
-    # Create the joined timeseries
-    ev.joined_timeseries.create(add_attrs=True, execute_scripts=True)
+    # Create the joined timeseries with only specified attributes
+    # include one invalid attribute 'tester' alongside valid attributes
+    attr_list = ['drainage_area', 'ecoregion', 'tester']
+    ev.joined_timeseries.create(add_attrs=True,
+                                execute_scripts=True,
+                                attr_list=attr_list)
 
     columns = ev.joined_timeseries.to_sdf().columns
     expected_columns = [
@@ -136,7 +140,6 @@ def test_create_joined_timeseries(tmpdir):
         'unit_name',
         'drainage_area',
         'ecoregion',
-        'year_2_discharge',
         'month',
         'year',
         'water_year',
