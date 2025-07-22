@@ -229,3 +229,4 @@ For a full list of metrics currently available in TEEHR, see the :doc:`/user_gui
     :hidden:
 
     TEEHR Framework <teehr_framework>
+    Spark Guide <spark_guide>
