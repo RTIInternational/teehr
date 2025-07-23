@@ -40,7 +40,7 @@ class TimeseriesTable(BaseTable):
         self.partition_by = [
             "configuration_name",
             "variable_name",
-            "reference_time"
+            # "reference_time"
         ]
         self.filter_model = TimeseriesFilter
         self.unique_column_set = [

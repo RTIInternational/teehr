@@ -4,6 +4,7 @@ from typing import Union, List
 import pandas as pd
 import geopandas as gpd
 import pyspark.sql as ps
+import pyspark.sql.functions as F
 from teehr.models.filters import (
     JoinedTimeseriesFilter
 )
@@ -17,7 +18,8 @@ from teehr.querying.metric_format import apply_aggregation_metrics
 from teehr.querying.utils import (
     order_df,
     group_df,
-    join_geometry
+    join_geometry,
+    parse_fields_to_list
 )
 
 import logging
@@ -143,7 +145,12 @@ class Metrics:
 
         self.df = apply_aggregation_metrics(
             self.df,
-            include_metrics
+            include_metrics,
+        )
+
+        self.df = self._post_process_metric_results(
+            include_metrics,
+            group_by
         )
 
         if order_by is not None:
@@ -176,32 +183,123 @@ class Metrics:
         return self.df
 
     def add_calculated_fields(self, cfs: Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]):
-            """Add calculated fields to the joined timeseries DataFrame before running metrics.
+        """Add calculated fields to the joined timeseries DataFrame before running metrics.
 
-            Parameters
-            ----------
-            cfs : Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]
-                The CFs to apply to the DataFrame.
+        Parameters
+        ----------
+        cfs : Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]
+            The CFs to apply to the DataFrame.
 
-            Returns
-            -------
-            self
-                The Metrics object with the CFs applied to the DataFrame.
+        Returns
+        -------
+        self
+            The Metrics object with the CFs applied to the DataFrame.
 
-            Examples
-            --------
-            >>> import teehr
-            >>> from teehr import RowLevelCalculatedFields as rcf
-            >>> ev.join_timeseries.add_calculated_fields([
-            >>>     rcf.Month()
-            >>> ]).write()
-            """
-            # self._check_load_table()
+        Examples
+        --------
+        >>> import teehr
+        >>> from teehr import RowLevelCalculatedFields as rcf
+        >>> ev.join_timeseries.add_calculated_fields([
+        >>>     rcf.Month()
+        >>> ]).write()
+        """
+        # self._check_load_table()
 
-            if not isinstance(cfs, List):
-                cfs = [cfs]
+        if not isinstance(cfs, List):
+            cfs = [cfs]
 
-            for cf in cfs:
-                self.df = cf.apply_to(self.df)
+        for cf in cfs:
+            self.df = cf.apply_to(self.df)
 
-            return self
+        return self
+
+    def _post_process_metric_results(
+        self,
+        include_metrics: List[MetricsBasemodel],
+        group_by: Union[
+            str, JoinedTimeseriesFields,
+            List[Union[str, JoinedTimeseriesFields]]
+        ]
+    ) -> ps.DataFrame:
+        """Post-process the results of the metrics query."""
+        for model in include_metrics:
+            if model.reference_configuration is not None:
+                self.df = self._calculate_metric_skill_score(
+                    model.output_field_name,
+                    model.reference_configuration,
+                    group_by
+                )
+
+            if model.unpack_results:
+                self.df = model.unpack_function(
+                    self.df,
+                    model.output_field_name
+                )
+
+        return self
+
+    def _calculate_metric_skill_score(
+        self,
+        metric_field: str,
+        reference_configuration: str,
+        group_by: Union[
+            str, JoinedTimeseriesFields,
+            List[Union[str, JoinedTimeseriesFields]]
+        ]
+    ) -> ps.DataFrame:
+        """Calculate skill score based on a reference configuration."""
+        logger.debug("Calculating skill score.")
+        group_by_strings = parse_fields_to_list(group_by)
+        # TODO: Raise error if configuration_name is not in group_by?
+        group_by_strings.remove("configuration_name")
+
+        pivot_sdf = (
+            self.df
+            .groupBy(group_by_strings).
+            pivot("configuration_name").
+            agg(F.first(metric_field))
+        )
+        # Get all configuration names except the reference configuration
+        configurations = self.df.select("configuration_name").distinct().collect()
+        configurations = [row.configuration_name for row in configurations]
+        configurations.remove(reference_configuration)
+
+        skill_score_col = f"{metric_field}_skill_score"
+        sdf = self.df.withColumn(skill_score_col, F.lit(None))
+
+        for config in configurations:
+            # Pivot and calculate the skill score.
+            temp_col = f"{config}_{metric_field}_skill"
+            pivot_sdf = pivot_sdf.withColumn(
+                temp_col,
+                1 - F.col(config) / F.col(reference_configuration)
+            ).withColumn(
+                "configuration_name",
+                F.lit(config)
+            )
+            # Join skill score values from the pivot table.
+            join_cols = group_by_strings + ["configuration_name"]
+            sdf = sdf.join(
+                pivot_sdf,
+                on=join_cols,
+                how="left"
+            ).select(
+                *join_cols,
+                F.col(f"{metric_field}"),
+                F.col(temp_col),
+                F.col(skill_score_col)
+            )
+            # Now update the column based on the configuration name.
+            sdf = sdf.withColumn(
+                skill_score_col,
+                F.when(
+                    sdf["configuration_name"] == f"{config}",
+                    sdf[temp_col]
+                ).otherwise(sdf[skill_score_col])
+            ).select(
+                *join_cols,
+                F.col(f"{metric_field}"),
+                F.col(skill_score_col)
+            )
+
+        return sdf

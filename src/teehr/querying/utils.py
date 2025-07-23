@@ -115,21 +115,3 @@ def join_geometry(
         ), on=target_location_id
     )
     return df_to_gdf(joined_df.toPandas())
-
-
-def calculate_skill_score(
-    sdf: ps.DataFrame,
-    metric_field: str,
-    reference_configuration: str
-) -> ps.DataFrame:
-    """Calculate skill score based on a reference configuration."""
-    logger.debug("Calculating skill score.")
-
-    ref_value = sdf.filter(
-        F.col("configuration_name") == reference_configuration
-    ).select(metric_field).collect()[0][0]
-
-    return sdf.withColumn(
-        f"{metric_field}_skill_score",
-        1 - F.col(metric_field) / ref_value
-    )
