@@ -4,6 +4,17 @@
 Getting started
 ===============
 
+.. contents:: Table of Contents
+   :local:
+   :depth: 1
+
+TEEHR Framework
+---------------
+:doc:`TEEHR Framework <teehr_framework>`
+
+Spark Guide
+-----------
+:doc:`Spark Guide <spark_guide>`
 
 Installation Guide for macOS & Linux
 ------------------------------------

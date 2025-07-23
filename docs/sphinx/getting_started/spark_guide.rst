@@ -41,7 +41,7 @@ Spark session using TEEHR's default configuration is shown below:
 
 Within the TEEHR framework, the Spark session is automatically configured with the necessary settings to work with
 the TEEHR data model. The default spark configuration created by TEEHR dynamically updates the driver memory and
-max result size to equal 75% and 50% of you on-board system memory, respectively. Advanced TEEHR users can also define
+max result size to equal 75% and 50% of your on-board system memory, respectively. Advanced TEEHR users can also define
 their own Spark session configuration by passing a custom configuration to the `teehr.Evaluation` constructor. For example,
 if the user encountered a memory management issue, they could create a custom Spark session with increased memory settings
 as follows:
