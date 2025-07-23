@@ -23,9 +23,8 @@ While this introduction provides a high-level overview of Spark, users are encou
 Creating a Spark Session
 ------------------------
 To use PySpark, you need to create a Spark session. This session is the entry point for using Spark functionality.
-When creating your TEEHR evaluation, a Spark session is automatically created for you. The default spark configuration
-created by TEEHR dynamically updates the driver memory and max result size to equal 75% and 50% of you on-board system memory,
-respectively. An example of creating the Spark session using TEEHR's default configuration is shown below:
+When creating your TEEHR evaluation, a Spark session is automatically created for you.  An example of creating the
+Spark session using TEEHR's default configuration is shown below:
 
 .. code-block:: python
 
@@ -41,8 +40,11 @@ respectively. An example of creating the Spark session using TEEHR's default con
 
 
 Within the TEEHR framework, the Spark session is automatically configured with the necessary settings to work with
-the TEEHR data model. Advanced TEEHR users can also define their own Spark session configuration by passing a custom
-configuration to the `teehr.Evaluation` constructor. For example:
+the TEEHR data model. The default spark configuration created by TEEHR dynamically updates the driver memory and
+max result size to equal 75% and 50% of you on-board system memory, respectively. Advanced TEEHR users can also define
+their own Spark session configuration by passing a custom configuration to the `teehr.Evaluation` constructor. For example,
+if the user encountered a memory management issue, they could create a custom Spark session with increased memory settings
+as follows:
 
 .. code-block:: python
 
@@ -61,15 +63,18 @@ configuration to the `teehr.Evaluation` constructor. For example:
         .set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider")
         .set("spark.sql.execution.arrow.pyspark.enabled", "true")
         .set("spark.sql.session.timeZone", "UTC")
-        .set("spark.driver.memory", "16g")
-        .set("spark.driver.maxResultSize", "8g")
+        .set("spark.driver.memory", "32g")
+        .set("spark.driver.maxResultSize", "24g")
         )
     spark_session = SparkSession.builder.config(conf=conf).getOrCreate()
 
     # Create a TEEHR evaluation with the custom Spark session
     evaluation = teehr.Evaluation(dir_path=Path("path/to/your/evaluation"),
                                   create_dir=True,
-                                  spark_session=spark_session)
+                                  spark=spark_session)
+
+For additional information on configuring Spark sessions, refer to the official
+`Spark Session documentation  <https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/spark_session.html>`_.
 
 Common Spark Warnings
 ---------------------
@@ -89,4 +94,9 @@ performance optimizations and can be ignored unless you are experiencing perform
 These warnings can usually be ignored unless you are experiencing performance issues.
 
 5. **Broadcasting Large Task**: If you see warnings about broadcasting large tasks, it may indicate that you are trying to broadcast a large dataset
-to all nodes in the cluster.
+to all nodes in the cluster. This can lead to performance issues and may require you to increase the memory allocated to the Spark driver if you encounter
+errors following the warning. You can adjust the memory settings in your Spark configuration to handle larger datasets.
+
+6. **Memory Management**: You may see warnings related to memory management, such as "Task not serializable" or "Out of memory". These warnings
+can indicate that your Spark job is using too much memory or that there are issues with serialization of objects. You may need to adjust your Spark configuration
+to allocate more memory or optimize your code to reduce memory usage.
