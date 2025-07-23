@@ -236,7 +236,7 @@ class Metrics:
                     model.output_field_name
                 )
 
-        return self
+        return self.df
 
     def _calculate_metric_skill_score(
         self,

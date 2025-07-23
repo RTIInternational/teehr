@@ -544,9 +544,7 @@ def test_ensemble_metrics(tmpdir):
     assert np.isclose(
         metrics_df.mean_crps_ensemble_skill_score.values[0], -32.115792
     )
-    assert np.isclose(
-        metrics_df.mean_crps_ensemble_skill_score.values[1], 0
-    )
+    assert np.isnan(metrics_df.mean_crps_ensemble_skill_score.values[1])
 
 
 def test_metrics_transforms(tmpdir):
