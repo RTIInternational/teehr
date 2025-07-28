@@ -89,7 +89,6 @@ def _format_df_column_names(
 ) -> pd.DataFrame:
     """Format dataretrieval dataframe columns to TEEHR data model."""
     logger.debug("Formatting column names.")
-    df.reset_index(inplace=True)
     if service == "iv":
         col_name = "00060"
     elif service == "dv":
@@ -124,8 +123,65 @@ def _format_df_column_names(
     ]]
 
 
+def _parse_site_id_list(
+    sites: Union[List[str], List[Dict[str, str]]]
+) -> List[str]:
+    """Parse the site ID list into a flat list of site IDs."""
+    parsed_sites = []
+    for site in sites:
+        if isinstance(site, dict):
+            # Confirm that the 'description' field is valid.
+            site_no = site["site_no"]
+            response = nwis.query_waterservices(
+                "site",
+                sites=[site_no],
+                hasDataTypeCd="iv,dv",
+                outputDataTypeCd="iv,dv"
+            )
+            df = nwis._read_rdb(response.text)
+            is_valid = False
+            for row_values in df.values:
+                if site["description"] in row_values:
+                    is_valid = True
+                    break
+            if not is_valid:
+                err_msg = (
+                    f"The site '{site_no}' does not have a time series description matching"
+                    f" '{site['description']}'. Please check the site and description."
+                )
+                logger.error(err_msg)
+                raise ValueError(err_msg)
+            parsed_sites.append(site["site_no"])
+        else:
+            parsed_sites.append(site)
+    return parsed_sites
+
+
+def _assign_discharge_by_description(
+    nwis_df: pd.DataFrame,
+    sites: Union[
+        List[str],
+        List[Dict[str, str]],
+        List[Union[str, Dict[str, str]]]
+    ],
+) -> pd.DataFrame:
+    """Filter the DataFrame by the timeseries description."""
+    logger.debug("Filtering by timeseries description.")
+    for site in sites:
+        if isinstance(site, dict):
+            site_no = site["site_no"]
+            mask = nwis_df["site_no"] == site_no
+            description = site["description"].strip("[]()").lower()
+            nwis_df.loc[mask, "00060"] = nwis_df[f"00060_{description}"]
+    return nwis_df
+
+
 def _fetch_usgs_streamflow(
-    sites: List[str],
+    sites: Union[
+        List[str],
+        List[Dict[str, str]],
+        List[Union[str, Dict[str, str]]]
+    ],
     start_date: datetime,
     end_date: datetime,
     service: str,
@@ -142,16 +198,28 @@ def _fetch_usgs_streamflow(
         - timedelta(minutes=1)
     ).strftime(DATETIME_STR_FMT)
 
+    # Parse out list of sites.
+    parsed_sites = _parse_site_id_list(sites)
+
     # Retrieve data --> dataretrieval
     usgs_df = nwis.get_record(
-        sites=sites,
+        sites=parsed_sites,
         service=service,
         start=start_dt_str,
         end=end_dt_str
     )
 
+    usgs_df.reset_index(inplace=True)
+
     variable_name = variable_mapper[VARIABLE_NAME][service]
     unit_name = variable_mapper[UNIT_NAME]["Imperial"]
+
+    # If any dictionaries were passed in, assign the values from
+    # the description field to the 00060 column.
+    usgs_df = _assign_discharge_by_description(
+        nwis_df=usgs_df,
+        sites=sites
+    )
 
     usgs_df = _format_df_column_names(
         df=usgs_df,
@@ -187,7 +255,11 @@ def _format_output_filename(chunk_by: str, start_dt, end_dt) -> str:
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def usgs_to_parquet(
-    sites: List[str],
+    sites: Union[
+        List[str],
+        List[Dict[str, str]],
+        List[Union[str, Dict[str, str]]]
+    ],
     start_date: Union[str, datetime, pd.Timestamp],
     end_date: Union[str, datetime, pd.Timestamp],
     output_parquet_dir: Union[str, Path],
@@ -306,8 +378,9 @@ def usgs_to_parquet(
                 continue
             else:
                 usgs_df = usgs_df[(usgs_df[VALUE_TIME] >= start_date.tz_localize("UTC")) &
-                                (usgs_df[VALUE_TIME] < end_date.tz_localize("UTC"))]
-
+                                  (usgs_df[VALUE_TIME] < end_date.tz_localize("UTC"))]
+                if isinstance(site, dict):
+                    site = site["site_no"]
                 output_filepath = Path(
                     output_parquet_dir,
                     f"{site}.parquet"
