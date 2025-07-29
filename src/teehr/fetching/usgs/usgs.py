@@ -130,6 +130,14 @@ def _parse_site_id_list(
     parsed_sites = []
     for site in sites:
         if isinstance(site, dict):
+            # Confirm that the site dictionary contains the required keys.
+            if "site_no" not in site or "description" not in site:
+                err_msg = (
+                    "Each site dictionary must contain the keys"
+                    " 'site_no' and 'description'."
+                )
+                logger.error(err_msg)
+                raise ValueError(err_msg)
             # Confirm that the 'description' field is valid.
             site_no = site["site_no"]
             response = nwis.query_waterservices(
