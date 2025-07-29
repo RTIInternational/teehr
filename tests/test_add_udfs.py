@@ -82,7 +82,7 @@ def test_add_row_udfs(tmpdir):
     assert "forecast_lead_time" in cols
     assert sdf.schema["forecast_lead_time"].dataType == T.DoubleType()
     row = check_sdf.collect()[1]
-    expected_val = row["value_time"] - row["reference_time"]
+    expected_val = (row["value_time"] - row["reference_time"]).total_seconds() / 3600.0
     test_val = row["forecast_lead_time"]
     assert expected_val == test_val
 
