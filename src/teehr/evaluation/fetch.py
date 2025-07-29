@@ -181,11 +181,16 @@ class Fetch:
 
         .. note::
 
-           Only codes '00060' (Discharge, cubic feet per second, service='iv')
-           and '00060_Mean' (Discharge, Mean cubic feet per second, service='dv')
-           are supported. If data is returned from NWIS with a different field name,
-           such as '00060_total spillway releases' in the case of a reservoir,
-           the function will return None and log an error message.
+           In some edge cases, a gage site may contain one or more
+           sub-locations that also measure discharge. To differentiate
+           these sub-locations, the ``usgs_to_parquet`` method should be
+           called directly, and a dictionary can be passed in for a site.
+           Each dictionary should contain the site number and a description
+           of the sub-location. The description is used to filter the
+           data to the specific sub-location. For example:
+           [{"site_no": "02449838", "description": "Main Gage"}]
+           Note that the dictionary must contain the keywords
+           'site_no' and 'description'.
 
 
         .. note::

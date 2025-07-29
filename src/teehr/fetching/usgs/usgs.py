@@ -281,6 +281,17 @@ def usgs_to_parquet(
     sites : List[str]
         List of USGS gages sites to fetch.
         Must be string to preserve the leading 0.
+
+        In some edge cases, a gage site may contain one or more
+        sub-locations that also measure discharge. To differentiate
+        these sub-locations, a dictionary can be passed in for a site.
+        Each dictionary should contain the site number and a description
+        of the sub-location. The description is used to filter the
+        data to the specific sub-location. For example:
+        [{"site_no": "02449838", "description": "Main Gage"}]
+
+        Note that the dictionary must contain the keywords
+        'site_no' and 'description'.
     start_date : datetime
         Start time of data to fetch.
     end_date : datetime
