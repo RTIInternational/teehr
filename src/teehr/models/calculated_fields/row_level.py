@@ -214,7 +214,7 @@ class Seasons(CalculatedFieldABC, CalculatedFieldBaseModel):
 
 
 class ForecastLeadTime(CalculatedFieldABC, CalculatedFieldBaseModel):
-    """Adds the forecast lead time from a timestamp column.
+    """Adds the forecast lead time in seconds from a timestamp column.
 
     Properties
     ----------
