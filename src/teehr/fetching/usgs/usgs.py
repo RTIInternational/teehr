@@ -88,29 +88,91 @@ def _format_df_column_names(
 ) -> pd.DataFrame:
     """Format dataretrieval dataframe columns to TEEHR data model."""
     logger.debug("Formatting column names.")
-    df.reset_index(inplace=True)
-    df.rename(
-        columns={
-            "site_no": LOCATION_ID,
-            "00060": VALUE,
-            "datetime": VALUE_TIME
-        },
-        inplace=True
+
+    # Check if we have a MultiIndex (multiple sites) or single Index
+    # (single site)
+    if isinstance(df.index, pd.MultiIndex):
+        # MultiIndex case: ['site_no', 'datetime']
+        # Extract index levels directly to avoid fragmentation from
+        # reset_index()
+        site_no_values = df.index.get_level_values('site_no')
+        datetime_values = df.index.get_level_values('datetime')
+
+        location_id_series = pd.Series(
+            "usgs-" + site_no_values.astype(str),
+            index=df.index,
+            name=LOCATION_ID
+        )
+
+        value_time_series = pd.Series(
+            datetime_values,
+            index=df.index,
+            name=VALUE_TIME
+        )
+    else:
+        # Single Index case: datetime index with 'site_no' column
+        # Extract site_no from column and datetime from index
+        site_no_values = df['site_no']
+        datetime_values = df.index
+
+        location_id_series = pd.Series(
+            "usgs-" + site_no_values.astype(str),
+            index=df.index,
+            name=LOCATION_ID
+        )
+
+        value_time_series = pd.Series(
+            datetime_values,
+            index=df.index,
+            name=VALUE_TIME
+        )
+
+    value_series = pd.Series(
+        df["00060"],
+        index=df.index,
+        name=VALUE
     )
-    df[LOCATION_ID] = "usgs-" + df[LOCATION_ID].astype(str)
-    df[CONFIGURATION_NAME] = USGS_CONFIGURATION_NAME
-    df[REFERENCE_TIME] = np.nan
-    df[UNIT_NAME] = unit_name
-    df[VARIABLE_NAME] = variable_name
-    return df[[
-        LOCATION_ID,
-        REFERENCE_TIME,
-        VALUE_TIME,
-        VALUE,
-        VARIABLE_NAME,
-        UNIT_NAME,
-        CONFIGURATION_NAME
-    ]]
+
+    reference_time_series = pd.Series(
+        np.nan,
+        index=df.index,
+        name=REFERENCE_TIME,
+        dtype=object
+    )
+
+    variable_name_series = pd.Series(
+        variable_name,
+        index=df.index,
+        name=VARIABLE_NAME
+    )
+
+    unit_name_series = pd.Series(
+        unit_name,
+        index=df.index,
+        name=UNIT_NAME
+    )
+
+    configuration_name_series = pd.Series(
+        USGS_CONFIGURATION_NAME,
+        index=df.index,
+        name=CONFIGURATION_NAME
+    )
+
+    # Use pd.concat to join all columns at once to avoid fragmentation
+    result_df = pd.concat([
+        location_id_series,
+        reference_time_series,
+        value_time_series,
+        value_series,
+        variable_name_series,
+        unit_name_series,
+        configuration_name_series
+    ], axis=1)
+
+    # Reset index once at the end to avoid fragmentation
+    result_df = result_df.reset_index(drop=True)
+
+    return result_df
 
 
 def _fetch_usgs_streamflow(
