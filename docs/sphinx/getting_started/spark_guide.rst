@@ -32,11 +32,10 @@ Spark session using TEEHR's default configuration is shown below:
     from pathlib import Path
 
     # Create a TEEHR evaluation
-    evaluation = teehr.Evaluation(dir_path=Path("path/to/your/evaluation"),
-                                  create_dir=True)
+    ev = teehr.Evaluation(dir_path=Path("path/to/your/evaluation"), create_dir=True)
 
     # Access the Spark session
-    spark = evaluation.spark
+    spark_session = ev.spark
 
 
 Within the TEEHR framework, the Spark session is automatically configured with the necessary settings to work with
@@ -69,9 +68,11 @@ as follows:
     spark_session = SparkSession.builder.config(conf=conf).getOrCreate()
 
     # Create a TEEHR evaluation with the custom Spark session
-    evaluation = teehr.Evaluation(dir_path=Path("path/to/your/evaluation"),
-                                  create_dir=True,
-                                  spark=spark_session)
+    ev = teehr.Evaluation(
+        dir_path=Path("path/to/your/evaluation"),
+        create_dir=True,
+        spark=spark_session
+    )
 
 For additional information on configuring Spark sessions, refer to the official
 `Spark Session documentation  <https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/spark_session.html>`_.
