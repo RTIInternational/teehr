@@ -1,6 +1,7 @@
 """Remove local AWS jars that interfere with pyspark v4.0."""
 import pyspark
 import os
+import glob
 
 
 def main():
@@ -17,19 +18,18 @@ def main():
 
     jars = [
         {
-            "path": f"{SPARK_HOME}/jars/aws-java-sdk-bundle-1.12.262.jar"
+            "path": f"{SPARK_HOME}/jars/aws-java-sdk-bundle-*.jar"
         },
         {
-            "path": f"{SPARK_HOME}/jars/hadoop-aws-3.3.4.jar"
+            "path": f"{SPARK_HOME}/jars/hadoop-aws-*.jar"
         }
     ]
 
     for jar in jars:
-        if os.path.exists(jar['path']):
-            os.remove(jar['path'])
-            print(f"Removed {jar['path']}")
-        else:
-            print(f"{jar['path']} does not exist, skipping removal.")
+        files_to_delete = glob.glob(jar['path'])
+        for file_path in files_to_delete:
+            os.remove(file_path)
+            print(f"Removed {file_path}")
 
 
 if __name__ == "__main__":
