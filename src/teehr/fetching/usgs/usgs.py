@@ -61,7 +61,8 @@ def _filter_to_hourly(df: pd.DataFrame) -> pd.DataFrame:
         & (df.index.minute == 0)
         & (df.index.second == 0)
     ]
-    df2.reset_index(level=0, allow_duplicates=True, inplace=True)
+    # Preserve the timezone-aware DatetimeIndex when resetting
+    df2.reset_index(inplace=True)
     return df2
 
 
@@ -89,88 +90,35 @@ def _format_df_column_names(
     """Format dataretrieval dataframe columns to TEEHR data model."""
     logger.debug("Formatting column names.")
 
-    # Check if we have a MultiIndex (multiple sites) or single Index
-    # (single site)
-    if isinstance(df.index, pd.MultiIndex):
-        # MultiIndex case: ['site_no', 'datetime']
-        # Extract index levels directly to avoid fragmentation from
-        # reset_index()
-        site_no_values = df.index.get_level_values('site_no')
-        datetime_values = df.index.get_level_values('datetime')
-
-        location_id_series = pd.Series(
-            "usgs-" + site_no_values.astype(str),
-            index=df.index,
-            name=LOCATION_ID
-        )
-
-        value_time_series = pd.Series(
-            datetime_values,
-            index=df.index,
-            name=VALUE_TIME
-        )
-    else:
-        # Single Index case: datetime index with 'site_no' column
-        # Extract site_no from column and datetime from index
-        site_no_values = df['site_no']
-        datetime_values = df.index
-
-        location_id_series = pd.Series(
-            "usgs-" + site_no_values.astype(str),
-            index=df.index,
-            name=LOCATION_ID
-        )
-
-        value_time_series = pd.Series(
-            datetime_values,
-            index=df.index,
+    # create series for value_time to preserve timezone information in df.index
+    value_time_series = pd.Series(
+            df.index,
             name=VALUE_TIME
         )
 
-    value_series = pd.Series(
-        df["00060"],
-        index=df.index,
-        name=VALUE
+    # Create numpy arrays for other columns
+    location_id_array = np.array("usgs-" + df['site_no'].values)
+    value_array = np.array(df["00060"])
+    reference_time_array = np.full(len(df), np.nan, dtype=object)
+    variable_name_array = np.full(len(df), variable_name, dtype=object)
+    unit_name_array = np.full(len(df), unit_name, dtype=object)
+    configuration_name_array = np.full(
+        len(df), USGS_CONFIGURATION_NAME, dtype=object
     )
 
-    reference_time_series = pd.Series(
-        np.nan,
-        index=df.index,
-        name=REFERENCE_TIME,
-        dtype=object
-    )
+    # Create dictionary with column names as keys
+    data_dict = {
+        LOCATION_ID: location_id_array,
+        REFERENCE_TIME: reference_time_array,
+        VALUE_TIME: value_time_series,
+        VALUE: value_array,
+        VARIABLE_NAME: variable_name_array,
+        UNIT_NAME: unit_name_array,
+        CONFIGURATION_NAME: configuration_name_array
+    }
 
-    variable_name_series = pd.Series(
-        variable_name,
-        index=df.index,
-        name=VARIABLE_NAME
-    )
-
-    unit_name_series = pd.Series(
-        unit_name,
-        index=df.index,
-        name=UNIT_NAME
-    )
-
-    configuration_name_series = pd.Series(
-        USGS_CONFIGURATION_NAME,
-        index=df.index,
-        name=CONFIGURATION_NAME
-    )
-
-    # Use pd.concat to join all columns at once to avoid fragmentation
-    result_df = pd.concat([
-        location_id_series,
-        reference_time_series,
-        value_time_series,
-        value_series,
-        variable_name_series,
-        unit_name_series,
-        configuration_name_series
-    ], axis=1)
-
-    # Reset index once at the end to avoid fragmentation
-    result_df = result_df.reset_index(drop=True)
+    # Construct DataFrame from dictionary
+    result_df = pd.DataFrame(data_dict)
 
     return result_df
 
@@ -198,7 +146,8 @@ def _fetch_usgs_streamflow(
         sites=sites,
         service=service,
         start=start_dt_str,
-        end=end_dt_str
+        end=end_dt_str,
+        multi_index=False
     )
 
     variable_name = variable_mapper[VARIABLE_NAME][service]
