@@ -98,7 +98,7 @@ class LocationAttributeTable(BaseTable):
         )
 
         # Reload the table
-        self._load_table()
+        # self._load_table()
 
     def field_enum(self) -> LocationAttributeFields:
         """Get the location attribute fields enum."""

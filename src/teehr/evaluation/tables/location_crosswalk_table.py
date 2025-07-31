@@ -101,7 +101,7 @@ class LocationCrosswalkTable(BaseTable):
         )
 
         # Reload the table
-        self._load_table()
+        # self._load_table()
 
     def field_enum(self) -> LocationCrosswalkFields:
         """Get the location crosswalk fields enum."""

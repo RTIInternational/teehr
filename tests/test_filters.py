@@ -3,8 +3,15 @@
 This module tests the filter functions on primary_timeseries. It
 should apply to all tables.
 """
+from datetime import timedelta
 import tempfile
 import pytest
+from teehr import RowLevelCalculatedFields as rcf
+from teehr.models.filters import (
+    TimeseriesFilter,
+    JoinedTimeseriesFilter,
+    FilterOperators
+)
 
 from setup_v0_3_study import setup_v0_3_study
 
@@ -47,10 +54,6 @@ def test_chain_filter_single_dict2(tmpdir):
 
 def test_chain_filter_single_model(tmpdir):
     """Test filter model."""
-    from teehr.models.filters import (
-        TimeseriesFilter,
-        FilterOperators
-    )
     ev = setup_v0_3_study(tmpdir)
     flds = ev.primary_timeseries.field_enum()
     df = ev.primary_timeseries.filter(
@@ -65,10 +68,6 @@ def test_chain_filter_single_model(tmpdir):
 
 def test_chain_filter_single_model2(tmpdir):
     """Test filter model."""
-    from teehr.models.filters import (
-        TimeseriesFilter,
-        FilterOperators
-    )
     ev = setup_v0_3_study(tmpdir)
     flds = ev.primary_timeseries.field_enum()
     with pytest.raises(Exception):
@@ -111,10 +110,6 @@ def test_chain_filter_list_dict(tmpdir):
 
 def test_chain_filter_list_model(tmpdir):
     """Test filter list of models."""
-    from teehr.models.filters import (
-        TimeseriesFilter,
-        FilterOperators
-    )
     ev = setup_v0_3_study(tmpdir)
     flds = ev.primary_timeseries.field_enum()
     df = ev.primary_timeseries.filter([
@@ -156,10 +151,6 @@ def test_query_single_dict(tmpdir):
 
 def test_query_single_model(tmpdir):
     """Test query model."""
-    from teehr.models.filters import (
-        TimeseriesFilter,
-        FilterOperators
-    )
     ev = setup_v0_3_study(tmpdir)
     flds = ev.primary_timeseries.field_enum()
     df = ev.primary_timeseries.query(
@@ -206,10 +197,6 @@ def test_query_list_dict(tmpdir):
 
 def test_query_list_model(tmpdir):
     """Test query list of models."""
-    from teehr.models.filters import (
-        TimeseriesFilter,
-        FilterOperators
-    )
     ev = setup_v0_3_study(tmpdir)
     flds = ev.primary_timeseries.field_enum()
     df = ev.primary_timeseries.query(
@@ -227,6 +214,38 @@ def test_query_list_model(tmpdir):
         ]
     ).to_pandas()
     assert len(df) == 13
+
+
+def test_filter_by_lead_time(tmpdir):
+    """Test filter by lead time."""
+    ev = setup_v0_3_study(tmpdir)
+    ev.joined_timeseries.add_calculated_fields([
+        rcf.ForecastLeadTime(),
+    ]).write()
+    filter_value = timedelta(days=0, hours=18)
+    flds = ev.joined_timeseries.field_enum()
+    df = ev.joined_timeseries.query(
+            JoinedTimeseriesFilter(
+                column=flds.forecast_lead_time,
+                operator=FilterOperators.gt,
+                value=filter_value
+            )
+    ).to_pandas()
+    assert len(df) == 45
+    df = ev.joined_timeseries.filter(
+        filters=[
+            {
+                "column": "forecast_lead_time",
+                "operator": ">",
+                "value": filter_value
+            }
+        ]
+    ).to_pandas()
+    assert len(df) == 45
+    df = ev.joined_timeseries.filter(
+        "forecast_lead_time > INTERVAL '0 18:00:00' DAY TO SECOND"
+    ).to_pandas()
+    assert len(df) == 45
 
 
 if __name__ == "__main__":
@@ -320,6 +339,12 @@ if __name__ == "__main__":
         test_query_list_model(
             tempfile.mkdtemp(
                 prefix="15-",
+                dir=tempdir
+            )
+        )
+        test_filter_by_lead_time(
+            tempfile.mkdtemp(
+                prefix="16-",
                 dir=tempdir
             )
         )

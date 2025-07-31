@@ -16,6 +16,7 @@ class MetricsBasemodel(PydanticBaseModel):
     return_type: Union[str, T.ArrayType, T.MapType] = Field(default=None)
     unpack_results: bool = Field(default=False)
     unpack_function: Callable = Field(default=None)
+    reference_configuration: str = Field(default=None)
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
@@ -119,3 +120,29 @@ class MetricCategories(StrEnum):
     Signature = "Signature"
     Probabilistic = "Probabilistic"
 
+
+class BaselineMethodEnum(StrEnum):
+    """Methods for calculating baselines."""
+
+    climatology = "climatology"
+    persistence = "persistence"
+
+
+class ClimatologyResolutionEnum(StrEnum):
+    """Resolutions for calculating climatology."""
+
+    hour_of_year = "hour_of_year"
+    day_of_year = "day_of_year"
+    month = "month"
+    season = "season"
+    year = "year"
+    water_year = "water_year"
+
+
+class ClimatologyStatisticEnum(StrEnum):
+    """Statistics for calculating climatology."""
+
+    mean = "mean"
+    median = "median"
+    min = "min"
+    max = "max"
