@@ -758,8 +758,8 @@ files = [
 
 [package.dependencies]
 numpy = [
-    {version = ">1.13.3", markers = "python_version < \"3.12.0.rc1\""},
     {version = ">=1.26.0b1", markers = "python_version >= \"3.12.0.rc1\""},
+    {version = ">1.13.3", markers = "python_version < \"3.12.0.rc1\""},
 ]
 
 [[package]]
@@ -1262,7 +1262,7 @@ description = "Python @deprecated decorator to deprecate old python classes, fun
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
 groups = ["main"]
-markers = "python_full_version == \"3.13.0\" or python_version >= \"3.11\" and python_version < \"3.13\""
+markers = "python_version >= \"3.11\""
 files = [
     {file = "Deprecated-1.2.18-py2.py3-none-any.whl", hash = "sha256:bd5011788200372a32418f888e326a09ff80d0214bd961147cfed01b5c018eec"},
     {file = "deprecated-1.2.18.tar.gz", hash = "sha256:422b6f6d859da6f2ef57857761bfb392480502a64c3028ca9bbe86085d72115d"},
@@ -1658,8 +1658,8 @@ files = [
 google-auth = ">=2.14.1,<3.0.0"
 googleapis-common-protos = ">=1.56.2,<2.0.0"
 proto-plus = [
-    {version = ">=1.22.3,<2.0.0"},
     {version = ">=1.25.0,<2.0.0", markers = "python_version >= \"3.13\""},
+    {version = ">=1.22.3,<2.0.0", markers = "python_version < \"3.13\""},
 ]
 protobuf = ">=3.19.5,<3.20.0 || >3.20.0,<3.20.1 || >3.20.1,<4.21.0 || >4.21.0,<4.21.1 || >4.21.1,<4.21.2 || >4.21.2,<4.21.3 || >4.21.3,<4.21.4 || >4.21.4,<4.21.5 || >4.21.5,<7.0.0"
 requests = ">=2.18.0,<3.0.0"
@@ -2251,7 +2251,7 @@ description = "IPython: Productive Interactive Computing"
 optional = false
 python-versions = ">=3.11"
 groups = ["dev"]
-markers = "python_full_version == \"3.13.0\" or python_version >= \"3.11\" and python_version < \"3.13\""
+markers = "python_version >= \"3.11\""
 files = [
     {file = "ipython-9.4.0-py3-none-any.whl", hash = "sha256:25850f025a446d9b359e8d296ba175a36aedd32e83ca9b5060430fe16801f066"},
     {file = "ipython-9.4.0.tar.gz", hash = "sha256:c033c6d4e7914c3d9768aabe76bbe87ba1dc66a92a05db6bfa1125d81f2ee270"},
@@ -2285,7 +2285,7 @@ description = "Defines a variety of Pygments lexers for highlighting IPython cod
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
-markers = "python_full_version == \"3.13.0\" or python_version >= \"3.11\" and python_version < \"3.13\""
+markers = "python_version >= \"3.11\""
 files = [
     {file = "ipython_pygments_lexers-1.1.1-py3-none-any.whl", hash = "sha256:a9462224a505ade19a605f71f8fa63c2048833ce50abc86768a0d81d876dc81c"},
     {file = "ipython_pygments_lexers-1.1.1.tar.gz", hash = "sha256:09c0138009e56b6854f9535736f4171d855c8c08a563a0dcd8022f78355c7e81"},
@@ -3467,7 +3467,7 @@ description = "A Python package providing buffer compression and transformation 
 optional = false
 python-versions = ">=3.11"
 groups = ["main"]
-markers = "python_full_version == \"3.13.0\" or python_version >= \"3.11\" and python_version < \"3.13\""
+markers = "python_version >= \"3.11\""
 files = [
     {file = "numcodecs-0.15.1-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:698f1d59511488b8fe215fadc1e679a4c70d894de2cca6d8bf2ab770eed34dfd"},
     {file = "numcodecs-0.15.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:bef8c8e64fab76677324a07672b10c31861775d03fc63ed5012ca384144e4bb9"},
@@ -3661,9 +3661,9 @@ files = [
 
 [package.dependencies]
 numpy = [
+    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
     {version = ">=1.22.4", markers = "python_version < \"3.11\""},
     {version = ">=1.23.2", markers = "python_version == \"3.11\""},
-    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
 ]
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
@@ -5194,7 +5194,7 @@ description = "Manipulate well-formed Roman numerals"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
-markers = "python_full_version == \"3.13.0\" or python_version >= \"3.11\" and python_version < \"3.13\""
+markers = "python_version >= \"3.11\""
 files = [
     {file = "roman_numerals_py-3.1.0-py3-none-any.whl", hash = "sha256:9da2ad2fb670bcf24e81070ceb3be72f6c11c440d73bd579fbeca1e9f330954c"},
     {file = "roman_numerals_py-3.1.0.tar.gz", hash = "sha256:be4bf804f083a4ce001b5eb7e3c0862479d10f94c936f6c4e5f250aa5ff5bd2d"},
@@ -5515,7 +5515,7 @@ description = "Fundamental algorithms for scientific computing in Python"
 optional = false
 python-versions = ">=3.11"
 groups = ["main"]
-markers = "python_full_version == \"3.13.0\" or python_version >= \"3.11\" and python_version < \"3.13\""
+markers = "python_version >= \"3.11\""
 files = [
     {file = "scipy-1.16.0-cp311-cp311-macosx_10_14_x86_64.whl", hash = "sha256:deec06d831b8f6b5fb0b652433be6a09db29e996368ce5911faf673e78d20085"},
     {file = "scipy-1.16.0-cp311-cp311-macosx_12_0_arm64.whl", hash = "sha256:d30c0fe579bb901c61ab4bb7f3eeb7281f0d4c4a7b52dbf563c89da4fd2949be"},
@@ -5748,7 +5748,7 @@ description = "Python documentation generator"
 optional = false
 python-versions = ">=3.11"
 groups = ["dev"]
-markers = "python_full_version == \"3.13.0\" or python_version >= \"3.11\" and python_version < \"3.13\""
+markers = "python_version >= \"3.11\""
 files = [
     {file = "sphinx-8.2.3-py3-none-any.whl", hash = "sha256:4405915165f13521d875a8c29c8970800a0141c14cc5416a38feca4ea5d9b9c3"},
     {file = "sphinx-8.2.3.tar.gz", hash = "sha256:398ad29dee7f63a75888314e9424d40f52ce5a6a87ae88e7071e80af296ec348"},
@@ -5793,8 +5793,8 @@ files = [
 [package.dependencies]
 anyascii = "*"
 astroid = [
-    {version = ">=2.7", markers = "python_version < \"3.12\""},
     {version = ">=3.0.0a1", markers = "python_version >= \"3.12\""},
+    {version = ">=2.7", markers = "python_version < \"3.12\""},
 ]
 Jinja2 = "*"
 PyYAML = "*"
@@ -7007,7 +7007,7 @@ description = "An implementation of chunked, compressed, N-dimensional arrays fo
 optional = false
 python-versions = ">=3.11"
 groups = ["main"]
-markers = "python_full_version == \"3.13.0\" or python_version >= \"3.11\" and python_version < \"3.13\""
+markers = "python_version >= \"3.11\""
 files = [
     {file = "zarr-2.18.7-py3-none-any.whl", hash = "sha256:ac3dc4033e9ae4e9d7b5e27c97ea3eaf1003cc0a07f010bd83d5134bf8c4b223"},
     {file = "zarr-2.18.7.tar.gz", hash = "sha256:b2b8f66f14dac4af66b180d2338819981b981f70e196c9a66e6bfaa9e59572f5"},
@@ -7059,4 +7059,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<=3.13"
-content-hash = "61713270a9343efff3e544887da8747ce9a7019cb03481ffff929e4df1b683d4"
+content-hash = "277ee427927ec26724f343403400e2480ac9d76e432478a3c6dd52c34a07e77d"

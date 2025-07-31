@@ -11,7 +11,7 @@ import pyspark.sql.functions as F
 from lxml import etree
 from datetime import datetime, timedelta
 import pyarrow as pa
-import fiona.errors
+import pyogrio.errors
 
 
 logger = logging.getLogger(__name__)
@@ -105,7 +105,7 @@ def read_spatial_file(
     elif ext in file_exts:
         try:
             gdf = gpd.read_file(filepath, **kwargs)
-        except (fiona.errors.DriverError, ValueError, OSError) as e:
+        except (pyogrio.errors.DataSourceError, ValueError, OSError) as e:
             raise ValueError(
                 f"""Failed to read file with geopandas.read_file: {e}"""
                 )
