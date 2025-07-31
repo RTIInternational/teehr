@@ -11,7 +11,7 @@ This guide will walk you through the steps to set up a development environment f
 
 Install the prerequisites:
 - Python 3.10 or later
-- Poetry
+- Poetry v2 or later
 - Java 11 or later for Spark (we use 17)
 
 
@@ -38,7 +38,7 @@ Install the prerequisites:
 
 4. Activate the virtual environment:
 ```bash
-poetry shell
+eval $(poetry env activate)
 ```
 
 Contributing Guidelines
