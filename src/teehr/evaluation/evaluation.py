@@ -174,13 +174,21 @@ class Evaluation:
         handler = logging.FileHandler(logger_path)
         handler.setFormatter(
             logging.Formatter(
-                "%(asctime)s %(levelname)s %(message)s"
+                "%(asctime)s [%(name)s - %(levelname)s] %(message)s"
             )
         )
         logger.addHandler(
             handler
         )
         logger.setLevel(logging.DEBUG)
+
+        # Configure PySpark loggers to match TEEHR logger settings
+        # but use INFO level to reduce verbosity
+        pyspark_loggers = ["py4j", "pyspark"]
+        for logger_name in pyspark_loggers:
+            pyspark_logger = logging.getLogger(logger_name)
+            pyspark_logger.addHandler(handler)
+            pyspark_logger.setLevel(logging.INFO)
 
     def clone_template(self):
         """Create a study from the standard template.
