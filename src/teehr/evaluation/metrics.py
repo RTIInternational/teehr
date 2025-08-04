@@ -221,7 +221,22 @@ class Metrics:
             List[Union[str, JoinedTimeseriesFields]]
         ]
     ) -> ps.DataFrame:
-        """Post-process the results of the metrics query."""
+        """Post-process the results of the metrics query.
+
+        Notes
+        -----
+        This method includes functionality to update the dataframe returned
+        by the query method depending on metric model attributes.
+
+        If the metric model specifies a reference configuration, it will
+        calculate the skill score of metric values for each configuration
+        relative to the reference configuration. The skill score is calculated
+        as `1 - (metric_value / reference_metric_value)`.
+
+        Additionally, if the metric model specifies unpacking of results,
+        metric results returned as a dictionary will be unpacked into separate
+        columns in the DataFrame.
+        """
         for model in include_metrics:
             if model.reference_configuration is not None:
                 self.df = self._calculate_metric_skill_score(
