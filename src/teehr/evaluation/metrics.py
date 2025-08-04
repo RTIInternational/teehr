@@ -262,7 +262,12 @@ class Metrics:
             List[Union[str, JoinedTimeseriesFields]]
         ]
     ) -> ps.DataFrame:
-        """Calculate skill score based on a reference configuration."""
+        """Calculate skill score based on a reference configuration.
+
+        Calculate the skill score of metric values for each configuration
+        relative to the reference configuration. The skill score is calculated
+        as `1 - (metric_value / reference_metric_value)`.
+        """
         logger.debug("Calculating skill score.")
         group_by_strings = parse_fields_to_list(group_by)
         # TODO: Raise error if configuration_name is not in group_by?

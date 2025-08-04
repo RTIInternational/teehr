@@ -450,7 +450,16 @@ class TimeseriesTable(BaseTable):
         input_column: str = "value",
         output_column: str = "agg_value"
     ) -> ps.DataFrame:
-        """Calculate rolling average for a given time period."""
+        """Calculate rolling average for a given time period.
+
+        Notes
+        -----
+        This function summarizes values (``mean`` by default) over a specified
+        look-back period defined by the ``time_window`` parameter.
+
+        The input table is grouped by the specified ``partition_by``
+        columns, which is the set of columns defining a unique time series.
+        """
         sdf.createOrReplaceTempView("temp_df")
         col_list = sdf.columns
         col_list.remove(input_column)
