@@ -583,7 +583,7 @@ class TimeseriesTable(BaseTable):
             List[Union[str, dict, FilterBaseModel]]
         ],
         output_configuration_name: str,
-        output_variable_name: str = "streamflow_hourly_climatology",
+        output_variable_name: str = "streamflow_daily_climatology",
         temporal_resolution: ClimatologyResolutionEnum = "day_of_year",
         summary_statistic: ClimatologyStatisticEnum = "mean"
     ):
@@ -595,6 +595,11 @@ class TimeseriesTable(BaseTable):
             List[Union[str, dict, FilterBaseModel]]]
             Filter to apply to the input timeseries to use in the
             climatology calculation.
+        output_configuration_name : str
+            Configuration name for the output climatology timeseries.
+        output_variable_name : str, optional
+            Variable name for the output climatology timeseries,
+            by default "streamflow_daily_climatology".
         temporal_resolution : ClimatologyResolutionEnum, optional
             Temporal resolution for the climatology calculation,
             by default "day_of_year".
@@ -615,4 +620,3 @@ class TimeseriesTable(BaseTable):
             },
             write_mode="overwrite"
         )
-        pass
