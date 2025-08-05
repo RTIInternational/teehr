@@ -10,6 +10,7 @@ Setting up the development environment is a critical step in contributing to TEE
 This guide will walk you through the steps to set up a development environment for TEEHR.
 
 Install the prerequisites:
+
 - Python 3.10 or later
 - Poetry v2 or later
 - Java 11 or later for Spark (we use 17)
@@ -40,6 +41,9 @@ Install the prerequisites:
 ```bash
 eval $(poetry env activate)
 ```
+
+.. note::
+   When upgrading to TEEHR v0.5, it is recommended to recreate your virtual environment to ensure all dependencies are correctly installed.
 
 Contributing Guidelines
 -----------------------
@@ -93,14 +97,11 @@ This document describes the release process which has some manual steps to compl
 
 Create branch with the following updated to the new version (find and replace version number):
 
-- ``version.txt``
 - ``pyproject.toml``
 - ``src/teehr/__init__.py``
 - ``docs/sphinx/getting_started/index.rst``
 
 Update the changelog at ``docs/sphinx/changelog/index.rst`` to reflect the changes included in the release.
-
-If also pushing changes to TEEHR-HUB, also update tags in ``teehr-hub/helm-chart/config.yaml``.
 
 Make a PR to main.  After PR has been reviewed and merged, checkout ``main`` pull changes and tag the commit.
 

@@ -13,6 +13,8 @@ TEEHR requires the following dependencies:
 
 * Java 17 or later for Spark
 
+* Poetry v2 or later
+
 
 The easiest way to install TEEHR is from PyPI using `pip`.
 If using `pip` to install TEEHR, we recommend installing TEEHR in a virtual environment.
@@ -140,12 +142,21 @@ Currently, TEEHR dependencies require users install on Linux or macOS. To use TE
 
 Set-up Guide for Docker
 -----------------------
-If you do not want to install TEEHR in your own virtual environment, you can use Docker:
+If you do not want to install TEEHR in your own virtual environment, you can use Docker. A Dockerfile
+is provided in a separate repository at: https://github.com/RTIInternational/teehr-hub
+
+Clone the repository, build and run the Docker image. The following commands will build and run the Docker image,
+mount your home directory to the Docker container, and start a Jupyter Lab server.
+
+When building the Docker image, specify the version of TEEHR you want to use by passing it in as a build
+argument. Pass "dev" to use the latest development version.
 
 .. code-block:: bash
 
-   docker build -t teehr:v0.4.13 .
-   docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.4.13 jupyter lab --ip 0.0.0.0 $HOME
+   git clone https://github.com/RTIInternational/teehr-hub.git
+   cd teehr-hub
+   docker build --build-arg IMAGE_TAG="dev" -t teehr:dev .
+   docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:dev jupyter lab --ip 0.0.0.0 $HOME
 
 Project Objectives
 ------------------
