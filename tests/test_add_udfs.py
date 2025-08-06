@@ -80,9 +80,9 @@ def test_add_row_udfs(tmpdir):
         assert row["season"] in ["winter", "spring", "summer", "fall"]
 
     assert "forecast_lead_time" in cols
-    assert sdf.schema["forecast_lead_time"].dataType == T.DayTimeIntervalType()
+    assert sdf.schema["forecast_lead_time"].dataType == T.LongType()
     row = check_sdf.collect()[1]
-    expected_val = row["value_time"] - row["reference_time"]
+    expected_val = (row["value_time"] - row["reference_time"]).total_seconds()
     test_val = row["forecast_lead_time"]
     assert expected_val == test_val
 
