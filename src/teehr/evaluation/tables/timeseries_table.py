@@ -444,7 +444,13 @@ class TimeseriesTable(BaseTable):
     def _calculate_rolling_average(
         self,
         sdf: ps.DataFrame,
-        partition_by: List[str],
+        partition_by: List[str] = [
+            'reference_time',
+            'location_id',
+            'configuration_name',
+            'variable_name',
+            'unit_name'
+        ],
         statistic: str = "mean",
         time_window: str = "6 hours",
         input_column: str = "value",
