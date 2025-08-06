@@ -229,8 +229,6 @@ def _fetch_usgs_streamflow(
         multi_index=False
     )
 
-    usgs_df.reset_index(inplace=True)
-
     variable_name = variable_mapper[VARIABLE_NAME][service]
     unit_name = variable_mapper[UNIT_NAME]["Imperial"]
 
