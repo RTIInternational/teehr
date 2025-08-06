@@ -61,7 +61,8 @@ def _filter_to_hourly(df: pd.DataFrame) -> pd.DataFrame:
         & (df.index.minute == 0)
         & (df.index.second == 0)
     ]
-    df2.reset_index(level=0, allow_duplicates=True, inplace=True)
+    # Preserve the timezone-aware DatetimeIndex when resetting
+    df2.reset_index(inplace=True)
     return df2
 
 
@@ -88,29 +89,38 @@ def _format_df_column_names(
 ) -> pd.DataFrame:
     """Format dataretrieval dataframe columns to TEEHR data model."""
     logger.debug("Formatting column names.")
-    df.reset_index(inplace=True)
-    df.rename(
-        columns={
-            "site_no": LOCATION_ID,
-            "00060": VALUE,
-            "datetime": VALUE_TIME
-        },
-        inplace=True
+
+    # create series for value_time to preserve timezone information in df.index
+    value_time_series = pd.Series(
+            df.index,
+            name=VALUE_TIME
+        )
+
+    # Create numpy arrays for other columns
+    location_id_array = np.array("usgs-" + df['site_no'].values)
+    value_array = np.array(df["00060"])
+    reference_time_array = np.full(len(df), np.nan, dtype=object)
+    variable_name_array = np.full(len(df), variable_name, dtype=object)
+    unit_name_array = np.full(len(df), unit_name, dtype=object)
+    configuration_name_array = np.full(
+        len(df), USGS_CONFIGURATION_NAME, dtype=object
     )
-    df[LOCATION_ID] = "usgs-" + df[LOCATION_ID].astype(str)
-    df[CONFIGURATION_NAME] = USGS_CONFIGURATION_NAME
-    df[REFERENCE_TIME] = np.nan
-    df[UNIT_NAME] = unit_name
-    df[VARIABLE_NAME] = variable_name
-    return df[[
-        LOCATION_ID,
-        REFERENCE_TIME,
-        VALUE_TIME,
-        VALUE,
-        VARIABLE_NAME,
-        UNIT_NAME,
-        CONFIGURATION_NAME
-    ]]
+
+    # Create dictionary with column names as keys
+    data_dict = {
+        LOCATION_ID: location_id_array,
+        REFERENCE_TIME: reference_time_array,
+        VALUE_TIME: value_time_series,
+        VALUE: value_array,
+        VARIABLE_NAME: variable_name_array,
+        UNIT_NAME: unit_name_array,
+        CONFIGURATION_NAME: configuration_name_array
+    }
+
+    # Construct DataFrame from dictionary
+    result_df = pd.DataFrame(data_dict)
+
+    return result_df
 
 
 def _fetch_usgs_streamflow(
@@ -136,7 +146,8 @@ def _fetch_usgs_streamflow(
         sites=sites,
         service=service,
         start=start_dt_str,
-        end=end_dt_str
+        end=end_dt_str,
+        multi_index=False
     )
 
     variable_name = variable_mapper[VARIABLE_NAME][service]

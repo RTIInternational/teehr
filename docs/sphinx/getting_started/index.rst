@@ -4,6 +4,19 @@
 Getting started
 ===============
 
+.. contents::
+   :local:
+   :depth: 1
+
+The TEEHR Data Model and Framework
+----------------------------------
+The :doc:`TEEHR Framework <teehr_framework>` provides an overview of the TEEHR data model,
+the Evaluation directory structure, and the Evaluation tables.
+
+An Intro to TEEHR and PySpark
+-----------------------------
+Check out the :doc:`Spark Guide <spark_guide>` to learn more about PySpark's integration with
+TEEHR, how to customize its configuration, and how to address some common warnings you may encounter.
 
 Installation Guide for macOS & Linux
 ------------------------------------
@@ -229,3 +242,4 @@ For a full list of metrics currently available in TEEHR, see the :doc:`/user_gui
     :hidden:
 
     TEEHR Framework <teehr_framework>
+    Spark Guide <spark_guide>

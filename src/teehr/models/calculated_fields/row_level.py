@@ -214,7 +214,7 @@ class Seasons(CalculatedFieldABC, CalculatedFieldBaseModel):
 
 
 class ForecastLeadTime(CalculatedFieldABC, CalculatedFieldBaseModel):
-    """Adds the forecast lead time from a timestamp column.
+    """Adds the forecast lead time in seconds from a timestamp column.
 
     Properties
     ----------
@@ -242,12 +242,12 @@ class ForecastLeadTime(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        @pandas_udf(returnType=T.DayTimeIntervalType())
+        @pandas_udf(returnType=T.LongType())
         def func(value_time: pd.Series,
                  reference_time: pd.Series
                  ) -> pd.Series:
             difference = value_time - reference_time
-            return difference
+            return difference.dt.total_seconds()
 
         sdf = sdf.withColumn(
             self.output_field_name,
