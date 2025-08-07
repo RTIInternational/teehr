@@ -1,5 +1,5 @@
 """Test evaluation class."""
-from teehr import Configuration
+from teehr import Configuration, Variable
 from teehr import DeterministicMetrics, ProbabilisticMetrics, SignatureMetrics
 from teehr import Operators as ops
 import tempfile
@@ -466,27 +466,85 @@ def test_ensemble_metrics(tmpdir):
     ev.primary_timeseries.load_parquet(
         in_path=primary_filepath
     )
-    ev.joined_timeseries.create(execute_scripts=False)
 
+    # Calculate climatology from USGS observations.
+    ev.configurations.add(
+        [
+            Configuration(
+                name="usgs_climatology",
+                type="primary",
+                description="Climatology of USGS streamflow"
+            )
+        ]
+    )
+    ev.variables.add(
+        [
+            Variable(
+                name="streamflow_hourly_climatology",
+                long_name="Climatology of USGS streamflow for hour of year"
+            )
+        ]
+    )
+    ev.primary_timeseries.calculate_climatology(
+        input_timeseries_filter=[
+            "configuration_name = 'usgs_observations'",
+            "variable_name = 'streamflow_hourly_inst'"
+        ],
+        output_configuration_name="usgs_climatology",
+        output_variable_name="streamflow_hourly_climatology",
+        temporal_resolution="hour_of_year",
+        summary_statistic="mean",
+    )
+
+
+    # Add reference forecast based on climatology.
+    ev.configurations.add(
+        [
+            Configuration(
+                name="reference_climatology_forecast",
+                type="secondary",
+                description="Reference forecast based on USGS climatology summarized by hour of year"
+            )
+        ]
+    )
+    ev.secondary_timeseries.create_reference_forecast(
+        reference_timeseries_filter=[
+            "configuration_name = 'usgs_climatology'",
+            "variable_name = 'streamflow_hourly_climatology'"
+        ],
+        template_forecast_filter=[
+            "configuration_name = 'MEFP'",
+            "variable_name = 'streamflow_hourly_inst'"
+        ],
+        output_configuration_name="reference_climatology_forecast",
+        method="climatology",
+        temporal_resolution="hour_of_year",
+        aggregate_reference_timeseries=True
+    )
+    ev.joined_timeseries.create(execute_scripts=False)
     # Now, metrics.
     crps = ProbabilisticMetrics.CRPS()
     crps.summary_func = np.mean
     crps.estimator = "pwm"
     crps.backend = "numba"
+    crps.reference_configuration = "reference_climatology_forecast"
 
     include_metrics = [crps]
-
     metrics_df = ev.metrics.query(
         include_metrics=include_metrics,
         group_by=[
             "primary_location_id",
-            "reference_time",
             "configuration_name"
         ],
         order_by=["primary_location_id"],
     ).to_pandas()
 
-    assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 35.627174)
+    assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 35.555721)
+    assert np.isclose(metrics_df.mean_crps_ensemble.values[1], 1.073679)
+    assert np.isclose(
+        metrics_df.mean_crps_ensemble_skill_score.values[0], -32.115792
+    )
+    assert np.isnan(metrics_df.mean_crps_ensemble_skill_score.values[1])
 
 
 def test_metrics_transforms(tmpdir):
