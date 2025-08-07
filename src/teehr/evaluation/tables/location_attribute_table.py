@@ -55,7 +55,7 @@ class LocationAttributeTable(BaseTable):
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True,
-        add_default_attrs: bool = True,
+        update_attrs_table: bool = True,
         **kwargs
     ):
         """Load location attributes helper."""
@@ -86,7 +86,7 @@ class LocationAttributeTable(BaseTable):
                 prefix=location_id_prefix,
             )
 
-        if add_default_attrs:
+        if update_attrs_table:
             attr_names = [
                 row.attribute_name for row in
                 df.select("attribute_name").distinct().collect()
@@ -150,7 +150,7 @@ class LocationAttributeTable(BaseTable):
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True,
-        add_default_attrs: bool = True,
+        update_attrs_table: bool = True,
         **kwargs
     ):
         """Import location_attributes from parquet file format.
@@ -180,7 +180,7 @@ class LocationAttributeTable(BaseTable):
             overwritten.
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the DataFrame.
-        add_default_attrs : bool, optional (default: True)
+        update_attrs_table : bool, optional (default: True)
             Whether to add default attributes for the location attributes.
             If True, it will add default attributes for each unique attribute
             name found in the data with category="continuous" and the
@@ -204,7 +204,7 @@ class LocationAttributeTable(BaseTable):
             location_id_prefix=location_id_prefix,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
-            add_default_attrs=add_default_attrs,
+            update_attrs_table=update_attrs_table,
             **kwargs
         )
         self._load_table()
@@ -217,7 +217,7 @@ class LocationAttributeTable(BaseTable):
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True,
-        add_default_attrs: bool = True,
+        update_attrs_table: bool = True,
         **kwargs
     ):
         """Import location_attributes from CSV file format.
@@ -246,7 +246,7 @@ class LocationAttributeTable(BaseTable):
             If "overwrite", existing partitions receiving new data are overwritten
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the DataFrame.
-        add_default_attrs : bool, optional (default: True)
+        update_attrs_table : bool, optional (default: True)
             Whether to add default attributes for the location attributes.
             If True, it will add default attributes for each unique attribute
             name found in the data with category="continuous" and the
@@ -270,7 +270,7 @@ class LocationAttributeTable(BaseTable):
             location_id_prefix=location_id_prefix,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
-            add_default_attrs=add_default_attrs,
+            update_attrs_table=update_attrs_table,
             **kwargs
         )
         self._load_table()

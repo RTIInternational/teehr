@@ -120,7 +120,7 @@ def test_create_joined_timeseries(tmpdir):
         in_path=GEO_FILEPATH,
         field_mapping={"attribute_value": "value"},
         pattern="test_attr_*.parquet",
-        add_default_attrs=True
+        update_attrs_table=True
     )
 
     # Create the joined timeseries with only specified attributes
