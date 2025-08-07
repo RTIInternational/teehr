@@ -55,6 +55,14 @@ To re-create your poetry virtual environment, try:
     poetry env remove --all # Removes all virtualenvs associated with the project
     poetry install
 
+Additionally, when upgrading to TEEHR v0.5, you may need to remove any older Java dependencies
+that may conflict with PySpark v4.0. To do this, run:
+
+.. code-block:: bash
+
+   python -m teehr.utils.remove_spark_jars
+
+
 Contributing Guidelines
 -----------------------
 
