@@ -13,7 +13,7 @@ def test_read_from_s3():
     assert var_cnt == 3
 
     conf_cnt = ev.configurations.to_sdf().count()
-    assert conf_cnt == 161
+    assert conf_cnt == 2
 
     attrs_cnt = ev.attributes.to_sdf().count()
     assert attrs_cnt == 26

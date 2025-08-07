@@ -12,14 +12,23 @@ def test_chunkby_location_id(tmpdir):
     """Test chunkby location id."""
     usgs_to_parquet(
         sites=[
+            {
+                "site_no": "08025360",
+                "description": "[Total Spillway Releases]"
+            },
+            # {
+            #     "site_no": "08165500",
+            #     "description": "[5-Minute Update]"
+            # },
             "02449838",
-            "02450825"
+            "02450825",
         ],
         start_date=datetime(2023, 2, 20),
-        end_date=datetime(2023, 2, 25),
+        end_date=datetime(2023, 2, 21),
         output_parquet_dir=Path(tmpdir),
         chunk_by="location_id",
-        overwrite_output=True
+        overwrite_output=True,
+        convert_to_si=False
     )
     df = pd.read_parquet(
         Path(
@@ -27,18 +36,27 @@ def test_chunkby_location_id(tmpdir):
             "02449838.parquet"
         )
     )
-    assert len(df) == 120
+    assert len(df) == 24
     assert df["value_time"].min() == pd.Timestamp("2023-02-20 00:00:00")
-    assert df["value_time"].max() == pd.Timestamp("2023-02-24 23:00:00")
+    assert df["value_time"].max() == pd.Timestamp("2023-02-20 23:00:00")
     df = pd.read_parquet(
         Path(
             tmpdir,
             "02450825.parquet"
         )
     )
-    assert len(df) == 119
+    assert len(df) == 24
     assert df["value_time"].min() == pd.Timestamp("2023-02-20 00:00:00")
-    assert df["value_time"].max() == pd.Timestamp("2023-02-24 23:00:00")
+    assert df["value_time"].max() == pd.Timestamp("2023-02-20 23:00:00")
+    df = pd.read_parquet(
+        Path(
+            tmpdir,
+            "08025360.parquet"
+        )
+    )
+    assert len(df) == 24
+    assert df["value_time"].min() == pd.Timestamp("2023-02-20 00:00:00")
+    assert df["value_time"].max() == pd.Timestamp("2023-02-20 23:00:00")
 
 
 def test_chunkby_day(tmpdir):

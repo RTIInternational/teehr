@@ -28,6 +28,10 @@ from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.metrics import Metrics
 import pandas as pd
 from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor # noqa
+import re
+import teehr
+import s3fs
+from fsspec.implementations.local import LocalFileSystem
 
 
 logger = logging.getLogger(__name__)
@@ -81,6 +85,10 @@ class Evaluation:
             else:
                 logger.error(f"Directory {self.dir_path} does not exist.")
                 raise NotADirectoryError
+
+        # Check version of Evaluation
+        if create_dir is False:
+            self.check_evaluation_version()
 
         # Create a local Spark Session if one is not provided.
         if not self.spark:
@@ -354,3 +362,56 @@ class Evaluation:
             self.joined_timeseries.to_sdf().createOrReplaceTempView("joined_timeseries")
 
         return self.spark.sql(query)
+
+    def check_evaluation_version(self):
+        """Check the version of the TEEHR Evaluation."""
+        if self.is_s3:
+            fs = s3fs.S3FileSystem(anon=True)
+            version_file = self.dir_path.path + "/" + "version"
+        else:
+            fs = LocalFileSystem()
+            version_file = Path(self.dir_path, "version")
+        if not fs.exists(version_file):
+            logger.error(f"Version file not found in {self.dir_path}.")
+            if self.is_s3:
+                err_msg = (
+                    f"Please create a version file in {self.dir_path}."
+                )
+                logger.error(err_msg)
+                raise Exception(err_msg)
+            else:
+                # TODO: Change this to raise an error in v0.6.
+                version = teehr.__version__
+                with fs.open(version_file, "w") as f:
+                    f.write(version)
+                logger.info(
+                    f"Created version file in {self.dir_path}."
+                    " In the future this will raise an error."
+                )
+        else:
+            with fs.open(version_file) as f:
+                version_txt = str(f.read().strip())
+            match = re.findall(r'(\d+\.\d+\.\d+)', version_txt)  # Assumes semantic versioning
+            if len(match) != 1:
+                err_msg = f"Invalid version format in {self.dir_path}: {version_txt}"
+                logger.error(err_msg)
+                raise ValueError(err_msg)
+            else:
+                version = match[0]
+        # TODO: Uncomment this in v0.6
+        # if version < "0.6.0":
+        #     err_msg = (
+        #         f"Evaluation version {version} in {self.dir_path} is less than 0.6."
+        #         " Please run the migration to upgrade to the latest version."
+        #     )
+        #     logger.error(err_msg)
+        #     raise ValueError(err_msg)
+        # else:
+        #     # Update the version to the latest
+        #     pass
+        logger.info(
+            f"Found evaluation version {version} in {self.dir_path}."
+            " Future versions v0.6 and greater will require a conversion"
+            " to a new format."
+        )
+        return version

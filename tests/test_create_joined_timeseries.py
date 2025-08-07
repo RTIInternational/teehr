@@ -94,32 +94,33 @@ def test_create_joined_timeseries(tmpdir):
         }
     )
 
-    # Add some attributes
-    ev.attributes.add(
-        [
-            Attribute(
-                name="drainage_area",
-                type="continuous",
-                description="Drainage area in square kilometers"
-            ),
-            Attribute(
-                name="ecoregion",
-                type="categorical",
-                description="Ecoregion"
-            ),
-            Attribute(
-                name="year_2_discharge",
-                type="continuous",
-                description="2-yr discharge in cubic meters per second"
-            ),
-        ]
-    )
+    # # Add some attributes -- now can be added by default based on name.
+    # ev.attributes.add(
+    #     [
+    #         Attribute(
+    #             name="drainage_area",
+    #             type="continuous",
+    #             description="Drainage area in square kilometers"
+    #         ),
+    #         Attribute(
+    #             name="ecoregion",
+    #             type="categorical",
+    #             description="Ecoregion"
+    #         ),
+    #         Attribute(
+    #             name="year_2_discharge",
+    #             type="continuous",
+    #             description="2-yr discharge in cubic meters per second"
+    #         ),
+    #     ]
+    # )
 
     # Load the location attribute data
     ev.location_attributes.load_parquet(
         in_path=GEO_FILEPATH,
         field_mapping={"attribute_value": "value"},
         pattern="test_attr_*.parquet",
+        update_attrs_table=True
     )
 
     # Create the joined timeseries with only specified attributes

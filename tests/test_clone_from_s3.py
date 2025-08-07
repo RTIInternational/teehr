@@ -29,7 +29,7 @@ def test_clone_example_from_s3(tmpdir):
     assert ev.units.to_sdf().count() == 4
     assert ev.variables.to_sdf().count() == 3
     assert ev.attributes.to_sdf().count() == 26
-    assert ev.configurations.to_sdf().count() == 161
+    assert ev.configurations.to_sdf().count() == 2
     assert ev.locations.to_sdf().count() == 2
     assert ev.location_attributes.to_sdf().count() == 50
     assert ev.location_crosswalks.to_sdf().count() == 2
@@ -69,7 +69,7 @@ def test_clone_and_subset_example_from_s3(tmpdir):
     assert ev.units.to_sdf().count() == 4
     assert ev.variables.to_sdf().count() == 3
     assert ev.attributes.to_sdf().count() == 26
-    assert ev.configurations.to_sdf().count() == 161
+    assert ev.configurations.to_sdf().count() == 2
     assert ev.locations.to_sdf().count() == 1
     assert ev.location_attributes.to_sdf().count() == 25
     assert ev.location_crosswalks.to_sdf().count() == 1

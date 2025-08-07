@@ -179,6 +179,19 @@ class Fetch:
         drop_duplicates : bool
             Whether to drop duplicates in the data. Default is True.
 
+        .. note::
+
+           In some edge cases, a gage site may contain one or more
+           sub-locations that also measure discharge. To differentiate
+           these sub-locations, the ``usgs_to_parquet`` method should be
+           called directly, and a dictionary can be passed in for a site.
+           Each dictionary should contain the site number and a description
+           of the sub-location. The description is used to filter the
+           data to the specific sub-location. For example:
+           [{"site_no": "02449838", "description": "Main Gage"}]
+           Note that the dictionary must contain the keywords
+           'site_no' and 'description'.
+
 
         .. note::
 

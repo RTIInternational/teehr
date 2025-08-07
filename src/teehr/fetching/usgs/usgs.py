@@ -61,7 +61,8 @@ def _filter_to_hourly(df: pd.DataFrame) -> pd.DataFrame:
         & (df.index.minute == 0)
         & (df.index.second == 0)
     ]
-    df2.reset_index(level=0, allow_duplicates=True, inplace=True)
+    # Preserve the timezone-aware DatetimeIndex when resetting
+    df2.reset_index(inplace=True)
     return df2
 
 
@@ -84,37 +85,122 @@ def _convert_to_si_units(df: pd.DataFrame, unit_name: str) -> pd.DataFrame:
 def _format_df_column_names(
     df: pd.DataFrame,
     variable_name: str,
-    unit_name: str
+    unit_name: str,
+    service: str,
 ) -> pd.DataFrame:
     """Format dataretrieval dataframe columns to TEEHR data model."""
     logger.debug("Formatting column names.")
-    df.reset_index(inplace=True)
-    df.rename(
-        columns={
-            "site_no": LOCATION_ID,
-            "00060": VALUE,
-            "datetime": VALUE_TIME
-        },
-        inplace=True
+    if service == "iv":
+        col_name = "00060"
+    elif service == "dv":
+        col_name = "00060_Mean"
+    if col_name not in df.columns:
+        logger.error(
+            "The requested USGS gage(s) does not contain parameter code"
+            f"'{col_name}'. Please check the site(s) and requested service."
+        )
+        return None
+
+    # create series for value_time to preserve timezone information in df.index
+    value_time_series = pd.Series(
+            df.index,
+            name=VALUE_TIME
+        )
+
+    # Create numpy arrays for other columns
+    location_id_array = np.array("usgs-" + df['site_no'].values)
+    value_array = np.array(df[col_name])
+    reference_time_array = np.full(len(df), np.nan, dtype=object)
+    variable_name_array = np.full(len(df), variable_name, dtype=object)
+    unit_name_array = np.full(len(df), unit_name, dtype=object)
+    configuration_name_array = np.full(
+        len(df), USGS_CONFIGURATION_NAME, dtype=object
     )
-    df[LOCATION_ID] = "usgs-" + df[LOCATION_ID].astype(str)
-    df[CONFIGURATION_NAME] = USGS_CONFIGURATION_NAME
-    df[REFERENCE_TIME] = np.nan
-    df[UNIT_NAME] = unit_name
-    df[VARIABLE_NAME] = variable_name
-    return df[[
-        LOCATION_ID,
-        REFERENCE_TIME,
-        VALUE_TIME,
-        VALUE,
-        VARIABLE_NAME,
-        UNIT_NAME,
-        CONFIGURATION_NAME
-    ]]
+
+    # Create dictionary with column names as keys
+    data_dict = {
+        LOCATION_ID: location_id_array,
+        REFERENCE_TIME: reference_time_array,
+        VALUE_TIME: value_time_series,
+        VALUE: value_array,
+        VARIABLE_NAME: variable_name_array,
+        UNIT_NAME: unit_name_array,
+        CONFIGURATION_NAME: configuration_name_array
+    }
+
+    # Construct DataFrame from dictionary
+    result_df = pd.DataFrame(data_dict)
+
+    return result_df
+
+
+def _parse_site_id_list(
+    sites: Union[List[str], List[Dict[str, str]]]
+) -> List[str]:
+    """Parse the site ID list into a flat list of site IDs."""
+    parsed_sites = []
+    for site in sites:
+        if isinstance(site, dict):
+            # Confirm that the site dictionary contains the required keys.
+            if "site_no" not in site or "description" not in site:
+                err_msg = (
+                    "Each site dictionary must contain the keys"
+                    " 'site_no' and 'description'."
+                )
+                logger.error(err_msg)
+                raise ValueError(err_msg)
+            # Confirm that the 'description' field is valid.
+            site_no = site["site_no"]
+            response = nwis.query_waterservices(
+                "site",
+                sites=[site_no],
+                hasDataTypeCd="iv,dv",
+                outputDataTypeCd="iv,dv"
+            )
+            df = nwis._read_rdb(response.text)
+            is_valid = False
+            for row_values in df.values:
+                if site["description"] in row_values:
+                    is_valid = True
+                    break
+            if not is_valid:
+                err_msg = (
+                    f"The site '{site_no}' does not have a time series description matching"
+                    f" '{site['description']}'. Please check the site and description."
+                )
+                logger.error(err_msg)
+                raise ValueError(err_msg)
+            parsed_sites.append(site["site_no"])
+        else:
+            parsed_sites.append(site)
+    return parsed_sites
+
+
+def _assign_discharge_by_description(
+    nwis_df: pd.DataFrame,
+    sites: Union[
+        List[str],
+        List[Dict[str, str]],
+        List[Union[str, Dict[str, str]]]
+    ],
+) -> pd.DataFrame:
+    """Filter the DataFrame by the timeseries description."""
+    logger.debug("Filtering by timeseries description.")
+    for site in sites:
+        if isinstance(site, dict):
+            site_no = site["site_no"]
+            mask = nwis_df["site_no"] == site_no
+            description = site["description"].strip("[]()").lower()
+            nwis_df.loc[mask, "00060"] = nwis_df[f"00060_{description}"]
+    return nwis_df
 
 
 def _fetch_usgs_streamflow(
-    sites: List[str],
+    sites: Union[
+        List[str],
+        List[Dict[str, str]],
+        List[Union[str, Dict[str, str]]]
+    ],
     start_date: datetime,
     end_date: datetime,
     service: str,
@@ -131,18 +217,37 @@ def _fetch_usgs_streamflow(
         - timedelta(minutes=1)
     ).strftime(DATETIME_STR_FMT)
 
+    # Parse out list of sites.
+    parsed_sites = _parse_site_id_list(sites)
+
     # Retrieve data --> dataretrieval
     usgs_df = nwis.get_record(
-        sites=sites,
+        sites=parsed_sites,
         service=service,
         start=start_dt_str,
-        end=end_dt_str
+        end=end_dt_str,
+        multi_index=False
     )
 
     variable_name = variable_mapper[VARIABLE_NAME][service]
     unit_name = variable_mapper[UNIT_NAME]["Imperial"]
 
-    usgs_df = _format_df_column_names(usgs_df, variable_name, unit_name)
+    # If any dictionaries were passed in, assign the values from
+    # the description field to the 00060 column.
+    usgs_df = _assign_discharge_by_description(
+        nwis_df=usgs_df,
+        sites=sites
+    )
+
+    usgs_df = _format_df_column_names(
+        df=usgs_df,
+        variable_name=variable_name,
+        unit_name=unit_name,
+        service=service
+    )
+
+    if usgs_df is None or usgs_df.empty:
+        return None
 
     if filter_to_hourly is True:
         usgs_df = _filter_to_hourly(usgs_df)
@@ -168,7 +273,11 @@ def _format_output_filename(chunk_by: str, start_dt, end_dt) -> str:
 
 @validate_call(config=ConfigDict(arbitrary_types_allowed=True))
 def usgs_to_parquet(
-    sites: List[str],
+    sites: Union[
+        List[str],
+        List[Dict[str, str]],
+        List[Union[str, Dict[str, str]]]
+    ],
     start_date: Union[str, datetime, pd.Timestamp],
     end_date: Union[str, datetime, pd.Timestamp],
     output_parquet_dir: Union[str, Path],
@@ -190,6 +299,17 @@ def usgs_to_parquet(
     sites : List[str]
         List of USGS gages sites to fetch.
         Must be string to preserve the leading 0.
+
+        In some edge cases, a gage site may contain one or more
+        sub-locations that also measure discharge. To differentiate
+        these sub-locations, a dictionary can be passed in for a site.
+        Each dictionary should contain the site number and a description
+        of the sub-location. The description is used to filter the
+        data to the specific sub-location. For example:
+        [{"site_no": "02449838", "description": "Main Gage"}]
+
+        Note that the dictionary must contain the keywords
+        'site_no' and 'description'.
     start_date : datetime
         Start time of data to fetch.
     end_date : datetime
@@ -219,6 +339,14 @@ def usgs_to_parquet(
         "dv": "streamflow_daily_mean"}, "unit": {"SI": "m^3/s",
         "Imperial": "ft^3/s"}}
 
+    .. note::
+
+       Only codes '00060' (Discharge, cubic feet per second, service='iv')
+       and '00060_Mean' (Discharge, Mean cubic feet per second, service='dv')
+       are supported. If data is returned from NWIS with a different field name,
+       such as '00060_total spillway releases' in the case of a reservoir,
+       the function will return None and log an error message.
+
     Examples
     --------
     Here we fetch five days worth of USGS hourly streamflow data, to two gages,
@@ -247,7 +375,7 @@ def usgs_to_parquet(
     >>>     chunk_by=CHUNK_BY,
     >>>     overwrite_output=OVERWRITE_OUTPUT
     >>> )
-    """
+    """  # noqa
     logger.info("Fetching USGS streamflow data.")
     start_date = pd.Timestamp(start_date)
     end_date = pd.Timestamp(end_date)
@@ -270,10 +398,18 @@ def usgs_to_parquet(
                 convert_to_si=convert_to_si,
             )
 
-            usgs_df = usgs_df[(usgs_df[VALUE_TIME] >= start_date.tz_localize("UTC")) &
-                              (usgs_df[VALUE_TIME] < end_date.tz_localize("UTC"))]
-
-            if len(usgs_df) > 0:
+            if usgs_df is None or usgs_df.empty:
+                logger.warning(
+                    f"No USGS streamflow data returned for the specified site: {site}"
+                    f" and date range: {start_date} to {end_date}."
+                    " This site will be skipped."
+                )
+                continue
+            else:
+                usgs_df = usgs_df[(usgs_df[VALUE_TIME] >= start_date.tz_localize("UTC")) &
+                                  (usgs_df[VALUE_TIME] < end_date.tz_localize("UTC"))]
+                if isinstance(site, dict):
+                    site = site["site_no"]
                 output_filepath = Path(
                     output_parquet_dir,
                     f"{site}.parquet"
@@ -315,10 +451,15 @@ def usgs_to_parquet(
             convert_to_si=convert_to_si
         )
 
-        usgs_df = usgs_df[(usgs_df[VALUE_TIME] >= dts["start_dt"].tz_localize("UTC")) &
-                          (usgs_df[VALUE_TIME] <= dts["end_dt"].tz_localize("UTC"))]
-
-        if len(usgs_df) > 0:
+        if usgs_df is None or usgs_df.empty:
+            logger.warning(
+                "No data returned from USGS for the specified sites and date range: "
+                f"{dts['start_dt']} to {dts['end_dt']}, skipping period."
+            )
+            continue
+        else:
+            usgs_df = usgs_df[(usgs_df[VALUE_TIME] >= dts["start_dt"].tz_localize("UTC")) &
+                            (usgs_df[VALUE_TIME] <= dts["end_dt"].tz_localize("UTC"))]
 
             output_filename = _format_output_filename(
                 chunk_by, dts["start_dt"], dts["end_dt"]
@@ -332,41 +473,3 @@ def usgs_to_parquet(
                 timeseries_type=timeseries_type
             )
 
-
-# if __name__ == "__main__":
-#     # Examples
-#     usgs_to_parquet(
-#         sites=[
-#             "02449838",
-#             "02450825"
-#         ],
-#         start_date=datetime(2023, 2, 20),
-#         end_date=datetime(2023, 2, 25),
-#         output_parquet_dir=Path(Path().home(), "temp", "usgs"),
-#         chunk_by="location_id",
-#         overwrite_output=True
-#     )
-
-#     usgs_to_parquet(
-#         sites=[
-#             "02449838",
-#             "02450825"
-#         ],
-#         start_date=datetime(2023, 2, 20),
-#         end_date=datetime(2023, 2, 25),
-#         output_parquet_dir=Path(Path().home(), "temp", "usgs"),
-#         chunk_by="day",
-#         overwrite_output=True
-#     )
-
-#     usgs_to_parquet(
-#         sites=[
-#             "02449838",
-#             "02450825"
-#         ],
-#         start_date=datetime(2023, 2, 20),
-#         end_date=datetime(2023, 2, 25),
-#         output_parquet_dir=Path(Path().home(), "temp", "usgs"),
-#         overwrite_output=True
-#     )
-#     pass
