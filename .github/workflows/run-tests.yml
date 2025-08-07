@@ -1,11 +1,11 @@
 name: Python package
 
-on:
-  pull_request:
-    types: [opened, reopened]
 # on:
-#   push:
-#     branches: [475-update-python-dependencies]
+#   pull_request:
+#     types: [opened, reopened]
+on:
+  push:
+    branches: [475-update-python-dependencies]
 
 jobs:
   build:
