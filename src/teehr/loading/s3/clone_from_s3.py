@@ -209,6 +209,7 @@ def clone_from_s3(
     source = f"{url}/version"
     dest = f"{ev.dir_path}/version"
     logger.debug(f"Copying from {source}/ to {dest}")
-    with fsspec.open(source, 'r', anon=True) as file:
-        with open(dest, 'w') as f:
-            f.write(file.read())
+    if fsspec.filesystem("s3").exists(source):
+        with fsspec.open(source, 'r', anon=True) as file:
+            with open(dest, 'w') as f:
+                f.write(file.read())

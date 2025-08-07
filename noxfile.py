@@ -5,10 +5,10 @@ import nox_poetry
 @nox_poetry.session()  # local test, ex: python=["3.11", "3.12"]
 def tests(session):
     """Run the test suite using pytest."""
-    session.install(".")
+    session.install("pytest", ".")  # for coverage report include: "pytest-cov"
     session.run(
         "pytest",
-        "--cov=teehr",
-        "--ctrf=report.json",
-        "--cov-report=term"
+        # "--cov=teehr",
+        # "--ctrf=report.json",
+        # "--cov-report=term",
     )
