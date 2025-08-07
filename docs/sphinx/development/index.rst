@@ -38,12 +38,22 @@ Install the prerequisites:
 
 
 4. Activate the virtual environment:
-```bash
-eval $(poetry env activate)
-```
+
+.. code-block:: bash
+
+   eval $(poetry env activate)
+
 
 .. note::
    When upgrading to TEEHR v0.5, it is recommended to recreate your virtual environment to ensure all dependencies are correctly installed.
+
+To re-create your poetry virtual environment, try:
+
+.. code-block:: bash
+
+    rm -rf .venv  # If virtualenv is in-project
+    poetry env remove --all # Removes all virtualenvs associated with the project
+    poetry install
 
 Contributing Guidelines
 -----------------------
