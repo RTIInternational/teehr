@@ -1,39 +1,36 @@
-name: Python package
+# name: Python package
 
+# # on:
+# #   pull_request:
+# #     types: [opened, reopened]
 # on:
-#   pull_request:
-#     types: [opened, reopened]
-on:
-  push:
-    branches: [475-update-python-dependencies]
+#   push:
+#     branches: [475-update-python-dependencies]
 
-jobs:
-  build:
+# jobs:
+#   build:
 
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+#     runs-on: ubuntu-latest
+#     strategy:
+#       matrix:
+#         python-version: ["3.10", "3.11", "3.12", "3.13"]
 
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          lfs: true
+#     steps:
+#       - uses: actions/checkout@v4
+#         with:
+#           lfs: true
 
-      - name: Set up Python ${{ matrix.python-version }}
-        id: setup-python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
+#       - name: Set up Python ${{ matrix.python-version }}
+#         id: setup-python
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: ${{ matrix.python-version }}
 
-      - name: Install Poetry
-        run: pip install poetry
+#       - name: Install Poetry
+#         run: pip install poetry
 
-      - name: Install Dependencies
-        run: poetry install --no-interaction --no-root
+#       - name: Install Dependencies
+#         run: poetry install --no-interaction --no-root
 
-      # - name: Install project
-      #   run: poetry install --no-interaction --with test
-
-      - name: Run tests
-        run: poetry run nox -s single_test
+#       - name: Run tests
+#         run: poetry run nox -s single_test

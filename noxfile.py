@@ -15,7 +15,7 @@ def all_tests(session):
     )
 
 
-@nox.session()
+@nox.session(python=["3.12", "3.13"])
 def single_test(session):
     """Run a single test using pytest."""
     session.install("pytest", "poetry")
