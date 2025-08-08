@@ -24,7 +24,9 @@ TEEHR requires the following dependencies:
 
 * Python 3.10 or later
 
-* Java 8 or later for Spark (we use 17)
+* Java 17 or later for Spark
+
+* Poetry v2 or later
 
 
 The easiest way to install TEEHR is from PyPI using `pip`.
@@ -42,9 +44,6 @@ The code below creates a new virtual environment and installs TEEHR in it.
    # Install using pip.
    # Starting with version 0.4.1 TEEHR is available in PyPI
    pip install teehr
-
-   # Download the required JAR files for Spark to interact with AWS S3.
-   python -m teehr.utils.install_spark_jars
 
 
 Installation Guide for Windows
@@ -152,17 +151,25 @@ Currently, TEEHR dependencies require users install on Linux or macOS. To use TE
       python3 -m venv .venv
       source .venv/bin/activate
       pip install teehr
-      python -m teehr.utils.install_spark_jars
 
 
 Set-up Guide for Docker
 -----------------------
-If you do not want to install TEEHR in your own virtual environment, you can use Docker:
+If you do not want to install TEEHR in your own virtual environment, you can use Docker. A Dockerfile
+is provided in a separate repository at: https://github.com/RTIInternational/teehr-hub
+
+Clone the repository, build and run the Docker image. The following commands will build and run the Docker image,
+mount your home directory to the Docker container, and start a Jupyter Lab server.
+
+When building the Docker image, specify the version of TEEHR you want to use by passing it in as a build
+argument. Pass "dev" to use the latest development version.
 
 .. code-block:: bash
 
-   docker build -t teehr:v0.4.13 .
-   docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:v0.4.13 jupyter lab --ip 0.0.0.0 $HOME
+   git clone https://github.com/RTIInternational/teehr-hub.git
+   cd teehr-hub
+   docker build --build-arg IMAGE_TAG="dev" -t teehr:dev .
+   docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:dev jupyter lab --ip 0.0.0.0 $HOME
 
 Project Objectives
 ------------------

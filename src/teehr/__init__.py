@@ -1,5 +1,11 @@
 """Initialize the TEEHR package."""
+import warnings
+
 __version__ = "0.5.0dev0"
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", UserWarning)
+    import pandera.pyspark as ps  # noqa: F401
 
 from teehr.evaluation.evaluation import Evaluation  # noqa
 from teehr.models.metrics.deterministic_models import DeterministicMetrics  # noqa

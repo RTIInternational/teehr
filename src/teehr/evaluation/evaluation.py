@@ -1,4 +1,5 @@
 """Evaluation module."""
+import psutil
 from datetime import datetime
 from typing import Union, Literal, List
 from pathlib import Path
@@ -92,6 +93,9 @@ class Evaluation:
         # Create a local Spark Session if one is not provided.
         if not self.spark:
             logger.info("Creating a new Spark session.")
+            memory_info = psutil.virtual_memory()
+            driver_memory = 0.75 * memory_info.available / (1024**3)  # Use 75% of available memory
+            driver_maxresultsize = 0.5 * driver_memory
             conf = (
                 SparkConf()
                 .setAppName("TEEHR")
@@ -102,7 +106,10 @@ class Evaluation:
                 .set("spark.sql.execution.arrow.pyspark.enabled", "true")
                 .set("spark.sql.session.timeZone", "UTC")
                 .set("spark.driver.host", "localhost")
+                .set("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.4.1")
                 .set("spark.sql.parquet.enableVectorizedReader", "false")
+                .set("spark.driver.memory", f"{int(driver_memory)}g")
+                .set("spark.driver.maxResultSize", f"{int(driver_maxresultsize)}g")
             )
             self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
 
