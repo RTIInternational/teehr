@@ -2,7 +2,7 @@ name: Build and Push Development Version for TEEHR Hub
 
 on:
   push:
-    branches: [main]  # 475-update-python-dependencies
+    branches: [475-update-python-dependencies]  # main, 475-update-python-dependencies
 
 jobs:
   call-docker-build:
