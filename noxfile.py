@@ -3,7 +3,7 @@ import nox_poetry
 import nox
 
 
-@nox_poetry.session()  # local test, ex: python=["3.11", "3.12"]
+@nox_poetry.session()  # for local testing, ex: python=["3.12", "3.13"]
 def all_tests(session):
     """Run the test suite using pytest."""
     session.install("pytest", ".")  # for coverage report include: "pytest-cov"
@@ -15,7 +15,7 @@ def all_tests(session):
     )
 
 
-@nox.session(python=["3.12", "3.13"])
+@nox.session()  # python=["3.12", "3.13"]
 def single_test(session):
     """Run a single test using pytest."""
     session.install("pytest", "poetry")
