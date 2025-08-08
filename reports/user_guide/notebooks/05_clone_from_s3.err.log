@@ -1,0 +1,240 @@
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/jupyter_core/utils/__init__.py", line 154, in wrapped
+    asyncio.get_running_loop()
+RuntimeError: no running event loop
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/jupyter_cache/executors/utils.py", line 58, in single_nb_execution
+    executenb(
+  File "/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/nbclient/client.py", line 1319, in execute
+    return NotebookClient(nb=nb, resources=resources, km=km, **kwargs).execute()
+  File "/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/jupyter_core/utils/__init__.py", line 158, in wrapped
+    return loop.run_until_complete(inner)
+  File "/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/asyncio/base_events.py", line 649, in run_until_complete
+    return future.result()
+  File "/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/nbclient/client.py", line 709, in async_execute
+    await self.async_execute_cell(
+  File "/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/nbclient/client.py", line 1062, in async_execute_cell
+    await self._check_raise_for_error(cell, cell_index, exec_reply)
+  File "/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/nbclient/client.py", line 918, in _check_raise_for_error
+    raise CellExecutionError.from_cell_and_msg(cell, exec_reply_content)
+nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
+------------------
+# Clone the e0_2_location_example evaluation from the S3 bucket
+ev.clone_from_s3("e0_2_location_example")
+------------------
+
+----- stderr -----
+25/08/08 15:02:09 WARN MetricsConfig: Cannot locate configuration: tried hadoop-metrics2-s3a-file-system.properties,hadoop-metrics2.properties
+SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+----- stderr -----
+[Stage 0:>                                                          (0 + 1) / 1]
+----- stderr -----
+[Stage 12:>                                                         (0 + 1) / 1]
+----- stderr -----
+[Stage 13:>                                                         (0 + 1) / 1]
+----- stderr -----
+[Stage 22:>                                                         (0 + 1) / 1]
+----- stderr -----
+
+----- stderr -----
+[Stage 25:>                                                         (0 + 1) / 1]
+----- stderr -----
+
+----- stderr -----
+25/08/08 15:02:25 WARN SparkStringUtils: Truncated the string representation of a plan since it was too large. This behavior can be adjusted by setting 'spark.sql.debug.maxToStringFields'.
+----- stderr -----
+[Stage 30:>                                                         (0 + 1) / 1]
+----- stderr -----
+
+------------------
+
+[0;31m---------------------------------------------------------------------------[0m
+[0;31mNoCredentialsError[0m                        Traceback (most recent call last)
+Cell [0;32mIn[4], line 2[0m
+[1;32m      1[0m [38;5;66;03m# Clone the e0_2_location_example evaluation from the S3 bucket[39;00m
+[0;32m----> 2[0m [43mev[49m[38;5;241;43m.[39;49m[43mclone_from_s3[49m[43m([49m[38;5;124;43m"[39;49m[38;5;124;43me0_2_location_example[39;49m[38;5;124;43m"[39;49m[43m)[49m
+
+File [0;32m~/work/teehr/teehr/src/teehr/evaluation/evaluation.py:279[0m, in [0;36mEvaluation.clone_from_s3[0;34m(self, evaluation_name, primary_location_ids, start_date, end_date)[0m
+[1;32m    276[0m     logger[38;5;241m.[39merror([38;5;124m"[39m[38;5;124mCannot clone from S3 to S3.[39m[38;5;124m"[39m)
+[1;32m    277[0m     [38;5;28;01mraise[39;00m [38;5;167;01mException[39;00m([38;5;124m"[39m[38;5;124mCannot clone from S3 to S3.[39m[38;5;124m"[39m)
+[0;32m--> 279[0m [38;5;28;01mreturn[39;00m [43mclone_from_s3[49m[43m([49m
+[1;32m    280[0m [43m    [49m[38;5;28;43mself[39;49m[43m,[49m
+[1;32m    281[0m [43m    [49m[43mevaluation_name[49m[43m,[49m
+[1;32m    282[0m [43m    [49m[43mprimary_location_ids[49m[43m,[49m
+[1;32m    283[0m [43m    [49m[43mstart_date[49m[43m,[49m
+[1;32m    284[0m [43m    [49m[43mend_date[49m
+[1;32m    285[0m [43m[49m[43m)[49m
+
+File [0;32m~/work/teehr/teehr/src/teehr/loading/s3/clone_from_s3.py:212[0m, in [0;36mclone_from_s3[0;34m(ev, evaluation_name, primary_location_ids, start_date, end_date, drop_duplicates)[0m
+[1;32m    210[0m dest [38;5;241m=[39m [38;5;124mf[39m[38;5;124m"[39m[38;5;132;01m{[39;00mev[38;5;241m.[39mdir_path[38;5;132;01m}[39;00m[38;5;124m/version[39m[38;5;124m"[39m
+[1;32m    211[0m logger[38;5;241m.[39mdebug([38;5;124mf[39m[38;5;124m"[39m[38;5;124mCopying from [39m[38;5;132;01m{[39;00msource[38;5;132;01m}[39;00m[38;5;124m/ to [39m[38;5;132;01m{[39;00mdest[38;5;132;01m}[39;00m[38;5;124m"[39m)
+[0;32m--> 212[0m [38;5;28;01mif[39;00m [43mfsspec[49m[38;5;241;43m.[39;49m[43mfilesystem[49m[43m([49m[38;5;124;43m"[39;49m[38;5;124;43ms3[39;49m[38;5;124;43m"[39;49m[43m)[49m[38;5;241;43m.[39;49m[43mexists[49m[43m([49m[43msource[49m[43m)[49m:
+[1;32m    213[0m     [38;5;28;01mwith[39;00m fsspec[38;5;241m.[39mopen(source, [38;5;124m'[39m[38;5;124mr[39m[38;5;124m'[39m, anon[38;5;241m=[39m[38;5;28;01mTrue[39;00m) [38;5;28;01mas[39;00m file:
+[1;32m    214[0m         [38;5;28;01mwith[39;00m [38;5;28mopen[39m(dest, [38;5;124m'[39m[38;5;124mw[39m[38;5;124m'[39m) [38;5;28;01mas[39;00m f:
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/fsspec/asyn.py:118[0m, in [0;36msync_wrapper.<locals>.wrapper[0;34m(*args, **kwargs)[0m
+[1;32m    115[0m [38;5;129m@functools[39m[38;5;241m.[39mwraps(func)
+[1;32m    116[0m [38;5;28;01mdef[39;00m[38;5;250m [39m[38;5;21mwrapper[39m([38;5;241m*[39margs, [38;5;241m*[39m[38;5;241m*[39mkwargs):
+[1;32m    117[0m     [38;5;28mself[39m [38;5;241m=[39m obj [38;5;129;01mor[39;00m args[[38;5;241m0[39m]
+[0;32m--> 118[0m     [38;5;28;01mreturn[39;00m [43msync[49m[43m([49m[38;5;28;43mself[39;49m[38;5;241;43m.[39;49m[43mloop[49m[43m,[49m[43m [49m[43mfunc[49m[43m,[49m[43m [49m[38;5;241;43m*[39;49m[43margs[49m[43m,[49m[43m [49m[38;5;241;43m*[39;49m[38;5;241;43m*[39;49m[43mkwargs[49m[43m)[49m
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/fsspec/asyn.py:103[0m, in [0;36msync[0;34m(loop, func, timeout, *args, **kwargs)[0m
+[1;32m    101[0m     [38;5;28;01mraise[39;00m FSTimeoutError [38;5;28;01mfrom[39;00m[38;5;250m [39m[38;5;21;01mreturn_result[39;00m
+[1;32m    102[0m [38;5;28;01melif[39;00m [38;5;28misinstance[39m(return_result, [38;5;167;01mBaseException[39;00m):
+[0;32m--> 103[0m     [38;5;28;01mraise[39;00m return_result
+[1;32m    104[0m [38;5;28;01melse[39;00m:
+[1;32m    105[0m     [38;5;28;01mreturn[39;00m return_result
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/fsspec/asyn.py:56[0m, in [0;36m_runner[0;34m(event, coro, result, timeout)[0m
+[1;32m     54[0m     coro [38;5;241m=[39m asyncio[38;5;241m.[39mwait_for(coro, timeout[38;5;241m=[39mtimeout)
+[1;32m     55[0m [38;5;28;01mtry[39;00m:
+[0;32m---> 56[0m     result[[38;5;241m0[39m] [38;5;241m=[39m [38;5;28;01mawait[39;00m coro
+[1;32m     57[0m [38;5;28;01mexcept[39;00m [38;5;167;01mException[39;00m [38;5;28;01mas[39;00m ex:
+[1;32m     58[0m     result[[38;5;241m0[39m] [38;5;241m=[39m ex
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/s3fs/core.py:1093[0m, in [0;36mS3FileSystem._exists[0;34m(self, path)[0m
+[1;32m   1090[0m     [38;5;28;01mreturn[39;00m exists_in_cache
+[1;32m   1092[0m [38;5;28;01mtry[39;00m:
+[0;32m-> 1093[0m     [38;5;28;01mawait[39;00m [38;5;28mself[39m[38;5;241m.[39m_info(path, bucket, key, version_id[38;5;241m=[39mversion_id)
+[1;32m   1094[0m     [38;5;28;01mreturn[39;00m [38;5;28;01mTrue[39;00m
+[1;32m   1095[0m [38;5;28;01mexcept[39;00m [38;5;167;01mFileNotFoundError[39;00m:
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/s3fs/core.py:1445[0m, in [0;36mS3FileSystem._info[0;34m(self, path, bucket, key, refresh, version_id)[0m
+[1;32m   1443[0m [38;5;28;01mif[39;00m key:
+[1;32m   1444[0m     [38;5;28;01mtry[39;00m:
+[0;32m-> 1445[0m         out [38;5;241m=[39m [38;5;28;01mawait[39;00m [38;5;28mself[39m[38;5;241m.[39m_call_s3(
+[1;32m   1446[0m             [38;5;124m"[39m[38;5;124mhead_object[39m[38;5;124m"[39m,
+[1;32m   1447[0m             [38;5;28mself[39m[38;5;241m.[39mkwargs,
+[1;32m   1448[0m             Bucket[38;5;241m=[39mbucket,
+[1;32m   1449[0m             Key[38;5;241m=[39mkey,
+[1;32m   1450[0m             [38;5;241m*[39m[38;5;241m*[39mversion_id_kw(version_id),
+[1;32m   1451[0m             [38;5;241m*[39m[38;5;241m*[39m[38;5;28mself[39m[38;5;241m.[39mreq_kw,
+[1;32m   1452[0m         )
+[1;32m   1453[0m         [38;5;28;01mreturn[39;00m {
+[1;32m   1454[0m             [38;5;124m"[39m[38;5;124mETag[39m[38;5;124m"[39m: out[38;5;241m.[39mget([38;5;124m"[39m[38;5;124mETag[39m[38;5;124m"[39m, [38;5;124m"[39m[38;5;124m"[39m),
+[1;32m   1455[0m             [38;5;124m"[39m[38;5;124mLastModified[39m[38;5;124m"[39m: out[38;5;241m.[39mget([38;5;124m"[39m[38;5;124mLastModified[39m[38;5;124m"[39m, [38;5;124m"[39m[38;5;124m"[39m),
+[0;32m   (...)[0m
+[1;32m   1461[0m             [38;5;124m"[39m[38;5;124mContentType[39m[38;5;124m"[39m: out[38;5;241m.[39mget([38;5;124m"[39m[38;5;124mContentType[39m[38;5;124m"[39m),
+[1;32m   1462[0m         }
+[1;32m   1463[0m     [38;5;28;01mexcept[39;00m [38;5;167;01mFileNotFoundError[39;00m:
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/s3fs/core.py:371[0m, in [0;36mS3FileSystem._call_s3[0;34m(self, method, *akwarglist, **kwargs)[0m
+[1;32m    369[0m logger[38;5;241m.[39mdebug([38;5;124m"[39m[38;5;124mCALL: [39m[38;5;132;01m%s[39;00m[38;5;124m - [39m[38;5;132;01m%s[39;00m[38;5;124m - [39m[38;5;132;01m%s[39;00m[38;5;124m"[39m, method[38;5;241m.[39m[38;5;18m__name__[39m, akwarglist, kw2)
+[1;32m    370[0m additional_kwargs [38;5;241m=[39m [38;5;28mself[39m[38;5;241m.[39m_get_s3_method_kwargs(method, [38;5;241m*[39makwarglist, [38;5;241m*[39m[38;5;241m*[39mkwargs)
+[0;32m--> 371[0m [38;5;28;01mreturn[39;00m [38;5;28;01mawait[39;00m _error_wrapper(
+[1;32m    372[0m     method, kwargs[38;5;241m=[39madditional_kwargs, retries[38;5;241m=[39m[38;5;28mself[39m[38;5;241m.[39mretries
+[1;32m    373[0m )
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/s3fs/core.py:146[0m, in [0;36m_error_wrapper[0;34m(func, args, kwargs, retries)[0m
+[1;32m    144[0m         err [38;5;241m=[39m e
+[1;32m    145[0m err [38;5;241m=[39m translate_boto_error(err)
+[0;32m--> 146[0m [38;5;28;01mraise[39;00m err
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/s3fs/core.py:114[0m, in [0;36m_error_wrapper[0;34m(func, args, kwargs, retries)[0m
+[1;32m    112[0m [38;5;28;01mfor[39;00m i [38;5;129;01min[39;00m [38;5;28mrange[39m(retries):
+[1;32m    113[0m     [38;5;28;01mtry[39;00m:
+[0;32m--> 114[0m         [38;5;28;01mreturn[39;00m [38;5;28;01mawait[39;00m func([38;5;241m*[39margs, [38;5;241m*[39m[38;5;241m*[39mkwargs)
+[1;32m    115[0m     [38;5;28;01mexcept[39;00m S3_RETRYABLE_ERRORS [38;5;28;01mas[39;00m e:
+[1;32m    116[0m         err [38;5;241m=[39m e
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/aiobotocore/context.py:36[0m, in [0;36mwith_current_context.<locals>.decorator.<locals>.wrapper[0;34m(*args, **kwargs)[0m
+[1;32m     34[0m [38;5;28;01mif[39;00m hook:
+[1;32m     35[0m     [38;5;28;01mawait[39;00m resolve_awaitable(hook())
+[0;32m---> 36[0m [38;5;28;01mreturn[39;00m [38;5;28;01mawait[39;00m func([38;5;241m*[39margs, [38;5;241m*[39m[38;5;241m*[39mkwargs)
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/aiobotocore/client.py:397[0m, in [0;36mAioBaseClient._make_api_call[0;34m(self, operation_name, api_params)[0m
+[1;32m    393[0m     maybe_compress_request(
+[1;32m    394[0m         [38;5;28mself[39m[38;5;241m.[39mmeta[38;5;241m.[39mconfig, request_dict, operation_model
+[1;32m    395[0m     )
+[1;32m    396[0m     apply_request_checksum(request_dict)
+[0;32m--> 397[0m     http, parsed_response [38;5;241m=[39m [38;5;28;01mawait[39;00m [38;5;28mself[39m[38;5;241m.[39m_make_request(
+[1;32m    398[0m         operation_model, request_dict, request_context
+[1;32m    399[0m     )
+[1;32m    401[0m [38;5;28;01mawait[39;00m [38;5;28mself[39m[38;5;241m.[39mmeta[38;5;241m.[39mevents[38;5;241m.[39memit(
+[1;32m    402[0m     [38;5;124mf[39m[38;5;124m'[39m[38;5;124mafter-call.[39m[38;5;132;01m{[39;00mservice_id[38;5;132;01m}[39;00m[38;5;124m.[39m[38;5;132;01m{[39;00moperation_name[38;5;132;01m}[39;00m[38;5;124m'[39m,
+[1;32m    403[0m     http_response[38;5;241m=[39mhttp,
+[0;32m   (...)[0m
+[1;32m    406[0m     context[38;5;241m=[39mrequest_context,
+[1;32m    407[0m )
+[1;32m    409[0m [38;5;28;01mif[39;00m http[38;5;241m.[39mstatus_code [38;5;241m>[39m[38;5;241m=[39m [38;5;241m300[39m:
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/aiobotocore/client.py:423[0m, in [0;36mAioBaseClient._make_request[0;34m(self, operation_model, request_dict, request_context)[0m
+[1;32m    419[0m [38;5;28;01masync[39;00m [38;5;28;01mdef[39;00m[38;5;250m [39m[38;5;21m_make_request[39m(
+[1;32m    420[0m     [38;5;28mself[39m, operation_model, request_dict, request_context
+[1;32m    421[0m ):
+[1;32m    422[0m     [38;5;28;01mtry[39;00m:
+[0;32m--> 423[0m         [38;5;28;01mreturn[39;00m [38;5;28;01mawait[39;00m [38;5;28mself[39m[38;5;241m.[39m_endpoint[38;5;241m.[39mmake_request(
+[1;32m    424[0m             operation_model, request_dict
+[1;32m    425[0m         )
+[1;32m    426[0m     [38;5;28;01mexcept[39;00m [38;5;167;01mException[39;00m [38;5;28;01mas[39;00m e:
+[1;32m    427[0m         [38;5;28;01mawait[39;00m [38;5;28mself[39m[38;5;241m.[39mmeta[38;5;241m.[39mevents[38;5;241m.[39memit(
+[1;32m    428[0m             [38;5;124mf[39m[38;5;124m'[39m[38;5;124mafter-call-error.[39m[38;5;132;01m{[39;00m[38;5;28mself[39m[38;5;241m.[39m_service_model[38;5;241m.[39mservice_id[38;5;241m.[39mhyphenize()[38;5;132;01m}[39;00m[38;5;124m.[39m[38;5;132;01m{[39;00moperation_model[38;5;241m.[39mname[38;5;132;01m}[39;00m[38;5;124m'[39m,
+[1;32m    429[0m             exception[38;5;241m=[39me,
+[1;32m    430[0m             context[38;5;241m=[39mrequest_context,
+[1;32m    431[0m         )
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/aiobotocore/endpoint.py:117[0m, in [0;36mAioEndpoint._send_request[0;34m(self, request_dict, operation_model)[0m
+[1;32m    115[0m context [38;5;241m=[39m request_dict[[38;5;124m'[39m[38;5;124mcontext[39m[38;5;124m'[39m]
+[1;32m    116[0m [38;5;28mself[39m[38;5;241m.[39m_update_retries_context(context, attempts)
+[0;32m--> 117[0m request [38;5;241m=[39m [38;5;28;01mawait[39;00m [38;5;28mself[39m[38;5;241m.[39mcreate_request(request_dict, operation_model)
+[1;32m    118[0m success_response, exception [38;5;241m=[39m [38;5;28;01mawait[39;00m [38;5;28mself[39m[38;5;241m.[39m_get_response(
+[1;32m    119[0m     request, operation_model, context
+[1;32m    120[0m )
+[1;32m    121[0m [38;5;28;01mwhile[39;00m [38;5;28;01mawait[39;00m [38;5;28mself[39m[38;5;241m.[39m_needs_retry(
+[1;32m    122[0m     attempts,
+[1;32m    123[0m     operation_model,
+[0;32m   (...)[0m
+[1;32m    126[0m     exception,
+[1;32m    127[0m ):
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/aiobotocore/endpoint.py:105[0m, in [0;36mAioEndpoint.create_request[0;34m(self, params, operation_model)[0m
+[1;32m    103[0m     service_id [38;5;241m=[39m operation_model[38;5;241m.[39mservice_model[38;5;241m.[39mservice_id[38;5;241m.[39mhyphenize()
+[1;32m    104[0m     event_name [38;5;241m=[39m [38;5;124mf[39m[38;5;124m'[39m[38;5;124mrequest-created.[39m[38;5;132;01m{[39;00mservice_id[38;5;132;01m}[39;00m[38;5;124m.[39m[38;5;132;01m{[39;00moperation_model[38;5;241m.[39mname[38;5;132;01m}[39;00m[38;5;124m'[39m
+[0;32m--> 105[0m     [38;5;28;01mawait[39;00m [38;5;28mself[39m[38;5;241m.[39m_event_emitter[38;5;241m.[39memit(
+[1;32m    106[0m         event_name,
+[1;32m    107[0m         request[38;5;241m=[39mrequest,
+[1;32m    108[0m         operation_name[38;5;241m=[39moperation_model[38;5;241m.[39mname,
+[1;32m    109[0m     )
+[1;32m    110[0m prepared_request [38;5;241m=[39m [38;5;28mself[39m[38;5;241m.[39mprepare_request(request)
+[1;32m    111[0m [38;5;28;01mreturn[39;00m prepared_request
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/aiobotocore/hooks.py:68[0m, in [0;36mAioHierarchicalEmitter._emit[0;34m(self, event_name, kwargs, stop_on_response)[0m
+[1;32m     65[0m logger[38;5;241m.[39mdebug([38;5;124m'[39m[38;5;124mEvent [39m[38;5;132;01m%s[39;00m[38;5;124m: calling handler [39m[38;5;132;01m%s[39;00m[38;5;124m'[39m, event_name, handler)
+[1;32m     67[0m [38;5;66;03m# Await the handler if its a coroutine.[39;00m
+[0;32m---> 68[0m response [38;5;241m=[39m [38;5;28;01mawait[39;00m resolve_awaitable(handler([38;5;241m*[39m[38;5;241m*[39mkwargs))
+[1;32m     69[0m responses[38;5;241m.[39mappend((handler, response))
+[1;32m     70[0m [38;5;28;01mif[39;00m stop_on_response [38;5;129;01mand[39;00m response [38;5;129;01mis[39;00m [38;5;129;01mnot[39;00m [38;5;28;01mNone[39;00m:
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/aiobotocore/_helpers.py:6[0m, in [0;36mresolve_awaitable[0;34m(obj)[0m
+[1;32m      4[0m [38;5;28;01masync[39;00m [38;5;28;01mdef[39;00m[38;5;250m [39m[38;5;21mresolve_awaitable[39m(obj):
+[1;32m      5[0m     [38;5;28;01mif[39;00m inspect[38;5;241m.[39misawaitable(obj):
+[0;32m----> 6[0m         [38;5;28;01mreturn[39;00m [38;5;28;01mawait[39;00m obj
+[1;32m      8[0m     [38;5;28;01mreturn[39;00m obj
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/aiobotocore/signers.py:24[0m, in [0;36mAioRequestSigner.handler[0;34m(self, operation_name, request, **kwargs)[0m
+[1;32m     19[0m [38;5;28;01masync[39;00m [38;5;28;01mdef[39;00m[38;5;250m [39m[38;5;21mhandler[39m([38;5;28mself[39m, operation_name[38;5;241m=[39m[38;5;28;01mNone[39;00m, request[38;5;241m=[39m[38;5;28;01mNone[39;00m, [38;5;241m*[39m[38;5;241m*[39mkwargs):
+[1;32m     20[0m     [38;5;66;03m# This is typically hooked up to the "request-created" event[39;00m
+[1;32m     21[0m     [38;5;66;03m# from a client's event emitter.  When a new request is created[39;00m
+[1;32m     22[0m     [38;5;66;03m# this method is invoked to sign the request.[39;00m
+[1;32m     23[0m     [38;5;66;03m# Don't call this method directly.[39;00m
+[0;32m---> 24[0m     [38;5;28;01mreturn[39;00m [38;5;28;01mawait[39;00m [38;5;28mself[39m[38;5;241m.[39msign(operation_name, request)
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/aiobotocore/signers.py:90[0m, in [0;36mAioRequestSigner.sign[0;34m(self, operation_name, request, region_name, signing_type, expires_in, signing_name)[0m
+[1;32m     87[0m     [38;5;28;01melse[39;00m:
+[1;32m     88[0m         [38;5;28;01mraise[39;00m e
+[0;32m---> 90[0m [43mauth[49m[38;5;241;43m.[39;49m[43madd_auth[49m[43m([49m[43mrequest[49m[43m)[49m
+
+File [0;32m/opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/botocore/auth.py:424[0m, in [0;36mSigV4Auth.add_auth[0;34m(self, request)[0m
+[1;32m    422[0m [38;5;28;01mdef[39;00m[38;5;250m [39m[38;5;21madd_auth[39m([38;5;28mself[39m, request):
+[1;32m    423[0m     [38;5;28;01mif[39;00m [38;5;28mself[39m[38;5;241m.[39mcredentials [38;5;129;01mis[39;00m [38;5;28;01mNone[39;00m:
+[0;32m--> 424[0m         [38;5;28;01mraise[39;00m NoCredentialsError()
+[1;32m    425[0m     datetime_now [38;5;241m=[39m datetime[38;5;241m.[39mdatetime[38;5;241m.[39mutcnow()
+[1;32m    426[0m     request[38;5;241m.[39mcontext[[38;5;124m'[39m[38;5;124mtimestamp[39m[38;5;124m'[39m] [38;5;241m=[39m datetime_now[38;5;241m.[39mstrftime(SIGV4_TIMESTAMP)
+
+[0;31mNoCredentialsError[0m: Unable to locate credentials
+
