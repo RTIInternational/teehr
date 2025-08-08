@@ -19,7 +19,7 @@ def all_tests(session):
 def single_test(session):
     """Run a single test using pytest."""
     session.install("pytest", "poetry")
-    session.run("poetry", "install", "--no-interaction", "--no-root")
+    session.run("poetry", "install", "--no-interaction")
     session.run(
         "pytest",
         "tests/test_clone_from_s3.py"
