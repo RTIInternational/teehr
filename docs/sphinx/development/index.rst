@@ -168,3 +168,37 @@ To run these manually and print the results to a text file `pre-commit-output.tx
 .. code-block:: bash
 
    pre-commit run --all-files > pre-commit-output.txt
+
+TEEHR Development CI/CD
+-----------------------
+The TEEHR repository uses GitHub Actions for continuous integration and continuous deployment (CI/CD).
+
+.. figure:: ../../images/development/dev_cicd_schematic.png
+  :scale: 55%
+
+When a pull request is opened or re-opened, the tests are run in multiple python environments using ``nox`` and ``pytest``,
+and the documentation is built and published. After any necessary changes are made, the pull request can be merged,
+which triggers the deployment of the ``Dev Version`` (built from main) to TEEHR-Hub.
+
+When a new version of TEEHR is released, a new tag is created, which triggers the deployment of the tagged version to TEEHR-Hub.
+
+``nox`` can also be used locally to run the tests in multiple python environments which must be installed separately (using ``pyenv`` for example).
+
+.. code-block:: python
+
+   @nox_poetry.session(python=["3.12", "3.13"])
+   def single_test(session):
+      """Run a single test using pytest."""
+      session.install("pytest", ".")
+      session.run(
+         "pytest",
+         "tests/test_clone_from_s3.py"
+      )
+
+The above example code from the noxfile.py demonstrates how to run a single test using pytest in a nox session
+for python 3.12 and 3.13. It can be called from the command line using:
+
+
+.. code-block:: bash
+
+   nox -s single_test

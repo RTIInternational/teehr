@@ -1,15 +1,11 @@
 name: documentation
 
 on:
-  # push:
-  #   tags: [ 'v*.*.*' ]
-  # workflow_run:
-  #   workflows: ["run-tests"]     # Triggered by "run-tests" workflow
-  #   types: [completed]           # Trigger when "run-tests" completes
+  workflow_run:
+    workflows: ["run-tests"]     # Triggered by "run-tests" workflow
+    types: [completed]           # Trigger when "run-tests" completes
   # push:
   #   branches: [475-update-python-dependencies]
-  pull_request:
-    types: [opened, reopened]
 
 
 permissions:
