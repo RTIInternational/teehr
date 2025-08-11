@@ -1,11 +1,11 @@
 name: Python package
 
-# on:
-#   pull_request:
-#     types: [opened, reopened]
 on:
-  push:
-    branches: [475-update-python-dependencies]
+  pull_request:
+    types: [opened, reopened]
+# on:
+#   push:
+#     branches: [475-update-python-dependencies]
 
 jobs:
   build:
@@ -33,4 +33,4 @@ jobs:
         run: poetry install --no-interaction --no-root
 
       - name: Run tests
-        run: poetry run nox -s single_test
+        run: poetry run nox -s all_tests
