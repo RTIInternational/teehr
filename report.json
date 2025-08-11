@@ -1,0 +1,1326 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 145,
+            "passed": 144,
+            "failed": 0,
+            "skipped": 1,
+            "pending": 0,
+            "other": 0,
+            "start": 1750341632.3993878,
+            "stop": 1750342369.208691
+        },
+        "tests": [
+            {
+                "name": "tests/test_add_domain_contents.py::test_add_domains",
+                "status": "passed",
+                "duration": 20.12947997399897,
+                "start": 1750341637.824615,
+                "stop": 1750341657.954674,
+                "retries": 0,
+                "file_path": "tests/test_add_domain_contents.py"
+            },
+            {
+                "name": "tests/test_add_udfs.py::test_add_row_udfs_null_reference",
+                "status": "passed",
+                "duration": 27.634386918999553,
+                "start": 1750341657.9561188,
+                "stop": 1750341685.5908213,
+                "retries": 0,
+                "file_path": "tests/test_add_udfs.py"
+            },
+            {
+                "name": "tests/test_add_udfs.py::test_add_row_udfs",
+                "status": "passed",
+                "duration": 17.736328543001036,
+                "start": 1750341685.5911372,
+                "stop": 1750341703.3277545,
+                "retries": 0,
+                "file_path": "tests/test_add_udfs.py"
+            },
+            {
+                "name": "tests/test_add_udfs.py::test_add_timeseries_udfs",
+                "status": "passed",
+                "duration": 13.8690161479999,
+                "start": 1750341703.3289168,
+                "stop": 1750341717.1982024,
+                "retries": 0,
+                "file_path": "tests/test_add_udfs.py"
+            },
+            {
+                "name": "tests/test_add_udfs.py::test_add_udfs_write",
+                "status": "passed",
+                "duration": 19.349385145999804,
+                "start": 1750341717.1985288,
+                "stop": 1750341736.548182,
+                "retries": 0,
+                "file_path": "tests/test_add_udfs.py"
+            },
+            {
+                "name": "tests/test_add_udfs.py::test_location_event_detection",
+                "status": "passed",
+                "duration": 14.467881620000298,
+                "start": 1750341736.548503,
+                "stop": 1750341751.016665,
+                "retries": 0,
+                "file_path": "tests/test_add_udfs.py"
+            },
+            {
+                "name": "tests/test_clone_from_s3.py::test_get_s3_evaluations_dataframe",
+                "status": "passed",
+                "duration": 0.25916653599961137,
+                "start": 1750341751.0173616,
+                "stop": 1750341751.2767873,
+                "retries": 0,
+                "file_path": "tests/test_clone_from_s3.py"
+            },
+            {
+                "name": "tests/test_clone_from_s3.py::test_get_s3_evaluations_list",
+                "status": "passed",
+                "duration": 0.09945147500002349,
+                "start": 1750341751.2770677,
+                "stop": 1750341751.3767672,
+                "retries": 0,
+                "file_path": "tests/test_clone_from_s3.py"
+            },
+            {
+                "name": "tests/test_clone_from_s3.py::test_clone_example_from_s3",
+                "status": "passed",
+                "duration": 15.75951776400052,
+                "start": 1750341751.3770366,
+                "stop": 1750341767.1368608,
+                "retries": 0,
+                "file_path": "tests/test_clone_from_s3.py"
+            },
+            {
+                "name": "tests/test_clone_from_s3.py::test_clone_partial_template_from_s3",
+                "status": "passed",
+                "duration": 11.038074004000919,
+                "start": 1750341767.137218,
+                "stop": 1750341778.175618,
+                "retries": 0,
+                "file_path": "tests/test_clone_from_s3.py"
+            },
+            {
+                "name": "tests/test_clone_from_s3.py::test_clone_and_subset_example_from_s3",
+                "status": "passed",
+                "duration": 15.375234283000282,
+                "start": 1750341778.1759467,
+                "stop": 1750341793.5515203,
+                "retries": 0,
+                "file_path": "tests/test_clone_from_s3.py"
+            },
+            {
+                "name": "tests/test_create_joined_timeseries.py::test_create_joined_timeseries",
+                "status": "passed",
+                "duration": 10.693259900000157,
+                "start": 1750341793.552186,
+                "stop": 1750341804.2457783,
+                "retries": 0,
+                "file_path": "tests/test_create_joined_timeseries.py"
+            },
+            {
+                "name": "tests/test_create_new_study.py::test_clone_template",
+                "status": "passed",
+                "duration": 0.5124233700007608,
+                "start": 1750341804.246491,
+                "stop": 1750341804.7592146,
+                "retries": 0,
+                "file_path": "tests/test_create_new_study.py"
+            },
+            {
+                "name": "tests/test_dataframe_accessor.py::test_init_with_dataframe",
+                "status": "passed",
+                "duration": 0.01917940200019075,
+                "start": 1750341804.7598712,
+                "stop": 1750341804.7793455,
+                "retries": 0,
+                "file_path": "tests/test_dataframe_accessor.py"
+            },
+            {
+                "name": "tests/test_dataframe_accessor.py::test_init_with_geodataframe",
+                "status": "passed",
+                "duration": 0.017632321000746742,
+                "start": 1750341804.7796695,
+                "stop": 1750341804.7975924,
+                "retries": 0,
+                "file_path": "tests/test_dataframe_accessor.py"
+            },
+            {
+                "name": "tests/test_dataframe_accessor.py::test_validate_missing_table_type",
+                "status": "passed",
+                "duration": 0.0009558559995639371,
+                "start": 1750341804.7979019,
+                "stop": 1750341804.7990718,
+                "retries": 0,
+                "file_path": "tests/test_dataframe_accessor.py"
+            },
+            {
+                "name": "tests/test_dataframe_accessor.py::test_validate_missing_fields",
+                "status": "passed",
+                "duration": 0.001758510999934515,
+                "start": 1750341804.7993095,
+                "stop": 1750341804.8012626,
+                "retries": 0,
+                "file_path": "tests/test_dataframe_accessor.py"
+            },
+            {
+                "name": "tests/test_dataframe_accessor.py::test_primary_timeseries_plot",
+                "status": "passed",
+                "duration": 0.1253035350009668,
+                "start": 1750341804.8014855,
+                "stop": 1750341804.9273226,
+                "retries": 0,
+                "file_path": "tests/test_dataframe_accessor.py"
+            },
+            {
+                "name": "tests/test_dataframe_accessor.py::test_secondary_timeseries_plot",
+                "status": "passed",
+                "duration": 0.07892930800062459,
+                "start": 1750341804.9276202,
+                "stop": 1750341805.0068252,
+                "retries": 0,
+                "file_path": "tests/test_dataframe_accessor.py"
+            },
+            {
+                "name": "tests/test_dataframe_accessor.py::test_locations_map",
+                "status": "passed",
+                "duration": 0.058570623000377964,
+                "start": 1750341805.007104,
+                "stop": 1750341805.066045,
+                "retries": 0,
+                "file_path": "tests/test_dataframe_accessor.py"
+            },
+            {
+                "name": "tests/test_dataframe_accessor.py::test_location_attributes_map",
+                "status": "passed",
+                "duration": 0.061322719000600046,
+                "start": 1750341805.066383,
+                "stop": 1750341805.127998,
+                "retries": 0,
+                "file_path": "tests/test_dataframe_accessor.py"
+            },
+            {
+                "name": "tests/test_dataframe_accessor.py::test_location_crosswalks_map",
+                "status": "passed",
+                "duration": 0.056104766000316886,
+                "start": 1750341805.1282778,
+                "stop": 1750341805.184666,
+                "retries": 0,
+                "file_path": "tests/test_dataframe_accessor.py"
+            },
+            {
+                "name": "tests/test_fetch_and_load.py::test_fetch_and_load_nwm_retro_points",
+                "status": "passed",
+                "duration": 26.618646865999835,
+                "start": 1750341805.1856623,
+                "stop": 1750341831.8046439,
+                "retries": 0,
+                "file_path": "tests/test_fetch_and_load.py"
+            },
+            {
+                "name": "tests/test_fetch_and_load.py::test_fetch_and_load_nwm_retro_grids",
+                "status": "passed",
+                "duration": 12.86125981800069,
+                "start": 1750341831.8050168,
+                "stop": 1750341844.66656,
+                "retries": 0,
+                "file_path": "tests/test_fetch_and_load.py"
+            },
+            {
+                "name": "tests/test_fetch_and_load.py::test_fetch_and_load_nwm_operational_points",
+                "status": "passed",
+                "duration": 47.33359113000097,
+                "start": 1750341844.6668692,
+                "stop": 1750341892.0007963,
+                "retries": 0,
+                "file_path": "tests/test_fetch_and_load.py"
+            },
+            {
+                "name": "tests/test_fetch_and_load.py::test_fetch_and_load_nwm_operational_grids",
+                "status": "skipped",
+                "duration": 0.00030391600012080744,
+                "start": 1750341892.0030022,
+                "stop": 1750341892.0036974,
+                "retries": 0,
+                "file_path": "tests/test_fetch_and_load.py",
+                "trace": "('/home/slamont/git/teehr/tests/test_fetch_and_load.py', 183, 'Skipped: This takes forever!')"
+            },
+            {
+                "name": "tests/test_filter_formatting.py::test_filter_eq_str",
+                "status": "passed",
+                "duration": 9.971436024000468,
+                "start": 1750341892.0043755,
+                "stop": 1750341901.9761703,
+                "retries": 0,
+                "file_path": "tests/test_filter_formatting.py"
+            },
+            {
+                "name": "tests/test_filter_formatting.py::test_filter_in_str",
+                "status": "passed",
+                "duration": 5.6332194810001965,
+                "start": 1750341901.976494,
+                "stop": 1750341907.6101155,
+                "retries": 0,
+                "file_path": "tests/test_filter_formatting.py"
+            },
+            {
+                "name": "tests/test_filter_formatting.py::test_filter_in_str_series",
+                "status": "passed",
+                "duration": 5.641704424999261,
+                "start": 1750341907.610592,
+                "stop": 1750341913.252605,
+                "retries": 0,
+                "file_path": "tests/test_filter_formatting.py"
+            },
+            {
+                "name": "tests/test_filter_formatting.py::test_filter_gt_dt",
+                "status": "passed",
+                "duration": 5.575363138999819,
+                "start": 1750341913.2529256,
+                "stop": 1750341918.8285725,
+                "retries": 0,
+                "file_path": "tests/test_filter_formatting.py"
+            },
+            {
+                "name": "tests/test_filter_formatting.py::test_filter_lt_int",
+                "status": "passed",
+                "duration": 5.473394029000701,
+                "start": 1750341918.8289156,
+                "stop": 1750341924.3025966,
+                "retries": 0,
+                "file_path": "tests/test_filter_formatting.py"
+            },
+            {
+                "name": "tests/test_filter_validation.py::test_filter_string_passes",
+                "status": "passed",
+                "duration": 5.5460894449997795,
+                "start": 1750341924.303277,
+                "stop": 1750341929.8496532,
+                "retries": 0,
+                "file_path": "tests/test_filter_validation.py"
+            },
+            {
+                "name": "tests/test_filter_validation.py::test_filter_int_to_string_passes",
+                "status": "passed",
+                "duration": 5.379483952998271,
+                "start": 1750341929.8500485,
+                "stop": 1750341935.2298253,
+                "retries": 0,
+                "file_path": "tests/test_filter_validation.py"
+            },
+            {
+                "name": "tests/test_filter_validation.py::test_filter_float_passes",
+                "status": "passed",
+                "duration": 5.317651702999683,
+                "start": 1750341935.2301433,
+                "stop": 1750341940.5480857,
+                "retries": 0,
+                "file_path": "tests/test_filter_validation.py"
+            },
+            {
+                "name": "tests/test_filter_validation.py::test_filter_int_to_float_passes",
+                "status": "passed",
+                "duration": 5.456818238000778,
+                "start": 1750341940.5483854,
+                "stop": 1750341946.0055084,
+                "retries": 0,
+                "file_path": "tests/test_filter_validation.py"
+            },
+            {
+                "name": "tests/test_filter_validation.py::test_filter_str_to_float_fails",
+                "status": "passed",
+                "duration": 5.597605624000607,
+                "start": 1750341946.0058494,
+                "stop": 1750341951.6037831,
+                "retries": 0,
+                "file_path": "tests/test_filter_validation.py"
+            },
+            {
+                "name": "tests/test_filter_validation.py::test_filter_datetime_passes",
+                "status": "passed",
+                "duration": 5.333912310999949,
+                "start": 1750341951.6041064,
+                "stop": 1750341956.938322,
+                "retries": 0,
+                "file_path": "tests/test_filter_validation.py"
+            },
+            {
+                "name": "tests/test_filter_validation.py::test_filter_datetime_passes2",
+                "status": "passed",
+                "duration": 5.323421551000138,
+                "start": 1750341956.9387157,
+                "stop": 1750341962.262418,
+                "retries": 0,
+                "file_path": "tests/test_filter_validation.py"
+            },
+            {
+                "name": "tests/test_filter_validation.py::test_filter_datetime_passes3",
+                "status": "passed",
+                "duration": 5.2705966900011845,
+                "start": 1750341962.262714,
+                "stop": 1750341967.5335991,
+                "retries": 0,
+                "file_path": "tests/test_filter_validation.py"
+            },
+            {
+                "name": "tests/test_filter_validation.py::test_filter_datetime_passes4",
+                "status": "passed",
+                "duration": 5.282250879999992,
+                "start": 1750341967.533908,
+                "stop": 1750341972.8164513,
+                "retries": 0,
+                "file_path": "tests/test_filter_validation.py"
+            },
+            {
+                "name": "tests/test_filter_validation.py::test_filter_datetime_passes5",
+                "status": "passed",
+                "duration": 5.291846528999486,
+                "start": 1750341972.81677,
+                "stop": 1750341978.108948,
+                "retries": 0,
+                "file_path": "tests/test_filter_validation.py"
+            },
+            {
+                "name": "tests/test_filter_validation.py::test_filter_datetime_fails",
+                "status": "passed",
+                "duration": 5.1982924630001435,
+                "start": 1750341978.1092525,
+                "stop": 1750341983.307829,
+                "retries": 0,
+                "file_path": "tests/test_filter_validation.py"
+            },
+            {
+                "name": "tests/test_filter_validation.py::test_filter_in_str_fails",
+                "status": "passed",
+                "duration": 5.457514112001263,
+                "start": 1750341983.308132,
+                "stop": 1750341988.7660043,
+                "retries": 0,
+                "file_path": "tests/test_filter_validation.py"
+            },
+            {
+                "name": "tests/test_filters.py::test_chain_filter_single_str",
+                "status": "passed",
+                "duration": 5.520984455999496,
+                "start": 1750341988.7667933,
+                "stop": 1750341994.2881095,
+                "retries": 0,
+                "file_path": "tests/test_filters.py"
+            },
+            {
+                "name": "tests/test_filters.py::test_chain_filter_single_str2",
+                "status": "passed",
+                "duration": 5.57120607700017,
+                "start": 1750341994.288502,
+                "stop": 1750341999.86001,
+                "retries": 0,
+                "file_path": "tests/test_filters.py"
+            },
+            {
+                "name": "tests/test_filters.py::test_chain_filter_single_dict",
+                "status": "passed",
+                "duration": 5.584444418998828,
+                "start": 1750341999.8603153,
+                "stop": 1750342005.4450407,
+                "retries": 0,
+                "file_path": "tests/test_filters.py"
+            },
+            {
+                "name": "tests/test_filters.py::test_chain_filter_single_dict2",
+                "status": "passed",
+                "duration": 5.3029723749996265,
+                "start": 1750342005.4453533,
+                "stop": 1750342010.7486145,
+                "retries": 0,
+                "file_path": "tests/test_filters.py"
+            },
+            {
+                "name": "tests/test_filters.py::test_chain_filter_single_model",
+                "status": "passed",
+                "duration": 5.297792385000321,
+                "start": 1750342010.7489316,
+                "stop": 1750342016.0470061,
+                "retries": 0,
+                "file_path": "tests/test_filters.py"
+            },
+            {
+                "name": "tests/test_filters.py::test_chain_filter_single_model2",
+                "status": "passed",
+                "duration": 5.367459602999588,
+                "start": 1750342016.0473044,
+                "stop": 1750342021.4150429,
+                "retries": 0,
+                "file_path": "tests/test_filters.py"
+            },
+            {
+                "name": "tests/test_filters.py::test_chain_filter_list_str",
+                "status": "passed",
+                "duration": 5.407197313000324,
+                "start": 1750342021.415345,
+                "stop": 1750342026.8228173,
+                "retries": 0,
+                "file_path": "tests/test_filters.py"
+            },
+            {
+                "name": "tests/test_filters.py::test_chain_filter_list_dict",
+                "status": "passed",
+                "duration": 5.504543647999526,
+                "start": 1750342026.8231654,
+                "stop": 1750342032.3279934,
+                "retries": 0,
+                "file_path": "tests/test_filters.py"
+            },
+            {
+                "name": "tests/test_filters.py::test_chain_filter_list_model",
+                "status": "passed",
+                "duration": 5.607646536000175,
+                "start": 1750342032.3282835,
+                "stop": 1750342037.9362042,
+                "retries": 0,
+                "file_path": "tests/test_filters.py"
+            },
+            {
+                "name": "tests/test_filters.py::test_query_single_str",
+                "status": "passed",
+                "duration": 5.357866739999736,
+                "start": 1750342037.9365025,
+                "stop": 1750342043.29465,
+                "retries": 0,
+                "file_path": "tests/test_filters.py"
+            },
+            {
+                "name": "tests/test_filters.py::test_query_single_dict",
+                "status": "passed",
+                "duration": 5.184593448000669,
+                "start": 1750342043.294951,
+                "stop": 1750342048.4798222,
+                "retries": 0,
+                "file_path": "tests/test_filters.py"
+            },
+            {
+                "name": "tests/test_filters.py::test_query_single_model",
+                "status": "passed",
+                "duration": 5.2845151649999025,
+                "start": 1750342048.4801145,
+                "stop": 1750342053.764953,
+                "retries": 0,
+                "file_path": "tests/test_filters.py"
+            },
+            {
+                "name": "tests/test_filters.py::test_query_list_str",
+                "status": "passed",
+                "duration": 5.2433477389986365,
+                "start": 1750342053.7652457,
+                "stop": 1750342059.0089169,
+                "retries": 0,
+                "file_path": "tests/test_filters.py"
+            },
+            {
+                "name": "tests/test_filters.py::test_query_list_dict",
+                "status": "passed",
+                "duration": 5.457266864000303,
+                "start": 1750342059.0092127,
+                "stop": 1750342064.466759,
+                "retries": 0,
+                "file_path": "tests/test_filters.py"
+            },
+            {
+                "name": "tests/test_filters.py::test_query_list_model",
+                "status": "passed",
+                "duration": 5.172437616999559,
+                "start": 1750342064.4670641,
+                "stop": 1750342069.6397855,
+                "retries": 0,
+                "file_path": "tests/test_filters.py"
+            },
+            {
+                "name": "tests/test_generate_weights.py::test_weights",
+                "status": "passed",
+                "duration": 0.24479942600009963,
+                "start": 1750342069.6411378,
+                "stop": 1750342069.886208,
+                "retries": 0,
+                "file_path": "tests/test_generate_weights.py"
+            },
+            {
+                "name": "tests/test_get_metrics_query.py::test_executing_deterministic_metrics",
+                "status": "passed",
+                "duration": 5.890698805999818,
+                "start": 1750342069.887121,
+                "stop": 1750342075.7781217,
+                "retries": 0,
+                "file_path": "tests/test_get_metrics_query.py"
+            },
+            {
+                "name": "tests/test_get_metrics_query.py::test_executing_signature_metrics",
+                "status": "passed",
+                "duration": 5.611271192999993,
+                "start": 1750342075.7784607,
+                "stop": 1750342081.3900263,
+                "retries": 0,
+                "file_path": "tests/test_get_metrics_query.py"
+            },
+            {
+                "name": "tests/test_get_metrics_query.py::test_metrics_filter_and_geometry",
+                "status": "passed",
+                "duration": 5.470294780000586,
+                "start": 1750342081.390343,
+                "stop": 1750342086.8609345,
+                "retries": 0,
+                "file_path": "tests/test_get_metrics_query.py"
+            },
+            {
+                "name": "tests/test_get_metrics_query.py::test_unpacking_bootstrap_results",
+                "status": "passed",
+                "duration": 11.739353787000255,
+                "start": 1750342086.8612587,
+                "stop": 1750342098.6009123,
+                "retries": 0,
+                "file_path": "tests/test_get_metrics_query.py"
+            },
+            {
+                "name": "tests/test_get_metrics_query.py::test_circularblock_bootstrapping",
+                "status": "passed",
+                "duration": 12.851286438000898,
+                "start": 1750342098.6012297,
+                "stop": 1750342111.4528134,
+                "retries": 0,
+                "file_path": "tests/test_get_metrics_query.py"
+            },
+            {
+                "name": "tests/test_get_metrics_query.py::test_stationary_bootstrapping",
+                "status": "passed",
+                "duration": 6.675945264999427,
+                "start": 1750342111.4531488,
+                "stop": 1750342118.1293983,
+                "retries": 0,
+                "file_path": "tests/test_get_metrics_query.py"
+            },
+            {
+                "name": "tests/test_get_metrics_query.py::test_gumboot_bootstrapping",
+                "status": "passed",
+                "duration": 4.743213249999826,
+                "start": 1750342118.129754,
+                "stop": 1750342122.8732808,
+                "retries": 0,
+                "file_path": "tests/test_get_metrics_query.py"
+            },
+            {
+                "name": "tests/test_get_metrics_query.py::test_metric_chaining",
+                "status": "passed",
+                "duration": 5.7971134729996265,
+                "start": 1750342122.874104,
+                "stop": 1750342128.6715393,
+                "retries": 0,
+                "file_path": "tests/test_get_metrics_query.py"
+            },
+            {
+                "name": "tests/test_get_metrics_query.py::test_ensemble_metrics",
+                "status": "passed",
+                "duration": 21.552681049000057,
+                "start": 1750342128.6718676,
+                "stop": 1750342150.224858,
+                "retries": 0,
+                "file_path": "tests/test_get_metrics_query.py"
+            },
+            {
+                "name": "tests/test_get_metrics_query.py::test_metrics_transforms",
+                "status": "passed",
+                "duration": 6.0452802929994505,
+                "start": 1750342150.226121,
+                "stop": 1750342156.2717037,
+                "retries": 0,
+                "file_path": "tests/test_get_metrics_query.py"
+            },
+            {
+                "name": "tests/test_get_metrics_query.py::test_bootstrapping_transforms",
+                "status": "passed",
+                "duration": 6.622174361000361,
+                "start": 1750342156.2720075,
+                "stop": 1750342162.8944745,
+                "retries": 0,
+                "file_path": "tests/test_get_metrics_query.py"
+            },
+            {
+                "name": "tests/test_get_table_field_enums.py::test_get_configuration_fields",
+                "status": "passed",
+                "duration": 5.20395169099902,
+                "start": 1750342162.8971736,
+                "stop": 1750342168.1014974,
+                "retries": 0,
+                "file_path": "tests/test_get_table_field_enums.py"
+            },
+            {
+                "name": "tests/test_get_table_field_enums.py::test_get_unit_fields",
+                "status": "passed",
+                "duration": 5.202703676000056,
+                "start": 1750342168.1018782,
+                "stop": 1750342173.3048875,
+                "retries": 0,
+                "file_path": "tests/test_get_table_field_enums.py"
+            },
+            {
+                "name": "tests/test_get_table_field_enums.py::test_get_variable_fields",
+                "status": "passed",
+                "duration": 5.033244495998588,
+                "start": 1750342173.3051972,
+                "stop": 1750342178.3387883,
+                "retries": 0,
+                "file_path": "tests/test_get_table_field_enums.py"
+            },
+            {
+                "name": "tests/test_get_table_field_enums.py::test_get_attribute_fields",
+                "status": "passed",
+                "duration": 5.08189420799863,
+                "start": 1750342178.3390985,
+                "stop": 1750342183.4212964,
+                "retries": 0,
+                "file_path": "tests/test_get_table_field_enums.py"
+            },
+            {
+                "name": "tests/test_get_table_field_enums.py::test_get_location_fields",
+                "status": "passed",
+                "duration": 5.022427685000366,
+                "start": 1750342183.4216306,
+                "stop": 1750342188.4443612,
+                "retries": 0,
+                "file_path": "tests/test_get_table_field_enums.py"
+            },
+            {
+                "name": "tests/test_get_table_field_enums.py::test_get_location_attribute_fields",
+                "status": "passed",
+                "duration": 5.11492271500083,
+                "start": 1750342188.444684,
+                "stop": 1750342193.559904,
+                "retries": 0,
+                "file_path": "tests/test_get_table_field_enums.py"
+            },
+            {
+                "name": "tests/test_get_table_field_enums.py::test_get_location_crosswalk_fields",
+                "status": "passed",
+                "duration": 5.030156920000081,
+                "start": 1750342193.5602062,
+                "stop": 1750342198.590733,
+                "retries": 0,
+                "file_path": "tests/test_get_table_field_enums.py"
+            },
+            {
+                "name": "tests/test_get_table_field_enums.py::test_get_timeseries_fields",
+                "status": "passed",
+                "duration": 5.1186728320008115,
+                "start": 1750342198.5911376,
+                "stop": 1750342203.710111,
+                "retries": 0,
+                "file_path": "tests/test_get_table_field_enums.py"
+            },
+            {
+                "name": "tests/test_get_table_field_enums.py::test_get_joined_timeseries_fields",
+                "status": "passed",
+                "duration": 5.797512750000351,
+                "start": 1750342203.7104123,
+                "stop": 1750342209.5082188,
+                "retries": 0,
+                "file_path": "tests/test_get_table_field_enums.py"
+            },
+            {
+                "name": "tests/test_import_location_attributes.py::test_convert_location_attributes",
+                "status": "passed",
+                "duration": 0.016322315998877457,
+                "start": 1750342209.5088794,
+                "stop": 1750342209.525927,
+                "retries": 0,
+                "file_path": "tests/test_import_location_attributes.py"
+            },
+            {
+                "name": "tests/test_import_location_attributes.py::test_validate_and_insert_location_attributes",
+                "status": "passed",
+                "duration": 1.5661465240000325,
+                "start": 1750342209.52688,
+                "stop": 1750342211.0933414,
+                "retries": 0,
+                "file_path": "tests/test_import_location_attributes.py"
+            },
+            {
+                "name": "tests/test_import_location_crosswalks.py::test_convert_location_crosswalk",
+                "status": "passed",
+                "duration": 0.010685230000490265,
+                "start": 1750342211.0939887,
+                "stop": 1750342211.1050563,
+                "retries": 0,
+                "file_path": "tests/test_import_location_crosswalks.py"
+            },
+            {
+                "name": "tests/test_import_location_crosswalks.py::test_validate_and_insert_crosswalks",
+                "status": "passed",
+                "duration": 0.9140933409998979,
+                "start": 1750342211.1055152,
+                "stop": 1750342212.0199864,
+                "retries": 0,
+                "file_path": "tests/test_import_location_crosswalks.py"
+            },
+            {
+                "name": "tests/test_import_location_crosswalks.py::test_convert_location_crosswalk_netcdf",
+                "status": "passed",
+                "duration": 0.026218824999887147,
+                "start": 1750342212.0202794,
+                "stop": 1750342212.0467753,
+                "retries": 0,
+                "file_path": "tests/test_import_location_crosswalks.py"
+            },
+            {
+                "name": "tests/test_import_locations.py::test_convert_locations_geojson",
+                "status": "passed",
+                "duration": 0.014324775999739359,
+                "start": 1750342212.0476916,
+                "stop": 1750342212.0622807,
+                "retries": 0,
+                "file_path": "tests/test_import_locations.py"
+            },
+            {
+                "name": "tests/test_import_locations.py::test_validate_and_insert_locations",
+                "status": "passed",
+                "duration": 1.2617764159995204,
+                "start": 1750342212.062526,
+                "stop": 1750342213.3246791,
+                "retries": 0,
+                "file_path": "tests/test_import_locations.py"
+            },
+            {
+                "name": "tests/test_import_locations.py::test_validate_and_insert_locations_adding_prefix",
+                "status": "passed",
+                "duration": 0.5181497839994336,
+                "start": 1750342213.3249886,
+                "stop": 1750342213.8434238,
+                "retries": 0,
+                "file_path": "tests/test_import_locations.py"
+            },
+            {
+                "name": "tests/test_import_timeseries.py::test_dropping_duplicates",
+                "status": "passed",
+                "duration": 2.2446422639995944,
+                "start": 1750342213.8440475,
+                "stop": 1750342216.088972,
+                "retries": 0,
+                "file_path": "tests/test_import_timeseries.py"
+            },
+            {
+                "name": "tests/test_import_timeseries.py::test_validate_and_insert_timeseries",
+                "status": "passed",
+                "duration": 4.736013314000047,
+                "start": 1750342216.0892508,
+                "stop": 1750342220.8255382,
+                "retries": 0,
+                "file_path": "tests/test_import_timeseries.py"
+            },
+            {
+                "name": "tests/test_import_timeseries.py::test_validate_and_insert_timeseries_set_const",
+                "status": "passed",
+                "duration": 2.6341586089993143,
+                "start": 1750342220.8258266,
+                "stop": 1750342223.4602947,
+                "retries": 0,
+                "file_path": "tests/test_import_timeseries.py"
+            },
+            {
+                "name": "tests/test_import_timeseries.py::test_validate_and_insert_summa_nc_timeseries",
+                "status": "passed",
+                "duration": 2.207297390000349,
+                "start": 1750342223.460628,
+                "stop": 1750342225.6682415,
+                "retries": 0,
+                "file_path": "tests/test_import_timeseries.py"
+            },
+            {
+                "name": "tests/test_import_timeseries.py::test_validate_and_insert_mizu_nc_timeseries",
+                "status": "passed",
+                "duration": 2.854374105999341,
+                "start": 1750342225.6686523,
+                "stop": 1750342228.523332,
+                "retries": 0,
+                "file_path": "tests/test_import_timeseries.py"
+            },
+            {
+                "name": "tests/test_import_timeseries.py::test_validate_and_insert_fews_xml_timeseries",
+                "status": "passed",
+                "duration": 3.4253836729994873,
+                "start": 1750342228.5236614,
+                "stop": 1750342231.9493256,
+                "retries": 0,
+                "file_path": "tests/test_import_timeseries.py"
+            },
+            {
+                "name": "tests/test_merge_mapping_fields.py::test_merge_mapping_fields",
+                "status": "passed",
+                "duration": 0.0004859429991483921,
+                "start": 1750342231.9499476,
+                "stop": 1750342231.9511504,
+                "retries": 0,
+                "file_path": "tests/test_merge_mapping_fields.py"
+            },
+            {
+                "name": "tests/test_nwm_fetch_and_format.py::test_nwm22_point_fetch_and_format",
+                "status": "passed",
+                "duration": 0.9883160400004272,
+                "start": 1750342231.9519153,
+                "stop": 1750342232.9405184,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetch_and_format.py"
+            },
+            {
+                "name": "tests/test_nwm_fetch_and_format.py::test_nwm30_point_fetch_and_format",
+                "status": "passed",
+                "duration": 0.5479846409989477,
+                "start": 1750342232.9408178,
+                "stop": 1750342233.489061,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetch_and_format.py"
+            },
+            {
+                "name": "tests/test_nwm_fetch_and_format.py::test_nwm30_point_fetch_and_format_medium_range_member",
+                "status": "passed",
+                "duration": 0.8989441369994893,
+                "start": 1750342233.4893324,
+                "stop": 1750342234.3885388,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetch_and_format.py"
+            },
+            {
+                "name": "tests/test_nwm_fetch_and_format.py::test_nwm22_grid_fetch_and_format",
+                "status": "passed",
+                "duration": 0.5014482030001091,
+                "start": 1750342234.3888266,
+                "stop": 1750342234.8905447,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetch_and_format.py"
+            },
+            {
+                "name": "tests/test_nwm_fetch_and_format.py::test_nwm30_grid_fetch_and_format",
+                "status": "passed",
+                "duration": 0.4858036350005932,
+                "start": 1750342234.8908107,
+                "stop": 1750342235.3768773,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetch_and_format.py"
+            },
+            {
+                "name": "tests/test_nwm_fetch_and_format.py::test_replace_location_id_prefix",
+                "status": "passed",
+                "duration": 0.002047857999059488,
+                "start": 1750342235.3771365,
+                "stop": 1750342235.379422,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetch_and_format.py"
+            },
+            {
+                "name": "tests/test_nwm_fetch_and_format.py::test_prepend_location_id_prefix",
+                "status": "passed",
+                "duration": 0.0012101729998903465,
+                "start": 1750342235.3796434,
+                "stop": 1750342235.3810318,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetch_and_format.py"
+            },
+            {
+                "name": "tests/test_nwm_fetch_and_format.py::test_raise_location_id_prefix_error",
+                "status": "passed",
+                "duration": 0.0009409129997948185,
+                "start": 1750342235.3812325,
+                "stop": 1750342235.3823473,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetch_and_format.py"
+            },
+            {
+                "name": "tests/test_nwm_fetching_utils.py::test_parsing_remote_json_paths",
+                "status": "passed",
+                "duration": 0.003224436001801223,
+                "start": 1750342235.3838432,
+                "stop": 1750342235.3874733,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetching_utils.py"
+            },
+            {
+                "name": "tests/test_nwm_fetching_utils.py::test_point_zarr_reference_file",
+                "status": "passed",
+                "duration": 31.391030388000217,
+                "start": 1750342235.3876982,
+                "stop": 1750342266.7793975,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetching_utils.py"
+            },
+            {
+                "name": "tests/test_nwm_fetching_utils.py::test_dates_and_nwm30_version",
+                "status": "passed",
+                "duration": 0.002175055999941833,
+                "start": 1750342266.7797706,
+                "stop": 1750342266.7821465,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetching_utils.py"
+            },
+            {
+                "name": "tests/test_nwm_fetching_utils.py::test_dates_and_nwm22_version",
+                "status": "passed",
+                "duration": 0.0016106809989651083,
+                "start": 1750342266.7823732,
+                "stop": 1750342266.7841594,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetching_utils.py"
+            },
+            {
+                "name": "tests/test_nwm_fetching_utils.py::test_dates_and_nwm21_version",
+                "status": "passed",
+                "duration": 0.003030928999578464,
+                "start": 1750342266.784362,
+                "stop": 1750342266.7881064,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetching_utils.py"
+            },
+            {
+                "name": "tests/test_nwm_fetching_utils.py::test_dates_and_nwm20_version",
+                "status": "passed",
+                "duration": 0.002681124999980966,
+                "start": 1750342266.7883456,
+                "stop": 1750342266.7912464,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetching_utils.py"
+            },
+            {
+                "name": "tests/test_nwm_fetching_utils.py::test_dates_and_nwm12_version",
+                "status": "passed",
+                "duration": 0.002227582998784783,
+                "start": 1750342266.791576,
+                "stop": 1750342266.7940664,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetching_utils.py"
+            },
+            {
+                "name": "tests/test_nwm_fetching_utils.py::test_building_nwm30_gcs_paths",
+                "status": "passed",
+                "duration": 0.35285916999964684,
+                "start": 1750342266.7943363,
+                "stop": 1750342267.1475291,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetching_utils.py"
+            },
+            {
+                "name": "tests/test_nwm_fetching_utils.py::test_building_nwm22_gcs_paths",
+                "status": "passed",
+                "duration": 0.22463504100051068,
+                "start": 1750342267.1477873,
+                "stop": 1750342267.3726823,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetching_utils.py"
+            },
+            {
+                "name": "tests/test_nwm_fetching_utils.py::test_generate_json_paths",
+                "status": "passed",
+                "duration": 0.13492291800048406,
+                "start": 1750342267.3729498,
+                "stop": 1750342267.5081332,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetching_utils.py"
+            },
+            {
+                "name": "tests/test_nwm_fetching_utils.py::test_generate_json_for_bad_file",
+                "status": "passed",
+                "duration": 0.4688849929998469,
+                "start": 1750342267.5083954,
+                "stop": 1750342267.9775472,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetching_utils.py"
+            },
+            {
+                "name": "tests/test_nwm_fetching_utils.py::test_create_periods_based_on_day",
+                "status": "passed",
+                "duration": 0.0036716820004585315,
+                "start": 1750342267.9778407,
+                "stop": 1750342267.9817357,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetching_utils.py"
+            },
+            {
+                "name": "tests/test_nwm_fetching_utils.py::test_create_periods_based_on_week",
+                "status": "passed",
+                "duration": 0.001400213000124495,
+                "start": 1750342267.9819734,
+                "stop": 1750342267.9835536,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetching_utils.py"
+            },
+            {
+                "name": "tests/test_nwm_fetching_utils.py::test_create_periods_based_on_month",
+                "status": "passed",
+                "duration": 0.0012242370003150427,
+                "start": 1750342267.9837563,
+                "stop": 1750342267.9851637,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetching_utils.py"
+            },
+            {
+                "name": "tests/test_nwm_fetching_utils.py::test_create_periods_based_on_year",
+                "status": "passed",
+                "duration": 0.0025119700003415346,
+                "start": 1750342267.9854195,
+                "stop": 1750342267.9883294,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetching_utils.py"
+            },
+            {
+                "name": "tests/test_nwm_fetching_utils.py::test_start_end_z_hours",
+                "status": "passed",
+                "duration": 0.719887356000072,
+                "start": 1750342267.9889507,
+                "stop": 1750342268.709159,
+                "retries": 0,
+                "file_path": "tests/test_nwm_fetching_utils.py"
+            },
+            {
+                "name": "tests/test_nwm_retro_point_fetching_chunkby.py::test_nwm20_retro_one_file",
+                "status": "passed",
+                "duration": 9.350009180000598,
+                "start": 1750342268.709771,
+                "stop": 1750342278.0600624,
+                "retries": 0,
+                "file_path": "tests/test_nwm_retro_point_fetching_chunkby.py"
+            },
+            {
+                "name": "tests/test_nwm_retro_point_fetching_chunkby.py::test_nwm20_retro_week",
+                "status": "passed",
+                "duration": 8.762800442999833,
+                "start": 1750342278.060359,
+                "stop": 1750342286.8234415,
+                "retries": 0,
+                "file_path": "tests/test_nwm_retro_point_fetching_chunkby.py"
+            },
+            {
+                "name": "tests/test_nwm_retro_point_fetching_chunkby.py::test_nwm20_retro_month",
+                "status": "passed",
+                "duration": 9.357314695000241,
+                "start": 1750342286.8237274,
+                "stop": 1750342296.1813996,
+                "retries": 0,
+                "file_path": "tests/test_nwm_retro_point_fetching_chunkby.py"
+            },
+            {
+                "name": "tests/test_nwm_retro_point_fetching_chunkby.py::test_nwm20_retro_year",
+                "status": "passed",
+                "duration": 20.58590583900059,
+                "start": 1750342296.1816785,
+                "stop": 1750342316.7678921,
+                "retries": 0,
+                "file_path": "tests/test_nwm_retro_point_fetching_chunkby.py"
+            },
+            {
+                "name": "tests/test_nwm_retro_point_fetching_chunkby.py::test_nwm21_retro_one_file",
+                "status": "passed",
+                "duration": 8.919743590000508,
+                "start": 1750342316.7682195,
+                "stop": 1750342325.6882427,
+                "retries": 0,
+                "file_path": "tests/test_nwm_retro_point_fetching_chunkby.py"
+            },
+            {
+                "name": "tests/test_nwm_retro_point_fetching_chunkby.py::test_nwm30_one_file",
+                "status": "passed",
+                "duration": 9.327741509999214,
+                "start": 1750342325.6885633,
+                "stop": 1750342335.0165827,
+                "retries": 0,
+                "file_path": "tests/test_nwm_retro_point_fetching_chunkby.py"
+            },
+            {
+                "name": "tests/test_read_from_s3.py::test_read_from_s3",
+                "status": "passed",
+                "duration": 13.3578726249998,
+                "start": 1750342335.0183,
+                "stop": 1750342348.376486,
+                "retries": 0,
+                "file_path": "tests/test_read_from_s3.py"
+            },
+            {
+                "name": "tests/test_s3_utils.py::test_concat_paths_with_string_path",
+                "status": "passed",
+                "duration": 0.0005161669987501227,
+                "start": 1750342348.377852,
+                "stop": 1750342348.3785803,
+                "retries": 0,
+                "file_path": "tests/test_s3_utils.py"
+            },
+            {
+                "name": "tests/test_s3_utils.py::test_concat_paths_with_local_string_path",
+                "status": "passed",
+                "duration": 0.0003937229994335212,
+                "start": 1750342348.3788273,
+                "stop": 1750342348.3793864,
+                "retries": 0,
+                "file_path": "tests/test_s3_utils.py"
+            },
+            {
+                "name": "tests/test_s3_utils.py::test_concat_paths_with_path_object",
+                "status": "passed",
+                "duration": 0.0003704729997480172,
+                "start": 1750342348.3795948,
+                "stop": 1750342348.3801205,
+                "retries": 0,
+                "file_path": "tests/test_s3_utils.py"
+            },
+            {
+                "name": "tests/test_s3_utils.py::test_concat_paths_with_s3path_object",
+                "status": "passed",
+                "duration": 0.0003798059997279779,
+                "start": 1750342348.3803296,
+                "stop": 1750342348.3808696,
+                "retries": 0,
+                "file_path": "tests/test_s3_utils.py"
+            },
+            {
+                "name": "tests/test_s3_utils.py::test_concat_paths_with_invalid_arg",
+                "status": "passed",
+                "duration": 0.00037214599979051854,
+                "start": 1750342348.3810651,
+                "stop": 1750342348.3815975,
+                "retries": 0,
+                "file_path": "tests/test_s3_utils.py"
+            },
+            {
+                "name": "tests/test_s3path.py::test_s3path_initialization_comma",
+                "status": "passed",
+                "duration": 0.0003750709993255441,
+                "start": 1750342348.3821416,
+                "stop": 1750342348.3826807,
+                "retries": 0,
+                "file_path": "tests/test_s3path.py"
+            },
+            {
+                "name": "tests/test_s3path.py::test_s3path_initialization_div",
+                "status": "passed",
+                "duration": 0.0003757519998544012,
+                "start": 1750342348.3829107,
+                "stop": 1750342348.3834672,
+                "retries": 0,
+                "file_path": "tests/test_s3path.py"
+            },
+            {
+                "name": "tests/test_s3path.py::test_s3path_invalid_initialization",
+                "status": "passed",
+                "duration": 0.0010861619994102512,
+                "start": 1750342348.3836741,
+                "stop": 1750342348.3854172,
+                "retries": 0,
+                "file_path": "tests/test_s3path.py"
+            },
+            {
+                "name": "tests/test_s3path.py::test_s3path_invalid_initialization_int",
+                "status": "passed",
+                "duration": 0.0004543009990811697,
+                "start": 1750342348.3856626,
+                "stop": 1750342348.3863082,
+                "retries": 0,
+                "file_path": "tests/test_s3path.py"
+            },
+            {
+                "name": "tests/test_s3path.py::test_s3path_concatenation",
+                "status": "passed",
+                "duration": 0.0004583910003930214,
+                "start": 1750342348.3865216,
+                "stop": 1750342348.387246,
+                "retries": 0,
+                "file_path": "tests/test_s3path.py"
+            },
+            {
+                "name": "tests/test_s3path.py::test_s3path_invalid_concatenation",
+                "status": "passed",
+                "duration": 0.0016097030002129031,
+                "start": 1750342348.387551,
+                "stop": 1750342348.389415,
+                "retries": 0,
+                "file_path": "tests/test_s3path.py"
+            },
+            {
+                "name": "tests/test_s3path.py::test_s3path_repr",
+                "status": "passed",
+                "duration": 0.0006175059997985954,
+                "start": 1750342348.3897977,
+                "stop": 1750342348.3906856,
+                "retries": 0,
+                "file_path": "tests/test_s3path.py"
+            },
+            {
+                "name": "tests/test_s3path.py::test_s3path_invalid_path",
+                "status": "passed",
+                "duration": 0.0005330249996404746,
+                "start": 1750342348.390997,
+                "stop": 1750342348.391784,
+                "retries": 0,
+                "file_path": "tests/test_s3path.py"
+            },
+            {
+                "name": "tests/test_sql_query.py::test_sql_query",
+                "status": "passed",
+                "duration": 9.54334868800106,
+                "start": 1750342348.3930256,
+                "stop": 1750342357.936688,
+                "retries": 0,
+                "file_path": "tests/test_sql_query.py"
+            },
+            {
+                "name": "tests/test_sql_query.py::test_sql_query_on_empty_tables",
+                "status": "passed",
+                "duration": 0.573435225999674,
+                "start": 1750342357.9369931,
+                "stop": 1750342358.5107334,
+                "retries": 0,
+                "file_path": "tests/test_sql_query.py"
+            },
+            {
+                "name": "tests/test_usgs_fetching_chunkby.py::test_chunkby_location_id",
+                "status": "passed",
+                "duration": 1.1814748970000437,
+                "start": 1750342358.5114381,
+                "stop": 1750342359.6931925,
+                "retries": 0,
+                "file_path": "tests/test_usgs_fetching_chunkby.py"
+            },
+            {
+                "name": "tests/test_usgs_fetching_chunkby.py::test_chunkby_day",
+                "status": "passed",
+                "duration": 4.476455375000114,
+                "start": 1750342359.6934807,
+                "stop": 1750342364.1702,
+                "retries": 0,
+                "file_path": "tests/test_usgs_fetching_chunkby.py"
+            },
+            {
+                "name": "tests/test_usgs_fetching_chunkby.py::test_chunkby_week",
+                "status": "passed",
+                "duration": 1.3512771729992892,
+                "start": 1750342364.1704967,
+                "stop": 1750342365.522037,
+                "retries": 0,
+                "file_path": "tests/test_usgs_fetching_chunkby.py"
+            },
+            {
+                "name": "tests/test_usgs_fetching_chunkby.py::test_chunkby_month",
+                "status": "passed",
+                "duration": 2.6478980699985186,
+                "start": 1750342365.5223143,
+                "stop": 1750342368.170479,
+                "retries": 0,
+                "file_path": "tests/test_usgs_fetching_chunkby.py"
+            },
+            {
+                "name": "tests/test_usgs_fetching_chunkby.py::test_chunkby_all",
+                "status": "passed",
+                "duration": 0.513319841998964,
+                "start": 1750342368.1707747,
+                "stop": 1750342368.6843522,
+                "retries": 0,
+                "file_path": "tests/test_usgs_fetching_chunkby.py"
+            }
+        ]
+    }
+}

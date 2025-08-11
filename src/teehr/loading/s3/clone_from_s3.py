@@ -2,6 +2,7 @@
 from pathlib import Path
 import yaml
 import fsspec
+import s3fs
 import pandas as pd
 import teehr.const as const
 from datetime import datetime
@@ -209,6 +210,8 @@ def clone_from_s3(
     source = f"{url}/version"
     dest = f"{ev.dir_path}/version"
     logger.debug(f"Copying from {source}/ to {dest}")
-    with fsspec.open(source, 'r', anon=True) as file:
-        with open(dest, 'w') as f:
-            f.write(file.read())
+    file_exists = s3fs.S3FileSystem("s3").exists(source)
+    if file_exists is True:
+        with fsspec.open(source, 'r', anon=True) as file:
+            with open(dest, 'w') as f:
+                f.write(file.read())
