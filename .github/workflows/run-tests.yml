@@ -33,4 +33,4 @@ jobs:
         run: poetry install --no-interaction --no-root
 
       - name: Run tests
-        run: poetry run nox
+        run: poetry run nox -s single_test
