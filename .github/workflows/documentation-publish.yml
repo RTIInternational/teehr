@@ -1,9 +1,16 @@
 name: documentation
 
 on:
-  push:
-    tags: [ 'v*.*.*' ]
-    # branches: [348-add-past-teehr-resources-to-docs]
+  pull_request:
+    types: [opened, reopened]
+  # workflow_run:
+  #   workflows: ["run-tests"]     # Triggered by "run-tests" workflow
+  #   types: [completed]           # Trigger when "run-tests" completes
+  #   branches:
+  #     - "475-update-python-dependencies"
+  # push:
+  #   branches: [475-update-python-dependencies]
+
 
 permissions:
   contents: write
@@ -24,7 +31,6 @@ jobs:
           pip install poetry
           poetry config virtualenvs.create false
           poetry install
-          python -m teehr.utils.install_spark_jars
 
       - name: Sphinx build
         run: |

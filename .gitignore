@@ -141,3 +141,5 @@ temp/
 *.drawio.bkp
 
 .DS_Store
+
+poetry.toml

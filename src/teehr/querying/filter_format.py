@@ -1,6 +1,7 @@
 """Functions for formatting filters for querying."""
 import pandas as pd
-import pandera as pa
+import pandera.pandas as pa
+# import warnings
 
 from collections.abc import Iterable
 from datetime import datetime, timedelta

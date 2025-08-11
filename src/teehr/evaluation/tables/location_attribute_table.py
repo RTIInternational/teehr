@@ -15,6 +15,7 @@ from teehr.loading.utils import add_or_replace_sdf_column_prefix
 from teehr.models.table_enums import TableWriteEnum
 import pyspark.sql as ps
 import pandas as pd
+from teehr.models.pydantic_table_models import Attribute
 
 
 logger = logging.getLogger(__name__)
@@ -56,6 +57,7 @@ class LocationAttributeTable(BaseTable):
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True,
+        update_attrs_table: bool = True,
         **kwargs
     ):
         """Load location attributes helper."""
@@ -85,6 +87,22 @@ class LocationAttributeTable(BaseTable):
                 column_name="location_id",
                 prefix=location_id_prefix,
             )
+
+        if update_attrs_table:
+            attr_names = [
+                row.attribute_name for row in
+                df.select("attribute_name").distinct().collect()
+            ]
+            attr_list = []
+            for attr_name in attr_names:
+                attr_list.append(
+                    Attribute(
+                        name=attr_name,
+                        type="continuous",
+                        description=f"{attr_name} default description"
+                    )
+                )
+            self.ev.attributes.add(attr_list)
 
         # Validate using the _validate() method
         validated_df = self._validate(
@@ -134,6 +152,7 @@ class LocationAttributeTable(BaseTable):
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True,
+        update_attrs_table: bool = True,
         **kwargs
     ):
         """Import location_attributes from parquet file format.
@@ -163,6 +182,11 @@ class LocationAttributeTable(BaseTable):
             overwritten.
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the DataFrame.
+        update_attrs_table : bool, optional (default: True)
+            Whether to add default attributes for the location attributes.
+            If True, it will add default attributes for each unique attribute
+            name found in the data with category="continuous" and the
+            default description "<attribute_name> default description".
         **kwargs
             Additional keyword arguments are passed to pd.read_parquet().
 
@@ -182,6 +206,7 @@ class LocationAttributeTable(BaseTable):
             location_id_prefix=location_id_prefix,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
+            update_attrs_table=update_attrs_table,
             **kwargs
         )
         self._load_table()
@@ -194,6 +219,7 @@ class LocationAttributeTable(BaseTable):
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True,
+        update_attrs_table: bool = True,
         **kwargs
     ):
         """Import location_attributes from CSV file format.
@@ -222,6 +248,11 @@ class LocationAttributeTable(BaseTable):
             If "overwrite", existing partitions receiving new data are overwritten
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the DataFrame.
+        update_attrs_table : bool, optional (default: True)
+            Whether to add default attributes for the location attributes.
+            If True, it will add default attributes for each unique attribute
+            name found in the data with category="continuous" and the
+            default description "<attribute_name> default description".
         **kwargs
             Additional keyword arguments are passed to pd.read_parquet().
 
@@ -241,6 +272,7 @@ class LocationAttributeTable(BaseTable):
             location_id_prefix=location_id_prefix,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
+            update_attrs_table=update_attrs_table,
             **kwargs
         )
         self._load_table()

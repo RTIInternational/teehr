@@ -307,7 +307,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
                 logger.warning(
                     f"An empty dataframe was returned for '{self.name}'."
                     )
-        elif ~df.isEmpty():
+        elif not df.isEmpty():
             df = self.ev.spark.read.format(self.format).options(**options).load(path)
 
         return df
