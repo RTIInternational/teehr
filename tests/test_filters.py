@@ -243,7 +243,7 @@ def test_filter_by_lead_time(tmpdir):
     ).to_pandas()
     assert len(df) == 45
     df = ev.joined_timeseries.filter(
-        "forecast_lead_time > INTERVAL '0 18:00:00' DAY TO SECOND"
+        f"forecast_lead_time > {filter_value.total_seconds()}"
     ).to_pandas()
     assert len(df) == 45
 
