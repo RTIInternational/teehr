@@ -26,6 +26,7 @@ from teehr.loading.s3.clone_from_s3 import (
 import teehr.const as const
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.metrics import Metrics
+from teehr.evaluation.generate import Generate
 import pandas as pd
 from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor # noqa
 import re
@@ -112,6 +113,11 @@ class Evaluation:
                 .set("spark.driver.maxResultSize", f"{int(driver_maxresultsize)}g")
             )
             self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
+
+    @property
+    def generate(self) -> Generate:
+        """The generate component class for generating synthetic data."""
+        return Generate(self)
 
     @property
     def fetch(self) -> Fetch:

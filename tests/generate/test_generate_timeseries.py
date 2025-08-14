@@ -52,7 +52,7 @@ def test_climatology(tmpdir):
             )
         ]
     )
-    ev.primary_timeseries.calculate_climatology(
+    ev.generate.climatology(
         input_timeseries_filter=[
             "configuration_name = 'usgs_observations'",
             "variable_name = 'streamflow_hourly_inst'"
