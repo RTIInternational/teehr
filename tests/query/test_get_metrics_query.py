@@ -15,7 +15,10 @@ from teehr.models.metrics.bootstrap_models import Bootstrappers
 from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 from teehr.evaluation.evaluation import Evaluation
 
-from data.setup_v0_3_study import setup_v0_3_study
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from data.setup_v0_3_study import setup_v0_3_study  # noqa
+
 TEST_STUDY_DATA_DIR_v0_4 = Path("tests", "data", "test_study")
 
 
@@ -42,7 +45,7 @@ def test_executing_deterministic_metrics(tmpdir):
 
     # Test all the metrics.
     include_all_metrics = [
-        func() for func in DeterministicMetrics.__dict__.values() if callable(func)
+        func() for func in DeterministicMetrics.__dict__.values() if callable(func)  # noqa
     ]
 
     # Get the currently available fields to use in the query.
@@ -370,7 +373,9 @@ def test_gumboot_bootstrapping(tmpdir):
     ).to_sdf()
 
     # Unpack and compare the results.
-    teehr_results = np.sort(np.array(metrics_df.kling_gupta_efficiency.values[0]))
+    teehr_results = np.sort(
+        np.array(metrics_df.kling_gupta_efficiency.values[0])
+    )
     manual_results = np.sort(results.ravel()).astype(np.float32)
     assert (teehr_results == manual_results).all()
     assert isinstance(metrics_df, pd.DataFrame)
@@ -439,7 +444,9 @@ def test_ensemble_metrics(tmpdir):
         in_path=usgs_location
     )
     ev.location_crosswalks.load_csv(
-        in_path=Path(TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv")
+        in_path=Path(
+            TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv"
+        )
     )
     ev.configurations.add(
         Configuration(
@@ -496,14 +503,13 @@ def test_ensemble_metrics(tmpdir):
         summary_statistic="mean",
     )
 
-
     # Add reference forecast based on climatology.
     ev.configurations.add(
         [
             Configuration(
                 name="reference_climatology_forecast",
                 type="secondary",
-                description="Reference forecast based on USGS climatology summarized by hour of year"
+                description="Reference forecast based on USGS climatology summarized by hour of year"  # noqa
             )
         ]
     )

@@ -4,10 +4,13 @@ import teehr
 from teehr import RowLevelCalculatedFields as rcf
 from teehr import TimeseriesAwareCalculatedFields as tcf
 
-from data.setup_v0_3_study import setup_v0_3_study
-
 import pyspark.sql.types as T
 import numpy as np
+
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from data.setup_v0_3_study import setup_v0_3_study  # noqa
 
 
 def test_add_row_udfs_null_reference(tmpdir):

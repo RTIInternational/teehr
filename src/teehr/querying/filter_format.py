@@ -1,7 +1,6 @@
 """Functions for formatting filters for querying."""
 import pandas as pd
 import pandera.pandas as pa
-# import warnings
 
 from collections.abc import Iterable
 from datetime import datetime, timedelta
@@ -72,7 +71,7 @@ def format_timedelta_value(value: timedelta) -> str:
     hours, remainder = divmod(total_seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
     days = value.days
-    return f"INTERVAL '{days} {hours:02d}:{minutes:02d}:{seconds:02d}' DAY TO SECOND"
+    return f"INTERVAL '{days} {hours:02d}:{minutes:02d}:{seconds:02d}' DAY TO SECOND"  # noqa
 
 
 def format_filter(

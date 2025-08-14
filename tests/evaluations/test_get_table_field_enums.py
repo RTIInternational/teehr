@@ -12,7 +12,10 @@ from teehr.models.table_enums import (
     JoinedTimeseriesFields
 )
 
-from data.setup_v0_3_study import setup_v0_3_study
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from data.setup_v0_3_study import setup_v0_3_study  # noqa
 
 
 def test_get_configuration_fields(tmpdir):

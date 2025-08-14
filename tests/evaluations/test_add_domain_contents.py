@@ -1,4 +1,4 @@
-"""Tests for the domain update columns"""
+"""Tests for the domain update columns."""
 from teehr.models.pydantic_table_models import (
     Configuration,
     Unit,

@@ -11,7 +11,10 @@ from teehr.querying.filter_format import validate_filter
 import tempfile
 import pytest
 
-from data.setup_v0_3_study import setup_v0_3_study
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from data.setup_v0_3_study import setup_v0_3_study  # noqa
 
 
 def test_filter_string_passes(tmpdir):
