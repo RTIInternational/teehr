@@ -111,9 +111,9 @@ def format_filter(
         value = format_iterable_value(filter.value)
         return f"""{column} {operator} {value}"""
     elif isinstance(filter.value, timedelta):
-        # value = format_timedelta_value(filter.value)
-        seconds = filter.value.total_seconds()
-        return f"""{column} {operator} {seconds}"""
+        value = format_timedelta_value(filter.value)
+        # seconds = filter.value.total_seconds()
+        return f"""{column} {operator} {value}"""
     else:
         logger.warning(
             f"Treating value {filter.value} as string because "

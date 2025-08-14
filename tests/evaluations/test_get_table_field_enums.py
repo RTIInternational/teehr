@@ -1,3 +1,4 @@
+"""Tests related to field enums."""
 import tempfile
 from teehr.models.table_enums import (
     ConfigurationFields,
@@ -11,7 +12,7 @@ from teehr.models.table_enums import (
     JoinedTimeseriesFields
 )
 
-from setup_v0_3_study import setup_v0_3_study
+from data.setup_v0_3_study import setup_v0_3_study
 
 
 def test_get_configuration_fields(tmpdir):

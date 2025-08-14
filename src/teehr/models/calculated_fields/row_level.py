@@ -243,12 +243,12 @@ class ForecastLeadTime(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        @pandas_udf(returnType=T.LongType())
+        @pandas_udf(returnType=T.DayTimeIntervalType())
         def func(value_time: pd.Series,
                  reference_time: pd.Series
                  ) -> pd.Series:
             difference = value_time - reference_time
-            return difference.dt.total_seconds()
+            return difference
 
         sdf = sdf.withColumn(
             self.output_field_name,

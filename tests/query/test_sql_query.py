@@ -6,7 +6,7 @@ should apply to all tables.
 import tempfile
 from teehr import Evaluation
 
-from setup_v0_3_study import setup_v0_3_study
+from data.setup_v0_3_study import setup_v0_3_study
 
 
 def test_sql_query(tmpdir):

@@ -11,7 +11,7 @@ from teehr.querying.filter_format import validate_filter
 import tempfile
 import pytest
 
-from setup_v0_3_study import setup_v0_3_study
+from data.setup_v0_3_study import setup_v0_3_study
 
 
 def test_filter_string_passes(tmpdir):

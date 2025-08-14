@@ -10,7 +10,7 @@ from teehr.querying.filter_format import (
 import pandas as pd
 import tempfile
 
-from setup_v0_3_study import setup_v0_3_study
+from data.setup_v0_3_study import setup_v0_3_study
 
 
 def test_filter_eq_str(tmpdir):

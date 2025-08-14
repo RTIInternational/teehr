@@ -13,7 +13,7 @@ from teehr.models.filters import (
     FilterOperators
 )
 
-from setup_v0_3_study import setup_v0_3_study
+from data.setup_v0_3_study import setup_v0_3_study
 
 
 def test_chain_filter_single_str(tmpdir):
@@ -242,9 +242,11 @@ def test_filter_by_lead_time(tmpdir):
         ]
     ).to_pandas()
     assert len(df) == 45
+
     df = ev.joined_timeseries.filter(
-        f"forecast_lead_time > {filter_value.total_seconds()}"
+        "forecast_lead_time > interval 18 hours"
     ).to_pandas()
+
     assert len(df) == 45
 
 
@@ -252,96 +254,96 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_chain_filter_single_str(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_single_str2(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_single_dict(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_single_dict2(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_single_model(
-            tempfile.mkdtemp(
-                prefix="5-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_single_model2(
-            tempfile.mkdtemp(
-                prefix="6-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_list_str(
-            tempfile.mkdtemp(
-                prefix="7-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_list_dict(
-            tempfile.mkdtemp(
-                prefix="8-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_list_model(
-            tempfile.mkdtemp(
-                prefix="9-",
-                dir=tempdir
-            )
-        )
-        test_query_single_str(
-            tempfile.mkdtemp(
-                prefix="10-",
-                dir=tempdir
-            )
-        )
-        test_query_single_dict(
-            tempfile.mkdtemp(
-                prefix="11-",
-                dir=tempdir
-            )
-        )
-        test_query_single_model(
-            tempfile.mkdtemp(
-                prefix="12-",
-                dir=tempdir
-            )
-        )
-        test_query_list_str(
-            tempfile.mkdtemp(
-                prefix="13-",
-                dir=tempdir
-            )
-        )
-        test_query_list_dict(
-            tempfile.mkdtemp(
-                prefix="14-",
-                dir=tempdir
-            )
-        )
-        test_query_list_model(
-            tempfile.mkdtemp(
-                prefix="15-",
-                dir=tempdir
-            )
-        )
+        # test_chain_filter_single_str(
+        #     tempfile.mkdtemp(
+        #         prefix="1-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_chain_filter_single_str2(
+        #     tempfile.mkdtemp(
+        #         prefix="2-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_chain_filter_single_dict(
+        #     tempfile.mkdtemp(
+        #         prefix="3-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_chain_filter_single_dict2(
+        #     tempfile.mkdtemp(
+        #         prefix="4-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_chain_filter_single_model(
+        #     tempfile.mkdtemp(
+        #         prefix="5-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_chain_filter_single_model2(
+        #     tempfile.mkdtemp(
+        #         prefix="6-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_chain_filter_list_str(
+        #     tempfile.mkdtemp(
+        #         prefix="7-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_chain_filter_list_dict(
+        #     tempfile.mkdtemp(
+        #         prefix="8-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_chain_filter_list_model(
+        #     tempfile.mkdtemp(
+        #         prefix="9-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_query_single_str(
+        #     tempfile.mkdtemp(
+        #         prefix="10-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_query_single_dict(
+        #     tempfile.mkdtemp(
+        #         prefix="11-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_query_single_model(
+        #     tempfile.mkdtemp(
+        #         prefix="12-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_query_list_str(
+        #     tempfile.mkdtemp(
+        #         prefix="13-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_query_list_dict(
+        #     tempfile.mkdtemp(
+        #         prefix="14-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_query_list_model(
+        #     tempfile.mkdtemp(
+        #         prefix="15-",
+        #         dir=tempdir
+        #     )
+        # )
         test_filter_by_lead_time(
             tempfile.mkdtemp(
                 prefix="16-",

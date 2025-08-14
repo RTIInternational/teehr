@@ -15,7 +15,7 @@ from teehr.models.metrics.bootstrap_models import Bootstrappers
 from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 from teehr.evaluation.evaluation import Evaluation
 
-from setup_v0_3_study import setup_v0_3_study
+from data.setup_v0_3_study import setup_v0_3_study
 TEST_STUDY_DATA_DIR_v0_4 = Path("tests", "data", "test_study")
 
 

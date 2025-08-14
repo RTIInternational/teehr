@@ -1,10 +1,10 @@
-"""Tests for the TEEHR study creation."""
+"""Tests for the TEEHR UDFs."""
 import tempfile
 import teehr
 from teehr import RowLevelCalculatedFields as rcf
 from teehr import TimeseriesAwareCalculatedFields as tcf
 
-from setup_v0_3_study import setup_v0_3_study
+from data.setup_v0_3_study import setup_v0_3_study
 
 import pyspark.sql.types as T
 import numpy as np
@@ -88,7 +88,7 @@ def test_add_row_udfs(tmpdir):
 
     assert "threshold_value_exceeded" in cols
     assert sdf.schema["threshold_value_exceeded"].dataType == T.BooleanType()
-    check_vals = check_sdf.select("threshold_value_exceeded").distinct().collect()
+    check_vals = check_sdf.select("threshold_value_exceeded").distinct().collect()  # noqa
     assert check_vals[0]["threshold_value_exceeded"] is True
 
     assert "day_of_year" in cols
