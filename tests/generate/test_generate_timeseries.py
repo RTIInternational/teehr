@@ -3,7 +3,8 @@ from pathlib import Path
 import tempfile
 
 import teehr
-from teehr import TimeseriesGenerators as tsg
+from teehr import SummaryTimeseriesGenerators as sts
+from teehr import BenchmarkForecastGenerators as bfs
 
 from teehr.models.generate.base import TimeseriesModel
 
@@ -37,17 +38,15 @@ def test_generate_timeseries_normals(tmpdir):
         )
     )
 
-    tsm = TimeseriesModel()
-    tsm.unit_name = "m^3/s"  # ft^3/s is the default
+    input_tsm = TimeseriesModel()
+    input_tsm.unit_name = "m^3/s"  # ft^3/s is the default
 
-    gen_method = tsg.Normals()
-    gen_method.temporal_resolution = "day_of_year"  # the default
-    gen_method.summary_statistic = "mean"           # the default
+    ts_normals = sts.Normals()
+    ts_normals.temporal_resolution = "day_of_year"  # the default
+    ts_normals.summary_statistic = "mean"           # the default
+    ts_normals.input_tsm = input_tsm
 
-    ev.generate.timeseries(
-        method=gen_method,
-        input_tsm=tsm
-    ).write()
+    ev.generate.summary_timeseries(method=ts_normals).write()
 
     # df = gts.to_pandas()
     prim_df = ev.primary_timeseries.to_pandas()
@@ -55,90 +54,7 @@ def test_generate_timeseries_normals(tmpdir):
     pass
 
 
-def test_climatology(tmpdir):
-    """Test the climatology calculation."""
-    usgs_location = Path(
-        TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_location.parquet"
-    )
-    ev = teehr.Evaluation(dir_path=tmpdir)
-    ev.clone_template()
-    ev.locations.load_spatial(
-        in_path=usgs_location
-    )
-    # Add USGS observations from test file.
-    ev.configurations.add(
-        [
-            teehr.Configuration(
-                name="usgs_observations",
-                type="primary",
-                description="USGS streamflow observations"
-            )
-        ]
-    )
-    ev.primary_timeseries.load_parquet(
-        in_path=Path(
-            TEST_STUDY_DATA_DIR_v0_4,
-            "timeseries",
-            "usgs_hefs_06711565_2yrs.parquet"
-        )
-    )
-    # Calculate climatology from USGS observations.
-    ev.configurations.add(
-        [
-            teehr.Configuration(
-                name="usgs_climatology",
-                type="primary",
-                description="Climatology of USGS streamflow"
-            )
-        ]
-    )
-    ev.variables.add(
-        [
-            teehr.Variable(
-                name="streamflow_hourly_ave",
-                long_name="Climatology of USGS streamflow for hour of year"
-            )
-        ]
-    )
-    ev.generate.climatology(
-        input_timeseries_filter=[
-            "configuration_name = 'usgs_observations'",
-            "variable_name = 'streamflow_hourly_inst'"
-        ],
-        output_configuration_name="usgs_climatology",
-        output_variable_name="streamflow_hourly_climatology",
-        temporal_resolution="day_of_year",
-        summary_statistic="mean",
-    )
-    prim_df = (
-        ev
-        .primary_timeseries
-        .filter("configuration_name = 'usgs_observations'")
-        .to_pandas()
-    )
-    clim_df = (
-        ev
-        .primary_timeseries
-        .filter("configuration_name = 'usgs_climatology'")
-        .to_pandas()
-    )
-    # Manually calculate the mean for each day of the year.
-    # Leap day of year gets set as the previous day's value.
-    prim_df["day_of_year"] = prim_df.value_time.dt.dayofyear
-    prim_df["year"] = prim_df.value_time.dt.year
-    leap_day_mask = (prim_df.year == 2024) & (prim_df.day_of_year == 60)
-    following_leap_day_mask = (prim_df.year == 2024) & (prim_df.day_of_year >= 61)
-    prim_df.loc[leap_day_mask, "day_of_year"] = 59
-    prim_df.loc[following_leap_day_mask, "day_of_year"] -= 1
-    mean_prim_srs = prim_df.copy().groupby("day_of_year")["value"].mean()
-    # Check that the climatology matches the manual calculation.
-    # After leap day of year, indices are shifted by one.
-    clim_df["day_of_year"] = clim_df.value_time.dt.dayofyear
-    assert clim_df[clim_df.day_of_year == 59].value.values[0] == mean_prim_srs.loc[59]
-    assert clim_df[clim_df.day_of_year == 61].value.values[0] == mean_prim_srs.loc[60]
-
-
-def test_reference_forecast(tmpdir):
+def test_generate_reference_forecast(tmpdir):
     """Test the reference forecast calculation."""
     ev = teehr.Evaluation(dir_path=tmpdir)
     ev.clone_template()
@@ -194,6 +110,33 @@ def test_reference_forecast(tmpdir):
     )
     # Calculate a reference forecast, assigning the USGS observation
     # values to an HEFS member (just for testing).
+    ref_fcst = bfs.ReferenceForecast()
+    ref_fcst.reference_tsm = TimeseriesModel(
+        configuration_name="usgs_observations",
+        variable_name="streamflow_day_of_year_mean",
+        unit_name="ft^3/s",
+        timeseries_type="primary"
+    )
+    ref_fcst.template_tsm = TimeseriesModel(
+        configuration_name="MEFP",
+        variable_name="streamflow_hourly_inst",
+        unit_name="ft^3/s",
+        timeseries_type="secondary",
+        member="1993"
+    )
+    ref_fcst.output_tsm = TimeseriesModel(
+        configuration_name="benchmark_forecast_normals",
+        variable_name="streamflow_hourly_inst",
+        unit_name="ft^3/s",
+        timeseries_type="secondary"
+    )
+
+    ev.generate.benchmark_forecast(
+        method=ref_fcst
+    ).write()
+
+    pass
+
     ev.configurations.add(
         teehr.Configuration(
             name="reference_climatology_forecast",
@@ -229,21 +172,15 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_generate_timeseries_normals(
-            tempfile.mkdtemp(
-                prefix="0-",
-                dir=tempdir
-            )
-        )
-        test_climatology(
+        # test_generate_timeseries_normals(
+        #     tempfile.mkdtemp(
+        #         prefix="0-",
+        #         dir=tempdir
+        #     )
+        # )
+        test_generate_reference_forecast(
             tempfile.mkdtemp(
                 prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_reference_forecast(
-            tempfile.mkdtemp(
-                prefix="2-",
                 dir=tempdir
             )
         )

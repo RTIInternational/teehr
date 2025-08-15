@@ -4,7 +4,14 @@ import abc
 from pydantic import BaseModel as PydanticBaseModel, ConfigDict
 from pydantic import Field
 from teehr.models.str_enum import StrEnum
+# import pyspark.sql as ps
+
 from teehr.models.fetching.utils import TimeseriesTypeEnum
+# from teehr.models.generate.base import (
+#     NormalsResolutionEnum,
+#     NormalsStatisticEnum,
+#     TimeseriesModel
+# )
 
 
 class GeneratorABC(abc.ABC):
@@ -16,8 +23,31 @@ class GeneratorABC(abc.ABC):
         pass
 
 
-class TimeseriesGeneratorBaseModel(PydanticBaseModel):
-    """Synthetic timeseries generator base model configuration."""
+class ReferenceForecastBaseModel(PydanticBaseModel):
+    """Base model for reference forecast generator classes."""
+
+    # temporal_resolution: NormalsResolutionEnum = Field(default=None)
+    # reference_tsm: TimeseriesModel = Field(default=None)
+    # template_tsm: TimeseriesModel = Field(default=None)
+    # output_tsm: TimeseriesModel = Field(default=None)
+    # aggregate_reference_timeseries: bool = Field(default=False)
+    # aggregation_time_window: str = Field(default=None)
+    # df: ps.DataFrame = Field(default=None)
+
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        validate_assignment=True,
+        extra='forbid'  # raise an error if extra fields are passed
+    )
+
+
+class SummaryTimeseriesBaseModel(PydanticBaseModel):
+    """Base model for summary timeseries generator classes."""
+
+    # temporal_resolution: NormalsResolutionEnum = Field(default=None)
+    # summary_statistic: NormalsStatisticEnum = Field(default=None)
+    # input_tsm: TimeseriesModel = Field(default=None)
+    # df: ps.DataFrame = Field(default=None)
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
@@ -35,15 +65,25 @@ class TimeseriesModel(PydanticBaseModel):
     timeseries_type: TimeseriesTypeEnum = Field(
         default=TimeseriesTypeEnum.primary
     )
+    member: str = Field(default=None)
 
     def to_query(self) -> str:
         """Generate a SQL query to select the timeseries."""
-        return f"""
-            SELECT * FROM {self.timeseries_type}_timeseries
-            WHERE configuration_name = '{self.configuration_name}'
-            AND variable_name = '{self.variable_name}'
-            AND unit_name = '{self.unit_name}'
-        ;"""
+        if self.member is None:
+            return f"""
+                SELECT * FROM {self.timeseries_type}_timeseries
+                WHERE configuration_name = '{self.configuration_name}'
+                AND variable_name = '{self.variable_name}'
+                AND unit_name = '{self.unit_name}'
+            ;"""
+        else:
+            return f"""
+                SELECT * FROM {self.timeseries_type}_timeseries
+                WHERE configuration_name = '{self.configuration_name}'
+                AND variable_name = '{self.variable_name}'
+                AND unit_name = '{self.unit_name}'
+                AND member = '{self.member}'
+            ;"""
 
 
 class NormalsResolutionEnum(StrEnum):

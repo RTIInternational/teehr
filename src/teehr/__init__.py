@@ -33,4 +33,7 @@ from teehr.models.filters import (  # noqa
 
 from teehr.models.calculated_fields.row_level import RowLevelCalculatedFields # noqa
 from teehr.models.calculated_fields.timeseries_aware import TimeseriesAwareCalculatedFields # noqa
-from teehr.models.generate.timeseries_generator_models import TimeseriesGenerators  # noqa
+from teehr.models.generate.timeseries_generator_models import (  # noqa
+    SummaryTimeseriesGenerators,
+    BenchmarkForecastGenerators
+)
