@@ -202,6 +202,9 @@ class LyneHollickBaseflow(CalculatedFieldABC,
     - output_field_name:
         The name of the column to store the baseflow separation result.
         Default: "lyne_hollick_baseflow"
+    - beta:
+        The filter parameter for the Lyne-Hollick filter method.
+        Default: 0.925
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
 
@@ -225,6 +228,9 @@ class LyneHollickBaseflow(CalculatedFieldABC,
     output_field_name: str = Field(
         default="lyne_hollick_baseflow"
     )
+    beta: float = Field(
+        default=0.925
+    )
     uniqueness_fields: Union[str, List[str]] = Field(
         default=[
             'reference_time',
@@ -241,6 +247,7 @@ class LyneHollickBaseflow(CalculatedFieldABC,
         output_field,
         input_field,
         time_field,
+        beta,
         group_by,
         return_type=T.DoubleType()
     ):
@@ -257,9 +264,11 @@ class LyneHollickBaseflow(CalculatedFieldABC,
         def lyne_hollick_baseflow(pdf: pd.DataFrame,
                                   input_field,
                                   time_field,
-                                  output_field) -> pd.DataFrame:
+                                  output_field,
+                                  beta) -> pd.DataFrame:
             # lazy load the BYU-baseflow library
-            import baseflow as bf
+            from baseflow.utils import clean_streamflow
+            from baseflow.methods import LH
 
             # create a new column for baseflow
             pdf[output_field] = None
@@ -277,27 +286,34 @@ class LyneHollickBaseflow(CalculatedFieldABC,
                     )
 
             # obtain the baseflow separation using the Lyne-Hollick method
-            result = bf.single(series=input_streamflow,
-                               area=None,
-                               ice=None,
-                               method='LH',
-                               return_kge=False)
-            result_df = result[0]
+            date, flow = clean_streamflow(input_streamflow)
+            result_df = pd.DataFrame(np.nan, index=date, columns=['LH'])
+            result_df['LH'] = LH(Q=flow,
+                                 beta=beta,
+                                 return_exceed=False)
 
             # assign the baseflow values to the new column
             pdf[output_field] = np.round(result_df['LH'].values, 2)
 
             return pdf
 
-        def wrapper(pdf, input_field, time_field, output_field):
+        def wrapper(pdf, input_field, time_field, output_field, beta):
             return lyne_hollick_baseflow(pdf,
                                          input_field,
                                          time_field,
-                                         output_field)
+                                         output_field,
+                                         beta)
 
         # Group the data and apply the UDF
-        sdf = sdf.orderBy(*group_by, time_field).groupby(group_by).applyInPandas(
-            lambda pdf: wrapper(pdf, input_field, time_field, output_field),
+        sdf = sdf.orderBy(
+            *group_by,
+            time_field
+            ).groupby(group_by).applyInPandas(
+            lambda pdf: wrapper(pdf,
+                                input_field,
+                                time_field,
+                                output_field,
+                                beta),
             schema=output_schema
         )
 
@@ -310,6 +326,7 @@ class LyneHollickBaseflow(CalculatedFieldABC,
             input_field=self.value_field_name,
             time_field=self.value_time_field_name,
             output_field=self.output_field_name,
+            beta=self.beta,
             group_by=self.uniqueness_fields
         )
 
@@ -334,6 +351,13 @@ class ChapmanBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
     - output_field_name:
         The name of the column to store the baseflow separation result.
         Default: "chapman_baseflow"
+    - beta:
+        The filter parameter for the Lyne-Hollick filter method.
+        Default: 0.925
+    - a: float
+        The recession coefficient for the Chapman filter method. If not
+        provided, it will be estimated using the input timeseries data.
+        Default: None
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
 
@@ -357,6 +381,12 @@ class ChapmanBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
     output_field_name: str = Field(
         default="chapman_baseflow"
     )
+    beta: float = Field(
+        default=0.925
+    )
+    a: float = Field(
+        default=None
+    )
     uniqueness_fields: Union[str, List[str]] = Field(
         default=[
             'reference_time',
@@ -373,6 +403,8 @@ class ChapmanBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         output_field,
         input_field,
         time_field,
+        beta,
+        a,
         group_by,
         return_type=T.DoubleType()
     ):
@@ -389,9 +421,14 @@ class ChapmanBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         def chapman_baseflow(pdf: pd.DataFrame,
                              input_field,
                              time_field,
-                             output_field) -> pd.DataFrame:
+                             output_field,
+                             beta,
+                             a) -> pd.DataFrame:
             # lazy load the BYU-baseflow library
-            import baseflow as bf
+            from baseflow.utils import clean_streamflow
+            from baseflow.comparision import strict_baseflow
+            from baseflow.param_estimate import recession_coefficient
+            from baseflow.methods import LH, Chapman
 
             # create a new column for baseflow
             pdf[output_field] = None
@@ -409,24 +446,45 @@ class ChapmanBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                     )
 
             # obtain the baseflow separation using the Chapman method
-            result = bf.single(series=input_streamflow,
-                               area=None,
-                               ice=None,
-                               method='Chapman',
-                               return_kge=False)
-            result_df = result[0]
+            date, flow = clean_streamflow(input_streamflow)
+            strict_filter = strict_baseflow(Q=flow,
+                                            ice=None)
+            if not a:
+                a = recession_coefficient(Q=flow,
+                                          strict=strict_filter)
+            b_LH = LH(Q=flow,
+                      beta=beta,
+                      return_exceed=False)
+            result_df = pd.DataFrame(np.nan, index=date, columns=['Chapman'])
+            result_df['Chapman'] = Chapman(Q=flow,
+                                           b_LH=b_LH,
+                                           a=a,
+                                           return_exceed=False)
 
             # assign the baseflow values to the new column
             pdf[output_field] = np.round(result_df['Chapman'].values, 2)
 
             return pdf
 
-        def wrapper(pdf, input_field, time_field, output_field):
-            return chapman_baseflow(pdf, input_field, time_field, output_field)
+        def wrapper(pdf, input_field, time_field, output_field, beta, a):
+            return chapman_baseflow(pdf,
+                                    input_field,
+                                    time_field,
+                                    output_field,
+                                    beta,
+                                    a)
 
         # group the data and apply the UDF
-        sdf = sdf.orderBy(*group_by, time_field).groupby(group_by).applyInPandas(
-            lambda pdf: wrapper(pdf, input_field, time_field, output_field),
+        sdf = sdf.orderBy(
+            *group_by,
+            time_field
+            ).groupby(group_by).applyInPandas(
+            lambda pdf: wrapper(pdf,
+                                input_field,
+                                time_field,
+                                output_field,
+                                beta,
+                                a),
             schema=output_schema
         )
 
@@ -439,6 +497,8 @@ class ChapmanBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             input_field=self.value_field_name,
             time_field=self.value_time_field_name,
             output_field=self.output_field_name,
+            beta=self.beta,
+            a=self.a,
             group_by=self.uniqueness_fields
         )
 
@@ -463,6 +523,13 @@ class ChapmanMaxwellBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
     - output_field_name:
         The name of the column to store the baseflow separation result.
         Default: "chapman_maxwell_baseflow"
+    - beta:
+        The filter parameter for the Lyne-Hollick filter method.
+        Default: 0.925
+    - a: float
+        The recession coefficient for the Chapman-Maxwell filter method. If not
+        provided, it will be estimated using the input timeseries data.
+        Default: None
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
 
@@ -486,6 +553,12 @@ class ChapmanMaxwellBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
     output_field_name: str = Field(
         default="chapman_maxwell_baseflow"
     )
+    beta: float = Field(
+        default=0.925
+    )
+    a: float = Field(
+        default=None
+    )
     uniqueness_fields: Union[str, List[str]] = Field(
         default=[
             'reference_time',
@@ -502,6 +575,8 @@ class ChapmanMaxwellBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         output_field,
         input_field,
         time_field,
+        beta,
+        a,
         group_by,
         return_type=T.DoubleType()
     ):
@@ -518,9 +593,14 @@ class ChapmanMaxwellBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         def chapman_maxwell_baseflow(pdf: pd.DataFrame,
                                      input_field,
                                      time_field,
-                                     output_field) -> pd.DataFrame:
+                                     output_field,
+                                     beta,
+                                     a) -> pd.DataFrame:
             # lazy load the BYU-baseflow library
-            import baseflow as bf
+            from baseflow.utils import clean_streamflow
+            from baseflow.comparision import strict_baseflow
+            from baseflow.param_estimate import recession_coefficient
+            from baseflow.methods import LH, CM
 
             # create a new column for baseflow
             pdf[output_field] = None
@@ -537,13 +617,21 @@ class ChapmanMaxwellBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                     "Input streamflow series must have at least 120 timesteps."
                     )
 
-            # obtain the baseflow separation using the Chapman method
-            result = bf.single(series=input_streamflow,
-                               area=None,
-                               ice=None,
-                               method='CM',
-                               return_kge=False)
-            result_df = result[0]
+            # obtain the baseflow separation using the Chapman-Maxwell method
+            date, flow = clean_streamflow(input_streamflow)
+            strict_filter = strict_baseflow(Q=flow,
+                                            ice=None)
+            if not a:
+                a = recession_coefficient(Q=flow,
+                                          strict=strict_filter)
+            b_LH = LH(Q=flow,
+                      beta=beta,
+                      return_exceed=False)
+            result_df = pd.DataFrame(np.nan, index=date, columns=['CM'])
+            result_df['CM'] = CM(Q=flow,
+                                 b_LH=b_LH,
+                                 a=a,
+                                 return_exceed=False)
 
             # assign the baseflow values to the new column
             pdf[output_field] = np.round(result_df['CM'].values, 2)
@@ -551,15 +639,25 @@ class ChapmanMaxwellBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             return pdf
 
         # Define the UDF for baseflow separation
-        def wrapper(pdf, input_field, time_field, output_field):
+        def wrapper(pdf, input_field, time_field, output_field, beta, a):
             return chapman_maxwell_baseflow(pdf,
                                             input_field,
                                             time_field,
-                                            output_field)
+                                            output_field,
+                                            beta,
+                                            a)
 
         # Group the data and apply the UDF
-        sdf = sdf.orderBy(*group_by, time_field).groupby(group_by).applyInPandas(
-            lambda pdf: wrapper(pdf, input_field, time_field, output_field),
+        sdf = sdf.orderBy(
+            *group_by,
+            time_field
+            ).groupby(group_by).applyInPandas(
+            lambda pdf: wrapper(pdf,
+                                input_field,
+                                time_field,
+                                output_field,
+                                beta,
+                                a),
             schema=output_schema
         )
 
@@ -572,6 +670,8 @@ class ChapmanMaxwellBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             output_field=self.output_field_name,
             input_field=self.value_field_name,
             time_field=self.value_time_field_name,
+            beta=self.beta,
+            a=self.a,
             group_by=self.uniqueness_fields
         )
 
@@ -597,6 +697,17 @@ class BoughtonBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
     - output_field_name:
         The name of the column to store the baseflow separation result.
         Default: "boughton_baseflow"
+    - beta:
+        The filter parameter for the Lyne-Hollick filter method.
+        Default: 0.925
+    - a: float
+        The recession coefficient for the Boughton filter method. If not
+        provided, it will be estimated using the input timeseries data.
+        Default: None
+    - c: float
+        The shape parameter for the Boughton filter method. If not
+        provided, it will be estimated using the input timeseries data.
+        Default: None
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
 
@@ -620,6 +731,15 @@ class BoughtonBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
     output_field_name: str = Field(
         default="boughton_baseflow"
     )
+    beta: float = Field(
+        default=0.925
+    )
+    a: float = Field(
+        default=None
+    )
+    c: float = Field(
+        default=None
+    )
     uniqueness_fields: Union[str, List[str]] = Field(
         default=[
             'reference_time',
@@ -636,6 +756,9 @@ class BoughtonBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         output_field,
         input_field,
         time_field,
+        beta,
+        a,
+        c,
         group_by,
         return_type=T.DoubleType()
     ):
@@ -652,9 +775,16 @@ class BoughtonBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         def boughton_baseflow(pdf: pd.DataFrame,
                               input_field,
                               time_field,
-                              output_field) -> pd.DataFrame:
+                              output_field,
+                              beta,
+                              a,
+                              c) -> pd.DataFrame:
             # lazy load the BYU-baseflow library
-            import baseflow as bf
+            from baseflow.utils import clean_streamflow
+            from baseflow.comparision import strict_baseflow
+            from baseflow.param_estimate import recession_coefficient
+            from baseflow.param_estimate import param_calibrate
+            from baseflow.methods import LH, Boughton
 
             # create a new column for baseflow
             pdf[output_field] = None
@@ -671,13 +801,29 @@ class BoughtonBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                     "Input streamflow series must have at least 120 timesteps."
                     )
 
-            # obtain the baseflow separation using the Chapman method
-            result = bf.single(series=input_streamflow,
-                               area=None,
-                               ice=None,
-                               method='Boughton',
-                               return_kge=False)
-            result_df = result[0]
+            # obtain the baseflow separation using the Boughton method
+            date, flow = clean_streamflow(input_streamflow)
+            strict_filter = strict_baseflow(Q=flow,
+                                            ice=None)
+            if not a:
+                a = recession_coefficient(Q=flow,
+                                          strict=strict_filter)
+            b_LH = LH(Q=flow,
+                      beta=beta,
+                      return_exceed=False)
+            if not c:
+                param_range = np.arange(0.0001, 0.1, 0.0001)
+                c = param_calibrate(param_range=param_range,
+                                    method=Boughton,
+                                    Q=flow,
+                                    b_LH=b_LH,
+                                    a=a)
+            result_df = pd.DataFrame(np.nan, index=date, columns=['Boughton'])
+            result_df['Boughton'] = Boughton(Q=flow,
+                                             b_LH=b_LH,
+                                             a=a,
+                                             C=c,
+                                             return_exceed=False)
 
             # assign the baseflow values to the new column
             pdf[output_field] = np.round(result_df['Boughton'].values, 2)
@@ -685,15 +831,27 @@ class BoughtonBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             return pdf
 
         # Define the UDF for baseflow separation
-        def wrapper(pdf, input_field, time_field, output_field):
+        def wrapper(pdf, input_field, time_field, output_field, beta, a, c):
             return boughton_baseflow(pdf,
                                      input_field,
                                      time_field,
-                                     output_field)
+                                     output_field,
+                                     beta,
+                                     a,
+                                     c)
 
         # Group the data and apply the UDF
-        sdf = sdf.orderBy(*group_by, time_field).groupby(group_by).applyInPandas(
-            lambda pdf: wrapper(pdf, input_field, time_field, output_field),
+        sdf = sdf.orderBy(
+            *group_by,
+            time_field
+            ).groupby(group_by).applyInPandas(
+            lambda pdf: wrapper(pdf,
+                                input_field,
+                                time_field,
+                                output_field,
+                                beta,
+                                a,
+                                c),
             schema=output_schema
         )
 
@@ -706,6 +864,9 @@ class BoughtonBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             output_field=self.output_field_name,
             input_field=self.value_field_name,
             time_field=self.value_time_field_name,
+            beta=self.beta,
+            a=self.a,
+            c=self.c,
             group_by=self.uniqueness_fields
         )
 
@@ -730,6 +891,17 @@ class FureyBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
     - output_field_name:
         The name of the column to store the baseflow separation result.
         Default: "furey_baseflow"
+    - beta:
+        The filter parameter for the Lyne-Hollick filter method.
+        Default: 0.925
+    - a: float
+        The recession coefficient for the Furey filter method. If not
+        provided, it will be estimated using the input timeseries data.
+        Default: None
+    - c: float
+        The shape parameter for the Furey filter method. If not
+        provided, it will be estimated using the input timeseries data.
+        Default: None
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
 
@@ -753,6 +925,15 @@ class FureyBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
     output_field_name: str = Field(
         default="furey_baseflow"
     )
+    beta: float = Field(
+        default=0.925
+    )
+    a: float = Field(
+        default=None
+    )
+    c: float = Field(
+        default=None
+    )
     uniqueness_fields: Union[str, List[str]] = Field(
         default=[
             'reference_time',
@@ -769,6 +950,9 @@ class FureyBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         output_field,
         input_field,
         time_field,
+        beta,
+        a,
+        c,
         group_by,
         return_type=T.DoubleType()
     ):
@@ -785,9 +969,16 @@ class FureyBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         def furey_baseflow(pdf: pd.DataFrame,
                            input_field,
                            time_field,
-                           output_field) -> pd.DataFrame:
+                           output_field,
+                           beta,
+                           a,
+                           c) -> pd.DataFrame:
             # lazy load the BYU-baseflow library
-            import baseflow as bf
+            from baseflow.utils import clean_streamflow
+            from baseflow.comparision import strict_baseflow
+            from baseflow.param_estimate import recession_coefficient
+            from baseflow.param_estimate import param_calibrate
+            from baseflow.methods import LH, Furey
 
             # create a new column for baseflow
             pdf[output_field] = None
@@ -804,13 +995,29 @@ class FureyBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                     "Input streamflow series must have at least 120 timesteps."
                     )
 
-            # obtain the baseflow separation using the Chapman method
-            result = bf.single(series=input_streamflow,
-                               area=None,
-                               ice=None,
-                               method='Furey',
-                               return_kge=False)
-            result_df = result[0]
+            # obtain the baseflow separation using the Furey method
+            date, flow = clean_streamflow(input_streamflow)
+            strict_filter = strict_baseflow(Q=flow,
+                                            ice=None)
+            if not a:
+                a = recession_coefficient(Q=flow,
+                                          strict=strict_filter)
+            b_LH = LH(Q=flow,
+                      beta=beta,
+                      return_exceed=False)
+            if not c:
+                param_range = np.arange(0.01, 10, 0.01)
+                c = param_calibrate(param_range=param_range,
+                                    method=Furey,
+                                    Q=flow,
+                                    b_LH=b_LH,
+                                    a=a)
+            result_df = pd.DataFrame(np.nan, index=date, columns=['Furey'])
+            result_df['Furey'] = Furey(Q=flow,
+                                       b_LH=b_LH,
+                                       a=a,
+                                       A=c,
+                                       return_exceed=False)
 
             # assign the baseflow values to the new column
             pdf[output_field] = np.round(result_df['Furey'].values, 2)
@@ -818,15 +1025,27 @@ class FureyBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             return pdf
 
         # Define the UDF for baseflow separation
-        def wrapper(pdf, input_field, time_field, output_field):
+        def wrapper(pdf, input_field, time_field, output_field, beta, a, c):
             return furey_baseflow(pdf,
                                   input_field,
                                   time_field,
-                                  output_field)
+                                  output_field,
+                                  beta,
+                                  a,
+                                  c)
 
         # Group the data and apply the UDF
-        sdf = sdf.orderBy(*group_by, time_field).groupby(group_by).applyInPandas(
-            lambda pdf: wrapper(pdf, input_field, time_field, output_field),
+        sdf = sdf.orderBy(
+            *group_by,
+            time_field
+            ).groupby(group_by).applyInPandas(
+            lambda pdf: wrapper(pdf,
+                                input_field,
+                                time_field,
+                                output_field,
+                                beta,
+                                a,
+                                c),
             schema=output_schema
         )
 
@@ -839,6 +1058,9 @@ class FureyBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             output_field=self.output_field_name,
             input_field=self.value_field_name,
             time_field=self.value_time_field_name,
+            beta=self.beta,
+            a=self.a,
+            c=self.c,
             group_by=self.uniqueness_fields
         )
 
@@ -863,6 +1085,17 @@ class EckhardtBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
     - output_field_name:
         The name of the column to store the baseflow separation result.
         Default: "eckhardt_baseflow"
+    - beta:
+        The filter parameter for the Lyne-Hollick filter method.
+        Default: 0.925
+    - a: float
+        The recession coefficient for the Eckhardt filter method. If not
+        provided, it will be estimated using the input timeseries data.
+        Default: None
+    - BFImax: float
+        The maximum baseflow index for the Eckhardt filter method. If not
+        provided, it will be estimated using the input timeseries data.
+        Default: None
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
 
@@ -886,6 +1119,15 @@ class EckhardtBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
     output_field_name: str = Field(
         default="eckhardt_baseflow"
     )
+    beta: float = Field(
+        default=0.925
+    )
+    a: float = Field(
+        default=None
+    )
+    BFImax: float = Field(
+        default=None
+    )
     uniqueness_fields: Union[str, List[str]] = Field(
         default=[
             'reference_time',
@@ -902,6 +1144,9 @@ class EckhardtBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         output_field,
         input_field,
         time_field,
+        beta,
+        a,
+        BFImax,
         group_by,
         return_type=T.DoubleType()
     ):
@@ -918,9 +1163,16 @@ class EckhardtBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         def eckhardt_baseflow(pdf: pd.DataFrame,
                               input_field,
                               time_field,
-                              output_field) -> pd.DataFrame:
+                              output_field,
+                              beta,
+                              a,
+                              BFImax) -> pd.DataFrame:
             # lazy load the BYU-baseflow library
-            import baseflow as bf
+            from baseflow.utils import clean_streamflow
+            from baseflow.comparision import strict_baseflow
+            from baseflow.param_estimate import recession_coefficient
+            from baseflow.param_estimate import param_calibrate
+            from baseflow.methods import LH, Eckhardt
 
             # create a new column for baseflow
             pdf[output_field] = None
@@ -937,13 +1189,29 @@ class EckhardtBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                     "Input streamflow series must have at least 120 timesteps."
                     )
 
-            # obtain the baseflow separation using the Chapman method
-            result = bf.single(series=input_streamflow,
-                               area=None,
-                               ice=None,
-                               method='Eckhardt',
-                               return_kge=False)
-            result_df = result[0]
+            # obtain the baseflow separation using the Eckhardt method
+            date, flow = clean_streamflow(input_streamflow)
+            strict_filter = strict_baseflow(Q=flow,
+                                            ice=None)
+            if not a:
+                a = recession_coefficient(Q=flow,
+                                          strict=strict_filter)
+            b_LH = LH(Q=flow,
+                      beta=beta,
+                      return_exceed=False)
+            if not BFImax:
+                param_range = np.arange(0.001, 1, 0.001)
+                BFImax = param_calibrate(param_range=param_range,
+                                         method=Eckhardt,
+                                         Q=flow,
+                                         b_LH=b_LH,
+                                         a=a)
+            result_df = pd.DataFrame(np.nan, index=date, columns=['Eckhardt'])
+            result_df['Eckhardt'] = Eckhardt(Q=flow,
+                                             b_LH=b_LH,
+                                             a=a,
+                                             BFImax=BFImax,
+                                             return_exceed=False)
 
             # assign the baseflow values to the new column
             pdf[output_field] = np.round(result_df['Eckhardt'].values, 2)
@@ -951,15 +1219,33 @@ class EckhardtBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             return pdf
 
         # Define the UDF for baseflow separation
-        def wrapper(pdf, input_field, time_field, output_field):
+        def wrapper(pdf,
+                    input_field,
+                    time_field,
+                    output_field,
+                    beta,
+                    a,
+                    BFImax):
             return eckhardt_baseflow(pdf,
                                      input_field,
                                      time_field,
-                                     output_field)
+                                     output_field,
+                                     beta,
+                                     a,
+                                     BFImax)
 
         # Group the data and apply the UDF
-        sdf = sdf.orderBy(*group_by, time_field).groupby(group_by).applyInPandas(
-            lambda pdf: wrapper(pdf, input_field, time_field, output_field),
+        sdf = sdf.orderBy(
+            *group_by,
+            time_field
+            ).groupby(group_by).applyInPandas(
+            lambda pdf: wrapper(pdf,
+                                input_field,
+                                time_field,
+                                output_field,
+                                beta,
+                                a,
+                                BFImax),
             schema=output_schema
         )
 
@@ -972,6 +1258,9 @@ class EckhardtBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             output_field=self.output_field_name,
             input_field=self.value_field_name,
             time_field=self.value_time_field_name,
+            beta=self.beta,
+            a=self.a,
+            BFImax=self.BFImax,
             group_by=self.uniqueness_fields
         )
 
@@ -997,6 +1286,13 @@ class EWMABaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
     - output_field_name:
         The name of the column to store the baseflow separation result.
         Default: "ewma_baseflow"
+    - beta:
+        The filter parameter for the Lyne-Hollick filter method.
+        Default: 0.925
+    - e: float
+        The smoothing parameter for the EWMA filter method. If not
+        provided, it will be estimated using the input timeseries data.
+        Default: None
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
 
@@ -1020,6 +1316,12 @@ class EWMABaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
     output_field_name: str = Field(
         default="ewma_baseflow"
     )
+    beta: float = Field(
+        default=0.925
+    )
+    e: float = Field(
+        default=None
+    )
     uniqueness_fields: Union[str, List[str]] = Field(
         default=[
             'reference_time',
@@ -1036,6 +1338,8 @@ class EWMABaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         output_field,
         input_field,
         time_field,
+        beta,
+        e,
         group_by,
         return_type=T.DoubleType()
     ):
@@ -1052,9 +1356,13 @@ class EWMABaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         def ewma_baseflow(pdf: pd.DataFrame,
                           input_field,
                           time_field,
-                          output_field) -> pd.DataFrame:
+                          output_field,
+                          beta,
+                          e) -> pd.DataFrame:
             # lazy load the BYU-baseflow library
-            import baseflow as bf
+            from baseflow.utils import clean_streamflow
+            from baseflow.param_estimate import param_calibrate
+            from baseflow.methods import LH, EWMA
 
             # create a new column for baseflow
             pdf[output_field] = None
@@ -1071,13 +1379,24 @@ class EWMABaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                     "Input streamflow series must have at least 120 timesteps."
                     )
 
-            # obtain the baseflow separation using the Chapman method
-            result = bf.single(series=input_streamflow,
-                               area=None,
-                               ice=None,
-                               method='EWMA',
-                               return_kge=False)
-            result_df = result[0]
+            # obtain the baseflow separation using the EWMA method
+            date, flow = clean_streamflow(input_streamflow)
+            b_LH = LH(Q=flow,
+                      beta=beta,
+                      return_exceed=False)
+            if not e:
+                param_range = np.arange(0.0001, 0.1, 0.0001)
+                e = param_calibrate(param_range=param_range,
+                                    method=EWMA,
+                                    Q=flow,
+                                    b_LH=b_LH,
+                                    a=None)
+            result_df = pd.DataFrame(np.nan, index=date, columns=['EWMA'])
+            result_df['EWMA'] = EWMA(Q=flow,
+                                     b_LH=b_LH,
+                                     a=None,
+                                     e=e,
+                                     return_exceed=False)
 
             # assign the baseflow values to the new column
             pdf[output_field] = np.round(result_df['EWMA'].values, 2)
@@ -1085,15 +1404,24 @@ class EWMABaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             return pdf
 
         # Define the UDF for baseflow separation
-        def wrapper(pdf, input_field, time_field, output_field):
+        def wrapper(pdf, input_field, time_field, output_field, beta, e):
             return ewma_baseflow(pdf,
                                  input_field,
                                  time_field,
-                                 output_field)
+                                 output_field,
+                                 beta,
+                                 e)
 
         # Group the data and apply the UDF
-        sdf = sdf.orderBy(*group_by, time_field).groupby(group_by).applyInPandas(
-            lambda pdf: wrapper(pdf, input_field, time_field, output_field),
+        sdf = sdf.orderBy(
+            *group_by,
+            time_field).groupby(group_by).applyInPandas(
+            lambda pdf: wrapper(pdf,
+                                input_field,
+                                time_field,
+                                output_field,
+                                beta,
+                                e),
             schema=output_schema
         )
 
@@ -1106,6 +1434,8 @@ class EWMABaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             output_field=self.output_field_name,
             input_field=self.value_field_name,
             time_field=self.value_time_field_name,
+            beta=self.beta,
+            e=self.e,
             group_by=self.uniqueness_fields
         )
 
@@ -1130,6 +1460,18 @@ class WillemsBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
     - output_field_name:
         The name of the column to store the baseflow separation result.
         Default: "willems_baseflow"
+    - beta:
+        The filter parameter for the Lyne-Hollick filter method.
+        Default: 0.925
+    - a: float
+        The recession coefficient for the Willems filter method. If not
+        provided, it will be estimated using the input timeseries data.
+        Default: None
+    - w: float
+        The case-specific average quickflow proportion of the streamflow
+        used in the Willems filter method. If not provided, it will be
+        estimated using the input timeseries data.
+        Default: None
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
 
@@ -1153,6 +1495,15 @@ class WillemsBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
     output_field_name: str = Field(
         default="willems_baseflow"
     )
+    beta: float = Field(
+        default=0.925
+    )
+    a: float = Field(
+        default=None
+    )
+    w: float = Field(
+        default=None
+    )
     uniqueness_fields: Union[str, List[str]] = Field(
         default=[
             'reference_time',
@@ -1169,6 +1520,9 @@ class WillemsBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         output_field,
         input_field,
         time_field,
+        beta,
+        a,
+        w,
         group_by,
         return_type=T.DoubleType()
     ):
@@ -1185,9 +1539,16 @@ class WillemsBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         def willems_baseflow(pdf: pd.DataFrame,
                              input_field,
                              time_field,
-                             output_field) -> pd.DataFrame:
+                             output_field,
+                             beta,
+                             a,
+                             w) -> pd.DataFrame:
             # lazy load the BYU-baseflow library
-            import baseflow as bf
+            from baseflow.utils import clean_streamflow
+            from baseflow.comparision import strict_baseflow
+            from baseflow.param_estimate import recession_coefficient
+            from baseflow.param_estimate import param_calibrate
+            from baseflow.methods import LH, Willems
 
             # create a new column for baseflow
             pdf[output_field] = None
@@ -1204,13 +1565,29 @@ class WillemsBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                     "Input streamflow series must have at least 120 timesteps."
                     )
 
-            # obtain the baseflow separation using the Chapman method
-            result = bf.single(series=input_streamflow,
-                               area=None,
-                               ice=None,
-                               method='Willems',
-                               return_kge=False)
-            result_df = result[0]
+            # obtain the baseflow separation using the Willems method
+            date, flow = clean_streamflow(input_streamflow)
+            strict_filter = strict_baseflow(Q=flow,
+                                            ice=None)
+            if not a:
+                a = recession_coefficient(Q=flow,
+                                          strict=strict_filter)
+            b_LH = LH(Q=flow,
+                      beta=beta,
+                      return_exceed=False)
+            if not w:
+                param_range = np.arange(0.001, 1, 0.001)
+                w = param_calibrate(param_range=param_range,
+                                    method=Willems,
+                                    Q=flow,
+                                    b_LH=b_LH,
+                                    a=a)
+            result_df = pd.DataFrame(np.nan, index=date, columns=['Willems'])
+            result_df['Willems'] = Willems(Q=flow,
+                                           b_LH=b_LH,
+                                           a=a,
+                                           w=w,
+                                           return_exceed=False)
 
             # assign the baseflow values to the new column
             pdf[output_field] = np.round(result_df['Willems'].values, 2)
@@ -1218,15 +1595,27 @@ class WillemsBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             return pdf
 
         # Define the UDF for baseflow separation
-        def wrapper(pdf, input_field, time_field, output_field):
+        def wrapper(pdf, input_field, time_field, output_field, beta, a, w):
             return willems_baseflow(pdf,
                                     input_field,
                                     time_field,
-                                    output_field)
+                                    output_field,
+                                    beta,
+                                    a,
+                                    w)
 
         # Group the data and apply the UDF
-        sdf = sdf.orderBy(*group_by, time_field).groupby(group_by).applyInPandas(
-            lambda pdf: wrapper(pdf, input_field, time_field, output_field),
+        sdf = sdf.orderBy(
+            *group_by,
+            time_field
+            ).groupby(group_by).applyInPandas(
+            lambda pdf: wrapper(pdf,
+                                input_field,
+                                time_field,
+                                output_field,
+                                beta,
+                                a,
+                                w),
             schema=output_schema
         )
 
@@ -1239,6 +1628,9 @@ class WillemsBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             output_field=self.output_field_name,
             input_field=self.value_field_name,
             time_field=self.value_time_field_name,
+            beta=self.beta,
+            a=self.a,
+            w=self.w,
             group_by=self.uniqueness_fields
         )
 
@@ -1264,6 +1656,9 @@ class UKIHBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
     - output_field_name:
         The name of the column to store the baseflow separation result.
         Default: "ukih_baseflow"
+    - beta:
+        The filter parameter for the Lyne-Hollick filter method.
+        Default: 0.925
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
 
@@ -1287,6 +1682,9 @@ class UKIHBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
     output_field_name: str = Field(
         default="ukih_baseflow"
     )
+    beta: float = Field(
+        default=0.925
+    )
     uniqueness_fields: Union[str, List[str]] = Field(
         default=[
             'reference_time',
@@ -1303,6 +1701,7 @@ class UKIHBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         output_field,
         input_field,
         time_field,
+        beta,
         group_by,
         return_type=T.DoubleType()
     ):
@@ -1319,9 +1718,11 @@ class UKIHBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         def ukih_baseflow(pdf: pd.DataFrame,
                           input_field,
                           time_field,
-                          output_field) -> pd.DataFrame:
+                          output_field,
+                          beta) -> pd.DataFrame:
             # lazy load the BYU-baseflow library
-            import baseflow as bf
+            from baseflow.utils import clean_streamflow
+            from baseflow.methods import LH, UKIH
 
             # create a new column for baseflow
             pdf[output_field] = None
@@ -1338,13 +1739,15 @@ class UKIHBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                     "Input streamflow series must have at least 120 timesteps."
                     )
 
-            # obtain the baseflow separation using the Chapman method
-            result = bf.single(series=input_streamflow,
-                               area=None,
-                               ice=None,
-                               method='UKIH',
-                               return_kge=False)
-            result_df = result[0]
+            # obtain the baseflow separation using the UKIH method
+            date, flow = clean_streamflow(input_streamflow)
+            b_LH = LH(Q=flow,
+                      beta=beta,
+                      return_exceed=False)
+            result_df = pd.DataFrame(np.nan, index=date, columns=['UKIH'])
+            result_df['UKIH'] = UKIH(Q=flow,
+                                     b_LH=b_LH,
+                                     return_exceed=False)
 
             # assign the baseflow values to the new column
             pdf[output_field] = np.round(result_df['UKIH'].values, 2)
@@ -1352,15 +1755,22 @@ class UKIHBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             return pdf
 
         # Define the UDF for baseflow separation
-        def wrapper(pdf, input_field, time_field, output_field):
+        def wrapper(pdf, input_field, time_field, output_field, beta):
             return ukih_baseflow(pdf,
                                  input_field,
                                  time_field,
-                                 output_field)
+                                 output_field,
+                                 beta)
 
         # Group the data and apply the UDF
-        sdf = sdf.orderBy(*group_by, time_field).groupby(group_by).applyInPandas(
-            lambda pdf: wrapper(pdf, input_field, time_field, output_field),
+        sdf = sdf.orderBy(
+            *group_by,
+            time_field).groupby(group_by).applyInPandas(
+            lambda pdf: wrapper(pdf,
+                                input_field,
+                                time_field,
+                                output_field,
+                                beta),
             schema=output_schema
         )
 
@@ -1373,6 +1783,7 @@ class UKIHBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
             output_field=self.output_field_name,
             input_field=self.value_field_name,
             time_field=self.value_time_field_name,
+            beta=self.beta,
             group_by=self.uniqueness_fields
         )
 
