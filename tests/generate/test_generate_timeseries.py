@@ -3,8 +3,56 @@ from pathlib import Path
 import tempfile
 
 import teehr
+from teehr import TimeseriesGenerators as tsg
+
+from teehr.models.generate.base import TimeseriesModel
 
 TEST_STUDY_DATA_DIR_v0_4 = Path("tests", "data", "test_study")
+
+
+def test_generate_timeseries_normals(tmpdir):
+    """Generate synthetic time series data."""
+    ev = teehr.Evaluation(dir_path=tmpdir)
+    ev.clone_template()
+    usgs_location = Path(
+        TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_location.parquet"
+    )
+    ev.locations.load_spatial(
+        in_path=usgs_location
+    )
+    ev.configurations.add(
+        [
+            teehr.Configuration(
+                name="usgs_observations",
+                type="primary",
+                description="USGS streamflow observations"
+            )
+        ]
+    )
+    ev.primary_timeseries.load_parquet(
+        in_path=Path(
+            TEST_STUDY_DATA_DIR_v0_4,
+            "timeseries",
+            "usgs_hefs_06711565_2yrs.parquet"
+        )
+    )
+
+    tsm = TimeseriesModel()
+    tsm.unit_name = "m^3/s"  # ft^3/s is the default
+
+    gen_method = tsg.Normals()
+    gen_method.temporal_resolution = "day_of_year"  # the default
+    gen_method.summary_statistic = "mean"           # the default
+
+    ev.generate.timeseries(
+        method=gen_method,
+        input_tsm=tsm
+    ).write()
+
+    # df = gts.to_pandas()
+    prim_df = ev.primary_timeseries.to_pandas()
+
+    pass
 
 
 def test_climatology(tmpdir):
@@ -47,7 +95,7 @@ def test_climatology(tmpdir):
     ev.variables.add(
         [
             teehr.Variable(
-                name="streamflow_hourly_climatology",
+                name="streamflow_hourly_ave",
                 long_name="Climatology of USGS streamflow for hour of year"
             )
         ]
@@ -181,6 +229,12 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
+        test_generate_timeseries_normals(
+            tempfile.mkdtemp(
+                prefix="0-",
+                dir=tempdir
+            )
+        )
         test_climatology(
             tempfile.mkdtemp(
                 prefix="1-",
