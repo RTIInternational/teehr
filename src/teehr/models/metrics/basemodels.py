@@ -16,6 +16,7 @@ class MetricsBasemodel(PydanticBaseModel):
     return_type: Union[str, T.ArrayType, T.MapType] = Field(default=None)
     unpack_results: bool = Field(default=False)
     unpack_function: Callable = Field(default=None)
+    reference_configuration: str = Field(default=None)
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
@@ -118,4 +119,3 @@ class MetricCategories(StrEnum):
     Categorical = "Categorical"
     Signature = "Signature"
     Probabilistic = "Probabilistic"
-

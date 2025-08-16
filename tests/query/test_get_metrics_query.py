@@ -1,5 +1,5 @@
 """Test evaluation class."""
-from teehr import Configuration
+from teehr import Configuration, Variable
 from teehr import DeterministicMetrics, ProbabilisticMetrics, SignatureMetrics
 from teehr import Operators as ops
 import tempfile
@@ -15,7 +15,10 @@ from teehr.models.metrics.bootstrap_models import Bootstrappers
 from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 from teehr.evaluation.evaluation import Evaluation
 
-from setup_v0_3_study import setup_v0_3_study
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from data.setup_v0_3_study import setup_v0_3_study  # noqa
+
 TEST_STUDY_DATA_DIR_v0_4 = Path("tests", "data", "test_study")
 
 
@@ -42,7 +45,7 @@ def test_executing_deterministic_metrics(tmpdir):
 
     # Test all the metrics.
     include_all_metrics = [
-        func() for func in DeterministicMetrics.__dict__.values() if callable(func)
+        func() for func in DeterministicMetrics.__dict__.values() if callable(func)  # noqa
     ]
 
     # Get the currently available fields to use in the query.
@@ -370,7 +373,9 @@ def test_gumboot_bootstrapping(tmpdir):
     ).to_sdf()
 
     # Unpack and compare the results.
-    teehr_results = np.sort(np.array(metrics_df.kling_gupta_efficiency.values[0]))
+    teehr_results = np.sort(
+        np.array(metrics_df.kling_gupta_efficiency.values[0])
+    )
     manual_results = np.sort(results.ravel()).astype(np.float32)
     assert (teehr_results == manual_results).all()
     assert isinstance(metrics_df, pd.DataFrame)
@@ -439,7 +444,9 @@ def test_ensemble_metrics(tmpdir):
         in_path=usgs_location
     )
     ev.location_crosswalks.load_csv(
-        in_path=Path(TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv")
+        in_path=Path(
+            TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv"
+        )
     )
     ev.configurations.add(
         Configuration(
@@ -466,27 +473,84 @@ def test_ensemble_metrics(tmpdir):
     ev.primary_timeseries.load_parquet(
         in_path=primary_filepath
     )
-    ev.joined_timeseries.create(execute_scripts=False)
 
+    # Calculate climatology from USGS observations.
+    ev.configurations.add(
+        [
+            Configuration(
+                name="usgs_climatology",
+                type="primary",
+                description="Climatology of USGS streamflow"
+            )
+        ]
+    )
+    ev.variables.add(
+        [
+            Variable(
+                name="streamflow_hourly_climatology",
+                long_name="Climatology of USGS streamflow for hour of year"
+            )
+        ]
+    )
+    ev.primary_timeseries.calculate_climatology(
+        input_timeseries_filter=[
+            "configuration_name = 'usgs_observations'",
+            "variable_name = 'streamflow_hourly_inst'"
+        ],
+        output_configuration_name="usgs_climatology",
+        output_variable_name="streamflow_hourly_climatology",
+        temporal_resolution="hour_of_year",
+        summary_statistic="mean",
+    )
+
+    # Add reference forecast based on climatology.
+    ev.configurations.add(
+        [
+            Configuration(
+                name="reference_climatology_forecast",
+                type="secondary",
+                description="Reference forecast based on USGS climatology summarized by hour of year"  # noqa
+            )
+        ]
+    )
+    ev.secondary_timeseries.create_reference_forecast(
+        reference_timeseries_filter=[
+            "configuration_name = 'usgs_climatology'",
+            "variable_name = 'streamflow_hourly_climatology'"
+        ],
+        template_forecast_filter=[
+            "configuration_name = 'MEFP'",
+            "variable_name = 'streamflow_hourly_inst'"
+        ],
+        output_configuration_name="reference_climatology_forecast",
+        method="climatology",
+        temporal_resolution="hour_of_year",
+        aggregate_reference_timeseries=True
+    )
+    ev.joined_timeseries.create(execute_scripts=False)
     # Now, metrics.
     crps = ProbabilisticMetrics.CRPS()
     crps.summary_func = np.mean
     crps.estimator = "pwm"
     crps.backend = "numba"
+    crps.reference_configuration = "reference_climatology_forecast"
 
     include_metrics = [crps]
-
     metrics_df = ev.metrics.query(
         include_metrics=include_metrics,
         group_by=[
             "primary_location_id",
-            "reference_time",
             "configuration_name"
         ],
         order_by=["primary_location_id"],
     ).to_pandas()
 
-    assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 35.627174)
+    assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 35.555721)
+    assert np.isclose(metrics_df.mean_crps_ensemble.values[1], 1.073679)
+    assert np.isclose(
+        metrics_df.mean_crps_ensemble_skill_score.values[0], -32.115792
+    )
+    assert np.isnan(metrics_df.mean_crps_ensemble_skill_score.values[1])
 
 
 def test_metrics_transforms(tmpdir):

@@ -1,4 +1,5 @@
 """Classes representing UDFs."""
+import calendar
 from typing import List, Union
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import Field, ConfigDict
@@ -242,12 +243,12 @@ class ForecastLeadTime(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        @pandas_udf(returnType=T.LongType())
+        @pandas_udf(returnType=T.DayTimeIntervalType())
         def func(value_time: pd.Series,
                  reference_time: pd.Series
                  ) -> pd.Series:
             difference = value_time - reference_time
-            return difference.dt.total_seconds()
+            return difference
 
         sdf = sdf.withColumn(
             self.output_field_name,
@@ -331,10 +332,10 @@ class DayOfYear(CalculatedFieldABC, CalculatedFieldBaseModel):
         @pandas_udf(returnType=T.IntegerType())
         def func(col: pd.Series) -> pd.Series:
             def adjust_day_of_year(date):
-                if (date.year % 4 == 0 and date.year % 100 != 0) or (date.year % 400 == 0):
+                if calendar.isleap(date.year):
                     if date.month == 2 and date.day == 29:
-                        return None
-                    elif date.month > 2 or (date.month == 2 and date.day > 28):
+                        return 59  # Assign to Feb.28 during leap years
+                    elif date.month > 2:
                         return date.dayofyear - 1
                     else:
                         return date.dayofyear
@@ -342,6 +343,51 @@ class DayOfYear(CalculatedFieldABC, CalculatedFieldBaseModel):
                     return date.dayofyear
 
             return col.apply(adjust_day_of_year)
+
+        sdf = sdf.withColumn(
+            self.output_field_name,
+            func(self.input_field_name)
+        )
+        return sdf
+
+
+class HourOfYear(CalculatedFieldABC, CalculatedFieldBaseModel):
+    """Adds the hour from a timestamp column.
+
+    Properties
+    ----------
+
+    - input_field_name:
+        The name of the column containing the timestamp.
+        Default: "value_time"
+    - output_field_name:
+        The name of the column to store the month.
+        Default: "hour_of_year"
+    """
+    input_field_name: str = Field(
+        default="value_time"
+    )
+    output_field_name: str = Field(
+        default="hour_of_year"
+    )
+
+    def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
+        """Apply the calculated field to the Spark DataFrame."""
+        @pandas_udf(returnType=T.IntegerType())
+        def func(col: pd.Series) -> pd.Series:
+            def adjust_hour_of_year(date):
+                if calendar.isleap(date.year):
+                    if date.month == 2 and date.day == 29:
+                        # Assign to Feb.28 during leap years
+                        return 58 * 24 + date.hour
+                    elif date.month > 2:
+                        return (date.dayofyear - 2) * 24 + date.hour
+                    else:
+                        return (date.dayofyear - 1) * 24 + date.hour
+                else:
+                    return (date.dayofyear - 1) * 24 + date.hour
+
+            return col.apply(adjust_hour_of_year)
 
         sdf = sdf.withColumn(
             self.output_field_name,
@@ -373,6 +419,7 @@ class RowLevelCalculatedFields:
     - ForecastLeadTime
     - ThresholdValueExceeded
     - DayOfYear
+    - HourOfYear
     """
 
     Month = Month
@@ -383,3 +430,4 @@ class RowLevelCalculatedFields:
     ForecastLeadTime = ForecastLeadTime
     ThresholdValueExceeded = ThresholdValueExceeded
     DayOfYear = DayOfYear
+    HourOfYear = HourOfYear
