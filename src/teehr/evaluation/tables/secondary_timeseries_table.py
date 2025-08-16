@@ -3,7 +3,7 @@ import teehr.const as const
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
 from teehr.loading.timeseries import convert_timeseries
 from pathlib import Path
-from typing import Union, List
+from typing import Union
 import logging
 from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
 from teehr.loading.utils import (

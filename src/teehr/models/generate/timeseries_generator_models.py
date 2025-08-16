@@ -29,6 +29,7 @@ class Persistence(SummaryTimeseriesBaseModel, GeneratorABC):
     timeseries to the forecast timeseries based on t-0 time, without any
     modifications or aggregations.
     """
+
     # TODO: Implement
     df: ps.DataFrame = None
     pass
@@ -44,6 +45,7 @@ class ReferenceForecast(SummaryTimeseriesBaseModel, GeneratorABC):
     timeseries to the forecast timeseries based on value time, optionally
     aggregrating values within a specified time window.
     """
+
     df: ps.DataFrame = None
     reference_tsm: TimeseriesModel = None
     template_tsm: TimeseriesModel = None
@@ -108,7 +110,7 @@ class ReferenceForecast(SummaryTimeseriesBaseModel, GeneratorABC):
         ev.spark.catalog.dropTempView("reference_timeseries")
         ev.spark.catalog.dropTempView("template_timeseries")
 
-        results_df = results_sdf.toPandas()  # TEMP
+        # results_df = results_sdf.toPandas()  # TEMP
 
         return results_sdf
 
@@ -188,6 +190,7 @@ class SummaryTimeseriesGenerators:
     """Synthetic timeseries generators."""
 
     Normals = Normals
+    # Detrend = Detrend
 
 
 class BenchmarkForecastGenerators:
