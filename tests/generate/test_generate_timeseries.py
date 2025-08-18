@@ -3,10 +3,10 @@ from pathlib import Path
 import tempfile
 
 import teehr
-from teehr import SummaryTimeseriesGenerators as sts
+from teehr import SignatureTimeseriesGenerators as sts
 from teehr import BenchmarkForecastGenerators as bfs
 
-from teehr.models.generate.base import TimeseriesModel
+from teehr.models.generate.base import TimeseriesFilter
 
 TEST_STUDY_DATA_DIR_v0_4 = Path("tests", "data", "test_study")
 
@@ -15,8 +15,11 @@ def test_generate_timeseries_normals(tmpdir):
     """Generate synthetic time series data."""
     ev = teehr.Evaluation(dir_path=tmpdir)
     ev.clone_template()
+    # usgs_location = Path(
+    #     TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_location.parquet"
+    # )
     usgs_location = Path(
-        TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_location.parquet"
+        TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_FakeNWM_locations.parquet"
     )
     ev.locations.load_spatial(
         in_path=usgs_location
@@ -30,6 +33,15 @@ def test_generate_timeseries_normals(tmpdir):
             )
         ]
     )
+    ev.configurations.add(
+        [
+            teehr.Configuration(
+                name="nwm30_medium_range_forcing",
+                type="primary",
+                description="Synthetic NWM 30 Medium Range AnA Forcing"
+            )
+        ]
+    )
     ev.primary_timeseries.load_parquet(
         in_path=Path(
             TEST_STUDY_DATA_DIR_v0_4,
@@ -38,17 +50,30 @@ def test_generate_timeseries_normals(tmpdir):
         )
     )
 
-    input_tsm = TimeseriesModel()
-    input_tsm.unit_name = "m^3/s"  # ft^3/s is the default
+    ev.primary_timeseries.load_parquet(
+        in_path=Path(
+            TEST_STUDY_DATA_DIR_v0_4,
+            "timeseries",
+            "synthetic_nwm_forcing_obs_2yrs.parquet"
+        )
+    )
+
+    input_ts = TimeseriesFilter()
+    input_ts.table_name = "primary_timeseries"
+    # input_tsm.unit_name = "m^3/s"  # ft^3/s is the default
+    # input_ts.unit_name = None  # not allowed since validate_assignment=True
 
     ts_normals = sts.Normals()
     ts_normals.temporal_resolution = "day_of_year"  # the default
     ts_normals.summary_statistic = "mean"           # the default
-    ts_normals.input_tsm = input_tsm
+    # ts_normals.input_tsm = input_tsm
 
-    ev.generate.summary_timeseries(method=ts_normals).write()
+    # you have to define either an input df or ts
+    ev.generate.summary_timeseries(
+        method=ts_normals,
+        input_timeseries=input_ts
+    ).write(destination_table="primary_timeseries")
 
-    # df = gts.to_pandas()
     prim_df = ev.primary_timeseries.to_pandas()
 
     pass
@@ -111,20 +136,20 @@ def test_generate_reference_forecast(tmpdir):
     # Calculate a reference forecast, assigning the USGS observation
     # values to an HEFS member (just for testing).
     ref_fcst = bfs.ReferenceForecast()
-    ref_fcst.reference_tsm = TimeseriesModel(
+    ref_fcst.reference_tsm = TimeseriesFilter(
         configuration_name="usgs_observations",
         variable_name="streamflow_day_of_year_mean",
         unit_name="ft^3/s",
         timeseries_type="primary"
     )
-    ref_fcst.template_tsm = TimeseriesModel(
+    ref_fcst.template_tsm = TimeseriesFilter(
         configuration_name="MEFP",
         variable_name="streamflow_hourly_inst",
         unit_name="ft^3/s",
         timeseries_type="secondary",
         member="1993"
     )
-    ref_fcst.output_tsm = TimeseriesModel(
+    ref_fcst.output_tsm = TimeseriesFilter(
         configuration_name="benchmark_forecast_normals",
         variable_name="streamflow_hourly_inst",
         unit_name="ft^3/s",
@@ -172,12 +197,12 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        # test_generate_timeseries_normals(
-        #     tempfile.mkdtemp(
-        #         prefix="0-",
-        #         dir=tempdir
-        #     )
-        # )
+        test_generate_timeseries_normals(
+            tempfile.mkdtemp(
+                prefix="0-",
+                dir=tempdir
+            )
+        )
         test_generate_reference_forecast(
             tempfile.mkdtemp(
                 prefix="1-",

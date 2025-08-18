@@ -2,11 +2,10 @@
 import logging
 
 import pyspark.sql as ps
-from pyspark.sql import functions as F
 
 from teehr.models.generate.base import (
-    SummaryTimeseriesBaseModel,
-    TimeseriesModel
+    SignatureTimeseriesBaseModel,
+    TimeseriesFilter
 )
 from teehr.models.pydantic_table_models import Variable
 
@@ -16,50 +15,70 @@ logger = logging.getLogger(__name__)
 
 # Q. Do we need a more generic base table for generated timeseries
 #    (other than base_table.py)?
-class SummaryTimeseries:
+class SignatureTimeseries:
     """Generate a synthetic time series from a single timeseries."""
 
     def __init__(
         self,
         generator,
-        method: SummaryTimeseriesBaseModel,
+        method: SignatureTimeseriesBaseModel,
         input_dataframe: ps.DataFrame = None,
-        add_variable_name: bool = True
+        update_variable_table: bool = True,
     ):
-        """Initialize and generate the timeseries."""
+        """Generate a new timeseries according to the method class.
+
+        Parameters
+        ----------
+        generator : Generator
+            The generator instance.
+        method : SignatureTimeseriesBaseModel
+            A model defining the signature timeseries generation method.
+        input_dataframe : ps.DataFrame
+            The input spark DataFrame.
+        update_variable_table : bool
+            Whether to update the variable table.
+        """
         self.df = None
-        self.tsm = method.input_tsm
         self.ev = generator.ev
-        if input_dataframe is None:
-            input_dataframe = generator.ev.sql(
-                query=method.input_tsm.to_query(),
-                create_temp_views=[
-                    f"{method.input_tsm.timeseries_type}_timeseries"
-                ]
-            )
-        # TODO: Ensure input_dataframe is not empty here.
-        # Generate the new timeseries.
-        # TODO: Still need to figure out where to add new domain variables.
-        if add_variable_name is True:
-            output_variable_name = method._get_output_variable_name(
-                input_dataframe
-            )
-            generator.ev.variables.add(
-                Variable(
-                    name=output_variable_name,
-                    long_name=f"Generated {output_variable_name}",
-                    unit_name=method.input_tsm.unit_name,
-                )
-            )
 
         self.df = method.generate(input_timeseries_sdf=input_dataframe)
 
-    def write(self, write_mode="append") -> None:
-        """Write the generated DataFrame to a specified path."""
-        if self.tsm.timeseries_type == "primary":
+        if update_variable_table is True:
+            variable_names = self.df.select(
+                "variable_name"
+            ).distinct().collect()
+            variable_names = [row.variable_name for row in variable_names]
+            for output_variable_name in variable_names:
+                self.ev.variables.add(
+                    Variable(
+                        name=output_variable_name,
+                        long_name="Generated signature timeseries variable"
+                    )
+                )
+
+    def write(
+        self,
+        destination_table: str,
+        write_mode="append"
+    ):
+        """Write the generated DataFrame to a specified table.
+
+        Parameters
+        ----------
+        destination_table : str
+            The name of the destination table to write to.
+        write_mode : str
+            The write mode for the DataFrame (e.g., "append", "overwrite").
+        """
+        if destination_table == "primary_timeseries":
             tbl = self.ev.primary_timeseries
-        elif self.tsm.timeseries_type == "secondary":
+        elif destination_table == "secondary_timeseries":
             tbl = self.ev.secondary_timeseries
+        else:
+            raise ValueError(
+                f"Invalid destination table: {destination_table}"
+                " Must be one of: primary_timeseries, secondary_timeseries"
+            )
         validated_df = tbl._validate(df=self.df)
         tbl._write_spark_df(validated_df, write_mode=write_mode)
 
@@ -77,7 +96,7 @@ class BenchmarkForecast:
     def __init__(
         self,
         generator,
-        method: SummaryTimeseriesBaseModel,
+        method: SignatureTimeseriesBaseModel,
         reference_dataframe: ps.DataFrame = None,
         template_dataframe: ps.DataFrame = None,
     ):
@@ -141,9 +160,10 @@ class Generator:
 
     def summary_timeseries(
         self,
-        method: SummaryTimeseriesBaseModel,
-        input_dataframe: ps.DataFrame = None
-    ) -> SummaryTimeseries:
+        method: SignatureTimeseriesBaseModel,
+        input_dataframe: ps.DataFrame = None,
+        input_timeseries: TimeseriesFilter = None
+    ) -> SignatureTimeseries:
         """Generate synthetic summary from a single timeseries.
 
         Parameters
@@ -152,15 +172,15 @@ class Generator:
             The method to use for generating the timeseries.
         input_dataframe : ps.DataFrame, optional
             The input Spark DataFrame. Defaults to None.
-        input_tsm : TimeseriesModel, optional
+        input_timeseries : TimeseriesFilter, optional
             The input timeseries model. The defines a unique timeseries
             that will be queried from the Evaluation and used as the
             input_dataframe. Defaults to None.
 
         Returns
         -------
-        SummaryTimeseries
-            The generated timeseries object.
+        SignatureTimeseries
+            The generated timeseries class object.
 
         Notes
         -----
@@ -170,10 +190,22 @@ class Generator:
         The output variable name is derived automatically based on the input
         variable name, and added to the Evaluation if it does not exist.
 
-        The naming convention follows the pattern:
+        The variable naming convention follows the pattern:
         <variable>_<temporal_resolution>_<summary_statistic>
         """
-        return SummaryTimeseries(
+        if input_dataframe is None:
+            if input_timeseries is None:
+                raise ValueError(
+                    "You must provide either an input dataframe"
+                    " or an input timeseries filter model."
+                )
+            input_dataframe = self.ev.sql(
+                query=input_timeseries.to_query(),
+                create_temp_views=[
+                    f"{input_timeseries.table_name}"
+                ]
+            )
+        return SignatureTimeseries(
             self,
             method=method,
             input_dataframe=input_dataframe
@@ -181,11 +213,12 @@ class Generator:
 
     def benchmark_forecast(
         self,
-        method: SummaryTimeseriesBaseModel,
+        method: SignatureTimeseriesBaseModel,
         reference_dataframe: ps.DataFrame = None,
         template_dataframe: ps.DataFrame = None
     ) -> BenchmarkForecast:
         """Generate a benchmark forecast from one or more timeseries."""
+        # TODO: Apply the filters here and pass in the sdf's?
         return BenchmarkForecast(
             self,
             method=method,
@@ -193,8 +226,7 @@ class Generator:
             template_dataframe=template_dataframe
         )
 
+    # What else would we want to generate?
     # def table(self) -> None:
     #     """Create a new table."""
     #     raise NotImplementedError("Table generation is not implemented yet.")
-
-    # What else would we want to generate?

@@ -5,13 +5,14 @@ from pyspark.sql import functions as F
 import pyspark.sql as ps
 
 from teehr.evaluation.evaluation import Evaluation
-from teehr.models.filters import FilterBaseModel
+# from teehr.models.filters import FilterBaseModel
 from teehr.models.generate.base import (
     GeneratorABC,
-    SummaryTimeseriesBaseModel,
+    SignatureTimeseriesBaseModel,
     NormalsResolutionEnum,
     NormalsStatisticEnum,
-    TimeseriesModel
+    TimeseriesFilter,
+    ReferenceForecastBaseModel
 )
 from teehr.querying.utils import group_df
 from teehr.generate.utils import (
@@ -21,7 +22,7 @@ from teehr.generate.utils import (
 )
 
 
-class Persistence(SummaryTimeseriesBaseModel, GeneratorABC):
+class Persistence(ReferenceForecastBaseModel, GeneratorABC):
     """Model for generating a synthetic persistence forecast timeseries.
 
     This model generates a synthetic persistence forecast timeseries based on
@@ -35,7 +36,7 @@ class Persistence(SummaryTimeseriesBaseModel, GeneratorABC):
     pass
 
 
-class ReferenceForecast(SummaryTimeseriesBaseModel, GeneratorABC):
+class ReferenceForecast(ReferenceForecastBaseModel, GeneratorABC):
     """Model for generating a synthetic reference forecast timeseries.
 
     Notes
@@ -44,12 +45,14 @@ class ReferenceForecast(SummaryTimeseriesBaseModel, GeneratorABC):
     an input timeseries DataFrame. It assigns the values from the input
     timeseries to the forecast timeseries based on value time, optionally
     aggregrating values within a specified time window.
+
+    This requires specific timeseries to work with.
     """
 
     df: ps.DataFrame = None
-    reference_tsm: TimeseriesModel = None
-    template_tsm: TimeseriesModel = None
-    output_tsm: TimeseriesModel = None
+    reference_tsm: TimeseriesFilter = None
+    template_tsm: TimeseriesFilter = None
+    output_tsm: TimeseriesFilter = None
 
     aggregate_reference_timeseries: bool = False
     aggregation_time_window: str = "6 hours"
@@ -115,22 +118,28 @@ class ReferenceForecast(SummaryTimeseriesBaseModel, GeneratorABC):
         return results_sdf
 
 
-class Normals(SummaryTimeseriesBaseModel, GeneratorABC):
+class Normals(SignatureTimeseriesBaseModel, GeneratorABC):
     """Model for generating synthetic normals timeseries."""
 
     temporal_resolution: NormalsResolutionEnum = NormalsResolutionEnum.day_of_year
     summary_statistic: NormalsStatisticEnum = NormalsStatisticEnum.mean
-    input_tsm: TimeseriesModel = None
     df: ps.DataFrame = None
 
-    def _get_output_variable_name(self, sdf) -> str:
-        input_variable_name = sdf.select(
-            F.first("variable_name")
-        ).collect()[0][0]
-        variable = input_variable_name.split("_")[0]
-        return (
-            f"{variable}_{self.temporal_resolution.value}_"
-            f"{self.summary_statistic.value}"
+    @staticmethod
+    def _update_variable_names(
+        sdf,
+        time_period,
+        statistic
+    ) -> ps.DataFrame:
+        """Update variable_name field values based on time period and stat."""
+        return sdf.withColumn(
+            "variable_name",
+            F.concat_ws(
+                "_",
+                F.split(sdf.variable_name, pattern="_")[0],
+                F.lit(time_period.output_field_name),
+                F.lit(statistic.value)
+            )
         )
 
     def generate(
@@ -175,18 +184,15 @@ class Normals(SummaryTimeseriesBaseModel, GeneratorABC):
             how="left"
         ).drop(time_period.output_field_name)
 
-        output_variable_name = self._get_output_variable_name(normals_sdf)
-
-        # Over-write the variable_name
-        normals_sdf = normals_sdf.withColumn(
-            "variable_name",
-            F.lit(output_variable_name)
+        normals_sdf = self._update_variable_names(
+            normals_sdf,
+            time_period=time_period,
+            statistic=self.summary_statistic
         )
-
         return normals_sdf
 
 
-class SummaryTimeseriesGenerators:
+class SignatureTimeseriesGenerators:
     """Synthetic timeseries generators."""
 
     Normals = Normals

@@ -1,42 +1,46 @@
 """Base model for Normals class."""
 import abc
+from typing import Optional
 
 from pydantic import BaseModel as PydanticBaseModel, ConfigDict
 from pydantic import Field
 import pyspark.sql as ps
 
 from teehr.models.str_enum import StrEnum
-from teehr.models.fetching.utils import TimeseriesTypeEnum
+# from teehr.models.fetching.utils import TimeseriesTypeEnum
 
 
-class TimeseriesModel(PydanticBaseModel):
-    """A class for uniquely identifying a timeseries."""
+class TimeseriesTableNamesEnum(StrEnum):
+    """Table names for timeseries."""
 
-    configuration_name: str = Field(default="usgs_observations")
-    variable_name: str = Field(default="streamflow_hourly_inst")
-    unit_name: str = Field(default="ft^3/s")
-    timeseries_type: TimeseriesTypeEnum = Field(
-        default=TimeseriesTypeEnum.primary
+    primary_timeseries = "primary_timeseries"
+    secondary_timeseries = "secondary_timeseries"
+
+
+class TimeseriesFilter(PydanticBaseModel, validate_assignment=True):
+    """A class for uniquely identifying a timeseries from an evaluation."""
+
+    configuration_name: Optional[str] = Field(default=None)
+    variable_name: Optional[str] = Field(default=None)
+    unit_name: Optional[str] = Field(default=None)
+    table_name: TimeseriesTableNamesEnum = Field(
+        default=TimeseriesTableNamesEnum.primary_timeseries
     )
-    member: str = Field(default=None)
+    member: Optional[str] = Field(default=None)
+    # TODO: Include all table fields?
+    # location_id, value, value_time, reference_time
 
     def to_query(self) -> str:
-        """Generate a SQL query to select the timeseries."""
-        if self.member is None:
-            return f"""
-                SELECT * FROM {self.timeseries_type}_timeseries
-                WHERE configuration_name = '{self.configuration_name}'
-                AND variable_name = '{self.variable_name}'
-                AND unit_name = '{self.unit_name}'
-            ;"""
-        else:
-            return f"""
-                SELECT * FROM {self.timeseries_type}_timeseries
-                WHERE configuration_name = '{self.configuration_name}'
-                AND variable_name = '{self.variable_name}'
-                AND unit_name = '{self.unit_name}'
-                AND member = '{self.member}'
-            ;"""
+        """Generate an SQL query to select the timeseries."""
+        query = f"SELECT * FROM {self.table_name}"
+        for i, (field_name, field_value) in enumerate(
+            self.model_dump(exclude_none=True, exclude={"table_name"}).items()
+        ):
+            if i == 0:
+                query += f" WHERE {field_name} = '{field_value}'"
+            else:
+                query += f" AND {field_name} = '{field_value}'"
+        return query
 
 
 class NormalsResolutionEnum(StrEnum):
@@ -72,9 +76,9 @@ class ReferenceForecastBaseModel(PydanticBaseModel):
     """Base model for reference forecast generator classes."""
 
     temporal_resolution: NormalsResolutionEnum = Field(default=None)
-    reference_tsm: TimeseriesModel = Field(default=None)
-    template_tsm: TimeseriesModel = Field(default=None)
-    output_tsm: TimeseriesModel = Field(default=None)
+    reference_tsm: TimeseriesFilter = Field(default=None)
+    template_tsm: TimeseriesFilter = Field(default=None)
+    output_tsm: TimeseriesFilter = Field(default=None)
     aggregate_reference_timeseries: bool = Field(default=False)
     aggregation_time_window: str = Field(default=None)
     df: ps.DataFrame = Field(default=None)
@@ -86,12 +90,18 @@ class ReferenceForecastBaseModel(PydanticBaseModel):
     )
 
 
-class SummaryTimeseriesBaseModel(PydanticBaseModel):
-    """Base model for summary timeseries generator classes."""
+class SignatureTimeseriesBaseModel(PydanticBaseModel):
+    """Base model for summary timeseries generator classes.
+
+    Notes
+    -----
+    These can handle configurations with multiple unit_names and
+    variable_names, since there is grouping within the method.
+    They assume reference_time is None (should they?).
+    """
 
     temporal_resolution: NormalsResolutionEnum = Field(default=None)
     summary_statistic: NormalsStatisticEnum = Field(default=None)
-    input_tsm: TimeseriesModel = Field(default=None)
     df: ps.DataFrame = Field(default=None)
 
     model_config = ConfigDict(

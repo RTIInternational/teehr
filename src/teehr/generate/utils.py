@@ -11,7 +11,7 @@ from teehr.querying.utils import group_df
 from teehr.models.generate.base import (
     NormalsResolutionEnum,
     NormalsStatisticEnum,
-    TimeseriesModel
+    TimeseriesFilter
 )
 from teehr.models.calculated_fields.row_level import (
     RowLevelCalculatedFields as rlc
