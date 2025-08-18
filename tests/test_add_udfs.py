@@ -108,9 +108,45 @@ def test_add_timeseries_udfs(tmpdir):
     ped = tcf.PercentileEventDetection()
     sdf = ped.apply_to(sdf)
 
+    lhbf = tcf.LyneHollickBaseflow()
+    sdf = lhbf.apply_to(sdf)
+
+    chapbf = tcf.ChapmanBaseflow()
+    sdf = chapbf.apply_to(sdf)
+
+    cmbf = tcf.ChapmanMaxwellBaseflow()
+    sdf = cmbf.apply_to(sdf)
+
+    bbf = tcf.BoughtonBaseflow()
+    sdf = bbf.apply_to(sdf)
+
+    fbf = tcf.FureyBaseflow()
+    sdf = fbf.apply_to(sdf)
+
+    eckbf = tcf.EckhardtBaseflow()
+    sdf = eckbf.apply_to(sdf)
+
+    ewmabf = tcf.EWMABaseflow()
+    sdf = ewmabf.apply_to(sdf)
+
+    wbf = tcf.WillemsBaseflow()
+    sdf = wbf.apply_to(sdf)
+
+    ukihbf = tcf.UKIHBaseflow()
+    sdf = ukihbf.apply_to(sdf)
+
     cols = sdf.columns
     assert "event" in cols
     assert "event_id" in cols
+    assert "lyne_hollick_baseflow" in cols
+    assert "chapman_baseflow" in cols
+    assert "chapman_maxwell_baseflow" in cols
+    assert "boughton_baseflow" in cols
+    assert "furey_baseflow" in cols
+    assert "eckhardt_baseflow" in cols
+    assert "ewma_baseflow" in cols
+    assert "willems_baseflow" in cols
+    assert "ukih_baseflow" in cols
 
     ev.spark.stop()
 
