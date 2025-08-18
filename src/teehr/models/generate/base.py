@@ -17,32 +17,6 @@ class TimeseriesTableNamesEnum(StrEnum):
     secondary_timeseries = "secondary_timeseries"
 
 
-class TimeseriesFilter(PydanticBaseModel, validate_assignment=True):
-    """A class for uniquely identifying a timeseries from an evaluation."""
-
-    configuration_name: Optional[str] = Field(default=None)
-    variable_name: Optional[str] = Field(default=None)
-    unit_name: Optional[str] = Field(default=None)
-    table_name: TimeseriesTableNamesEnum = Field(
-        default=TimeseriesTableNamesEnum.primary_timeseries
-    )
-    member: Optional[str] = Field(default=None)
-    # TODO: Include all table fields?
-    # location_id, value, value_time, reference_time
-
-    def to_query(self) -> str:
-        """Generate an SQL query to select the timeseries."""
-        query = f"SELECT * FROM {self.table_name}"
-        for i, (field_name, field_value) in enumerate(
-            self.model_dump(exclude_none=True, exclude={"table_name"}).items()
-        ):
-            if i == 0:
-                query += f" WHERE {field_name} = '{field_value}'"
-            else:
-                query += f" AND {field_name} = '{field_value}'"
-        return query
-
-
 class NormalsResolutionEnum(StrEnum):
     """Temporal resolutions for calculating normals."""
 
@@ -63,6 +37,38 @@ class NormalsStatisticEnum(StrEnum):
     max = "max"
 
 
+class TimeseriesFilter(PydanticBaseModel):
+    """A class for uniquely identifying a timeseries from an evaluation."""
+
+    configuration_name: Optional[str] = Field(default=None)
+    variable_name: Optional[str] = Field(default=None)
+    unit_name: Optional[str] = Field(default=None)
+    table_name: TimeseriesTableNamesEnum = Field(
+        default=TimeseriesTableNamesEnum.primary_timeseries
+    )
+    member: Optional[str] = Field(default=None)
+    # TODO: Include all table fields?
+    # location_id, value, value_time, reference_time
+
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        validate_assignment=True,
+        extra='forbid'  # raise an error if extra fields are passed
+    )
+
+    def to_query(self) -> str:
+        """Generate an SQL query to select the timeseries."""
+        query = f"SELECT * FROM {self.table_name}"
+        for i, (field_name, field_value) in enumerate(
+            self.model_dump(exclude_none=True, exclude={"table_name"}).items()
+        ):
+            if i == 0:
+                query += f" WHERE {field_name} = '{field_value}'"
+            else:
+                query += f" AND {field_name} = '{field_value}'"
+        return query
+
+
 class GeneratorABC(abc.ABC):
     """Abstract base class for generating synthetic timeseries."""
 
@@ -72,14 +78,11 @@ class GeneratorABC(abc.ABC):
         pass
 
 
-class ReferenceForecastBaseModel(PydanticBaseModel):
+class BenchmarkForecastBaseModel(PydanticBaseModel):  # , validate_assignment=True
     """Base model for reference forecast generator classes."""
 
     temporal_resolution: NormalsResolutionEnum = Field(default=None)
-    reference_tsm: TimeseriesFilter = Field(default=None)
-    template_tsm: TimeseriesFilter = Field(default=None)
-    output_tsm: TimeseriesFilter = Field(default=None)
-    aggregate_reference_timeseries: bool = Field(default=False)
+    aggregate_reference_timesteps: bool = Field(default=False)
     aggregation_time_window: str = Field(default=None)
     df: ps.DataFrame = Field(default=None)
 

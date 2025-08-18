@@ -12,7 +12,7 @@ from teehr.models.generate.base import (
     NormalsResolutionEnum,
     NormalsStatisticEnum,
     TimeseriesFilter,
-    ReferenceForecastBaseModel
+    BenchmarkForecastBaseModel
 )
 from teehr.querying.utils import group_df
 from teehr.generate.utils import (
@@ -22,7 +22,7 @@ from teehr.generate.utils import (
 )
 
 
-class Persistence(ReferenceForecastBaseModel, GeneratorABC):
+class Persistence(BenchmarkForecastBaseModel, GeneratorABC):
     """Model for generating a synthetic persistence forecast timeseries.
 
     This model generates a synthetic persistence forecast timeseries based on
@@ -36,7 +36,7 @@ class Persistence(ReferenceForecastBaseModel, GeneratorABC):
     pass
 
 
-class ReferenceForecast(ReferenceForecastBaseModel, GeneratorABC):
+class ReferenceForecast(BenchmarkForecastBaseModel, GeneratorABC):
     """Model for generating a synthetic reference forecast timeseries.
 
     Notes
@@ -50,9 +50,6 @@ class ReferenceForecast(ReferenceForecastBaseModel, GeneratorABC):
     """
 
     df: ps.DataFrame = None
-    reference_tsm: TimeseriesFilter = None
-    template_tsm: TimeseriesFilter = None
-    output_tsm: TimeseriesFilter = None
 
     aggregate_reference_timeseries: bool = False
     aggregation_time_window: str = "6 hours"
@@ -63,7 +60,8 @@ class ReferenceForecast(ReferenceForecastBaseModel, GeneratorABC):
         ev: Evaluation,
         reference_sdf: ps.DataFrame,
         template_sdf: ps.DataFrame,
-        partition_by: List[str]
+        partition_by: List[str],
+        output_configuration_name: str
     ) -> ps.DataFrame:
         """Generate synthetic reference forecast timeseries."""
         # Aggregate the reference timeseries to the
@@ -98,7 +96,7 @@ class ReferenceForecast(ReferenceForecastBaseModel, GeneratorABC):
                 , tf.unit_name
                 , tf.variable_name
                 , tf.member
-                , '{self.output_tsm.configuration_name}' as configuration_name
+                , '{output_configuration_name}' as configuration_name
             FROM template_timeseries tf
             JOIN location_crosswalks cf
                 on cf.secondary_location_id = tf.location_id
@@ -113,7 +111,10 @@ class ReferenceForecast(ReferenceForecastBaseModel, GeneratorABC):
         ev.spark.catalog.dropTempView("reference_timeseries")
         ev.spark.catalog.dropTempView("template_timeseries")
 
-        # results_df = results_sdf.toPandas()  # TEMP
+
+        template_df = template_sdf.toPandas()
+        reference_df = reference_sdf.toPandas()
+        results_df = results_sdf.toPandas()  # TEMP
 
         return results_sdf
 

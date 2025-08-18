@@ -4,7 +4,7 @@ import tempfile
 
 import teehr
 from teehr import SignatureTimeseriesGenerators as sts
-from teehr import BenchmarkForecastGenerators as bfs
+from teehr import BenchmarkForecastGenerators as bfg
 
 from teehr.models.generate.base import TimeseriesFilter
 
@@ -69,7 +69,7 @@ def test_generate_timeseries_normals(tmpdir):
     # ts_normals.input_tsm = input_tsm
 
     # you have to define either an input df or ts
-    ev.generate.summary_timeseries(
+    ev.generate.signature_timeseries(
         method=ts_normals,
         input_timeseries=input_ts
     ).write(destination_table="primary_timeseries")
@@ -135,29 +135,33 @@ def test_generate_reference_forecast(tmpdir):
     )
     # Calculate a reference forecast, assigning the USGS observation
     # values to an HEFS member (just for testing).
-    ref_fcst = bfs.ReferenceForecast()
-    ref_fcst.reference_tsm = TimeseriesFilter(
-        configuration_name="usgs_observations",
-        variable_name="streamflow_day_of_year_mean",
+    ref_fcst = bfg.ReferenceForecast()
+
+    reference_ts = TimeseriesFilter(
+        configuration_name="usgs_climatology",
+        variable_name="streamflow_hourly_inst",
         unit_name="ft^3/s",
-        timeseries_type="primary"
+        table_name="primary_timeseries"
     )
-    ref_fcst.template_tsm = TimeseriesFilter(
+    template_ts = TimeseriesFilter(
         configuration_name="MEFP",
         variable_name="streamflow_hourly_inst",
         unit_name="ft^3/s",
-        timeseries_type="secondary",
+        table_name="secondary_timeseries",
         member="1993"
     )
-    ref_fcst.output_tsm = TimeseriesFilter(
-        configuration_name="benchmark_forecast_normals",
-        variable_name="streamflow_hourly_inst",
-        unit_name="ft^3/s",
-        timeseries_type="secondary"
-    )
+    # ref_fcst.output_tsm = TimeseriesFilter(
+    #     configuration_name="benchmark_forecast_normals",
+    #     variable_name="streamflow_hourly_inst",
+    #     unit_name="ft^3/s",
+    #     timeseries_type="secondary"
+    # )
 
     ev.generate.benchmark_forecast(
-        method=ref_fcst
+        method=ref_fcst,
+        reference_timeseries=reference_ts,
+        template_timeseries=template_ts,
+        output_configuration_name="benchmark_forecast_daily_normals"
     ).write()
 
     pass
@@ -197,12 +201,12 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_generate_timeseries_normals(
-            tempfile.mkdtemp(
-                prefix="0-",
-                dir=tempdir
-            )
-        )
+        # test_generate_timeseries_normals(
+        #     tempfile.mkdtemp(
+        #         prefix="0-",
+        #         dir=tempdir
+        #     )
+        # )
         test_generate_reference_forecast(
             tempfile.mkdtemp(
                 prefix="1-",
