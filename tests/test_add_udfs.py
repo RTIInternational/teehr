@@ -135,6 +135,11 @@ def test_add_timeseries_udfs(tmpdir):
     ukihbf = tcf.UKIHBaseflow()
     sdf = ukihbf.apply_to(sdf)
 
+    bfdp = tcf.BaseflowDominatedPeriods(
+        baseflow_field_name='lyne_hollick_baseflow'
+        )
+    sdf = bfdp.apply_to(sdf)
+
     cols = sdf.columns
     assert "event" in cols
     assert "event_id" in cols
@@ -147,6 +152,8 @@ def test_add_timeseries_udfs(tmpdir):
     assert "ewma_baseflow" in cols
     assert "willems_baseflow" in cols
     assert "ukih_baseflow" in cols
+    assert "baseflow_period" in cols
+    assert "baseflow_period_id" in cols
 
     ev.spark.stop()
 

@@ -183,6 +183,203 @@ class PercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
         return sdf
 
 
+class BaseflowDominatedPeriods(CalculatedFieldABC, CalculatedFieldBaseModel):
+    """Determines baseflow dominated periods.
+
+    This class identifies periods where baseflow is dominant in the streamflow
+    timeseries by adding two columns. The 'baseflow_period' column (bool)
+    indicates whether the period is baseflow dominated, and the
+    'baseflow_period_id' column (string) groups continuous segments of
+    baseflow dominated periods and assigns a unique ID to each segment in the
+    format "startdate-enddate".
+
+    Properties
+    ----------
+    - value_time_field_name:
+        The name of the column containing the timestamp.
+        Default: "value_time"
+    - value_field_name:
+        The name of the column containing the value to compare with baseflow.
+        Default: "primary_value"
+    - baseflow_field_name:
+        The name of the column containing the baseflow values.
+        Default: None
+    - output_baseflow_period_field_name:
+        The name of the column to store the baseflow period information.
+        Default: "baseflow_period"
+    - output_baseflow_period_id_field_name:
+        The name of the column to store the baseflow period ID information.
+        Default: "baseflow_period_id"
+    - uniqueness_fields:
+        The columns to use to uniquely identify each timeseries.
+
+        .. code-block:: python
+
+            Default: [
+                'reference_time',
+                'primary_location_id',
+                'configuration_name',
+                'variable_name',
+                'unit_name'
+            ]
+    """
+
+    value_time_field_name: str = Field(
+        default="value_time"
+    )
+    value_field_name: str = Field(
+        default="primary_value"
+    )
+    baseflow_field_name: str = Field(
+        default=None
+    )
+    output_baseflow_period_field_name: str = Field(
+        default="baseflow_period"
+    )
+    output_baseflow_period_id_field_name: str = Field(
+        default="baseflow_period_id"
+    )
+    uniqueness_fields: Union[str, List[str]] = Field(
+        default=[
+            'reference_time',
+            'primary_location_id',
+            'configuration_name',
+            'variable_name',
+            'unit_name'
+        ]
+    )
+
+    @staticmethod
+    def add_is_baseflow_period(
+        sdf: ps.DataFrame,
+        input_field,
+        baseflow_field,
+        output_field,
+        group_by,
+        return_type=T.BooleanType()
+    ):
+        # Get the schema of the input DataFrame
+        input_schema = sdf.schema
+
+        # Create a copy of the schema and add the new column
+        output_schema = T.StructType(input_schema.fields + [T.StructField(output_field, return_type, True)])
+
+        def is_baseflow_period(
+                 pdf: pd.DataFrame,
+                 input_field,
+                 baseflow_field,
+                 output_field
+        ) -> pd.DataFrame:
+            # isolate timeseries
+            streamflows = pdf[input_field]
+            baseflows = pdf[baseflow_field]
+
+            # create boolean and add to dataframe
+            pdf[output_field] = baseflows > streamflows
+
+            return pdf
+
+        def wrapper(pdf, input_field, baseflow_field, output_field):
+            return is_baseflow_period(
+                pdf, input_field, baseflow_field, output_field
+            )
+
+        sdf = sdf.groupby(group_by).applyInPandas(
+            lambda pdf: wrapper(pdf,
+                                input_field,
+                                baseflow_field,
+                                output_field),
+            schema=output_schema
+        )
+
+        return sdf
+
+    @staticmethod
+    def add_baseflow_period_ids(
+        sdf: ps.DataFrame,
+        input_field,
+        time_field,
+        output_field,
+        group_by,
+        return_type=T.StringType()
+    ):
+        # Get the schema of the input DataFrame
+        input_schema = sdf.schema
+
+        # Create a copy of the schema and add the new column
+        output_schema = T.StructType(input_schema.fields + [T.StructField(output_field, return_type, True)])
+
+        def baseflow_period_id(pdf: pd.DataFrame,
+                               input_field,
+                               time_field,
+                               output_field
+                               ) -> pd.DataFrame:
+            # Create a new column for continuous segments
+            pdf['segment'] = (pdf[input_field] != pdf[input_field].shift()).cumsum()
+
+            # Filter only the segments where baseflow exceeds streamflow
+            segments = pdf[pdf[input_field]]
+
+            # Group by segment and create startdate-enddate string
+            segment_ranges = segments.groupby('segment').agg(
+                startdate=(time_field, 'min'),
+                enddate=(time_field, 'max')
+            ).reset_index()
+
+            # Merge the segment ranges back to the original DataFrame
+            pdf = pdf.merge(segment_ranges[['segment', 'startdate', 'enddate']], on='segment', how='left')
+
+            # Create the startdate-enddate string column
+            pdf[output_field] = pdf.apply(
+                lambda row: f"{row['startdate']}-{row['enddate']}" if pd.notnull(row['startdate']) else None,
+                axis=1
+            )
+
+            # Drop the 'segment', 'startdate', and 'enddate' columns
+            pdf.drop(columns=['segment', 'startdate', 'enddate'], inplace=True)
+
+            return pdf
+
+        def wrapper(pdf, input_field, time_field, output_field):
+            return baseflow_period_id(pdf,
+                                      input_field,
+                                      time_field,
+                                      output_field)
+
+        # Group the data and apply the UDF
+        sdf = sdf.orderBy(
+            *group_by,
+            time_field
+            ).groupby(group_by).applyInPandas(
+            lambda pdf: wrapper(pdf,
+                                input_field,
+                                time_field,
+                                output_field),
+            schema=output_schema
+        )
+
+        return sdf
+
+    def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
+
+        sdf = self.add_is_baseflow_period(
+            sdf=sdf,
+            input_field=self.value_field_name,
+            baseflow_field=self.baseflow_field_name,
+            output_field=self.output_baseflow_period_field_name,
+            group_by=self.uniqueness_fields
+        )
+        sdf = self.add_baseflow_period_ids(
+            sdf=sdf,
+            input_field=self.output_baseflow_period_field_name,
+            time_field=self.value_time_field_name,
+            output_field=self.output_baseflow_period_id_field_name,
+            group_by=self.uniqueness_fields
+        )
+
+        return sdf
+
+
 class LyneHollickBaseflow(CalculatedFieldABC,
                           CalculatedFieldBaseModel):
     """Baseflow separation using the Lyne-Hollick method.
@@ -293,7 +490,7 @@ class LyneHollickBaseflow(CalculatedFieldABC,
                                  return_exceed=False)
 
             # assign the baseflow values to the new column
-            pdf[output_field] = np.round(result_df['LH'].values, 2)
+            pdf[output_field] = result_df['LH'].values
 
             return pdf
 
@@ -462,7 +659,7 @@ class ChapmanBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                                            return_exceed=False)
 
             # assign the baseflow values to the new column
-            pdf[output_field] = np.round(result_df['Chapman'].values, 2)
+            pdf[output_field] = result_df['Chapman'].values
 
             return pdf
 
@@ -634,7 +831,7 @@ class ChapmanMaxwellBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                                  return_exceed=False)
 
             # assign the baseflow values to the new column
-            pdf[output_field] = np.round(result_df['CM'].values, 2)
+            pdf[output_field] = result_df['CM'].values
 
             return pdf
 
@@ -826,7 +1023,7 @@ class BoughtonBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                                              return_exceed=False)
 
             # assign the baseflow values to the new column
-            pdf[output_field] = np.round(result_df['Boughton'].values, 2)
+            pdf[output_field] = result_df['Boughton'].values
 
             return pdf
 
@@ -1020,7 +1217,7 @@ class FureyBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                                        return_exceed=False)
 
             # assign the baseflow values to the new column
-            pdf[output_field] = np.round(result_df['Furey'].values, 2)
+            pdf[output_field] = result_df['Furey'].values
 
             return pdf
 
@@ -1214,7 +1411,7 @@ class EckhardtBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                                              return_exceed=False)
 
             # assign the baseflow values to the new column
-            pdf[output_field] = np.round(result_df['Eckhardt'].values, 2)
+            pdf[output_field] = result_df['Eckhardt'].values
 
             return pdf
 
@@ -1399,7 +1596,7 @@ class EWMABaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                                      return_exceed=False)
 
             # assign the baseflow values to the new column
-            pdf[output_field] = np.round(result_df['EWMA'].values, 2)
+            pdf[output_field] = result_df['EWMA'].values
 
             return pdf
 
@@ -1590,7 +1787,7 @@ class WillemsBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                                            return_exceed=False)
 
             # assign the baseflow values to the new column
-            pdf[output_field] = np.round(result_df['Willems'].values, 2)
+            pdf[output_field] = result_df['Willems'].values
 
             return pdf
 
@@ -1750,7 +1947,7 @@ class UKIHBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
                                      return_exceed=False)
 
             # assign the baseflow values to the new column
-            pdf[output_field] = np.round(result_df['UKIH'].values, 2)
+            pdf[output_field] = result_df['UKIH'].values
 
             return pdf
 
@@ -1816,6 +2013,7 @@ class TimeseriesAwareCalculatedFields():
     """
 
     PercentileEventDetection = PercentileEventDetection
+    BaseflowDominatedPeriods = BaseflowDominatedPeriods
     LyneHollickBaseflow = LyneHollickBaseflow
     ChapmanBaseflow = ChapmanBaseflow
     ChapmanMaxwellBaseflow = ChapmanMaxwellBaseflow
