@@ -64,6 +64,7 @@ pydata-sphinx-theme = ">=0.16.0"
 sphinx-autobuild = ">=2024.10.3"
 dask = {extras = ["distributed"], version = "^2025.5.1"}
 tomli = ">=2.2.1"
+hvplot = ">=0.12.0,<1"
 
 
 [tool.numpydoc_validation]
