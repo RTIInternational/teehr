@@ -180,6 +180,11 @@ class Normals(SignatureGeneratorBaseModel, GeneratorABC):
             time_period=time_period,
             statistic=self.summary_statistic
         )
+
+        normals_sdf = ffill_and_bfill_nans(
+            normals_sdf
+        )
+
         return normals_sdf
 
 

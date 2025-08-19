@@ -54,7 +54,7 @@ class GeneratedTimeSeriesBasemodel:
     def to_pandas(self):
         """Return Pandas DataFrame."""
         df = self.df.toPandas()
-        df.attrs['table_type'] = self.tsm.timeseries_type.__str__()
+        # df.attrs['table_type'] = self.tsm.timeseries_type.__str__()
         df.attrs['fields'] = self.df.columns
         return df
 
