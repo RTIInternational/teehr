@@ -135,7 +135,7 @@ def test_add_timeseries_udfs(tmpdir):
     ukihbf = tcf.UKIHBaseflow()
     sdf = ukihbf.apply_to(sdf)
 
-    bfdp = tcf.BaseflowDominatedPeriods(
+    bfdp = tcf.BaseflowPeriodDetection(
         baseflow_field_name='lyne_hollick_baseflow'
         )
     sdf = bfdp.apply_to(sdf)

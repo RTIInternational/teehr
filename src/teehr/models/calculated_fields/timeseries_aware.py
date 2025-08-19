@@ -183,7 +183,7 @@ class PercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
         return sdf
 
 
-class BaseflowDominatedPeriods(CalculatedFieldABC, CalculatedFieldBaseModel):
+class BaseflowPeriodDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
     """Determines baseflow dominated periods.
 
     This class identifies periods where baseflow is dominant in the streamflow
@@ -2018,7 +2018,7 @@ class TimeseriesAwareCalculatedFields():
     """
 
     PercentileEventDetection = PercentileEventDetection
-    BaseflowDominatedPeriods = BaseflowDominatedPeriods
+    BaseflowPeriodDetection = BaseflowPeriodDetection
     LyneHollickBaseflow = LyneHollickBaseflow
     ChapmanBaseflow = ChapmanBaseflow
     ChapmanMaxwellBaseflow = ChapmanMaxwellBaseflow
