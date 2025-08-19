@@ -112,7 +112,11 @@ def test_generate_reference_forecast(tmpdir):
     ev = teehr.Evaluation(dir_path=tmpdir)
     ev.clone_template()
     ev.locations.load_spatial(
-        in_path=Path(TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_location.parquet")
+        in_path=Path(
+            TEST_STUDY_DATA_DIR_v0_4,
+            "geo",
+            "USGS_PlatteRiver_location.parquet"
+        )
     )
     ev.location_crosswalks.load_csv(
         in_path=Path(TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv")
