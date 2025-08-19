@@ -2005,6 +2005,7 @@ class TimeseriesAwareCalculatedFields():
     Available Calculated Fields:
 
     - PercentileEventDetection
+    - BaseflowDominatedPeriods
     - LyneHollickBaseflow
     - ChapmanBaseflow
     - ChapmanMaxwellBaseflow
