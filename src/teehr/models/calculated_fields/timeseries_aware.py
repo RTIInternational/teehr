@@ -277,9 +277,10 @@ class BaseflowPeriodDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
             # isolate timeseries
             streamflows = pdf[input_field]
             baseflows = pdf[baseflow_field]
+            quickflows = streamflows - baseflows
 
             # create boolean and add to dataframe
-            pdf[output_field] = baseflows > streamflows
+            pdf[output_field] = baseflows > quickflows
 
             return pdf
 
