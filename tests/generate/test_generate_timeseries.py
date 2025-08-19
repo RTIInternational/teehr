@@ -4,7 +4,7 @@ import tempfile
 
 import teehr
 from teehr import SignatureTimeseriesGenerators as sts
-from teehr import BenchmarkForecastGenerators as bfg
+from teehr import BenchmarkForecastGenerators as bm
 
 from teehr.models.generate.base import TimeseriesFilter
 
@@ -15,11 +15,10 @@ def test_generate_timeseries_normals(tmpdir):
     """Generate synthetic time series data."""
     ev = teehr.Evaluation(dir_path=tmpdir)
     ev.clone_template()
-    # usgs_location = Path(
-    #     TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_location.parquet"
-    # )
     usgs_location = Path(
-        TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_FakeNWM_locations.parquet"
+        TEST_STUDY_DATA_DIR_v0_4,
+        "geo",
+        "USGS_PlatteRiver_FakeNWM_locations.parquet"
     )
     ev.locations.load_spatial(
         in_path=usgs_location
@@ -74,9 +73,38 @@ def test_generate_timeseries_normals(tmpdir):
         timestep="1 hour"
     ).write()  # default destination: "primary_timeseries"
 
-    prim_df = ev.primary_timeseries.to_pandas()
-
-    pass
+    prim_df = (
+        ev
+        .primary_timeseries
+        .filter([
+            "configuration_name = 'usgs_observations'",
+            "variable_name = 'streamflow_hourly_inst'"
+        ])
+        .to_pandas()
+    )
+    clim_df = (
+        ev
+        .primary_timeseries
+        .filter([
+            "configuration_name = 'usgs_observations'",
+            "variable_name = 'streamflow_day_of_year_mean'"
+        ])
+        .to_pandas()
+    )
+    # Manually calculate the mean for each day of the year.
+    # Leap day of year gets set as the previous day's value.
+    prim_df["day_of_year"] = prim_df.value_time.dt.dayofyear
+    prim_df["year"] = prim_df.value_time.dt.year
+    leap_day_mask = (prim_df.year == 2024) & (prim_df.day_of_year == 60)
+    following_leap_day_mask = (prim_df.year == 2024) & (prim_df.day_of_year >= 61)
+    prim_df.loc[leap_day_mask, "day_of_year"] = 59
+    prim_df.loc[following_leap_day_mask, "day_of_year"] -= 1
+    mean_prim_srs = prim_df.copy().groupby("day_of_year")["value"].mean()
+    # Check that the climatology matches the manual calculation.
+    # After leap day of year, indices are shifted by one.
+    clim_df["day_of_year"] = clim_df.value_time.dt.dayofyear
+    assert clim_df[clim_df.day_of_year == 59].value.values[0] == mean_prim_srs.loc[59]
+    assert clim_df[clim_df.day_of_year == 61].value.values[0] == mean_prim_srs.loc[60]
 
 
 def test_generate_reference_forecast(tmpdir):
@@ -135,7 +163,7 @@ def test_generate_reference_forecast(tmpdir):
     )
     # Calculate a reference forecast, assigning the USGS observation
     # values to an HEFS member (just for testing).
-    ref_fcst = bfg.ReferenceForecast()
+    ref_fcst = bm.ReferenceForecast()
 
     reference_ts = TimeseriesFilter(
         configuration_name="usgs_climatology",
@@ -143,6 +171,7 @@ def test_generate_reference_forecast(tmpdir):
         unit_name="ft^3/s",
         table_name="primary_timeseries"
     )
+
     template_ts = TimeseriesFilter(
         configuration_name="MEFP",
         variable_name="streamflow_hourly_inst",
@@ -150,16 +179,14 @@ def test_generate_reference_forecast(tmpdir):
         table_name="secondary_timeseries",
         member="1993"
     )
-
     # If the user has control over the name, they need to add it manually.
     ev.configurations.add(
         teehr.Configuration(
-            name="reference_climatology_forecast",
+            name="benchmark_forecast_daily_normals",
             type="secondary",
             description="Reference forecast based on USGS climatology"
         )
     )
-
     ev.generate.benchmark_forecast(
         method=ref_fcst,
         reference_timeseries=reference_ts,
@@ -167,24 +194,10 @@ def test_generate_reference_forecast(tmpdir):
         output_configuration_name="benchmark_forecast_daily_normals"
     ).write(destination_table="secondary_timeseries")
 
-    pass
-
-    # ev.secondary_timeseries.create_reference_forecast(
-    #     reference_timeseries_filter=[
-    #         "configuration_name = 'usgs_climatology'",
-    #     ],
-    #     template_forecast_filter=[
-    #         "configuration_name = 'MEFP'",
-    #         "variable_name = 'streamflow_hourly_inst'"
-    #     ],
-    #     output_configuration_name="reference_climatology_forecast",
-    #     method="climatology",
-    #     temporal_resolution="day_of_year",
-    #     aggregate_reference_timeseries=False
-    # )
     ref_fcst_df = ev.secondary_timeseries.filter(
-        "configuration_name = 'reference_climatology_forecast'"
+        "configuration_name = 'benchmark_forecast_daily_normals'"
     ).to_pandas()
+
     # Values at reference forecast value_times should match USGS climatology.
     usgs_clim_df = ev.primary_timeseries.to_pandas()
     for vt in ref_fcst_df.value_time.unique():
@@ -197,12 +210,12 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        # test_generate_timeseries_normals(
-        #     tempfile.mkdtemp(
-        #         prefix="0-",
-        #         dir=tempdir
-        #     )
-        # )
+        test_generate_timeseries_normals(
+            tempfile.mkdtemp(
+                prefix="0-",
+                dir=tempdir
+            )
+        )
         test_generate_reference_forecast(
             tempfile.mkdtemp(
                 prefix="1-",
