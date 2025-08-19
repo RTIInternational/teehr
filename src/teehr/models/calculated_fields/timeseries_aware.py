@@ -258,6 +258,10 @@ class BaseflowDominatedPeriods(CalculatedFieldABC, CalculatedFieldBaseModel):
         group_by,
         return_type=T.BooleanType()
     ):
+        # Check for baseflow_field_name
+        if baseflow_field is None:
+            raise ValueError("baseflow_field_name must be specified.")
+
         # Get the schema of the input DataFrame
         input_schema = sdf.schema
 
