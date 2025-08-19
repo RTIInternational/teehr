@@ -1,18 +1,17 @@
 """Classes for generating synthetic timeseries."""
-from typing import Union, List
+from typing import List
+import logging
 
 from pyspark.sql import functions as F
 import pyspark.sql as ps
 
 from teehr.evaluation.evaluation import Evaluation
-# from teehr.models.filters import FilterBaseModel
 from teehr.models.generate.base import (
     GeneratorABC,
-    SignatureTimeseriesBaseModel,
+    SignatureGeneratorBaseModel,
     NormalsResolutionEnum,
     NormalsStatisticEnum,
-    TimeseriesFilter,
-    BenchmarkForecastBaseModel
+    BenchmarkGeneratorBaseModel
 )
 from teehr.querying.utils import group_df
 from teehr.generate.utils import (
@@ -21,8 +20,10 @@ from teehr.generate.utils import (
     ffill_and_bfill_nans
 )
 
+logger = logging.getLogger(__name__)
 
-class Persistence(BenchmarkForecastBaseModel, GeneratorABC):
+
+class Persistence(BenchmarkGeneratorBaseModel, GeneratorABC):
     """Model for generating a synthetic persistence forecast timeseries.
 
     This model generates a synthetic persistence forecast timeseries based on
@@ -36,7 +37,7 @@ class Persistence(BenchmarkForecastBaseModel, GeneratorABC):
     pass
 
 
-class ReferenceForecast(BenchmarkForecastBaseModel, GeneratorABC):
+class ReferenceForecast(BenchmarkGeneratorBaseModel, GeneratorABC):
     """Model for generating a synthetic reference forecast timeseries.
 
     Notes
@@ -49,11 +50,9 @@ class ReferenceForecast(BenchmarkForecastBaseModel, GeneratorABC):
     This requires specific timeseries to work with.
     """
 
-    df: ps.DataFrame = None
-
     aggregate_reference_timeseries: bool = False
     aggregation_time_window: str = "6 hours"
-    temporal_resolution: NormalsResolutionEnum = NormalsResolutionEnum.day_of_year
+    df: ps.DataFrame = None
 
     def generate(
         self,
@@ -66,27 +65,21 @@ class ReferenceForecast(BenchmarkForecastBaseModel, GeneratorABC):
         """Generate synthetic reference forecast timeseries."""
         # Aggregate the reference timeseries to the
         # using a rolling average if aggregate_reference_timeseries is True.
+        # TODO: Should this define a new variable_name?
         if self.aggregate_reference_timeseries is True:
             reference_sdf = calculate_rolling_average(
                 sdf=reference_sdf,
                 partition_by=partition_by,
                 time_window=self.aggregation_time_window
             )
-        time_period = get_time_period_rlc(
-            temporal_resolution=self.temporal_resolution
-        )
-        template_sdf = time_period.apply_to(template_sdf)
-        # TODO: This is redundant with climatology method?
-        reference_sdf = time_period.apply_to(reference_sdf)
         # Join the reference sdf  to the template secondary forecast
         xwalk_sdf = ev.location_crosswalks.to_sdf()
         xwalk_sdf.createOrReplaceTempView("location_crosswalks")
         reference_sdf.createOrReplaceTempView("reference_timeseries")
         template_sdf.createOrReplaceTempView("template_timeseries")
-        # logger.debug(
-        #     "Joining reference climatology timeseries to template forecast."
-        # )
-        # TODO: What about output tsm variable_name? Is it the same as input?
+        logger.debug(
+            "Joining reference timeseries values to the template forecast."
+        )
         query = f"""
             SELECT
                 tf.reference_time
@@ -102,7 +95,6 @@ class ReferenceForecast(BenchmarkForecastBaseModel, GeneratorABC):
                 on cf.secondary_location_id = tf.location_id
             LEFT JOIN reference_timeseries rf
                 on cf.primary_location_id = rf.location_id
-                and tf.{time_period.output_field_name} = rf.{time_period.output_field_name}
                 and tf.unit_name = rf.unit_name
                 and tf.value_time = rf.value_time
         """  # noqa
@@ -111,15 +103,16 @@ class ReferenceForecast(BenchmarkForecastBaseModel, GeneratorABC):
         ev.spark.catalog.dropTempView("reference_timeseries")
         ev.spark.catalog.dropTempView("template_timeseries")
 
+        logger.debug("Filling NaNs with forward fill and backward fill.")
+        results_sdf = ffill_and_bfill_nans(results_sdf)
 
-        template_df = template_sdf.toPandas()
-        reference_df = reference_sdf.toPandas()
-        results_df = results_sdf.toPandas()  # TEMP
+        #  # TODO: Is this needed?
+        # results_sdf = results_sdf.dropna(subset=["value"])
 
         return results_sdf
 
 
-class Normals(SignatureTimeseriesBaseModel, GeneratorABC):
+class Normals(SignatureGeneratorBaseModel, GeneratorABC):
     """Model for generating synthetic normals timeseries."""
 
     temporal_resolution: NormalsResolutionEnum = NormalsResolutionEnum.day_of_year
@@ -145,7 +138,8 @@ class Normals(SignatureTimeseriesBaseModel, GeneratorABC):
 
     def generate(
         self,
-        input_timeseries_sdf: ps.DataFrame
+        input_dataframe: ps.DataFrame,
+        output_dataframe: ps.DataFrame
     ):
         """Generate synthetic normals timeseries."""
         time_period = get_time_period_rlc(self.temporal_resolution)
@@ -166,20 +160,16 @@ class Normals(SignatureTimeseriesBaseModel, GeneratorABC):
             "configuration_name"
         ]
         # Add the time period as a calculated field.
-        input_timeseries_sdf = time_period.apply_to(input_timeseries_sdf)
+        input_dataframe = time_period.apply_to(input_dataframe)
         # Aggregate values based on the time period and summary statistic.
         groupby_field_list.append(time_period.output_field_name)
         summary_sdf = (
-            group_df(input_timeseries_sdf, groupby_field_list).
+            group_df(input_dataframe, groupby_field_list).
             agg(summary_func("value").alias("value"))
         )
-        # TODO: Use a template here instead of joining back?
-        # Decompose the input sdf by:
-        # - start/end dates
-        # - timestep
-        # Create a template sdf based on those variables
 
-        normals_sdf = input_timeseries_sdf.drop("value").join(
+        output_dataframe = time_period.apply_to(output_dataframe)
+        normals_sdf = output_dataframe.join(
             summary_sdf,
             on=groupby_field_list,
             how="left"

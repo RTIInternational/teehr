@@ -1,6 +1,5 @@
 """Pydantic models for domain table entries."""
 from pydantic import BaseModel
-from datetime import datetime
 
 
 class TableBaseModel(BaseModel):

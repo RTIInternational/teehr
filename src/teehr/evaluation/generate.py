@@ -1,16 +1,18 @@
 """A component class for generating synthetic time series."""
 import logging
-from typing import List
+from typing import List, Union
+from datetime import datetime, timedelta
 
 import pyspark.sql as ps
-from pydantic import BaseModel as PydanticBaseModel, ConfigDict
+import pyspark.sql.functions as F
 
 from teehr.models.generate.base import (
-    SignatureTimeseriesBaseModel,
-    BenchmarkForecastBaseModel,
+    SignatureGeneratorBaseModel,
+    BenchmarkGeneratorBaseModel,
     TimeseriesFilter
 )
 from teehr.models.pydantic_table_models import Variable
+from teehr.generate.utils import construct_signature_dataframe
 
 
 logger = logging.getLogger(__name__)
@@ -21,7 +23,7 @@ class GeneratedTimeSeriesBasemodel:
 
     def write(
         self,
-        destination_table: str,
+        destination_table: str = "primary_timeseries",
         write_mode="append"
     ):
         """Write the generated DataFrame to a specified table.
@@ -36,7 +38,11 @@ class GeneratedTimeSeriesBasemodel:
         if destination_table == "primary_timeseries":
             tbl = self.ev.primary_timeseries
         elif destination_table == "secondary_timeseries":
+            # Note. This assumes the location_id's in self.df
+            # are in the crosswalk table secondary column.
             tbl = self.ev.secondary_timeseries
+            if "member" not in self.df.columns:
+                self.df = self.df.withColumn("member", F.lit(None))
         else:
             raise ValueError(
                 f"Invalid destination table: {destination_table}"
@@ -53,16 +59,15 @@ class GeneratedTimeSeriesBasemodel:
         return df
 
 
-# Q. Do we need a more generic base table for generated timeseries
-#    (other than base_table.py)?
 class SignatureTimeseries(GeneratedTimeSeriesBasemodel):
     """Generate a synthetic time series from a single timeseries."""
 
     def __init__(
         self,
         generator,
-        method: SignatureTimeseriesBaseModel,
-        input_dataframe: ps.DataFrame = None,
+        method: SignatureGeneratorBaseModel,
+        input_dataframe: ps.DataFrame,
+        output_dataframe: ps.DataFrame,
         update_variable_table: bool = True,
     ):
         """Generate a new timeseries according to the method class.
@@ -75,13 +80,19 @@ class SignatureTimeseries(GeneratedTimeSeriesBasemodel):
             A model defining the signature timeseries generation method.
         input_dataframe : ps.DataFrame
             The input spark DataFrame.
+        output_dataframe : ps.DataFrame
+            The output spark DataFrame of a specified timestep and start
+            and end datetimes.
         update_variable_table : bool
             Whether to update the variable table.
         """
         self.df = None
         self.ev = generator.ev
 
-        self.df = method.generate(input_timeseries_sdf=input_dataframe)
+        self.df = method.generate(
+            input_dataframe=input_dataframe,
+            output_dataframe=output_dataframe
+        )
 
         if update_variable_table is True:
             variable_names = self.df.select(
@@ -103,7 +114,7 @@ class BenchmarkForecast(GeneratedTimeSeriesBasemodel):
     def __init__(
         self,
         generator,
-        method: BenchmarkForecastBaseModel,
+        method: BenchmarkGeneratorBaseModel,
         reference_dataframe: ps.DataFrame,
         template_dataframe: ps.DataFrame,
         partition_by: List[str],
@@ -112,7 +123,6 @@ class BenchmarkForecast(GeneratedTimeSeriesBasemodel):
         """Initialize and generate the timeseries."""
         self.df = None
         self.ev = generator.ev
-        # self.output_tsm = method.output_tsm
 
         self.df = method.generate(
             ev=self.ev,
@@ -121,8 +131,6 @@ class BenchmarkForecast(GeneratedTimeSeriesBasemodel):
             partition_by=partition_by,
             output_configuration_name=output_configuration_name
         )
-        # TODO: Add output configuration and variable names to ev?
-        pass
 
 
 class Generator:
@@ -134,8 +142,11 @@ class Generator:
 
     def signature_timeseries(
         self,
-        method: SignatureTimeseriesBaseModel,
-        input_timeseries: TimeseriesFilter
+        method: SignatureGeneratorBaseModel,
+        input_timeseries: TimeseriesFilter,
+        start_datetime: Union[str, datetime],
+        end_datetime: Union[str, datetime],
+        timestep: Union[str, timedelta] = "1 hour",
     ) -> SignatureTimeseries:
         """Generate synthetic summary from a single timeseries.
 
@@ -175,20 +186,44 @@ class Generator:
                 "Input DataFrame is empty!"
                 " Check the parameters of the input_timeseries."
             )
+
+        output_dataframe = construct_signature_dataframe(
+            spark=self.ev.spark,
+            input_dataframe=input_dataframe,
+            start_datetime=start_datetime,
+            end_datetime=end_datetime,
+            timestep=timestep
+        )
         return SignatureTimeseries(
             self,
             method=method,
-            input_dataframe=input_dataframe
+            input_dataframe=input_dataframe,
+            output_dataframe=output_dataframe
         )
 
     def benchmark_forecast(
         self,
-        method: BenchmarkForecastBaseModel,
+        method: BenchmarkGeneratorBaseModel,
         reference_timeseries: TimeseriesFilter,
         template_timeseries: TimeseriesFilter,
         output_configuration_name: str
     ) -> BenchmarkForecast:
-        """Generate a benchmark forecast from two timeseries."""
+        """Generate a benchmark forecast from two timeseries.
+
+        Parameters
+        ----------
+        method : BenchmarkGeneratorBaseModel
+            The method to use for generating the benchmark forecast.
+        reference_timeseries : TimeseriesFilter
+            The reference timeseries containing the values to use
+            for the benchmark.
+        template_timeseries : TimeseriesFilter
+            The template timeseries containing the forecast structure
+            (lead time, time interval, issuance frequency, etc) to use for
+            the benchmark.
+        output_configuration_name : str
+            The configuration name for the generated benchmark forecast.
+        """
         reference_dataframe = self.ev.sql(
             query=reference_timeseries.to_query(),
             create_temp_views=[

@@ -7,7 +7,6 @@ from pydantic import Field
 import pyspark.sql as ps
 
 from teehr.models.str_enum import StrEnum
-# from teehr.models.fetching.utils import TimeseriesTypeEnum
 
 
 class TimeseriesTableNamesEnum(StrEnum):
@@ -78,10 +77,9 @@ class GeneratorABC(abc.ABC):
         pass
 
 
-class BenchmarkForecastBaseModel(PydanticBaseModel):  # , validate_assignment=True
-    """Base model for reference forecast generator classes."""
+class BenchmarkGeneratorBaseModel(PydanticBaseModel):
+    """Base model for benchmark forecast generator classes."""
 
-    temporal_resolution: NormalsResolutionEnum = Field(default=None)
     aggregate_reference_timesteps: bool = Field(default=False)
     aggregation_time_window: str = Field(default=None)
     df: ps.DataFrame = Field(default=None)
@@ -93,7 +91,7 @@ class BenchmarkForecastBaseModel(PydanticBaseModel):  # , validate_assignment=Tr
     )
 
 
-class SignatureTimeseriesBaseModel(PydanticBaseModel):
+class SignatureGeneratorBaseModel(PydanticBaseModel):
     """Base model for summary timeseries generator classes.
 
     Notes

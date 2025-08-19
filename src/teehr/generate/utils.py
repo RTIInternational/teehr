@@ -1,21 +1,84 @@
-from typing import Union, List
+"""Utilities for generating synthetic timeseries."""
+from typing import List, Union
 import sys
+from functools import reduce
+from datetime import timedelta, datetime
 
+from pyspark.sql import DataFrame
 from pyspark.sql import functions as F
 import pyspark.sql as ps
 from pyspark.sql import Window
 
-# from teehr.evaluation.evaluation import Evaluation
-from teehr.models.filters import FilterBaseModel
-from teehr.querying.utils import group_df
 from teehr.models.generate.base import (
-    NormalsResolutionEnum,
-    NormalsStatisticEnum,
-    TimeseriesFilter
+    NormalsResolutionEnum
 )
 from teehr.models.calculated_fields.row_level import (
     RowLevelCalculatedFields as rlc
 )
+
+
+def construct_signature_dataframe(
+    spark: ps.SparkSession,
+    input_dataframe: ps.DataFrame,
+    start_datetime: Union[str, datetime],
+    end_datetime: Union[str, datetime],
+    timestep: Union[str, timedelta]
+) -> ps.DataFrame:
+    """Construct a template signature DataFrame for the given input.
+
+    In a signature dataframe, reference_time is assigned None. Remaining
+    columns other than ``value`` are populated from the input dataframe.
+
+    Parameters
+    ----------
+    spark : ps.SparkSession
+        The Spark session object.
+    input_dataframe : ps.DataFrame
+        The input Spark DataFrame to generate the signature DataFrame.
+    start_datetime : Union[str, datetime]
+        The start datetime for the time series value_time.
+    end_datetime : Union[str, datetime]
+        The end datetime for the time series value_time.
+    timestep : Union[str, timedelta]
+        The time step for the time series.
+    """
+    sdf = spark.createDataFrame(
+        [(start_datetime, end_datetime)],
+        ["start_ts_str", "end_ts_str"]) \
+        .withColumn("start_ts", F.to_timestamp(F.col("start_ts_str"))) \
+        .withColumn("end_ts", F.to_timestamp(F.col("end_ts_str")))
+
+    if isinstance(timestep, timedelta):
+        timestep = f"{timestep.total_seconds()} seconds"
+
+    output_sdf = sdf.withColumn(
+        "timestamp_array",
+        F.sequence(
+                F.col("start_ts"),
+                F.col("end_ts"),
+                F.expr(f"interval {timestep}")
+            )
+        ) \
+        .withColumn("value_time", F.explode(F.col("timestamp_array"))) \
+        .select("value_time")
+
+    output_sdf = output_sdf.withColumn("reference_time", F.lit(None))
+
+    groupby_field_list = [
+        "location_id",
+        "variable_name",
+        "unit_name",
+        "configuration_name"
+    ]
+    concat_df_list = []
+    for row in input_dataframe.select(
+        *groupby_field_list
+    ).distinct().toLocalIterator():
+        for key, val in row.asDict().items():
+            output_sdf = output_sdf.withColumn(key, F.lit(val))
+        concat_df_list.append(output_sdf)
+
+    return reduce(DataFrame.unionByName, concat_df_list)
 
 
 def get_time_period_rlc(
