@@ -7,6 +7,14 @@ import pyspark.sql.types as T
 import pyspark.sql as ps
 from teehr.models.calculated_fields.base import CalculatedFieldABC, CalculatedFieldBaseModel
 
+UNIQUENESS_FIELDS = [
+            'reference_time',
+            'primary_location_id',
+            'configuration_name',
+            'variable_name',
+            'unit_name'
+        ]
+
 
 class PercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
     """Adds an "event" and "event_id" column to the DataFrame based on a percentile threshold.
@@ -61,13 +69,7 @@ class PercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
         default="event_id"
     )
     uniqueness_fields: Union[str, List[str]] = Field(
-        default=[
-            'reference_time',
-            'primary_location_id',
-            'configuration_name',
-            'variable_name',
-            'unit_name'
-        ]
+        default=None
     )
 
     @staticmethod
@@ -164,7 +166,8 @@ class PercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
         return sdf
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
-
+        if self.uniqueness_fields is None:
+            self.uniqueness_fields = UNIQUENESS_FIELDS
         sdf = self.add_is_event(
             sdf=sdf,
             input_field=self.value_field_name,
@@ -240,13 +243,7 @@ class BaseflowPeriodDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
         default="baseflow_period_id"
     )
     uniqueness_fields: Union[str, List[str]] = Field(
-        default=[
-            'reference_time',
-            'primary_location_id',
-            'configuration_name',
-            'variable_name',
-            'unit_name'
-        ]
+        default=None
     )
 
     @staticmethod
@@ -366,7 +363,8 @@ class BaseflowPeriodDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
         return sdf
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
-
+        if self.uniqueness_fields is None:
+            self.uniqueness_fields = UNIQUENESS_FIELDS
         sdf = self.add_is_baseflow_period(
             sdf=sdf,
             input_field=self.value_field_name,
@@ -434,13 +432,7 @@ class LyneHollickBaseflow(CalculatedFieldABC,
         default=0.925
     )
     uniqueness_fields: Union[str, List[str]] = Field(
-        default=[
-            'reference_time',
-            'primary_location_id',
-            'configuration_name',
-            'variable_name',
-            'unit_name'
-        ]
+        default=None
     )
 
     @staticmethod
@@ -522,7 +514,8 @@ class LyneHollickBaseflow(CalculatedFieldABC,
         return sdf
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
-
+        if self.uniqueness_fields is None:
+            self.uniqueness_fields = UNIQUENESS_FIELDS
         sdf = self.add_lyne_hollick_baseflow(
             sdf=sdf,
             input_field=self.value_field_name,
@@ -590,13 +583,7 @@ class ChapmanBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         default=None
     )
     uniqueness_fields: Union[str, List[str]] = Field(
-        default=[
-            'reference_time',
-            'primary_location_id',
-            'configuration_name',
-            'variable_name',
-            'unit_name'
-        ]
+        default=None
     )
 
     @staticmethod
@@ -693,7 +680,8 @@ class ChapmanBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         return sdf
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
-
+        if self.uniqueness_fields is None:
+            self.uniqueness_fields = UNIQUENESS_FIELDS
         sdf = self.add_chapman_baseflow(
             sdf=sdf,
             input_field=self.value_field_name,
@@ -762,13 +750,7 @@ class ChapmanMaxwellBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         default=None
     )
     uniqueness_fields: Union[str, List[str]] = Field(
-        default=[
-            'reference_time',
-            'primary_location_id',
-            'configuration_name',
-            'variable_name',
-            'unit_name'
-        ]
+        default=None
     )
 
     @staticmethod
@@ -866,7 +848,8 @@ class ChapmanMaxwellBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         return sdf
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
-
+        if self.uniqueness_fields is None:
+            self.uniqueness_fields = UNIQUENESS_FIELDS
         sdf = self.add_chapman_maxwell_baseflow(
             sdf,
             output_field=self.output_field_name,
@@ -943,13 +926,7 @@ class BoughtonBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         default=None
     )
     uniqueness_fields: Union[str, List[str]] = Field(
-        default=[
-            'reference_time',
-            'primary_location_id',
-            'configuration_name',
-            'variable_name',
-            'unit_name'
-        ]
+        default=None
     )
 
     @staticmethod
@@ -1060,7 +1037,8 @@ class BoughtonBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         return sdf
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
-
+        if self.uniqueness_fields is None:
+            self.uniqueness_fields = UNIQUENESS_FIELDS
         sdf = self.add_boughton_baseflow(
             sdf,
             output_field=self.output_field_name,
@@ -1137,13 +1115,7 @@ class FureyBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         default=None
     )
     uniqueness_fields: Union[str, List[str]] = Field(
-        default=[
-            'reference_time',
-            'primary_location_id',
-            'configuration_name',
-            'variable_name',
-            'unit_name'
-        ]
+        default=None
     )
 
     @staticmethod
@@ -1254,7 +1226,8 @@ class FureyBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         return sdf
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
-
+        if self.uniqueness_fields is None:
+            self.uniqueness_fields = UNIQUENESS_FIELDS
         sdf = self.add_furey_baseflow(
             sdf,
             output_field=self.output_field_name,
@@ -1331,13 +1304,7 @@ class EckhardtBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         default=None
     )
     uniqueness_fields: Union[str, List[str]] = Field(
-        default=[
-            'reference_time',
-            'primary_location_id',
-            'configuration_name',
-            'variable_name',
-            'unit_name'
-        ]
+        default=None
     )
 
     @staticmethod
@@ -1454,7 +1421,8 @@ class EckhardtBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         return sdf
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
-
+        if self.uniqueness_fields is None:
+            self.uniqueness_fields = UNIQUENESS_FIELDS
         sdf = self.add_eckhardt_baseflow(
             sdf,
             output_field=self.output_field_name,
@@ -1525,13 +1493,7 @@ class EWMABaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         default=None
     )
     uniqueness_fields: Union[str, List[str]] = Field(
-        default=[
-            'reference_time',
-            'primary_location_id',
-            'configuration_name',
-            'variable_name',
-            'unit_name'
-        ]
+        default=None
     )
 
     @staticmethod
@@ -1630,7 +1592,8 @@ class EWMABaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         return sdf
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
-
+        if self.uniqueness_fields is None:
+            self.uniqueness_fields = UNIQUENESS_FIELDS
         sdf = self.add_ewma_baseflow(
             sdf,
             output_field=self.output_field_name,
@@ -1707,13 +1670,7 @@ class WillemsBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         default=None
     )
     uniqueness_fields: Union[str, List[str]] = Field(
-        default=[
-            'reference_time',
-            'primary_location_id',
-            'configuration_name',
-            'variable_name',
-            'unit_name'
-        ]
+        default=None
     )
 
     @staticmethod
@@ -1824,7 +1781,8 @@ class WillemsBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         return sdf
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
-
+        if self.uniqueness_fields is None:
+            self.uniqueness_fields = UNIQUENESS_FIELDS
         sdf = self.add_willems_baseflow(
             sdf,
             output_field=self.output_field_name,
@@ -1888,13 +1846,7 @@ class UKIHBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         default=0.925
     )
     uniqueness_fields: Union[str, List[str]] = Field(
-        default=[
-            'reference_time',
-            'primary_location_id',
-            'configuration_name',
-            'variable_name',
-            'unit_name'
-        ]
+        default=None
     )
 
     @staticmethod
@@ -1979,7 +1931,8 @@ class UKIHBaseflow(CalculatedFieldABC, CalculatedFieldBaseModel):
         return sdf
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
-
+        if self.uniqueness_fields is None:
+            self.uniqueness_fields = UNIQUENESS_FIELDS
         sdf = self.add_ukih_baseflow(
             sdf,
             output_field=self.output_field_name,
