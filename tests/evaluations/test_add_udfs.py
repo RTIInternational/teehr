@@ -83,7 +83,7 @@ def test_add_row_udfs(tmpdir):
         assert row["season"] in ["winter", "spring", "summer", "fall"]
 
     assert "forecast_lead_time" in cols
-    assert sdf.schema["forecast_lead_time"].dataType == T.LongType()
+    assert sdf.schema["forecast_lead_time"].dataType == T.DayTimeIntervalType()
     row = check_sdf.collect()[1]
     expected_val = (row["value_time"] - row["reference_time"]).total_seconds()
     test_val = row["forecast_lead_time"]
@@ -172,12 +172,12 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_add_row_udfs_null_reference(
-            tempfile.mkdtemp(
-                prefix="0-",
-                dir=tempdir
-            )
-        )
+        # test_add_row_udfs_null_reference(
+        #     tempfile.mkdtemp(
+        #         prefix="0-",
+        #         dir=tempdir
+        #     )
+        # )
         test_add_row_udfs(
             tempfile.mkdtemp(
                 prefix="1-",
