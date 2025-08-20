@@ -68,7 +68,7 @@ class ReferenceForecast(BenchmarkGeneratorBaseModel, GeneratorABC):
         # TODO: Should this define a new variable_name?
         if self.aggregate_reference_timeseries is True:
             reference_sdf = calculate_rolling_average(
-                ev=ev,
+                spark=ev.spark,
                 sdf=reference_sdf,
                 partition_by=partition_by,
                 time_window=self.aggregation_time_window

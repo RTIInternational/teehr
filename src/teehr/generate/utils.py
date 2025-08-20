@@ -104,7 +104,7 @@ def get_time_period_rlc(
 
 
 def calculate_rolling_average(
-    ev,
+    spark: ps.SparkSession,
     sdf: ps.DataFrame,
     partition_by: List[str] = [
         'reference_time',
@@ -131,7 +131,7 @@ def calculate_rolling_average(
     sdf.createOrReplaceTempView("temp_df")
     col_list = sdf.columns
     col_list.remove(input_column)
-    return ev.spark.sql(
+    return spark.sql(
         f"""
         WITH cte AS (
             SELECT *, {statistic}({input_column}) OVER (
