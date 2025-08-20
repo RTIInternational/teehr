@@ -101,10 +101,9 @@ def test_generate_timeseries_normals(tmpdir):
     prim_df.loc[following_leap_day_mask, "day_of_year"] -= 1
     mean_prim_srs = prim_df.copy().groupby("day_of_year")["value"].mean()
     # Check that the climatology matches the manual calculation.
-    # After leap day of year, indices are shifted by one.
     clim_df["day_of_year"] = clim_df.value_time.dt.dayofyear
     assert clim_df[clim_df.day_of_year == 59].value.values[0] == mean_prim_srs.loc[59]
-    assert clim_df[clim_df.day_of_year == 61].value.values[0] == mean_prim_srs.loc[60]
+    assert clim_df[clim_df.day_of_year == 61].value.values[0] == mean_prim_srs.loc[61]
 
 
 def test_generate_reference_forecast(tmpdir):

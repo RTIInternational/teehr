@@ -34,6 +34,11 @@ def _pivot_by_member(
     unique_members, member_indices = np.unique(
         members.values, return_inverse=True
     )
+    if unique_members.size == 1:  # Only one ensemble member
+        return {
+            "primary": p.values,
+            "secondary": s.values
+        }
     # Assumes all members are same length.
     forecast_length = member_indices[member_indices == member_indices[0]].size
     n_members = unique_members.size

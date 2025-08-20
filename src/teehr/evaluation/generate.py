@@ -68,7 +68,8 @@ class SignatureTimeseries(GeneratedTimeSeriesBasemodel):
         method: SignatureGeneratorBaseModel,
         input_dataframe: ps.DataFrame,
         output_dataframe: ps.DataFrame,
-        update_variable_table: bool = True,
+        update_variable_table: bool,
+        fillna: bool
     ):
         """Generate a new timeseries according to the method class.
 
@@ -85,13 +86,16 @@ class SignatureTimeseries(GeneratedTimeSeriesBasemodel):
             and end datetimes.
         update_variable_table : bool
             Whether to update the variable table.
+        fillna : bool
+            Whether to forward and back-fill NaN values.
         """
         self.df = None
         self.ev = generator.ev
 
         self.df = method.generate(
             input_dataframe=input_dataframe,
-            output_dataframe=output_dataframe
+            output_dataframe=output_dataframe,
+            fillna=fillna
         )
 
         if update_variable_table is True:
@@ -147,6 +151,8 @@ class Generator:
         start_datetime: Union[str, datetime],
         end_datetime: Union[str, datetime],
         timestep: Union[str, timedelta] = "1 hour",
+        update_variable_table: bool = True,
+        fillna: bool = True
     ) -> SignatureTimeseries:
         """Generate synthetic summary from a single timeseries.
 
@@ -158,6 +164,16 @@ class Generator:
             The input timeseries model. The defines a unique timeseries
             that will be queried from the Evaluation and used as the
             input_dataframe. Defaults to None.
+        start_datetime : Union[str, datetime]
+            The start datetime for the generated timeseries.
+        end_datetime : Union[str, datetime]
+            The end datetime for the generated timeseries.
+        timestep : Union[str, timedelta], optional
+            The timestep for the generated timeseries. Defaults to "1 hour".
+        update_variable_table : bool, optional
+            Whether to update the variable table. Defaults to True.
+        fillna : bool, optional
+            Whether to forward and back-fill NaN values. Defaults to True.
 
         Returns
         -------
@@ -198,7 +214,9 @@ class Generator:
             self,
             method=method,
             input_dataframe=input_dataframe,
-            output_dataframe=output_dataframe
+            output_dataframe=output_dataframe,
+            update_variable_table=update_variable_table,
+            fillna=fillna
         )
 
     def benchmark_forecast(

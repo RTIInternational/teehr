@@ -1,5 +1,5 @@
 """Test evaluation class."""
-from teehr import Configuration, Variable
+from teehr import Configuration
 from teehr import DeterministicMetrics, ProbabilisticMetrics, SignatureMetrics
 from teehr import Operators as ops
 import tempfile
@@ -14,6 +14,9 @@ from teehr.models.filters import JoinedTimeseriesFilter
 from teehr.models.metrics.bootstrap_models import Bootstrappers
 from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 from teehr.evaluation.evaluation import Evaluation
+from teehr import SignatureTimeseriesGenerators as sts
+from teehr import BenchmarkForecastGenerators as bm
+from teehr.models.generate.base import TimeseriesFilter
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -474,66 +477,64 @@ def test_ensemble_metrics(tmpdir):
         in_path=primary_filepath
     )
 
-    # Calculate climatology from USGS observations.
-    ev.configurations.add(
-        [
-            Configuration(
-                name="usgs_climatology",
-                type="primary",
-                description="Climatology of USGS streamflow"
-            )
-        ]
-    )
-    ev.variables.add(
-        [
-            Variable(
-                name="streamflow_hourly_climatology",
-                long_name="Climatology of USGS streamflow for hour of year"
-            )
-        ]
-    )
-    ev.primary_timeseries.calculate_climatology(
-        input_timeseries_filter=[
-            "configuration_name = 'usgs_observations'",
-            "variable_name = 'streamflow_hourly_inst'"
-        ],
-        output_configuration_name="usgs_climatology",
-        output_variable_name="streamflow_hourly_climatology",
-        temporal_resolution="hour_of_year",
-        summary_statistic="mean",
-    )
+    # Calculate annual hourly normals from USGS observations.
+    input_ts = TimeseriesFilter()
+    input_ts.table_name = "primary_timeseries"
+
+    ts_normals = sts.Normals()
+    ts_normals.temporal_resolution = "hour_of_year"  # the default
+    ts_normals.summary_statistic = "mean"           # the default
+
+    ev.generate.signature_timeseries(
+        method=ts_normals,
+        input_timeseries=input_ts,
+        start_datetime="2024-11-19 12:00:00",
+        end_datetime="2024-11-21 13:00:00",
+        timestep="1 hour",
+        fillna=False
+    ).write()
 
     # Add reference forecast based on climatology.
     ev.configurations.add(
         [
             Configuration(
-                name="reference_climatology_forecast",
+                name="benchmark_forecast_hourly_normals",
                 type="secondary",
                 description="Reference forecast based on USGS climatology summarized by hour of year"  # noqa
             )
         ]
     )
-    ev.secondary_timeseries.create_reference_forecast(
-        reference_timeseries_filter=[
-            "configuration_name = 'usgs_climatology'",
-            "variable_name = 'streamflow_hourly_climatology'"
-        ],
-        template_forecast_filter=[
-            "configuration_name = 'MEFP'",
-            "variable_name = 'streamflow_hourly_inst'"
-        ],
-        output_configuration_name="reference_climatology_forecast",
-        method="climatology",
-        temporal_resolution="hour_of_year",
-        aggregate_reference_timeseries=True
+    ref_fcst = bm.ReferenceForecast()
+    ref_fcst.aggregate_reference_timeseries = True
+
+    reference_ts = TimeseriesFilter(
+        variable_name="streamflow_hour_of_year_mean",
+        unit_name="ft^3/s",
+        table_name="primary_timeseries"
     )
+
+    template_ts = TimeseriesFilter(
+        configuration_name="MEFP",
+        variable_name="streamflow_hourly_inst",
+        unit_name="ft^3/s",
+        table_name="secondary_timeseries",
+        member="1993"
+    )
+    ev.generate.benchmark_forecast(
+        method=ref_fcst,
+        reference_timeseries=reference_ts,
+        template_timeseries=template_ts,
+        output_configuration_name="benchmark_forecast_hourly_normals"
+    ).write(destination_table="secondary_timeseries")
+
     ev.joined_timeseries.create(execute_scripts=False)
+
     # Now, metrics.
     crps = ProbabilisticMetrics.CRPS()
     crps.summary_func = np.mean
     crps.estimator = "pwm"
     crps.backend = "numba"
-    crps.reference_configuration = "reference_climatology_forecast"
+    crps.reference_configuration = "benchmark_forecast_hourly_normals"
 
     include_metrics = [crps]
     metrics_df = ev.metrics.query(

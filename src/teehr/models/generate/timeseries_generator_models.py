@@ -68,6 +68,7 @@ class ReferenceForecast(BenchmarkGeneratorBaseModel, GeneratorABC):
         # TODO: Should this define a new variable_name?
         if self.aggregate_reference_timeseries is True:
             reference_sdf = calculate_rolling_average(
+                ev=ev,
                 sdf=reference_sdf,
                 partition_by=partition_by,
                 time_window=self.aggregation_time_window
@@ -139,7 +140,8 @@ class Normals(SignatureGeneratorBaseModel, GeneratorABC):
     def generate(
         self,
         input_dataframe: ps.DataFrame,
-        output_dataframe: ps.DataFrame
+        output_dataframe: ps.DataFrame,
+        fillna: bool
     ):
         """Generate synthetic normals timeseries."""
         time_period = get_time_period_rlc(self.temporal_resolution)
@@ -181,9 +183,10 @@ class Normals(SignatureGeneratorBaseModel, GeneratorABC):
             statistic=self.summary_statistic
         )
 
-        normals_sdf = ffill_and_bfill_nans(
-            normals_sdf
-        )
+        if fillna is True:
+            normals_sdf = ffill_and_bfill_nans(
+                normals_sdf
+            )
 
         return normals_sdf
 
