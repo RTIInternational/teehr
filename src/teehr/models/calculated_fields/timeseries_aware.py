@@ -191,10 +191,13 @@ class BaseflowPeriodDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     This class identifies periods where baseflow is dominant in the streamflow
     timeseries by adding two columns. The 'baseflow_period' column (bool)
-    indicates whether the period is baseflow dominated, and the
-    'baseflow_period_id' column (string) groups continuous segments of
-    baseflow dominated periods and assigns a unique ID to each segment in the
-    format "startdate-enddate".
+    indicates whether the baseflow portion of the streamflow timeseries exceeds
+    the quickflow portion, and the 'baseflow_period_id' column (string) groups
+    continuous segments of baseflow dominated periods and assigns a unique ID
+    to each segment in the format "startdate-enddate". Users can define a
+    custom 'event_threshold' value to adjust the sensitivity of baseflow
+    detection by applying a multiplier to the quickflow portion of the
+    streamflow timeseries.
 
     Properties
     ----------
@@ -207,6 +210,12 @@ class BaseflowPeriodDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
     - baseflow_field_name:
         The name of the column containing the baseflow values.
         Default: None
+    - event_threshold:
+        The threshold multiplier value to determine event periods. The
+        multiplier is applied to the quickflow portion of the streamflow
+        timeseries when determining if the streamflow timeseries is
+        dominated by baseflow.
+        Default: 1.0
     - output_baseflow_period_field_name:
         The name of the column to store the baseflow period information.
         Default: "baseflow_period"
@@ -236,6 +245,9 @@ class BaseflowPeriodDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
     baseflow_field_name: str = Field(
         default=None
     )
+    event_threshold: float = Field(
+        default=1.0
+    )
     output_baseflow_period_field_name: str = Field(
         default="baseflow_period"
     )
@@ -251,6 +263,7 @@ class BaseflowPeriodDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
         sdf: ps.DataFrame,
         input_field,
         baseflow_field,
+        event_threshold,
         output_field,
         group_by,
         return_type=T.BooleanType()
@@ -269,6 +282,7 @@ class BaseflowPeriodDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
                  pdf: pd.DataFrame,
                  input_field,
                  baseflow_field,
+                 event_threshold,
                  output_field
         ) -> pd.DataFrame:
             # isolate timeseries
@@ -276,20 +290,28 @@ class BaseflowPeriodDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
             baseflows = pdf[baseflow_field]
             quickflows = streamflows - baseflows
 
+            # apply event_threshold
+            quickflows_adj = quickflows * event_threshold
+
             # create boolean and add to dataframe
-            pdf[output_field] = baseflows > quickflows
+            pdf[output_field] = baseflows > quickflows_adj
 
             return pdf
 
-        def wrapper(pdf, input_field, baseflow_field, output_field):
+        def wrapper(pdf,
+                    input_field,
+                    baseflow_field,
+                    event_threshold,
+                    output_field):
             return is_baseflow_period(
-                pdf, input_field, baseflow_field, output_field
+                pdf, input_field, baseflow_field, event_threshold, output_field
             )
 
         sdf = sdf.groupby(group_by).applyInPandas(
             lambda pdf: wrapper(pdf,
                                 input_field,
                                 baseflow_field,
+                                event_threshold,
                                 output_field),
             schema=output_schema
         )
@@ -369,6 +391,7 @@ class BaseflowPeriodDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
             sdf=sdf,
             input_field=self.value_field_name,
             baseflow_field=self.baseflow_field_name,
+            event_threshold=self.event_threshold,
             output_field=self.output_baseflow_period_field_name,
             group_by=self.uniqueness_fields
         )

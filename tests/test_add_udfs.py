@@ -223,13 +223,23 @@ def test_add_timeseries_udfs(tmpdir):
     test = sdf.select('ukih_baseflow').toPandas()['ukih_baseflow'].values.sum()
     assert np.isclose(control, test, atol=0.001)
 
-    # test baseflow period detection
+    # test baseflow period detection (no event_threshold)
     bfdp = tcf.BaseflowPeriodDetection(
         baseflow_field_name='lyne_hollick_baseflow'
         )
     sdf = bfdp.apply_to(sdf)
     event_count = sdf.select('baseflow_period_id').distinct().count()
     assert event_count == 130
+
+    # test baseflow period detection (w/ event_threshold)
+    bfdp = tcf.BaseflowPeriodDetection(
+        baseflow_field_name='lyne_hollick_baseflow',
+        event_threshold=1.5,
+        output_baseflow_period_field_name='baseflow_period_2',
+        output_baseflow_period_id_field_name='baseflow_period_id_2'
+    )
+    sdf = bfdp.apply_to(sdf)
+    assert event_count == 208
 
     # test percentile event detection
     ped = tcf.PercentileEventDetection()
