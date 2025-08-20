@@ -90,7 +90,8 @@ def test_add_row_udfs(tmpdir):
 
     assert "threshold_value_exceeded" in cols
     assert sdf.schema["threshold_value_exceeded"].dataType == T.BooleanType()
-    check_vals = check_sdf.select("threshold_value_exceeded").distinct().collect()
+    check_vals = check_sdf.select(
+        "threshold_value_exceeded").distinct().collect()
     assert check_vals[0]["threshold_value_exceeded"] is True
 
     assert "day_of_year" in cols
@@ -124,7 +125,8 @@ def test_add_timeseries_udfs(tmpdir):
                              return_kge=False)
     df = result[0]
     control = df['LH'].values.sum()
-    test = sdf.select('lyne_hollick_baseflow').toPandas()['lyne_hollick_baseflow'].values.sum()
+    test = sdf.select('lyne_hollick_baseflow').toPandas()[
+        'lyne_hollick_baseflow'].values.sum()
     assert np.isclose(control, test, atol=0.001)
 
     # test Chapman baseflow
@@ -135,7 +137,8 @@ def test_add_timeseries_udfs(tmpdir):
                              return_kge=False)
     df = result[0]
     control = df['Chapman'].values.sum()
-    test = sdf.select('chapman_baseflow').toPandas()['chapman_baseflow'].values.sum()
+    test = sdf.select('chapman_baseflow').toPandas()[
+        'chapman_baseflow'].values.sum()
     assert np.isclose(control, test, atol=0.001)
 
     # test Chapman-Maxwell baseflow
@@ -146,7 +149,8 @@ def test_add_timeseries_udfs(tmpdir):
                              return_kge=False)
     df = result[0]
     control = df['CM'].values.sum()
-    test = sdf.select('chapman_maxwell_baseflow').toPandas()['chapman_maxwell_baseflow'].values.sum()
+    test = sdf.select('chapman_maxwell_baseflow').toPandas()[
+        'chapman_maxwell_baseflow'].values.sum()
     assert np.isclose(control, test, atol=0.001)
 
     # test Boughton baseflow
@@ -157,7 +161,8 @@ def test_add_timeseries_udfs(tmpdir):
                              return_kge=False)
     df = result[0]
     control = df['Boughton'].values.sum()
-    test = sdf.select('boughton_baseflow').toPandas()['boughton_baseflow'].values.sum()
+    test = sdf.select('boughton_baseflow').toPandas()[
+        'boughton_baseflow'].values.sum()
     assert np.isclose(control, test, atol=0.001)
 
     # test Furey baseflow
@@ -168,7 +173,8 @@ def test_add_timeseries_udfs(tmpdir):
                              return_kge=False)
     df = result[0]
     control = df['Furey'].values.sum()
-    test = sdf.select('furey_baseflow').toPandas()['furey_baseflow'].values.sum()
+    test = sdf.select('furey_baseflow').toPandas()[
+        'furey_baseflow'].values.sum()
     assert np.isclose(control, test, atol=0.001)
 
     # test Eckhardt baseflow
@@ -179,7 +185,8 @@ def test_add_timeseries_udfs(tmpdir):
                              return_kge=False)
     df = result[0]
     control = df['Eckhardt'].values.sum()
-    test = sdf.select('eckhardt_baseflow').toPandas()['eckhardt_baseflow'].values.sum()
+    test = sdf.select('eckhardt_baseflow').toPandas()[
+        'eckhardt_baseflow'].values.sum()
     assert np.isclose(control, test, atol=0.001)
 
     # test EWMA baseflow
@@ -201,7 +208,8 @@ def test_add_timeseries_udfs(tmpdir):
                              return_kge=False)
     df = result[0]
     control = df['Willems'].values.sum()
-    test = sdf.select('willems_baseflow').toPandas()['willems_baseflow'].values.sum()
+    test = sdf.select('willems_baseflow').toPandas()[
+        'willems_baseflow'].values.sum()
     assert np.isclose(control, test, atol=0.001)
 
     # test UKIH baseflow
