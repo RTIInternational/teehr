@@ -1,0 +1,6 @@
+﻿teehr.evaluation.fetch.Fetch.nwm\_operational\_points
+=====================================================
+
+.. currentmodule:: teehr.evaluation.fetch
+
+.. automethod:: Fetch.nwm_operational_points

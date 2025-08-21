@@ -1,0 +1,6 @@
+﻿teehr.evaluation.metrics.Metrics.query
+======================================
+
+.. currentmodule:: teehr.evaluation.metrics
+
+.. automethod:: Metrics.query

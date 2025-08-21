@@ -1,0 +1,6 @@
+﻿teehr.evaluation.metrics.Metrics.add\_calculated\_fields
+========================================================
+
+.. currentmodule:: teehr.evaluation.metrics
+
+.. automethod:: Metrics.add_calculated_fields
