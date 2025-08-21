@@ -29,14 +29,16 @@ Creating and Managing an Evaluation
 
 Methods for creating, cloning, and configuring an Evaluation.
 
+.. currentmodule:: teehr.Evaluation
+
 .. autosummary::
    :nosignatures:
 
-   Evaluation.clone_template
-   Evaluation.list_s3_evaluations
-   Evaluation.clone_from_s3
-   Evaluation.clean_cache
-   Evaluation.enable_logging
+   clone_template
+   list_s3_evaluations
+   clone_from_s3
+   clean_cache
+   enable_logging
 
 
 The Evaluation Dataset
@@ -71,8 +73,10 @@ Methods related to metric calculations.
 .. currentmodule:: teehr.evaluation.metrics
 
 .. autosummary::
+   :template: custom-module-template.rst
    :toctree: generated
    :nosignatures:
+   :recursive:
 
    Metrics.query
    Metrics.add_calculated_fields
@@ -89,6 +93,7 @@ Methods for fetching NWM and USGS data from external sources.
 .. currentmodule:: teehr.evaluation.fetch
 
 .. autosummary::
+   :template: custom-module-template.rst
    :toctree: generated
    :nosignatures:
 
@@ -146,7 +151,9 @@ Classes for defining and customizing user-defined field models.
 .. autosummary::
    :toctree: generated
    :template: custom-class-template.rst
+   :recursive:
    :nosignatures:
+
 
    row_level.RowLevelCalculatedFields
    timeseries_aware.TimeseriesAwareCalculatedFields
