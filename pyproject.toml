@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "teehr"
-version = "0.5.0dev0"
+version = "0.5.0dev1"
 description = "Tools for Exploratory Evaluation in Hydrologic Research"
 authors = [
     "RTI International",
@@ -65,7 +65,7 @@ pydata-sphinx-theme = ">=0.16.0"
 sphinx-autobuild = ">=2024.10.3"
 dask = {extras = ["distributed"], version = "^2025.5.1"}
 tomli = ">=2.2.1"
-geoviews = "^1.14.1"
+geoviews = ">1.14.1,<2"
 
 
 [tool.numpydoc_validation]
