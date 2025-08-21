@@ -1,3 +1,4 @@
+"""Unit table class."""
 from teehr.evaluation.tables.domain_table import DomainTable
 from teehr.models.filters import UnitFilter
 from teehr.models.table_enums import UnitFields
@@ -44,7 +45,7 @@ class UnitTable(DomainTable):
 
         Example
         -------
-        >>> from teehr.models.domain_tables import Unit
+        >>> from teehr import Unit
         >>> unit = Unit(
         >>>     name="m^3/s",
         >>>     long_name="Cubic meters per second"

@@ -65,6 +65,7 @@ pydata-sphinx-theme = ">=0.16.0"
 sphinx-autobuild = ">=2024.10.3"
 dask = {extras = ["distributed"], version = "^2025.5.1"}
 tomli = ">=2.2.1"
+geoviews = "^1.14.1"
 
 
 [tool.numpydoc_validation]

@@ -1,3 +1,4 @@
+"""Configuration table class."""
 from teehr.evaluation.tables.domain_table import DomainTable
 from teehr.models.filters import ConfigurationFilter
 from teehr.models.table_enums import ConfigurationFields
@@ -40,7 +41,7 @@ class ConfigurationTable(DomainTable):
 
         Example
         -------
-        >>> from teehr.models.domain_tables import Configuration
+        >>> from teehr import Configuration
         >>> configuration = Configuration(
         >>>     name="usgs_observations",
         >>>     type="primary",

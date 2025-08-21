@@ -132,7 +132,6 @@ Classes for defining and customizing metrics and bootstrap models.
 .. autosummary::
    :toctree: generated
    :template: custom-class-template.rst
-   :recursive:
    :nosignatures:
 
    DeterministicMetrics

@@ -16,8 +16,10 @@ help:
 
 # Clean generated API files
 clean-api:
-	@echo "Removing generated API files..."
-	@rm -f api/generated/*.rst
+	@echo "Removing generated API stub files..."
+	@if [ -d api/generated ]; then \
+		rm -f api/generated/*.rst; \
+	fi
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
