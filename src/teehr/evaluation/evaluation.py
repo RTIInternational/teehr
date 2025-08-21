@@ -17,6 +17,7 @@ from teehr.utils.s3path import S3Path
 from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
+import pyspark.sql as ps
 import logging
 from teehr.loading.utils import copy_template_to
 from teehr.loading.s3.clone_from_s3 import (
@@ -415,3 +416,73 @@ class Evaluation:
             " to a new format."
         )
         return version
+
+    def distinct_location_prefixes(self,
+                                   table: str
+                                   ) -> ps.DataFrame:
+        """Get distinct location-id prefixes.
+
+        Returns a Spark DataFrame containing distinct location-id prefixes for
+        the target table. Available tables are: primary_timeseries,
+        secondary_timeseries, joined_timeseries.
+
+        Parameters
+        ----------
+        table : str
+            The name of the table to get distinct location-id prefixes for.
+
+        Returns
+        -------
+        ps.DataFrame
+            A Spark DataFrame containing distinct location-id prefixes for the
+            target table.
+            When called on the joined_timeseries table, this will include
+            unique prefix combinations for both primary and secondary
+            location IDs.
+            This is lazily evaluated so you need to call an action (e.g.,
+            sdf.show()) to access the returned DataFrame.
+        """
+        # ensure compatibility
+        compatible_tables = ['primary_timeseries',
+                             'secondary_timeseries',
+                             'joined_timeseries']
+        if table not in compatible_tables:
+            raise ValueError(f"Table {table} is not compatible.")
+
+        # primary_timeseries routine
+        if table == 'primary_timeseries':
+            self.primary_timeseries._check_load_table()
+            view = self.sql("""
+                            SELECT DISTINCT
+                            split(location_id, '-')[0]
+                            AS primary_location_prefix
+                            FROM primary_timeseries
+                            """,
+                            create_temp_views=['primary_timeseries']
+                            )
+        # secondary_timeseries routine
+        elif table == 'secondary_timeseries':
+            self.secondary_timeseries._check_load_table()
+            view = self.sql("""
+                            SELECT DISTINCT
+                            split(location_id, '-')[0]
+                            AS secondary_location_prefix
+                            FROM secondary_timeseries
+                            """,
+                            create_temp_views=['secondary_timeseries']
+                            )
+        # joined_timeseries routine
+        else:
+            self.joined_timeseries._check_load_table()
+            view = self.sql("""
+                            SELECT DISTINCT
+                            split(primary_location_id, '-')[0]
+                            AS primary_location_prefix,
+                            split(secondary_location_id, '-')[0]
+                            AS secondary_location_prefix
+                            FROM joined_timeseries
+                            """,
+                            create_temp_views=['joined_timeseries']
+                            )
+
+        return view

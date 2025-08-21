@@ -60,6 +60,26 @@ def test_sql_query_on_empty_tables(tmpdir):
     assert sdf.isEmpty()
 
 
+def test_distinct_location_prefixes(tmpdir):
+    """Test distinct location prefixes."""
+    ev = setup_v0_3_study(tmpdir)
+    # test primary_timeseries
+    sdf = ev.distinct_location_prefixes("primary_timeseries")
+    cols = sdf.columns
+    assert not sdf.isEmpty()
+    assert cols == ["primary_location_prefix"]
+    # test secondary_timeseries
+    sdf = ev.distinct_location_prefixes("secondary_timeseries")
+    cols = sdf.columns
+    assert not sdf.isEmpty()
+    assert cols == ["secondary_location_prefix"]
+    # test joined_timeseries
+    sdf = ev.distinct_location_prefixes("joined_timeseries")
+    cols = sdf.columns
+    assert not sdf.isEmpty()
+    assert cols == ["primary_location_prefix", "secondary_location_prefix"]
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
@@ -73,6 +93,12 @@ if __name__ == "__main__":
         test_sql_query_on_empty_tables(
             tempfile.mkdtemp(
                 prefix="2-",
+                dir=tempdir
+            )
+        )
+        test_distinct_location_prefixes(
+            tempfile.mkdtemp(
+                prefix="3-",
                 dir=tempdir
             )
         )
