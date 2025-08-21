@@ -141,7 +141,8 @@ class Normals(SignatureGeneratorBaseModel, GeneratorABC):
         self,
         input_dataframe: ps.DataFrame,
         output_dataframe: ps.DataFrame,
-        fillna: bool
+        fillna: bool,
+        dropna: bool
     ):
         """Generate synthetic normals timeseries."""
         time_period = get_time_period_rlc(self.temporal_resolution)
@@ -187,6 +188,9 @@ class Normals(SignatureGeneratorBaseModel, GeneratorABC):
             normals_sdf = ffill_and_bfill_nans(
                 normals_sdf
             )
+
+        if dropna is True:
+            normals_sdf = normals_sdf.dropna(subset=["value"])
 
         return normals_sdf
 

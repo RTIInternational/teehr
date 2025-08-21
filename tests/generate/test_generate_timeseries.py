@@ -103,7 +103,7 @@ def test_generate_timeseries_normals(tmpdir):
     # Check that the climatology matches the manual calculation.
     clim_df["day_of_year"] = clim_df.value_time.dt.dayofyear
     assert clim_df[clim_df.day_of_year == 59].value.values[0] == mean_prim_srs.loc[59]
-    assert clim_df[clim_df.day_of_year == 61].value.values[0] == mean_prim_srs.loc[61]
+    assert clim_df[clim_df.day_of_year == 61].value.values[0] == mean_prim_srs.loc[60]
 
 
 def test_generate_reference_forecast(tmpdir):

@@ -69,7 +69,8 @@ class SignatureTimeseries(GeneratedTimeSeriesBasemodel):
         input_dataframe: ps.DataFrame,
         output_dataframe: ps.DataFrame,
         update_variable_table: bool,
-        fillna: bool
+        fillna: bool,
+        dropna: bool
     ):
         """Generate a new timeseries according to the method class.
 
@@ -88,6 +89,8 @@ class SignatureTimeseries(GeneratedTimeSeriesBasemodel):
             Whether to update the variable table.
         fillna : bool
             Whether to forward and back-fill NaN values.
+        dropna : bool
+            Whether to drop rows with NaN values.
         """
         self.df = None
         self.ev = generator.ev
@@ -95,7 +98,8 @@ class SignatureTimeseries(GeneratedTimeSeriesBasemodel):
         self.df = method.generate(
             input_dataframe=input_dataframe,
             output_dataframe=output_dataframe,
-            fillna=fillna
+            fillna=fillna,
+            dropna=dropna
         )
 
         if update_variable_table is True:
@@ -152,7 +156,8 @@ class Generator:
         end_datetime: Union[str, datetime],
         timestep: Union[str, timedelta] = "1 hour",
         update_variable_table: bool = True,
-        fillna: bool = True
+        fillna: bool = False,
+        dropna: bool = True
     ) -> SignatureTimeseries:
         """Generate synthetic summary from a single timeseries.
 
@@ -173,7 +178,9 @@ class Generator:
         update_variable_table : bool, optional
             Whether to update the variable table. Defaults to True.
         fillna : bool, optional
-            Whether to forward and back-fill NaN values. Defaults to True.
+            Whether to forward and back-fill NaN values. Defaults to False.
+        dropna : bool, optional
+            Whether to drop rows with NaN values. Defaults to True.
 
         Returns
         -------
@@ -216,7 +223,8 @@ class Generator:
             input_dataframe=input_dataframe,
             output_dataframe=output_dataframe,
             update_variable_table=update_variable_table,
-            fillna=fillna
+            fillna=fillna,
+            dropna=dropna
         )
 
     def benchmark_forecast(
