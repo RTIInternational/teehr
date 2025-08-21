@@ -99,7 +99,10 @@ def _root_mean_squared_error(p: pd.Series, s: pd.Series) -> float:
 
 
 def mean_error(model: MetricsBasemodel) -> Callable:
-    """Create the Mean Error metric function."""
+    """Create the Mean Error metric function.
+
+    :math:`Mean\\ Error=\\frac{\\sum(sec-prim)}{count}`
+    """ # noqa
     logger.debug("Building the mean_error metric function")
 
     def mean_error_inner(p: pd.Series, s: pd.Series) -> float:
@@ -112,7 +115,10 @@ def mean_error(model: MetricsBasemodel) -> Callable:
 
 
 def relative_bias(model: MetricsBasemodel) -> Callable:
-    """Create the Relative Bias metric function."""
+    """Create the Relative Bias metric function.
+
+    :math:`Relative\\ Bias=\\frac{\\sum(sec-prim)}{\\sum(prim)}`
+    """ # noqa
     logger.debug("Building the relative_bias metric function")
 
     def relative_bias_inner(p: pd.Series, s: pd.Series) -> float:
@@ -125,7 +131,10 @@ def relative_bias(model: MetricsBasemodel) -> Callable:
 
 
 def mean_absolute_relative_error(model: MetricsBasemodel) -> Callable:
-    """Create the Absolute Relative Error metric function."""
+    """Create the Absolute Relative Error metric function.
+
+    :math:`Relative\\ MAE=\\frac{\\sum|sec-prim|}{\\sum(prim)}`
+    """ # noqa
     logger.debug("Building the mean_absolute_relative_error metric function")
 
     def mean_absolute_relative_error_inner(p: pd.Series,
@@ -139,7 +148,10 @@ def mean_absolute_relative_error(model: MetricsBasemodel) -> Callable:
 
 
 def multiplicative_bias(model: MetricsBasemodel) -> Callable:
-    """Create the Multiplicative Bias metric function."""
+    """Create the Multiplicative Bias metric function.
+
+    :math:`Mult.\\ Bias=\\frac{\\mu_{sec}}{\\mu_{prim}}`
+    """ # noqa
     logger.debug("Building the multiplicative_bias metric function")
 
     def multiplicative_bias_inner(p: pd.Series, s: pd.Series) -> float:
@@ -151,7 +163,10 @@ def multiplicative_bias(model: MetricsBasemodel) -> Callable:
 
 
 def pearson_correlation(model: MetricsBasemodel) -> Callable:
-    """Create the Pearson Correlation Coefficient metric function."""
+    """Create the Pearson Correlation Coefficient metric function.
+
+    :math:`r=r(sec, prim)`
+    """ # noqa
     logger.debug("Building the pearson_correlation metric function")
 
     def pearson_correlation_inner(p: pd.Series, s: pd.Series) -> float:
@@ -163,7 +178,10 @@ def pearson_correlation(model: MetricsBasemodel) -> Callable:
 
 
 def r_squared(model: MetricsBasemodel) -> Callable:
-    """Create the R-squared metric function."""
+    """Create the R-squared metric function.
+
+    :math:`r^2=r(sec, prim)^2`
+    """ # noqa
     logger.debug("Building the R-squared metric function")
 
     def r_squared_inner(p: pd.Series, s: pd.Series) -> float:
@@ -176,7 +194,10 @@ def r_squared(model: MetricsBasemodel) -> Callable:
 
 
 def max_value_delta(model: MetricsBasemodel) -> Callable:
-    """Create the max_value_delta metric function."""
+    """Create the max_value_delta metric function.
+
+    :math:`mvd=max(value_{sec})-max(value_{prim})`
+    """ # noqa
     logger.debug("Building the max_value_delta metric function")
 
     def max_value_delta_inner(p: pd.Series, s: pd.Series) -> float:
@@ -188,7 +209,10 @@ def max_value_delta(model: MetricsBasemodel) -> Callable:
 
 
 def annual_peak_relative_bias(model: MetricsBasemodel) -> Callable:
-    """Create the annual_peak_relative_bias metric function."""
+    """Create the annual_peak_relative_bias metric function.
+
+    :math:`Ann\\ PF\\ Bias=\\frac{\\sum(ann.\\ peak_{sec}-ann.\\ peak_{prim})}{\\sum(ann.\\ peak_{prim})}`
+    """ # noqa
     logger.debug("Building the annual_peak_relative_bias metric function")
 
     def annual_peak_relative_bias_inner(
@@ -220,7 +244,10 @@ def annual_peak_relative_bias(model: MetricsBasemodel) -> Callable:
 
 
 def spearman_correlation(model: MetricsBasemodel) -> Callable:
-    """Create the Spearman metric function."""
+    """Create the Spearman metric function.
+
+    :math:`r_s=1-\\frac{6*\\sum|rank_{prim}-rank_{sec}|^2}{count(count^2-1)}`
+    """ # noqa
     logger.debug("Building the spearman_correlation metric function")
 
     def spearman_correlation_inner(p: pd.Series, s: pd.Series) -> float:
@@ -239,7 +266,10 @@ def spearman_correlation(model: MetricsBasemodel) -> Callable:
 
 
 def nash_sutcliffe_efficiency(model: MetricsBasemodel) -> Callable:
-    """Create the nash_sutcliffe_efficiency metric function."""
+    """Create the nash_sutcliffe_efficiency metric function.
+
+    :math:`NSE=1-\\frac{\\sum(prim-sec)^2}{\\sum(prim-\\mu_{prim}^2)}`
+    """ # noqa
     logger.debug("Building the nash_sutcliffe_efficiency metric function")
 
     def nash_sutcliffe_efficiency_inner(p: pd.Series, s: pd.Series) -> float:
@@ -263,7 +293,10 @@ def nash_sutcliffe_efficiency(model: MetricsBasemodel) -> Callable:
 
 
 def nash_sutcliffe_efficiency_normalized(model: MetricsBasemodel) -> Callable:
-    """Create the nash_sutcliffe_efficiency_normalized metric function."""
+    """Create the nash_sutcliffe_efficiency_normalized metric function.
+
+    :math:`NNSE=\\frac{1}{(2-NSE)}`
+    """ # noqa
     logger.debug(
         "Building the nash_sutcliffe_efficiency_normalized metric function"
         )
@@ -291,7 +324,10 @@ def nash_sutcliffe_efficiency_normalized(model: MetricsBasemodel) -> Callable:
 
 
 def kling_gupta_efficiency(model: MetricsBasemodel) -> Callable:
-    """Create the kling_gupta_efficiency metric function."""
+    """Create the kling_gupta_efficiency metric function.
+
+    :math:`KGE=1-\\sqrt{(r(sec, prim)-1)^2+(\\frac{\\sigma_{sec}}{\\sigma_{prim}}-1)^2+(\\frac{\\mu_{sec}}{\\mu_{sec}/\\mu_{prim}}-1)^2}`
+    """ # noqa
     logger.debug("Building the kling_gupta_efficiency metric function")
 
     def kling_gupta_efficiency_inner(p: pd.Series,
@@ -326,7 +362,10 @@ def kling_gupta_efficiency(model: MetricsBasemodel) -> Callable:
 
 
 def kling_gupta_efficiency_mod1(model: MetricsBasemodel) -> Callable:
-    """Create the kling_gupta_efficiency_mod1 metric function."""
+    """Create the kling_gupta_efficiency_mod1 metric function.
+
+    :math:`KGE'=1-\\sqrt{(r(sec, prim)-1)^2+(\\frac{\\sigma_{sec}/\\mu_{sec}}{\\sigma_{prim}/\\mu_{prim}}-1)^2+(\\frac{\\mu_{sec}}{\\mu_{sec}/\\mu_{prim}}-1)^2}`
+    """ # noqa
     logger.debug("Building the kling_gupta_effiency_mod1 metric function")
 
     def kling_gupta_efficiency_mod1_inner(p: pd.Series, s: pd.Series) -> float:
@@ -361,7 +400,10 @@ def kling_gupta_efficiency_mod1(model: MetricsBasemodel) -> Callable:
 
 
 def kling_gupta_efficiency_mod2(model: MetricsBasemodel) -> Callable:
-    """Create the kling_gupta_efficiency_mod2 metric function."""
+    """Create the kling_gupta_efficiency_mod2 metric function.
+
+    :math:`KGE''=1-\\sqrt{(r(sec, prim)-1)^2+(\\frac{\\sigma_{sec}}{\\sigma_{prim}}-1)^2+\\frac{(\\mu_{sec}-\\mu_{prim})^2}{\\sigma_{prim}^2}}`
+    """ # noqa
     logger.debug("Building the kling_gupta_efficiency_mod2 metric function")
 
     def kling_gupta_efficiency_mod2_inner(p: pd.Series, s: pd.Series) -> float:
@@ -397,7 +439,10 @@ def kling_gupta_efficiency_mod2(model: MetricsBasemodel) -> Callable:
 
 
 def mean_absolute_error(model: MetricsBasemodel) -> Callable:
-    """Create the mean_absolute_error metric function."""
+    """Create the mean_absolute_error metric function.
+
+    :math:`MAE=\\frac{\\sum|sec-prim|}{count}`
+    """ # noqa
     logger.debug("Building the mean_absolute_error metric function")
 
     def mean_absolute_error_inner(p: pd.Series, s: pd.Series) -> float:
@@ -409,7 +454,10 @@ def mean_absolute_error(model: MetricsBasemodel) -> Callable:
 
 
 def mean_squared_error(model: MetricsBasemodel) -> Callable:
-    """Create the mean_squared_error metric function."""
+    """Create the mean_squared_error metric function.
+
+    :math:`MSE=\\frac{\\sum(sec-prim)^2}{count}`
+    """ # noqa
     logger.debug("Building the mean_squared_error metric function")
 
     def mean_squared_error_inner(p: pd.Series, s: pd.Series) -> float:
@@ -421,7 +469,10 @@ def mean_squared_error(model: MetricsBasemodel) -> Callable:
 
 
 def root_mean_squared_error(model: MetricsBasemodel) -> Callable:
-    """Create the root_mean_squared_error metric function."""
+    """Create the root_mean_squared_error metric function.
+
+    :math:`RMSE=\\sqrt{\\frac{\\sum(sec-prim)^2}{count}}`
+    """ # noqa
     logger.debug("Building the root_mean_squared_error metric function")
 
     def root_mean_squared_error_inner(p: pd.Series, s: pd.Series) -> float:
@@ -433,7 +484,10 @@ def root_mean_squared_error(model: MetricsBasemodel) -> Callable:
 
 
 def root_mean_standard_deviation_ratio(model: MetricsBasemodel) -> Callable:
-    """Create the root_mean_standard_deviation_ratio metric function."""
+    """Create the root_mean_standard_deviation_ratio metric function.
+
+    :math:`RMSE_{ratio}=\\frac{RMSE}{\\sigma_{obs}}`
+    """ # noqa
     logger.debug(
         "Building the root_mean_standard_deviation_ratio metric function"
         )
@@ -452,7 +506,10 @@ def root_mean_standard_deviation_ratio(model: MetricsBasemodel) -> Callable:
 
 # Time-based Metrics
 def max_value_timedelta(model: MetricsBasemodel) -> Callable:
-    """Create the max_value_timedelta metric function."""
+    """Create the max_value_timedelta metric function.
+
+    :math:`mvtd=max\\_value\\_time_{sec}-max\\_value\\_time_{prim}`
+    """ # noqa
     logger.debug("Building the max_value_timedelta metric function")
 
     def max_value_timedelta_inner(

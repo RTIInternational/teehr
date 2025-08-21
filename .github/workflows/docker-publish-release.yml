@@ -2,8 +2,8 @@ name: Build and Push Release Version for TEEHR Hub
 
 on:
   workflow_run:
-    workflows: ["publish-package"]  # Triggered by "publish-package" workflow
-    types: [completed]              # Trigger when "publish-package" completes
+    workflows: ["build-publish-package"]  # Triggered by "build-publish-package" workflow
+    types: [completed]                    # Trigger when "build-publish-package" completes
 
 jobs:
   get-existing-version:

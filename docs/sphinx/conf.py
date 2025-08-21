@@ -69,6 +69,7 @@ master_doc = 'index'
 autodoc_default_options = {'inherited-members': True}
 
 autosummary_generate = True
+add_module_names = False
 
 # -- Napolean options --------------------------------------------------------
 napoleon_google_docstring = False

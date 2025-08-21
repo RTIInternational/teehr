@@ -1,3 +1,4 @@
+"""Attribute table class."""
 from teehr.evaluation.tables.domain_table import DomainTable
 from teehr.models.filters import AttributeFilter
 from teehr.models.table_enums import AttributeFields
@@ -40,7 +41,7 @@ class AttributeTable(DomainTable):
 
         Example
         -------
-        >>> from teehr.models.domain_tables import Attribute
+        >>> from teehr import Attribute
         >>> attribute = Attribute(
         >>>     name="drainage_area",
         >>>     type="continuous",

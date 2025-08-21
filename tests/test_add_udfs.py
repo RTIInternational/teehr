@@ -239,6 +239,7 @@ def test_add_timeseries_udfs(tmpdir):
         output_baseflow_period_id_field_name='baseflow_period_id_2'
     )
     sdf = bfdp.apply_to(sdf)
+    event_count = sdf.select('baseflow_period_id_2').distinct().count()
     assert event_count == 208
 
     # test percentile event detection
@@ -304,18 +305,18 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_add_row_udfs_null_reference(
-            tempfile.mkdtemp(
-                prefix="0-",
-                dir=tempdir
-            )
-        )
-        test_add_row_udfs(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
+        # test_add_row_udfs_null_reference(
+        #     tempfile.mkdtemp(
+        #         prefix="0-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_add_row_udfs(
+        #     tempfile.mkdtemp(
+        #         prefix="1-",
+        #         dir=tempdir
+        #     )
+        # )
         test_add_timeseries_udfs(
             tempfile.mkdtemp(
                 prefix="2-",
