@@ -41,6 +41,7 @@ lxml = ">=5.4.0,<6"
 bokeh = ">=3.7.3,<4"
 protobuf = "5.28.3"
 psutil = ">=7.0.0,<8"
+baseflow = "^0.1.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = ">=7.4.3"
