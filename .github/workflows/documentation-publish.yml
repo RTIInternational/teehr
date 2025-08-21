@@ -8,8 +8,8 @@ on:
   #   types: [completed]           # Trigger when "run-tests" completes
   #   branches:
   #     - "475-update-python-dependencies"
-  # push:
-  #   branches: [475-update-python-dependencies]
+  push:
+    branches: [511-update-class-references-in-api-docs]
 
 
 permissions:
