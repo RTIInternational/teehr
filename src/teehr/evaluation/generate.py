@@ -1,9 +1,8 @@
 """A component class for generating synthetic time series."""
 import logging
-from typing import List, Union
+from typing import Union
 from datetime import datetime, timedelta
 
-import pyspark.sql as ps
 import pyspark.sql.functions as F
 
 from teehr.models.generate.base import (
@@ -58,95 +57,24 @@ class GeneratedTimeSeriesBasemodel:
         df.attrs['fields'] = self.df.columns
         return df
 
+    def to_sdf(self):
+        """Return PySpark DataFrame.
 
-class SignatureTimeseries(GeneratedTimeSeriesBasemodel):
-    """Generate a synthetic time series from a single timeseries."""
-
-    def __init__(
-        self,
-        generator,
-        method: SignatureGeneratorBaseModel,
-        input_dataframe: ps.DataFrame,
-        output_dataframe: ps.DataFrame,
-        update_variable_table: bool,
-        fillna: bool,
-        dropna: bool
-    ):
-        """Generate a new timeseries according to the method class.
-
-        Parameters
-        ----------
-        generator : Generator
-            The generator instance.
-        method : SignatureTimeseriesBaseModel
-            A model defining the signature timeseries generation method.
-        input_dataframe : ps.DataFrame
-            The input spark DataFrame.
-        output_dataframe : ps.DataFrame
-            The output spark DataFrame of a specified timestep and start
-            and end datetimes.
-        update_variable_table : bool
-            Whether to update the variable table.
-        fillna : bool
-            Whether to forward and back-fill NaN values.
-        dropna : bool
-            Whether to drop rows with NaN values.
+        The PySpark DataFrame can be further processed using PySpark. Note,
+        PySpark DataFrames are lazy and will not be executed until an action
+        is called.  For example, calling `show()`, `collect()` or toPandas().
+        This can be useful for further processing or analysis.
         """
-        self.df = None
-        self.ev = generator.ev
-
-        self.df = method.generate(
-            input_dataframe=input_dataframe,
-            output_dataframe=output_dataframe,
-            fillna=fillna,
-            dropna=dropna
-        )
-
-        if update_variable_table is True:
-            variable_names = self.df.select(
-                "variable_name"
-            ).distinct().collect()
-            variable_names = [row.variable_name for row in variable_names]
-            for output_variable_name in variable_names:
-                self.ev.variables.add(
-                    Variable(
-                        name=output_variable_name,
-                        long_name="Generated signature timeseries variable"
-                    )
-                )
+        return self.df
 
 
-class BenchmarkForecast(GeneratedTimeSeriesBasemodel):
-    """Generate a synthetic time series from multiple timeseries."""
-
-    def __init__(
-        self,
-        generator,
-        method: BenchmarkGeneratorBaseModel,
-        reference_dataframe: ps.DataFrame,
-        template_dataframe: ps.DataFrame,
-        partition_by: List[str],
-        output_configuration_name: str
-    ):
-        """Initialize and generate the timeseries."""
-        self.df = None
-        self.ev = generator.ev
-
-        self.df = method.generate(
-            ev=self.ev,
-            reference_sdf=reference_dataframe,
-            template_sdf=template_dataframe,
-            partition_by=partition_by,
-            output_configuration_name=output_configuration_name
-        )
-
-
-class Generator:
+class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
     """Component class for generating synthetic data."""
 
     def __init__(self, ev) -> None:
         """Initialize the Generator class."""
         self.ev = ev
+        self.df = None
 
     def signature_timeseries(
         self,
@@ -158,7 +86,7 @@ class Generator:
         update_variable_table: bool = True,
         fillna: bool = False,
         dropna: bool = True
-    ) -> SignatureTimeseries:
+    ):
         """Generate synthetic summary from a single timeseries.
 
         Parameters
@@ -184,7 +112,7 @@ class Generator:
 
         Returns
         -------
-        SignatureTimeseries
+        GeneratedTimeseries
             The generated timeseries class object.
 
         Notes
@@ -217,15 +145,26 @@ class Generator:
             end_datetime=end_datetime,
             timestep=timestep
         )
-        return SignatureTimeseries(
-            self,
-            method=method,
+        self.df = method.generate(
             input_dataframe=input_dataframe,
             output_dataframe=output_dataframe,
-            update_variable_table=update_variable_table,
             fillna=fillna,
             dropna=dropna
         )
+        if update_variable_table is True:
+            variable_names = self.df.select(
+                "variable_name"
+            ).distinct().collect()
+            variable_names = [row.variable_name for row in variable_names]
+            for output_variable_name in variable_names:
+                self.ev.variables.add(
+                    Variable(
+                        name=output_variable_name,
+                        long_name="Generated signature timeseries variable"
+                    )
+                )
+
+        return self
 
     def benchmark_forecast(
         self,
@@ -233,7 +172,7 @@ class Generator:
         reference_timeseries: TimeseriesFilter,
         template_timeseries: TimeseriesFilter,
         output_configuration_name: str
-    ) -> BenchmarkForecast:
+    ):
         """Generate a benchmark forecast from two timeseries.
 
         Parameters
@@ -249,6 +188,11 @@ class Generator:
             the benchmark.
         output_configuration_name : str
             The configuration name for the generated benchmark forecast.
+
+        Returns
+        -------
+        GeneratedTimeseries
+            The generated timeseries class object.
         """
         reference_dataframe = self.ev.sql(
             query=reference_timeseries.to_query(),
@@ -279,14 +223,14 @@ class Generator:
                 " Check the parameters of the template_timeseries."
             )
 
-        return BenchmarkForecast(
-            self,
-            method=method,
-            reference_dataframe=reference_dataframe,
-            template_dataframe=template_dataframe,
+        self.df = method.generate(
+            ev=self.ev,
+            reference_sdf=reference_dataframe,
+            template_sdf=template_dataframe,
             partition_by=partition_by,
             output_configuration_name=output_configuration_name
         )
+        return self
 
     # What else would we want to generate?
     # def table(self) -> None:

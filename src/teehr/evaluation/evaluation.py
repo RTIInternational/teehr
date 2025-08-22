@@ -26,7 +26,7 @@ from teehr.loading.s3.clone_from_s3 import (
 import teehr.const as const
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.metrics import Metrics
-from teehr.evaluation.generate import Generator
+from teehr.evaluation.generate import GeneratedTimeseries
 import pandas as pd
 from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor # noqa
 import re
@@ -115,9 +115,9 @@ class Evaluation:
             self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
 
     @property
-    def generate(self) -> Generator:
+    def generate(self) -> GeneratedTimeseries:
         """The generate component class for generating synthetic data."""
-        return Generator(self)
+        return GeneratedTimeseries(self)
 
     @property
     def fetch(self) -> Fetch:

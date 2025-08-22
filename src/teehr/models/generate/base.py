@@ -39,12 +39,12 @@ class NormalsStatisticEnum(StrEnum):
 class TimeseriesFilter(PydanticBaseModel):
     """A class for uniquely identifying a timeseries from an evaluation."""
 
-    configuration_name: Optional[str] = Field(default=None)
-    variable_name: Optional[str] = Field(default=None)
-    unit_name: Optional[str] = Field(default=None)
     table_name: TimeseriesTableNamesEnum = Field(
         default=TimeseriesTableNamesEnum.primary_timeseries
     )
+    configuration_name: Optional[str] = Field(default=None)
+    variable_name: Optional[str] = Field(default=None)
+    unit_name: Optional[str] = Field(default=None)
     member: Optional[str] = Field(default=None)
     # TODO: Include all table fields?
     # location_id, value, value_time, reference_time
