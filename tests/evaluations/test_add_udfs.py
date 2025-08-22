@@ -6,6 +6,8 @@ from teehr import TimeseriesAwareCalculatedFields as tcf
 
 import pyspark.sql.types as T
 import numpy as np
+import baseflow
+import pandas as pd
 
 import sys
 from pathlib import Path
@@ -91,7 +93,8 @@ def test_add_row_udfs(tmpdir):
 
     assert "threshold_value_exceeded" in cols
     assert sdf.schema["threshold_value_exceeded"].dataType == T.BooleanType()
-    check_vals = check_sdf.select("threshold_value_exceeded").distinct().collect()  # noqa
+    check_vals = check_sdf.select(
+        "threshold_value_exceeded").distinct().collect()
     assert check_vals[0]["threshold_value_exceeded"] is True
 
     assert "day_of_year" in cols
@@ -105,15 +108,148 @@ def test_add_row_udfs(tmpdir):
 
 def test_add_timeseries_udfs(tmpdir):
     """Test adding a timeseries aware UDF."""
-    ev = setup_v0_3_study(tmpdir)
+    # utilize e0_2_location_example from s3 to satisfy baseflow POR reqs
+    ev = teehr.Evaluation(tmpdir)
+    ev.clone_from_s3(evaluation_name="e0_2_location_example",
+                     primary_location_ids=["usgs-14316700"])
     sdf = ev.joined_timeseries.to_sdf()
 
+    # set up input to baseflow package for native testing
+    pdf = sdf.toPandas()
+    pdf = pdf.sort_values(by='value_time')
+    streamflow = pd.Series(pdf['primary_value'].values,
+                           index=pd.to_datetime(pdf['value_time']))
+
+    # test Lyne-Hollick baseflow
+    lhbf = tcf.LyneHollickBaseflow()
+    sdf = lhbf.apply_to(sdf)
+    result = baseflow.single(series=streamflow,
+                             method='LH',
+                             return_kge=False)
+    df = result[0]
+    control = df['LH'].values.sum()
+    test = sdf.select('lyne_hollick_baseflow').toPandas()[
+        'lyne_hollick_baseflow'].values.sum()
+    assert np.isclose(control, test, atol=0.001)
+
+    # test Chapman baseflow
+    chapbf = tcf.ChapmanBaseflow()
+    sdf = chapbf.apply_to(sdf)
+    result = baseflow.single(series=streamflow,
+                             method='Chapman',
+                             return_kge=False)
+    df = result[0]
+    control = df['Chapman'].values.sum()
+    test = sdf.select('chapman_baseflow').toPandas()[
+        'chapman_baseflow'].values.sum()
+    assert np.isclose(control, test, atol=0.001)
+
+    # test Chapman-Maxwell baseflow
+    cmbf = tcf.ChapmanMaxwellBaseflow()
+    sdf = cmbf.apply_to(sdf)
+    result = baseflow.single(series=streamflow,
+                             method='CM',
+                             return_kge=False)
+    df = result[0]
+    control = df['CM'].values.sum()
+    test = sdf.select('chapman_maxwell_baseflow').toPandas()[
+        'chapman_maxwell_baseflow'].values.sum()
+    assert np.isclose(control, test, atol=0.001)
+
+    # test Boughton baseflow
+    bbf = tcf.BoughtonBaseflow()
+    sdf = bbf.apply_to(sdf)
+    result = baseflow.single(series=streamflow,
+                             method='Boughton',
+                             return_kge=False)
+    df = result[0]
+    control = df['Boughton'].values.sum()
+    test = sdf.select('boughton_baseflow').toPandas()[
+        'boughton_baseflow'].values.sum()
+    assert np.isclose(control, test, atol=0.001)
+
+    # test Furey baseflow
+    fbf = tcf.FureyBaseflow()
+    sdf = fbf.apply_to(sdf)
+    result = baseflow.single(series=streamflow,
+                             method='Furey',
+                             return_kge=False)
+    df = result[0]
+    control = df['Furey'].values.sum()
+    test = sdf.select('furey_baseflow').toPandas()[
+        'furey_baseflow'].values.sum()
+    assert np.isclose(control, test, atol=0.001)
+
+    # test Eckhardt baseflow
+    eckbf = tcf.EckhardtBaseflow()
+    sdf = eckbf.apply_to(sdf)
+    result = baseflow.single(series=streamflow,
+                             method='Eckhardt',
+                             return_kge=False)
+    df = result[0]
+    control = df['Eckhardt'].values.sum()
+    test = sdf.select('eckhardt_baseflow').toPandas()[
+        'eckhardt_baseflow'].values.sum()
+    assert np.isclose(control, test, atol=0.001)
+
+    # test EWMA baseflow
+    ewmabf = tcf.EWMABaseflow()
+    sdf = ewmabf.apply_to(sdf)
+    result = baseflow.single(series=streamflow,
+                             method='EWMA',
+                             return_kge=False)
+    df = result[0]
+    control = df['EWMA'].values.sum()
+    test = sdf.select('ewma_baseflow').toPandas()['ewma_baseflow'].values.sum()
+    assert np.isclose(control, test, atol=0.001)
+
+    # test Willems baseflow
+    wbf = tcf.WillemsBaseflow()
+    sdf = wbf.apply_to(sdf)
+    result = baseflow.single(series=streamflow,
+                             method='Willems',
+                             return_kge=False)
+    df = result[0]
+    control = df['Willems'].values.sum()
+    test = sdf.select('willems_baseflow').toPandas()[
+        'willems_baseflow'].values.sum()
+    assert np.isclose(control, test, atol=0.001)
+
+    # test UKIH baseflow
+    ukihbf = tcf.UKIHBaseflow()
+    sdf = ukihbf.apply_to(sdf)
+    result = baseflow.single(series=streamflow,
+                             method='UKIH',
+                             return_kge=False)
+    df = result[0]
+    control = df['UKIH'].values.sum()
+    test = sdf.select('ukih_baseflow').toPandas()['ukih_baseflow'].values.sum()
+    assert np.isclose(control, test, atol=0.001)
+
+    # test baseflow period detection (no event_threshold)
+    bfdp = tcf.BaseflowPeriodDetection(
+        baseflow_field_name='lyne_hollick_baseflow'
+        )
+    sdf = bfdp.apply_to(sdf)
+    event_count = sdf.select('baseflow_period_id').distinct().count()
+    assert event_count == 130
+
+    # test baseflow period detection (w/ event_threshold)
+    bfdp = tcf.BaseflowPeriodDetection(
+        baseflow_field_name='lyne_hollick_baseflow',
+        event_threshold=1.5,
+        output_baseflow_period_field_name='baseflow_period_2',
+        output_baseflow_period_id_field_name='baseflow_period_id_2'
+    )
+    sdf = bfdp.apply_to(sdf)
+    event_count = sdf.select('baseflow_period_id_2').distinct().count()
+    assert event_count == 208
+
+    # test percentile event detection
     ped = tcf.PercentileEventDetection()
     sdf = ped.apply_to(sdf)
-
-    cols = sdf.columns
-    assert "event" in cols
-    assert "event_id" in cols
+    event_count = sdf.select('event_id').distinct().count()
+    assert event_count == 219
 
     ev.spark.stop()
 

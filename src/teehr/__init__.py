@@ -1,7 +1,7 @@
 """Initialize the TEEHR package."""
 import warnings
 
-__version__ = "0.5.0dev0"
+__version__ = "0.5.0dev1"
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore", UserWarning)

@@ -1,3 +1,4 @@
+"""Variable table class."""
 from teehr.evaluation.tables.domain_table import DomainTable
 from teehr.models.filters import VariableFilter
 from teehr.models.table_enums import VariableFields
@@ -44,7 +45,7 @@ class VariableTable(DomainTable):
 
         Example
         -------
-        >>> from teehr.models.domain_tables import Variable
+        >>> from teehr import Variable
         >>> variable = Variable(
         >>>     name="streamflow_hourly_inst",
         >>>     long_name="Instantaneous streamflow"

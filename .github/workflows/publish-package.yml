@@ -1,4 +1,4 @@
-name: test-build-publish
+name: build-publish-package
 
 on:
   push:

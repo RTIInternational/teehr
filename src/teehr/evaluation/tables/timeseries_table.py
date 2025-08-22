@@ -338,7 +338,7 @@ class TimeseriesTable(BaseTable):
         persist_dataframe: bool = False,
         drop_duplicates: bool = True,
     ):
-        """Import timeseries from XML data format.
+        """Import timeseries from FEWS PI-XML data format.
 
         Parameters
         ----------
@@ -352,15 +352,19 @@ class TimeseriesTable(BaseTable):
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
             Default mapping:
-            {
-                "locationId": "location_id",
-                "forecastDate": "reference_time",
-                "parameterId": "variable_name",
-                "units": "unit_name",
-                "ensembleId": "configuration_name",
-                "ensembleMemberIndex": "member",
-                "forecastDate": "reference_time"
-            }
+
+            .. code-block:: python
+
+                {
+                    "locationId": "location_id",
+                    "forecastDate": "reference_time",
+                    "parameterId": "variable_name",
+                    "units": "unit_name",
+                    "ensembleId": "configuration_name",
+                    "ensembleMemberIndex": "member",
+                    "forecastDate": "reference_time"
+                }
+
         constant_field_values : dict, optional
             A dictionary mapping field names to constant values.
             Format: {field_name: value}.
