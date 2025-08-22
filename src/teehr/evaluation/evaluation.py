@@ -17,7 +17,6 @@ from teehr.utils.s3path import S3Path
 from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
-import pyspark.sql as ps
 import logging
 from teehr.loading.utils import copy_template_to
 from teehr.loading.s3.clone_from_s3 import (
