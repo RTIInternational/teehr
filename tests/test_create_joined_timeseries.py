@@ -1,9 +1,6 @@
 """Test the import_timeseries function in the Evaluation class."""
 from pathlib import Path
 from teehr import Evaluation, Configuration
-from teehr.models.pydantic_table_models import (
-    Attribute
-)
 import tempfile
 import geopandas as gpd
 import numpy as np
@@ -198,6 +195,7 @@ def test_distinct_values(tmpdir):
     # test invalid column handling for location_prefixes==False
     with pytest.raises(ValueError):
         prefixes = ev.joined_timeseries.distinct_values(column='test')
+
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
