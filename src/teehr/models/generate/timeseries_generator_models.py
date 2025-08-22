@@ -40,6 +40,16 @@ class Persistence(BenchmarkGeneratorBaseModel, GeneratorABC):
 class ReferenceForecast(BenchmarkGeneratorBaseModel, GeneratorABC):
     """Model for generating a synthetic reference forecast timeseries.
 
+    Parameters
+    ----------
+    aggregate_reference_timeseries : bool
+        Whether to aggregate the reference timeseries.
+        Defaults to False.
+    aggregation_time_window : str
+        The time window for aggregation. Defaults to "6 hours".
+    df : ps.DataFrame
+        The DataFrame containing the timeseries data.
+
     Notes
     -----
     This model generates a synthetic reference forecast timeseries based on
@@ -114,7 +124,17 @@ class ReferenceForecast(BenchmarkGeneratorBaseModel, GeneratorABC):
 
 
 class Normals(SignatureGeneratorBaseModel, GeneratorABC):
-    """Model for generating synthetic normals timeseries."""
+    """Model for generating synthetic normals timeseries.
+
+    Parameters
+    ----------
+    temporal_resolution : NormalsResolutionEnum
+        The temporal resolution for the normals timeseries.
+    summary_statistic : NormalsStatisticEnum
+        The summary statistic to use for the normals timeseries.
+    df : ps.DataFrame
+        The DataFrame containing the timeseries data.
+    """
 
     temporal_resolution: NormalsResolutionEnum = NormalsResolutionEnum.day_of_year
     summary_statistic: NormalsStatisticEnum = NormalsStatisticEnum.mean
