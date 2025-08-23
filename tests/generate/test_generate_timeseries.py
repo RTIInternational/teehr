@@ -6,7 +6,7 @@ import teehr
 from teehr import SignatureTimeseriesGenerators as sts
 from teehr import BenchmarkForecastGenerators as bm
 
-from teehr.models.generate.base import TimeseriesFilter
+from teehr.models.filters import TableFilter
 
 TEST_STUDY_DATA_DIR_v0_4 = Path("tests", "data", "test_study")
 
@@ -56,10 +56,9 @@ def test_generate_timeseries_normals(tmpdir):
         )
     )
 
-    input_ts = TimeseriesFilter()
+    input_ts = TableFilter()
     input_ts.table_name = "primary_timeseries"
-    # input_tsm.unit_name = "m^3/s"  # ft^3/s is the default
-    # input_ts.unit_name = None
+    # input_ts.filters = []
 
     ts_normals = sts.Normals()
     ts_normals.temporal_resolution = "day_of_year"  # the default
@@ -67,7 +66,7 @@ def test_generate_timeseries_normals(tmpdir):
 
     ev.generate.signature_timeseries(
         method=ts_normals,
-        input_timeseries=input_ts,
+        input_table_filter=input_ts,
         start_datetime="2023-01-01T00:00:00",
         end_datetime="2024-12-31T00:00:00",
         timestep="1 hour"
@@ -168,19 +167,22 @@ def test_generate_reference_forecast(tmpdir):
     # values to an HEFS member (just for testing).
     ref_fcst = bm.ReferenceForecast()
 
-    reference_ts = TimeseriesFilter(
-        configuration_name="usgs_climatology",
-        variable_name="streamflow_hourly_climatology",
-        unit_name="ft^3/s",
-        table_name="primary_timeseries"
+    reference_filter = TableFilter(
+        table_name="primary_timeseries",
+        filters=[
+            "configuration_name = 'usgs_climatology'",
+            "variable_name = 'streamflow_hourly_climatology'",
+            "unit_name = 'ft^3/s'"
+        ]
     )
-
-    template_ts = TimeseriesFilter(
-        configuration_name="MEFP",
-        variable_name="streamflow_hourly_inst",
-        unit_name="ft^3/s",
+    template_filter = TableFilter(
         table_name="secondary_timeseries",
-        member="1993"
+        filters=[
+            "configuration_name = 'MEFP'",
+            "variable_name = 'streamflow_hourly_inst'",
+            "unit_name = 'ft^3/s'",
+            "member = '1993'"
+        ]
     )
     # If the user has control over the name, they need to add it manually.
     ev.configurations.add(
@@ -192,8 +194,8 @@ def test_generate_reference_forecast(tmpdir):
     )
     ev.generate.benchmark_forecast(
         method=ref_fcst,
-        reference_timeseries=reference_ts,
-        template_timeseries=template_ts,
+        reference_table_filter=reference_filter,
+        template_table_filter=template_filter,
         output_configuration_name="benchmark_forecast_daily_normals"
     ).write(destination_table="secondary_timeseries")
 

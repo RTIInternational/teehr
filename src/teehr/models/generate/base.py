@@ -1,10 +1,11 @@
 """Base model for Normals class."""
 import abc
-from typing import Optional
+from typing import Union, List
+
+from teehr.models.filters import FilterBaseModel
 
 from pydantic import BaseModel as PydanticBaseModel, ConfigDict
 from pydantic import Field
-import pyspark.sql as ps
 
 from teehr.models.str_enum import StrEnum
 
@@ -36,38 +37,6 @@ class NormalsStatisticEnum(StrEnum):
     max = "max"
 
 
-class TimeseriesFilter(PydanticBaseModel):
-    """A class for uniquely identifying a timeseries from an evaluation."""
-
-    table_name: TimeseriesTableNamesEnum = Field(
-        default=TimeseriesTableNamesEnum.primary_timeseries
-    )
-    configuration_name: Optional[str] = Field(default=None)
-    variable_name: Optional[str] = Field(default=None)
-    unit_name: Optional[str] = Field(default=None)
-    member: Optional[str] = Field(default=None)
-    # TODO: Include all table fields?
-    # location_id, value, value_time, reference_time
-
-    model_config = ConfigDict(
-        arbitrary_types_allowed=True,
-        validate_assignment=True,
-        extra='forbid'  # raise an error if extra fields are passed
-    )
-
-    def to_query(self) -> str:
-        """Generate an SQL query to select the timeseries."""
-        query = f"SELECT * FROM {self.table_name}"
-        for i, (field_name, field_value) in enumerate(
-            self.model_dump(exclude_none=True, exclude={"table_name"}).items()
-        ):
-            if i == 0:
-                query += f" WHERE {field_name} = '{field_value}'"
-            else:
-                query += f" AND {field_name} = '{field_value}'"
-        return query
-
-
 class GeneratorABC(abc.ABC):
     """Abstract base class for generating synthetic timeseries."""
 
@@ -82,7 +51,6 @@ class BenchmarkGeneratorBaseModel(PydanticBaseModel):
 
     aggregate_reference_timesteps: bool = Field(default=False)
     aggregation_time_window: str = Field(default=None)
-    df: ps.DataFrame = Field(default=None)
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
@@ -101,9 +69,15 @@ class SignatureGeneratorBaseModel(PydanticBaseModel):
     They assume reference_time is None (should they?).
     """
 
+    table_name: TimeseriesTableNamesEnum = Field(
+        default=TimeseriesTableNamesEnum.primary_timeseries
+    )
+    filters: Union[
+        str, dict, FilterBaseModel,
+        List[Union[str, dict, FilterBaseModel]]
+    ] = Field(default=None)
     temporal_resolution: NormalsResolutionEnum = Field(default=None)
     summary_statistic: NormalsStatisticEnum = Field(default=None)
-    df: ps.DataFrame = Field(default=None)
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,

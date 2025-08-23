@@ -23,6 +23,7 @@ from teehr.loading.s3.clone_from_s3 import (
     list_s3_evaluations,
     clone_from_s3
 )
+from teehr.models.filters import TableFilter, FilterBaseModel, TableNamesEnum
 import teehr.const as const
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.metrics import Metrics
@@ -33,6 +34,8 @@ import re
 import teehr
 import s3fs
 from fsspec.implementations.local import LocalFileSystem
+import pyspark.sql as ps
+from teehr.querying.filter_format import validate_and_apply_filters
 
 
 logger = logging.getLogger(__name__)
@@ -421,3 +424,50 @@ class Evaluation:
             " to a new format."
         )
         return version
+
+    def filter(
+        self,
+        table_name: TableNamesEnum = None,
+        filters: Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]
+        ] = None,
+        table_filter: TableFilter = None
+    ) -> ps.DataFrame:
+        """Apply filters to a table returning a sdf.
+
+        Parameters
+        ----------
+        table_name: TableNamesEnum
+            The name of the table to filter. Defaults to None.
+        filters: Union[str, dict, FilterBaseModel, List[Union[str, dict, FilterBaseModel]]]
+            The filters to apply to the table. Defaults to None.
+        table_filter: TableFilter
+            A TableFilter object containing the table name and filters.
+            Defaults to None.
+        """
+        table_mapper = {
+            "primary_timeseries": self.primary_timeseries,
+            "secondary_timeseries": self.secondary_timeseries,
+            "locations": self.locations,
+            "units": self.units,
+            "variables": self.variables,
+            "configurations": self.configurations,
+            "attributes": self.attributes,
+            "location_attributes": self.location_attributes,
+            "location_crosswalks": self.location_crosswalks,
+            "joined_timeseries": self.joined_timeseries,
+        }
+        if table_filter is not None:
+            table_name = table_filter.table_name
+            filters = table_filter.filters
+
+        base_table = table_mapper.get(table_name)
+        return validate_and_apply_filters(
+            sdf=base_table.to_sdf(),
+            filters=filters,
+            filter_model=base_table.filter_model,
+            fields_enum=base_table.field_enum(),
+            dataframe_schema=base_table._get_schema("pandas"),
+            validate=base_table.validate_filter_field_types
+        )

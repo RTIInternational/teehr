@@ -2,7 +2,7 @@
 from collections.abc import Iterable
 from typing import List, Union
 from pydantic import BaseModel as BaseModel
-from pydantic import ValidationInfo, field_validator
+from pydantic import ValidationInfo, field_validator, Field
 from datetime import datetime, timedelta
 import logging
 from teehr.models.str_enum import StrEnum
@@ -15,7 +15,8 @@ from teehr.models.table_enums import (
     LocationAttributeFields,
     LocationCrosswalkFields,
     TimeseriesFields,
-    JoinedTimeseriesFields
+    JoinedTimeseriesFields,
+    TableNamesEnum
 )
 from teehr.models.pydantic_table_models import (
     TableBaseModel
@@ -150,3 +151,15 @@ class JoinedTimeseriesFilter(FilterBaseModel):
         timedelta,
         List[Union[str, int, float, datetime, timedelta]]
     ]
+
+
+class TableFilter(BaseModel):
+    """A class for filtering a table from an evaluation."""
+
+    table_name: TableNamesEnum = Field(
+        default="primary_timeseries"
+    )
+    filters: Union[
+        str, dict, FilterBaseModel,
+        List[Union[str, dict, FilterBaseModel]]
+    ] = Field(default=None)

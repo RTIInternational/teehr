@@ -522,8 +522,8 @@ def test_ensemble_metrics(tmpdir):
     )
     ev.generate.benchmark_forecast(
         method=ref_fcst,
-        reference_timeseries=reference_ts,
-        template_timeseries=template_ts,
+        reference_table_filter=reference_ts,
+        template_table_filter=template_ts,
         output_configuration_name="benchmark_forecast_hourly_normals"
     ).write(destination_table="secondary_timeseries")
 

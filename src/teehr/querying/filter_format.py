@@ -177,13 +177,16 @@ def validate_filter(
 
 def validate_and_apply_filters(
     sdf: DataFrame,
-    filters: Union[str, dict, List[dict]],
+    filters: Union[str, dict, List[dict], None],
     filter_model: FilterBaseModel,
     fields_enum: StrEnum,
     dataframe_schema: pa.DataFrameSchema = None,
     validate: bool = True
 ):
     """Validate and apply filters."""
+    if filters is None:
+        return sdf
+
     if isinstance(filters, str):
         logger.debug(f"Filter {filters} is already string.  Applying as is.")
         sdf = sdf.filter(filters)

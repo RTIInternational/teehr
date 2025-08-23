@@ -10,8 +10,11 @@ from teehr import RowLevelCalculatedFields as rcf
 from teehr.models.filters import (
     TimeseriesFilter,
     JoinedTimeseriesFilter,
-    FilterOperators
+    FilterOperators,
+    TableFilter,
+    TableNamesEnum
 )
+import pyspark.sql as ps
 
 import sys
 from pathlib import Path
@@ -262,6 +265,25 @@ def test_filter_by_lead_time(tmpdir):
     assert len(df) == 9
 
 
+def test_table_filter(tmpdir):
+    """Test table filter model."""
+    ev = setup_v0_3_study(tmpdir)
+
+    df = ev.primary_timeseries.to_pandas()
+    tbl_filter = TableFilter(
+        table_name="primary_timeseries",
+        filters=[
+            "configuration_name = 'usgs_observations'"
+        ]
+    )
+    sdf = ev.filter(table_filter=tbl_filter)
+    assert sdf.count() == len(df)
+
+    for tbl_name in TableNamesEnum:
+        sdf = ev.filter(table_name=tbl_name)
+        assert isinstance(sdf, ps.DataFrame)
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
@@ -359,6 +381,12 @@ if __name__ == "__main__":
         test_filter_by_lead_time(
             tempfile.mkdtemp(
                 prefix="16-",
+                dir=tempdir
+            )
+        )
+        test_table_filter(
+            tempfile.mkdtemp(
+                prefix="17-",
                 dir=tempdir
             )
         )

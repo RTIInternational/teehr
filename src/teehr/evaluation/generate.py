@@ -5,10 +5,10 @@ from datetime import datetime, timedelta
 
 import pyspark.sql.functions as F
 
+from teehr.models.filters import TableFilter
 from teehr.models.generate.base import (
     SignatureGeneratorBaseModel,
-    BenchmarkGeneratorBaseModel,
-    TimeseriesFilter
+    BenchmarkGeneratorBaseModel
 )
 from teehr.models.pydantic_table_models import Variable
 from teehr.generate.utils import construct_signature_dataframe
@@ -79,7 +79,7 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
     def signature_timeseries(
         self,
         method: SignatureGeneratorBaseModel,
-        input_timeseries: TimeseriesFilter,
+        input_table_filter: TableFilter,
         start_datetime: Union[str, datetime],
         end_datetime: Union[str, datetime],
         timestep: Union[str, timedelta] = "1 hour",
@@ -93,10 +93,10 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
         ----------
         method : TimeseriesGeneratorBaseModel
             The method to use for generating the timeseries.
-        input_timeseries : TimeseriesFilter, optional
-            The input timeseries model. The defines a unique timeseries
+        input_table_filter : TableFilter, optional
+            The input table filter. The defines a timeseries
             that will be queried from the Evaluation and used as the
-            input_dataframe. Defaults to None.
+            input_dataframe.
         start_datetime : Union[str, datetime]
             The start datetime for the generated timeseries.
         end_datetime : Union[str, datetime]
@@ -126,16 +126,11 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
         The variable naming convention follows the pattern:
         <variable>_<temporal_resolution>_<summary_statistic>
         """
-        input_dataframe = self.ev.sql(
-            query=input_timeseries.to_query(),
-            create_temp_views=[
-                f"{input_timeseries.table_name}"
-            ]
-        )
+        input_dataframe = self.ev.filter(table_filter=input_table_filter)
         if input_dataframe.isEmpty():
             raise ValueError(
                 "Input DataFrame is empty!"
-                " Check the parameters of the input_timeseries."
+                " Check the arguments of the input_table_filter."
             )
 
         output_dataframe = construct_signature_dataframe(
@@ -169,8 +164,8 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
     def benchmark_forecast(
         self,
         method: BenchmarkGeneratorBaseModel,
-        reference_timeseries: TimeseriesFilter,
-        template_timeseries: TimeseriesFilter,
+        reference_table_filter: TableFilter,
+        template_table_filter: TableFilter,
         output_configuration_name: str
     ):
         """Generate a benchmark forecast from two timeseries.
@@ -179,11 +174,12 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
         ----------
         method : BenchmarkGeneratorBaseModel
             The method to use for generating the benchmark forecast.
-        reference_timeseries : TimeseriesFilter
-            The reference timeseries containing the values to use
-            for the benchmark.
-        template_timeseries : TimeseriesFilter
-            The template timeseries containing the forecast structure
+        reference_table_filter : TableFilter
+            The reference table filter defining the timeseries
+            containing the values to assign to the template timeseries.
+        template_table_filter : TableFilter
+            The template table filter that defines the timeseries
+            containing the forecast structure
             (lead time, time interval, issuance frequency, etc) to use for
             the benchmark.
         output_configuration_name : str
@@ -194,21 +190,15 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
         GeneratedTimeseries
             The generated timeseries class object.
         """
-        reference_dataframe = self.ev.sql(
-            query=reference_timeseries.to_query(),
-            create_temp_views=[
-                f"{reference_timeseries.table_name}"
-            ]
+        reference_dataframe = self.ev.filter(
+            table_filter=reference_table_filter
         )
-        template_dataframe = self.ev.sql(
-            query=template_timeseries.to_query(),
-            create_temp_views=[
-                f"{template_timeseries.table_name}"
-            ]
+        template_dataframe = self.ev.filter(
+            table_filter=template_table_filter
         )
-        if reference_timeseries.table_name == "primary_timeseries":
+        if reference_table_filter.table_name == "primary_timeseries":
             partition_by = self.ev.primary_timeseries.unique_column_set
-        elif reference_timeseries.table_name == "secondary_timeseries":
+        elif reference_table_filter.table_name == "secondary_timeseries":
             partition_by = self.ev.secondary_timeseries.unique_column_set
         partition_by.remove("value_time")
 
