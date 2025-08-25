@@ -10,12 +10,17 @@ from pathlib import Path
 import numpy as np
 from arch.bootstrap import CircularBlockBootstrap, StationaryBootstrap
 
-from teehr.models.filters import JoinedTimeseriesFilter
+from teehr.models.filters import JoinedTimeseriesFilter, TableFilter
 from teehr.models.metrics.bootstrap_models import Bootstrappers
 from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 from teehr.evaluation.evaluation import Evaluation
+from teehr import SignatureTimeseriesGenerators as sts
+from teehr import BenchmarkForecastGenerators as bm
 
-from setup_v0_3_study import setup_v0_3_study
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from data.setup_v0_3_study import setup_v0_3_study  # noqa
+
 TEST_STUDY_DATA_DIR_v0_4 = Path("tests", "data", "test_study")
 
 
@@ -42,7 +47,7 @@ def test_executing_deterministic_metrics(tmpdir):
 
     # Test all the metrics.
     include_all_metrics = [
-        func() for func in DeterministicMetrics.__dict__.values() if callable(func)
+        func() for func in DeterministicMetrics.__dict__.values() if callable(func)  # noqa
     ]
 
     # Get the currently available fields to use in the query.
@@ -370,7 +375,9 @@ def test_gumboot_bootstrapping(tmpdir):
     ).to_sdf()
 
     # Unpack and compare the results.
-    teehr_results = np.sort(np.array(metrics_df.kling_gupta_efficiency.values[0]))
+    teehr_results = np.sort(
+        np.array(metrics_df.kling_gupta_efficiency.values[0])
+    )
     manual_results = np.sort(results.ravel()).astype(np.float32)
     assert (teehr_results == manual_results).all()
     assert isinstance(metrics_df, pd.DataFrame)
@@ -439,7 +446,9 @@ def test_ensemble_metrics(tmpdir):
         in_path=usgs_location
     )
     ev.location_crosswalks.load_csv(
-        in_path=Path(TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv")
+        in_path=Path(
+            TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv"
+        )
     )
     ev.configurations.add(
         Configuration(
@@ -466,6 +475,58 @@ def test_ensemble_metrics(tmpdir):
     ev.primary_timeseries.load_parquet(
         in_path=primary_filepath
     )
+
+    # Calculate annual hourly normals from USGS observations.
+    input_ts = TableFilter()
+    input_ts.table_name = "primary_timeseries"
+
+    ts_normals = sts.Normals()
+    ts_normals.temporal_resolution = "hour_of_year"  # the default
+    ts_normals.summary_statistic = "mean"           # the default
+
+    ev.generate.signature_timeseries(
+        method=ts_normals,
+        input_table_filter=input_ts,
+        start_datetime="2024-11-19 12:00:00",
+        end_datetime="2024-11-21 13:00:00",
+        timestep="1 hour",
+        fillna=False
+    ).write()
+
+    # Add reference forecast based on climatology.
+    ev.configurations.add(
+        [
+            Configuration(
+                name="benchmark_forecast_hourly_normals",
+                type="secondary",
+                description="Reference forecast based on USGS climatology summarized by hour of year"  # noqa
+            )
+        ]
+    )
+    ref_fcst = bm.ReferenceForecast()
+    ref_fcst.aggregate_reference_timeseries = True
+
+    reference_ts = TableFilter()
+    reference_ts.table_name = "primary_timeseries"
+    reference_ts.filters = [
+        "variable_name = 'streamflow_hour_of_year_mean'",
+        "unit_name = 'ft^3/s'"
+    ]
+
+    template_ts = TableFilter()
+    template_ts.table_name = "secondary_timeseries"
+    template_ts.filters = [
+        "variable_name = 'streamflow_hourly_inst'",
+        "unit_name = 'ft^3/s'",
+        "member = '1993'"
+    ]
+    ev.generate.benchmark_forecast(
+        method=ref_fcst,
+        reference_table_filter=reference_ts,
+        template_table_filter=template_ts,
+        output_configuration_name="benchmark_forecast_hourly_normals"
+    ).write(destination_table="secondary_timeseries")
+
     ev.joined_timeseries.create(execute_scripts=False)
 
     # Now, metrics.
@@ -473,20 +534,24 @@ def test_ensemble_metrics(tmpdir):
     crps.summary_func = np.mean
     crps.estimator = "pwm"
     crps.backend = "numba"
+    crps.reference_configuration = "benchmark_forecast_hourly_normals"
 
     include_metrics = [crps]
-
     metrics_df = ev.metrics.query(
         include_metrics=include_metrics,
         group_by=[
             "primary_location_id",
-            "reference_time",
             "configuration_name"
         ],
         order_by=["primary_location_id"],
     ).to_pandas()
 
-    assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 35.627174)
+    assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 35.555721)
+    assert np.isclose(metrics_df.mean_crps_ensemble.values[1], 1.073679)
+    assert np.isclose(
+        metrics_df.mean_crps_ensemble_skill_score.values[0], -32.115792
+    )
+    assert np.isnan(metrics_df.mean_crps_ensemble_skill_score.values[1])
 
 
 def test_metrics_transforms(tmpdir):

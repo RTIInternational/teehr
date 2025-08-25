@@ -2,6 +2,21 @@
 from teehr.models.str_enum import StrEnum
 
 
+class TableNamesEnum(StrEnum):
+    """Table names for the dataset."""
+
+    primary_timeseries = "primary_timeseries"
+    secondary_timeseries = "secondary_timeseries"
+    locations = "locations"
+    units = "units"
+    variables = "variables"
+    configurations = "configurations"
+    attributes = "attributes"
+    location_attributes = "location_attributes"
+    location_crosswalks = "location_crosswalks"
+    joined_timeseries = "joined_timeseries"
+
+
 class TableWriteEnum(StrEnum):
     """Methods to write or update Evaluation tables."""
 
