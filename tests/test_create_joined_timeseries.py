@@ -182,6 +182,41 @@ def test_distinct_values(tmpdir):
     assert len(prefixes) == 1
     assert prefixes[0] == "fcst"
 
+    # test locations for id with location_prefixes==True (valid)
+    prefixes = ev.locations.distinct_values(
+        column='id',
+        location_prefixes=True
+    )
+    assert len(prefixes) == 1
+    assert prefixes[0] == "gage"
+
+    # test location_attributes for location_id with
+    # location_prefixes==True (valid)
+    prefixes = ev.location_attributes.distinct_values(
+        column='location_id',
+        location_prefixes=True
+    )
+    assert len(prefixes) == 1
+    assert prefixes[0] == "gage"
+
+    # test location_crosswalk for primary_location_id with
+    # location_prefixes==True (valid)
+    prefixes = ev.location_crosswalks.distinct_values(
+        column='primary_location_id',
+        location_prefixes=True
+    )
+    assert len(prefixes) == 1
+    assert prefixes[0] == "gage"
+
+    # test location_crosswalk for secondary_location_id with
+    # location_prefixes=True (valid)
+    prefixes = ev.location_crosswalks.distinct_values(
+        column='secondary_location_id',
+        location_prefixes=True
+    )
+    assert len(prefixes) == 1
+    assert prefixes[0] == "fcst"
+
     # test invalid table handling with location_prefixes==True
     with pytest.raises(ValueError):
         prefixes = ev.locations.distinct_values(column='name',

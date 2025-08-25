@@ -680,7 +680,10 @@ class BaseTable():
             # ensure valid table
             valid_tables = ['primary_timeseries',
                             'secondary_timeseries',
-                            'joined_timeseries']
+                            'joined_timeseries',
+                            'locations',
+                            'location_attributes',
+                            'location_crosswalks']
             if self.name not in valid_tables:
                 raise ValueError(
                     f"""
@@ -692,7 +695,11 @@ class BaseTable():
             valid_columns = {'primary_timeseries': ['location_id'],
                              'secondary_timeseries': ['location_id'],
                              'joined_timeseries': ['primary_location_id',
-                                                   'secondary_location_id']
+                                                   'secondary_location_id'],
+                             'locations': ['id'],
+                             'location_attributes': ['location_id'],
+                             'location_crosswalks': ['primary_location_id',
+                                                     'secondary_location_id']
                              }
             if column not in valid_columns[self.name]:
                 raise ValueError(
