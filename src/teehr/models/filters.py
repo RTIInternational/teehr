@@ -163,3 +163,4 @@ class TableFilter(BaseModel):
         str, dict, FilterBaseModel,
         List[Union[str, dict, FilterBaseModel]]
     ] = Field(default=None)
+    # Could this be extended to include group_by and metrics?

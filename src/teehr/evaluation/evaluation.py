@@ -461,7 +461,8 @@ class Evaluation:
         if table_filter is not None:
             table_name = table_filter.table_name
             filters = table_filter.filters
-
+        if table_name is None:
+            raise ValueError("Table name must be specified.")
         base_table = table_mapper.get(table_name)
         return validate_and_apply_filters(
             sdf=base_table.to_sdf(),

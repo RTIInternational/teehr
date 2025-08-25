@@ -95,14 +95,19 @@ def test_generate_timeseries_normals(tmpdir):
     prim_df["day_of_year"] = prim_df.value_time.dt.dayofyear
     prim_df["year"] = prim_df.value_time.dt.year
     leap_day_mask = (prim_df.year == 2024) & (prim_df.day_of_year == 60)
-    following_leap_day_mask = (prim_df.year == 2024) & (prim_df.day_of_year >= 61)
+    following_leap_day_mask = (prim_df.year == 2024) & \
+        (prim_df.day_of_year >= 61)
     prim_df.loc[leap_day_mask, "day_of_year"] = 59
     prim_df.loc[following_leap_day_mask, "day_of_year"] -= 1
     mean_prim_srs = prim_df.copy().groupby("day_of_year")["value"].mean()
     # Check that the climatology matches the manual calculation.
     clim_df["day_of_year"] = clim_df.value_time.dt.dayofyear
-    assert clim_df[clim_df.day_of_year == 59].value.values[0] == mean_prim_srs.loc[59]
-    assert clim_df[clim_df.day_of_year == 61].value.values[0] == mean_prim_srs.loc[60]
+    assert clim_df[
+        clim_df.day_of_year == 59
+    ].value.values[0] == mean_prim_srs.loc[59]
+    assert clim_df[
+        clim_df.day_of_year == 61
+    ].value.values[0] == mean_prim_srs.loc[60]
 
 
 def test_generate_reference_forecast(tmpdir):
@@ -117,7 +122,9 @@ def test_generate_reference_forecast(tmpdir):
         )
     )
     ev.location_crosswalks.load_csv(
-        in_path=Path(TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv")
+        in_path=Path(
+            TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv"
+        )
     )
     # Add USGS observations from test file.
     ev.configurations.add(
@@ -206,8 +213,12 @@ def test_generate_reference_forecast(tmpdir):
     # Values at reference forecast value_times should match USGS climatology.
     usgs_clim_df = ev.primary_timeseries.to_pandas()
     for vt in ref_fcst_df.value_time.unique():
-        usgs_clim_value = usgs_clim_df[usgs_clim_df.value_time == vt].value.values[0]
-        ref_fcst_value = ref_fcst_df[ref_fcst_df.value_time == vt].value.values[0]
+        usgs_clim_value = usgs_clim_df[
+            usgs_clim_df.value_time == vt
+        ].value.values[0]
+        ref_fcst_value = ref_fcst_df[
+            ref_fcst_df.value_time == vt
+        ].value.values[0]
         assert usgs_clim_value == ref_fcst_value
 
 
