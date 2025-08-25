@@ -662,8 +662,9 @@ class BaseTable():
         location_prefixes : bool
             Whether to return location prefixes. If True, only the unique
             prefixes of the locations will be returned. Only compatible with
-            primary_timeseries, secondary_timeseries, and joined_timeseries
-            tables and their respective location columns.
+            primary_timeseries, secondary_timeseries, joined_timeseries,
+            locations, location_attributes, and location_crosswalk tables and
+            their respective location columns.
             Default: False
 
         Returns
