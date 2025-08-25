@@ -649,10 +649,80 @@ class BaseTable():
         self._check_load_table()
         return self.df.columns
 
-    def distinct_values(self, column: str) -> List[str]:
-        """Return distinct values for a column."""
+    def distinct_values(self,
+                        column: str,
+                        location_prefixes: bool = False
+                        ) -> List[str]:
+        """Return distinct values for a column.
+
+        Parameters
+        ----------
+        column : str
+            The column to get distinct values for.
+        location_prefixes : bool
+            Whether to return location prefixes. If True, only the unique
+            prefixes of the locations will be returned. Only compatible with
+            primary_timeseries, secondary_timeseries, joined_timeseries,
+            locations, location_attributes, and location_crosswalk tables and
+            their respective location columns.
+            Default: False
+
+        Returns
+        -------
+        List[str]
+            The distinct values for the column.
+        """
         self._check_load_table()
-        return self.df.select(column).distinct().rdd.flatMap(lambda x: x).collect()
+        if column not in self.df.columns:
+            raise ValueError(
+                f"Invalid column: '{column}' for table: '{self.name}'"
+            )
+        if location_prefixes:
+            # ensure valid table
+            valid_tables = ['primary_timeseries',
+                            'secondary_timeseries',
+                            'joined_timeseries',
+                            'locations',
+                            'location_attributes',
+                            'location_crosswalks']
+            if self.name not in valid_tables:
+                raise ValueError(
+                    f"""
+                    Invalid table: '{self.name}' with argument
+                    location_prefixes==True. Valid tables are: {valid_tables}
+                    """
+                    )
+            # ensure valid columns for selected table
+            valid_columns = {'primary_timeseries': ['location_id'],
+                             'secondary_timeseries': ['location_id'],
+                             'joined_timeseries': ['primary_location_id',
+                                                   'secondary_location_id'],
+                             'locations': ['id'],
+                             'location_attributes': ['location_id'],
+                             'location_crosswalks': ['primary_location_id',
+                                                     'secondary_location_id']
+                             }
+            if column not in valid_columns[self.name]:
+                raise ValueError(
+                    f"""
+                    Invalid column: '{column}' for table: '{self.name}' with
+                    argument location_prefixes==True. Valid columns are:
+                    {valid_columns[self.name]}
+                    """
+                )
+            # get unique location prefixes
+            unique_locations = self.df.select(column).distinct().rdd.flatMap(
+                lambda x: x
+                ).collect()
+            prefixes = [location.split('-')[0] for location
+                        in unique_locations
+                        ]
+            return list(set(prefixes))
+
+        else:
+            return self.df.select(column).distinct().rdd.flatMap(
+                lambda x: x
+                ).collect()
 
     def field_enum(self) -> StrEnum:
         """Get the fields enum."""
