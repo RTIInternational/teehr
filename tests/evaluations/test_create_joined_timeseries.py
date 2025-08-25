@@ -4,8 +4,11 @@ from teehr import Evaluation, Configuration
 import tempfile
 import geopandas as gpd
 import numpy as np
-from setup_v0_3_study import setup_v0_3_study
 import pytest
+
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from data.setup_v0_3_study import setup_v0_3_study  # noqa
 
 
 TEST_DATA_DIR = Path("tests", "data", "v0_3_test_study")
