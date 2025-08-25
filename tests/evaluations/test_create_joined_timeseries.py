@@ -1,12 +1,11 @@
 """Test the import_timeseries function in the Evaluation class."""
 from pathlib import Path
 from teehr import Evaluation, Configuration
-from teehr.models.pydantic_table_models import (
-    Attribute
-)
 import tempfile
 import geopandas as gpd
 import numpy as np
+from setup_v0_3_study import setup_v0_3_study
+import pytest
 
 
 TEST_DATA_DIR = Path("tests", "data", "v0_3_test_study")
@@ -94,27 +93,6 @@ def test_create_joined_timeseries(tmpdir):
         }
     )
 
-    # # Add some attributes -- now can be added by default based on name.
-    # ev.attributes.add(
-    #     [
-    #         Attribute(
-    #             name="drainage_area",
-    #             type="continuous",
-    #             description="Drainage area in square kilometers"
-    #         ),
-    #         Attribute(
-    #             name="ecoregion",
-    #             type="categorical",
-    #             description="Ecoregion"
-    #         ),
-    #         Attribute(
-    #             name="year_2_discharge",
-    #             type="continuous",
-    #             description="2-yr discharge in cubic meters per second"
-    #         ),
-    #     ]
-    # )
-
     # Load the location attribute data
     ev.location_attributes.load_parquet(
         in_path=GEO_FILEPATH,
@@ -162,6 +140,98 @@ def test_create_joined_timeseries(tmpdir):
     assert sorted(columns) == sorted(expected_columns)
 
 
+def test_distinct_values(tmpdir):
+    """Test base_table.distinct_values() using joined_timeseries."""
+    ev = setup_v0_3_study(tmpdir)
+
+    # test primary_timeseries with location_prefixes==False (valid)
+    distinct_vals = ev.primary_timeseries.distinct_values(column='location_id')
+    assert len(distinct_vals) == 3
+
+    # test primary_timeseries with location_prefixes==True (valid)
+    prefixes = ev.primary_timeseries.distinct_values(
+        column='location_id',
+        location_prefixes=True
+    )
+    assert len(prefixes) == 1
+    assert prefixes[0] == "gage"
+
+    # test secondary_timeseries with location_prefixes==True (valid)
+    prefixes = ev.secondary_timeseries.distinct_values(
+        column='location_id',
+        location_prefixes=True
+    )
+    assert len(prefixes) == 1
+    assert prefixes[0] == "fcst"
+
+    # test joined_timeseries for primary_location_id with
+    # location_prefixes==True (valid)
+    prefixes = ev.joined_timeseries.distinct_values(
+        column='primary_location_id',
+        location_prefixes=True
+    )
+    assert len(prefixes) == 1
+    assert prefixes[0] == "gage"
+
+    # test joined_timeseries for secondary_location_id with
+    # location_prefixes==True (valid)
+    prefixes = ev.joined_timeseries.distinct_values(
+        column='secondary_location_id',
+        location_prefixes=True
+        )
+    assert len(prefixes) == 1
+    assert prefixes[0] == "fcst"
+
+    # test locations for id with location_prefixes==True (valid)
+    prefixes = ev.locations.distinct_values(
+        column='id',
+        location_prefixes=True
+    )
+    assert len(prefixes) == 1
+    assert prefixes[0] == "gage"
+
+    # test location_attributes for location_id with
+    # location_prefixes==True (valid)
+    prefixes = ev.location_attributes.distinct_values(
+        column='location_id',
+        location_prefixes=True
+    )
+    assert len(prefixes) == 1
+    assert prefixes[0] == "gage"
+
+    # test location_crosswalk for primary_location_id with
+    # location_prefixes==True (valid)
+    prefixes = ev.location_crosswalks.distinct_values(
+        column='primary_location_id',
+        location_prefixes=True
+    )
+    assert len(prefixes) == 1
+    assert prefixes[0] == "gage"
+
+    # test location_crosswalk for secondary_location_id with
+    # location_prefixes=True (valid)
+    prefixes = ev.location_crosswalks.distinct_values(
+        column='secondary_location_id',
+        location_prefixes=True
+    )
+    assert len(prefixes) == 1
+    assert prefixes[0] == "fcst"
+
+    # test invalid table handling with location_prefixes==True
+    with pytest.raises(ValueError):
+        prefixes = ev.locations.distinct_values(column='name',
+                                                location_prefixes=True)
+
+    # test invalid column handling for location_prefixes==True
+    with pytest.raises(ValueError):
+        prefixes = ev.joined_timeseries.distinct_values(column='location_id',
+                                                        location_prefixes=True)
+
+    # test invalid column handling for location_prefixes==False
+    with pytest.raises(ValueError):
+        prefixes = ev.joined_timeseries.distinct_values(column='test')
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
@@ -169,6 +239,12 @@ if __name__ == "__main__":
         test_create_joined_timeseries(
             tempfile.mkdtemp(
                 prefix="1-",
+                dir=tempdir
+            )
+        )
+        test_distinct_values(
+            tempfile.mkdtemp(
+                prefix="2-",
                 dir=tempdir
             )
         )
