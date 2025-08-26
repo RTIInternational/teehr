@@ -88,7 +88,7 @@ def test_add_row_udfs(tmpdir):
     assert sdf.schema["forecast_lead_time"].dataType == T.DayTimeIntervalType()
     row = check_sdf.collect()[1]
     expected_val = (row["value_time"] - row["reference_time"]).total_seconds()
-    test_val = row["forecast_lead_time"]
+    test_val = row["forecast_lead_time"].total_seconds()
     assert expected_val == test_val
 
     assert "threshold_value_exceeded" in cols
