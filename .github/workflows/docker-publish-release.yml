@@ -1,4 +1,4 @@
-name: Build and Push Release Version for TEEHR Hub
+name: build-push-teehr-hub-release
 
 on:
   workflow_run:
