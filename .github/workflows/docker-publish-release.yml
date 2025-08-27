@@ -1,9 +1,14 @@
 name: build-push-teehr-hub-release
 
 on:
-  workflow_run:
-    workflows: ["build-publish-package"]  # Triggered by "build-publish-package" workflow
-    types: [completed]                    # Trigger when "build-publish-package" completes
+  workflow_call:
+    inputs:
+      image-tag:
+        description: "The image tag to use for the Docker image"
+        required: true
+        type: string
+    # workflows: ["build-publish-package"]  # Triggered by "build-publish-package" workflow
+    # types: [completed]                    # Trigger when "build-publish-package" completes
 
 jobs:
   get-existing-version:
@@ -22,5 +27,5 @@ jobs:
     secrets: inherit
     needs: get-existing-version
     with:
-      image-tag: ${{ github.ref_name }}
+      image-tag: ${{ inputs.image-tag }}
       previous-image-tag: ${{ needs.get-existing-version.outputs.pypi_version }}
