@@ -13,7 +13,6 @@ from teehr.const import MAX_CPUS
 
 from pathlib import Path
 from typing import Union
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -29,7 +28,7 @@ class TimeseriesTable(BaseTable):
         self.partition_by = [
             "configuration_name",
             "variable_name",
-            "reference_time"
+            # "reference_time"
         ]
         self.filter_model = TimeseriesFilter
         self.unique_column_set = [
@@ -42,7 +41,7 @@ class TimeseriesTable(BaseTable):
         ]
 
     def to_pandas(self):
-        """Return Pandas DataFrame for Primary Timeseries."""
+        """Return Pandas DataFrame for Timeseries."""
         self._check_load_table()
         df = self.df.toPandas()
         df.attrs['table_type'] = self.name
@@ -67,7 +66,7 @@ class TimeseriesTable(BaseTable):
         drop_duplicates: bool = True,
         **kwargs
     ):
-        """Import primary timeseries parquet data.
+        """Import timeseries parquet data.
 
         Parameters
         ----------
@@ -124,7 +123,7 @@ class TimeseriesTable(BaseTable):
         - value
         - location_id
         """
-        logger.info(f"Loading primary timeseries parquet data: {in_path}")
+        logger.info(f"Loading timeseries parquet data: {in_path}")
 
         validate_input_is_parquet(in_path)
         self._load(
@@ -154,7 +153,7 @@ class TimeseriesTable(BaseTable):
         drop_duplicates: bool = True,
         **kwargs
     ):
-        """Import primary timeseries csv data.
+        """Import timeseries csv data.
 
         Parameters
         ----------
@@ -213,7 +212,7 @@ class TimeseriesTable(BaseTable):
         - value
         - location_id
         """
-        logger.info(f"Loading primary timeseries csv data: {in_path}")
+        logger.info(f"Loading timeseries csv data: {in_path}")
 
         validate_input_is_csv(in_path)
         self._load(
@@ -243,7 +242,7 @@ class TimeseriesTable(BaseTable):
         drop_duplicates: bool = True,
         **kwargs
     ):
-        """Import primary timeseries netcdf data.
+        """Import timeseries netcdf data.
 
         Parameters
         ----------
@@ -302,7 +301,7 @@ class TimeseriesTable(BaseTable):
         - value
         - location_id
         """
-        logger.info(f"Loading primary timeseries netcdf data: {in_path}")
+        logger.info(f"Loading timeseries netcdf data: {in_path}")
 
         validate_input_is_netcdf(in_path)
         self._load(
@@ -418,7 +417,7 @@ class TimeseriesTable(BaseTable):
         - location_id
         - member
         """
-        logger.info(f"Loading primary timeseries xml data: {in_path}")
+        logger.info(f"Loading timeseries xml data: {in_path}")
 
         validate_input_is_xml(in_path)
         self._load(

@@ -6,17 +6,17 @@ import pandas as pd
 import numpy as np
 
 from teehr.models.metrics.basemodels import MetricsBasemodel
-from teehr.metrics.deterministic_funcs import _transform
+# from teehr.metrics.deterministic_funcs import _transform
 
 logger = logging.getLogger(__name__)
 
 
-def _pivot_by_value_time(
+def _pivot_by_member(
     p: pd.Series,
     s: pd.Series,
-    value_time: pd.Series
+    members: pd.Series
 ) -> Dict:
-    """Pivot the timeseries data by value_time.
+    """Pivot the timeseries data by members.
 
     Notes
     -----
@@ -26,14 +26,31 @@ def _pivot_by_value_time(
             The first dimension should be the time step, and the second
             dimension should be the ensemble member.
     """
-    # TODO: Probably a better way to do this?
-    primary = []
-    secondary = []
-    for vt in value_time.unique():
-        vt_index = value_time[value_time == vt].index
-        primary.append(p[vt_index].values[0])
-        secondary.append(s[vt_index].values)
-    return {"primary": np.array(primary), "secondary": np.array(secondary)}
+    if members.isna().all():  # No ensemble members
+        return {
+            "primary": p.values,
+            "secondary": s.values
+        }
+    unique_members, member_indices = np.unique(
+        members.values, return_inverse=True
+    )
+    if unique_members.size == 1:  # Only one ensemble member
+        return {
+            "primary": p.values,
+            "secondary": s.values
+        }
+    # Assumes all members are same length.
+    forecast_length = member_indices[member_indices == member_indices[0]].size
+    n_members = unique_members.size
+    secondary_arr = np.full((forecast_length, n_members), np.nan)
+    for i in range(n_members):
+        mask = (member_indices == i)
+        secondary_arr[:, i] = s[mask]
+
+    return {
+        "primary": p.values[member_indices == 0],
+        "secondary": secondary_arr
+    }
 
 
 def ensemble_crps(model: MetricsBasemodel) -> Callable:
@@ -43,7 +60,7 @@ def ensemble_crps(model: MetricsBasemodel) -> Callable:
     def ensemble_crps_inner(
         p: pd.Series,
         s: pd.Series,
-        value_time: pd.Series,
+        members: pd.Series,
     ) -> float:
         """Create a wrapper around scoringrules crps_ensemble.
 
@@ -53,8 +70,8 @@ def ensemble_crps(model: MetricsBasemodel) -> Callable:
             The primary values.
         s : pd.Series
             The secondary values.
-        value_time : pd.Series
-            The value time.
+        members : pd.Series
+            The member IDs.
 
         Returns
         -------
@@ -65,8 +82,9 @@ def ensemble_crps(model: MetricsBasemodel) -> Callable:
         # lazy load scoringrules
         import scoringrules as sr
 
-        p, s, value_time = _transform(p, s, model, value_time)
-        pivoted_dict = _pivot_by_value_time(p, s, value_time)
+        # p, s, value_time = _transform(p, s, model, value_time)
+        # pivoted_dict = _pivot_by_value_time(p, s, value_time)
+        pivoted_dict = _pivot_by_member(p, s, members)
 
         if model.summary_func is not None:
             return model.summary_func(

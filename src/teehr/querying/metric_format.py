@@ -7,8 +7,10 @@ from pyspark.sql import GroupedData
 from pyspark.sql.functions import pandas_udf
 
 from teehr.models.metrics.basemodels import MetricsBasemodel
-from teehr.models.metrics.basemodels import MetricCategories as mc
-from teehr.querying.utils import validate_fields_exist, parse_fields_to_list
+from teehr.querying.utils import (
+    validate_fields_exist,
+    parse_fields_to_list
+)
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +36,6 @@ def apply_aggregation_metrics(
                 f"Applying metric: {alias} with {model.bootstrap.name}"
                 " bootstrapping"
             )
-
             func_pd = pandas_udf(
                 model.bootstrap.func(model),
                 model.bootstrap.return_type
@@ -51,10 +52,5 @@ def apply_aggregation_metrics(
         )
 
     sdf = gp.agg(*func_list)
-
-    # Note: Test exploding multiple columns
-    for model in include_metrics:
-        if model.unpack_results:
-            sdf = model.unpack_function(sdf, model.output_field_name)
 
     return sdf

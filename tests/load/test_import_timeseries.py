@@ -11,6 +11,7 @@ import tempfile
 import xarray as xr
 import pandas as pd
 import numpy as np
+import geopandas as gpd
 
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
@@ -434,6 +435,88 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
     assert metrics_df["primary_location_id"].nunique() == 1
 
 
+def test_validate_and_insert_in_memory_timeseries(tmpdir):
+    """Test the validate_locations function."""
+    ev = Evaluation(dir_path=tmpdir)
+    ev.enable_logging()
+    ev.clone_template()
+
+    gdf = gpd.read_file(GEOJSON_GAGES_FILEPATH)
+    ev.locations.load_dataframe(df=gdf)
+
+    ev.configurations.add(
+        [
+            Configuration(
+                name="usgs_observations",
+                type="primary",
+                description="USGS Data"
+            ),
+            Configuration(
+                name="nwm30_retrospective",
+                type="secondary",
+                description="NWM Data"
+            )
+        ]
+    )
+    ev.units.add(
+        Unit(
+            name="cfd",
+            long_name="Cubic Feet per Day"
+        )
+    )
+    ev.variables.add(
+        Variable(
+            name="streamflow",
+            long_name="Streamflow"
+        )
+    )
+
+    df = pd.read_parquet(PRIMARY_TIMESERIES_FILEPATH)
+    ev.primary_timeseries.load_dataframe(
+        df=df,
+        field_mapping={
+            "reference_time": "reference_time",
+            "value_time": "value_time",
+            "configuration": "configuration_name",
+            "measurement_unit": "unit_name",
+            "variable_name": "variable_name",
+            "value": "value",
+            "location_id": "location_id"
+        },
+        constant_field_values={
+            "unit_name": "m^3/s",
+            "variable_name": "streamflow_hourly_inst",
+            "configuration_name": "usgs_observations"
+        }
+    )
+    assert len(df) == len(ev.primary_timeseries.to_pandas())
+
+    df = pd.read_csv(CROSSWALK_FILEPATH)
+    ev.location_crosswalks.load_dataframe(df=df)
+
+    df = pd.read_parquet(SECONDARY_TIMESERIES_FILEPATH)
+    ev.secondary_timeseries.load_dataframe(
+        df=df,
+        field_mapping={
+            "reference_time": "reference_time",
+            "value_time": "value_time",
+            "configuration": "configuration_name",
+            "measurement_unit": "unit_name",
+            "variable_name": "variable_name",
+            "value": "value",
+            "location_id": "location_id"
+        },
+        constant_field_values={
+            "unit_name": "m^3/s",
+            "variable_name": "streamflow_hourly_inst",
+            "configuration_name": "nwm30_retrospective"
+        }
+    )
+    assert len(df) == len(ev.secondary_timeseries.to_pandas())
+
+    pass
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
@@ -471,6 +554,12 @@ if __name__ == "__main__":
         test_validate_and_insert_fews_xml_timeseries(
             tempfile.mkdtemp(
                 prefix="5-",
+                dir=tempdir
+            )
+        )
+        test_validate_and_insert_in_memory_timeseries(
+            tempfile.mkdtemp(
+                prefix="6-",
                 dir=tempdir
             )
         )

@@ -1,7 +1,7 @@
 """Initialize the TEEHR package."""
 import warnings
 
-__version__ = "0.5.0dev1"
+__version__ = "0.5.0dev2"
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore", UserWarning)
@@ -33,3 +33,7 @@ from teehr.models.filters import (  # noqa
 
 from teehr.models.calculated_fields.row_level import RowLevelCalculatedFields # noqa
 from teehr.models.calculated_fields.timeseries_aware import TimeseriesAwareCalculatedFields # noqa
+from teehr.models.generate.timeseries_generator_models import (  # noqa
+    SignatureTimeseriesGenerators,
+    BenchmarkForecastGenerators
+)

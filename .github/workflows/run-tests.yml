@@ -1,11 +1,10 @@
-name: Python package
+name: run-all-tests
 
 on:
   pull_request:
     types: [opened, reopened, ready_for_review]
-# on:
-#   push:
-#     branches: [475-update-python-dependencies]
+  # push:
+  #   branches: [420-add-skill-score-for-ensemble-metrics]
 
 jobs:
   build:

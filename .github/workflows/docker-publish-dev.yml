@@ -1,4 +1,4 @@
-name: Build and Push Development Version for TEEHR Hub
+name: build-push-teehr-hub-dev
 
 on:
   push:

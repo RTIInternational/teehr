@@ -1,4 +1,4 @@
-name: documentation
+name: build-publish-documentation
 
 on:
   pull_request:

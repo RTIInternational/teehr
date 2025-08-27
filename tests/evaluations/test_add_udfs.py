@@ -1,15 +1,18 @@
-"""Tests for the TEEHR study creation."""
+"""Tests for the TEEHR UDFs."""
 import tempfile
 import teehr
 from teehr import RowLevelCalculatedFields as rcf
 from teehr import TimeseriesAwareCalculatedFields as tcf
 
-from setup_v0_3_study import setup_v0_3_study
-
 import pyspark.sql.types as T
 import numpy as np
 import baseflow
 import pandas as pd
+
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from data.setup_v0_3_study import setup_v0_3_study  # noqa
 
 
 def test_add_row_udfs_null_reference(tmpdir):
@@ -82,10 +85,10 @@ def test_add_row_udfs(tmpdir):
         assert row["season"] in ["winter", "spring", "summer", "fall"]
 
     assert "forecast_lead_time" in cols
-    assert sdf.schema["forecast_lead_time"].dataType == T.LongType()
+    assert sdf.schema["forecast_lead_time"].dataType == T.DayTimeIntervalType()
     row = check_sdf.collect()[1]
     expected_val = (row["value_time"] - row["reference_time"]).total_seconds()
-    test_val = row["forecast_lead_time"]
+    test_val = row["forecast_lead_time"].total_seconds()
     assert expected_val == test_val
 
     assert "threshold_value_exceeded" in cols
@@ -305,18 +308,18 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        # test_add_row_udfs_null_reference(
-        #     tempfile.mkdtemp(
-        #         prefix="0-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_add_row_udfs(
-        #     tempfile.mkdtemp(
-        #         prefix="1-",
-        #         dir=tempdir
-        #     )
-        # )
+        test_add_row_udfs_null_reference(
+            tempfile.mkdtemp(
+                prefix="0-",
+                dir=tempdir
+            )
+        )
+        test_add_row_udfs(
+            tempfile.mkdtemp(
+                prefix="1-",
+                dir=tempdir
+            )
+        )
         test_add_timeseries_udfs(
             tempfile.mkdtemp(
                 prefix="2-",

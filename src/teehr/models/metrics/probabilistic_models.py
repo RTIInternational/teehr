@@ -29,7 +29,7 @@ class CRPS(ProbabilisticBasemodel):
         :func:`probabilistic_funcs.ensemble_crps`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default
-        ["primary_value", "secondary_value", "value_time"].
+        ["primary_value", "secondary_value", "member"].
     attrs : Dict
         The static attributes for the metric.
     """
@@ -41,7 +41,7 @@ class CRPS(ProbabilisticBasemodel):
     func: Callable = Field(probabilistic_funcs.ensemble_crps, frozen=True)
     summary_func: Union[Callable, None] = Field(default=None)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
-        default=["primary_value", "secondary_value", "value_time"]
+        default=["primary_value", "secondary_value", "member"]
     )
     attrs: Dict = Field(default=tma.CRPS_ENSEMBLE_ATTRS, frozen=True)
 

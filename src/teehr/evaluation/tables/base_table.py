@@ -10,9 +10,15 @@ from teehr.utils.s3path import S3Path
 from teehr.utils.utils import to_path_or_s3path, path_to_spark
 from teehr.models.filters import FilterBaseModel
 from teehr.models.table_enums import TableWriteEnum
+from teehr.loading.utils import (
+    merge_field_mappings,
+    validate_constant_values_dict,
+    add_or_replace_sdf_column_prefix
+)
 import logging
 from pyspark.sql.functions import lit, col
 from functools import reduce
+import pandas as pd
 
 
 logger = logging.getLogger(__name__)
@@ -328,7 +334,7 @@ class BaseTable():
                 f"Invalid write mode: {write_mode}. "
                 "Valid values are 'append', 'overwrite' and 'upsert'."
             )
-        self._load_table(show_missing_table_warning=False)
+        # self._load_table(show_missing_table_warning=False)
 
     def _get_schema(self, type: str = "pyspark"):
         """Get the primary timeseries schema.
@@ -604,6 +610,7 @@ class BaseTable():
             filter_model=self.filter_model,
             fields_enum=self.field_enum(),
             dataframe_schema=self._get_schema("pandas"),
+            validate=self.validate_filter_field_types
         )
         return self
 
@@ -764,3 +771,77 @@ class BaseTable():
         self._check_load_table()
         return self.df
 
+    def _load_dataframe(
+        self,
+        df: Union[pd.DataFrame, ps.DataFrame],
+        field_mapping: dict,
+        constant_field_values: dict,
+        location_id_prefix: str,
+        write_mode: TableWriteEnum,
+        persist_dataframe: bool,
+        drop_duplicates: bool
+    ):
+        """Load a timeseries from an in-memory dataframe."""
+        if (isinstance(df, ps.DataFrame) and df.isEmpty()) or (
+            isinstance(df, pd.DataFrame) and df.empty
+        ):
+            logger.debug(
+                "The input dataframe is empty. "
+                "No data will be loaded into the table."
+            )
+            return
+        default_field_mapping = {}
+        fields = self.schema_func(type="pandas").columns.keys()
+        for field in fields:
+            if field not in default_field_mapping.values():
+                default_field_mapping[field] = field
+        if field_mapping:
+            logger.debug("Merging user field_mapping with default field mapping.")
+            field_mapping = merge_field_mappings(
+                default_field_mapping,
+                field_mapping
+            )
+        else:
+            logger.debug("Using default field mapping.")
+            field_mapping = default_field_mapping
+        # verify constant_field_values keys are in field_mapping values
+        if constant_field_values:
+            validate_constant_values_dict(
+                constant_field_values,
+                field_mapping.values()
+            )
+
+        # Convert the input DataFrame to Spark DataFrame
+        if isinstance(df, pd.DataFrame):
+            df = self.spark.createDataFrame(df)
+        elif not isinstance(df, ps.DataFrame):
+            raise TypeError(
+                "Input dataframe must be a Pandas DataFrame or a PySpark DataFrame."
+            )
+        # Apply field mapping and constant field values
+        df = df.withColumnsRenamed(field_mapping)
+
+        if constant_field_values:
+            for field, value in constant_field_values.items():
+                df = df.withColumn(field, lit(value))
+
+        if persist_dataframe:
+            df = df.persist()
+
+        if location_id_prefix:
+            df = add_or_replace_sdf_column_prefix(
+                sdf=df,
+                column_name="location_id",
+                prefix=location_id_prefix,
+            )
+        validated_df = self._validate(
+            df=df,
+            drop_duplicates=drop_duplicates,
+            add_missing_columns=True
+        )
+        self._write_spark_df(
+            validated_df,
+            write_mode=write_mode
+        )
+
+        df.unpersist()
