@@ -1,6 +1,19 @@
 Release Notes
 =============
 
+0.5.0 - 2025-08-27
+-------------------
+
+Changed
+^^^^^^^
+- Many updates and new features are introduced in this release, including but not limited to:
+  - Baseflow separation methods
+  - Better handling of warnings
+  - Ability to generate benchmark timeseries and forecasts
+  - Upgrading to pyspark 4.0
+  - Documentation updates
+- For a full list see: https://github.com/RTIInternational/teehr/milestone/4?closed=1
+
 0.4.13 - 2025-06-09
 -------------------
 

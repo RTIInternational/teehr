@@ -117,7 +117,6 @@ Create branch with the following updated to the new version (find and replace ve
 
 - ``pyproject.toml``
 - ``src/teehr/__init__.py``
-- ``docs/sphinx/getting_started/index.rst``
 
 Update the changelog at ``docs/sphinx/changelog/index.rst`` to reflect the changes included in the release.
 
@@ -136,10 +135,6 @@ Deployment to TEEHR-HUB is a manual process that requires the correct credential
 
 Contributing to the Documentation
 ---------------------------------
-* description
-* docstring approach (numpy)
-* pre-commit validation
-* building and pushing docs
 
 The documentation files are in the ``docs/sphinx`` directory.
 
