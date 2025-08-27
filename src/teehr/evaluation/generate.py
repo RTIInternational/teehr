@@ -99,8 +99,12 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
             input_dataframe.
         start_datetime : Union[str, datetime]
             The start datetime for the generated timeseries.
+            If provided as a str, the format must be supported by PySpark's
+            ``to_timestamp`` function, such as "yyyy-MM-dd HH:mm:ss".
         end_datetime : Union[str, datetime]
             The end datetime for the generated timeseries.
+            If provided as a str, the format must be supported by PySpark's
+            ``to_timestamp`` function, such as "yyyy-MM-dd HH:mm:ss".
         timestep : Union[str, timedelta], optional
             The timestep for the generated timeseries. Defaults to "1 hour".
         update_variable_table : bool, optional

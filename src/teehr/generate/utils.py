@@ -37,8 +37,12 @@ def construct_signature_dataframe(
         The input Spark DataFrame to generate the signature DataFrame.
     start_datetime : Union[str, datetime]
         The start datetime for the time series value_time.
+        If provided as a str, the format must be supported by PySpark's
+        ``to_timestamp`` function, such as "yyyy-MM-dd HH:mm:ss".
     end_datetime : Union[str, datetime]
         The end datetime for the time series value_time.
+        If provided as a str, the format must be supported by PySpark's
+        ``to_timestamp`` function, such as "yyyy-MM-dd HH:mm:ss".
     timestep : Union[str, timedelta]
         The time step for the time series.
     """
