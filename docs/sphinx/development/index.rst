@@ -135,10 +135,6 @@ Deployment to TEEHR-HUB is a manual process that requires the correct credential
 
 Contributing to the Documentation
 ---------------------------------
-* description
-* docstring approach (numpy)
-* pre-commit validation
-* building and pushing docs
 
 The documentation files are in the ``docs/sphinx`` directory.
 
