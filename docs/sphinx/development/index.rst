@@ -117,7 +117,6 @@ Create branch with the following updated to the new version (find and replace ve
 
 - ``pyproject.toml``
 - ``src/teehr/__init__.py``
-- ``docs/sphinx/getting_started/index.rst``
 
 Update the changelog at ``docs/sphinx/changelog/index.rst`` to reflect the changes included in the release.
 
