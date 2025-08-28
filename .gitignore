@@ -143,3 +143,6 @@ temp/
 .DS_Store
 
 poetry.toml
+
+# TEMP
+playground/iceberg/local-eval-warehouse
