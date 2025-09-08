@@ -389,14 +389,15 @@ class Evaluation:
                 logger.error(err_msg)
                 raise Exception(err_msg)
             else:
-                # TODO: Change this to raise an error in v0.6.
-                version = teehr.__version__
-                with fs.open(version_file, "w") as f:
-                    f.write(version)
-                logger.info(
-                    f"Created version file in {self.dir_path}."
-                    " In the future this will raise an error."
+                # Raise an error if no version file is found.
+                err_msg = (
+                    "Incompatible Evaluation version."
+                    " No version file found in {self.dir_path}."
+                    " TEEHR v0.6 requires a version file to be present"
+                    " in the evaluation directory."
                 )
+                logger.error(err_msg)
+                raise ValueError(err_msg)
         else:
             with fs.open(version_file) as f:
                 version_txt = str(f.read().strip())
@@ -407,17 +408,14 @@ class Evaluation:
                 raise ValueError(err_msg)
             else:
                 version = match[0]
-        # TODO: Uncomment this in v0.6
-        # if version < "0.6.0":
-        #     err_msg = (
-        #         f"Evaluation version {version} in {self.dir_path} is less than 0.6."
-        #         " Please run the migration to upgrade to the latest version."
-        #     )
-        #     logger.error(err_msg)
-        #     raise ValueError(err_msg)
-        # else:
-        #     # Update the version to the latest
-        #     pass
+        # Raise an error requiring migration to v0.6 warehouse.
+        if version < "0.6.0":
+            err_msg = (
+                f"Evaluation version {version} in {self.dir_path} is less than 0.6."
+                " Please run the migration to upgrade to the latest version."
+            )
+            logger.error(err_msg)
+            raise ValueError(err_msg)
         logger.info(
             f"Found evaluation version {version} in {self.dir_path}."
             " Future versions v0.6 and greater will require a conversion"
