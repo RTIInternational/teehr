@@ -1,8 +1,14 @@
 """Utility functions for the evaluation class."""
 import logging
 import fnmatch
-from typing import List
+from typing import List, Union
 from pathlib import Path
+import psutil
+
+from pyspark.sql import SparkSession
+from pyspark import SparkConf
+
+from teehr.utils.s3path import S3Path
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +18,78 @@ ELBOW = "└──"
 TEE = "├──"
 PIPE_PREFIX = "│   "
 SPACE_PREFIX = "    "
+
+
+# Note: Scala version: 2.13 in pyspark 4.0
+SCALA_VERSION = "2.13"
+PYSPARK_VERSION = "4.0"
+ICEBERG_VERSION = "1.10.0"
+# SEDONA_VERSION = "1.8.0"
+
+
+def create_spark_session(
+    warehouse_path: Union[str, Path, S3Path],
+    catalog_name: str = "local",
+    catalog_type: str = "hadoop",
+    driver_memory: Union[str, int, float] = None,
+    driver_maxresultsize: Union[str, int, float] = None
+) -> SparkSession:
+    """Create and return a Spark session for evaluation."""
+    memory_info = psutil.virtual_memory()
+    if driver_memory is None:
+        driver_memory = 0.75 * memory_info.available / (1024**3)
+    if driver_maxresultsize is None:
+        driver_maxresultsize = 0.5 * driver_memory
+
+    conf = (
+        SparkConf()
+        .setAppName("TEEHR")
+        .setMaster("local[*]")
+        .set("spark.driver.host", "localhost")
+        .set("spark.driver.bindAddress", "localhost")
+        .set("spark.driver.memory", f"{int(driver_memory)}g")
+        .set("spark.driver.maxResultSize", f"{int(driver_maxresultsize)}g")
+        .set("spark.sql.sources.partitionOverwriteMode", "dynamic")
+        .set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+        .set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider")
+        .set("spark.sql.execution.arrow.pyspark.enabled", "true")
+        .set("spark.sql.session.timeZone", "UTC")
+        .set("spark.driver.host", "localhost")
+        .set(
+            "spark.jars.repositories",
+            "https://artifacts.unidata.ucar.edu/repository/unidata-all,"
+            "https://repository.apache.org/content/repositories/snapshots,"
+            "https://repository.apache.org/content/groups/snapshots"
+        )
+        .set(
+            "spark.jars.packages",
+            "org.apache.hadoop:hadoop-aws:3.4.1,"
+            # f"org.apache.sedona:sedona-spark-shaded-{pyspark_version}_{scala_version}:{sedona_version},"
+            f"org.apache.iceberg:iceberg-spark-runtime-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}-SNAPSHOT,"
+            "org.datasyslab:geotools-wrapper:1.8.0-33.1,"
+            f"org.apache.iceberg:iceberg-spark-extensions-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}-SNAPSHOT"
+        )
+        .set("spark.sql.parquet.enableVectorizedReader", "false")
+        .set(
+            "spark.sql.extensions",
+            "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions"
+        )
+        .set(
+            f"spark.sql.catalog.{catalog_name}",
+            "org.apache.iceberg.spark.SparkCatalog"
+        )
+        .set(
+            f"spark.sql.catalog.{catalog_name}.type", catalog_type
+        )
+        .set(
+            f"spark.sql.catalog.{catalog_name}.warehouse",
+            f"{warehouse_path}/{catalog_name}"
+        )
+    )
+    spark = SparkSession.builder.config(conf=conf).getOrCreate()
+    logger.info("Spark session created for TEEHR Evaluation.")
+
+    return spark
 
 
 def print_tree(

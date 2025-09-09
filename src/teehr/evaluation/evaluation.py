@@ -1,5 +1,4 @@
 """Evaluation module."""
-import psutil
 from datetime import datetime
 from typing import Union, Literal, List
 from pathlib import Path
@@ -16,7 +15,6 @@ from teehr.evaluation.tables.joined_timeseries_table import JoinedTimeseriesTabl
 from teehr.utils.s3path import S3Path
 from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
 from pyspark.sql import SparkSession
-from pyspark import SparkConf
 import logging
 from teehr.loading.utils import copy_template_to
 from teehr.loading.s3.clone_from_s3 import (
@@ -28,14 +26,14 @@ import teehr.const as const
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.metrics import Metrics
 from teehr.evaluation.generate import GeneratedTimeseries
+from teehr.evaluation.utils import create_spark_session
 import pandas as pd
-from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor # noqa
 import re
-import teehr
 import s3fs
 from fsspec.implementations.local import LocalFileSystem
 import pyspark.sql as ps
 from teehr.querying.filter_format import validate_and_apply_filters
+from teehr.utilities import apply_migrations
 
 
 logger = logging.getLogger(__name__)
@@ -50,6 +48,8 @@ class Evaluation:
     def __init__(
         self,
         dir_path: Union[str, Path, S3Path],
+        warehouse_path: Union[str, Path, S3Path],
+        catalog_name: str = "local",
         create_dir: bool = False,
         spark: SparkSession = None
     ):
@@ -69,6 +69,9 @@ class Evaluation:
         if isinstance(self.dir_path, S3Path):
             self.is_s3 = True
             logger.info(f"Using S3 path {self.dir_path}.  Evaluation will be read-only")
+
+        self.catalog_name = catalog_name
+        self.warehouse_path = to_path_or_s3path(warehouse_path)
 
         self.spark = spark
 
@@ -97,25 +100,11 @@ class Evaluation:
         # Create a local Spark Session if one is not provided.
         if not self.spark:
             logger.info("Creating a new Spark session.")
-            memory_info = psutil.virtual_memory()
-            driver_memory = 0.75 * memory_info.available / (1024**3)  # Use 75% of available memory
-            driver_maxresultsize = 0.5 * driver_memory
-            conf = (
-                SparkConf()
-                .setAppName("TEEHR")
-                .setMaster("local[*]")
-                .set("spark.sql.sources.partitionOverwriteMode", "dynamic")
-                .set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-                .set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider")
-                .set("spark.sql.execution.arrow.pyspark.enabled", "true")
-                .set("spark.sql.session.timeZone", "UTC")
-                .set("spark.driver.host", "localhost")
-                .set("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.4.1")
-                .set("spark.sql.parquet.enableVectorizedReader", "false")
-                .set("spark.driver.memory", f"{int(driver_memory)}g")
-                .set("spark.driver.maxResultSize", f"{int(driver_maxresultsize)}g")
+            self.spark = create_spark_session(
+                warehouse_path=self.warehouse_path,
+                catalog_name=self.catalog_name
             )
-            self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
+        pass
 
     @property
     def generate(self) -> GeneratedTimeseries:
@@ -206,7 +195,7 @@ class Evaluation:
         )
         logger.setLevel(logging.DEBUG)
 
-    def clone_template(self):
+    def clone_template(self, schema_name: str = "db"):
         """Create a study from the standard template.
 
         This method mainly copies the template directory to the specified
@@ -220,6 +209,14 @@ class Evaluation:
         template_dir = Path(teehr_root, "template")
         logger.info(f"Copying template from {template_dir} to {self.dir_path}")
         copy_template_to(template_dir, self.dir_path)
+
+        # Create initial iceberg tables.
+        apply_migrations.evolve_catalog_schema(
+            spark=self.spark,
+            catalog_dir_path=template_dir,
+            catalog_name=self.catalog_name,
+            schema_name=schema_name
+        )
 
     @staticmethod
     def list_s3_evaluations(
@@ -470,3 +467,15 @@ class Evaluation:
             dataframe_schema=base_table._get_schema("pandas"),
             validate=base_table.validate_filter_field_types
         )
+
+    def apply_schema_migration(
+        self,
+        schema_name: str = "db"
+    ):
+        """Migrate v0.5 Evalution to v0.6 Iceberg tables."""
+        apply_migrations.evolve_catalog_schema(
+            self.spark,
+            self.catalog_name,
+            schema_name
+        )
+        print(f"Schema evolution completed for {self.catalog_name}.")
