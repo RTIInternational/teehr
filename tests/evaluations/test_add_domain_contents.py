@@ -12,7 +12,7 @@ def test_add_domains(tmpdir):
     """Test creating a new study."""
     from teehr import Evaluation
 
-    ev = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
     ev.clone_template()
 
     # Check configurations.add doesn't add columns

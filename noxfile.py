@@ -82,3 +82,13 @@ def visualization(session):
         "pytest",
         "tests/visualization"
     )
+
+
+@nox_poetry.session()
+def iceberg(session):
+    """Run tests related to iceberg."""
+    session.install("pytest", ".")
+    session.run(
+        "pytest",
+        "tests/iceberg"
+    )

@@ -74,6 +74,7 @@ class Evaluation:
             )
 
         self.catalog_name = catalog_name
+        self.schema_name = None
 
         if warehouse_path is None:
             warehouse_path = Path(dir_path, "warehouse")
@@ -227,6 +228,7 @@ class Evaluation:
             catalog_name=self.catalog_name,
             schema_name=schema_name
         )
+        self.schema_name = schema_name
 
     @staticmethod
     def list_s3_evaluations(
