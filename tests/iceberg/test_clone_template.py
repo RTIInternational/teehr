@@ -4,10 +4,6 @@ import tempfile
 
 from teehr import Evaluation
 
-EVAL_WAREHOUSE_DIR = (
-    Path.cwd() / "playground" / "iceberg" / "local-eval-warehouse"
-)
-
 
 def test_clone_template(tmpdir):
     """Test creating a new study."""
