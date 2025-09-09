@@ -213,11 +213,16 @@ def evolve_catalog_schema(
     """
     Evolve a catalog schema by applying any new schema versions.
 
-    Parameters:
-      catalog_name (str): The name of the catalog to evolve.
-
-    Returns:
-      None
+    Parameters
+    ----------
+    spark : SparkSession
+        The Spark session to use for executing schema evolution statements.
+    catalog_dir_path : Union[str, Path]
+        The directory path where the catalog schema versions are stored.
+    catalog_name : str
+        The name of the catalog to evolve.
+    schema_name : str
+        The name of the schema within the catalog to evolve.
     """
     available_schema_versions = read_available_schema_versions(
       catalog_dir_path=catalog_dir_path,

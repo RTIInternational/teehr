@@ -4,6 +4,7 @@ import fnmatch
 from typing import List, Union
 from pathlib import Path
 import psutil
+import shutil
 
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
@@ -25,6 +26,17 @@ SCALA_VERSION = "2.13"
 PYSPARK_VERSION = "4.0"
 ICEBERG_VERSION = "1.10.0"
 # SEDONA_VERSION = "1.8.0"
+
+
+def copy_schema_dir(
+    target_dir: Union[str, Path, S3Path]
+):
+    """Copy the schema directory from source to target."""
+    shutil.copytree(
+        src=Path(__file__).parent.parent / "schemas",
+        dst=Path(target_dir, "schemas")
+    )
+    pass
 
 
 def create_spark_session(

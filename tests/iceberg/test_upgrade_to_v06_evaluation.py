@@ -1,36 +1,21 @@
 """Tests for Iceberg."""
-from pathlib import Path
-# import tempfile
+import tempfile
 
-from evaluation import Evaluation
-
-EVAL_WAREHOUSE_DIR = (
-    Path.cwd() / "playground" / "iceberg" / "local-eval-warehouse"
-)
+import teehr
+from teehr.utilities.convert_to_iceberg import convert_evaluation
 
 
-def test_evaluation_conversion():
-    """Test creating a new study."""
-    ev = Evaluation(
-        dir_path=EVAL_WAREHOUSE_DIR,
-        warehouse_path=EVAL_WAREHOUSE_DIR / "warehouse",
+def test_upgrade_evaluation(tmpdir):
+    """Test upgrading a pre-v0.6 evaluation to v0.6."""
+    ev = teehr.Evaluation(
+        dir_path=tmpdir,
         create_dir=True,
     )
-    ev.clone_template()
+    ev.clone_from_s3("e0_2_location_example")
 
-    pass
-    # 1. Clone an existing evaluation and convert to iceberg using pre-defined
-    #    schemas
-    # ev.clone_from_s3("e0_2_location_example")
+    convert_evaluation(tmpdir)
 
-    # Apply schema migration. This creates the warehouse tables
-    # if they don't exist.
-    # ev.apply_schema_migration()
-
-    # Convert the dataset to iceberg tables.
-    # ev.convert_to_iceberg()
-
-    # Test a sedona query.
+    # Test a spark query.
     attribute_names = [row.attribute_name for row in ev.spark.sql(f"""
         SELECT DISTINCT(attribute_name) FROM local.db.location_attributes
     """).collect()]
@@ -60,17 +45,25 @@ def test_evaluation_conversion():
     # ST_GeomFromWKB(l.geometry)  # Can't get sedona to work with pyspark 4.0!
     # Looks like it's coming in 1.8.0: https://github.com/apache/sedona/pull/1919
 
-    df = ev.spark.sql(f"""
+    df = ev.spark.sql("""
         SELECT *
         FROM locations_view
     """).toPandas()
 
-    # WHERE id = 'usgs-01013500'
+    assert df.index.size == 2
+    assert df.columns.size == 29
+    assert "NWRFC" in df.river_forecast_center.tolist()
 
     ev.spark.stop()
 
-    pass
-
 
 if __name__ == "__main__":
-    test_evaluation_conversion()
+    with tempfile.TemporaryDirectory(
+        prefix="teehr-"
+    ) as tmpdir:
+        test_upgrade_evaluation(
+            tempfile.mkdtemp(
+                prefix="1-",
+                dir=tmpdir
+            )
+        )

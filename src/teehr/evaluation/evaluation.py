@@ -26,7 +26,7 @@ import teehr.const as const
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.metrics import Metrics
 from teehr.evaluation.generate import GeneratedTimeseries
-from teehr.evaluation.utils import create_spark_session
+from teehr.evaluation.utils import create_spark_session, copy_schema_dir
 import pandas as pd
 import re
 import s3fs
@@ -48,10 +48,11 @@ class Evaluation:
     def __init__(
         self,
         dir_path: Union[str, Path, S3Path],
-        warehouse_path: Union[str, Path, S3Path],
+        warehouse_path: Union[str, Path, S3Path] = None,
         catalog_name: str = "local",
         create_dir: bool = False,
-        spark: SparkSession = None
+        spark: SparkSession = None,
+        check_evaluation_version: bool = True
     ):
         """
         Initialize the Evaluation class.
@@ -68,9 +69,14 @@ class Evaluation:
         self.is_s3 = False
         if isinstance(self.dir_path, S3Path):
             self.is_s3 = True
-            logger.info(f"Using S3 path {self.dir_path}.  Evaluation will be read-only")
+            logger.info(
+                f"Using S3 path {self.dir_path}.  Evaluation will be read-only"
+            )
 
         self.catalog_name = catalog_name
+
+        if warehouse_path is None:
+            warehouse_path = Path(dir_path, "warehouse")
         self.warehouse_path = to_path_or_s3path(warehouse_path)
 
         self.spark = spark
@@ -94,8 +100,9 @@ class Evaluation:
                 raise NotADirectoryError
 
         # Check version of Evaluation
-        if create_dir is False:
-            self.check_evaluation_version()
+        if check_evaluation_version is True:
+            if create_dir is False:
+                self.check_evaluation_version()
 
         # Create a local Spark Session if one is not provided.
         if not self.spark:
@@ -209,11 +216,14 @@ class Evaluation:
         template_dir = Path(teehr_root, "template")
         logger.info(f"Copying template from {template_dir} to {self.dir_path}")
         copy_template_to(template_dir, self.dir_path)
-
+        # Copy in the schema
+        copy_schema_dir(
+            target_dir=self.dir_path
+        )
         # Create initial iceberg tables.
         apply_migrations.evolve_catalog_schema(
             spark=self.spark,
-            catalog_dir_path=template_dir,
+            catalog_dir_path=self.dir_path,
             catalog_name=self.catalog_name,
             schema_name=schema_name
         )
