@@ -91,7 +91,7 @@ def test_executing_signature_metrics(tmpdir):
 def test_metrics_filter_and_geometry(tmpdir):
     """Test get_metrics method with filter and geometry."""
     # Define the evaluation object.
-    eval = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir)
 
     # Define some metrics.
     kge = DeterministicMetrics.KlingGuptaEfficiency()
@@ -102,7 +102,7 @@ def test_metrics_filter_and_geometry(tmpdir):
     include_metrics = [pmvt, mvtd, primary_avg, kge]
 
     # Get the currently available fields to use in the query.
-    flds = eval.joined_timeseries.field_enum()
+    flds = ev.joined_timeseries.field_enum()
 
     # Define some filters.
     filters = [
@@ -113,7 +113,7 @@ def test_metrics_filter_and_geometry(tmpdir):
         )
     ]
 
-    metrics_df = eval.metrics.query(
+    metrics_df = ev.metrics.query(
         include_metrics=include_metrics,
         group_by=[flds.primary_location_id],
         order_by=[flds.primary_location_id],
@@ -167,7 +167,7 @@ def test_unpacking_bootstrap_results(tmpdir):
 def test_circularblock_bootstrapping(tmpdir):
     """Test get_metrics method circular block bootstrapping."""
     # Define the evaluation object.
-    eval = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir)
 
     # Define a bootstrapper.
     boot = Bootstrappers.CircularBlock(
@@ -181,7 +181,7 @@ def test_circularblock_bootstrapping(tmpdir):
     # kge.unpack_results = True
 
     # Manual bootstrapping.
-    df = eval.joined_timeseries.to_pandas()
+    df = ev.joined_timeseries.to_pandas()
     df_gageA = df.groupby("primary_location_id").get_group("gage-A")
 
     p = df_gageA.primary_value
@@ -200,7 +200,7 @@ def test_circularblock_bootstrapping(tmpdir):
     )
 
     # TEEHR bootstrapping.
-    flds = eval.joined_timeseries.field_enum()
+    flds = ev.joined_timeseries.field_enum()
 
     filters = [
         JoinedTimeseriesFilter(
@@ -210,7 +210,7 @@ def test_circularblock_bootstrapping(tmpdir):
         )
     ]
 
-    metrics_df = eval.metrics.query(
+    metrics_df = ev.metrics.query(
         include_metrics=[kge],
         filters=filters,
         group_by=[flds.primary_location_id],
@@ -231,7 +231,7 @@ def test_circularblock_bootstrapping(tmpdir):
 def test_stationary_bootstrapping(tmpdir):
     """Test get_metrics method stationary bootstrapping."""
     # Define the evaluation object.
-    eval = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir)
 
     # Define a bootstrapper.
     boot = Bootstrappers.Stationary(
@@ -244,7 +244,7 @@ def test_stationary_bootstrapping(tmpdir):
     kge.bootstrap = boot
 
     # Manual bootstrapping.
-    df = eval.joined_timeseries.to_pandas()
+    df = ev.joined_timeseries.to_pandas()
     df_gageA = df.groupby("primary_location_id").get_group("gage-A")
 
     p = df_gageA.primary_value
@@ -263,7 +263,7 @@ def test_stationary_bootstrapping(tmpdir):
     )
 
     # TEEHR bootstrapping.
-    flds = eval.joined_timeseries.field_enum()
+    flds = ev.joined_timeseries.field_enum()
 
     filters = [
         JoinedTimeseriesFilter(
@@ -273,7 +273,7 @@ def test_stationary_bootstrapping(tmpdir):
         )
     ]
 
-    metrics_df = eval.metrics.query(
+    metrics_df = ev.metrics.query(
         include_metrics=[kge],
         filters=filters,
         group_by=[flds.primary_location_id]
@@ -295,8 +295,9 @@ def test_gumboot_bootstrapping(tmpdir):
     """Test get_metrics method gumboot bootstrapping."""
     # Manually create an evaluation using timseries from the R
     # Gumboot package vignette.
-    eval = Evaluation(dir_path=tmpdir, create_dir=True)
-    eval.clone_template()
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
+    ev.clone_template()
+    # Write the staged joined_timeseries data to the warehouse.
     joined_timeseries_filepath = Path(
         "tests",
         "data",
@@ -304,18 +305,26 @@ def test_gumboot_bootstrapping(tmpdir):
         "timeseries",
         "flows_1030500.parquet"
     )
-    # Copy in joined timeseries file.
-    shutil.copy(
-        joined_timeseries_filepath,
-        Path(eval.joined_timeseries.dir, joined_timeseries_filepath.name)
+    sdf = ev.spark.read.parquet(joined_timeseries_filepath.as_posix())
+    (
+        sdf.writeTo(
+            f"{ev.catalog_name}.{ev.schema_name}.joined_timeseries"
+        )
+        .using("iceberg")
+        .createOrReplace()
     )
-    # Copy in the locations file.
+    # Write the staged locations data to the warehouse.
     test_study_data_dir = Path("tests", "data", "v0_3_test_study")
-    shutil.copy(
-        Path(test_study_data_dir, "geo", "gages.parquet"),
-        Path(eval.locations.dir, "gages.parquet")
+    sdf = ev.spark.read.parquet(
+        Path(test_study_data_dir, "geo", "gages.parquet").as_posix()
     )
-
+    (
+        sdf.writeTo(
+            f"{ev.catalog_name}.{ev.schema_name}.locations"
+        )
+        .using("iceberg")
+        .createOrReplace()
+    )
     # quantiles = [0.05, 0.5, 0.95]
     quantiles = None
 
@@ -331,7 +340,7 @@ def test_gumboot_bootstrapping(tmpdir):
     nse = DeterministicMetrics.NashSutcliffeEfficiency(bootstrap=boot)
 
     # Manually calling Gumboot.
-    df = eval.joined_timeseries.to_pandas()
+    df = ev.joined_timeseries.to_pandas()
     df_gageA = df.groupby("primary_location_id").get_group("gage-A")
 
     p = df_gageA.primary_value
@@ -352,7 +361,7 @@ def test_gumboot_bootstrapping(tmpdir):
     )
 
     # TEEHR Gumboot bootstrapping.
-    flds = eval.joined_timeseries.field_enum()
+    flds = ev.joined_timeseries.field_enum()
 
     filters = [
         JoinedTimeseriesFilter(
@@ -362,13 +371,13 @@ def test_gumboot_bootstrapping(tmpdir):
         )
     ]
 
-    metrics_df = eval.metrics.query(
+    metrics_df = ev.metrics.query(
         include_metrics=[kge, nse],
         filters=filters,
         group_by=[flds.primary_location_id]
     ).to_pandas()
 
-    _ = eval.metrics.query(
+    _ = ev.metrics.query(
         include_metrics=[kge, nse],
         filters=filters,
         group_by=[flds.primary_location_id]
@@ -391,10 +400,10 @@ def test_gumboot_bootstrapping(tmpdir):
 def test_metric_chaining(tmpdir):
     """Test get_metrics method with chaining."""
     # Define the evaluation object.
-    eval = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir)
 
     # Test chaining.
-    metrics_df = eval.metrics.query(
+    metrics_df = ev.metrics.query(
         order_by=["primary_location_id", "month"],
         group_by=["primary_location_id", "month"],
         include_metrics=[
@@ -557,7 +566,7 @@ def test_ensemble_metrics(tmpdir):
 def test_metrics_transforms(tmpdir):
     """Test applying metric transforms (non-bootstrap)."""
     # Define the evaluation object.
-    eval = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir)
 
     # define metric requiring p,s
     kge = DeterministicMetrics.KlingGuptaEfficiency()
@@ -570,14 +579,14 @@ def test_metrics_transforms(tmpdir):
     mvtd_t.transform = 'log'
 
     # get metrics_df
-    metrics_df_transformed = eval.metrics.query(
+    metrics_df_transformed = ev.metrics.query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             kge_t,
             mvtd_t
         ]
     ).to_pandas()
-    metrics_df = eval.metrics.query(
+    metrics_df = ev.metrics.query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             kge,
@@ -600,7 +609,7 @@ def test_metrics_transforms(tmpdir):
 def test_bootstrapping_transforms(tmpdir):
     """Test applying metric transforms (bootstrap)."""
     # Define the evaluation object.
-    eval = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir)
 
     # Define a bootstrapper.
     boot = Bootstrappers.CircularBlock(
@@ -614,7 +623,7 @@ def test_bootstrapping_transforms(tmpdir):
     kge.transform = 'log'
 
     # Manual bootstrapping.
-    df = eval.joined_timeseries.to_pandas()
+    df = ev.joined_timeseries.to_pandas()
     df_gageA = df.groupby("primary_location_id").get_group("gage-A")
 
     p = df_gageA.primary_value
@@ -633,7 +642,7 @@ def test_bootstrapping_transforms(tmpdir):
     )
 
     # TEEHR bootstrapping.
-    flds = eval.joined_timeseries.field_enum()
+    flds = ev.joined_timeseries.field_enum()
 
     filters = [
         JoinedTimeseriesFilter(
@@ -643,7 +652,7 @@ def test_bootstrapping_transforms(tmpdir):
         )
     ]
 
-    metrics_df = eval.metrics.query(
+    metrics_df = ev.metrics.query(
         include_metrics=[kge],
         filters=filters,
         group_by=[flds.primary_location_id],
@@ -665,54 +674,55 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_executing_deterministic_metrics(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_executing_signature_metrics(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_metrics_filter_and_geometry(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        test_unpacking_bootstrap_results(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
-        test_circularblock_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="5-",
-                dir=tempdir
-            )
-        )
-        test_stationary_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="6-",
-                dir=tempdir
-            )
-        )
-        test_gumboot_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="7-",
-                dir=tempdir
-            )
-        )
-        test_metric_chaining(
-            tempfile.mkdtemp(
-                prefix="8-",
-                dir=tempdir
-            )
-        )
+        # test_executing_deterministic_metrics(
+        #     tempfile.mkdtemp(
+        #         prefix="1-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_executing_signature_metrics(
+        #     tempfile.mkdtemp(
+        #         prefix="2-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_metrics_filter_and_geometry(
+        #     tempfile.mkdtemp(
+        #         prefix="3-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_unpacking_bootstrap_results(
+        #     tempfile.mkdtemp(
+        #         prefix="4-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_circularblock_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="5-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_stationary_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="6-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_gumboot_bootstrapping(
+        #     tempfile.mkdtemp(
+        #         prefix="7-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_metric_chaining(
+        #     tempfile.mkdtemp(
+        #         prefix="8-",
+        #         dir=tempdir
+        #     )
+        # )
+        # TODO: High memory usage.
         test_ensemble_metrics(
             tempfile.mkdtemp(
                 prefix="9-",

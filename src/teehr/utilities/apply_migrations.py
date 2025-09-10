@@ -6,6 +6,7 @@ from pathlib import Path
 import logging
 
 from pyspark.sql import SparkSession
+from pyspark.sql.types import StructType, StructField, IntegerType, LongType
 
 
 logger = logging.getLogger(__name__)
@@ -103,17 +104,24 @@ def update_applied_schema_version(
     Returns:
       None
     """
+    schema = StructType([
+        StructField("version", IntegerType(), True),
+        StructField("applied_on", LongType(), True)
+    ])
+
     schema_version_df = spark.createDataFrame(
       data=[
         (applied_schema_version, time.time_ns() // 1000000)
       ],
-      schema=['version', 'applied_on']
+      schema=schema
     )
 
     schema_version_df \
         .writeTo(f'{catalog_name}.schema_evolution.schema_version_history') \
         .using("iceberg") \
         .append()
+
+    pass
 
 
 def determine_schema_version_delta(
@@ -250,3 +258,5 @@ def evolve_catalog_schema(
           schema_name=schema_name,
           evolution_statements=evolution_statements
         )
+
+    # spark.stop()

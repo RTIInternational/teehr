@@ -58,6 +58,7 @@ def create_spark_session(
         SparkConf()
         .setAppName("TEEHR")
         .setMaster("local[*]")
+        # .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         .set("spark.driver.host", "localhost")
         .set("spark.driver.bindAddress", "localhost")
         .set("spark.driver.memory", f"{int(driver_memory)}g")

@@ -39,6 +39,8 @@ def test_clone_example_from_s3(tmpdir):
 
     assert Path(ev.scripts_dir, "user_defined_fields.py").is_file()
 
+    ev.spark.stop()
+
 
 def test_clone_partial_template_from_s3(tmpdir):
     """Test cloning a partially empty evaluation from s3."""
@@ -54,6 +56,8 @@ def test_clone_partial_template_from_s3(tmpdir):
     assert ev.joined_timeseries.to_sdf().count() == 0
 
     assert Path(ev.scripts_dir, "user_defined_fields.py").is_file()
+
+    ev.spark.stop()
 
 
 def test_clone_and_subset_example_from_s3(tmpdir):
@@ -81,6 +85,8 @@ def test_clone_and_subset_example_from_s3(tmpdir):
     assert ev.joined_timeseries.to_pandas().value_time.min() == \
         pd.Timestamp("2001-09-30 20:00:00")
     assert Path(ev.scripts_dir, "user_defined_fields.py").is_file()
+
+    ev.spark.stop()
 
 
 if __name__ == "__main__":

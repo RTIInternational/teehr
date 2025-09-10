@@ -181,10 +181,7 @@ def test_fetch_and_load_nwm_operational_points(tmpdir):
     assert ts_df.value_time.max() == pd.Timestamp("2024-02-22 20:00:00")
     assert updated_df.value_time.min() == pd.Timestamp("2024-02-22 03:00:00")
     assert updated_df.value_time.max() == pd.Timestamp("2024-02-23 06:00:00")
-    # assert np.isclose(updated_df.value.sum(), np.float32(492485.03))
-
-    assert np.isclose(updated_df.value.sum(), np.float32(492702.2))
-    # TODO: Why is this different now?
+    assert np.isclose(updated_df.value.sum(), np.float32(492485.03))
 
     ev.spark.stop()
 
