@@ -41,7 +41,7 @@ def test_sql_query(tmpdir):
 
 def test_sql_query_on_empty_tables(tmpdir):
     """Test sql query on empty table."""
-    ev = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
     # Enable logging
     ev.enable_logging()
     # Clone the template

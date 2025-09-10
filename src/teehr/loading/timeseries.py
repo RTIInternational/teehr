@@ -290,7 +290,7 @@ def validate_and_insert_timeseries(
         raise ValueError("Invalid timeseries type.")
 
     # Read the converted files to Spark DataFrame
-    df = table._read_files(in_path, pattern)
+    df = table._read_files_from_cache_or_s3(in_path, pattern)
 
     if drop_overlapping_assimilation_values:
         df = df.withColumn("reference_time", lit(None))

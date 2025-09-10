@@ -4,7 +4,7 @@ def test_read_from_s3():
     # path = "s3a://ciroh-rti-public-data/teehr-data-warehouse/v0_4_evaluations/e1_camels_daily_streamflow"
     path = "s3a://ciroh-rti-public-data/teehr-data-warehouse/v0_4_evaluations/e0_2_location_example"
 
-    ev = teehr.Evaluation(dir_path=path)
+    ev = teehr.Evaluation(dir_path=path, create_dir=True)
 
     unit_cnt = ev.units.to_sdf().count()
     assert unit_cnt == 4

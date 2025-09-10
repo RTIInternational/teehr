@@ -26,7 +26,7 @@ def test_convert_location_crosswalk(tmpdir):
 
 def test_validate_and_insert_crosswalks(tmpdir):
     """Test the validate crosswalks function."""
-    ev = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
     ev.clone_template()
 
     ev.locations.load_spatial(

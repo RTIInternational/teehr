@@ -25,7 +25,7 @@ GEO_FILEPATH = Path(TEST_DATA_DIR, "geo")
 
 def test_create_joined_timeseries(tmpdir):
     """Test the validate_locations function."""
-    ev = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
 
     # Enable logging
     ev.enable_logging()

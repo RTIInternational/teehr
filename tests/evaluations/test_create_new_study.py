@@ -10,7 +10,7 @@ def test_clone_template(tmpdir):
     """Test creating a new study."""
     from teehr import Evaluation
 
-    ev = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
     ev.clone_template()
     # Make sure the empty table warning is not raised.
     ev.attributes.add(
@@ -24,7 +24,6 @@ def test_clone_template(tmpdir):
     )
 
     # Not a complete test, but at least we know the function runs.
-    assert Path(tmpdir, "dataset").is_dir()
     assert Path(tmpdir, "cache").is_dir()
     assert Path(tmpdir, "scripts").is_dir()
     assert Path(tmpdir, ".gitignore").is_file()

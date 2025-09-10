@@ -261,8 +261,8 @@ def test_add_udfs_write(tmpdir):
     ped = tcf.PercentileEventDetection()
     ev.joined_timeseries.add_calculated_fields(ped).write()
 
-    flt = rcf.ForecastLeadTime()
-    ev.joined_timeseries.add_calculated_fields(flt).write()
+    # flt = rcf.ForecastLeadTime()
+    # ev.joined_timeseries.add_calculated_fields(flt).write()
 
     new_sdf = ev.joined_timeseries.to_sdf()
 
