@@ -1,0 +1,27 @@
+name,type,description
+2_year_flow,continuous,Two year flow rate in m^3/s
+frac_urban,categorical,frac_urban
+high_prec_freq,categorical,high_prec_freq
+pet_mean,categorical,pet_mean
+ecoregion_L2,categorical,ecoregion_L2
+river_forecast_center,categorical,river_forecast_center
+frac_snow,categorical,frac_snow
+high_q_freq,categorical,high_q_freq
+soil_porosity,categorical,soil_porosity
+q95,categorical,q95
+aridity,categorical,aridity
+drainage_area,categorical,drainage_area
+elev_mean,categorical,elev_mean
+forest_frac,categorical,forest_frac
+q_mean,categorical,q_mean
+stream_order,categorical,stream_order
+slope_mean,categorical,slope_mean
+dom_land_cover,categorical,dom_land_cover
+p_seasonality,categorical,p_seasonality
+baseflow_index,categorical,baseflow_index
+q5,categorical,q5
+zero_q_freq,categorical,zero_q_freq
+dom_land_cover_frac,categorical,dom_land_cover_frac
+p_mean,categorical,p_mean
+runoff_ratio,categorical,runoff_ratio
+slope_fdc,categorical,slope_fdc

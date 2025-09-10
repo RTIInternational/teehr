@@ -52,7 +52,8 @@ class Evaluation:
         catalog_name: str = "local",
         create_dir: bool = False,
         spark: SparkSession = None,
-        check_evaluation_version: bool = True
+        check_evaluation_version: bool = True,
+        schema_name: str = "db"
     ):
         """
         Initialize the Evaluation class.
@@ -74,7 +75,7 @@ class Evaluation:
             )
 
         self.catalog_name = catalog_name
-        self.schema_name = None
+        self.schema_name = schema_name
 
         if warehouse_path is None:
             warehouse_path = Path(dir_path, "warehouse")

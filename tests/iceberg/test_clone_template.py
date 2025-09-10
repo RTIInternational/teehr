@@ -24,7 +24,7 @@ def test_clone_template(tmpdir):
     assert ev.spark.sql("SELECT * FROM primary_timeseries").count() == 0
     assert ev.spark.sql("SELECT * FROM secondary_timeseries").count() == 0
 
-    pass
+    ev.spark.stop()
 
 
 if __name__ == "__main__":

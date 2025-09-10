@@ -57,40 +57,79 @@ def convert_evaluation(
         schema_name=schema_name
     )
     logger.info(f"Schema evolution completed for {catalog_name}.")
+    spark.stop()
 
     # Now you have to copy over the data!
     ev = teehr.Evaluation(
         dir_path=dir_path,
-        spark=spark,
-        check_evaluation_version=False
+        check_evaluation_version=False,
+
     )
+    options = {
+        "header": "true",
+        "ignoreMissingFiles": "true"
+    }
 
-    units_sdf = ev.units.to_sdf()
-    units_sdf.writeTo("local.db.units").append()
+    units_table = ev.units
+    schema = units_table.schema_func().to_structtype()
+    units_sdf = ev.spark.read.format(units_table.format).options(**options).load(units_table.dir.as_posix(), schema=schema)
+    units_sdf.writeTo(f"{catalog_name}.{schema_name}.units").append()
 
-    configuration_sdf = ev.configurations.to_sdf()
-    configuration_sdf.writeTo("local.db.configurations").append()
+    configuration_table = ev.configurations
+    schema = configuration_table.schema_func().to_structtype()
+    configuration_sdf = ev.spark.read.format(configuration_table.format).options(**options).load(configuration_table.dir.as_posix(), schema=schema)
+    configuration_sdf.writeTo(
+        f"{catalog_name}.{schema_name}.configurations"
+    ).append()
 
-    variables_sdf = ev.variables.to_sdf()
-    variables_sdf.writeTo("local.db.variables").append()
+    variables_table = ev.variables
+    schema = variables_table.schema_func().to_structtype()
+    variables_sdf = ev.spark.read.format(variables_table.format).options(**options).load(variables_table.dir.as_posix(), schema=schema)
+    variables_sdf.writeTo(
+        f"{catalog_name}.{schema_name}.variables"
+    ).append()
 
-    attributes_sdf = ev.attributes.to_sdf()
-    attributes_sdf.writeTo("local.db.attributes").append()
+    attributes_table = ev.attributes
+    schema = attributes_table.schema_func().to_structtype()
+    attributes_sdf = ev.spark.read.format(attributes_table.format).options(**options).load(attributes_table.dir.as_posix(), schema=schema)
+    attributes_sdf.writeTo(
+        f"{catalog_name}.{schema_name}.attributes"
+    ).append()
 
-    locations_sdf = ev.locations.to_sdf()
-    locations_sdf.writeTo("local.db.locations").append()
+    locations_table = ev.locations
+    schema = locations_table.schema_func().to_structtype()
+    locations_sdf = ev.spark.read.format(locations_table.format).options(**options).load(locations_table.dir.as_posix(), schema=schema)
+    locations_sdf.writeTo(
+        f"{catalog_name}.{schema_name}.locations"
+    ).append()
 
-    location_attrs_sdf = ev.location_attributes.to_sdf()
-    location_attrs_sdf.writeTo("local.db.location_attributes").append()
+    location_attrs_table = ev.location_attributes
+    schema = location_attrs_table.schema_func().to_structtype()
+    location_attrs_sdf = ev.spark.read.format(location_attrs_table.format).options(**options).load(location_attrs_table.dir.as_posix(), schema=schema)
+    location_attrs_sdf.writeTo(
+        f"{catalog_name}.{schema_name}.location_attributes"
+    ).append()
 
-    location_attrs_sdf = ev.primary_timeseries.to_sdf()
-    location_attrs_sdf.writeTo("local.db.primary_timeseries").append()
+    primary_timeseries_table = ev.primary_timeseries
+    schema = primary_timeseries_table.schema_func().to_structtype()
+    primary_timeseries_sdf = ev.spark.read.format(primary_timeseries_table.format).options(**options).load(primary_timeseries_table.dir.as_posix(), schema=schema)
+    primary_timeseries_sdf.writeTo(
+        f"{catalog_name}.{schema_name}.primary_timeseries"
+    ).append()
 
-    secondary_timeseries_sdf = ev.secondary_timeseries.to_sdf()
-    secondary_timeseries_sdf.writeTo("local.db.secondary_timeseries").append()
+    secondary_timeseries_table = ev.secondary_timeseries
+    schema = secondary_timeseries_table.schema_func().to_structtype()
+    secondary_timeseries_sdf = ev.spark.read.format(secondary_timeseries_table.format).options(**options).load(secondary_timeseries_table.dir.as_posix(), schema=schema)
+    secondary_timeseries_sdf.writeTo(
+        f"{catalog_name}.{schema_name}.secondary_timeseries"
+    ).append()
 
-    location_crosswalk_sdf = ev.location_crosswalks.to_sdf()
-    location_crosswalk_sdf.writeTo("local.db.location_crosswalks").append()
+    location_crosswalk_table = ev.location_crosswalks
+    schema = location_crosswalk_table.schema_func().to_structtype()
+    location_crosswalk_sdf = ev.spark.read.format(location_crosswalk_table.format).options(**options).load(location_crosswalk_table.dir.as_posix(), schema=schema)
+    location_crosswalk_sdf.writeTo(
+        f"{catalog_name}.{schema_name}.location_crosswalks"
+    ).append()
     logger.info(f"Local warehouse created in {dir_path}/warehouse.")
 
     # Update the version file.
@@ -102,3 +141,5 @@ def convert_evaluation(
         f"Updated evaluation version file at {version_file} to"
         f" {teehr.__version__}."
     )
+
+    ev.spark.stop()

@@ -125,7 +125,7 @@ class BaseTable():
 
         return df
 
-    def _read_files(
+    def _read_from_warehouse(
         self,
         path: Union[str, Path, S3Path],
         pattern: str = None,
@@ -188,7 +188,7 @@ class BaseTable():
             Additional options to pass to the spark read method.
         """
         logger.info(f"Loading files from {self.dir}.")
-        self.df = self._read_files(
+        self.df = self._read_from_warehouse(
             self.dir,
             **kwargs
         )
