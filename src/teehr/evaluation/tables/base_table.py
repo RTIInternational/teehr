@@ -221,8 +221,10 @@ class BaseTable():
         # Create a temporary view for the source DataFrame
         df.createOrReplaceTempView("source_updates")
 
+        # Note. Using the <=> operator for null-safe equality comparison
+        # so that two null values are considered equal.
         on_sql = " AND ".join(
-            [f"t.{fld} = s.{fld}" for fld in self.uniqueness_fields]
+            [f"t.{fld} <=> s.{fld}" for fld in self.uniqueness_fields]
         )
         update_fields = list(
             set(self.fields())
@@ -257,10 +259,11 @@ class BaseTable():
             partition_by = []
         # Create a temporary view for the source DataFrame
         df.createOrReplaceTempView("source_updates")
+        # Note. Using the <=> operator for null-safe equality comparison
+        # so that two null values are considered equal.
         on_sql = " AND ".join(
-            [f"t.{fld} = s.{fld}" for fld in self.uniqueness_fields]
+            [f"t.{fld} <=> s.{fld}" for fld in self.uniqueness_fields]
         )
-        # Perform the append using MERGE INTO
         sql_query = f"""
             MERGE INTO {self.ev.catalog_name}.{self.ev.schema_name}.{self.name} t
             USING source_updates s

@@ -14,7 +14,7 @@ def all_tests(session):
     )
 
 
-@nox_poetry.session()
+@nox_poetry.session(reuse_venv=True)
 def evaluations(session):
     """Run tests related to evaluations."""
     session.install("pytest", ".")
@@ -24,7 +24,7 @@ def evaluations(session):
     )
 
 
-@nox_poetry.session()
+@nox_poetry.session(reuse_venv=True)
 def fetch(session):
     """Run tests related to fetching."""
     session.install("pytest", ".")
@@ -34,7 +34,7 @@ def fetch(session):
     )
 
 
-@nox_poetry.session()
+@nox_poetry.session(reuse_venv=True)
 def generate(session):
     """Run tests related to generating timeseries."""
     session.install("pytest", ".")
@@ -44,7 +44,7 @@ def generate(session):
     )
 
 
-@nox_poetry.session()
+@nox_poetry.session(reuse_venv=True)
 def load(session):
     """Run tests related to loading."""
     session.install("pytest", ".")
@@ -54,7 +54,7 @@ def load(session):
     )
 
 
-@nox_poetry.session()
+@nox_poetry.session(reuse_venv=True)
 def query(session):
     """Run tests related to querying."""
     session.install("pytest", ".")
@@ -64,7 +64,7 @@ def query(session):
     )
 
 
-@nox_poetry.session()
+@nox_poetry.session(reuse_venv=True)
 def s3_utils(session):
     """Run tests related to S3 utilities."""
     session.install("pytest", ".")
@@ -74,7 +74,7 @@ def s3_utils(session):
     )
 
 
-@nox_poetry.session()
+@nox_poetry.session(reuse_venv=True)
 def visualization(session):
     """Run tests related to visualization."""
     session.install("pytest", ".")
@@ -84,7 +84,7 @@ def visualization(session):
     )
 
 
-@nox_poetry.session()
+@nox_poetry.session(reuse_venv=True)
 def iceberg(session):
     """Run tests related to iceberg."""
     session.install("pytest", ".")

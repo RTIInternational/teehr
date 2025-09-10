@@ -54,6 +54,7 @@ def test_validate_and_insert_locations(tmpdir):
         "usgs-14316700"
     ]
     assert ev.locations.to_sdf().count() == 8
+    ev.spark.stop()
 
 
 def test_validate_and_insert_locations_adding_prefix(tmpdir):
@@ -80,6 +81,7 @@ def test_validate_and_insert_locations_adding_prefix(tmpdir):
     assert ev.locations.to_sdf().count() == 3
     assert id_val[0] == "test"
     assert id_val[1] == "A"
+    ev.spark.stop()
 
 
 if __name__ == "__main__":

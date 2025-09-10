@@ -53,6 +53,7 @@ def test_validate_and_insert_crosswalks(tmpdir):
     ]
 
     assert True
+    ev.spark.stop()
 
 
 def test_convert_location_crosswalk_netcdf(tmpdir):
