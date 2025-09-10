@@ -95,7 +95,7 @@ def test_dropping_duplicates(tmpdir):
     ).index.size == 78
     assert df.index.size == 78
     assert df.drop_duplicates(
-        subset=ev.primary_timeseries.unique_column_set
+        subset=ev.primary_timeseries.uniqueness_fields
     ).index.size == 78
 
 

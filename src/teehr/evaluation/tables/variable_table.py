@@ -22,7 +22,7 @@ class VariableTable(DomainTable):
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.filter_model = VariableFilter
         self.schema_func = schemas.variable_schema
-        self.unique_column_set = ["name"]
+        self.uniqueness_fields = ["name"]
 
     def field_enum(self) -> VariableFields:
         """Get the variable fields enum."""

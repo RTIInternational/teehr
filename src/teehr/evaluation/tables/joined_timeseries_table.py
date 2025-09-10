@@ -27,7 +27,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
         self.validate_filter_field_types = False
         self.strict_validation = False
         self.schema_func = schemas.joined_timeseries_schema
-        self.unique_column_set = [
+        self.uniqueness_fields = [
             "primary_location_id",
             "secondary_location_id",
             "value_time",

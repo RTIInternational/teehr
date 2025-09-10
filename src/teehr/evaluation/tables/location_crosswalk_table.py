@@ -30,7 +30,7 @@ class LocationCrosswalkTable(BaseTable):
         self.format = "parquet"
         self.filter_model = LocationCrosswalkFilter
         self.schema_func = schemas.location_crosswalks_schema
-        self.unique_column_set = [
+        self.uniqueness_fields = [
             "secondary_location_id"
         ]
         self.foreign_keys = [

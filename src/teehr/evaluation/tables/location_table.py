@@ -32,7 +32,7 @@ class LocationTable(BaseTable):
         self.format = "parquet"
         self.filter_model = LocationFilter
         self.schema_func = schemas.locations_schema
-        self.unique_column_set = ["id"]
+        self.uniqueness_fields = ["id"]
 
     def field_enum(self) -> LocationFields:
         """Get the location fields enum."""

@@ -31,7 +31,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         self.name = "secondary_timeseries"
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.schema_func = schemas.secondary_timeseries_schema
-        self.unique_column_set = [
+        self.uniqueness_fields = [
             "location_id",
             "value_time",
             "reference_time",

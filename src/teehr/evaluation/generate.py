@@ -201,9 +201,9 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
             table_filter=template_table_filter
         )
         if reference_table_filter.table_name == "primary_timeseries":
-            partition_by = self.ev.primary_timeseries.unique_column_set
+            partition_by = self.ev.primary_timeseries.uniqueness_fields
         elif reference_table_filter.table_name == "secondary_timeseries":
-            partition_by = self.ev.secondary_timeseries.unique_column_set
+            partition_by = self.ev.secondary_timeseries.uniqueness_fields
         partition_by.remove("value_time")
 
         if reference_dataframe.isEmpty():

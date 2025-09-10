@@ -32,7 +32,7 @@ class LocationAttributeTable(BaseTable):
         self.format = "parquet"
         self.filter_model = LocationAttributeFilter
         self.schema_func = schemas.location_attributes_schema
-        self.unique_column_set = [
+        self.uniqueness_fields = [
             "location_id",
             "attribute_name"
         ]

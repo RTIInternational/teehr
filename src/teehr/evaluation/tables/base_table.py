@@ -171,117 +171,54 @@ class BaseTable():
         # Create a temporary view for the source DataFrame
         df.createOrReplaceTempView("source_updates")
 
-        # TODO: Need util for creating the SQL string for
-        # uniqueness fields.
-
+        on_sql = " AND ".join(
+            [f"t.{fld} = s.{fld}" for fld in self.uniqueness_fields]
+        )
+        update_fields = list(
+            set(self.fields())
+            .symmetric_difference(set(self.uniqueness_fields))
+        )
+        update_set_sql = ", ".join(
+            [f"t.{fld} = s.{fld}" for fld in update_fields]
+        )
         # Perform the upsert using MERGE INTO
         sql_query = f"""
             MERGE INTO {self.ev.catalog_name}.{self.ev.schema_name}.{self.name} t
             USING source_updates s
-            ON t.id = s.id
-            WHEN MATCHED THEN UPDATE SET t.name = s.name, t.value = s.value
-            WHEN NOT MATCHED THEN INSERT (id, name, value) VALUES (s.id, s.name, s.value)
+            ON {on_sql}
+            WHEN MATCHED THEN UPDATE SET {update_set_sql}
+            WHEN NOT MATCHED THEN INSERT *
         """
         self.ev.spark.sql(sql_query)
+        self.ev.spark.catalog.dropTempView("source_updates")
 
-        # existing_sdf = self._read_files(
-        #     self.dir,
-        #     use_table_schema=True,
-        #     show_missing_table_warning=False,
-        #     **kwargs
-        # )
-
-        # # Limit the dataframe to the partitions that are being updated.
-        # for partition in partition_by:
-        #     partition_values = df.select(partition).distinct(). \
-        #         rdd.flatMap(lambda x: x).collect()
-        #     if partition_values[0] is not None:  # all null partition values
-        #         existing_sdf = existing_sdf.filter(
-        #             col(partition).isin(partition_values)
-        #         )
-        # # Remove rows from existing_sdf that are to be updated.
-        # # Concat and re-write.
-        # if not existing_sdf.isEmpty():
-        #     # Create the join condition clause using eqNullSafe to treat
-        #     # nulls as equal.
-        #     join_condition = reduce(
-        #         lambda x, y: x & y, [df[k].eqNullSafe(existing_sdf[k]) for k in self.unique_column_set]  # noqa: E501
-        #     )
-        #     existing_sdf = existing_sdf.join(
-        #         df,
-        #         how="left_anti",
-        #         on=join_condition,
-        #     )
-        #     df = existing_sdf.unionByName(df)
-        #     # Get columns in correct order
-        #     df = df.select([*self.schema_func().columns])
-
-        # if num_partitions is not None:
-        #     df = df.repartition(num_partitions)
-        # (
-        #     df.
-        #     write.
-        #     partitionBy(partition_by).
-        #     format(self.format).
-        #     mode("overwrite").
-        #     options(**kwargs).
-        #     save(str(self.dir))
-        # )
-
-    # def _append_without_duplicates(
-    #     self,
-    #     df,
-    #     num_partitions: int = None,
-    #     **kwargs
-    # ):
-    #     """Append new data without duplicates."""
-    #     logger.info(
-    #         f"Appending to {self.name} without duplicates."
-    #     )
-    #     partition_by = self.partition_by
-    #     if partition_by is None:
-    #         partition_by = []
-
-    #     existing_sdf = self._read_files(
-    #         self.dir,
-    #         use_table_schema=True,
-    #         show_missing_table_warning=False,
-    #         **kwargs
-    #     )
-    #     # Anti-join: Joins rows from left df that do not have a match
-    #     # in right df.  This is used to drop duplicates. df gets written
-    #     # in append mode.
-    #     if not existing_sdf.isEmpty():
-    #         # Create the join condition clause using eqNullSafe to treat
-    #         # nulls as equal.
-    #         join_condition = reduce(
-    #             lambda x, y: x & y, [df[k].eqNullSafe(existing_sdf[k]) for k in self.unique_column_set]  # noqa: E501
-    #         )
-    #         df = df.join(
-    #             existing_sdf,
-    #             how="left_anti",
-    #             on=join_condition,
-    #         )
-
-    #     if num_partitions is not None:
-    #         df = df.repartition(num_partitions)
-
-    #     # Only continue if there is new data to write.
-    #     if not df.isEmpty():
-    #         (
-    #             df.
-    #             write.
-    #             partitionBy(partition_by).
-    #             format(self.format).
-    #             mode("append").
-    #             options(**kwargs).
-    #             save(str(self.dir))
-    #         )
-    #     else:
-    #         logger.info(
-    #             f"No new data to append to {self.name}. "
-    #             "Nothing will be written."
-    #         )
+    def _append_without_duplicates(
+        self,
+        df,
+        num_partitions: int = None,
+        **kwargs
+    ):
+        """Append new data without duplicates."""
+        logger.info(
+            f"Appending to {self.name} without duplicates."
+        )
+        partition_by = self.partition_by
+        if partition_by is None:
+            partition_by = []
+        # Create a temporary view for the source DataFrame
+        df.createOrReplaceTempView("source_updates")
+        on_sql = " AND ".join(
+            [f"t.{fld} = s.{fld}" for fld in self.uniqueness_fields]
+        )
+        # Perform the append using MERGE INTO
+        sql_query = f"""
+            MERGE INTO {self.ev.catalog_name}.{self.ev.schema_name}.{self.name} t
+            USING source_updates s
+            ON {on_sql}
+            WHEN NOT MATCHED THEN INSERT *
+        """
+        self.ev.spark.sql(sql_query)
+        self.ev.spark.catalog.dropTempView("source_updates")
 
     def _dynamic_overwrite(
         self,
@@ -336,15 +273,11 @@ class BaseTable():
                 **kwargs
             )
         elif write_mode == "append":
-            # TODO: Just leave this as plain-old append?
-            df.writeTo(
-                f"{self.ev.catalog_name}.{self.ev.schema_name}.{self.name}"
-            ).append()
-            # self._append_without_duplicates(
-            #     df=df,
-            #     num_partitions=num_partitions,
-            #     **kwargs
-            # )
+            self._append_without_duplicates(
+                df=df,
+                num_partitions=num_partitions,
+                **kwargs
+            )
         elif write_mode == "upsert":
             self._upsert_without_duplicates(
                 df=df,
@@ -356,7 +289,6 @@ class BaseTable():
                 f"Invalid write mode: {write_mode}. "
                 "Valid values are 'append', 'overwrite' and 'upsert'."
             )
-        # self._load_table(show_missing_table_warning=False)
 
     def _get_schema(self, type: str = "pyspark"):
         """Get the primary timeseries schema.
@@ -411,7 +343,7 @@ class BaseTable():
             df = df.select(*schema_cols)
 
         if drop_duplicates:
-            df = df.dropDuplicates(subset=self.unique_column_set)
+            df = df.dropDuplicates(subset=self.uniqueness_fields)
 
         validated_df = schema.validate(df)
 

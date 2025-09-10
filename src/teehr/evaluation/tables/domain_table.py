@@ -38,7 +38,7 @@ class DomainTable(BaseTable):
 
         # warn user if rows in added data already exist in the original table
         df_matched = new_df_validated.join(
-            org_df, on=self.unique_column_set, how="left_semi"
+            org_df, on=self.uniqueness_fields, how="left_semi"
         )
         if df_matched.count() == 0:
             # add the validated new data to the existing data
@@ -62,25 +62,25 @@ class DomainTable(BaseTable):
                 )
             # Include a warning detailing which values are duplicates
             matched_values = df_matched.select(
-                self.unique_column_set
+                self.uniqueness_fields
                 ).distinct()
             matched_values_list = matched_values.collect()
             matched_values_str = "; ".join(
                 [
                     ", ".join(
-                        f"{col}={row[col]}" for col in self.unique_column_set
+                        f"{col}={row[col]}" for col in self.uniqueness_fields
                     )
                     for row in matched_values_list
                 ]
             )
             logger.warning(
-                f"Duplicate values in {self.unique_column_set}: "
+                f"Duplicate values in {self.uniqueness_fields}: "
                 f"{matched_values_str}"
             )
 
             # add data that is not already in the original table
             new_df_not_matched = new_df_validated.join(
-                org_df, on=self.unique_column_set, how="left_anti"
+                org_df, on=self.uniqueness_fields, how="left_anti"
             )
             logger.info(
                 f"Adding {new_df_not_matched.count()} new objects to "
