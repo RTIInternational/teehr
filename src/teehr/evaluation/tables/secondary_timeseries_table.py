@@ -105,7 +105,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             **kwargs
         )
         # Read the converted files to Spark DataFrame
-        df = self._read_files(cache_dir)
+        df = self._read_files_from_cache_or_s3(cache_dir)
 
         if persist_dataframe:
             df = df.persist()

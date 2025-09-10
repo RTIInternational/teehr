@@ -134,7 +134,7 @@ class LocationTable(BaseTable):
             **kwargs
         )
         # Read the converted files to Spark DataFrame
-        df = self._read_files(cache_dir)
+        df = self._read_files_from_cache_or_s3(cache_dir)
 
         # Add or replace location_id prefix if provided
         if location_id_prefix:

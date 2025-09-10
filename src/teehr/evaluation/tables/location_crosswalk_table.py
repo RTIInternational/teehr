@@ -71,7 +71,7 @@ class LocationCrosswalkTable(BaseTable):
         )
 
         # Read the converted files to Spark DataFrame
-        df = self._read_files(cache_dir)
+        df = self._read_files_from_cache_or_s3(cache_dir)
 
         # Add or replace primary location_id prefix if provided
         if primary_location_id_prefix:

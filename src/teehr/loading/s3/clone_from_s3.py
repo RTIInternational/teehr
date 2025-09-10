@@ -90,8 +90,7 @@ def clone_from_s3(
     evaluation_name: str,
     primary_location_ids: Union[None, List[str]],
     start_date: Union[str, datetime, None],
-    end_date: Union[str, datetime, None],
-    drop_duplicates: bool = False,
+    end_date: Union[str, datetime, None]
 ):
     """Clone an evaluation from s3.
 
@@ -119,12 +118,9 @@ def clone_from_s3(
 
     Note: future version will allow subsetting the tables to clone.
     """
-
     # Make the Evaluation directories
-    logger.info(f"Creating directories for evaluation: {evaluation_name}")
-    Path(ev.cache_dir).mkdir()
-    Path(ev.dataset_dir).mkdir()
-    Path(ev.scripts_dir).mkdir()
+    logger.info(f"Creating template evaluation: {evaluation_name}")
+    ev.clone_template()
 
     logger.info(f"Cloning evaluation from s3: {evaluation_name}")
     tables = [
@@ -171,12 +167,9 @@ def clone_from_s3(
     for table in tables:
         table = table["table"]
 
-        logger.debug(f"Making directory {table.dir}")
-        Path(table.dir).mkdir()
-
         logger.debug(f"Cloning {table.name} from {s3_dataset_path}/{table.name}/ to {table.dir}")
 
-        sdf_in = table._read_files(
+        sdf_in = table._read_files_from_cache_or_s3(
             path=f"{s3_dataset_path}/{table.name}/",
             show_missing_table_warning=True
         )
@@ -190,10 +183,18 @@ def clone_from_s3(
             end_date=end_date
         )
 
-        table._write_spark_df(
-            sdf_in,
-            write_mode="overwrite"
-        )
+        if table.name == "joined_timeseries":
+            (
+                sdf_in.writeTo(
+                    f"{ev.catalog_name}.{ev.schema_name}.{table.name}"
+                )
+                .createOrReplace()
+            )
+        else:
+            table._write_spark_df(
+                sdf_in,
+                write_mode="overwrite"
+            )
 
     # copy scripts path to ev.scripts_dir
     source = f"{url}/scripts/user_defined_fields.py"

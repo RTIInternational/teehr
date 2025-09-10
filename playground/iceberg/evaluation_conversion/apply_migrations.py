@@ -56,7 +56,7 @@ def read_available_schema_versions(
       A list of integers representing the available schema versions.
     """
     schema_versions: list[int] = [
-        int(d) for d in os.listdir(f'{LOCAL_CATALOG_DIR}/{catalog_name}/schemas')
+        int(d) for d in os.listdir(f'{LOCAL_CATALOG_DIR}/{catalog_name}/migrations')
     ]
     return sorted(schema_versions)
 
@@ -188,7 +188,7 @@ def load_schema_version_evolution_statements(
       list[str]: A list of SQL statements to execute to evolve the schema to the specified version.
     """
     schema_version_statements = []
-    version_dir_name = f'{LOCAL_CATALOG_DIR}/{catalog_name}/schemas/{schema_version:04}'
+    version_dir_name = f'{LOCAL_CATALOG_DIR}/{catalog_name}/migrations/{schema_version:04}'
 
     schema_file_names = os.listdir(version_dir_name)
     for f in schema_file_names:

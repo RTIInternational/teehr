@@ -33,8 +33,8 @@ def copy_schema_dir(
 ):
     """Copy the schema directory from source to target."""
     shutil.copytree(
-        src=Path(__file__).parent.parent / "schemas",
-        dst=Path(target_dir, "schemas")
+        src=Path(__file__).parent.parent / "migrations",
+        dst=Path(target_dir, "migrations")
     )
     pass
 

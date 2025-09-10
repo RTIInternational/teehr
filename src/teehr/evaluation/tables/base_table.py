@@ -77,7 +77,7 @@ class BaseTable():
                     f"the {fk['domain_column']} column in {fk['domain_table']}"
                 )
 
-    def _read_files(
+    def _read_files_from_cache_or_s3(
         self,
         path: Union[str, Path, S3Path],
         pattern: str = None,
@@ -118,6 +118,56 @@ class BaseTable():
         # read it again without the schema to ensure all fields are included.
         # Otherwise, continue.
         schema = self.schema_func().to_structtype()
+        df = self.ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
+        if df.isEmpty():
+            if show_missing_table_warning:
+                logger.warning(f"An empty dataframe was returned for '{self.name}'.")
+
+        return df
+
+    def _read_files(
+        self,
+        path: Union[str, Path, S3Path],
+        pattern: str = None,
+        show_missing_table_warning: bool = False,
+        **options
+    ) -> ps.DataFrame:
+        """Read data from table directory as a spark dataframe.
+
+        Parameters
+        ----------
+        path : Union[str, Path, S3Path]
+            The path to the directory containing the files.
+        pattern : str, optional
+            The pattern to match files.
+        show_missing_table_warning : bool, optional
+            If True, show the warning an empty table was returned.
+            The default is True.
+        **options
+            Additional options to pass to the spark read method.
+
+        Returns
+        -------
+        df : ps.DataFrame
+            The spark dataframe.
+        """
+        logger.info(f"Reading files from {path}.")
+        if len(options) == 0:
+            options = {
+                "header": "true",
+                "ignoreMissingFiles": "true"
+            }
+
+        path = to_path_or_s3path(path)
+
+        path = path_to_spark(path, pattern)
+        # First, read the file with the schema and check if it's empty.
+        # If it's not empty and it's the joined timeseries table,
+        # read it again without the schema to ensure all fields are included.
+        # Otherwise, continue.
+        # schema = self.schema_func().to_structtype()
+        # TODO: What if we're reading parquet from the cache here?
+        # Have a separate _read_from_cache method?
         df = (
             self.ev.spark.read.format("iceberg")
             .load(f"{self.ev.catalog_name}.{self.ev.schema_name}.{self.name}")
@@ -222,7 +272,8 @@ class BaseTable():
 
     def _dynamic_overwrite(
         self,
-        df: ps.DataFrame
+        df: ps.DataFrame,
+        **kwargs
     ):
         """Overwrite partitions contained in the dataframe."""
         logger.info(
@@ -231,13 +282,13 @@ class BaseTable():
         partition_by = self.partition_by
         if partition_by is None:
             partition_by = []
+        # TODO: Handle partitioning.
         (
             df.
             writeTo(
                 f"{self.ev.catalog_name}.{self.ev.schema_name}.{self.name}"
-            ).
-            partitionedBy(partition_by).
-            overwritePartitions()
+            )
+            .overwritePartitions()
         )
 
     def _write_spark_df(
@@ -269,7 +320,7 @@ class BaseTable():
 
         if write_mode == "overwrite":
             self._dynamic_overwrite(
-                df,
+                df=df,
                 **kwargs
             )
         elif write_mode == "append":
