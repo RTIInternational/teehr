@@ -274,56 +274,13 @@ trio = ["trio (>=0.26.1)"]
 
 [[package]]
 name = "apache-sedona"
-version = "1.7.2"
+version = "1.8.0"
 description = "Apache Sedona is a cluster computing system for processing large-scale spatial data"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "apache_sedona-1.7.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:b1e64c7668266d849ce1e8816e5a780573dbed6f164c2a753503996b939026f4"},
-    {file = "apache_sedona-1.7.2-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:30e5ff8c6383b413f152c9b271449ea10d3f625c51799d996ff05be4f5123456"},
-    {file = "apache_sedona-1.7.2-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a21b1cf60f12ad9d85c81e06eccc04d0cded4f7a66e7572f95dc508ec6c16f72"},
-    {file = "apache_sedona-1.7.2-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c74ddd73f0fccdedf6832b2c1138e595bf817059d9a21a0ed259d1b21a22f34b"},
-    {file = "apache_sedona-1.7.2-cp310-cp310-win_amd64.whl", hash = "sha256:f5106eb0d38863bdad819df07f255dd117388bb5747e6fcb0f64bcae3dae0762"},
-    {file = "apache_sedona-1.7.2-cp310-cp310-win_arm64.whl", hash = "sha256:07fa23dc66fa8755da0cbf21b563aed1260467c0534cb1f5f9d7b87df69dc1b8"},
-    {file = "apache_sedona-1.7.2-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:6209bba93deba2ef6ae6e0887280cc433388a84823583b50aa92a107510fcd49"},
-    {file = "apache_sedona-1.7.2-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:9ae7144345908122169f7e0252c3605a2f39656b68ae16dd2c50f08734150050"},
-    {file = "apache_sedona-1.7.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a26b72d2e447082e4b1aff07e9896eff085f43d38442adcc4f74f3e6642e0787"},
-    {file = "apache_sedona-1.7.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fadd9d5fa1b771e3317c705d565e8f2379c03aafd0cb0d3a66728bacf2caa3c8"},
-    {file = "apache_sedona-1.7.2-cp311-cp311-win_amd64.whl", hash = "sha256:1ceb087d0b8c845c072764a80a6f67dc2dc5c304f49f4a5dd8e54f719518ea60"},
-    {file = "apache_sedona-1.7.2-cp311-cp311-win_arm64.whl", hash = "sha256:c3014d48ea9d4625cab64bb833b2b8431092a1194f36dcf7a6b62837bc183c80"},
-    {file = "apache_sedona-1.7.2-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:5643decdece8da096b77cf07966573e5f0fae26a0be57d3ac5e756b7f5d50d30"},
-    {file = "apache_sedona-1.7.2-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:83e96e380138942c65999f2bd9db951ec175c306b3744546f487ad22583e62cd"},
-    {file = "apache_sedona-1.7.2-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:907a31a67887668537bc6fee5a1d3a4e459beece915c5f0f87691a502646f3fc"},
-    {file = "apache_sedona-1.7.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ee8ecc9f7b2afe7908966f1196a1f27c0107ca4e087ae128bde61195583ecad3"},
-    {file = "apache_sedona-1.7.2-cp312-cp312-win_amd64.whl", hash = "sha256:429bd046da3a0dc8c96ed34209fb8111a3024215a86876011ef8db710edface1"},
-    {file = "apache_sedona-1.7.2-cp312-cp312-win_arm64.whl", hash = "sha256:526c9fb1c7e71d2f327c170a6f40935c9e0a6a81211e90dc08b1e11b3d462f99"},
-    {file = "apache_sedona-1.7.2-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:4b087ded606ecc9d88cd8aa761b325425da9270e8d8884d45f804f926539339b"},
-    {file = "apache_sedona-1.7.2-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:08ee6560f5ae5256d58fe81ff47a07900338a20e084c93de3bc62e032b5dde7c"},
-    {file = "apache_sedona-1.7.2-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:4c9f90c6425d5516a4c5b2ca790aded8d013230daeb360bda0946e4a16e5a63c"},
-    {file = "apache_sedona-1.7.2-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6cd3d61f39cf3463881f7c3947ff5bcc211cf1964f95e74593363540c296ffd3"},
-    {file = "apache_sedona-1.7.2-cp313-cp313-win_amd64.whl", hash = "sha256:10b72bbce2c4781b0747fb26c19bb050e3fbd55c5a89838236ad11359746a35e"},
-    {file = "apache_sedona-1.7.2-cp313-cp313-win_arm64.whl", hash = "sha256:f9c917a2df58f367e5f98734923d8405beea7202acfbdcbfa4d9e26ec172230c"},
-    {file = "apache_sedona-1.7.2-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:c078efa164b9f3d72b3fe5b8806576b0ed1d9943995d07f70ecf26d78649d922"},
-    {file = "apache_sedona-1.7.2-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b546ccd8df1cf3f2b353162962900550f0bc58dbd51635b7e02b671fa936696b"},
-    {file = "apache_sedona-1.7.2-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:62bd88a6aa15d65f673e0461e00d0db8ec176d8de9a69caadb9e3fa54c14a7de"},
-    {file = "apache_sedona-1.7.2-cp36-cp36m-win_amd64.whl", hash = "sha256:5233cad33810516a0d4a09c1693af74758f7f10b89c6b84011da12fd809e0ac0"},
-    {file = "apache_sedona-1.7.2-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:61eb5d95750def89539eaa328e9c3e48604449ab82e50acae9a4ba1db36bea1e"},
-    {file = "apache_sedona-1.7.2-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:390eb03bb79e4c9131031601137fb32ee2f9f487b8feb55b843e65bf1f531934"},
-    {file = "apache_sedona-1.7.2-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f5fc05a22e194b9fec0521cb1eb27f8b120d563ba76c805fd8ab19ab55d9bce7"},
-    {file = "apache_sedona-1.7.2-cp37-cp37m-win_amd64.whl", hash = "sha256:6e4477b7096481f0ed8794e7a9edede3e025e53d0cf6541b4dcefe87676ced4e"},
-    {file = "apache_sedona-1.7.2-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:1140a2589351cd3d6c2aff9960e9aa541a94eea24e50a4cf01f947835836388a"},
-    {file = "apache_sedona-1.7.2-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:c2f2c04573f84f87caff759bd6346395689cc9538687f3f5261a5007aa8ab20c"},
-    {file = "apache_sedona-1.7.2-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ea566cf0f7fbcfd79e3cf8f1123cd854dc3a23c200be0c3f3685b81ce0c2b1ec"},
-    {file = "apache_sedona-1.7.2-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:441acd71d532f4a717216fd79a643ba586809acbca6f7be94cb26a7edf5b6155"},
-    {file = "apache_sedona-1.7.2-cp38-cp38-win_amd64.whl", hash = "sha256:066b796104e0ca2c41403ea578e8895678ea573f86c18439eb4160ab041dc173"},
-    {file = "apache_sedona-1.7.2-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:14529978f2a08e9f6dfced193009941eb86f7b86d438ededa2d8249812ef08cc"},
-    {file = "apache_sedona-1.7.2-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:cd668833bb0f174c60fe61e2d84b91b18b36754d08086744322fad91efdac3c2"},
-    {file = "apache_sedona-1.7.2-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b8156d13b7c58b3195bc25ba94ece7be93fa68f448d0ec5476992fbdeeeb5c67"},
-    {file = "apache_sedona-1.7.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b5d45ff288ce2dbe3500482624366b9392928d9249de11e81faf2e587170a532"},
-    {file = "apache_sedona-1.7.2-cp39-cp39-win_amd64.whl", hash = "sha256:7120e1ef2ba6d20baca9aad42b472c9c3e231fe70ab8e1b69ee0df996b111c9a"},
-    {file = "apache_sedona-1.7.2-cp39-cp39-win_arm64.whl", hash = "sha256:414d295e2c5c002477b9300c60fd9062e4d557622af9ee5f67a57825eeb21a6b"},
-    {file = "apache_sedona-1.7.2.tar.gz", hash = "sha256:808f12a56140a5e4094f9a02522142313aded5b44633035bc65c31a91e526214"},
+    {file = "apache_sedona-1.8.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6fe7aae5ef693e5b02ce1e98b3149ff1c884153106dfb78d8bb1dc5ce49e20a0"},
 ]
 
 [package.dependencies]
@@ -332,9 +289,15 @@ shapely = ">=1.7.0"
 
 [package.extras]
 all = ["geopandas", "keplergl (==0.3.2)", "pydeck (==0.8.0)", "pyspark (>=2.3.0)", "rasterio (>=1.2.10)"]
+db = ["sedonadb[geopandas]"]
+flink = ["apache-flink (>=1.19.0)"]
 kepler-map = ["geopandas", "keplergl (==0.3.2)"]
 pydeck-map = ["geopandas", "pydeck (==0.8.0)"]
 spark = ["pyspark (>=2.3.0)"]
+
+[package.source]
+type = "file"
+url = "playground/iceberg/apache_sedona-1.8.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
 
 [[package]]
 name = "appnope"
@@ -7487,4 +7450,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.14"
-content-hash = "d58b5b98f7907c7460b8b74730d26bb66cc31f629ac68f79f091e12862da2c85"
+content-hash = "1831ca6f693507c2c01bc0d59833424314b8263c8e9f5abf4788d3648e1ba003"

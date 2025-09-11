@@ -45,7 +45,7 @@ def test_upgrade_evaluation(tmpdir):
                         max(value) FOR attribute_name IN ({attribute_names_sql})
                     )
                 )
-                SELECT l.id, l.name, l.geometry AS geometry, la.*
+                SELECT l.id, l.name, ST_GeomFromWKB(l.geometry) AS geometry, la.*
                 FROM local.db.locations l
                 LEFT JOIN location_attributes_pivot la
                 ON l.id = la.location_id

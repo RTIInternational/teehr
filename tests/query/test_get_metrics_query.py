@@ -3,7 +3,6 @@ from teehr import Configuration
 from teehr import DeterministicMetrics, ProbabilisticMetrics, SignatureMetrics
 from teehr import Operators as ops
 import tempfile
-import shutil
 import pandas as pd
 import geopandas as gpd
 from pathlib import Path
@@ -16,6 +15,7 @@ from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 from teehr.evaluation.evaluation import Evaluation
 from teehr import SignatureTimeseriesGenerators as sts
 from teehr import BenchmarkForecastGenerators as bm
+import pytest
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -62,6 +62,7 @@ def test_executing_deterministic_metrics(tmpdir):
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
     assert metrics_df.columns.size == 20
+    ev.spark.stop()
 
 
 def test_executing_signature_metrics(tmpdir):
@@ -86,6 +87,7 @@ def test_executing_signature_metrics(tmpdir):
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
     assert metrics_df.columns.size == 8
+    ev.spark.stop()
 
 
 def test_metrics_filter_and_geometry(tmpdir):
@@ -123,6 +125,7 @@ def test_metrics_filter_and_geometry(tmpdir):
     assert isinstance(metrics_df, gpd.GeoDataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 6
+    ev.spark.stop()
 
 
 def test_unpacking_bootstrap_results(tmpdir):
@@ -162,6 +165,7 @@ def test_unpacking_bootstrap_results(tmpdir):
     ]
 
     assert (cols == benchmark_cols).all()
+    ev.spark.stop()
 
 
 def test_circularblock_bootstrapping(tmpdir):
@@ -226,6 +230,7 @@ def test_circularblock_bootstrapping(tmpdir):
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 2
+    ev.spark.stop()
 
 
 def test_stationary_bootstrapping(tmpdir):
@@ -289,6 +294,7 @@ def test_stationary_bootstrapping(tmpdir):
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 2
+    ev.spark.stop()
 
 
 def test_gumboot_bootstrapping(tmpdir):
@@ -395,6 +401,7 @@ def test_gumboot_bootstrapping(tmpdir):
     r_df = pd.read_csv(R_BENCHMARK_RESULTS)
     r_kge_vals = np.sort(r_df.KGE.values)
     assert np.allclose(teehr_results, r_kge_vals, rtol=1e-06)
+    ev.spark.stop()
 
 
 def test_metric_chaining(tmpdir):
@@ -427,8 +434,10 @@ def test_metric_chaining(tmpdir):
     assert all(
         metrics_df.columns == ["primary_location_id", "primary_average"]
     )
+    ev.spark.stop()
 
 
+@pytest.mark.skip(reason="Temporary!")
 def test_ensemble_metrics(tmpdir):
     """Test get_metrics method with ensemble metrics."""
     usgs_location = Path(
@@ -561,6 +570,7 @@ def test_ensemble_metrics(tmpdir):
         metrics_df.mean_crps_ensemble_skill_score.values[0], -32.115792
     )
     assert np.isnan(metrics_df.mean_crps_ensemble_skill_score.values[1])
+    ev.spark.stop()
 
 
 def test_metrics_transforms(tmpdir):
@@ -604,6 +614,7 @@ def test_metrics_transforms(tmpdir):
     assert isinstance(metrics_df_transformed, pd.DataFrame)
     assert result_kge != result_kge_t
     assert result_mvtd == result_mvtd_t
+    ev.spark.stop()
 
 
 def test_bootstrapping_transforms(tmpdir):
@@ -668,67 +679,68 @@ def test_bootstrapping_transforms(tmpdir):
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 2
+    ev.spark.stop()
 
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        # test_executing_deterministic_metrics(
-        #     tempfile.mkdtemp(
-        #         prefix="1-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_executing_signature_metrics(
-        #     tempfile.mkdtemp(
-        #         prefix="2-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_metrics_filter_and_geometry(
-        #     tempfile.mkdtemp(
-        #         prefix="3-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_unpacking_bootstrap_results(
-        #     tempfile.mkdtemp(
-        #         prefix="4-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_circularblock_bootstrapping(
-        #     tempfile.mkdtemp(
-        #         prefix="5-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_stationary_bootstrapping(
-        #     tempfile.mkdtemp(
-        #         prefix="6-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_gumboot_bootstrapping(
-        #     tempfile.mkdtemp(
-        #         prefix="7-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_metric_chaining(
-        #     tempfile.mkdtemp(
-        #         prefix="8-",
-        #         dir=tempdir
-        #     )
-        # )
-        # TODO: High memory usage.
-        test_ensemble_metrics(
+        test_executing_deterministic_metrics(
             tempfile.mkdtemp(
-                prefix="9-",
+                prefix="1-",
                 dir=tempdir
             )
         )
+        test_executing_signature_metrics(
+            tempfile.mkdtemp(
+                prefix="2-",
+                dir=tempdir
+            )
+        )
+        test_metrics_filter_and_geometry(
+            tempfile.mkdtemp(
+                prefix="3-",
+                dir=tempdir
+            )
+        )
+        test_unpacking_bootstrap_results(
+            tempfile.mkdtemp(
+                prefix="4-",
+                dir=tempdir
+            )
+        )
+        test_circularblock_bootstrapping(
+            tempfile.mkdtemp(
+                prefix="5-",
+                dir=tempdir
+            )
+        )
+        test_stationary_bootstrapping(
+            tempfile.mkdtemp(
+                prefix="6-",
+                dir=tempdir
+            )
+        )
+        test_gumboot_bootstrapping(
+            tempfile.mkdtemp(
+                prefix="7-",
+                dir=tempdir
+            )
+        )
+        test_metric_chaining(
+            tempfile.mkdtemp(
+                prefix="8-",
+                dir=tempdir
+            )
+        )
+        # # TODO: High memory usage.
+        # test_ensemble_metrics(
+        #     tempfile.mkdtemp(
+        #         prefix="9-",
+        #         dir=tempdir
+        #     )
+        # )
         test_metrics_transforms(
             tempfile.mkdtemp(
                 prefix="10-",

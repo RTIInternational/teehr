@@ -116,6 +116,14 @@ def update_applied_schema_version(
       schema=schema
     )
 
+    # schema_version_df.createOrReplaceTempView("schema_version")
+    # sql_query = f"""
+    #     INSERT INTO {catalog_name}.schema_evolution.schema_version_history
+    #     SELECT * FROM schema_version
+    # """
+    # spark.sql(sql_query)
+    # spark.catalog.dropTempView("source_updates")
+
     schema_version_df \
         .writeTo(f'{catalog_name}.schema_evolution.schema_version_history') \
         .using("iceberg") \
