@@ -200,10 +200,6 @@ class JoinedTimeseriesTable(TimeseriesTable):
             .using("iceberg")
             .createOrReplace()
         )
-        # self._write_spark_df(
-        #     validated_df,
-        #     write_mode="overwrite",
-        # )
         logger.info("Joined timeseries table written to disk.")
         self._load_table()
 
