@@ -15,7 +15,7 @@ from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 from teehr.evaluation.evaluation import Evaluation
 from teehr import SignatureTimeseriesGenerators as sts
 from teehr import BenchmarkForecastGenerators as bm
-import pytest
+# import pytest
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -437,7 +437,7 @@ def test_metric_chaining(tmpdir):
     ev.spark.stop()
 
 
-@pytest.mark.skip(reason="Temporary!")
+# @pytest.mark.skip(reason="Temporary!")
 def test_ensemble_metrics(tmpdir):
     """Test get_metrics method with ensemble metrics."""
     usgs_location = Path(

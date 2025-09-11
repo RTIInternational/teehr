@@ -20,7 +20,7 @@ def test_sql_query(tmpdir):
         JOIN units u ON pt.unit_name = u.name
         JOIN configurations c ON pt.configuration_name = c.name
         LIMIT 10;
-    """)
+    """, create_temp_views=["primary_timeseries", "units", "configurations"])
     sdf_cols = sorted(sdf.columns)
     expected_cols = [
         'configuration_name',
@@ -37,6 +37,7 @@ def test_sql_query(tmpdir):
         'variable_name'
     ]
     assert sdf_cols == expected_cols
+    ev.spark.stop()
 
 
 def test_sql_query_on_empty_tables(tmpdir):
@@ -51,16 +52,17 @@ def test_sql_query_on_empty_tables(tmpdir):
         JOIN units u ON pt.unit_name = u.name
         JOIN configurations c ON pt.configuration_name = c.name
         LIMIT 10;
-    """)
+    """, create_temp_views=["primary_timeseries", "units", "configurations"])
     assert sdf.isEmpty()
     sdf = ev.sql("""
         SELECT * FROM primary_timeseries;
-    """)
+    """, create_temp_views=["primary_timeseries"])
     assert sdf.isEmpty()
     sdf = ev.sql("""
         SELECT * FROM secondary_timeseries;
-    """)
+    """, create_temp_views=["secondary_timeseries"])
     assert sdf.isEmpty()
+    ev.spark.stop()
 
 
 if __name__ == "__main__":

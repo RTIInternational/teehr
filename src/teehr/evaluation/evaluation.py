@@ -319,7 +319,7 @@ class Evaluation:
         remove_dir_if_exists(self.cache_dir)
         self.cache_dir.mkdir()
 
-    def sql(self, query: str, create_temp_views: List[str] = None):
+    def sql(self, query: str, create_temp_views: List[str]):
         """Run a SQL query on the Spark session against the TEEHR tables.
 
         Parameters
@@ -348,19 +348,19 @@ class Evaluation:
             - secondary_timeseries
             - joined_timeseries
         """
-        if not create_temp_views:
-            create_temp_views = [
-                "units",
-                "variables",
-                "attributes",
-                "configurations",
-                "locations",
-                "location_attributes",
-                "location_crosswalks",
-                "primary_timeseries",
-                "secondary_timeseries",
-                "joined_timeseries"
-            ]
+        # if not create_temp_views:
+        #     create_temp_views = [
+        #         "units",
+        #         "variables",
+        #         "attributes",
+        #         "configurations",
+        #         "locations",
+        #         "location_attributes",
+        #         "location_crosswalks",
+        #         "primary_timeseries",
+        #         "secondary_timeseries",
+        #         "joined_timeseries"
+        #     ]
 
         if "units" in create_temp_views:
             self.units.to_sdf().createOrReplaceTempView("units")
