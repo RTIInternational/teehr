@@ -152,6 +152,16 @@ class BaseTable():
             The spark dataframe.
         """
         logger.info(f"Reading files from {path}.")
+
+        # Temp hack.
+        if isinstance(path, S3Path):
+            return self._read_files_from_cache_or_s3(
+                path=path,
+                pattern=pattern,
+                show_missing_table_warning=show_missing_table_warning,
+                **options
+            )
+
         if len(options) == 0:
             options = {
                 "header": "true",

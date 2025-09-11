@@ -734,13 +734,13 @@ if __name__ == "__main__":
                 dir=tempdir
             )
         )
-        # # TODO: High memory usage.
-        # test_ensemble_metrics(
-        #     tempfile.mkdtemp(
-        #         prefix="9-",
-        #         dir=tempdir
-        #     )
-        # )
+        # TODO: High memory usage?
+        test_ensemble_metrics(
+            tempfile.mkdtemp(
+                prefix="9-",
+                dir=tempdir
+            )
+        )
         test_metrics_transforms(
             tempfile.mkdtemp(
                 prefix="10-",

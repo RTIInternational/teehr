@@ -23,7 +23,7 @@ def test_get_s3_evaluations_list():
 
 def test_clone_example_from_s3(tmpdir):
     """Test cloning a fully populated evaluation from s3."""
-    ev = Evaluation(tmpdir, create_dir=True)
+    ev = Evaluation(tmpdir, create_dir=True, enable_s3_reads=True)
     ev.clone_from_s3("e0_2_location_example")
 
     assert ev.units.to_sdf().count() == 4
@@ -44,7 +44,7 @@ def test_clone_example_from_s3(tmpdir):
 
 def test_clone_partial_template_from_s3(tmpdir):
     """Test cloning a partially empty evaluation from s3."""
-    ev = Evaluation(tmpdir, create_dir=True)
+    ev = Evaluation(tmpdir, create_dir=True, enable_s3_reads=True)
     ev.clone_from_s3("e4_nwm_operational")
 
     # assert ev.units.to_sdf().count() == 9
@@ -62,7 +62,7 @@ def test_clone_partial_template_from_s3(tmpdir):
 
 def test_clone_and_subset_example_from_s3(tmpdir):
     """Test filter string."""
-    ev = Evaluation(tmpdir, create_dir=True)
+    ev = Evaluation(tmpdir, create_dir=True, enable_s3_reads=True)
     ev.clone_from_s3(
         evaluation_name="e0_2_location_example",
         primary_location_ids=["usgs-14316700"],

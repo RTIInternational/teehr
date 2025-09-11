@@ -49,7 +49,8 @@ def create_spark_session(
     catalog_name: str = "local",
     catalog_type: str = "hadoop",
     driver_memory: Union[str, int, float] = None,
-    driver_maxresultsize: Union[str, int, float] = None
+    driver_maxresultsize: Union[str, int, float] = None,
+    enable_s3_reads: bool = False
 ) -> SparkSession:
     """Create and return a Spark session for evaluation."""
     memory_info = psutil.virtual_memory()
@@ -63,53 +64,92 @@ def create_spark_session(
     sedona_jar_path = Path(__file__).parents[3] / "playground" / "iceberg" / "sedona-spark-shaded-4.0_2.13-1.8.1-SNAPSHOT.jar"
     shutil.copy(sedona_jar_path, dest_dir)
 
-    conf = (
-        SparkConf()
-        .setAppName("TEEHR")
-        .setMaster("local[*]")
-        .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")  # can improve performance?
-        .set("spark.driver.host", "localhost")
-        .set("spark.driver.bindAddress", "localhost")
-        .set("spark.driver.memory", f"{int(driver_memory)}g")
-        .set("spark.driver.maxResultSize", f"{int(driver_maxresultsize)}g")
-        .set("spark.sql.sources.partitionOverwriteMode", "dynamic")
-        .set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-        .set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider")
-        .set("spark.sql.execution.arrow.pyspark.enabled", "true")
-        .set("spark.sql.session.timeZone", "UTC")
-        .set(
-            "spark.jars.repositories",
-            "https://artifacts.unidata.ucar.edu/repository/unidata-all,"
-            "https://repository.apache.org/content/repositories/snapshots,"
-            "https://repository.apache.org/content/groups/snapshots"
+    if enable_s3_reads is True:
+        conf = (
+            SparkConf()
+            .setAppName("TEEHR")
+            .setMaster("local[*]")
+            .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")  # can improve performance?
+            .set("spark.driver.memory", f"{int(driver_memory)}g")
+            .set("spark.driver.maxResultSize", f"{int(driver_maxresultsize)}g")
+            .set("spark.sql.sources.partitionOverwriteMode", "dynamic")
+            .set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+            .set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider")
+            .set("spark.sql.execution.arrow.pyspark.enabled", "true")
+            .set("spark.sql.session.timeZone", "UTC")
+            .set(
+                "spark.jars.repositories",
+                "https://artifacts.unidata.ucar.edu/repository/unidata-all,"
+                "https://repository.apache.org/content/repositories/snapshots,"
+                "https://repository.apache.org/content/groups/snapshots"
+            )
+            .set(
+                "spark.jars.packages",
+                "org.apache.hadoop:hadoop-aws:3.4.1,"  # SEEMS TO CAUSE HIGH MEMORY USAGE. Also 3.4.2 seems to fail.
+                f"org.apache.iceberg:iceberg-spark-runtime-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}-SNAPSHOT,"
+                # "org.datasyslab:geotools-wrapper:1.8.0-33.1,"  IS THIS NEEDED?
+                f"org.apache.iceberg:iceberg-spark-extensions-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}-SNAPSHOT,"
+            )
+            .set("spark.jars", "sedona-spark-shaded-4.0_2.13-1.8.1-SNAPSHOT.jar")
+            .set("spark.sql.parquet.enableVectorizedReader", "false")
+            .set(
+                "spark.sql.extensions",
+                "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions"
+            )
+            .set(
+                f"spark.sql.catalog.{catalog_name}",
+                "org.apache.iceberg.spark.SparkCatalog"
+            )
+            .set(
+                f"spark.sql.catalog.{catalog_name}.type", catalog_type
+            )
+            .set(
+                f"spark.sql.catalog.{catalog_name}.warehouse",
+                f"{warehouse_path}/{catalog_name}"
+            )
         )
-        .set(
-            "spark.jars.packages",
-            # "org.apache.hadoop:hadoop-aws:3.4.2,"  # SEEMS TO CAUSE HIGH MEMORY USAGE
-            # f"org.apache.sedona:sedona-spark-shaded-{pyspark_version}_{scala_version}:{sedona_version},"
-            f"org.apache.iceberg:iceberg-spark-runtime-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}-SNAPSHOT,"
-            # "org.datasyslab:geotools-wrapper:1.8.0-33.1,"  IS THIS NEEDED?
-            f"org.apache.iceberg:iceberg-spark-extensions-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}-SNAPSHOT,"
+    else:
+        conf = (
+            SparkConf()
+            .setAppName("TEEHR")
+            .setMaster("local[*]")
+            .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")  # can improve performance?
+            .set("spark.driver.memory", f"{int(driver_memory)}g")
+            .set("spark.driver.maxResultSize", f"{int(driver_maxresultsize)}g")
+            .set("spark.sql.sources.partitionOverwriteMode", "dynamic")
+            .set("spark.sql.execution.arrow.pyspark.enabled", "true")
+            .set("spark.sql.session.timeZone", "UTC")
+            .set(
+                "spark.jars.repositories",
+                "https://artifacts.unidata.ucar.edu/repository/unidata-all,"
+                "https://repository.apache.org/content/repositories/snapshots,"
+                "https://repository.apache.org/content/groups/snapshots"
+            )
+            .set(
+                "spark.jars.packages",
+                f"org.apache.iceberg:iceberg-spark-runtime-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}-SNAPSHOT,"
+                # "org.datasyslab:geotools-wrapper:1.8.0-33.1,"  IS THIS NEEDED?
+                f"org.apache.iceberg:iceberg-spark-extensions-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}-SNAPSHOT,"
+            )
+            .set("spark.jars", "sedona-spark-shaded-4.0_2.13-1.8.1-SNAPSHOT.jar")
+            .set("spark.sql.parquet.enableVectorizedReader", "false")
+            .set(
+                "spark.sql.extensions",
+                "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions"
+            )
+            .set(
+                f"spark.sql.catalog.{catalog_name}",
+                "org.apache.iceberg.spark.SparkCatalog"
+            )
+            .set(
+                f"spark.sql.catalog.{catalog_name}.type", catalog_type
+            )
+            .set(
+                f"spark.sql.catalog.{catalog_name}.warehouse",
+                f"{warehouse_path}/{catalog_name}"
+            )
         )
-        # .set("spark.jars", f"{dest_dir}/sedona-spark-shaded-4.0_2.13-1.8.1-SNAPSHOT.jar")
-        .set("spark.jars", "sedona-spark-shaded-4.0_2.13-1.8.1-SNAPSHOT.jar")
-        .set("spark.sql.parquet.enableVectorizedReader", "false")
-        .set(
-            "spark.sql.extensions",
-            "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions"
-        )
-        .set(
-            f"spark.sql.catalog.{catalog_name}",
-            "org.apache.iceberg.spark.SparkCatalog"
-        )
-        .set(
-            f"spark.sql.catalog.{catalog_name}.type", catalog_type
-        )
-        .set(
-            f"spark.sql.catalog.{catalog_name}.warehouse",
-            f"{warehouse_path}/{catalog_name}"
-        )
-    )
+
     spark = SparkSession.builder.config(conf=conf).getOrCreate()
     sedona_spark = SedonaContext.create(spark)
     logger.info("Spark session created for TEEHR Evaluation.")
