@@ -82,6 +82,8 @@ def test_add_domains(tmpdir):
 
     assert list(cols.sort_values()) == list(new_cols.sort_values())
 
+    ev.spark.stop()
+
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(

@@ -67,7 +67,7 @@ def create_spark_session(
         SparkConf()
         .setAppName("TEEHR")
         .setMaster("local[*]")
-        # .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+        .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")  # can improve performance?
         .set("spark.driver.host", "localhost")
         .set("spark.driver.bindAddress", "localhost")
         .set("spark.driver.memory", f"{int(driver_memory)}g")
@@ -85,7 +85,7 @@ def create_spark_session(
         )
         .set(
             "spark.jars.packages",
-            "org.apache.hadoop:hadoop-aws:3.4.1,"
+            # "org.apache.hadoop:hadoop-aws:3.4.2,"  # SEEMS TO CAUSE HIGH MEMORY USAGE
             # f"org.apache.sedona:sedona-spark-shaded-{pyspark_version}_{scala_version}:{sedona_version},"
             f"org.apache.iceberg:iceberg-spark-runtime-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}-SNAPSHOT,"
             # "org.datasyslab:geotools-wrapper:1.8.0-33.1,"  IS THIS NEEDED?
