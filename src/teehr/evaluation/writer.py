@@ -3,8 +3,6 @@ from typing import List
 
 from pyspark.sql import DataFrame
 
-from teehr.evaluation.evaluation import Evaluation
-
 
 # TODO: Should the Writer class contain DELETE FROM? That's how it's
 # organized in the docs: https://iceberg.apache.org/docs/1.9.1/spark-writes/#delete-from
@@ -12,7 +10,7 @@ from teehr.evaluation.evaluation import Evaluation
 class Writer:
     """Class to handle writing evaluation results to storage."""
 
-    def __init__(self, ev: Evaluation):
+    def __init__(self, ev):
         """Initialize the Writer with an Evaluation instance.
 
         Parameters
@@ -28,19 +26,20 @@ class Writer:
 
     def _upsert(
         self,
-        sdf: DataFrame,
+        source_view: str,
+        source_fields: List[str],
         target_table: str,
         uniqueness_fields: List[str],
     ):
         """Upsert the DataFrame to the specified target in the catalog."""
-        sdf.createOrReplaceTempView("source_updates")
         # Use the <=> operator for null-safe equality comparison
         # so that two null values are considered equal.
         on_sql = " AND ".join(
             [f"t.{fld} <=> s.{fld}" for fld in uniqueness_fields]
         )
+        # TODO: Get source_fields from the source_view?
         update_fields = list(
-            set(sdf.fields())
+            set(source_fields)
             .symmetric_difference(set(uniqueness_fields))
         )
         update_set_sql = ", ".join(
@@ -54,16 +53,15 @@ class Writer:
             WHEN NOT MATCHED THEN INSERT *
         """  # noqa: E501
         self.ev.spark.sql(sql_query)
-        self.ev.spark.catalog.dropTempView("source_updates")
+        self.ev.spark.catalog.dropTempView(f"{source_view}")
 
     def _append(
         self,
-        sdf: DataFrame,
+        source_view: str,
         target_table: str,
         uniqueness_fields: List[str],
     ):
         """Append the DataFrame to the specified target in the catalog."""
-        sdf.createOrReplaceTempView("source_updates")
         # Use the <=> operator for null-safe equality comparison
         # so that two null values are considered equal.
         on_sql = " AND ".join(
@@ -76,9 +74,9 @@ class Writer:
             WHEN NOT MATCHED THEN INSERT *
         """  # noqa: E501
         self.ev.spark.sql(sql_query)
-        self.ev.spark.catalog.dropTempView("source_updates")
+        self.ev.spark.catalog.dropTempView(f"{source_view}")
 
-    def write_to_warehouse(
+    def to_warehouse(
         self,
         sdf: DataFrame,
         target_table: str,
@@ -99,9 +97,13 @@ class Writer:
         uniqueness_fields : List[str], optional
             List of fields that uniquely identify a record, by default None.
         """
+        # TODO: If uniqueness_fields is None, get them from the table.
+        if uniqueness_fields is None:
+            uniqueness_fields = self._get_uniqueness_fields(target_table)
+        source_view = sdf.createOrReplaceTempView("source_updates")
         if write_mode == "append":
             self._append(
-                sdf=sdf,
+                source_view=source_view,
                 target_table=target_table,
                 uniqueness_fields=uniqueness_fields
             )

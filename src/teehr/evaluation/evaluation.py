@@ -26,6 +26,7 @@ import teehr.const as const
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.metrics import Metrics
 from teehr.evaluation.generate import GeneratedTimeseries
+from teehr.evaluation.writer import Writer
 from teehr.evaluation.utils import create_spark_session, copy_schema_dir
 import pandas as pd
 import re
@@ -117,6 +118,11 @@ class Evaluation:
             )
 
         pass
+
+    @property
+    def write(self) -> Writer:
+        """The write component class for writing data."""
+        return Writer(self)
 
     @property
     def generate(self) -> GeneratedTimeseries:
@@ -457,18 +463,18 @@ class Evaluation:
             A TableFilter object containing the table name and filters.
             Defaults to None.
         """
-        table_mapper = {
-            "primary_timeseries": self.primary_timeseries,
-            "secondary_timeseries": self.secondary_timeseries,
-            "locations": self.locations,
-            "units": self.units,
-            "variables": self.variables,
-            "configurations": self.configurations,
-            "attributes": self.attributes,
-            "location_attributes": self.location_attributes,
-            "location_crosswalks": self.location_crosswalks,
-            "joined_timeseries": self.joined_timeseries,
-        }
+        # table_mapper = {
+        #     "primary_timeseries": self.primary_timeseries,
+        #     "secondary_timeseries": self.secondary_timeseries,
+        #     "locations": self.locations,
+        #     "units": self.units,
+        #     "variables": self.variables,
+        #     "configurations": self.configurations,
+        #     "attributes": self.attributes,
+        #     "location_attributes": self.location_attributes,
+        #     "location_crosswalks": self.location_crosswalks,
+        #     "joined_timeseries": self.joined_timeseries,
+        # }
         if table_filter is not None:
             table_name = table_filter.table_name
             filters = table_filter.filters
