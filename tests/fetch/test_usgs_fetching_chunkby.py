@@ -8,6 +8,39 @@ import pandas as pd
 from teehr.fetching.usgs.usgs import usgs_to_parquet
 
 
+def test_daily_service(tmpdir):
+    """Test chunkby location id."""
+    usgs_to_parquet(
+        sites=[
+            "02449838",
+            "02450825",
+        ],
+        start_date=datetime(2023, 2, 20),
+        end_date=datetime(2023, 2, 21),
+        output_parquet_dir=Path(tmpdir),
+        chunk_by="location_id",
+        overwrite_output=True,
+        convert_to_si=False,
+        service="dv"
+    )
+    df1 = pd.read_parquet(
+        Path(
+            tmpdir,
+            "02449838.parquet"
+        )
+    )
+    df2 = pd.read_parquet(
+        Path(
+            tmpdir,
+            "02450825.parquet"
+        )
+    )
+    assert len(df1) == 1
+    assert len(df2) == 1
+    assert df1["value"].iloc[0] == 157.0  # confirmed with NWIS web
+    assert df2["value"].iloc[0] == 389.0
+
+
 def test_chunkby_location_id(tmpdir):
     """Test chunkby location id."""
     usgs_to_parquet(
@@ -199,6 +232,7 @@ def test_chunkby_all(tmpdir):
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(prefix="teehr-") as tempdir:
+        test_daily_service(tempfile.mkdtemp(dir=tempdir))
         test_chunkby_location_id(tempfile.mkdtemp(dir=tempdir))
         test_chunkby_day(tempfile.mkdtemp(dir=tempdir))
         test_chunkby_week(tempfile.mkdtemp(dir=tempdir))
