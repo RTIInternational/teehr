@@ -490,8 +490,9 @@ class Evaluation:
     ):
         """Migrate v0.5 Evalution to v0.6 Iceberg tables."""
         apply_migrations.evolve_catalog_schema(
-            self.spark,
-            self.catalog_name,
-            schema_name
+            spark=self.spark,
+            catalog_dir_path=self.dir_path,
+            catalog_name=self.catalog_name,
+            schema_name=schema_name
         )
-        print(f"Schema evolution completed for {self.catalog_name}.")
+        logger.info(f"Schema evolution completed for {self.catalog_name}.")
