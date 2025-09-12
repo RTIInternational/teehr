@@ -141,6 +141,7 @@ def test_create_joined_timeseries(tmpdir):
     ])
     assert len(columns) == len(expected_columns)
     assert sorted(columns) == sorted(expected_columns)
+    ev.spark.stop()
 
 
 def test_distinct_values(tmpdir):
@@ -233,6 +234,7 @@ def test_distinct_values(tmpdir):
     # test invalid column handling for location_prefixes==False
     with pytest.raises(ValueError):
         prefixes = ev.joined_timeseries.distinct_values(column='test')
+    ev.spark.stop()
 
 
 if __name__ == "__main__":

@@ -27,6 +27,7 @@ def test_clone_template(tmpdir):
     assert Path(tmpdir, "cache").is_dir()
     assert Path(tmpdir, "scripts").is_dir()
     assert Path(tmpdir, ".gitignore").is_file()
+    ev.spark.stop()
 
 
 if __name__ == "__main__":

@@ -54,7 +54,7 @@ class Evaluation:
         spark: SparkSession = None,
         check_evaluation_version: bool = True,
         schema_name: str = "db",
-        enable_s3_reads: bool = False
+        enable_s3_reads: bool = True
     ):
         """
         Initialize the Evaluation class.
