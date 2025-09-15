@@ -224,9 +224,12 @@ class LocationTable(BaseTable):
             drop_duplicates=drop_duplicates,
             add_missing_columns=True
         )
-        self._write_spark_df(
-            validated_df,
-            write_mode=write_mode
+
+        self.ev.write.to_warehouse(
+            source_data=validated_df,
+            target_table=self.name,
+            write_mode=write_mode,
+            uniqueness_fields=self.uniqueness_fields
         )
 
         df.unpersist()
