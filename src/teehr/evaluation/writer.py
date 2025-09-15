@@ -3,6 +3,8 @@ from typing import List
 
 from pyspark.sql import DataFrame
 
+from teehr.evaluation.utils import get_table_instance
+
 
 # TODO: Should the Writer class contain DELETE FROM? That's how it's
 # organized in the docs: https://iceberg.apache.org/docs/1.9.1/spark-writes/#delete-from
@@ -47,7 +49,7 @@ class Writer:
         )
         sql_query = f"""
             MERGE INTO {self.ev.catalog_name}.{self.ev.schema_name}.{target_table} t
-            USING source_updates s
+            USING source_data s
             ON {on_sql}
             WHEN MATCHED THEN UPDATE SET {update_set_sql}
             WHEN NOT MATCHED THEN INSERT *
@@ -69,7 +71,7 @@ class Writer:
         )
         sql_query = f"""
             MERGE INTO {self.ev.catalog_name}.{self.ev.schema_name}.{target_table} t
-            USING source_updates s
+            USING source_data s
             ON {on_sql}
             WHEN NOT MATCHED THEN INSERT *
         """  # noqa: E501
@@ -78,7 +80,7 @@ class Writer:
 
     def to_warehouse(
         self,
-        sdf: DataFrame,
+        source_data: DataFrame | str,
         target_table: str,
         write_mode: str = "append",
         uniqueness_fields: List[str] | None = None,
@@ -95,21 +97,50 @@ class Writer:
             The mode to use when writing the DataFrame
             (e.g., 'append', 'overwrite'), by default "append".
         uniqueness_fields : List[str], optional
-            List of fields that uniquely identify a record, by default None.
+            List of fields that uniquely identify a record, by default None,
+            which means the uniqueness_fields are taken from the table class.
         """
-        # TODO: If uniqueness_fields is None, get them from the table.
         if uniqueness_fields is None:
-            uniqueness_fields = self._get_uniqueness_fields(target_table)
-        source_view = sdf.createOrReplaceTempView("source_updates")
+            uniqueness_fields = get_table_instance(
+                self.ev, target_table
+            ).uniqueness_fields
+
+        if isinstance(source_data, DataFrame):
+            source_data.createOrReplaceTempView("source_data")
+
         if write_mode == "append":
             self._append(
-                source_view=source_view,
+                source_view=source_data,
                 target_table=target_table,
                 uniqueness_fields=uniqueness_fields
             )
         elif write_mode == "upsert":
             self._upsert(
-                sdf=sdf,
+                source_view=source_data,
                 target_table=target_table,
                 uniqueness_fields=uniqueness_fields,
             )
+
+    def to_cache(
+        self,
+        source_data: DataFrame,
+        cache_name: str,
+        write_mode: str = "overwrite"
+    ):
+        """Cache the DataFrame in memory for faster access.
+
+        Parameters
+        ----------
+        source_data : DataFrame
+            The Spark DataFrame to cache.
+        cache_name : str
+            The name to use for the cached table.
+        write_mode : str, optional
+            The mode to use when caching the DataFrame
+            (e.g., 'append', 'overwrite'), by default "overwrite".
+        """
+        # TODO: Implement
+        pass
+        # if write_mode == "overwrite":
+        #     self.spark.catalog.dropTempView(cache_name)
+        # source_data.createOrReplaceTempView(cache_name)

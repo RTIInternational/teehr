@@ -6,7 +6,7 @@ from pyspark.sql.types import StructType, StructField, StringType
 from teehr import Evaluation
 
 
-def test_writer_class(tmpdir):
+def test_table_writes(tmpdir):
     """Test creating a new study."""
     ev = Evaluation(dir_path=tmpdir, create_dir=True)
     ev.clone_template()
@@ -24,10 +24,10 @@ def test_writer_class(tmpdir):
     )
 
     ev.write.to_warehouse(
-        sdf=sdf,
+        source_data=sdf,
         target_table="units",
         write_mode="append",
-        uniqueness_fields=["name"]
+        # uniqueness_fields=["name"]
     )
 
     ev.spark.stop()
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_writer_class(
+        test_table_writes(
             tempfile.mkdtemp(
                 prefix="1-",
                 dir=tempdir
