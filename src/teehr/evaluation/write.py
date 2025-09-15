@@ -9,7 +9,7 @@ from teehr.evaluation.utils import get_table_instance
 # TODO: Should the Writer class contain DELETE FROM? That's how it's
 # organized in the docs: https://iceberg.apache.org/docs/1.9.1/spark-writes/#delete-from
 
-class Writer:
+class Write:
     """Class to handle writing evaluation results to storage."""
 
     def __init__(self, ev):

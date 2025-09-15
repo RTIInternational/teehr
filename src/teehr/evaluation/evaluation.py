@@ -26,7 +26,7 @@ import teehr.const as const
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.metrics import Metrics
 from teehr.evaluation.generate import GeneratedTimeseries
-from teehr.evaluation.writer import Writer
+from teehr.evaluation.write import Write
 from teehr.evaluation.utils import create_spark_session, copy_schema_dir
 import pandas as pd
 import re
@@ -120,9 +120,9 @@ class Evaluation:
         pass
 
     @property
-    def write(self) -> Writer:
+    def write(self) -> Write:
         """The write component class for writing data."""
-        return Writer(self)
+        return Write(self)
 
     @property
     def generate(self) -> GeneratedTimeseries:
