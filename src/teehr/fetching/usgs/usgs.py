@@ -44,7 +44,9 @@ from teehr.fetching.const import (
     USGS_VARIABLE_MAPPER
 )
 
-DATETIME_STR_FMT = "%Y-%m-%dT%H:%M:00+0000"
+HOURLY_DATETIME_STR_FMT = "%Y-%m-%dT%H:%M:00+0000"
+DAILY_DATETIME_STR_FMT = "%Y-%m-%d"
+
 DAYLIGHT_SAVINGS_PAD = timedelta(hours=2)
 
 pd.options.mode.copy_on_write = True
@@ -211,11 +213,22 @@ def _fetch_usgs_streamflow(
 ) -> pd.DataFrame:
     """Fetch USGS gage data and format to TEEHR format."""
     logger.debug("Fetching USGS streamflow data from NWIS.")
-    start_dt_str = start_date.strftime(DATETIME_STR_FMT)
+
+    if service == "iv":
+        datetime_str_format = HOURLY_DATETIME_STR_FMT
+    elif service == "dv":
+        datetime_str_format = DAILY_DATETIME_STR_FMT
+    else:
+        err_msg = f"Service '{service}' is not supported. Valid options are 'iv' and 'dv'."
+        logger.error(err_msg)
+        raise ValueError(err_msg)
+
+    start_dt_str = start_date.strftime(datetime_str_format)
+
     end_dt_str = (
         end_date
         - timedelta(minutes=1)
-    ).strftime(DATETIME_STR_FMT)
+    ).strftime(datetime_str_format)
 
     # Parse out list of sites.
     parsed_sites = _parse_site_id_list(sites)
