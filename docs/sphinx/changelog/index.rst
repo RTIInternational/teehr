@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+0.5.1 - 2025-09-15
+-------------------
+
+Changed
+^^^^^^^
+- Fixed USGS fetching for daily values when `service=dv`
+
 0.5.0 - 2025-08-27
 -------------------
 
