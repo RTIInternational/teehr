@@ -15,6 +15,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           lfs: true
+          ref: main
       - name: Set up python
         id: setup-python
         uses: actions/setup-python@v5
