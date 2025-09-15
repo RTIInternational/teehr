@@ -122,10 +122,12 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             df=df,
             drop_duplicates=drop_duplicates
         )
-        # Write to the table
-        self._write_spark_df(
-            validated_df,
-            write_mode=write_mode
+
+        self.ev.write.to_warehouse(
+            source_data=validated_df,
+            target_table=self.name,
+            write_mode=write_mode,
+            uniqueness_fields=self.uniqueness_fields
         )
 
         df.unpersist()

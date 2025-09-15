@@ -527,12 +527,12 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_dropping_duplicates(
-            tempfile.mkdtemp(
-                prefix="0-",
-                dir=tempdir
-            )
-        )
+        # test_dropping_duplicates(
+        #     tempfile.mkdtemp(
+        #         prefix="0-",
+        #         dir=tempdir
+        #     )
+        # )
         test_validate_and_insert_timeseries(
             tempfile.mkdtemp(
                 prefix="1-",

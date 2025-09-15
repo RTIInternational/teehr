@@ -26,20 +26,38 @@ class Write:
         self.schema = ev.schema_name
         self.ev = ev
 
+    def _create_or_replace(
+        self,
+        source_view: str,
+        target_table: str,
+        partition_by: List[str],
+    ):
+        """Upsert the DataFrame to the specified target in the catalog."""
+        # Use the <=> operator for null-safe equality comparison
+        # so that two null values are considered equal.
+        sql_query = f"""
+            CREATE OR REPLACE TABLE {self.ev.catalog_name}.{self.ev.schema_name}.{target_table}
+            PARTITIONED BY ({', '.join(partition_by)})
+            AS SELECT * FROM {source_view}
+        """  # noqa: E501
+        self.ev.spark.sql(sql_query)
+
     def _upsert(
         self,
         source_view: str,
-        source_fields: List[str],
         target_table: str,
         uniqueness_fields: List[str],
     ):
         """Upsert the DataFrame to the specified target in the catalog."""
+        # TODO: Does this do what we want it to do? Should there be a
+        # SELECT first?
+        # Or should it be WHEN MATCHED THEN UPDATE *?
         # Use the <=> operator for null-safe equality comparison
         # so that two null values are considered equal.
         on_sql = " AND ".join(
             [f"t.{fld} <=> s.{fld}" for fld in uniqueness_fields]
         )
-        # TODO: Get source_fields from the source_view?
+        source_fields = self.ev.spark.table(source_view).columns
         update_fields = list(
             set(source_fields)
             .symmetric_difference(set(uniqueness_fields))
@@ -49,13 +67,12 @@ class Write:
         )
         sql_query = f"""
             MERGE INTO {self.ev.catalog_name}.{self.ev.schema_name}.{target_table} t
-            USING source_data s
+            USING {source_view} s
             ON {on_sql}
             WHEN MATCHED THEN UPDATE SET {update_set_sql}
             WHEN NOT MATCHED THEN INSERT *
         """  # noqa: E501
         self.ev.spark.sql(sql_query)
-        self.ev.spark.catalog.dropTempView(f"{source_view}")
 
     def _append(
         self,
@@ -71,12 +88,11 @@ class Write:
         )
         sql_query = f"""
             MERGE INTO {self.ev.catalog_name}.{self.ev.schema_name}.{target_table} t
-            USING source_data s
+            USING {source_view} s
             ON {on_sql}
             WHEN NOT MATCHED THEN INSERT *
         """  # noqa: E501
         self.ev.spark.sql(sql_query)
-        self.ev.spark.catalog.dropTempView(f"{source_view}")
 
     def to_warehouse(
         self,
@@ -84,6 +100,7 @@ class Write:
         target_table: str,
         write_mode: str = "append",
         uniqueness_fields: List[str] | None = None,
+        partition_by: List[str] = None,
     ):
         """Write the DataFrame to the specified target in the catalog.
 
@@ -91,6 +108,8 @@ class Write:
         ----------
         sdf : DataFrame
             The Spark DataFrame to write.
+        source_data : DataFrame | str
+            The Spark DataFrame or temporary view name to write.
         target_table : str
             The target table name in the catalog.
         write_mode : str, optional
@@ -99,14 +118,20 @@ class Write:
         uniqueness_fields : List[str], optional
             List of fields that uniquely identify a record, by default None,
             which means the uniqueness_fields are taken from the table class.
+        partition_by : List[str], optional
+            List of fields to partition the table by, required if write_mode is
+            'create_or_replace'.
         """
         if uniqueness_fields is None:
-            uniqueness_fields = get_table_instance(
+            table_instance = get_table_instance(
                 self.ev, target_table
-            ).uniqueness_fields
+            )
+            if table_instance is not None:
+                uniqueness_fields = table_instance.uniqueness_fields
 
         if isinstance(source_data, DataFrame):
             source_data.createOrReplaceTempView("source_data")
+            source_data = "source_data"
 
         if write_mode == "append":
             self._append(
@@ -120,6 +145,14 @@ class Write:
                 target_table=target_table,
                 uniqueness_fields=uniqueness_fields,
             )
+        elif write_mode == "create_or_replace":
+            self._create_or_replace(
+                source_view=source_data,
+                target_table=target_table,
+                partition_by=partition_by
+            )
+
+        self.ev.spark.sql("DROP VIEW IF EXISTS source_data")
 
     def to_cache(
         self,

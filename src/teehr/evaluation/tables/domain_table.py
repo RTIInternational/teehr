@@ -17,7 +17,8 @@ class DomainTable(BaseTable):
 
     def _add(
         self,
-        obj: Union[TableBaseModel, List[TableBaseModel]]
+        obj: Union[TableBaseModel, List[TableBaseModel]],
+        write_mode: str = "append"
     ):
         logger.info(f"Adding attribute to {self.dir}")
         self._check_load_table()
@@ -51,8 +52,12 @@ class DomainTable(BaseTable):
                 )
             validated_df = self._validate(combined_df)
 
-            # write the validated data to the table
-            self._write_spark_df(validated_df)
+            self.ev.write.to_warehouse(
+                source_data=validated_df,
+                target_table=self.name,
+                write_mode=write_mode,
+                uniqueness_fields=self.uniqueness_fields
+            )
         else:
             # warn the user that some rows in the added data already exist
             matched_count = df_matched.count()
@@ -93,5 +98,10 @@ class DomainTable(BaseTable):
                 f"{new_df_not_matched.count()} new objects"
             )
             validated_df = self._validate(combined_df)
-            # write the validated data to the table
-            self._write_spark_df(validated_df)
+
+            self.ev.write.to_warehouse(
+                source_data=validated_df,
+                target_table=self.name,
+                write_mode=write_mode,
+                uniqueness_fields=self.uniqueness_fields
+            )

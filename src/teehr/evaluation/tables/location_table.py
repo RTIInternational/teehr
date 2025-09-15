@@ -150,15 +150,15 @@ class LocationTable(BaseTable):
             drop_duplicates=drop_duplicates
         )
 
-        # Write to the table
-        self._write_spark_df(
-            df=validated_df,
+        self.ev.write.to_warehouse(
+            source_data=validated_df,
+            target_table=self.name,
             write_mode=write_mode,
-            num_partitions=1
+            uniqueness_fields=self.uniqueness_fields
         )
 
-        # Reload the table
-        self._load_table()
+        # # Reload the table
+        # self._load_table()
 
     def _load_dataframe(
         self,

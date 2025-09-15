@@ -95,15 +95,12 @@ class LocationCrosswalkTable(BaseTable):
             drop_duplicates=drop_duplicates
         )
 
-        # Write to the table df.rdd.getNumPartitions()
-        self._write_spark_df(
-            df=validated_df,
-            num_partitions=df.rdd.getNumPartitions(),
-            write_mode=write_mode
+        self.ev.write.to_warehouse(
+            source_data=validated_df,
+            target_table=self.name,
+            write_mode=write_mode,
+            uniqueness_fields=self.uniqueness_fields
         )
-
-        # Reload the table
-        # self._load_table()
 
     def field_enum(self) -> LocationCrosswalkFields:
         """Get the location crosswalk fields enum."""

@@ -214,146 +214,6 @@ class BaseTable():
         if self.df is None:
             self._raise_missing_table_error(table_name=self.name)
 
-    def _upsert_without_duplicates(
-        self,
-        df,
-        num_partitions: int = None,
-        **kwargs
-    ):
-        """Update existing data and append new data without duplicates."""
-        logger.info(
-            f"Upserting to {self.name} without duplicates."
-        )
-        partition_by = self.partition_by
-        if partition_by is None:
-            partition_by = []
-
-        # Create a temporary view for the source DataFrame
-        df.createOrReplaceTempView("source_updates")
-
-        # Note. Using the <=> operator for null-safe equality comparison
-        # so that two null values are considered equal.
-        on_sql = " AND ".join(
-            [f"t.{fld} <=> s.{fld}" for fld in self.uniqueness_fields]
-        )
-        update_fields = list(
-            set(self.fields())
-            .symmetric_difference(set(self.uniqueness_fields))
-        )
-        update_set_sql = ", ".join(
-            [f"t.{fld} = s.{fld}" for fld in update_fields]
-        )
-        # Perform the upsert using MERGE INTO
-        sql_query = f"""
-            MERGE INTO {self.ev.catalog_name}.{self.ev.schema_name}.{self.name} t
-            USING source_updates s
-            ON {on_sql}
-            WHEN MATCHED THEN UPDATE SET {update_set_sql}
-            WHEN NOT MATCHED THEN INSERT *
-        """
-        self.ev.spark.sql(sql_query)
-        self.ev.spark.catalog.dropTempView("source_updates")
-
-    def _append_without_duplicates(
-        self,
-        df,
-        num_partitions: int = None,
-        **kwargs
-    ):
-        """Append new data without duplicates."""
-        logger.info(
-            f"Appending to {self.name} without duplicates."
-        )
-        partition_by = self.partition_by
-        if partition_by is None:
-            partition_by = []
-        # Create a temporary view for the source DataFrame
-        df.createOrReplaceTempView("source_updates")
-        # Note. Using the <=> operator for null-safe equality comparison
-        # so that two null values are considered equal.
-        on_sql = " AND ".join(
-            [f"t.{fld} <=> s.{fld}" for fld in self.uniqueness_fields]
-        )
-        sql_query = f"""
-            MERGE INTO {self.ev.catalog_name}.{self.ev.schema_name}.{self.name} t
-            USING source_updates s
-            ON {on_sql}
-            WHEN NOT MATCHED THEN INSERT *
-        """
-        self.ev.spark.sql(sql_query)
-        self.ev.spark.catalog.dropTempView("source_updates")
-
-    def _dynamic_overwrite(
-        self,
-        df: ps.DataFrame,
-        **kwargs
-    ):
-        """Overwrite partitions contained in the dataframe."""
-        logger.info(
-            f"Overwriting table partitions in {self.name}."
-        )
-        partition_by = self.partition_by
-        if partition_by is None:
-            partition_by = []
-        # TODO: Handle partitioning.
-        (
-            df.
-            writeTo(
-                f"{self.ev.catalog_name}.{self.ev.schema_name}.{self.name}"
-            )
-            .overwritePartitions()
-        )
-
-    def _write_spark_df(
-        self,
-        df: ps.DataFrame,
-        write_mode: TableWriteEnum = "append",
-        num_partitions: int = None,
-        **kwargs
-    ):
-        """Write spark dataframe to directory.
-
-        Parameters
-        ----------
-        df : ps.DataFrame
-            The spark dataframe to write.
-        **kwargs
-            Additional options to pass to the spark write method.
-        """
-        if self.ev.is_s3:
-            logger.error("Writing to S3 is not supported.")
-            raise ValueError("Writing to S3 is not supported.")
-
-        logger.info(f"Writing files to {self.dir}.")
-
-        if len(kwargs) == 0:
-            kwargs = {
-                "header": "true",
-            }
-
-        if write_mode == "overwrite":
-            self._dynamic_overwrite(
-                df=df,
-                **kwargs
-            )
-        elif write_mode == "append":
-            self._append_without_duplicates(
-                df=df,
-                num_partitions=num_partitions,
-                **kwargs
-            )
-        elif write_mode == "upsert":
-            self._upsert_without_duplicates(
-                df=df,
-                num_partitions=num_partitions,
-                **kwargs
-            )
-        else:
-            raise ValueError(
-                f"Invalid write mode: {write_mode}. "
-                "Valid values are 'append', 'overwrite' and 'upsert'."
-            )
-
     def _get_schema(self, type: str = "pyspark"):
         """Get the primary timeseries schema.
 
@@ -857,9 +717,11 @@ class BaseTable():
             drop_duplicates=drop_duplicates,
             add_missing_columns=True
         )
-        self._write_spark_df(
-            validated_df,
-            write_mode=write_mode
+        self.ev.write.to_warehouse(
+            source_data=validated_df,
+            target_table=self.name,
+            write_mode=write_mode,
+            uniqueness_fields=self.uniqueness_fields
         )
 
         df.unpersist()

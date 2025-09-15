@@ -185,22 +185,16 @@ class JoinedTimeseriesTable(TimeseriesTable):
 
         return self
 
-    def write(self, drop_duplicates: bool = False):
-        """Write the joined timeseries table to disk."""
-        # Validate to fix 'Cannot use NullType for partition column' error.
-        validated_df = self._validate(
-            df=self.df,
-            strict=False,
-            drop_duplicates=drop_duplicates
+    def write(self, write_mode: str = "create_or_replace"):
+        """Write the joined timeseries table to the warehouse."""
+        # TODO: What should default write mode be?
+        self.ev.write.to_warehouse(
+            source_data=self.df,
+            target_table=self.name,
+            write_mode=write_mode,
+            uniqueness_fields=self.uniqueness_fields
         )
-        (
-            validated_df.writeTo(
-                f"{self.ev.catalog_name}.{self.ev.schema_name}.{self.name}"
-            )
-            .using("iceberg")
-            .createOrReplace()
-        )
-        logger.info("Joined timeseries table written to disk.")
+        logger.info("Joined timeseries table written to the warehouse.")
         self._load_table()
 
     def _run_script(self, joined_df: ps.DataFrame) -> ps.DataFrame:
@@ -223,7 +217,8 @@ class JoinedTimeseriesTable(TimeseriesTable):
         add_attrs: bool = True,
         execute_scripts: bool = False,
         drop_duplicates: bool = False,
-        attr_list: List[str] = None
+        attr_list: List[str] = None,
+        write_mode: str = "create_or_replace"
     ):
         """Create joined timeseries table.
 
@@ -254,18 +249,12 @@ class JoinedTimeseriesTable(TimeseriesTable):
             strict=False,
             drop_duplicates=drop_duplicates
         )
-        (
-            validated_df.writeTo(
-                f"{self.ev.catalog_name}.{self.ev.schema_name}.{self.name}"
-            )
-            .using("iceberg")
-            .createOrReplace()
+        self.ev.write.to_warehouse(
+            source_data=validated_df,
+            target_table=self.name,
+            write_mode=write_mode,
+            partition_by=self.partition_by,
         )
-        # self._write_spark_df(
-        #     validated_df,
-        #     write_mode="overwrite",
-        #     merge_schema="true"
-        # )
         logger.info("Joined timeseries table created.")
         self._load_table()
 
