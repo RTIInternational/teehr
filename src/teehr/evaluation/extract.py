@@ -2,6 +2,7 @@
 from pathlib import Path
 from typing import List, Callable
 import logging
+import concurrent.futures
 
 from pandera.pyspark import DataFrameSchema as SparkDataFrameSchema
 from pandera import DataFrameSchema as PandasDataFrameSchema
@@ -79,6 +80,7 @@ class DataExtractor:
         constant_field_values: dict = None,
         pattern: str = "**/*.parquet",
         parallel: bool = False,
+        max_workers: int = 1,
         **kwargs
     ):
         """Convert location attributes data to parquet format.
@@ -109,6 +111,9 @@ class DataExtractor:
         parallel : bool, optional
             Whether to process files in parallel. Default is False.
             Note: Parallel processing is not yet implemented.
+        max_workers : int, optional
+            The maximum number of worker processes to use if parallel is True.
+            Default is 1. If set to -1, uses the number of CPUs available.
         **kwargs
             Additional keyword arguments are passed to
             the extraction function related to reading the raw data files.
@@ -150,7 +155,33 @@ class DataExtractor:
                 )
                 files_converted += 1
         elif in_datapath.is_dir() and parallel is True:
-            raise NotImplementedError("Parallel processing not yet implemented.")
+            filepaths = sorted(list(in_datapath.glob(f"{pattern}")))
+            with concurrent.futures.ProcessPoolExecutor(
+                max_workers=max_workers
+            ) as executor:
+                futures = []
+                for in_filepath in filepaths:
+                    futures.append(
+                        executor.submit(
+                            in_filepath=in_filepath,
+                            field_mapping=merged_field_mapping,
+                            **kwargs
+                        )
+                    )
+                for future in concurrent.futures.as_completed(futures):
+                    df = future.result()
+                    # Apply constant field values
+                    if constant_field_values:
+                        for field, value in constant_field_values.items():
+                            df[field] = value
+                    # Validate data types and required fields
+                    validated_df = table_schema_func.validate(df)
+                    # Write to cache as parquet
+                    self.ev.write.to_cache(
+                        validated_df,
+                        out_filepath
+                    )
+                    files_converted += 1
         else:
             out_filepath = Path(cache_dir, in_datapath.name)
             out_filepath = out_filepath.with_suffix(".parquet")
