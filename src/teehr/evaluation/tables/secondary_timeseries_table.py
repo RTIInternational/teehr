@@ -85,9 +85,10 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
-        max_workers: Union[int, None] = MAX_CPUS,
         persist_dataframe: bool = False,
         drop_duplicates: bool = True,
+        parallel: bool = False,
+        max_workers: Union[int, None] = MAX_CPUS,
         **kwargs
     ):
         """Import timeseries helper."""
@@ -103,6 +104,8 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             table_fields=self.fields(),
             table_schema_func=self.schema_func(type="pandas"),
             extraction_func=convert_single_timeseries,
+            parallel=parallel,
+            max_workers=max_workers,
             **kwargs
         )
         # Read the converted files to Spark DataFrame
