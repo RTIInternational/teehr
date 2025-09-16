@@ -13,13 +13,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# The target file size in bytes of cached parquet files.
-TARGET_FILE_SIZE = 128 * 1e6
-
-# The correction factor adjusts for differences in
-# in-memory and on-disk sizes. Do not change.
-CORRECTION_FACTOR = 0.735
-
 
 def convert_single_timeseries(
     in_filepath: Union[str, Path],
