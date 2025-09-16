@@ -159,17 +159,20 @@ class DataExtractor:
             with concurrent.futures.ProcessPoolExecutor(
                 max_workers=max_workers
             ) as executor:
-                futures = []
+                futures = {}
                 for in_filepath in filepaths:
-                    futures.append(
-                        executor.submit(
-                            in_filepath=in_filepath,
-                            field_mapping=merged_field_mapping,
-                            **kwargs
-                        )
+                    future = executor.submit(
+                        extraction_func,
+                        in_filepath,
+                        merged_field_mapping,
+                        **kwargs
                     )
+                    futures[future] = in_filepath.name
                 for future in concurrent.futures.as_completed(futures):
                     df = future.result()
+                    filename = futures[future]
+                    out_filepath = Path(cache_dir, filename)
+                    out_filepath = out_filepath.with_suffix(".parquet")
                     # Apply constant field values
                     if constant_field_values:
                         for field, value in constant_field_values.items():
