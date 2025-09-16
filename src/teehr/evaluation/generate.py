@@ -48,7 +48,12 @@ class GeneratedTimeSeriesBasemodel:
                 " Must be one of: primary_timeseries, secondary_timeseries"
             )
         validated_df = tbl._validate(df=self.df)
-        tbl._write_spark_df(validated_df, write_mode=write_mode)
+        self.ev.write.to_warehouse(
+            source_data=validated_df,
+            target_table=tbl.name,
+            write_mode="append",
+            uniqueness_fields=tbl.uniqueness_fields
+        )
 
     def to_pandas(self):
         """Return Pandas DataFrame."""

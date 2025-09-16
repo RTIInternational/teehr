@@ -184,16 +184,19 @@ def clone_from_s3(
         )
 
         if table.name == "joined_timeseries":
-            (
-                sdf_in.writeTo(
-                    f"{ev.catalog_name}.{ev.schema_name}.{table.name}"
-                )
-                .createOrReplace()
+            ev.write.to_warehouse(
+                source_data=sdf_in,
+                target_table=table.name,
+                write_mode="create_or_replace",
+                uniqueness_fields=table.uniqueness_fields,
+                partition_by=table.partition_by
             )
         else:
-            table._write_spark_df(
-                sdf_in,
-                write_mode="overwrite"
+            ev.write.to_warehouse(
+                source_data=sdf_in,
+                target_table=table.name,
+                write_mode="overwrite",
+                uniqueness_fields=table.uniqueness_fields
             )
 
     # copy scripts path to ev.scripts_dir

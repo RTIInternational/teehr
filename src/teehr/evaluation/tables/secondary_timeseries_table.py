@@ -124,7 +124,8 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         # Validate using the _validate() method
         validated_df = self._validate(
             df=df,
-            drop_duplicates=drop_duplicates
+            drop_duplicates=drop_duplicates,
+            add_missing_columns=True
         )
 
         self.ev.write.to_warehouse(

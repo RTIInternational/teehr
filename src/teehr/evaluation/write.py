@@ -35,6 +35,11 @@ class Write:
         partition_by: List[str],
     ):
         """Upsert the DataFrame to the specified target in the catalog."""
+        if partition_by is None:
+            raise ValueError(
+                "partition_by fields must be provided when using"
+                " write_mode='create_or_replace'"
+            )
         # Use the <=> operator for null-safe equality comparison
         # so that two null values are considered equal.
         sql_query = f"""
@@ -174,7 +179,7 @@ class Write:
             The mode to use when caching the DataFrame
             (e.g., 'append', 'overwrite'), by default "overwrite".
         """
-        # TODO: Implement
+        # TODO: What about None values? Datatype issues?
         if isinstance(source_data, pd.DataFrame):
             source_data.to_parquet(cache_filepath)
         elif isinstance(source_data, DataFrame):

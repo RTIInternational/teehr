@@ -192,7 +192,8 @@ class JoinedTimeseriesTable(TimeseriesTable):
             source_data=self.df,
             target_table=self.name,
             write_mode=write_mode,
-            uniqueness_fields=self.uniqueness_fields
+            uniqueness_fields=self.uniqueness_fields,
+            partition_by=self.partition_by,
         )
         logger.info("Joined timeseries table written to the warehouse.")
         self._load_table()
