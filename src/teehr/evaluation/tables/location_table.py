@@ -1,7 +1,7 @@
 """Location table class."""
 import teehr.const as const
 from teehr.evaluation.tables.base_table import BaseTable
-from teehr.loading.locations import convert_locations
+from teehr.loading.locations import convert_single_locations
 from teehr.models.filters import LocationFilter
 from teehr.models.table_enums import LocationFields
 from teehr.querying.utils import df_to_gdf
@@ -33,6 +33,12 @@ class LocationTable(BaseTable):
         self.filter_model = LocationFilter
         self.schema_func = schemas.locations_schema
         self.uniqueness_fields = ["id"]
+        self.cache_dir = Path(
+            self.ev.dir_path,
+            const.CACHE_DIR,
+            const.LOADING_CACHE_DIR,
+            const.LOCATIONS_DIR
+        )
 
     def field_enum(self) -> LocationFields:
         """Get the location fields enum."""
@@ -117,24 +123,22 @@ class LocationTable(BaseTable):
           location IDs to be prefixed with "usgs" or the nwm version
           ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
         """
-        cache_dir = Path(
-            self.ev.dir_path,
-            const.CACHE_DIR,
-            const.LOADING_CACHE_DIR,
-            const.LOCATIONS_DIR
-        )
         # Clear the cache directory if it exists.
-        remove_dir_if_exists(cache_dir)
+        remove_dir_if_exists(self.cache_dir)
 
-        convert_locations(
-            in_path,
-            cache_dir,
+        self.ev.extract.to_cache(
+            in_datapath=in_path,
             field_mapping=field_mapping,
             pattern=pattern,
+            cache_dir=self.cache_dir,
+            table_fields=self.fields(),
+            table_schema_func=self.schema_func(type="pandas"),
+            extraction_func=convert_single_locations,
             **kwargs
         )
+
         # Read the converted files to Spark DataFrame
-        df = self._read_files_from_cache_or_s3(cache_dir)
+        df = self._read_files_from_cache_or_s3(self.cache_dir)
 
         # Add or replace location_id prefix if provided
         if location_id_prefix:
@@ -156,9 +160,6 @@ class LocationTable(BaseTable):
             write_mode=write_mode,
             uniqueness_fields=self.uniqueness_fields
         )
-
-        # # Reload the table
-        # self._load_table()
 
     def _load_dataframe(
         self,

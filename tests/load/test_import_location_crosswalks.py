@@ -1,5 +1,7 @@
 """Test the import_location_crosswalks function."""
-from teehr.loading.location_crosswalks import convert_location_crosswalks
+from teehr.loading.location_crosswalks import (
+    convert_single_location_crosswalks
+)
 from pathlib import Path
 from teehr import Evaluation
 import tempfile
@@ -15,13 +17,11 @@ CROSSWALK_FILEPATH_NC = Path(
 
 def test_convert_location_crosswalk(tmpdir):
     """Test the import_locations function on geojson."""
-    output_filepath = Path(tmpdir, "crosswalk.parquet")
-
-    convert_location_crosswalks(
-        in_path=CROSSWALK_FILEPATH,
-        out_dirpath=tmpdir,
+    df = convert_single_location_crosswalks(
+        in_filepath=CROSSWALK_FILEPATH,
+        field_mapping={"primary_location_id": "primary_location_id"}
     )
-    assert output_filepath.is_file()
+    assert df.index.size == 3
 
 
 def test_validate_and_insert_crosswalks(tmpdir):
@@ -58,19 +58,16 @@ def test_validate_and_insert_crosswalks(tmpdir):
 
 def test_convert_location_crosswalk_netcdf(tmpdir):
     """Test the import_locations function on netcdf."""
-    output_filepath = Path(tmpdir, "nwm_v3_route_link_subset.parquet")
-
     field_mapping = {
         "link": "secondary_location_id",
         "gages": "primary_location_id"
     }
 
-    convert_location_crosswalks(
-        in_path=CROSSWALK_FILEPATH_NC,
-        out_dirpath=tmpdir,
+    df = convert_single_location_crosswalks(
+        in_filepath=CROSSWALK_FILEPATH_NC,
         field_mapping=field_mapping,
     )
-    assert output_filepath.is_file()
+    assert df.index.size == 100
 
 
 if __name__ == "__main__":

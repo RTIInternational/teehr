@@ -1,5 +1,5 @@
 """Test the import locations functionality."""
-from teehr.loading.locations import convert_locations
+from teehr.loading.locations import convert_single_locations
 from pathlib import Path
 from teehr import Evaluation
 import tempfile
@@ -14,13 +14,11 @@ GEOJSON_NP_GAGES_FILEPATH = Path(
 
 def test_convert_locations_geojson(tmpdir):
     """Test the convert_locations function on geojson."""
-    output_filepath = Path(tmpdir, "gages.parquet")
-
-    convert_locations(
-        in_path=GEOJSON_GAGES_FILEPATH,
-        out_dirpath=tmpdir,
+    df = convert_single_locations(
+        in_filepath=GEOJSON_GAGES_FILEPATH,
+        field_mapping={"id": "id"}
     )
-    assert output_filepath.is_file()
+    assert df.index.size == 3
 
 
 def test_validate_and_insert_locations(tmpdir):

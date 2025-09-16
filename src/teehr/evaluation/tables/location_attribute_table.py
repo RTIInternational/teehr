@@ -1,7 +1,7 @@
 """Location Attribute Table class."""
 import teehr.const as const
 from teehr.evaluation.tables.base_table import BaseTable
-from teehr.loading.location_attributes import convert_location_attributes
+from teehr.loading.location_attributes import convert_single_location_attributes
 from teehr.loading.utils import validate_input_is_csv, validate_input_is_parquet
 from teehr.models.filters import LocationAttributeFilter
 from teehr.models.table_enums import LocationAttributeFields
@@ -48,6 +48,12 @@ class LocationAttributeTable(BaseTable):
                 "domain_column": "name",
             }
         ]
+        self.cache_dir = Path(
+            self.ev.dir_path,
+            const.CACHE_DIR,
+            const.LOADING_CACHE_DIR,
+            const.LOCATION_ATTRIBUTES_DIR
+        )
 
     def _load(
         self,
@@ -61,24 +67,22 @@ class LocationAttributeTable(BaseTable):
         **kwargs
     ):
         """Load location attributes helper."""
-        cache_dir = Path(
-            self.ev.dir_path,
-            const.CACHE_DIR,
-            const.LOADING_CACHE_DIR,
-            const.LOCATION_ATTRIBUTES_DIR
-        )
         # Clear the cache directory if it exists.
-        remove_dir_if_exists(cache_dir)
+        remove_dir_if_exists(self.cache_dir)
 
-        convert_location_attributes(
-            in_path,
-            cache_dir,
-            pattern=pattern,
+        self.ev.extract.to_cache(
+            in_datapath=in_path,
             field_mapping=field_mapping,
+            pattern=pattern,
+            cache_dir=self.cache_dir,
+            table_fields=self.fields(),
+            table_schema_func=self.schema_func(type="pandas"),
+            extraction_func=convert_single_location_attributes,
             **kwargs
         )
+
         # Read the converted files to Spark DataFrame
-        df = self._read_files_from_cache_or_s3(cache_dir)
+        df = self._read_files_from_cache_or_s3(self.cache_dir)
 
         # Add or replace location_id prefix if provided
         if location_id_prefix:
@@ -104,7 +108,6 @@ class LocationAttributeTable(BaseTable):
                 )
             self.ev.attributes.add(attr_list)
 
-        # Validate using the _validate() method
         validated_df = self._validate(
             df=df,
             drop_duplicates=drop_duplicates

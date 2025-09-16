@@ -1,6 +1,6 @@
 import teehr.const as const
 from teehr.evaluation.tables.base_table import BaseTable
-from teehr.loading.location_crosswalks import convert_location_crosswalks
+# from teehr.loading.location_crosswalks import convert_location_crosswalks
 from teehr.loading.utils import validate_input_is_csv, validate_input_is_parquet
 from teehr.models.filters import LocationCrosswalkFilter
 from teehr.models.table_enums import LocationCrosswalkFields
@@ -12,6 +12,7 @@ import logging
 from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
 from teehr.models.table_enums import TableWriteEnum
 from teehr.loading.utils import add_or_replace_sdf_column_prefix
+from teehr.loading.location_crosswalks import convert_single_location_crosswalks
 import pyspark.sql as ps
 import pandas as pd
 
@@ -40,6 +41,12 @@ class LocationCrosswalkTable(BaseTable):
                 "domain_column": "id",
             }
         ]
+        self.cache_dir = Path(
+            self.ev.dir_path,
+            const.CACHE_DIR,
+            const.LOADING_CACHE_DIR,
+            const.LOCATION_CROSSWALKS_DIR
+        )
 
     def _load(
         self,
@@ -53,25 +60,22 @@ class LocationCrosswalkTable(BaseTable):
         **kwargs
     ):
         """Load location crosswalks helper."""
-        cache_dir = Path(
-            self.ev.dir_path,
-            const.CACHE_DIR,
-            const.LOADING_CACHE_DIR,
-            const.LOCATION_CROSSWALKS_DIR
-        )
         # Clear the cache directory if it exists.
-        remove_dir_if_exists(cache_dir)
+        remove_dir_if_exists(self.cache_dir)
 
-        convert_location_crosswalks(
-            in_path,
-            cache_dir,
+        self.ev.extract.to_cache(
+            in_datapath=in_path,
             field_mapping=field_mapping,
             pattern=pattern,
+            cache_dir=self.cache_dir,
+            table_fields=self.fields(),
+            table_schema_func=self.schema_func(type="pandas"),
+            extraction_func=convert_single_location_crosswalks,
             **kwargs
         )
 
         # Read the converted files to Spark DataFrame
-        df = self._read_files_from_cache_or_s3(cache_dir)
+        df = self._read_files_from_cache_or_s3(self.cache_dir)
 
         # Add or replace primary location_id prefix if provided
         if primary_location_id_prefix:

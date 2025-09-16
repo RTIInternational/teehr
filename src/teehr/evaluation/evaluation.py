@@ -27,6 +27,7 @@ from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.metrics import Metrics
 from teehr.evaluation.generate import GeneratedTimeseries
 from teehr.evaluation.write import Write
+from teehr.evaluation.extract import DataExtractor
 from teehr.evaluation.utils import create_spark_session, copy_schema_dir
 import pandas as pd
 import re
@@ -118,6 +119,11 @@ class Evaluation:
             )
 
         pass
+
+    @property
+    def extract(self) -> DataExtractor:
+        """The extract component class for extracting data."""
+        return DataExtractor(self)
 
     @property
     def write(self) -> Write:

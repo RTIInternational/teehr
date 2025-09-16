@@ -1,7 +1,9 @@
 """Writer class for TEEHR evaluations."""
 from typing import List
+from pathlib import Path
 
 from pyspark.sql import DataFrame
+import pandas as pd
 
 from teehr.evaluation.utils import get_table_instance
 
@@ -156,8 +158,8 @@ class Write:
 
     def to_cache(
         self,
-        source_data: DataFrame,
-        cache_name: str,
+        source_data: DataFrame | pd.DataFrame,
+        cache_filepath: str | Path,
         write_mode: str = "overwrite"
     ):
         """Cache the DataFrame in memory for faster access.
@@ -165,7 +167,7 @@ class Write:
         Parameters
         ----------
         source_data : DataFrame
-            The Spark DataFrame to cache.
+            The Spark or Pandas DataFrame to cache.
         cache_name : str
             The name to use for the cached table.
         write_mode : str, optional
@@ -173,7 +175,9 @@ class Write:
             (e.g., 'append', 'overwrite'), by default "overwrite".
         """
         # TODO: Implement
-        pass
-        # if write_mode == "overwrite":
-        #     self.spark.catalog.dropTempView(cache_name)
-        # source_data.createOrReplaceTempView(cache_name)
+        if isinstance(source_data, pd.DataFrame):
+            source_data.to_parquet(cache_filepath)
+        elif isinstance(source_data, DataFrame):
+            source_data.write.mode(write_mode).parquet(cache_filepath)
+        else:
+            raise ValueError("source_data must be a Spark or Pandas DataFrame.")

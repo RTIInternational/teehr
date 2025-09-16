@@ -1,7 +1,7 @@
 """Secondary timeseries table class."""
 import teehr.const as const
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
-from teehr.loading.timeseries import convert_timeseries
+from teehr.loading.timeseries import convert_single_timeseries
 from pathlib import Path
 from typing import Union
 import logging
@@ -62,6 +62,12 @@ class SecondaryTimeseriesTable(TimeseriesTable):
                 "domain_column": "secondary_location_id",
             }
         ]
+        self.cache_dir = Path(
+            self.ev.dir_path,
+            const.CACHE_DIR,
+            const.LOADING_CACHE_DIR,
+            const.SECONDARY_TIMESERIES_DIR
+        )
 
     def field_enum(self) -> TimeseriesFields:
         """Get the timeseries fields enum."""
@@ -85,27 +91,22 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         **kwargs
     ):
         """Import timeseries helper."""
-        cache_dir = Path(
-            self.ev.dir_path,
-            const.CACHE_DIR,
-            const.LOADING_CACHE_DIR,
-            const.SECONDARY_TIMESERIES_DIR
-        )
         # Clear the cache directory if it exists.
-        remove_dir_if_exists(cache_dir)
+        remove_dir_if_exists(self.cache_dir)
 
-        convert_timeseries(
-            in_path=in_path,
-            out_path=cache_dir,
+        self.ev.extract.to_cache(
+            in_datapath=in_path,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
-            timeseries_type="secondary",
             pattern=pattern,
-            max_workers=max_workers,
+            cache_dir=self.cache_dir,
+            table_fields=self.fields(),
+            table_schema_func=self.schema_func(type="pandas"),
+            extraction_func=convert_single_timeseries,
             **kwargs
         )
         # Read the converted files to Spark DataFrame
-        df = self._read_files_from_cache_or_s3(cache_dir)
+        df = self._read_files_from_cache_or_s3(self.cache_dir)
 
         if persist_dataframe:
             df = df.persist()
