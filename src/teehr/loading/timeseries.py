@@ -140,9 +140,11 @@ def validate_and_insert_timeseries(
     )
 
     # Write to the table
-    table._write_spark_df(
-        validated_df,
-        write_mode=write_mode
+    ev.write.to_warehouse(
+        source_data=validated_df,
+        target_table=table.name,
+        write_mode=write_mode,
+        uniqueness_fields=table.uniqueness_fields
     )
 
     # Reload the table
