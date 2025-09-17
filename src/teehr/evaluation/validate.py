@@ -69,7 +69,7 @@ class Validator:
         ps.DataFrame
             The validated Spark DataFrame.
         """
-        logger.info(f"Validating DataFrame against schema for {self.name}.")
+        logger.info("Validating DataFrame against schema.")
         if isinstance(table_schema, SparkDataFrameSchema):
             if not isinstance(df, ps.DataFrame):
                 raise ValueError(

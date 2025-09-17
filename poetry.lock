@@ -280,7 +280,42 @@ optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "apache_sedona-1.8.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:6fe7aae5ef693e5b02ce1e98b3149ff1c884153106dfb78d8bb1dc5ce49e20a0"},
+    {file = "apache_sedona-1.8.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:f2d01841f7ff4e29a765e0e9e03ffec1cedc9e291375aaee476a44a77ad5843a"},
+    {file = "apache_sedona-1.8.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:5ede2e19742edb4b7b3f8497cff9b364d02092b9b4e2dbec24e71921c213861b"},
+    {file = "apache_sedona-1.8.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ed1f4664c301d8f2f4073f8210ddadd1b7a583ca4ecee7ffca4a340f0c7e81ea"},
+    {file = "apache_sedona-1.8.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e2460d8c16bf37309cc67abe85c6aa62d8b4e2b28d80437c41c4d8f2b0f7bd3b"},
+    {file = "apache_sedona-1.8.0-cp310-cp310-win_amd64.whl", hash = "sha256:8c3d43eaa9fa4b5d33f1e443b42ce22cc6bc71aa6743b16c239dc4374f314f42"},
+    {file = "apache_sedona-1.8.0-cp310-cp310-win_arm64.whl", hash = "sha256:c9040a8357e371533df70a7797ab0006841f5ae4421ad50002b8f85a65b350b4"},
+    {file = "apache_sedona-1.8.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:a2951eb75533770e240dd32dd1ecd08643360224ea86cbde0522b58ec5673ac8"},
+    {file = "apache_sedona-1.8.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:efd1ce6e780faef327366b2a26ed5a1d60e437fd271b074f8a5d6159c790e564"},
+    {file = "apache_sedona-1.8.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f04f64731f52ad9adcf5a1c5ddb2779973046e80724f01f82bad5efd45a5bdd7"},
+    {file = "apache_sedona-1.8.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:be8db3a5669288f7455729bc84592426f6f3488a52511aba2f9b4bc4df2a2135"},
+    {file = "apache_sedona-1.8.0-cp311-cp311-win_amd64.whl", hash = "sha256:4c67ac29b1e629f9c93194f5a6ddc8afd8dcd442f8916f2d7d6e7c8d25a7a7c3"},
+    {file = "apache_sedona-1.8.0-cp311-cp311-win_arm64.whl", hash = "sha256:efbcfe8aaed0ac2a7696582eb9854b1394ada847424bc775a7c4819f0d8bfa24"},
+    {file = "apache_sedona-1.8.0-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:e2731cb167e9f61e442fd95c59c1cb013f8eac2985af54aaf061f85dd5f88b3d"},
+    {file = "apache_sedona-1.8.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:32642311db6d1b7b4406ec48f444fedd1b504fea30aa4f9f403f442f7433cc64"},
+    {file = "apache_sedona-1.8.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:945bfe904813c069b0870cea843c2b10d53167fdb3f040a9fb3dfa2abe8760fb"},
+    {file = "apache_sedona-1.8.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9ce70b14eb2f4e25c5d0b6090265063e4bbc8ab718f94f453ea9f8323f5a921d"},
+    {file = "apache_sedona-1.8.0-cp312-cp312-win_amd64.whl", hash = "sha256:fec648b60214f97c36e066876bf2294c4d253fba04f7f44aa5928513c794c70c"},
+    {file = "apache_sedona-1.8.0-cp312-cp312-win_arm64.whl", hash = "sha256:bd28a4e200020b11b12931ca2af8a11a56b456d010df78d89ab89e4ddb7d5790"},
+    {file = "apache_sedona-1.8.0-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:0d790bf6adccd8c66b5b4d701d22f9c8ed721cbd14d8634264a48b23d7d7ab67"},
+    {file = "apache_sedona-1.8.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:bc1874736f17db48b7fd222bc0387d15550b46b8cef15c42c308d32d4257498c"},
+    {file = "apache_sedona-1.8.0-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a552a280f678385473f67aad29fed97fbf0c9dccfcaa4058464ea04d116851cc"},
+    {file = "apache_sedona-1.8.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:660114267367affd2817abb4ab221b96c94d0fc2fd0a8f0d559c0bc8f6303ca3"},
+    {file = "apache_sedona-1.8.0-cp313-cp313-win_amd64.whl", hash = "sha256:39931c46340421e61e91376590a6ee533ed54e9a912c7ed62e0a46014277680b"},
+    {file = "apache_sedona-1.8.0-cp313-cp313-win_arm64.whl", hash = "sha256:71ce78ce474301b4fd133e6f8282ad69687f876dd4334ec319323608c181fe88"},
+    {file = "apache_sedona-1.8.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:6fdbabcf5d645783b34e040ae1c59148b561c4d30e1c2ea409f0dfa6056a1a9a"},
+    {file = "apache_sedona-1.8.0-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:45fb37599d7b98a02be1c501d2af0eeb207518e67b36c4c93b2c46534c267473"},
+    {file = "apache_sedona-1.8.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f7b469194a4cda6b2be5974d6d3b13dc6263a98842a4e05ff35e9604c3df6c60"},
+    {file = "apache_sedona-1.8.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8a28bb1f0ae35dfb1ce74977feb844e5f384549d46fe4844247c81c6b33d7493"},
+    {file = "apache_sedona-1.8.0-cp38-cp38-win_amd64.whl", hash = "sha256:b2654cfa8611545209e16682765698b2058c2b48384588a60ccbcdd6ec5485eb"},
+    {file = "apache_sedona-1.8.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:1878d81df59cb11fd68f5f3b2969ad7323aca63d08eae55fa084ae38fc299315"},
+    {file = "apache_sedona-1.8.0-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:d13085b89ad2f0460962771f77b59392551722b9f1b44c6fcb964c053da375f2"},
+    {file = "apache_sedona-1.8.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a6ceb18a56ba12862f7f54eb36f7f0fa10bda2454ec174d90759b2984323dba1"},
+    {file = "apache_sedona-1.8.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:cd1e49ce58dab5f7eba395bc6d48473d145650801348df6e4b13e0a36606fd57"},
+    {file = "apache_sedona-1.8.0-cp39-cp39-win_amd64.whl", hash = "sha256:a978586948c06e44ff2ca3fd65f00fb6102ab89d89b4d4a24fe70370941730fd"},
+    {file = "apache_sedona-1.8.0-cp39-cp39-win_arm64.whl", hash = "sha256:2778da9b11d5a6540dba2aa87e3a280f68442e8021cdc5137571fdf4db94fd79"},
+    {file = "apache_sedona-1.8.0.tar.gz", hash = "sha256:560d176b8ba6fd5b9a55d5c780eb9798a99e309b1253737f9576cad0a8f17b05"},
 ]
 
 [package.dependencies]
@@ -294,10 +329,6 @@ flink = ["apache-flink (>=1.19.0)"]
 kepler-map = ["geopandas", "keplergl (==0.3.2)"]
 pydeck-map = ["geopandas", "pydeck (==0.8.0)"]
 spark = ["pyspark (>=2.3.0)"]
-
-[package.source]
-type = "file"
-url = "playground/iceberg/apache_sedona-1.8.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"
 
 [[package]]
 name = "appnope"
@@ -7450,4 +7481,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.14"
-content-hash = "1831ca6f693507c2c01bc0d59833424314b8263c8e9f5abf4788d3648e1ba003"
+content-hash = "7042ad7d0ad7984934d5da0f8a4f35ed896fa89195d94d7ca2ff5d27d54e3980"

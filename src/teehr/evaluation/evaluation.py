@@ -70,8 +70,7 @@ class Evaluation:
         create_dir: bool = False,
         spark: SparkSession = None,
         check_evaluation_version: bool = True,
-        schema_name: str = "db",
-        enable_s3_reads: bool = True
+        schema_name: str = "db"
     ):
         """
         Initialize the Evaluation class.
@@ -129,8 +128,7 @@ class Evaluation:
             logger.info("Creating a new Spark session.")
             self.spark = create_spark_session(
                 warehouse_path=self.warehouse_path,
-                catalog_name=self.catalog_name,
-                enable_s3_reads=enable_s3_reads
+                catalog_name=self.catalog_name
             )
 
         pass

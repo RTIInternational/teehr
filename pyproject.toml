@@ -34,7 +34,6 @@ numba = ">=0.60.0,<1"
 arch = ">=7.0.0,<8"
 pandera = {extras = ["pyspark"], version = ">=0.20.4,<1"}
 netcdf4 = ">=1.6.5,<2"
-apache-sedona = {path = "playground/iceberg/apache_sedona-1.8.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl"}
 scoringrules = ">=0.7.1,<1"
 pyiceberg = ">=0.9.1,<1"
 lxml = ">=5.4.0,<6"
@@ -42,6 +41,7 @@ bokeh = ">=3.7.3,<4"
 protobuf = "5.28.3"
 psutil = ">=7.0.0,<8"
 baseflow = "^0.1.0"
+apache-sedona = ">=1.8.0,<2"
 
 [tool.poetry.group.test.dependencies]
 pytest = ">=7.4.3"

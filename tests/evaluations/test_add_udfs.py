@@ -19,8 +19,7 @@ def test_add_row_udfs_null_reference(tmpdir):
     """Test adding row level UDFs with null reference time."""
     ev = teehr.Evaluation(
         dir_path=tmpdir,
-        create_dir=True,
-        enable_s3_reads=True
+        create_dir=True
     )
     ev.clone_from_s3("e0_2_location_example")
     ev.joined_timeseries.create(add_attrs=False, execute_scripts=False)
@@ -32,7 +31,7 @@ def test_add_row_udfs_null_reference(tmpdir):
         rcf.Seasons()
     ]).write()
 
-    # ev.spark.stop()
+    ev.spark.stop()
 
 
 def test_add_row_udfs(tmpdir):
@@ -107,13 +106,13 @@ def test_add_row_udfs(tmpdir):
     for row in check_vals:
         assert row["day_of_year"] in [1, 2]
 
-    # ev.spark.stop()
+    ev.spark.stop()
 
 
 def test_add_timeseries_udfs(tmpdir):
     """Test adding a timeseries aware UDF."""
     # utilize e0_2_location_example from s3 to satisfy baseflow POR reqs
-    ev = teehr.Evaluation(tmpdir, create_dir=True, enable_s3_reads=True)
+    ev = teehr.Evaluation(tmpdir, create_dir=True)
     ev.clone_from_s3(evaluation_name="e0_2_location_example",
                      primary_location_ids=["usgs-14316700"])
     sdf = ev.joined_timeseries.to_sdf()
@@ -255,7 +254,7 @@ def test_add_timeseries_udfs(tmpdir):
     event_count = sdf.select('event_id').distinct().count()
     assert event_count == 219
 
-    # ev.spark.stop()
+    ev.spark.stop()
 
 
 def test_add_udfs_write(tmpdir):
@@ -275,7 +274,7 @@ def test_add_udfs_write(tmpdir):
     assert "event_id" in cols
     # assert "forecast_lead_time" in cols
 
-    # ev.spark.stop()
+    ev.spark.stop()
 
 
 def test_location_event_detection(tmpdir):
@@ -305,7 +304,7 @@ def test_location_event_detection(tmpdir):
     assert "max_primary_value" in sdf.columns
     assert "max_secondary_value" in sdf.columns
 
-    # ev.spark.stop()
+    ev.spark.stop()
 
 
 if __name__ == "__main__":

@@ -208,6 +208,7 @@ class Write:
             Whether to create a temporary (True) or a global view (False),
             by default True.
         """
+        # TODO: Does this make sense to be on writer?
         if isinstance(source_data, pd.DataFrame):
             source_data = self.ev.spark.createDataFrame(source_data)
         if temporary is True:
