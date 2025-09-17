@@ -103,6 +103,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             cache_dir=self.cache_dir,
             table_fields=self.fields(),
             table_schema_func=self.schema_func(type="pandas"),
+            write_schema_func=self.schema_func(type="arrow"),
             extraction_func=convert_single_timeseries,
             parallel=parallel,
             max_workers=max_workers,

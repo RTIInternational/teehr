@@ -6,6 +6,7 @@ import concurrent.futures
 
 from pandera.pyspark import DataFrameSchema as SparkDataFrameSchema
 from pandera import DataFrameSchema as PandasDataFrameSchema
+from pyarrow import schema as arrow_schema
 
 from teehr.loading.utils import (
     merge_field_mappings,
@@ -75,6 +76,7 @@ class DataExtractor:
         cache_dir: str | Path,
         table_fields: list[str],
         table_schema_func: SparkDataFrameSchema | PandasDataFrameSchema,
+        write_schema_func: arrow_schema,
         extraction_func: Callable[[str | Path], dict[str]],
         field_mapping: dict = None,
         constant_field_values: dict = None,
@@ -153,8 +155,9 @@ class DataExtractor:
                 )
                 # Write to cache as parquet
                 self.ev.write.to_cache(
-                    validated_df,
-                    out_filepath
+                    source_data=validated_df,
+                    cache_filepath=out_filepath,
+                    write_schema=write_schema_func
                 )
                 files_converted += 1
         elif in_datapath.is_dir() and parallel is True:
@@ -187,8 +190,9 @@ class DataExtractor:
                     )
                     # Write to cache as parquet
                     self.ev.write.to_cache(
-                        validated_df,
-                        out_filepath
+                        source_data=validated_df,
+                        cache_filepath=out_filepath,
+                        write_schema=write_schema_func
                     )
                     files_converted += 1
         else:
@@ -211,8 +215,9 @@ class DataExtractor:
             )
             # Write to cache as parquet
             self.ev.write.to_cache(
-                validated_df,
-                out_filepath
+                source_data=validated_df,
+                cache_filepath=out_filepath,
+                write_schema=write_schema_func
             )
             files_converted += 1
         logger.info(f"Converted {files_converted} files.")

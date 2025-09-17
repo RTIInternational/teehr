@@ -4,6 +4,7 @@ from pathlib import Path
 
 from pyspark.sql import DataFrame
 import pandas as pd
+from pyarrow import schema as arrow_schema
 
 from teehr.evaluation.utils import get_table_instance
 
@@ -165,6 +166,7 @@ class Write:
         self,
         source_data: DataFrame | pd.DataFrame,
         cache_filepath: str | Path,
+        write_schema: arrow_schema,
         write_mode: str = "overwrite"
     ):
         """Cache the DataFrame in memory for faster access.
@@ -182,7 +184,11 @@ class Write:
         # TODO: What about None values? Datatype issues?
         # Need kwargs for to_parquet?
         if isinstance(source_data, pd.DataFrame):
-            source_data.to_parquet(cache_filepath)
+            source_data.to_parquet(
+                cache_filepath,
+                engine="pyarrow",
+                schema=write_schema
+            )
         elif isinstance(source_data, DataFrame):
             source_data.write.mode(write_mode).parquet(cache_filepath)
         else:

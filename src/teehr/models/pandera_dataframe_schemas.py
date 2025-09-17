@@ -1,8 +1,10 @@
+"""Pandera DataFrame Schemas for TEEHR Tables."""
 import pandera.pyspark as ps
 import pandera.pandas as pa
 import pyspark.sql.types as T
 import pandas as pd
-from typing import List, Union
+import pyarrow
+
 
 # Domains
 # PySpark Pandera Schemas
@@ -82,6 +84,12 @@ def configuration_schema(type: str = "pyspark") -> ps.DataFrameSchema:
             unique=["name"],
             coerce=True
         )
+    if type == "arrow":
+        return pyarrow.schema([
+            ("name", pyarrow.string()),
+            ("type", pyarrow.string()),
+            ("description", pyarrow.string()),
+        ])
 
 def unit_schema(type: str = "pyspark") -> ps.DataFrameSchema:
     if type == "pandas":
@@ -119,6 +127,11 @@ def unit_schema(type: str = "pyspark") -> ps.DataFrameSchema:
             unique=["name"],
             coerce=True
         )
+    if type == "arrow":
+        return pyarrow.schema([
+            ("name", pyarrow.string()),
+            ("long_name", pyarrow.string()),
+        ])
 
 def variable_schema(type: str = "pyspark") -> ps.DataFrameSchema:
     if type == "pandas":
@@ -157,6 +170,11 @@ def variable_schema(type: str = "pyspark") -> ps.DataFrameSchema:
             unique=["name"],
             coerce=True
         )
+    if type == "arrow":
+        return pyarrow.schema([
+            ("name", pyarrow.string()),
+            ("long_name", pyarrow.string()),
+        ])
 
 def attribute_schema(type: str = "pyspark") -> ps.DataFrameSchema:
     if type == "pandas":
@@ -205,6 +223,12 @@ def attribute_schema(type: str = "pyspark") -> ps.DataFrameSchema:
             unique=["name"],
             coerce=True
         )
+    if type == "arrow":
+        return pyarrow.schema([
+            ("name", pyarrow.string()),
+            ("type", pyarrow.string()),
+            ("description", pyarrow.string()),
+        ])
 
 # Locations
 # PySpark Pandera Models
@@ -229,6 +253,12 @@ def locations_schema(type: str = "pyspark") -> ps.DataFrameSchema:
             unique=["id"],
             coerce=True
         )
+    if type == "arrow":
+        return pyarrow.schema([
+            ("id", pyarrow.string()),
+            ("name", pyarrow.string()),
+            ("geometry", pyarrow.binary()),
+        ])
 
 def location_attributes_schema(
         type: str = "pyspark",
@@ -270,6 +300,12 @@ def location_attributes_schema(
             strict=True,
             coerce=True,
         )
+    if type == "arrow":
+        return pyarrow.schema([
+            ("location_id", pyarrow.string()),
+            ("attribute_name", pyarrow.string()),
+            ("value", pyarrow.string()),
+        ])
 
 def location_crosswalks_schema(
         type: str = "pyspark",
@@ -303,6 +339,11 @@ def location_crosswalks_schema(
             strict=True,
             coerce=True,
         )
+    if type == "arrow":
+        return pyarrow.schema([
+            ("primary_location_id", pyarrow.string()),
+            ("secondary_location_id", pyarrow.string()),
+        ])
 
 
 def weights_file_schema() -> pa.DataFrameSchema:
@@ -334,6 +375,7 @@ def weights_file_schema() -> pa.DataFrameSchema:
 # Timeseries
 pandas_value_type = pa.Float32()
 pyspark_value_type = T.FloatType()
+pyarrow_value_type = pyarrow.float32()
 
 # PySpark Pandera Models
 def primary_timeseries_schema(
@@ -415,6 +457,16 @@ def primary_timeseries_schema(
             strict=True,
             coerce=True,
         )
+    if type == "arrow":
+        return pyarrow.schema([
+            ("reference_time", pyarrow.timestamp("us")),
+            ("value_time", pyarrow.timestamp("us")),
+            ("value", pyarrow_value_type),
+            ("variable_name", pyarrow.string()),
+            ("configuration_name", pyarrow.string()),
+            ("unit_name", pyarrow.string()),
+            ("location_id", pyarrow.string()),
+        ])
 
 def secondary_timeseries_schema(
         type: str = "pyspark",
@@ -502,6 +554,18 @@ def secondary_timeseries_schema(
             strict=True,
             coerce=True,
         )
+    if type == "arrow":
+        return pyarrow.schema([
+            ("reference_time", pyarrow.timestamp("us")),
+            ("value_time", pyarrow.timestamp("us")),
+            ("value", pyarrow_value_type),
+            ("variable_name", pyarrow.string()),
+            ("configuration_name", pyarrow.string()),
+            ("unit_name", pyarrow.string()),
+            ("location_id", pyarrow.string()),
+            ("member", pyarrow.string()),
+        ])
+
 
 def joined_timeseries_schema(
     type: str = "pyspark",
@@ -601,3 +665,15 @@ def joined_timeseries_schema(
             },
             coerce=True,
         )
+    if type == "arrow":  # is this needed for joined?
+        return pyarrow.schema([
+            ("reference_time", pyarrow.timestamp("us")),
+            ("value_time", pyarrow.timestamp("us")),
+            ("primary_value", pyarrow_value_type),
+            ("secondary_value", pyarrow_value_type),
+            ("variable_name", pyarrow.string()),
+            ("configuration_name", pyarrow.string()),
+            ("unit_name", pyarrow.string()),
+            ("primary_location_id", pyarrow.string()),
+            ("secondary_location_id", pyarrow.string()),
+        ])
