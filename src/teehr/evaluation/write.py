@@ -5,6 +5,7 @@ from pathlib import Path
 from pyspark.sql import DataFrame
 import pandas as pd
 from pyarrow import schema as arrow_schema
+import geopandas as gpd
 
 from teehr.evaluation.utils import get_table_instance
 
@@ -175,15 +176,19 @@ class Write:
         ----------
         source_data : DataFrame
             The Spark or Pandas DataFrame to cache.
-        cache_name : str
-            The name to use for the cached table.
+        cache_filepath : str
+            The path to use for the cached table.
+        write_schema : arrow_schema
+            The pyarrow schema to use when writing the parquet file.
         write_mode : str, optional
             The mode to use when caching the DataFrame
             (e.g., 'append', 'overwrite'), by default "overwrite".
         """
-        # TODO: What about None values? Datatype issues?
-        # Need kwargs for to_parquet?
-        if isinstance(source_data, pd.DataFrame):
+        # Allow additional kwargs for to_parquet?
+        if isinstance(source_data, gpd.GeoDataFrame):
+            # Not sure why the arrow schema doesn't work with geopandas.
+            source_data.to_parquet(cache_filepath)
+        elif isinstance(source_data, pd.DataFrame):
             source_data.to_parquet(
                 cache_filepath,
                 engine="pyarrow",

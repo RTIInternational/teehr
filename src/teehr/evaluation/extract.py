@@ -97,6 +97,8 @@ class DataExtractor:
             The list of fields in the target table.
         table_schema_func : Callable
             A function that returns a pandera schema for validating the data.
+        write_schema_func : arrow_schema
+            A pyarrow schema for writing the parquet file to the cache.
         extraction_func : Callable
             A function that extracts a DataFrame from a raw data file.
             The function must have the signature:
