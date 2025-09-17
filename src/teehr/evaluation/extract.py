@@ -147,7 +147,10 @@ class DataExtractor:
                     for field, value in constant_field_values.items():
                         df[field] = value
                 # Validate data types and required fields
-                validated_df = table_schema_func.validate(df)
+                validated_df = self.ev.validate.data_types(
+                    df=df,
+                    table_schema=table_schema_func
+                )
                 # Write to cache as parquet
                 self.ev.write.to_cache(
                     validated_df,
@@ -178,7 +181,10 @@ class DataExtractor:
                         for field, value in constant_field_values.items():
                             df[field] = value
                     # Validate data types and required fields
-                    validated_df = table_schema_func.validate(df)
+                    validated_df = self.ev.validate.data_types(
+                        df=df,
+                        table_schema=table_schema_func
+                    )
                     # Write to cache as parquet
                     self.ev.write.to_cache(
                         validated_df,
@@ -199,7 +205,10 @@ class DataExtractor:
                 for field, value in constant_field_values.items():
                     df[field] = value
             # Validate data types and required fields
-            validated_df = table_schema_func.validate(df)
+            validated_df = self.ev.validate.data_types(
+                df=df,
+                table_schema=table_schema_func
+            )
             # Write to cache as parquet
             self.ev.write.to_cache(
                 validated_df,

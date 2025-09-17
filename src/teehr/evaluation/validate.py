@@ -4,7 +4,9 @@ from typing import List, Dict
 
 import pyspark.sql as ps
 from pandera.pyspark import DataFrameSchema as SparkDataFrameSchema
+from pandera.pandas import DataFrameSchema as PandasDataFrameSchema
 from pyspark.sql.functions import lit
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -47,9 +49,9 @@ class Validator:
 
     def data_types(
         self,
-        sdf: ps.DataFrame,
-        table_schema: SparkDataFrameSchema
-    ) -> ps.DataFrame:
+        df: ps.DataFrame | pd.DataFrame,
+        table_schema: SparkDataFrameSchema | PandasDataFrameSchema,
+    ) -> ps.DataFrame | pd.DataFrame:
         """Validate the DataFrame against the provided schema.
 
         This only checks data types, fields, and nullability using
@@ -67,13 +69,24 @@ class Validator:
         ps.DataFrame
             The validated Spark DataFrame.
         """
-        # TODO: This uses only the pandera schema validation.
         logger.info(f"Validating DataFrame against schema for {self.name}.")
         if isinstance(table_schema, SparkDataFrameSchema):
-            validated_sdf = table_schema.validate(sdf)
+            if not isinstance(df, ps.DataFrame):
+                raise ValueError(
+                    "df must be a Spark DataFrame if"
+                    " schema is a Spark DataFrameSchema."
+                )
+        elif isinstance(table_schema, PandasDataFrameSchema):
+            if not isinstance(df, pd.DataFrame):
+                raise ValueError(
+                    "df must be a Pandas DataFrame."
+                    " if schema is a Pandas DataFrameSchema."
+                )
         else:
-            raise ValueError("schema must be a Spark DataFrameSchema.")
-        return validated_sdf
+            raise ValueError(
+                "schema must be a Spark or Pandas DataFrameSchema."
+            )
+        return table_schema.validate(df)
 
     def data_schema(
         self,
@@ -87,7 +100,7 @@ class Validator:
     ) -> ps.DataFrame:
         """Validate the DataFrame against the warehouse schema.
 
-        This only checks data types, fields, and nullability using
+        This checks data types, fields, and nullability using
         the pandera schema, while also enforcing foreign key relationships,
         optionally dropping duplicates, and optionally adding or removing
         columns to match the warehouse schema.
