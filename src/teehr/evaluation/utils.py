@@ -86,6 +86,7 @@ def create_spark_session(
         .set(
             "spark.jars.packages",
             "org.apache.hadoop:hadoop-aws:3.4.1,"  # SEEMS TO CAUSE HIGH MEMORY USAGE? Also 3.4.2 seems to fail.
+            # "com.amazonaws:aws-java-sdk-bundle:1.12.791,"
             f"org.apache.sedona:sedona-spark-shaded-{PYSPARK_VERSION}_{SCALA_VERSION}:{SEDONA_VERSION},"
             f"org.apache.iceberg:iceberg-spark-runtime-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION},"
             "org.datasyslab:geotools-wrapper:1.8.0-33.1,"  # for raster ops

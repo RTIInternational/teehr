@@ -27,7 +27,7 @@ def test_clone_example_from_s3(tmpdir):
     ev.clone_from_s3("e0_2_location_example")
 
     assert ev.units.to_sdf().count() == 4
-    assert ev.variables.to_sdf().count() == 3
+    assert ev.variables.to_sdf().count() == 4
     assert ev.attributes.to_sdf().count() == 26
     assert ev.configurations.to_sdf().count() == 2
     assert ev.locations.to_sdf().count() == 2
@@ -47,10 +47,10 @@ def test_clone_partial_template_from_s3(tmpdir):
     ev = Evaluation(tmpdir, create_dir=True)
     ev.clone_from_s3("e4_nwm_operational")
 
-    # assert ev.units.to_sdf().count() == 9
-    # assert ev.variables.to_sdf().count() == 5
-    # assert ev.attributes.to_sdf().count() == 13
-    # assert ev.configurations.to_sdf().count() == 1
+    assert ev.units.to_sdf().count() == 9
+    assert ev.variables.to_sdf().count() == 5
+    assert ev.attributes.to_sdf().count() == 13
+    assert ev.configurations.to_sdf().count() == 1
     assert ev.primary_timeseries.to_sdf().count() == 0
     assert ev.secondary_timeseries.to_sdf().count() == 0
     assert ev.joined_timeseries.to_sdf().count() == 0

@@ -195,8 +195,9 @@ def clone_from_s3(
             ev.write.to_warehouse(
                 source_data=sdf_in,
                 target_table=table.name,
-                write_mode="overwrite",
-                uniqueness_fields=table.uniqueness_fields
+                write_mode="upsert",
+                uniqueness_fields=table.uniqueness_fields,
+                partition_by=table.partition_by
             )
 
     # copy scripts path to ev.scripts_dir

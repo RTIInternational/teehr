@@ -105,6 +105,32 @@ class Write:
         """  # noqa: E501
         self.ev.spark.sql(sql_query)
 
+    def _overwrite(
+        self,
+        source_view: str,
+        target_table: str,
+        # uniqueness_fields: List[str],
+    ):
+        """Replace the target table values with matching Dataframe values."""
+        # Use the <=> operator for null-safe equality comparison
+        # so that two null values are considered equal.
+        # on_sql = " AND ".join(
+        #     [f"t.{fld} <=> s.{fld}" for fld in uniqueness_fields]
+        # )
+        # source_fields = self.ev.spark.table(source_view).columns
+        # update_fields = list(
+        #     set(source_fields)
+        #     .symmetric_difference(set(uniqueness_fields))
+        # )
+        # update_set_sql = ", ".join(
+        #     [f"t.{fld} = s.{fld}" for fld in update_fields]
+        # )
+        sql_query = f"""
+            INSERT OVERWRITE TABLE {self.ev.catalog_name}.{self.ev.schema_name}.{target_table}
+            SELECT * FROM {source_view}
+        """  # noqa: E501
+        self.ev.spark.sql(sql_query)
+
     def to_warehouse(
         self,
         source_data: DataFrame | str,
@@ -161,6 +187,18 @@ class Write:
                 source_view=source_data,
                 target_table=target_table,
                 partition_by=partition_by
+            )
+        # TODO: Is something like this needed?
+        # elif write_mode == "overwrite":
+        #     self._overwrite(
+        #         source_view=source_data,
+        #         target_table=target_table,
+        #         # uniqueness_fields=uniqueness_fields,
+        #     )
+        else:
+            raise ValueError(
+                "write_mode must be one of 'append', 'upsert',"
+                " or 'create_or_replace',."
             )
 
         self.ev.spark.sql("DROP VIEW IF EXISTS source_data")
