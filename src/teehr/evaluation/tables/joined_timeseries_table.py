@@ -1,3 +1,4 @@
+"""Joined Timeseries Table."""
 import sys
 from pathlib import Path
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
@@ -245,10 +246,13 @@ class JoinedTimeseriesTable(TimeseriesTable):
         if execute_scripts:
             joined_df = self._run_script(joined_df)
 
-        validated_df = self._validate(
-            df=joined_df,
+        validated_df = self.ev.validate.data_schema(
+            sdf=joined_df,
             strict=False,
-            drop_duplicates=drop_duplicates
+            table_schema=self.schema_func(),
+            drop_duplicates=drop_duplicates,
+            foreign_keys=self.foreign_keys,
+            uniqueness_fields=self.uniqueness_fields
         )
         self.ev.write.to_warehouse(
             source_data=validated_df,

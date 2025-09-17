@@ -1,7 +1,11 @@
+"""Location Crosswalk Table."""
 import teehr.const as const
 from teehr.evaluation.tables.base_table import BaseTable
 # from teehr.loading.location_crosswalks import convert_location_crosswalks
-from teehr.loading.utils import validate_input_is_csv, validate_input_is_parquet
+from teehr.loading.utils import (
+    validate_input_is_csv,
+    validate_input_is_parquet
+)
 from teehr.models.filters import LocationCrosswalkFilter
 from teehr.models.table_enums import LocationCrosswalkFields
 from teehr.querying.utils import join_geometry
@@ -12,7 +16,9 @@ import logging
 from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
 from teehr.models.table_enums import TableWriteEnum
 from teehr.loading.utils import add_or_replace_sdf_column_prefix
-from teehr.loading.location_crosswalks import convert_single_location_crosswalks
+from teehr.loading.location_crosswalks import (
+    convert_single_location_crosswalks
+)
 import pyspark.sql as ps
 import pandas as pd
 
@@ -93,10 +99,12 @@ class LocationCrosswalkTable(BaseTable):
                 prefix=secondary_location_id_prefix,
             )
 
-        # Validate using the _validate() method
-        validated_df = self._validate(
-            df=df,
-            drop_duplicates=drop_duplicates
+        validated_df = self.ev.validate.data_schema(
+            sdf=df,
+            table_schema=self.schema_func(),
+            drop_duplicates=drop_duplicates,
+            foreign_keys=self.foreign_keys,
+            uniqueness_fields=self.uniqueness_fields
         )
 
         self.ev.write.to_warehouse(
@@ -183,7 +191,6 @@ class LocationCrosswalkTable(BaseTable):
 
         Notes
         -----
-
         The TEEHR Location Crosswalk table schema includes fields:
 
         - primary_location_id
@@ -255,7 +262,7 @@ class LocationCrosswalkTable(BaseTable):
 
         - primary_location_id
         - secondary_location_id
-        """
+        """ # noqa
         validate_input_is_csv(in_path)
         self._load(
             in_path=in_path,
@@ -311,7 +318,7 @@ class LocationCrosswalkTable(BaseTable):
             a large number of files from the cache.
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the dataframe.
-        """
+        """ # noqa
         self._load_dataframe(
             df=df,
             field_mapping=field_mapping,

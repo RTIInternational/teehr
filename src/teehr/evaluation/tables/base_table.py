@@ -16,15 +16,14 @@ from teehr.loading.utils import (
     add_or_replace_sdf_column_prefix
 )
 import logging
-from pyspark.sql.functions import lit, col
-from functools import reduce
+from pyspark.sql.functions import lit
 import pandas as pd
 
 
 logger = logging.getLogger(__name__)
 
 
-class BaseTable():
+class BaseTable:
     """Base table class."""
 
     def __init__(self, ev):
@@ -228,61 +227,16 @@ class BaseTable():
 
         return self.schema_func()
 
-    def _validate(
-        self,
-        df: ps.DataFrame,
-        strict: bool = True,
-        add_missing_columns: bool = False,
-        drop_duplicates: bool = True,
-    ) -> ps.DataFrame:
-        """Validate a DataFrame against the table schema.
-
-        Parameters
-        ----------
-        df : ps.DataFrame
-            The DataFrame to validate.
-        strict : bool, optional
-            If True, any extra columns will be dropped before validation.
-            If False, will be validated as-is.
-            The default is True.
-
-        Returns
-        -------
-        validated_df : ps.DataFrame
-            The validated DataFrame.
-        """
-        schema = self._get_schema()
-
-        logger.info(f"Validating DataFrame with {schema.columns}.")
-
-        schema_cols = schema.columns.keys()
-
-        # Add missing columns
-        if add_missing_columns:
-            for col_name in schema_cols:
-                if col_name not in df.columns:
-                    df = df.withColumn(col_name, lit(None))
-
-        if strict:
-            df = df.select(*schema_cols)
-
-        if drop_duplicates:
-            df = df.dropDuplicates(subset=self.uniqueness_fields)
-
-        validated_df = schema.validate(df)
-
-        if len(validated_df.pandera.errors) > 0:
-            logger.error(f"Validation failed: {validated_df.pandera.errors}")
-            raise ValueError(f"Validation failed: {validated_df.pandera.errors}")
-
-        self._enforce_foreign_keys(validated_df)
-
-        return validated_df
-
     def validate(self):
         """Validate the dataset table against the schema."""
         self._check_load_table()
-        self._validate(self.df)
+        self.ev.validate.data_schema(
+            sdf=self.df,
+            table_schema=self.schema_func(),
+            drop_duplicates=self.drop_duplicates,
+            foreign_keys=self.foreign_keys,
+            uniqueness_fields=self.uniqueness_fields,
+        )
 
     def query(
         self,
@@ -712,9 +666,12 @@ class BaseTable():
                 column_name="location_id",
                 prefix=location_id_prefix,
             )
-        validated_df = self._validate(
-            df=df,
+        validated_df = self.ev.validate.data_schema(
+            sdf=df,
+            table_schema=self.schema_func(),
             drop_duplicates=drop_duplicates,
+            foreign_keys=self.foreign_keys,
+            uniqueness_fields=self.uniqueness_fields,
             add_missing_columns=True
         )
         self.ev.write.to_warehouse(

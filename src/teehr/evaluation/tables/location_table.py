@@ -15,7 +15,10 @@ from teehr.models.table_enums import TableWriteEnum
 import pandas as pd
 import pyspark.pandas as ps
 from pyspark.sql.functions import lit
-from teehr.loading.utils import merge_field_mappings, validate_constant_values_dict
+from teehr.loading.utils import (
+    merge_field_mappings,
+    validate_constant_values_dict
+)
 import geopandas as gpd
 
 logger = logging.getLogger(__name__)
@@ -148,10 +151,12 @@ class LocationTable(BaseTable):
                 prefix=location_id_prefix,
             )
 
-        # Validate using the _validate() method
-        validated_df = self._validate(
-            df=df,
-            drop_duplicates=drop_duplicates
+        validated_df = self.ev.validate.data_schema(
+            sdf=df,
+            table_schema=self.schema_func(),
+            drop_duplicates=drop_duplicates,
+            foreign_keys=self.foreign_keys,
+            uniqueness_fields=self.uniqueness_fields
         )
 
         self.ev.write.to_warehouse(
@@ -178,7 +183,9 @@ class LocationTable(BaseTable):
             if field not in default_field_mapping.values():
                 default_field_mapping[field] = field
         if field_mapping:
-            logger.debug("Merging user field_mapping with default field mapping.")
+            logger.debug(
+                "Merging user field_mapping with default field mapping."
+            )
             field_mapping = merge_field_mappings(
                 default_field_mapping,
                 field_mapping
@@ -220,12 +227,13 @@ class LocationTable(BaseTable):
                 column_name="location_id",
                 prefix=location_id_prefix,
             )
-        validated_df = self._validate(
-            df=df,
+        validated_df = self.ev.validate.data_schema(
+            sdf=df,
+            table_schema=self.schema_func(),
             drop_duplicates=drop_duplicates,
-            add_missing_columns=True
+            foreign_keys=self.foreign_keys,
+            uniqueness_fields=self.uniqueness_fields
         )
-
         self.ev.write.to_warehouse(
             source_data=validated_df,
             target_table=self.name,
@@ -277,7 +285,7 @@ class LocationTable(BaseTable):
             a large number of files from the cache.
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the dataframe.
-        """
+        """ # noqa
         self._load_dataframe(
             df=df,
             field_mapping=field_mapping,

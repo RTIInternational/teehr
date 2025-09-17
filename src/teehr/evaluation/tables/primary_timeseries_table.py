@@ -86,6 +86,9 @@ class PrimaryTimeseriesTable(TimeseriesTable):
         # Clear the cache directory if it exists.
         remove_dir_if_exists(self.cache_dir)
 
+        # Thought. This could almost be:
+        # self.ev.extract.to_cache(...).validate(...).write.to_warehouse(...)
+
         self.ev.extract.to_cache(
             in_datapath=in_path,
             field_mapping=field_mapping,
@@ -114,10 +117,12 @@ class PrimaryTimeseriesTable(TimeseriesTable):
                 prefix=location_id_prefix,
             )
 
-        # Validate using the _validate() method
-        validated_df = self._validate(
-            df=df,
-            drop_duplicates=drop_duplicates
+        validated_df = self.ev.validate.data_schema(
+            sdf=df,
+            table_schema=self.schema_func(),
+            drop_duplicates=drop_duplicates,
+            foreign_keys=self.foreign_keys,
+            uniqueness_fields=self.uniqueness_fields
         )
 
         self.ev.write.to_warehouse(
@@ -183,7 +188,7 @@ class PrimaryTimeseriesTable(TimeseriesTable):
         - variable_name
         - value
         - location_id
-        """
+        """ # noqa
         self._load_dataframe(
             df=df,
             field_mapping=field_mapping,

@@ -1,8 +1,13 @@
 """Location Attribute Table class."""
 import teehr.const as const
 from teehr.evaluation.tables.base_table import BaseTable
-from teehr.loading.location_attributes import convert_single_location_attributes
-from teehr.loading.utils import validate_input_is_csv, validate_input_is_parquet
+from teehr.loading.location_attributes import (
+    convert_single_location_attributes
+)
+from teehr.loading.utils import (
+    validate_input_is_csv,
+    validate_input_is_parquet
+)
 from teehr.models.filters import LocationAttributeFilter
 from teehr.models.table_enums import LocationAttributeFields
 from teehr.querying.utils import join_geometry
@@ -108,9 +113,12 @@ class LocationAttributeTable(BaseTable):
                 )
             self.ev.attributes.add(attr_list)
 
-        validated_df = self._validate(
-            df=df,
-            drop_duplicates=drop_duplicates
+        validated_df = self.ev.validate.data_schema(
+            sdf=df,
+            table_schema=self.schema_func(),
+            drop_duplicates=drop_duplicates,
+            foreign_keys=self.foreign_keys,
+            uniqueness_fields=self.uniqueness_fields
         )
 
         self.ev.write.to_warehouse(
@@ -263,7 +271,7 @@ class LocationAttributeTable(BaseTable):
         - location_id
         - attribute_name
         - value
-        """
+        """ # noqa
         validate_input_is_csv(in_path)
         self._load(
             in_path=in_path,
@@ -319,7 +327,7 @@ class LocationAttributeTable(BaseTable):
             a large number of files from the cache.
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the dataframe.
-        """
+        """ # noqa
         self._load_dataframe(
             df=df,
             field_mapping=field_mapping,

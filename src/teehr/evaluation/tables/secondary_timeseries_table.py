@@ -121,13 +121,14 @@ class SecondaryTimeseriesTable(TimeseriesTable):
                 column_name="location_id",
                 prefix=location_id_prefix,
             )
-        # Validate using the _validate() method
-        validated_df = self._validate(
-            df=df,
+        validated_df = self.ev.validate.data_schema(
+            sdf=df,
+            table_schema=self.schema_func(),
             drop_duplicates=drop_duplicates,
+            foreign_keys=self.foreign_keys,
+            uniqueness_fields=self.uniqueness_fields,
             add_missing_columns=True
         )
-
         self.ev.write.to_warehouse(
             source_data=validated_df,
             target_table=self.name,

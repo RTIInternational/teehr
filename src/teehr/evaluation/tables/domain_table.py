@@ -1,3 +1,4 @@
+"""Domain table class."""
 from teehr.evaluation.tables.base_table import BaseTable
 from teehr.models.pydantic_table_models import TableBaseModel
 import pandas as pd
@@ -35,7 +36,12 @@ class DomainTable(BaseTable):
         logger.info(
             f"Validating {len(obj)} objects before adding to {self.name} table"
             )
-        new_df_validated = self._validate(new_df)
+        new_df_validated = self.ev.validate.data_schema(
+            sdf=new_df,
+            table_schema=self.schema_func(),
+            foreign_keys=self.foreign_keys,
+            uniqueness_fields=self.uniqueness_fields
+        )
 
         # warn user if rows in added data already exist in the original table
         df_matched = new_df_validated.join(
@@ -50,7 +56,12 @@ class DomainTable(BaseTable):
             logger.info(
                 f"Validating {self.name} table after adding {len(obj)} objects"
                 )
-            validated_df = self._validate(combined_df)
+            validated_df = self.ev.validate.data_schema(
+                sdf=combined_df,
+                table_schema=self.schema_func(),
+                foreign_keys=self.foreign_keys,
+                uniqueness_fields=self.uniqueness_fields
+            )
 
             self.ev.write.to_warehouse(
                 source_data=validated_df,
@@ -97,7 +108,12 @@ class DomainTable(BaseTable):
                 f"Validating {self.name} table after adding "
                 f"{new_df_not_matched.count()} new objects"
             )
-            validated_df = self._validate(combined_df)
+            validated_df = self.ev.validate.data_schema(
+                sdf=combined_df,
+                table_schema=self.schema_func(),
+                foreign_keys=self.foreign_keys,
+                uniqueness_fields=self.uniqueness_fields
+            )
 
             self.ev.write.to_warehouse(
                 source_data=validated_df,

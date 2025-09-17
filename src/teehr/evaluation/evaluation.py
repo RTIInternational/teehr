@@ -28,6 +28,7 @@ from teehr.evaluation.metrics import Metrics
 from teehr.evaluation.generate import GeneratedTimeseries
 from teehr.evaluation.write import Write
 from teehr.evaluation.extract import DataExtractor
+from teehr.evaluation.validate import Validator
 from teehr.evaluation.utils import create_spark_session, copy_schema_dir
 import pandas as pd
 import re
@@ -119,6 +120,11 @@ class Evaluation:
             )
 
         pass
+
+    @property
+    def validate(self) -> Validator:
+        """The validate component class for validating data."""
+        return Validator(self)
 
     @property
     def extract(self) -> DataExtractor:
