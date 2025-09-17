@@ -77,12 +77,12 @@ def create_spark_session(
         .set("spark.sql.execution.arrow.pyspark.enabled", "true")
         .set("spark.sql.session.timeZone", "UTC")
         # .set("spark.sql.parquet.enableVectorizedReader", "false")  # why was it set to false?
-        .set(
-            "spark.jars.repositories",
-            "https://artifacts.unidata.ucar.edu/repository/unidata-all,"
+        # .set(
+            # "spark.jars.repositories",
+            # "https://artifacts.unidata.ucar.edu/repository/unidata-all,"  # for netcdf in spark
             # "https://repository.apache.org/content/repositories/snapshots,"
             # "https://repository.apache.org/content/groups/snapshots"
-        )
+        # )
         .set(
             "spark.jars.packages",
             "org.apache.hadoop:hadoop-aws:3.4.1,"  # SEEMS TO CAUSE HIGH MEMORY USAGE? Also 3.4.2 seems to fail.
