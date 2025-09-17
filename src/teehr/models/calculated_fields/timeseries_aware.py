@@ -17,11 +17,14 @@ UNIQUENESS_FIELDS = [
 
 
 class PercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
-    """Adds an "event" and "event_id" column to the DataFrame based on a percentile threshold.
+    """Adds "event" and "event_id" columns to the DataFrame based on a percentile threshold.
 
-    The "event" column (bool) indicates whether the value is above the XXth percentile.
-    The "event_id" column (string) groups continuous segments of events and assigns a
-    unique ID to each segment in the format "startdate-enddate".
+    The "event" column (bool) indicates whether the value is above the XXth
+    percentile. For the "event" column, True values indicate that the
+    corresponding value exceeds the specified percentile threshold, while
+    False values indicate that the value is below or equal to the threshold.
+    The "event_id" column (string) groups continuous segments of events and
+    assigns a unique ID to each segment in the format "startdate-enddate".
 
     Properties
     ----------
@@ -40,6 +43,15 @@ class PercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
     - output_event_id_field_name:
         The name of the column to store the event ID.
         Default: "event_id"
+    - output_quantile_field_name:
+        The name of the column to store the quantile value.
+        Default: "quantile_value"
+    - add_quantile_field:
+        Whether to add the quantile field.
+        Default: False
+    - skip_event_id:
+        Whether to skip the event ID generation.
+        Default: False
     - uniqueness_fields:
         The columns to use to uniquely identify each timeseries.
 
@@ -68,9 +80,56 @@ class PercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
     output_event_id_field_name: str = Field(
         default="event_id"
     )
+    output_quantile_field_name: str = Field(
+        default="quantile_value"
+    )
+    add_quantile_field: bool = Field(
+        default=False
+    )
+    skip_event_id: bool = Field(
+        default=False
+    )
     uniqueness_fields: Union[str, List[str]] = Field(
         default=None
     )
+
+    @staticmethod
+    def add_quantile_value(
+        sdf: ps.DataFrame,
+        output_field,
+        input_field,
+        quantile,
+        group_by,
+        return_type=T.DoubleType()
+    ):
+        # Get the schema of the input DataFrame
+        input_schema = sdf.schema
+
+        # Create a copy of the schema and add the new column
+        output_schema = T.StructType(input_schema.fields + [T.StructField(output_field, return_type, True)])
+
+        def compute_quantile(pdf, input_field, quantile, output_field) -> pd.DataFrame:
+            pvs = pdf[input_field]
+
+            # Calculate the XXth percentile
+            percentile = pvs.quantile(quantile)
+
+            # Create a new column with the XXth percentile value
+            pdf[output_field] = percentile
+
+            return pdf
+
+        def wrapper(pdf, input_field, quantile, output_field):
+            return compute_quantile(pdf, input_field, quantile, output_field)
+
+        # Group the data and apply the UDF
+        # lambda pdf: wrapper_function(pdf, threshold_value)
+        sdf = sdf.groupby(group_by).applyInPandas(
+            lambda pdf: wrapper(pdf, input_field, quantile, output_field),
+            schema=output_schema
+        )
+
+        return sdf
 
     @staticmethod
     def add_is_event(
@@ -168,6 +227,14 @@ class PercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         if self.uniqueness_fields is None:
             self.uniqueness_fields = UNIQUENESS_FIELDS
+        if self.add_quantile_field:
+            sdf = self.add_quantile_value(
+                sdf=sdf,
+                input_field=self.value_field_name,
+                quantile=self.quantile,
+                output_field=self.output_quantile_field_name,
+                group_by=self.uniqueness_fields
+            )
         sdf = self.add_is_event(
             sdf=sdf,
             input_field=self.value_field_name,
@@ -175,13 +242,14 @@ class PercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
             output_field=self.output_event_field_name,
             group_by=self.uniqueness_fields
         )
-        sdf = self.add_event_ids(
-            sdf=sdf,
-            input_field=self.output_event_field_name,
-            time_field=self.value_time_field_name,
-            output_field=self.output_event_id_field_name,
-            group_by=self.uniqueness_fields
-        )
+        if not self.skip_event_id:
+            sdf = self.add_event_ids(
+                sdf=sdf,
+                input_field=self.output_event_field_name,
+                time_field=self.value_time_field_name,
+                output_field=self.output_event_id_field_name,
+                group_by=self.uniqueness_fields
+            )
 
         return sdf
 

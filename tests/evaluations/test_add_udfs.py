@@ -245,11 +245,30 @@ def test_add_timeseries_udfs(tmpdir):
     event_count = sdf.select('baseflow_period_id_2').distinct().count()
     assert event_count == 208
 
-    # test percentile event detection
+    # test percentile event detection (default)
     ped = tcf.PercentileEventDetection()
     sdf = ped.apply_to(sdf)
     event_count = sdf.select('event_id').distinct().count()
     assert event_count == 219
+
+    # test percentile event detection (no event-id)
+    sdf = ev.joined_timeseries.to_sdf()
+    ped = tcf.PercentileEventDetection(
+        skip_event_id=True
+    )
+    sdf = ped.apply_to(sdf)
+    num_event_timesteps = sdf.filter(sdf.event == True).count()
+    assert num_event_timesteps == 14823
+
+    # test percentile event detection (return quantile value)
+    sdf = ev.joined_timeseries.to_sdf()
+    ped = tcf.PercentileEventDetection(
+        add_quantile_field=True
+    )
+    sdf = ped.apply_to(sdf)
+    distinct_quantiles = sdf.select("quantile_value").distinct().collect()
+    quantile = distinct_quantiles[0][0]
+    assert np.isclose(quantile, 37.66, atol=0.01)
 
     ev.spark.stop()
 
