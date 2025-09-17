@@ -72,6 +72,8 @@ def convert_single_timeseries(
 
 
 # TODO: Update/remove this function. This is only used by fetching.
+# Should this be part of a Loader class? This general workflow is repeated
+# for each table.
 def validate_and_insert_timeseries(
     ev,
     in_path: Union[str, Path],
@@ -126,12 +128,14 @@ def validate_and_insert_timeseries(
     if drop_overlapping_assimilation_values:
         df = df.withColumn("reference_time", lit(None))
 
-    # Validate using the _validate() method
-    validated_df = table._validate(
-        df=df,
-        drop_duplicates=drop_duplicates
+    # Validate datatypes, foreign keys, and drop duplicates.
+    validated_df = ev.validate.data_schema(
+        sdf=df,
+        table_schema=table.schema_func(),
+        drop_duplicates=drop_duplicates,
+        foreign_keys=table.foreign_keys,
+        uniqueness_fields=table.uniqueness_fields
     )
-
     # Write to the table
     ev.write.to_warehouse(
         source_data=validated_df,

@@ -14,9 +14,10 @@ logger = logging.getLogger(__name__)
 class Validator:
     """Class for validating data."""
 
-    def __init__(self, ev) -> None:
+    def __init__(self, ev=None) -> None:
         """Initialize the Validator class."""
-        self.ev = ev
+        if ev is not None:
+            self.ev = ev
 
     def _enforce_foreign_keys(
         self,
@@ -47,8 +48,8 @@ class Validator:
                     f"the {fk['domain_column']} column in {fk['domain_table']}"
                 )
 
+    @staticmethod
     def data_types(
-        self,
         df: ps.DataFrame | pd.DataFrame,
         table_schema: SparkDataFrameSchema | PandasDataFrameSchema,
     ) -> ps.DataFrame | pd.DataFrame:

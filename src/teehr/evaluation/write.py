@@ -16,19 +16,21 @@ from teehr.evaluation.utils import get_table_instance
 class Write:
     """Class to handle writing evaluation results to storage."""
 
-    def __init__(self, ev):
+    def __init__(self, ev=None):
         """Initialize the Writer with an Evaluation instance.
 
         Parameters
         ----------
         ev : Evaluation
             An instance of the Evaluation class containing Spark session
-            and catalog details.
+            and catalog details. The default is None, which allows access to
+            the classes static methods only.
         """
-        self.spark = ev.spark
-        self.catalog_name = ev.catalog_name
-        self.schema = ev.schema_name
-        self.ev = ev
+        if ev is not None:
+            self.spark = ev.spark
+            self.catalog_name = ev.catalog_name
+            self.schema = ev.schema_name
+            self.ev = ev
 
     def _create_or_replace(
         self,
@@ -163,8 +165,8 @@ class Write:
 
         self.ev.spark.sql("DROP VIEW IF EXISTS source_data")
 
+    @staticmethod
     def to_cache(
-        self,
         source_data: DataFrame | pd.DataFrame,
         cache_filepath: str | Path,
         write_schema: arrow_schema,
