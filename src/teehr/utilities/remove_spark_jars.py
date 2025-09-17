@@ -24,7 +24,7 @@ def main():
             "path": f"{SPARK_HOME}/jars/hadoop-aws-*.jar"
         },
         {
-            "path": f"{SPARK_HOME}/jars/sedona-spark-shaded-4.0_2.13-1.8.1-SNAPSHOT.jar"
+            "path": f"{SPARK_HOME}/jars/*-SNAPSHOT.jar"
         }
     ]
 
