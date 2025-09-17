@@ -69,7 +69,10 @@ def test_generate_timeseries_normals(tmpdir):
         input_table_filter=input_ts,
         start_datetime="2023-01-01T00:00:00",
         end_datetime="2024-12-31T00:00:00",
-        timestep="1 hour"
+        timestep="1 hour",
+        fillna=False,
+        dropna=False,
+        update_variable_table=True
     ).write()  # default destination: "primary_timeseries"
 
     prim_df = (
@@ -108,6 +111,7 @@ def test_generate_timeseries_normals(tmpdir):
     assert clim_df[
         clim_df.day_of_year == 61
     ].value.values[0] == mean_prim_srs.loc[60]
+    ev.spark.stop()
 
 
 def test_generate_reference_forecast(tmpdir):
@@ -220,6 +224,8 @@ def test_generate_reference_forecast(tmpdir):
             ref_fcst_df.value_time == vt
         ].value.values[0]
         assert usgs_clim_value == ref_fcst_value
+
+    ev.spark.stop()
 
 
 if __name__ == "__main__":

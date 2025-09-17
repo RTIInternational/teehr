@@ -23,7 +23,8 @@ class GeneratedTimeSeriesBasemodel:
     def write(
         self,
         destination_table: str = "primary_timeseries",
-        write_mode="append"
+        write_mode: str = "append",
+        drop_duplicates: bool = True
     ):
         """Write the generated DataFrame to a specified table.
 
@@ -47,7 +48,14 @@ class GeneratedTimeSeriesBasemodel:
                 f"Invalid destination table: {destination_table}"
                 " Must be one of: primary_timeseries, secondary_timeseries"
             )
-        validated_df = tbl._validate(df=self.df)
+        validated_df = self.ev.validate.data_schema(
+            sdf=self.df,
+            table_schema=tbl.schema_func(),
+            drop_duplicates=drop_duplicates,
+            foreign_keys=tbl.foreign_keys,
+            uniqueness_fields=tbl.uniqueness_fields,
+            add_missing_columns=True
+        )
         self.ev.write.to_warehouse(
             source_data=validated_df,
             target_table=tbl.name,
