@@ -508,7 +508,8 @@ def test_ensemble_metrics(tmpdir):
         start_datetime="2024-11-19 12:00:00",
         end_datetime="2024-11-21 13:00:00",
         timestep="1 hour",
-        fillna=False
+        fillna=False,
+        dropna=False
     ).write()
 
     # Add reference forecast based on climatology.
