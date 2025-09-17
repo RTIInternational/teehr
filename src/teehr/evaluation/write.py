@@ -180,9 +180,37 @@ class Write:
             (e.g., 'append', 'overwrite'), by default "overwrite".
         """
         # TODO: What about None values? Datatype issues?
+        # Need kwargs for to_parquet?
         if isinstance(source_data, pd.DataFrame):
             source_data.to_parquet(cache_filepath)
         elif isinstance(source_data, DataFrame):
             source_data.write.mode(write_mode).parquet(cache_filepath)
         else:
-            raise ValueError("source_data must be a Spark or Pandas DataFrame.")
+            raise ValueError(
+                "source_data must be a Spark or Pandas DataFrame."
+            )
+
+    def to_view(
+        self,
+        source_data: DataFrame | pd.DataFrame,
+        view_name: str,
+        temporary: bool = True,
+    ):
+        """Create a view from the DataFrame.
+
+        Parameters
+        ----------
+        source_data : DataFrame
+            The Spark or Pandas DataFrame to create a view from.
+        view_name : str
+            The name to use for the temporary or global view.
+        temporary : bool, optional
+            Whether to create a temporary (True) or a global view (False),
+            by default True.
+        """
+        if isinstance(source_data, pd.DataFrame):
+            source_data = self.ev.spark.createDataFrame(source_data)
+        if temporary is True:
+            source_data.createOrReplaceTempView(view_name)
+        else:
+            source_data.createOrReplaceGlobalTempView(view_name)

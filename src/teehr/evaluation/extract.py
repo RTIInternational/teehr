@@ -83,7 +83,7 @@ class DataExtractor:
         max_workers: int = 1,
         **kwargs
     ):
-        """Convert location attributes data to parquet format.
+        """Convert raw data to parquet format enforcing the provided table schema.
 
         Parameters
         ----------

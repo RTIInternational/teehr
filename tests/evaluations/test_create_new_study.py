@@ -12,6 +12,9 @@ def test_clone_template(tmpdir):
 
     ev = Evaluation(dir_path=tmpdir, create_dir=True)
     ev.clone_template()
+
+    tbls_df = ev.list_tables()
+
     # Make sure the empty table warning is not raised.
     ev.attributes.add(
         [
@@ -23,7 +26,12 @@ def test_clone_template(tmpdir):
         ]
     )
 
+    _ = ev.sql("SELECT * FROM attributes", create_temp_views=["attributes"])
+    views_df = ev.list_views()
+
     # Not a complete test, but at least we know the function runs.
+    assert len(tbls_df) == 9
+    assert len(views_df) == 1
     assert Path(tmpdir, "cache").is_dir()
     assert Path(tmpdir, "scripts").is_dir()
     assert Path(tmpdir, ".gitignore").is_file()

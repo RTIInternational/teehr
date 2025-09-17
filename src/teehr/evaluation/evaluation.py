@@ -4,14 +4,24 @@ from typing import Union, Literal, List
 from pathlib import Path
 from teehr.evaluation.tables.attribute_table import AttributeTable
 from teehr.evaluation.tables.configuration_table import ConfigurationTable
-from teehr.evaluation.tables.location_attribute_table import LocationAttributeTable
-from teehr.evaluation.tables.location_crosswalk_table import LocationCrosswalkTable
+from teehr.evaluation.tables.location_attribute_table import (
+    LocationAttributeTable
+)
+from teehr.evaluation.tables.location_crosswalk_table import (
+    LocationCrosswalkTable
+)
 from teehr.evaluation.tables.location_table import LocationTable
-from teehr.evaluation.tables.primary_timeseries_table import PrimaryTimeseriesTable
-from teehr.evaluation.tables.secondary_timeseries_table import SecondaryTimeseriesTable
+from teehr.evaluation.tables.primary_timeseries_table import (
+    PrimaryTimeseriesTable
+)
+from teehr.evaluation.tables.secondary_timeseries_table import (
+    SecondaryTimeseriesTable
+)
 from teehr.evaluation.tables.unit_table import UnitTable
 from teehr.evaluation.tables.variable_table import VariableTable
-from teehr.evaluation.tables.joined_timeseries_table import JoinedTimeseriesTable
+from teehr.evaluation.tables.joined_timeseries_table import (
+    JoinedTimeseriesTable
+)
 from teehr.utils.s3path import S3Path
 from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
 from pyspark.sql import SparkSession
@@ -29,7 +39,11 @@ from teehr.evaluation.generate import GeneratedTimeseries
 from teehr.evaluation.write import Write
 from teehr.evaluation.extract import DataExtractor
 from teehr.evaluation.validate import Validator
-from teehr.evaluation.utils import create_spark_session, copy_schema_dir
+from teehr.evaluation.utils import (
+    create_spark_session,
+    copy_schema_dir,
+    get_table_instance
+)
 import pandas as pd
 import re
 import s3fs
@@ -296,7 +310,6 @@ class Evaluation:
 
         Notes
         -----
-
         Includes the following tables:
             - units
             - variables
@@ -365,7 +378,7 @@ class Evaluation:
             - primary_timeseries
             - secondary_timeseries
             - joined_timeseries
-        """
+        """ # noqa
         # if not create_temp_views:
         #     create_temp_views = [
         #         "units",
@@ -378,7 +391,7 @@ class Evaluation:
         #         "primary_timeseries",
         #         "secondary_timeseries",
         #         "joined_timeseries"
-        #     ]
+        #     ]  # joined_timeseries may not exist
 
         if "units" in create_temp_views:
             self.units.to_sdf().createOrReplaceTempView("units")
@@ -475,24 +488,12 @@ class Evaluation:
             A TableFilter object containing the table name and filters.
             Defaults to None.
         """
-        # table_mapper = {
-        #     "primary_timeseries": self.primary_timeseries,
-        #     "secondary_timeseries": self.secondary_timeseries,
-        #     "locations": self.locations,
-        #     "units": self.units,
-        #     "variables": self.variables,
-        #     "configurations": self.configurations,
-        #     "attributes": self.attributes,
-        #     "location_attributes": self.location_attributes,
-        #     "location_crosswalks": self.location_crosswalks,
-        #     "joined_timeseries": self.joined_timeseries,
-        # }
         if table_filter is not None:
             table_name = table_filter.table_name
             filters = table_filter.filters
         if table_name is None:
             raise ValueError("Table name must be specified.")
-        base_table = table_mapper.get(table_name)
+        base_table = get_table_instance(self, table_name)
         return validate_and_apply_filters(
             sdf=base_table.to_sdf(),
             filters=filters,
@@ -514,3 +515,28 @@ class Evaluation:
             schema_name=schema_name
         )
         logger.info(f"Schema evolution completed for {self.catalog_name}.")
+
+    def list_tables(self) -> pd.DataFrame:
+        """List the tables in the catalog returning a Pandas DataFrame."""
+        tbl_list = self.spark.catalog.listTables(
+            f"{self.catalog_name}.{self.schema_name}"
+        )
+        metadata = []
+        # Note. "EXTERNAL" tables are those managed by REST catalog?
+        # (ie, not hadoop)
+        for tbl in tbl_list:
+            if tbl.tableType == "VIEW":
+                continue
+            metadata.append({
+                "name": tbl.name,
+                "database": tbl.database,
+                "description": tbl.description,
+                "tableType": tbl.tableType,
+                "isTemporary": tbl.isTemporary
+            })
+            logger.info(f"Table: {tbl.name}, Type: {tbl.tableType}")
+        return pd.DataFrame(metadata)
+
+    def list_views(self) -> pd.DataFrame:
+        """List the views in the catalog returning a Pandas DataFrame."""
+        return self.spark.sql("SHOW VIEWS").toPandas()
