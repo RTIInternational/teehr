@@ -11,8 +11,6 @@ from teehr.utils.utils import to_path_or_s3path, path_to_spark
 from teehr.models.filters import FilterBaseModel
 from teehr.models.table_enums import TableWriteEnum
 from teehr.loading.utils import (
-    merge_field_mappings,
-    validate_constant_values_dict,
     add_or_replace_sdf_column_prefix
 )
 import logging
@@ -119,7 +117,7 @@ class BaseTable:
         )
         return sdf
 
-    def _load_table(self, **kwargs):
+    def _load_table(self):
         """Load the table from the directory to self.df.
 
         Parameters
