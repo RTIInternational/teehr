@@ -52,13 +52,26 @@ CREATE TABLE IF NOT EXISTS secondary_timeseries (
     member STRING
 ) USING iceberg PARTITIONED BY (configuration_name, variable_name);
 
+CREATE TABLE IF NOT EXISTS joined_timeseries (
+    reference_time TIMESTAMP,
+    value_time TIMESTAMP,
+    configuration_name STRING,
+    unit_name STRING,
+    variable_name STRING,
+    primary_value FLOAT,
+    secondary_value FLOAT,
+    primary_location_id STRING,
+    secondary_location_id STRING,
+    member STRING
+) USING iceberg PARTITIONED BY (configuration_name, variable_name);
+
 CREATE TABLE IF NOT EXISTS location_attributes(
     location_id STRING,
     attribute_name STRING,
     value STRING
 ) USING iceberg;
 
--- Should be if not exists?
+-- Should these be if not exists?
 INSERT INTO units VALUES
     ("m^3/s", "Cubic Meters Per Second"),
     ("ft^3/s", "Cubic Feet Per Second"),

@@ -124,6 +124,13 @@ def convert_evaluation(
         f"{catalog_name}.{schema_name}.secondary_timeseries"
     ).append()
 
+    joined_timeseries_table = ev.joined_timeseries
+    schema = joined_timeseries_table.schema_func().to_structtype()
+    joined_timeseries_sdf = ev.spark.read.format(joined_timeseries_table.format).options(**options).load(joined_timeseries_table.dir.as_posix(), schema=schema)
+    joined_timeseries_sdf.writeTo(
+        f"{catalog_name}.{schema_name}.joined_timeseries"
+    ).append()
+
     location_crosswalk_table = ev.location_crosswalks
     schema = location_crosswalk_table.schema_func().to_structtype()
     location_crosswalk_sdf = ev.spark.read.format(location_crosswalk_table.format).options(**options).load(location_crosswalk_table.dir.as_posix(), schema=schema)
@@ -143,3 +150,7 @@ def convert_evaluation(
     )
 
     ev.spark.stop()
+
+
+if __name__ == "__main__":
+    convert_evaluation()
