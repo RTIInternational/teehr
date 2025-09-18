@@ -2,6 +2,7 @@
 from typing import Union
 from pathlib import Path
 import logging
+import argparse
 
 import teehr
 from teehr.evaluation.utils import create_spark_session, copy_schema_dir
@@ -36,6 +37,8 @@ def convert_evaluation(
     schema_name : str, optional
         The name of the Iceberg schema (default is "db").
     """
+    dir_path = Path(dir_path)
+
     if warehouse_path is None:
         warehouse_path = Path(dir_path) / "warehouse"
 
@@ -153,4 +156,39 @@ def convert_evaluation(
 
 
 if __name__ == "__main__":
-    convert_evaluation()
+    parser = argparse.ArgumentParser(
+        description="Convert a pre-v0.6 Evaluation dataset to Iceberg."
+    )
+    parser.add_argument(
+        "dir_path",
+        help="The directory path to the Evaluation to upgrade."
+    )
+    parser.add_argument(
+        "--warehouse_path",
+        default=None,
+        help="Name of the Iceberg warehouse"
+    )
+    parser.add_argument(
+        "--catalog_dir_path",
+        default=None,
+        help="The directory path where the catalog schema versions are stored"
+    )
+    parser.add_argument(
+        "--catalog_name",
+        default="local",
+        help="Name of the Iceberg catalog"
+    )
+    parser.add_argument(
+        "--schema_name",
+        default="db",
+        help="Name of the Iceberg schema"
+    )
+    args = parser.parse_args()
+
+    convert_evaluation(
+        dir_path=args.dir_path,
+        warehouse_path=args.warehouse_path,
+        catalog_name=args.catalog_name,
+        catalog_dir_path=args.catalog_dir_path,
+        schema_name=args.schema_name
+    )
