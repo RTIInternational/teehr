@@ -104,22 +104,20 @@ class BaseTable:
     ) -> ps.DataFrame:
         """Read data from table as a spark dataframe.
 
-        ToDO: This just needs
-
         Returns
         -------
         df : ps.DataFrame
             The spark dataframe.
         """
-        logger.info("Reading files from warehouse.")
-
-        df = (
-            self.ev.spark.read.format("iceberg")
-            .load(
+        logger.info(
+            f"Reading files from {self.ev.catalog_name}.{self.ev.schema_name}."
+            f"{self.name}."
+        )
+        sdf = (self.ev.spark.read.format("iceberg").load(
                 f"{self.ev.catalog_name}.{self.ev.schema_name}.{self.name}"
             )
         )
-        return df
+        return sdf
 
     def _load_table(self, **kwargs):
         """Load the table from the directory to self.df.
@@ -129,11 +127,11 @@ class BaseTable:
         **kwargs
             Additional options to pass to the spark read method.
         """
-        logger.info(f"Loading files from {self.dir}.")
-        self.df = self._read_from_warehouse(
-            self.dir,
-            **kwargs
+        logger.info(
+            f"Loading files from {self.ev.catalog_name}.{self.ev.schema_name}."
+            f"{self.name}."
         )
+        self.df = self._read_from_warehouse()
 
     def _check_load_table(self):
         """Check if the table is loaded.
@@ -398,7 +396,6 @@ class BaseTable:
 
         Examples
         --------
-
         Order by string:
 
         >>> ts_df = ev.primary_timeseries.order_by("value_time").to_df()
@@ -409,7 +406,6 @@ class BaseTable:
         >>> ts_df = ev.primary_timeseries.order_by(
         >>>     TimeseriesFields.value_time
         >>> ).to_pandas()
-
         """
         logger.info(f"Setting order_by {fields}.")
         self._check_load_table()
