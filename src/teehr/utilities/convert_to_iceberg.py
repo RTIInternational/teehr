@@ -17,10 +17,10 @@ def convert_evaluation(
     dir_path: Union[str, Path, S3Path],
     warehouse_path: Union[str, Path, S3Path] = None,
     catalog_name: str = "local",
-    catalog_dir_path: Union[str, Path, S3Path] = None,
+    migrations_path: Union[str, Path, S3Path] = None,
     schema_name: str = "db"
 ):
-    """Convert v0.5.0 TEEHR Evaluation to v0.6 Iceberg.
+    """Convert TEEHR Evaluation to v0.6 Iceberg.
 
     Parameters
     ----------
@@ -30,7 +30,7 @@ def convert_evaluation(
         The path to the Iceberg warehouse.
     catalog_name : str, optional
         The name of the Iceberg catalog (default is "local").
-    catalog_dir_path : Union[str, Path, S3Path], optional
+    migrations_path : Union[str, Path, S3Path], optional
         The directory path where the catalog schema versions are stored
         (default is None, in which case the schema(s) from the template
         Evaluation are used).
@@ -42,9 +42,9 @@ def convert_evaluation(
     if warehouse_path is None:
         warehouse_path = Path(dir_path) / "warehouse"
 
-    if catalog_dir_path is None:
+    if migrations_path is None:
         teehr_root = Path(__file__).parent.parent
-        catalog_dir_path = Path(teehr_root, "template")
+        migrations_path = Path(teehr_root, "template")
 
     spark = create_spark_session(
         warehouse_path=warehouse_path,
@@ -166,22 +166,26 @@ if __name__ == "__main__":
     parser.add_argument(
         "--warehouse_path",
         default=None,
-        help="Name of the Iceberg warehouse"
+        help="Name of the Iceberg warehouse. Unless specified, the warehouse"
+        " will be created in the 'warehouse' subdirectory of"
+        " the Evaluation directory."
     )
     parser.add_argument(
-        "--catalog_dir_path",
+        "--migrations_path",
         default=None,
-        help="The directory path where the catalog schema versions are stored"
+        help="The directory path where the schema migrations are stored."
+        " Unless specified, the migrations from the template Evaluation"
+        " will be used."
     )
     parser.add_argument(
         "--catalog_name",
         default="local",
-        help="Name of the Iceberg catalog"
+        help="Name of the Iceberg catalog, default is 'local'."
     )
     parser.add_argument(
         "--schema_name",
         default="db",
-        help="Name of the Iceberg schema"
+        help="Name of the Iceberg schema, default is 'db'."
     )
     args = parser.parse_args()
 
@@ -189,6 +193,6 @@ if __name__ == "__main__":
         dir_path=args.dir_path,
         warehouse_path=args.warehouse_path,
         catalog_name=args.catalog_name,
-        catalog_dir_path=args.catalog_dir_path,
+        migrations_path=args.migrations_path,
         schema_name=args.schema_name
     )
