@@ -39,6 +39,7 @@ from teehr.evaluation.generate import GeneratedTimeseries
 from teehr.evaluation.write import Write
 from teehr.evaluation.extract import DataExtractor
 from teehr.evaluation.validate import Validator
+from teehr.evaluation.workflows import Workflow
 from teehr.evaluation.utils import (
     create_spark_session,
     copy_schema_dir,
@@ -51,12 +52,13 @@ from fsspec.implementations.local import LocalFileSystem
 import pyspark.sql as ps
 from teehr.querying.filter_format import validate_and_apply_filters
 from teehr.utilities import apply_migrations
+from teehr.models.evaluation_base import EvaluationBase
 
 
 logger = logging.getLogger(__name__)
 
 
-class Evaluation:
+class Evaluation(EvaluationBase):
     """The Evaluation class.
 
     This is the main class for the TEEHR evaluation.
@@ -142,6 +144,11 @@ class Evaluation:
     def extract(self) -> DataExtractor:
         """The extract component class for extracting data."""
         return DataExtractor(self)
+
+    @property
+    def workflows(self) -> Workflow:
+        """The workflow component class for managing evaluation workflows."""
+        return Workflow(self)
 
     @property
     def write(self) -> Write:

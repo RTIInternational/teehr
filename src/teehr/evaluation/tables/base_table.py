@@ -51,31 +51,6 @@ class BaseTable:
         logger.error(err_msg)
         raise ValueError(err_msg)
 
-    def _enforce_foreign_keys(self, sdf: ps.DataFrame):
-        """Enforce foreign keys relationships on the timeseries tables."""
-        if len(self.foreign_keys) > 0:
-            logger.info(
-                f"Enforcing foreign key constraints for {self.name}."
-            )
-        for fk in self.foreign_keys:
-            sdf.createOrReplaceTempView("temp_table")
-            sql = f"""
-                SELECT t.* from temp_table t
-                LEFT ANTI JOIN {fk['domain_table']} d
-                ON t.{fk['column']} = d.{fk['domain_column']}
-            """
-            result_sdf = self.ev.sql(
-                query=sql, create_temp_views=[fk["domain_table"]]
-            )
-            self.spark.catalog.dropTempView("temp_table")
-            self.spark.catalog.dropTempView(fk["domain_table"])
-            if not result_sdf.isEmpty():
-                raise ValueError(
-                    f"Foreign key constraint violation: "
-                    f"A {fk['column']} entry in {self.name} is not found in "
-                    f"the {fk['domain_column']} column in {fk['domain_table']}"
-                )
-
     def _read_files_from_cache_or_s3(
         self,
         path: Union[str, Path, S3Path],
@@ -126,66 +101,24 @@ class BaseTable:
 
     def _read_from_warehouse(
         self,
-        path: Union[str, Path, S3Path],
-        pattern: str = None,
-        show_missing_table_warning: bool = False,
-        **options
     ) -> ps.DataFrame:
-        """Read data from table directory as a spark dataframe.
+        """Read data from table as a spark dataframe.
 
-        Parameters
-        ----------
-        path : Union[str, Path, S3Path]
-            The path to the directory containing the files.
-        pattern : str, optional
-            The pattern to match files.
-        show_missing_table_warning : bool, optional
-            If True, show the warning an empty table was returned.
-            The default is True.
-        **options
-            Additional options to pass to the spark read method.
+        ToDO: This just needs
 
         Returns
         -------
         df : ps.DataFrame
             The spark dataframe.
         """
-        logger.info(f"Reading files from {path}.")
+        logger.info("Reading files from warehouse.")
 
-        # Temp hack.
-        if isinstance(path, S3Path):
-            return self._read_files_from_cache_or_s3(
-                path=path,
-                pattern=pattern,
-                show_missing_table_warning=show_missing_table_warning,
-                **options
-            )
-
-        if len(options) == 0:
-            options = {
-                "header": "true",
-                "ignoreMissingFiles": "true"
-            }
-
-        path = to_path_or_s3path(path)
-
-        path = path_to_spark(path, pattern)
-        # First, read the file with the schema and check if it's empty.
-        # If it's not empty and it's the joined timeseries table,
-        # read it again without the schema to ensure all fields are included.
-        # Otherwise, continue.
-        # schema = self.schema_func().to_structtype()
-        # TODO: What if we're reading parquet from the cache here?
-        # Have a separate _read_from_cache method?
         df = (
             self.ev.spark.read.format("iceberg")
-            .load(f"{self.ev.catalog_name}.{self.ev.schema_name}.{self.name}")
+            .load(
+                f"{self.ev.catalog_name}.{self.ev.schema_name}.{self.name}"
+            )
         )
-        # df = self.ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
-        if df.isEmpty():
-            if show_missing_table_warning:
-                logger.warning(f"An empty dataframe was returned for '{self.name}'.")
-
         return df
 
     def _load_table(self, **kwargs):
@@ -622,27 +555,12 @@ class BaseTable:
                 "No data will be loaded into the table."
             )
             return
-        default_field_mapping = {}
-        fields = self.schema_func(type="pandas").columns.keys()
-        for field in fields:
-            if field not in default_field_mapping.values():
-                default_field_mapping[field] = field
-        if field_mapping:
-            logger.debug("Merging user field_mapping with default field mapping.")
-            field_mapping = merge_field_mappings(
-                default_field_mapping,
-                field_mapping
-            )
-        else:
-            logger.debug("Using default field mapping.")
-            field_mapping = default_field_mapping
-        # verify constant_field_values keys are in field_mapping values
-        if constant_field_values:
-            validate_constant_values_dict(
-                constant_field_values,
-                field_mapping.values()
-            )
-
+        # self.schema_func(type="pandas").columns.keys()
+        self.ev.extract._merge_field_mapping(
+            table_fields=self.field_enum(),
+            field_mapping=field_mapping,
+            constant_field_values=constant_field_values
+        )
         # Convert the input DataFrame to Spark DataFrame
         if isinstance(df, pd.DataFrame):
             df = self.spark.createDataFrame(df)
