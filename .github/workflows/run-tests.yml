@@ -3,6 +3,8 @@ name: run-all-tests
 on:
   pull_request:
     types: [opened, reopened, ready_for_review]
+    branches:
+      - main
   # push:
   #   branches: [420-add-skill-score-for-ensemble-metrics]
 

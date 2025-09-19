@@ -53,8 +53,8 @@ def df_to_gdf(df: pd.DataFrame) -> gpd.GeoDataFrame:
 
 
 def validate_fields_exist(
-        valid_fields: List[str],
-        requested_fields: List[str]
+    valid_fields: List[str],
+    requested_fields: List[str]
 ):
     """Validate that the requested_fields are in the valid_fields list."""
     logger.debug("Validating requested fields.")
@@ -66,7 +66,7 @@ def validate_fields_exist(
 
 
 def parse_fields_to_list(
-        requested_fields: Union[str, StrEnum, List[Union[str, StrEnum]]]
+    requested_fields: Union[str, StrEnum, List[Union[str, StrEnum]]]
 ) -> List[str]:
     """Convert the requested fields to a list of strings."""
     logger.debug("Parsing requested fields to a list of strings.")

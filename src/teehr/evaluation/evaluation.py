@@ -1,22 +1,30 @@
 """Evaluation module."""
-import psutil
 from datetime import datetime
 from typing import Union, Literal, List
 from pathlib import Path
 from teehr.evaluation.tables.attribute_table import AttributeTable
 from teehr.evaluation.tables.configuration_table import ConfigurationTable
-from teehr.evaluation.tables.location_attribute_table import LocationAttributeTable
-from teehr.evaluation.tables.location_crosswalk_table import LocationCrosswalkTable
+from teehr.evaluation.tables.location_attribute_table import (
+    LocationAttributeTable
+)
+from teehr.evaluation.tables.location_crosswalk_table import (
+    LocationCrosswalkTable
+)
 from teehr.evaluation.tables.location_table import LocationTable
-from teehr.evaluation.tables.primary_timeseries_table import PrimaryTimeseriesTable
-from teehr.evaluation.tables.secondary_timeseries_table import SecondaryTimeseriesTable
+from teehr.evaluation.tables.primary_timeseries_table import (
+    PrimaryTimeseriesTable
+)
+from teehr.evaluation.tables.secondary_timeseries_table import (
+    SecondaryTimeseriesTable
+)
 from teehr.evaluation.tables.unit_table import UnitTable
 from teehr.evaluation.tables.variable_table import VariableTable
-from teehr.evaluation.tables.joined_timeseries_table import JoinedTimeseriesTable
+from teehr.evaluation.tables.joined_timeseries_table import (
+    JoinedTimeseriesTable
+)
 from teehr.utils.s3path import S3Path
 from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
 from pyspark.sql import SparkSession
-from pyspark import SparkConf
 import logging
 from teehr.loading.utils import copy_template_to
 from teehr.loading.s3.clone_from_s3 import (
@@ -28,20 +36,29 @@ import teehr.const as const
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.metrics import Metrics
 from teehr.evaluation.generate import GeneratedTimeseries
+from teehr.evaluation.write import Write
+from teehr.evaluation.extract import DataExtractor
+from teehr.evaluation.validate import Validator
+from teehr.evaluation.workflows import Workflow
+from teehr.evaluation.utils import (
+    create_spark_session,
+    copy_schema_dir,
+    get_table_instance
+)
 import pandas as pd
-from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor # noqa
 import re
-import teehr
 import s3fs
 from fsspec.implementations.local import LocalFileSystem
 import pyspark.sql as ps
 from teehr.querying.filter_format import validate_and_apply_filters
+from teehr.utilities import apply_migrations
+from teehr.models.evaluation_base import EvaluationBase
 
 
 logger = logging.getLogger(__name__)
 
 
-class Evaluation:
+class Evaluation(EvaluationBase):
     """The Evaluation class.
 
     This is the main class for the TEEHR evaluation.
@@ -50,8 +67,12 @@ class Evaluation:
     def __init__(
         self,
         dir_path: Union[str, Path, S3Path],
+        warehouse_path: Union[str, Path, S3Path] = None,
+        catalog_name: str = "local",
         create_dir: bool = False,
-        spark: SparkSession = None
+        spark: SparkSession = None,
+        check_evaluation_version: bool = True,
+        schema_name: str = "db"
     ):
         """
         Initialize the Evaluation class.
@@ -68,7 +89,16 @@ class Evaluation:
         self.is_s3 = False
         if isinstance(self.dir_path, S3Path):
             self.is_s3 = True
-            logger.info(f"Using S3 path {self.dir_path}.  Evaluation will be read-only")
+            logger.info(
+                f"Using S3 path {self.dir_path}.  Evaluation will be read-only"
+            )
+
+        self.catalog_name = catalog_name
+        self.schema_name = schema_name
+
+        if warehouse_path is None:
+            warehouse_path = Path(dir_path, "warehouse")
+        self.warehouse_path = to_path_or_s3path(warehouse_path)
 
         self.spark = spark
 
@@ -91,31 +121,39 @@ class Evaluation:
                 raise NotADirectoryError
 
         # Check version of Evaluation
-        if create_dir is False:
-            self.check_evaluation_version()
+        if check_evaluation_version is True:
+            if create_dir is False:
+                self.check_evaluation_version()
 
         # Create a local Spark Session if one is not provided.
         if not self.spark:
             logger.info("Creating a new Spark session.")
-            memory_info = psutil.virtual_memory()
-            driver_memory = 0.75 * memory_info.available / (1024**3)  # Use 75% of available memory
-            driver_maxresultsize = 0.5 * driver_memory
-            conf = (
-                SparkConf()
-                .setAppName("TEEHR")
-                .setMaster("local[*]")
-                .set("spark.sql.sources.partitionOverwriteMode", "dynamic")
-                .set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-                .set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider")
-                .set("spark.sql.execution.arrow.pyspark.enabled", "true")
-                .set("spark.sql.session.timeZone", "UTC")
-                .set("spark.driver.host", "localhost")
-                .set("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.4.1")
-                .set("spark.sql.parquet.enableVectorizedReader", "false")
-                .set("spark.driver.memory", f"{int(driver_memory)}g")
-                .set("spark.driver.maxResultSize", f"{int(driver_maxresultsize)}g")
+            self.spark = create_spark_session(
+                warehouse_path=self.warehouse_path,
+                catalog_name=self.catalog_name
             )
-            self.spark = SparkSession.builder.config(conf=conf).getOrCreate()
+
+        pass
+
+    @property
+    def validate(self) -> Validator:
+        """The validate component class for validating data."""
+        return Validator(self)
+
+    @property
+    def extract(self) -> DataExtractor:
+        """The extract component class for extracting data."""
+        return DataExtractor(self)
+
+    @property
+    def workflows(self) -> Workflow:
+        """The workflow component class for managing evaluation workflows."""
+        return Workflow(self)
+
+    @property
+    def write(self) -> Write:
+        """The write component class for writing data."""
+        return Write(self)
 
     @property
     def generate(self) -> GeneratedTimeseries:
@@ -206,7 +244,7 @@ class Evaluation:
         )
         logger.setLevel(logging.DEBUG)
 
-    def clone_template(self):
+    def clone_template(self, schema_name: str = "db"):
         """Create a study from the standard template.
 
         This method mainly copies the template directory to the specified
@@ -220,6 +258,18 @@ class Evaluation:
         template_dir = Path(teehr_root, "template")
         logger.info(f"Copying template from {template_dir} to {self.dir_path}")
         copy_template_to(template_dir, self.dir_path)
+        # Copy in the schema
+        copy_schema_dir(
+            target_dir=self.dir_path
+        )
+        # Create initial iceberg tables.
+        apply_migrations.evolve_catalog_schema(
+            spark=self.spark,
+            catalog_dir_path=self.dir_path,
+            catalog_name=self.catalog_name,
+            schema_name=schema_name
+        )
+        self.schema_name = schema_name
 
     @staticmethod
     def list_s3_evaluations(
@@ -265,7 +315,6 @@ class Evaluation:
 
         Notes
         -----
-
         Includes the following tables:
             - units
             - variables
@@ -306,7 +355,7 @@ class Evaluation:
         remove_dir_if_exists(self.cache_dir)
         self.cache_dir.mkdir()
 
-    def sql(self, query: str, create_temp_views: List[str] = None):
+    def sql(self, query: str, create_temp_views: List[str]):
         """Run a SQL query on the Spark session against the TEEHR tables.
 
         Parameters
@@ -334,20 +383,20 @@ class Evaluation:
             - primary_timeseries
             - secondary_timeseries
             - joined_timeseries
-        """
-        if not create_temp_views:
-            create_temp_views = [
-                "units",
-                "variables",
-                "attributes",
-                "configurations",
-                "locations",
-                "location_attributes",
-                "location_crosswalks",
-                "primary_timeseries",
-                "secondary_timeseries",
-                "joined_timeseries"
-            ]
+        """ # noqa
+        # if not create_temp_views:
+        #     create_temp_views = [
+        #         "units",
+        #         "variables",
+        #         "attributes",
+        #         "configurations",
+        #         "locations",
+        #         "location_attributes",
+        #         "location_crosswalks",
+        #         "primary_timeseries",
+        #         "secondary_timeseries",
+        #         "joined_timeseries"
+        #     ]  # joined_timeseries may not exist
 
         if "units" in create_temp_views:
             self.units.to_sdf().createOrReplaceTempView("units")
@@ -389,14 +438,15 @@ class Evaluation:
                 logger.error(err_msg)
                 raise Exception(err_msg)
             else:
-                # TODO: Change this to raise an error in v0.6.
-                version = teehr.__version__
-                with fs.open(version_file, "w") as f:
-                    f.write(version)
-                logger.info(
-                    f"Created version file in {self.dir_path}."
-                    " In the future this will raise an error."
+                # Raise an error if no version file is found.
+                err_msg = (
+                    "Incompatible Evaluation version."
+                    " No version file found in {self.dir_path}."
+                    " TEEHR v0.6 requires a version file to be present"
+                    " in the evaluation directory."
                 )
+                logger.error(err_msg)
+                raise ValueError(err_msg)
         else:
             with fs.open(version_file) as f:
                 version_txt = str(f.read().strip())
@@ -407,17 +457,14 @@ class Evaluation:
                 raise ValueError(err_msg)
             else:
                 version = match[0]
-        # TODO: Uncomment this in v0.6
-        # if version < "0.6.0":
-        #     err_msg = (
-        #         f"Evaluation version {version} in {self.dir_path} is less than 0.6."
-        #         " Please run the migration to upgrade to the latest version."
-        #     )
-        #     logger.error(err_msg)
-        #     raise ValueError(err_msg)
-        # else:
-        #     # Update the version to the latest
-        #     pass
+        # Raise an error requiring migration to v0.6 warehouse.
+        if version < "0.6.0":
+            err_msg = (
+                f"Evaluation version {version} in {self.dir_path} is less than 0.6."
+                " Please run the migration to upgrade to the latest version."
+            )
+            logger.error(err_msg)
+            raise ValueError(err_msg)
         logger.info(
             f"Found evaluation version {version} in {self.dir_path}."
             " Future versions v0.6 and greater will require a conversion"
@@ -446,24 +493,12 @@ class Evaluation:
             A TableFilter object containing the table name and filters.
             Defaults to None.
         """
-        table_mapper = {
-            "primary_timeseries": self.primary_timeseries,
-            "secondary_timeseries": self.secondary_timeseries,
-            "locations": self.locations,
-            "units": self.units,
-            "variables": self.variables,
-            "configurations": self.configurations,
-            "attributes": self.attributes,
-            "location_attributes": self.location_attributes,
-            "location_crosswalks": self.location_crosswalks,
-            "joined_timeseries": self.joined_timeseries,
-        }
         if table_filter is not None:
             table_name = table_filter.table_name
             filters = table_filter.filters
         if table_name is None:
             raise ValueError("Table name must be specified.")
-        base_table = table_mapper.get(table_name)
+        base_table = get_table_instance(self, table_name)
         return validate_and_apply_filters(
             sdf=base_table.to_sdf(),
             filters=filters,
@@ -472,3 +507,41 @@ class Evaluation:
             dataframe_schema=base_table._get_schema("pandas"),
             validate=base_table.validate_filter_field_types
         )
+
+    def apply_schema_migration(
+        self,
+        schema_name: str = "db"
+    ):
+        """Migrate v0.5 Evalution to v0.6 Iceberg tables."""
+        apply_migrations.evolve_catalog_schema(
+            spark=self.spark,
+            catalog_dir_path=self.dir_path,
+            catalog_name=self.catalog_name,
+            schema_name=schema_name
+        )
+        logger.info(f"Schema evolution completed for {self.catalog_name}.")
+
+    def list_tables(self) -> pd.DataFrame:
+        """List the tables in the catalog returning a Pandas DataFrame."""
+        tbl_list = self.spark.catalog.listTables(
+            f"{self.catalog_name}.{self.schema_name}"
+        )
+        metadata = []
+        # Note. "EXTERNAL" tables are those managed by REST catalog?
+        # (ie, not hadoop)
+        for tbl in tbl_list:
+            if tbl.tableType == "VIEW":
+                continue
+            metadata.append({
+                "name": tbl.name,
+                "database": tbl.database,
+                "description": tbl.description,
+                "tableType": tbl.tableType,
+                "isTemporary": tbl.isTemporary
+            })
+            logger.info(f"Table: {tbl.name}, Type: {tbl.tableType}")
+        return pd.DataFrame(metadata)
+
+    def list_views(self) -> pd.DataFrame:
+        """List the views in the catalog returning a Pandas DataFrame."""
+        return self.spark.sql("SHOW VIEWS").toPandas()

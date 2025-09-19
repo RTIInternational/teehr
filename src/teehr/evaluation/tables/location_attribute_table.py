@@ -1,8 +1,13 @@
 """Location Attribute Table class."""
 import teehr.const as const
 from teehr.evaluation.tables.base_table import BaseTable
-from teehr.loading.location_attributes import convert_location_attributes
-from teehr.loading.utils import validate_input_is_csv, validate_input_is_parquet
+from teehr.loading.location_attributes import (
+    convert_single_location_attributes
+)
+from teehr.loading.utils import (
+    validate_input_is_csv,
+    validate_input_is_parquet
+)
 from teehr.models.filters import LocationAttributeFilter
 from teehr.models.table_enums import LocationAttributeFields
 from teehr.querying.utils import join_geometry
@@ -32,7 +37,7 @@ class LocationAttributeTable(BaseTable):
         self.format = "parquet"
         self.filter_model = LocationAttributeFilter
         self.schema_func = schemas.location_attributes_schema
-        self.unique_column_set = [
+        self.uniqueness_fields = [
             "location_id",
             "attribute_name"
         ]
@@ -48,6 +53,12 @@ class LocationAttributeTable(BaseTable):
                 "domain_column": "name",
             }
         ]
+        self.cache_dir = Path(
+            self.ev.dir_path,
+            const.CACHE_DIR,
+            const.LOADING_CACHE_DIR,
+            const.LOCATION_ATTRIBUTES_DIR
+        )
 
     def _load(
         self,
@@ -61,24 +72,23 @@ class LocationAttributeTable(BaseTable):
         **kwargs
     ):
         """Load location attributes helper."""
-        cache_dir = Path(
-            self.ev.dir_path,
-            const.CACHE_DIR,
-            const.LOADING_CACHE_DIR,
-            const.LOCATION_ATTRIBUTES_DIR
-        )
         # Clear the cache directory if it exists.
-        remove_dir_if_exists(cache_dir)
+        remove_dir_if_exists(self.cache_dir)
 
-        convert_location_attributes(
-            in_path,
-            cache_dir,
-            pattern=pattern,
+        self.ev.extract.to_cache(
+            in_datapath=in_path,
             field_mapping=field_mapping,
+            pattern=pattern,
+            cache_dir=self.cache_dir,
+            table_fields=self.fields(),
+            table_schema_func=self.schema_func(type="pandas"),
+            write_schema_func=self.schema_func(type="arrow"),
+            extraction_func=convert_single_location_attributes,
             **kwargs
         )
+
         # Read the converted files to Spark DataFrame
-        df = self._read_files(cache_dir)
+        df = self._read_files_from_cache_or_s3(self.cache_dir)
 
         # Add or replace location_id prefix if provided
         if location_id_prefix:
@@ -104,21 +114,20 @@ class LocationAttributeTable(BaseTable):
                 )
             self.ev.attributes.add(attr_list)
 
-        # Validate using the _validate() method
-        validated_df = self._validate(
-            df=df,
-            drop_duplicates=drop_duplicates
+        validated_df = self.ev.validate.schema(
+            sdf=df,
+            table_schema=self.schema_func(),
+            drop_duplicates=drop_duplicates,
+            foreign_keys=self.foreign_keys,
+            uniqueness_fields=self.uniqueness_fields
         )
 
-        # Write to the table df.rdd.getNumPartitions()
-        self._write_spark_df(
-            df=validated_df,
-            num_partitions=df.rdd.getNumPartitions(),
-            write_mode=write_mode
+        self.ev.write.to_warehouse(
+            source_data=validated_df,
+            target_table=self.name,
+            write_mode=write_mode,
+            uniqueness_fields=self.uniqueness_fields
         )
-
-        # Reload the table
-        # self._load_table()
 
     def field_enum(self) -> LocationAttributeFields:
         """Get the location attribute fields enum."""
@@ -263,7 +272,7 @@ class LocationAttributeTable(BaseTable):
         - location_id
         - attribute_name
         - value
-        """
+        """ # noqa
         validate_input_is_csv(in_path)
         self._load(
             in_path=in_path,
@@ -319,7 +328,7 @@ class LocationAttributeTable(BaseTable):
             a large number of files from the cache.
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the dataframe.
-        """
+        """ # noqa
         self._load_dataframe(
             df=df,
             field_mapping=field_mapping,

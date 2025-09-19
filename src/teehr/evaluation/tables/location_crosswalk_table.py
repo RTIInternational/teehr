@@ -1,7 +1,11 @@
+"""Location Crosswalk Table."""
 import teehr.const as const
 from teehr.evaluation.tables.base_table import BaseTable
-from teehr.loading.location_crosswalks import convert_location_crosswalks
-from teehr.loading.utils import validate_input_is_csv, validate_input_is_parquet
+# from teehr.loading.location_crosswalks import convert_location_crosswalks
+from teehr.loading.utils import (
+    validate_input_is_csv,
+    validate_input_is_parquet
+)
 from teehr.models.filters import LocationCrosswalkFilter
 from teehr.models.table_enums import LocationCrosswalkFields
 from teehr.querying.utils import join_geometry
@@ -12,6 +16,9 @@ import logging
 from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
 from teehr.models.table_enums import TableWriteEnum
 from teehr.loading.utils import add_or_replace_sdf_column_prefix
+from teehr.loading.location_crosswalks import (
+    convert_single_location_crosswalks
+)
 import pyspark.sql as ps
 import pandas as pd
 
@@ -30,7 +37,7 @@ class LocationCrosswalkTable(BaseTable):
         self.format = "parquet"
         self.filter_model = LocationCrosswalkFilter
         self.schema_func = schemas.location_crosswalks_schema
-        self.unique_column_set = [
+        self.uniqueness_fields = [
             "secondary_location_id"
         ]
         self.foreign_keys = [
@@ -40,6 +47,12 @@ class LocationCrosswalkTable(BaseTable):
                 "domain_column": "id",
             }
         ]
+        self.cache_dir = Path(
+            self.ev.dir_path,
+            const.CACHE_DIR,
+            const.LOADING_CACHE_DIR,
+            const.LOCATION_CROSSWALKS_DIR
+        )
 
     def _load(
         self,
@@ -53,25 +66,23 @@ class LocationCrosswalkTable(BaseTable):
         **kwargs
     ):
         """Load location crosswalks helper."""
-        cache_dir = Path(
-            self.ev.dir_path,
-            const.CACHE_DIR,
-            const.LOADING_CACHE_DIR,
-            const.LOCATION_CROSSWALKS_DIR
-        )
         # Clear the cache directory if it exists.
-        remove_dir_if_exists(cache_dir)
+        remove_dir_if_exists(self.cache_dir)
 
-        convert_location_crosswalks(
-            in_path,
-            cache_dir,
+        self.ev.extract.to_cache(
+            in_datapath=in_path,
             field_mapping=field_mapping,
             pattern=pattern,
+            cache_dir=self.cache_dir,
+            table_fields=self.fields(),
+            table_schema_func=self.schema_func(type="pandas"),
+            write_schema_func=self.schema_func(type="arrow"),
+            extraction_func=convert_single_location_crosswalks,
             **kwargs
         )
 
         # Read the converted files to Spark DataFrame
-        df = self._read_files(cache_dir)
+        df = self._read_files_from_cache_or_s3(self.cache_dir)
 
         # Add or replace primary location_id prefix if provided
         if primary_location_id_prefix:
@@ -89,21 +100,20 @@ class LocationCrosswalkTable(BaseTable):
                 prefix=secondary_location_id_prefix,
             )
 
-        # Validate using the _validate() method
-        validated_df = self._validate(
-            df=df,
-            drop_duplicates=drop_duplicates
+        validated_df = self.ev.validate.schema(
+            sdf=df,
+            table_schema=self.schema_func(),
+            drop_duplicates=drop_duplicates,
+            foreign_keys=self.foreign_keys,
+            uniqueness_fields=self.uniqueness_fields
         )
 
-        # Write to the table df.rdd.getNumPartitions()
-        self._write_spark_df(
-            df=validated_df,
-            num_partitions=df.rdd.getNumPartitions(),
-            write_mode=write_mode
+        self.ev.write.to_warehouse(
+            source_data=validated_df,
+            target_table=self.name,
+            write_mode=write_mode,
+            uniqueness_fields=self.uniqueness_fields
         )
-
-        # Reload the table
-        # self._load_table()
 
     def field_enum(self) -> LocationCrosswalkFields:
         """Get the location crosswalk fields enum."""
@@ -182,7 +192,6 @@ class LocationCrosswalkTable(BaseTable):
 
         Notes
         -----
-
         The TEEHR Location Crosswalk table schema includes fields:
 
         - primary_location_id
@@ -254,7 +263,7 @@ class LocationCrosswalkTable(BaseTable):
 
         - primary_location_id
         - secondary_location_id
-        """
+        """ # noqa
         validate_input_is_csv(in_path)
         self._load(
             in_path=in_path,
@@ -310,7 +319,7 @@ class LocationCrosswalkTable(BaseTable):
             a large number of files from the cache.
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the dataframe.
-        """
+        """ # noqa
         self._load_dataframe(
             df=df,
             field_mapping=field_mapping,

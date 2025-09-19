@@ -1,8 +1,17 @@
 """Utility functions for the evaluation class."""
 import logging
 import fnmatch
-from typing import List
+from typing import List, Union
 from pathlib import Path
+import psutil
+import shutil
+
+from pyspark.sql import SparkSession
+from pyspark import SparkConf
+import pyspark
+from sedona.spark import SedonaContext
+
+from teehr.utils.s3path import S3Path
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +21,99 @@ ELBOW = "└──"
 TEE = "├──"
 PIPE_PREFIX = "│   "
 SPACE_PREFIX = "    "
+
+
+# Note: Scala version: 2.13 in pyspark 4.0
+SCALA_VERSION = "2.13"
+PYSPARK_VERSION = "4.0"
+ICEBERG_VERSION = "1.10.0"
+SEDONA_VERSION = "1.8.0"
+
+SPARK_HOME = pyspark.__path__[0]
+
+
+def get_table_instance(ev, table_name: str):
+    """Get a table instance from the catalog."""
+    table = getattr(ev, table_name, None)
+    return table
+
+
+def copy_schema_dir(
+    target_dir: Union[str, Path, S3Path]
+):
+    """Copy the schema directory from source to target."""
+    shutil.copytree(
+        src=Path(__file__).parent.parent / "migrations",
+        dst=Path(target_dir, "migrations"),
+        dirs_exist_ok=True
+    )
+    pass
+
+
+def create_spark_session(
+    warehouse_path: Union[str, Path, S3Path],
+    catalog_name: str = "local",
+    catalog_type: str = "hadoop",
+    driver_memory: Union[str, int, float] = None,
+    driver_maxresultsize: Union[str, int, float] = None
+) -> SparkSession:
+    """Create and return a Spark session for evaluation."""
+    memory_info = psutil.virtual_memory()
+    if driver_memory is None:
+        driver_memory = 0.75 * memory_info.available / (1024**3)
+    if driver_maxresultsize is None:
+        driver_maxresultsize = 0.5 * driver_memory
+
+    conf = (
+        SparkConf()
+        .setAppName("TEEHR")
+        .setMaster("local[*]")
+        .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")  # can improve performance?
+        .set("spark.driver.memory", f"{int(driver_memory)}g")
+        .set("spark.driver.maxResultSize", f"{int(driver_maxresultsize)}g")
+        .set("spark.sql.sources.partitionOverwriteMode", "dynamic")
+        .set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+        .set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider")
+        .set("spark.sql.execution.arrow.pyspark.enabled", "true")
+        .set("spark.sql.session.timeZone", "UTC")
+        # .set("spark.sql.parquet.enableVectorizedReader", "false")  # why was it set to false?
+        # .set(
+            # "spark.jars.repositories",
+            # "https://artifacts.unidata.ucar.edu/repository/unidata-all,"  # for netcdf in spark
+            # "https://repository.apache.org/content/repositories/snapshots,"
+            # "https://repository.apache.org/content/groups/snapshots"
+        # )
+        .set(
+            "spark.jars.packages",
+            "org.apache.hadoop:hadoop-aws:3.4.1,"  # SEEMS TO CAUSE HIGH MEMORY USAGE? Also 3.4.2 seems to fail.
+            # "com.amazonaws:aws-java-sdk-bundle:1.12.791,"
+            f"org.apache.sedona:sedona-spark-shaded-{PYSPARK_VERSION}_{SCALA_VERSION}:{SEDONA_VERSION},"
+            f"org.apache.iceberg:iceberg-spark-runtime-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION},"
+            "org.datasyslab:geotools-wrapper:1.8.0-33.1,"  # for raster ops
+            f"org.apache.iceberg:iceberg-spark-extensions-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION},"
+        )
+        .set(
+            "spark.sql.extensions",
+            "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions"
+        )
+        .set(
+            f"spark.sql.catalog.{catalog_name}",
+            "org.apache.iceberg.spark.SparkCatalog"
+        )
+        .set(
+            f"spark.sql.catalog.{catalog_name}.type", catalog_type
+        )
+        .set(
+            f"spark.sql.catalog.{catalog_name}.warehouse",
+            f"{warehouse_path}/{catalog_name}"
+        )
+    )
+
+    spark = SparkSession.builder.config(conf=conf).getOrCreate()
+    sedona_spark = SedonaContext.create(spark)
+    logger.info("Spark session created for TEEHR Evaluation.")
+
+    return sedona_spark
 
 
 def print_tree(

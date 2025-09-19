@@ -1,3 +1,4 @@
+"""Joined Timeseries Table."""
 import sys
 from pathlib import Path
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
@@ -27,7 +28,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
         self.validate_filter_field_types = False
         self.strict_validation = False
         self.schema_func = schemas.joined_timeseries_schema
-        self.unique_column_set = [
+        self.uniqueness_fields = [
             "primary_location_id",
             "secondary_location_id",
             "value_time",
@@ -185,19 +186,17 @@ class JoinedTimeseriesTable(TimeseriesTable):
 
         return self
 
-    def write(self, drop_duplicates: bool = False):
-        """Write the joined timeseries table to disk."""
-        # Validate to fix 'Cannot use NullType for partition column' error.
-        validated_df = self._validate(
-            df=self.df,
-            strict=False,
-            drop_duplicates=drop_duplicates
+    def write(self, write_mode: str = "create_or_replace"):
+        """Write the joined timeseries table to the warehouse."""
+        # TODO: What should default write mode be?
+        self.ev.write.to_warehouse(
+            source_data=self.df,
+            target_table=self.name,
+            write_mode=write_mode,
+            uniqueness_fields=self.uniqueness_fields,
+            partition_by=self.partition_by,
         )
-        self._write_spark_df(
-            validated_df,
-            write_mode="overwrite",
-        )
-        logger.info("Joined timeseries table written to disk.")
+        logger.info("Joined timeseries table written to the warehouse.")
         self._load_table()
 
     def _run_script(self, joined_df: ps.DataFrame) -> ps.DataFrame:
@@ -220,7 +219,8 @@ class JoinedTimeseriesTable(TimeseriesTable):
         add_attrs: bool = True,
         execute_scripts: bool = False,
         drop_duplicates: bool = False,
-        attr_list: List[str] = None
+        attr_list: List[str] = None,
+        write_mode: str = "create_or_replace"
     ):
         """Create joined timeseries table.
 
@@ -246,19 +246,24 @@ class JoinedTimeseriesTable(TimeseriesTable):
         if execute_scripts:
             joined_df = self._run_script(joined_df)
 
-        validated_df = self._validate(
-            df=joined_df,
+        validated_df = self.ev.validate.schema(
+            sdf=joined_df,
             strict=False,
-            drop_duplicates=drop_duplicates
+            table_schema=self.schema_func(),
+            drop_duplicates=drop_duplicates,
+            foreign_keys=self.foreign_keys,
+            uniqueness_fields=self.uniqueness_fields
         )
-        self._write_spark_df(
-            validated_df,
-            write_mode="overwrite",
+        self.ev.write.to_warehouse(
+            source_data=validated_df,
+            target_table=self.name,
+            write_mode=write_mode,
+            partition_by=self.partition_by,
         )
         logger.info("Joined timeseries table created.")
         self._load_table()
 
-    def _read_files(
+    def _read_files_from_cache_or_s3(
         self,
         path: Union[str, Path, S3Path],
         pattern: str = None,
@@ -294,20 +299,14 @@ class JoinedTimeseriesTable(TimeseriesTable):
         path = to_path_or_s3path(path)
 
         path = path_to_spark(path, pattern)
-
         # First, read the file with the schema and check if it's empty.
         # If it's not empty and it's the joined timeseries table,
         # read it again without the schema to ensure all fields are included.
         # Otherwise, continue.
         schema = self.schema_func().to_structtype()
-        df = self.ev.spark.read.format(self.format).options(**options).load(
-            path, schema=schema)
+        df = self.ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
         if df.isEmpty():
             if show_missing_table_warning:
-                logger.warning(
-                    f"An empty dataframe was returned for '{self.name}'."
-                    )
-        elif not df.isEmpty():
-            df = self.ev.spark.read.format(self.format).options(**options).load(path)
-
-        return df
+                logger.warning(f"An empty dataframe was returned for '{self.name}'.")
+                return df
+        return self.ev.spark.read.format(self.format).options(**options).load(path)

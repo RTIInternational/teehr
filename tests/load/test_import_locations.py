@@ -1,5 +1,5 @@
 """Test the import locations functionality."""
-from teehr.loading.locations import convert_locations
+from teehr.loading.locations import convert_single_locations
 from pathlib import Path
 from teehr import Evaluation
 import tempfile
@@ -14,18 +14,16 @@ GEOJSON_NP_GAGES_FILEPATH = Path(
 
 def test_convert_locations_geojson(tmpdir):
     """Test the convert_locations function on geojson."""
-    output_filepath = Path(tmpdir, "gages.parquet")
-
-    convert_locations(
-        in_path=GEOJSON_GAGES_FILEPATH,
-        out_dirpath=tmpdir,
+    df = convert_single_locations(
+        in_filepath=GEOJSON_GAGES_FILEPATH,
+        field_mapping={"id": "id"}
     )
-    assert output_filepath.is_file()
+    assert df.index.size == 3
 
 
 def test_validate_and_insert_locations(tmpdir):
     """Test the validate_locations function."""
-    ev = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
     ev.clone_template()
     # Load and replace the location ID prefix
     ev.locations.load_spatial(
@@ -54,11 +52,12 @@ def test_validate_and_insert_locations(tmpdir):
         "usgs-14316700"
     ]
     assert ev.locations.to_sdf().count() == 8
+    ev.spark.stop()
 
 
 def test_validate_and_insert_locations_adding_prefix(tmpdir):
     """Test the validate_locations function."""
-    ev = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
     ev.clone_template()
 
     # Add a new location ID prefix
@@ -80,6 +79,7 @@ def test_validate_and_insert_locations_adding_prefix(tmpdir):
     assert ev.locations.to_sdf().count() == 3
     assert id_val[0] == "test"
     assert id_val[1] == "A"
+    ev.spark.stop()
 
 
 if __name__ == "__main__":

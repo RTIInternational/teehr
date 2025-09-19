@@ -11,20 +11,17 @@ from teehr.utils.utils import to_path_or_s3path, path_to_spark
 from teehr.models.filters import FilterBaseModel
 from teehr.models.table_enums import TableWriteEnum
 from teehr.loading.utils import (
-    merge_field_mappings,
-    validate_constant_values_dict,
     add_or_replace_sdf_column_prefix
 )
 import logging
-from pyspark.sql.functions import lit, col
-from functools import reduce
+from pyspark.sql.functions import lit
 import pandas as pd
 
 
 logger = logging.getLogger(__name__)
 
 
-class BaseTable():
+class BaseTable:
     """Base table class."""
 
     def __init__(self, ev):
@@ -52,32 +49,7 @@ class BaseTable():
         logger.error(err_msg)
         raise ValueError(err_msg)
 
-    def _enforce_foreign_keys(self, sdf: ps.DataFrame):
-        """Enforce foreign keys relationships on the timeseries tables."""
-        if len(self.foreign_keys) > 0:
-            logger.info(
-                f"Enforcing foreign key constraints for {self.name}."
-            )
-        for fk in self.foreign_keys:
-            sdf.createOrReplaceTempView("temp_table")
-            sql = f"""
-                SELECT t.* from temp_table t
-                LEFT ANTI JOIN {fk['domain_table']} d
-                ON t.{fk['column']} = d.{fk['domain_column']}
-            """
-            result_sdf = self.ev.sql(
-                query=sql, create_temp_views=[fk["domain_table"]]
-            )
-            self.spark.catalog.dropTempView("temp_table")
-            self.spark.catalog.dropTempView(fk["domain_table"])
-            if not result_sdf.isEmpty():
-                raise ValueError(
-                    f"Foreign key constraint violation: "
-                    f"A {fk['column']} entry in {self.name} is not found in "
-                    f"the {fk['domain_column']} column in {fk['domain_table']}"
-                )
-
-    def _read_files(
+    def _read_files_from_cache_or_s3(
         self,
         path: Union[str, Path, S3Path],
         pattern: str = None,
@@ -125,7 +97,27 @@ class BaseTable():
 
         return df
 
-    def _load_table(self, **kwargs):
+    def _read_from_warehouse(
+        self,
+    ) -> ps.DataFrame:
+        """Read data from table as a spark dataframe.
+
+        Returns
+        -------
+        df : ps.DataFrame
+            The spark dataframe.
+        """
+        logger.info(
+            f"Reading files from {self.ev.catalog_name}.{self.ev.schema_name}."
+            f"{self.name}."
+        )
+        sdf = (self.ev.spark.read.format("iceberg").load(
+                f"{self.ev.catalog_name}.{self.ev.schema_name}.{self.name}"
+            )
+        )
+        return sdf
+
+    def _load_table(self):
         """Load the table from the directory to self.df.
 
         Parameters
@@ -133,11 +125,11 @@ class BaseTable():
         **kwargs
             Additional options to pass to the spark read method.
         """
-        logger.info(f"Loading files from {self.dir}.")
-        self.df = self._read_files(
-            self.dir,
-            **kwargs
+        logger.info(
+            f"Loading files from {self.ev.catalog_name}.{self.ev.schema_name}."
+            f"{self.name}."
         )
+        self.df = self._read_from_warehouse()
 
     def _check_load_table(self):
         """Check if the table is loaded.
@@ -149,192 +141,6 @@ class BaseTable():
             self._load_table()
         if self.df is None:
             self._raise_missing_table_error(table_name=self.name)
-
-    def _upsert_without_duplicates(
-        self,
-        df,
-        num_partitions: int = None,
-        **kwargs
-    ):
-        """Update existing data and append new data without duplicates."""
-        logger.info(
-            f"Upserting to {self.name} without duplicates."
-        )
-        partition_by = self.partition_by
-        if partition_by is None:
-            partition_by = []
-
-        existing_sdf = self._read_files(
-            self.dir,
-            use_table_schema=True,
-            show_missing_table_warning=False,
-            **kwargs
-        )
-
-        # Limit the dataframe to the partitions that are being updated.
-        for partition in partition_by:
-            partition_values = df.select(partition).distinct(). \
-                rdd.flatMap(lambda x: x).collect()
-            if partition_values[0] is not None:  # all null partition values
-                existing_sdf = existing_sdf.filter(
-                    col(partition).isin(partition_values)
-                )
-        # Remove rows from existing_sdf that are to be updated.
-        # Concat and re-write.
-        if not existing_sdf.isEmpty():
-            # Create the join condition clause using eqNullSafe to treat
-            # nulls as equal.
-            join_condition = reduce(
-                lambda x, y: x & y, [df[k].eqNullSafe(existing_sdf[k]) for k in self.unique_column_set]  # noqa: E501
-            )
-            existing_sdf = existing_sdf.join(
-                df,
-                how="left_anti",
-                on=join_condition,
-            )
-            df = existing_sdf.unionByName(df)
-            # Get columns in correct order
-            df = df.select([*self.schema_func().columns])
-
-        if num_partitions is not None:
-            df = df.repartition(num_partitions)
-        (
-            df.
-            write.
-            partitionBy(partition_by).
-            format(self.format).
-            mode("overwrite").
-            options(**kwargs).
-            save(str(self.dir))
-        )
-
-    def _append_without_duplicates(
-        self,
-        df,
-        num_partitions: int = None,
-        **kwargs
-    ):
-        """Append new data without duplicates."""
-        logger.info(
-            f"Appending to {self.name} without duplicates."
-        )
-        partition_by = self.partition_by
-        if partition_by is None:
-            partition_by = []
-
-        existing_sdf = self._read_files(
-            self.dir,
-            use_table_schema=True,
-            show_missing_table_warning=False,
-            **kwargs
-        )
-        # Anti-join: Joins rows from left df that do not have a match
-        # in right df.  This is used to drop duplicates. df gets written
-        # in append mode.
-        if not existing_sdf.isEmpty():
-            # Create the join condition clause using eqNullSafe to treat
-            # nulls as equal.
-            join_condition = reduce(
-                lambda x, y: x & y, [df[k].eqNullSafe(existing_sdf[k]) for k in self.unique_column_set]  # noqa: E501
-            )
-            df = df.join(
-                existing_sdf,
-                how="left_anti",
-                on=join_condition,
-            )
-
-        if num_partitions is not None:
-            df = df.repartition(num_partitions)
-
-        # Only continue if there is new data to write.
-        if not df.isEmpty():
-            (
-                df.
-                write.
-                partitionBy(partition_by).
-                format(self.format).
-                mode("append").
-                options(**kwargs).
-                save(str(self.dir))
-            )
-        else:
-            logger.info(
-                f"No new data to append to {self.name}. "
-                "Nothing will be written."
-            )
-
-    def _dynamic_overwrite(
-        self,
-        df: ps.DataFrame,
-        **kwargs
-    ):
-        """Overwrite partitions contained in the dataframe."""
-        logger.info(
-            f"Overwriting table partitions in {self.name}."
-        )
-        partition_by = self.partition_by
-        if partition_by is None:
-            partition_by = []
-        (
-            df.
-            write.
-            partitionBy(partition_by).
-            format(self.format).
-            mode("overwrite").
-            options(**kwargs).
-            save(str(self.dir))
-        )
-
-    def _write_spark_df(
-        self,
-        df: ps.DataFrame,
-        write_mode: TableWriteEnum = "append",
-        num_partitions: int = None,
-        **kwargs
-    ):
-        """Write spark dataframe to directory.
-
-        Parameters
-        ----------
-        df : ps.DataFrame
-            The spark dataframe to write.
-        **kwargs
-            Additional options to pass to the spark write method.
-        """
-        if self.ev.is_s3:
-            logger.error("Writing to S3 is not supported.")
-            raise ValueError("Writing to S3 is not supported.")
-
-        logger.info(f"Writing files to {self.dir}.")
-
-        if len(kwargs) == 0:
-            kwargs = {
-                "header": "true",
-            }
-
-        if write_mode == "overwrite":
-            self._dynamic_overwrite(
-                df,
-                **kwargs
-            )
-        elif write_mode == "append":
-            self._append_without_duplicates(
-                df=df,
-                num_partitions=num_partitions,
-                **kwargs
-            )
-        elif write_mode == "upsert":
-            self._upsert_without_duplicates(
-                df=df,
-                num_partitions=num_partitions,
-                **kwargs
-            )
-        else:
-            raise ValueError(
-                f"Invalid write mode: {write_mode}. "
-                "Valid values are 'append', 'overwrite' and 'upsert'."
-            )
-        # self._load_table(show_missing_table_warning=False)
 
     def _get_schema(self, type: str = "pyspark"):
         """Get the primary timeseries schema.
@@ -350,61 +156,16 @@ class BaseTable():
 
         return self.schema_func()
 
-    def _validate(
-        self,
-        df: ps.DataFrame,
-        strict: bool = True,
-        add_missing_columns: bool = False,
-        drop_duplicates: bool = True,
-    ) -> ps.DataFrame:
-        """Validate a DataFrame against the table schema.
-
-        Parameters
-        ----------
-        df : ps.DataFrame
-            The DataFrame to validate.
-        strict : bool, optional
-            If True, any extra columns will be dropped before validation.
-            If False, will be validated as-is.
-            The default is True.
-
-        Returns
-        -------
-        validated_df : ps.DataFrame
-            The validated DataFrame.
-        """
-        schema = self._get_schema()
-
-        logger.info(f"Validating DataFrame with {schema.columns}.")
-
-        schema_cols = schema.columns.keys()
-
-        # Add missing columns
-        if add_missing_columns:
-            for col_name in schema_cols:
-                if col_name not in df.columns:
-                    df = df.withColumn(col_name, lit(None))
-
-        if strict:
-            df = df.select(*schema_cols)
-
-        if drop_duplicates:
-            df = df.dropDuplicates(subset=self.unique_column_set)
-
-        validated_df = schema.validate(df)
-
-        if len(validated_df.pandera.errors) > 0:
-            logger.error(f"Validation failed: {validated_df.pandera.errors}")
-            raise ValueError(f"Validation failed: {validated_df.pandera.errors}")
-
-        self._enforce_foreign_keys(validated_df)
-
-        return validated_df
-
     def validate(self):
         """Validate the dataset table against the schema."""
         self._check_load_table()
-        self._validate(self.df)
+        self.ev.validate.schema(
+            sdf=self.df,
+            table_schema=self.schema_func(),
+            drop_duplicates=self.drop_duplicates,
+            foreign_keys=self.foreign_keys,
+            uniqueness_fields=self.uniqueness_fields,
+        )
 
     def query(
         self,
@@ -633,7 +394,6 @@ class BaseTable():
 
         Examples
         --------
-
         Order by string:
 
         >>> ts_df = ev.primary_timeseries.order_by("value_time").to_df()
@@ -644,7 +404,6 @@ class BaseTable():
         >>> ts_df = ev.primary_timeseries.order_by(
         >>>     TimeseriesFields.value_time
         >>> ).to_pandas()
-
         """
         logger.info(f"Setting order_by {fields}.")
         self._check_load_table()
@@ -790,27 +549,12 @@ class BaseTable():
                 "No data will be loaded into the table."
             )
             return
-        default_field_mapping = {}
-        fields = self.schema_func(type="pandas").columns.keys()
-        for field in fields:
-            if field not in default_field_mapping.values():
-                default_field_mapping[field] = field
-        if field_mapping:
-            logger.debug("Merging user field_mapping with default field mapping.")
-            field_mapping = merge_field_mappings(
-                default_field_mapping,
-                field_mapping
-            )
-        else:
-            logger.debug("Using default field mapping.")
-            field_mapping = default_field_mapping
-        # verify constant_field_values keys are in field_mapping values
-        if constant_field_values:
-            validate_constant_values_dict(
-                constant_field_values,
-                field_mapping.values()
-            )
-
+        # self.schema_func(type="pandas").columns.keys()
+        self.ev.extract._merge_field_mapping(
+            table_fields=self.field_enum(),
+            field_mapping=field_mapping,
+            constant_field_values=constant_field_values
+        )
         # Convert the input DataFrame to Spark DataFrame
         if isinstance(df, pd.DataFrame):
             df = self.spark.createDataFrame(df)
@@ -819,7 +563,8 @@ class BaseTable():
                 "Input dataframe must be a Pandas DataFrame or a PySpark DataFrame."
             )
         # Apply field mapping and constant field values
-        df = df.withColumnsRenamed(field_mapping)
+        if field_mapping:
+            df = df.withColumnsRenamed(field_mapping)
 
         if constant_field_values:
             for field, value in constant_field_values.items():
@@ -834,14 +579,19 @@ class BaseTable():
                 column_name="location_id",
                 prefix=location_id_prefix,
             )
-        validated_df = self._validate(
-            df=df,
+        validated_df = self.ev.validate.schema(
+            sdf=df,
+            table_schema=self.schema_func(),
             drop_duplicates=drop_duplicates,
+            foreign_keys=self.foreign_keys,
+            uniqueness_fields=self.uniqueness_fields,
             add_missing_columns=True
         )
-        self._write_spark_df(
-            validated_df,
-            write_mode=write_mode
+        self.ev.write.to_warehouse(
+            source_data=validated_df,
+            target_table=self.name,
+            write_mode=write_mode,
+            uniqueness_fields=self.uniqueness_fields
         )
 
         df.unpersist()

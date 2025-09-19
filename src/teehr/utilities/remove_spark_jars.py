@@ -22,6 +22,9 @@ def main():
         },
         {
             "path": f"{SPARK_HOME}/jars/hadoop-aws-*.jar"
+        },
+        {
+            "path": f"{SPARK_HOME}/jars/*-SNAPSHOT.jar"
         }
     ]
 

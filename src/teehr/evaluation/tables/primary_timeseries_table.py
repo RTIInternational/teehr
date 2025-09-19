@@ -2,7 +2,7 @@
 import teehr.const as const
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
 from teehr.models.table_enums import TimeseriesFields
-from teehr.loading.timeseries import convert_timeseries
+from teehr.loading.timeseries import convert_single_timeseries
 import teehr.models.pandera_dataframe_schemas as schemas
 from pathlib import Path
 from typing import Union
@@ -53,6 +53,12 @@ class PrimaryTimeseriesTable(TimeseriesTable):
                 "domain_column": "id",
             }
         ]
+        self.cache_dir = Path(
+            self.ev.dir_path,
+            const.CACHE_DIR,
+            const.LOADING_CACHE_DIR,
+            const.PRIMARY_TIMESERIES_DIR
+        )
 
     def field_enum(self) -> TimeseriesFields:
         """Get the timeseries fields enum."""
@@ -70,34 +76,36 @@ class PrimaryTimeseriesTable(TimeseriesTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
-        max_workers: Union[int, None] = MAX_CPUS,
         persist_dataframe: bool = False,
         drop_duplicates: bool = True,
+        parallel: bool = False,
+        max_workers: Union[int, None] = MAX_CPUS,
         **kwargs
     ):
         """Import timeseries helper."""
-        cache_dir = Path(
-            self.ev.dir_path,
-            const.CACHE_DIR,
-            const.LOADING_CACHE_DIR,
-            const.PRIMARY_TIMESERIES_DIR
-        )
         # Clear the cache directory if it exists.
-        remove_dir_if_exists(cache_dir)
+        remove_dir_if_exists(self.cache_dir)
 
-        convert_timeseries(
-            in_path=in_path,
-            out_path=cache_dir,
+        # Thought. This could almost be:
+        # self.ev.extract.to_cache(...).validate(...).write.to_warehouse(...)
+
+        self.ev.extract.to_cache(
+            in_datapath=in_path,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
-            timeseries_type="primary",
             pattern=pattern,
+            cache_dir=self.cache_dir,
+            table_fields=self.fields(),
+            table_schema_func=self.schema_func(type="pandas"),
+            write_schema_func=self.schema_func(type="arrow"),
+            extraction_func=convert_single_timeseries,
             max_workers=max_workers,
+            parallel=parallel,
             **kwargs
         )
 
         # Read the converted files to Spark DataFrame
-        df = self._read_files(cache_dir)
+        df = self._read_files_from_cache_or_s3(self.cache_dir)
 
         if persist_dataframe:
             df = df.persist()
@@ -110,20 +118,20 @@ class PrimaryTimeseriesTable(TimeseriesTable):
                 prefix=location_id_prefix,
             )
 
-        # Validate using the _validate() method
-        validated_df = self._validate(
-            df=df,
-            drop_duplicates=drop_duplicates
+        validated_df = self.ev.validate.schema(
+            sdf=df,
+            table_schema=self.schema_func(),
+            drop_duplicates=drop_duplicates,
+            foreign_keys=self.foreign_keys,
+            uniqueness_fields=self.uniqueness_fields
         )
 
-        # Write to the table
-        self._write_spark_df(
-            validated_df,
-            write_mode=write_mode
+        self.ev.write.to_warehouse(
+            source_data=validated_df,
+            target_table=self.name,
+            write_mode=write_mode,
+            uniqueness_fields=self.uniqueness_fields
         )
-
-        # Reload the table
-        # self._load_table()
 
         df.unpersist()
 
@@ -181,7 +189,7 @@ class PrimaryTimeseriesTable(TimeseriesTable):
         - variable_name
         - value
         - location_id
-        """
+        """ # noqa
         self._load_dataframe(
             df=df,
             field_mapping=field_mapping,

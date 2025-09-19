@@ -1,7 +1,7 @@
 """Location table class."""
 import teehr.const as const
 from teehr.evaluation.tables.base_table import BaseTable
-from teehr.loading.locations import convert_locations
+from teehr.loading.locations import convert_single_locations
 from teehr.models.filters import LocationFilter
 from teehr.models.table_enums import LocationFields
 from teehr.querying.utils import df_to_gdf
@@ -15,7 +15,10 @@ from teehr.models.table_enums import TableWriteEnum
 import pandas as pd
 import pyspark.pandas as ps
 from pyspark.sql.functions import lit
-from teehr.loading.utils import merge_field_mappings, validate_constant_values_dict
+from teehr.loading.utils import (
+    merge_field_mappings,
+    validate_constant_values_dict
+)
 import geopandas as gpd
 
 logger = logging.getLogger(__name__)
@@ -32,7 +35,13 @@ class LocationTable(BaseTable):
         self.format = "parquet"
         self.filter_model = LocationFilter
         self.schema_func = schemas.locations_schema
-        self.unique_column_set = ["id"]
+        self.uniqueness_fields = ["id"]
+        self.cache_dir = Path(
+            self.ev.dir_path,
+            const.CACHE_DIR,
+            const.LOADING_CACHE_DIR,
+            const.LOCATIONS_DIR
+        )
 
     def field_enum(self) -> LocationFields:
         """Get the location fields enum."""
@@ -117,24 +126,23 @@ class LocationTable(BaseTable):
           location IDs to be prefixed with "usgs" or the nwm version
           ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
         """
-        cache_dir = Path(
-            self.ev.dir_path,
-            const.CACHE_DIR,
-            const.LOADING_CACHE_DIR,
-            const.LOCATIONS_DIR
-        )
         # Clear the cache directory if it exists.
-        remove_dir_if_exists(cache_dir)
+        remove_dir_if_exists(self.cache_dir)
 
-        convert_locations(
-            in_path,
-            cache_dir,
+        self.ev.extract.to_cache(
+            in_datapath=in_path,
             field_mapping=field_mapping,
             pattern=pattern,
+            cache_dir=self.cache_dir,
+            table_fields=self.fields(),
+            table_schema_func=self.schema_func(type="pandas"),
+            write_schema_func=self.schema_func(type="arrow"),
+            extraction_func=convert_single_locations,
             **kwargs
         )
+
         # Read the converted files to Spark DataFrame
-        df = self._read_files(cache_dir)
+        df = self._read_files_from_cache_or_s3(self.cache_dir)
 
         # Add or replace location_id prefix if provided
         if location_id_prefix:
@@ -144,21 +152,20 @@ class LocationTable(BaseTable):
                 prefix=location_id_prefix,
             )
 
-        # Validate using the _validate() method
-        validated_df = self._validate(
-            df=df,
-            drop_duplicates=drop_duplicates
+        validated_df = self.ev.validate.schema(
+            sdf=df,
+            table_schema=self.schema_func(),
+            drop_duplicates=drop_duplicates,
+            foreign_keys=self.foreign_keys,
+            uniqueness_fields=self.uniqueness_fields
         )
 
-        # Write to the table
-        self._write_spark_df(
-            df=validated_df,
+        self.ev.write.to_warehouse(
+            source_data=validated_df,
+            target_table=self.name,
             write_mode=write_mode,
-            num_partitions=1
+            uniqueness_fields=self.uniqueness_fields
         )
-
-        # Reload the table
-        self._load_table()
 
     def _load_dataframe(
         self,
@@ -177,7 +184,9 @@ class LocationTable(BaseTable):
             if field not in default_field_mapping.values():
                 default_field_mapping[field] = field
         if field_mapping:
-            logger.debug("Merging user field_mapping with default field mapping.")
+            logger.debug(
+                "Merging user field_mapping with default field mapping."
+            )
             field_mapping = merge_field_mappings(
                 default_field_mapping,
                 field_mapping
@@ -219,14 +228,18 @@ class LocationTable(BaseTable):
                 column_name="location_id",
                 prefix=location_id_prefix,
             )
-        validated_df = self._validate(
-            df=df,
+        validated_df = self.ev.validate.schema(
+            sdf=df,
+            table_schema=self.schema_func(),
             drop_duplicates=drop_duplicates,
-            add_missing_columns=True
+            foreign_keys=self.foreign_keys,
+            uniqueness_fields=self.uniqueness_fields
         )
-        self._write_spark_df(
-            validated_df,
-            write_mode=write_mode
+        self.ev.write.to_warehouse(
+            source_data=validated_df,
+            target_table=self.name,
+            write_mode=write_mode,
+            uniqueness_fields=self.uniqueness_fields
         )
 
         df.unpersist()
@@ -273,7 +286,7 @@ class LocationTable(BaseTable):
             a large number of files from the cache.
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the dataframe.
-        """
+        """ # noqa
         self._load_dataframe(
             df=df,
             field_mapping=field_mapping,

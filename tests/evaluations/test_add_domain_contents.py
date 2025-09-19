@@ -12,7 +12,7 @@ def test_add_domains(tmpdir):
     """Test creating a new study."""
     from teehr import Evaluation
 
-    ev = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
     ev.clone_template()
 
     # Check configurations.add doesn't add columns
@@ -28,9 +28,12 @@ def test_add_domains(tmpdir):
         ]
     )
 
-    new_cols = ev.configurations.to_pandas().columns
+    df = ev.configurations.to_pandas()
 
-    assert list(cols.sort_values()) == list(new_cols.sort_values())
+    assert list(cols.sort_values()) == list(df.columns.sort_values())
+    assert df.name.iloc[0] == "conf1"
+    assert df.type.iloc[0] == "secondary"
+    assert df.description.iloc[0] == "Configuration 1"
 
     # Check units.add doesn't add columns
     cols = ev.units.to_pandas().columns
@@ -78,6 +81,8 @@ def test_add_domains(tmpdir):
     new_cols = ev.attributes.to_pandas().columns
 
     assert list(cols.sort_values()) == list(new_cols.sort_values())
+
+    ev.spark.stop()
 
 
 if __name__ == "__main__":

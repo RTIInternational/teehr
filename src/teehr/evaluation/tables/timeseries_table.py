@@ -31,7 +31,7 @@ class TimeseriesTable(BaseTable):
             # "reference_time"
         ]
         self.filter_model = TimeseriesFilter
-        self.unique_column_set = [
+        self.uniqueness_fields = [
             "location_id",
             "value_time",
             "reference_time",
@@ -61,6 +61,7 @@ class TimeseriesTable(BaseTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        parallel: bool = False,
         max_workers: Union[int, None] = MAX_CPUS,
         persist_dataframe: bool = False,
         drop_duplicates: bool = True,
@@ -94,6 +95,8 @@ class TimeseriesTable(BaseTable):
             does not exist will be appended.
             If "overwrite", existing partitions receiving new data are
             overwritten.
+        parallel : bool, optional (default: False)
+            Whether to process files in parallel. Default is False.
         max_workers : Union[int, None], optional
             The maximum number of workers to use for parallel processing when
             in_path is a directory. This gets passed to the concurrent.futures
@@ -133,6 +136,7 @@ class TimeseriesTable(BaseTable):
             constant_field_values=constant_field_values,
             location_id_prefix=location_id_prefix,
             write_mode=write_mode,
+            parallel=parallel,
             max_workers=max_workers,
             persist_dataframe=persist_dataframe,
             drop_duplicates=drop_duplicates,
@@ -148,6 +152,7 @@ class TimeseriesTable(BaseTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        parallel: bool = False,
         max_workers: Union[int, None] = MAX_CPUS,
         persist_dataframe: bool = False,
         drop_duplicates: bool = True,
@@ -183,6 +188,8 @@ class TimeseriesTable(BaseTable):
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
             If "overwrite", existing partitions receiving new data are overwritten
+        parallel : bool, optional (default: False)
+            Whether to process files in parallel. Default is False.
         max_workers : Union[int, None], optional
             The maximum number of workers to use for parallel processing when
             in_path is a directory. This gets passed to the concurrent.futures
@@ -222,6 +229,7 @@ class TimeseriesTable(BaseTable):
             constant_field_values=constant_field_values,
             location_id_prefix=location_id_prefix,
             write_mode=write_mode,
+            parallel=parallel,
             max_workers=max_workers,
             persist_dataframe=persist_dataframe,
             drop_duplicates=drop_duplicates,
@@ -237,6 +245,7 @@ class TimeseriesTable(BaseTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        parallel: bool = False,
         max_workers: Union[int, None] = MAX_CPUS,
         persist_dataframe: bool = False,
         drop_duplicates: bool = True,
@@ -272,6 +281,8 @@ class TimeseriesTable(BaseTable):
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
             If "overwrite", existing partitions receiving new data are overwritten
+        parallel : bool, optional (default: False)
+            Whether to process files in parallel. Default is False.
         max_workers : Union[int, None], optional
             The maximum number of workers to use for parallel processing when
             in_path is a directory. This gets passed to the concurrent.futures
@@ -311,6 +322,7 @@ class TimeseriesTable(BaseTable):
             constant_field_values=constant_field_values,
             location_id_prefix=location_id_prefix,
             write_mode=write_mode,
+            parallel=parallel,
             max_workers=max_workers,
             persist_dataframe=persist_dataframe,
             drop_duplicates=drop_duplicates,
@@ -334,6 +346,7 @@ class TimeseriesTable(BaseTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
+        parallel: bool = False,
         max_workers: Union[int, None] = MAX_CPUS,
         persist_dataframe: bool = False,
         drop_duplicates: bool = True,
@@ -382,6 +395,8 @@ class TimeseriesTable(BaseTable):
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
             If "overwrite", existing partitions receiving new data are overwritten
+        parallel : bool, optional (default: False)
+            Whether to process files in parallel. Default is False.
         max_workers : Union[int, None], optional
             The maximum number of workers to use for parallel processing when
             in_path is a directory. This gets passed to the concurrent.futures
@@ -427,6 +442,7 @@ class TimeseriesTable(BaseTable):
             constant_field_values=constant_field_values,
             location_id_prefix=location_id_prefix,
             write_mode=write_mode,
+            parallel=parallel,
             max_workers=max_workers,
             persist_dataframe=persist_dataframe,
             drop_duplicates=drop_duplicates,

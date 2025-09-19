@@ -32,7 +32,7 @@ ZONAL_LOCATIONS = Path(
 
 def test_fetch_and_load_nwm_retro_points(tmpdir):
     """Test the NWM retro point fetch and load."""
-    ev = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
     ev.enable_logging()
     ev.clone_template()
 
@@ -90,10 +90,12 @@ def test_fetch_and_load_nwm_retro_points(tmpdir):
     assert sts_df.value_time.min() == pd.Timestamp("2022-02-22 00:00:00")
     assert sts_df.value_time.max() == pd.Timestamp("2022-02-25 23:00:00")
 
+    ev.spark.stop()
+
 
 def test_fetch_and_load_nwm_retro_grids(tmpdir):
     """Test the NWM retro grid fetch and load."""
-    ev = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
     ev.enable_logging()
     ev.clone_template()
 
@@ -123,10 +125,12 @@ def test_fetch_and_load_nwm_retro_grids(tmpdir):
     assert ts_df.value_time.min() == pd.Timestamp("2008-05-23 09:00:00")
     assert ts_df.value_time.max() == pd.Timestamp("2008-05-23 10:00:00")
 
+    ev.spark.stop()
+
 
 def test_fetch_and_load_nwm_operational_points(tmpdir):
     """Test the NWM operational point fetch and load."""
-    ev = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
     ev.enable_logging()
     ev.clone_template()
 
@@ -179,11 +183,13 @@ def test_fetch_and_load_nwm_operational_points(tmpdir):
     assert updated_df.value_time.max() == pd.Timestamp("2024-02-23 06:00:00")
     assert np.isclose(updated_df.value.sum(), np.float32(492485.03))
 
+    ev.spark.stop()
+
 
 @pytest.mark.skip(reason="This takes forever!")
 def test_fetch_and_load_nwm_operational_grids(tmpdir):
     """Test the NWM forecast grids fetch and load."""
-    ev = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
     ev.enable_logging()
     ev.clone_template()
 
@@ -231,6 +237,8 @@ def test_fetch_and_load_nwm_operational_grids(tmpdir):
     )
     assert len(file_list) == 1
 
+    ev.spark.stop()
+
 
 if __name__ == "__main__":
 
@@ -240,28 +248,28 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_fetch_and_load_nwm_retro_points(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_fetch_and_load_nwm_retro_grids(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
+        # test_fetch_and_load_nwm_retro_points(
+        #     tempfile.mkdtemp(
+        #         prefix="1-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_fetch_and_load_nwm_retro_grids(
+        #     tempfile.mkdtemp(
+        #         prefix="2-",
+        #         dir=tempdir
+        #     )
+        # )
         test_fetch_and_load_nwm_operational_points(
             tempfile.mkdtemp(
                 prefix="3-",
                 dir=tempdir
             )
         )
-        # Warning: This one is slow.
-        test_fetch_and_load_nwm_operational_grids(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
+        # # Warning: This one is slow.
+        # test_fetch_and_load_nwm_operational_grids(
+        #     tempfile.mkdtemp(
+        #         prefix="4-",
+        #         dir=tempdir
+        #     )
+        # )

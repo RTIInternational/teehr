@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "teehr"
-version = "0.5.0"
+version = "0.6.0dev0"
 description = "Tools for Exploratory Evaluation in Hydrologic Research"
 authors = [
     "RTI International",
@@ -34,7 +34,6 @@ numba = ">=0.60.0,<1"
 arch = ">=7.0.0,<8"
 pandera = {extras = ["pyspark"], version = ">=0.20.4,<1"}
 netcdf4 = ">=1.6.5,<2"
-apache-sedona = ">=1.7.0,<2"
 scoringrules = ">=0.7.1,<1"
 pyiceberg = ">=0.9.1,<1"
 lxml = ">=5.4.0,<6"
@@ -42,6 +41,7 @@ bokeh = ">=3.7.3,<4"
 protobuf = "5.28.3"
 psutil = ">=7.0.0,<8"
 baseflow = "^0.1.0"
+apache-sedona = ">=1.8.0,<2"
 
 [tool.poetry.group.test.dependencies]
 pytest = ">=7.4.3"

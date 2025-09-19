@@ -1,7 +1,7 @@
 """Secondary timeseries table class."""
 import teehr.const as const
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
-from teehr.loading.timeseries import convert_timeseries
+from teehr.loading.timeseries import convert_single_timeseries
 from pathlib import Path
 from typing import Union
 import logging
@@ -31,7 +31,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         self.name = "secondary_timeseries"
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.schema_func = schemas.secondary_timeseries_schema
-        self.unique_column_set = [
+        self.uniqueness_fields = [
             "location_id",
             "value_time",
             "reference_time",
@@ -62,6 +62,12 @@ class SecondaryTimeseriesTable(TimeseriesTable):
                 "domain_column": "secondary_location_id",
             }
         ]
+        self.cache_dir = Path(
+            self.ev.dir_path,
+            const.CACHE_DIR,
+            const.LOADING_CACHE_DIR,
+            const.SECONDARY_TIMESERIES_DIR
+        )
 
     def field_enum(self) -> TimeseriesFields:
         """Get the timeseries fields enum."""
@@ -79,33 +85,32 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
-        max_workers: Union[int, None] = MAX_CPUS,
         persist_dataframe: bool = False,
         drop_duplicates: bool = True,
+        parallel: bool = False,
+        max_workers: Union[int, None] = MAX_CPUS,
         **kwargs
     ):
         """Import timeseries helper."""
-        cache_dir = Path(
-            self.ev.dir_path,
-            const.CACHE_DIR,
-            const.LOADING_CACHE_DIR,
-            const.SECONDARY_TIMESERIES_DIR
-        )
         # Clear the cache directory if it exists.
-        remove_dir_if_exists(cache_dir)
+        remove_dir_if_exists(self.cache_dir)
 
-        convert_timeseries(
-            in_path=in_path,
-            out_path=cache_dir,
+        self.ev.extract.to_cache(
+            in_datapath=in_path,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
-            timeseries_type="secondary",
             pattern=pattern,
+            cache_dir=self.cache_dir,
+            table_fields=self.fields(),
+            table_schema_func=self.schema_func(type="pandas"),
+            write_schema_func=self.schema_func(type="arrow"),
+            extraction_func=convert_single_timeseries,
+            parallel=parallel,
             max_workers=max_workers,
             **kwargs
         )
         # Read the converted files to Spark DataFrame
-        df = self._read_files(cache_dir)
+        df = self._read_files_from_cache_or_s3(self.cache_dir)
 
         if persist_dataframe:
             df = df.persist()
@@ -117,15 +122,19 @@ class SecondaryTimeseriesTable(TimeseriesTable):
                 column_name="location_id",
                 prefix=location_id_prefix,
             )
-        # Validate using the _validate() method
-        validated_df = self._validate(
-            df=df,
-            drop_duplicates=drop_duplicates
+        validated_df = self.ev.validate.schema(
+            sdf=df,
+            table_schema=self.schema_func(),
+            drop_duplicates=drop_duplicates,
+            foreign_keys=self.foreign_keys,
+            uniqueness_fields=self.uniqueness_fields,
+            add_missing_columns=True
         )
-        # Write to the table
-        self._write_spark_df(
-            validated_df,
-            write_mode=write_mode
+        self.ev.write.to_warehouse(
+            source_data=validated_df,
+            target_table=self.name,
+            write_mode=write_mode,
+            uniqueness_fields=self.uniqueness_fields
         )
 
         df.unpersist()

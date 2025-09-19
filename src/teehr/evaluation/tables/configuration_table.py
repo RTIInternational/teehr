@@ -18,7 +18,7 @@ class ConfigurationTable(DomainTable):
         self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
         self.filter_model = ConfigurationFilter
         self.schema_func = schemas.configuration_schema
-        self.unique_column_set = ["name"]
+        self.uniqueness_fields = ["name"]
 
     def field_enum(self) -> ConfigurationFields:
         """Get the configuration fields enum."""

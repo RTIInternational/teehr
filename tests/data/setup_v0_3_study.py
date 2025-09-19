@@ -20,7 +20,7 @@ GEO_FILEPATH = Path(TEST_DATA_DIR, "geo")
 
 def setup_v0_3_study(tmpdir):
     """Set up a v0.3 study."""
-    ev = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
 
     # Enable logging
     ev.enable_logging()
@@ -107,7 +107,7 @@ def setup_v0_3_study(tmpdir):
                 name="year_2_discharge",
                 type="continuous",
                 description="2-yr discharge in cubic meters per second"
-            ),
+            )
         ]
     )
 
@@ -116,6 +116,7 @@ def setup_v0_3_study(tmpdir):
         in_path=GEO_FILEPATH,
         field_mapping={"attribute_value": "value"},
         pattern="test_attr_*.parquet",
+        update_attrs_table=False
     )
 
     # Create the joined timeseries

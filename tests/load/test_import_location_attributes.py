@@ -1,5 +1,7 @@
 """Test the import_location_attributes methods."""
-from teehr.loading.location_attributes import convert_location_attributes
+from teehr.loading.location_attributes import (
+    convert_single_location_attributes
+)
 from pathlib import Path
 from teehr import Evaluation
 import tempfile
@@ -18,19 +20,16 @@ GEO_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo")
 
 def test_convert_location_attributes(tmpdir):
     """Test conversion of single location_attributes file."""
-    output_filepath = Path(tmpdir, "test_attr_2yr_discharge.parquet")
-
-    convert_location_attributes(
-        in_path=LOCATION_ATTRIBUTES_FILEPATH,
-        out_dirpath=tmpdir,
+    df = convert_single_location_attributes(
+        in_filepath=LOCATION_ATTRIBUTES_FILEPATH,
         field_mapping={"attribute_value": "value"}
     )
-    assert output_filepath.is_file()
+    assert df.index.size == 3
 
 
 def test_validate_and_insert_location_attributes(tmpdir):
     """Test the validate location_attributes function."""
-    ev = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
     ev.clone_template()
 
     ev.enable_logging()
@@ -64,8 +63,7 @@ def test_validate_and_insert_location_attributes(tmpdir):
         pattern="test_attr_*.parquet",
         location_id_prefix="usgs",
     )
-
-    assert True
+    ev.spark.stop()
 
 
 if __name__ == "__main__":
