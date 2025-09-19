@@ -563,7 +563,8 @@ class BaseTable:
                 "Input dataframe must be a Pandas DataFrame or a PySpark DataFrame."
             )
         # Apply field mapping and constant field values
-        df = df.withColumnsRenamed(field_mapping)
+        if field_mapping:
+            df = df.withColumnsRenamed(field_mapping)
 
         if constant_field_values:
             for field, value in constant_field_values.items():

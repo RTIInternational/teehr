@@ -1,5 +1,4 @@
 """Tests for Iceberg."""
-import tempfile
 from pathlib import Path
 import shutil
 
@@ -8,8 +7,12 @@ import pytest
 import teehr
 from teehr.utilities.convert_to_iceberg import convert_evaluation
 
+# Note. This test writes to the test/data directory, then cleans up after
+# itself. If you do not let the test finish, you may need to manually
+# delete the created directories.
 
-def test_upgrade_evaluation(tmpdir):
+
+def test_upgrade_evaluation():
     """Test upgrading a pre-v0.6 evaluation to v0.6."""
     v04_ev_dir = Path("tests", "data", "v0_4_e0_evaluation")
 
@@ -80,12 +83,4 @@ def test_upgrade_evaluation(tmpdir):
 
 
 if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tmpdir:
-        test_upgrade_evaluation(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tmpdir
-            )
-        )
+    test_upgrade_evaluation()
