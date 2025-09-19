@@ -1,0 +1,34 @@
+﻿UnitTable
+=========
+
+.. currentmodule:: teehr.evaluation.tables.unit_table
+
+.. autoclass:: UnitTable
+   :members:
+   :show-inheritance:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~UnitTable.add
+      ~UnitTable.distinct_values
+      ~UnitTable.field_enum
+      ~UnitTable.fields
+      ~UnitTable.filter
+      ~UnitTable.order_by
+      ~UnitTable.query
+      ~UnitTable.to_geopandas
+      ~UnitTable.to_pandas
+      ~UnitTable.to_sdf
+      ~UnitTable.validate
+   
+   
+
+   
+   
+   

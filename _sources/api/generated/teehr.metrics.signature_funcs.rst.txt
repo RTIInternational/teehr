@@ -1,0 +1,37 @@
+﻿signature\_funcs
+================
+
+.. automodule:: teehr.metrics.signature_funcs
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      average
+      count
+      max_value_time
+      maximum
+      minimum
+      sum
+      variance
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
