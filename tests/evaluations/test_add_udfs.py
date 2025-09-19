@@ -113,7 +113,7 @@ def test_add_row_udfs(tmpdir):
     assert sdf.schema["threshold_value_exceeded"].dataType == T.BooleanType()
     check_vals = check_sdf.select(
         "threshold_value_exceeded").distinct().collect()
-    assert check_vals[0]["threshold_value_exceeded"] is True
+    assert check_vals[0]["threshold_value_exceeded"] is False
 
     assert "day_of_year" in cols
     assert sdf.schema["day_of_year"].dataType == T.IntegerType()

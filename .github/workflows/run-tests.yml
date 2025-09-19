@@ -3,8 +3,8 @@ name: run-all-tests
 on:
   pull_request:
     types: [opened, reopened, ready_for_review]
-  # push:
-  #   branches: [420-add-skill-score-for-ensemble-metrics]
+  push:
+    branches: [535-fix-datatype-issue-in-thresholdvalueexceeded]
 
 jobs:
   build:
