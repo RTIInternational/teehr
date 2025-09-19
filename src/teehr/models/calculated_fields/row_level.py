@@ -267,7 +267,7 @@ class ThresholdValueExceeded(CalculatedFieldABC, CalculatedFieldBaseModel):
         Default: "primary_value"
     - threshold_field_name:
         The name of the column containing the threshold value.
-        Default: 0
+        Default: "secondary_value"
     - output_field_name:
         The name of the column to store the boolean value.
         Default: "threshold_value_exceeded"
@@ -311,7 +311,7 @@ class ThresholdValueNotExceeded(CalculatedFieldABC, CalculatedFieldBaseModel):
         Default: "primary_value"
     - threshold_field_name:
         The name of the column containing the threshold value.
-        Default: 0
+        Default: "secondary_value"
     - output_field_name:
         The name of the column to store the boolean value.
         Default: "threshold_value_not_exceeded"
