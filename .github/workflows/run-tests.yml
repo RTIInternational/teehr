@@ -17,7 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
           lfs: true
 
       - name: Set up Python ${{ matrix.python-version }}
