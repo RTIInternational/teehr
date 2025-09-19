@@ -345,12 +345,12 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        # test_add_row_udfs_null_reference(
-        #     tempfile.mkdtemp(
-        #         prefix="0-",
-        #         dir=tempdir
-        #     )
-        # )
+        test_add_row_udfs_null_reference(
+            tempfile.mkdtemp(
+                prefix="0-",
+                dir=tempdir
+            )
+        )
         test_add_row_udfs(
             tempfile.mkdtemp(
                 prefix="1-",
