@@ -122,7 +122,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
                 column_name="location_id",
                 prefix=location_id_prefix,
             )
-        validated_df = self.ev.validate.data_schema(
+        validated_df = self.ev.validate.schema(
             sdf=df,
             table_schema=self.schema_func(),
             drop_duplicates=drop_duplicates,

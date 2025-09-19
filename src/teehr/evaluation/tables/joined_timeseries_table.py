@@ -246,7 +246,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
         if execute_scripts:
             joined_df = self._run_script(joined_df)
 
-        validated_df = self.ev.validate.data_schema(
+        validated_df = self.ev.validate.schema(
             sdf=joined_df,
             strict=False,
             table_schema=self.schema_func(),

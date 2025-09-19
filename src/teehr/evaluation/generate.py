@@ -48,7 +48,7 @@ class GeneratedTimeSeriesBasemodel:
                 f"Invalid destination table: {destination_table}"
                 " Must be one of: primary_timeseries, secondary_timeseries"
             )
-        validated_df = self.ev.validate.data_schema(
+        validated_df = self.ev.validate.schema(
             sdf=self.df,
             table_schema=tbl.schema_func(),
             drop_duplicates=drop_duplicates,

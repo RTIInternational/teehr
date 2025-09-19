@@ -49,7 +49,7 @@ class Validator:
                 )
 
     @staticmethod
-    def data_types(
+    def data(
         df: ps.DataFrame | pd.DataFrame,
         table_schema: SparkDataFrameSchema | PandasDataFrameSchema,
     ) -> ps.DataFrame | pd.DataFrame:
@@ -89,7 +89,7 @@ class Validator:
             )
         return table_schema.validate(df)
 
-    def data_schema(
+    def schema(
         self,
         sdf: ps.DataFrame,
         table_schema: SparkDataFrameSchema,

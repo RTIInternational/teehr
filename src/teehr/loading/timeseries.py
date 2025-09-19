@@ -129,7 +129,7 @@ def validate_and_insert_timeseries(
         df = df.withColumn("reference_time", lit(None))
 
     # Validate datatypes, foreign keys, and drop duplicates.
-    validated_df = ev.validate.data_schema(
+    validated_df = ev.validate.schema(
         sdf=df,
         table_schema=table.schema_func(),
         drop_duplicates=drop_duplicates,

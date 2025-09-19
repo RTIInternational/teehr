@@ -30,7 +30,7 @@ def test_clone_template(tmpdir):
     views_df = ev.list_views()
 
     # Not a complete test, but at least we know the function runs.
-    assert len(tbls_df) == 9
+    assert len(tbls_df) == 10
     assert len(views_df) == 1
     assert Path(tmpdir, "cache").is_dir()
     assert Path(tmpdir, "scripts").is_dir()

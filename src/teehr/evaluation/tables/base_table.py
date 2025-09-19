@@ -159,7 +159,7 @@ class BaseTable:
     def validate(self):
         """Validate the dataset table against the schema."""
         self._check_load_table()
-        self.ev.validate.data_schema(
+        self.ev.validate.schema(
             sdf=self.df,
             table_schema=self.schema_func(),
             drop_duplicates=self.drop_duplicates,
@@ -578,7 +578,7 @@ class BaseTable:
                 column_name="location_id",
                 prefix=location_id_prefix,
             )
-        validated_df = self.ev.validate.data_schema(
+        validated_df = self.ev.validate.schema(
             sdf=df,
             table_schema=self.schema_func(),
             drop_duplicates=drop_duplicates,

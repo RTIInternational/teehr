@@ -151,7 +151,7 @@ class DataExtractor:
                     for field, value in constant_field_values.items():
                         df[field] = value
                 # Validate data types and required fields
-                validated_df = self.ev.validate.data_types(
+                validated_df = self.ev.validate.data(
                     df=df,
                     table_schema=table_schema_func
                 )
@@ -186,7 +186,7 @@ class DataExtractor:
                         for field, value in constant_field_values.items():
                             df[field] = value
                     # Validate data types and required fields
-                    validated_df = self.ev.validate.data_types(
+                    validated_df = self.ev.validate.data(
                         df=df,
                         table_schema=table_schema_func
                     )
@@ -211,7 +211,7 @@ class DataExtractor:
                 for field, value in constant_field_values.items():
                     df[field] = value
             # Validate data types and required fields
-            validated_df = self.ev.validate.data_types(
+            validated_df = self.ev.validate.data(
                 df=df,
                 table_schema=table_schema_func
             )
