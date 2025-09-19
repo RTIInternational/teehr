@@ -57,7 +57,15 @@ def test_add_row_udfs(tmpdir):
     sdf = rcf.ThresholdValueExceeded(
             threshold_field_name="year_2_discharge"
         ).apply_to(sdf)
-    _ = sdf.toPandas()
+    df1 = sdf.toPandas()
+
+    sdf = rcf.ThresholdValueNotExceeded(
+            threshold_field_name="year_2_discharge"
+        ).apply_to(sdf)
+    df2 = sdf.toPandas()
+    assert all(
+        df1['threshold_value_exceeded'] == ~df2['threshold_value_not_exceeded']
+    )
 
     sdf = rcf.DayOfYear().apply_to(sdf)
     _ = sdf.toPandas()
@@ -337,12 +345,12 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_add_row_udfs_null_reference(
-            tempfile.mkdtemp(
-                prefix="0-",
-                dir=tempdir
-            )
-        )
+        # test_add_row_udfs_null_reference(
+        #     tempfile.mkdtemp(
+        #         prefix="0-",
+        #         dir=tempdir
+        #     )
+        # )
         test_add_row_udfs(
             tempfile.mkdtemp(
                 prefix="1-",

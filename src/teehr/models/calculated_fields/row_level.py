@@ -301,6 +301,50 @@ class ThresholdValueExceeded(CalculatedFieldABC, CalculatedFieldBaseModel):
         return sdf
 
 
+class ThresholdValueNotExceeded(CalculatedFieldABC, CalculatedFieldBaseModel):
+    """Adds boolean column indicating if the input value is less than or equal to a threshold.
+
+    Properties
+    ----------
+    - input_field_name:
+        The name of the column containing the primary value.
+        Default: "primary_value"
+    - threshold_field_name:
+        The name of the column containing the threshold value.
+        Default: 0
+    - output_field_name:
+        The name of the column to store the boolean value.
+        Default: "threshold_value_not_exceeded"
+
+    """ # noqa
+
+    input_field_name: str = Field(
+        default="primary_value"
+    )
+    threshold_field_name: str = Field(
+        default="secondary_value"
+    )
+    output_field_name: str = Field(
+        default="threshold_value_not_exceeded"
+    )
+
+    def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
+        """Apply the calculated field to the Spark DataFrame."""
+        @pandas_udf(returnType=T.BooleanType())
+        def func(input_value: pd.Series,
+                 threshold_value: pd.Series
+                 ) -> pd.Series:
+            mask = input_value.astype(float) <= threshold_value.astype(float)
+            return mask
+
+        sdf = sdf.withColumn(
+            self.output_field_name,
+            func(self.input_field_name,
+                 self.threshold_field_name)
+        )
+        return sdf
+
+
 class DayOfYear(CalculatedFieldABC, CalculatedFieldBaseModel):
     """Adds the day of the year from a timestamp column.
 
@@ -429,5 +473,6 @@ class RowLevelCalculatedFields:
     Seasons = Seasons
     ForecastLeadTime = ForecastLeadTime
     ThresholdValueExceeded = ThresholdValueExceeded
+    ThresholdValueNotExceeded = ThresholdValueNotExceeded
     DayOfYear = DayOfYear
     HourOfYear = HourOfYear
