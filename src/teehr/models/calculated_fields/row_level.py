@@ -290,7 +290,7 @@ class ThresholdValueExceeded(CalculatedFieldABC, CalculatedFieldBaseModel):
         def func(input_value: pd.Series,
                  threshold_value: pd.Series
                  ) -> pd.Series:
-            mask = input_value > threshold_value
+            mask = input_value.astype(float) > threshold_value.astype(float)
             return mask
 
         sdf = sdf.withColumn(
