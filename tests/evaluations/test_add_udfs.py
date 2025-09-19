@@ -37,20 +37,38 @@ def test_add_row_udfs(tmpdir):
     sdf = ev.joined_timeseries.to_sdf()
 
     sdf = rcf.Month().apply_to(sdf)
+    _ = sdf.toPandas()
 
     sdf = rcf.Year().apply_to(sdf)
+    _ = sdf.toPandas()
 
     sdf = rcf.WaterYear().apply_to(sdf)
+    _ = sdf.toPandas()
 
     sdf = rcf.NormalizedFlow().apply_to(sdf)
+    _ = sdf.toPandas()
 
     sdf = rcf.Seasons().apply_to(sdf)
+    _ = sdf.toPandas()
 
     sdf = rcf.ForecastLeadTime().apply_to(sdf)
+    _ = sdf.toPandas()
 
-    sdf = rcf.ThresholdValueExceeded().apply_to(sdf)
+    sdf = rcf.ThresholdValueExceeded(
+            threshold_field_name="year_2_discharge"
+        ).apply_to(sdf)
+    df1 = sdf.toPandas()
+
+    sdf = rcf.ThresholdValueNotExceeded(
+            threshold_field_name="year_2_discharge"
+        ).apply_to(sdf)
+    df2 = sdf.toPandas()
+    assert all(
+        df1['threshold_value_exceeded'] == ~df2['threshold_value_not_exceeded']
+    )
 
     sdf = rcf.DayOfYear().apply_to(sdf)
+    _ = sdf.toPandas()
 
     cols = sdf.columns
     check_sdf = sdf[sdf["primary_location_id"] == "gage-A"]
@@ -95,7 +113,7 @@ def test_add_row_udfs(tmpdir):
     assert sdf.schema["threshold_value_exceeded"].dataType == T.BooleanType()
     check_vals = check_sdf.select(
         "threshold_value_exceeded").distinct().collect()
-    assert check_vals[0]["threshold_value_exceeded"] is True
+    assert check_vals[0]["threshold_value_exceeded"] is False
 
     assert "day_of_year" in cols
     assert sdf.schema["day_of_year"].dataType == T.IntegerType()
