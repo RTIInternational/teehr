@@ -151,3 +151,49 @@ def sum(model: MetricsBasemodel) -> Callable:
         return np.sum(p)
 
     return sum_inner
+
+
+def flow_duration_curve_slope(model: MetricsBasemodel) -> Callable:
+    """Create flow duration curve slope metric function."""
+    logger.debug("Building the flow duration curve slope metric function")
+
+    def flow_duration_curve_slope_inner(
+        p: pd.Series,
+    ) -> float:
+        """Flow duration curve slope."""
+        # ensure percentiles are within valid range
+        if not (0 < model.lower_percentile < 1):
+            raise ValueError(
+                "Lower percentile must be between 0 and 1"
+                )
+        if not (0 < model.upper_percentile < 1):
+            raise ValueError(
+                "Upper percentile must be between 0 and 1"
+                )
+
+        # ensure lower percentile is less than upper percentile
+        if model.lower_percentile >= model.upper_percentile:
+            raise ValueError(
+                "Lower percentile must be less than upper percentile"
+                )
+
+        # apply any specified transform
+        p = _transform(p, model)
+
+        # sort the streamflow values in ascending order
+        p_sorted = p.sort_values(ascending=True).reset_index(drop=True)
+
+        # calculate exceedance probabilities
+        n = len(p_sorted)
+        fdc_probs = (p_sorted.index/(n+1))
+
+        # calculate slope between specified percentiles
+        lower_idx = int(np.ceil((model.lower_percentile) * n)) - 1
+        upper_idx = int(np.ceil((model.upper_percentile) * n)) - 1
+        slope = (p_sorted.iloc[upper_idx] - p_sorted.iloc[lower_idx]) / (
+            fdc_probs[upper_idx] - fdc_probs[lower_idx]
+        )
+
+        return slope
+
+    return flow_duration_curve_slope_inner

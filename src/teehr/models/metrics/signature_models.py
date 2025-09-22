@@ -217,6 +217,42 @@ class MaxValueTime(DeterministicBasemodel):
     return_type: str = Field(default="timestamp", frozen=True)
 
 
+class FlowDurationCurveSlope(DeterministicBasemodel):
+    """Flow Duration Curve Slope.
+
+    Parameters
+    ----------
+    bootstrap : DeterministicBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "flow_duration_curve".
+    func : Callable
+        The function to apply to the data, by default
+        :func:`signature_funcs.flow_duration_curve`.
+    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+        The input field names, by default ["primary_value"].
+    lower_percentile : float
+        The lower percentile for slope calculation, by default 0.25.
+    upper_percentile : float
+        The upper percentile for slope calculation, by default 0.85.
+    attrs : Dict
+        The static attributes for the metric.
+    """
+
+    transform: TransformEnum = Field(default=None)
+    output_field_name: str = Field(default="flow_duration_curve_slope")
+    func: Callable = Field(default=sig_funcs.flow_duration_curve_slope,
+                           frozen=True)
+    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+        default=["primary_value"]
+    )
+    lower_percentile: float = Field(default=0.25)
+    upper_percentile: float = Field(default=0.85)
+    attrs: Dict = Field(default=tma.FDC_ATTRS, frozen=True)
+
+
 class SignatureMetrics:
     """Define and customize signature metrics.
 
@@ -241,3 +277,4 @@ class SignatureMetrics:
     Minimum = Minimum
     Sum = Sum
     Variance = Variance
+    FlowDurationCurveSlope = FlowDurationCurveSlope

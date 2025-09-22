@@ -218,3 +218,11 @@ CRPS_ENSEMBLE_ATTRS = {
     "value_range": [None, None],
     "optimal_value": 0.0,
 }
+
+FDC_ATTRS = {
+    "short_name": "fdc",
+    "display_name": "Flow Duration Curve",
+    "category": mc.Signature,
+    "value_range": [None, None],
+    "optimal_value": None,
+}
