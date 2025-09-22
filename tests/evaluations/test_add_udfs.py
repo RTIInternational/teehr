@@ -37,20 +37,38 @@ def test_add_row_udfs(tmpdir):
     sdf = ev.joined_timeseries.to_sdf()
 
     sdf = rcf.Month().apply_to(sdf)
+    _ = sdf.toPandas()
 
     sdf = rcf.Year().apply_to(sdf)
+    _ = sdf.toPandas()
 
     sdf = rcf.WaterYear().apply_to(sdf)
+    _ = sdf.toPandas()
 
     sdf = rcf.NormalizedFlow().apply_to(sdf)
+    _ = sdf.toPandas()
 
     sdf = rcf.Seasons().apply_to(sdf)
+    _ = sdf.toPandas()
 
     sdf = rcf.ForecastLeadTime().apply_to(sdf)
+    _ = sdf.toPandas()
 
-    sdf = rcf.ThresholdValueExceeded().apply_to(sdf)
+    sdf = rcf.ThresholdValueExceeded(
+            threshold_field_name="year_2_discharge"
+        ).apply_to(sdf)
+    df1 = sdf.toPandas()
+
+    sdf = rcf.ThresholdValueNotExceeded(
+            threshold_field_name="year_2_discharge"
+        ).apply_to(sdf)
+    df2 = sdf.toPandas()
+    assert all(
+        df1['threshold_value_exceeded'] == ~df2['threshold_value_not_exceeded']
+    )
 
     sdf = rcf.DayOfYear().apply_to(sdf)
+    _ = sdf.toPandas()
 
     cols = sdf.columns
     check_sdf = sdf[sdf["primary_location_id"] == "gage-A"]
@@ -95,7 +113,7 @@ def test_add_row_udfs(tmpdir):
     assert sdf.schema["threshold_value_exceeded"].dataType == T.BooleanType()
     check_vals = check_sdf.select(
         "threshold_value_exceeded").distinct().collect()
-    assert check_vals[0]["threshold_value_exceeded"] is True
+    assert check_vals[0]["threshold_value_exceeded"] is False
 
     assert "day_of_year" in cols
     assert sdf.schema["day_of_year"].dataType == T.IntegerType()
@@ -245,11 +263,30 @@ def test_add_timeseries_udfs(tmpdir):
     event_count = sdf.select('baseflow_period_id_2').distinct().count()
     assert event_count == 208
 
-    # test percentile event detection
+    # test percentile event detection (default)
     ped = tcf.PercentileEventDetection()
     sdf = ped.apply_to(sdf)
     event_count = sdf.select('event_id').distinct().count()
     assert event_count == 219
+
+    # test percentile event detection (no event-id)
+    sdf = ev.joined_timeseries.to_sdf()
+    ped = tcf.PercentileEventDetection(
+        skip_event_id=True
+    )
+    sdf = ped.apply_to(sdf)
+    num_event_timesteps = sdf.filter(sdf.event == True).count()
+    assert num_event_timesteps == 14823
+
+    # test percentile event detection (return quantile value)
+    sdf = ev.joined_timeseries.to_sdf()
+    ped = tcf.PercentileEventDetection(
+        add_quantile_field=True
+    )
+    sdf = ped.apply_to(sdf)
+    distinct_quantiles = sdf.select("quantile_value").distinct().collect()
+    quantile = distinct_quantiles[0][0]
+    assert np.isclose(quantile, 37.66, atol=0.01)
 
     ev.spark.stop()
 

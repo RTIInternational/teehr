@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, reopened, ready_for_review]
   # push:
-  #   branches: [420-add-skill-score-for-ensemble-metrics]
+  #   branches: [535-fix-datatype-issue-in-thresholdvalueexceeded]
 
 jobs:
   build:
@@ -17,7 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
           lfs: true
 
       - name: Set up Python ${{ matrix.python-version }}
