@@ -324,13 +324,13 @@ class ExceedanceProbability(CalculatedFieldABC, CalculatedFieldBaseModel):
 
             # sort the streamflow values in ascending order, add rank via index
             working_df.sort_values(by=input_field,
-                                   ascending=True,
+                                   ascending=False,
                                    inplace=True)
             working_df.reset_index(drop=True, inplace=True)
 
             # add probability of exceedance column
             n = len(working_df)
-            working_df[output_field] = (working_df.index / (n+1)) * 100
+            working_df[output_field] = (working_df.index / (n+1))
 
             # merge the new column back to the original dataframe
             pdf = pdf.merge(working_df[[input_field, output_field]],

@@ -288,6 +288,13 @@ def test_add_timeseries_udfs(tmpdir):
     quantile = distinct_quantiles[0][0]
     assert np.isclose(quantile, 37.66, atol=0.01)
 
+    # test exceedance probability
+    sdf = ev.joined_timeseries.to_sdf()
+    ep = tcf.ExceedanceProbability()
+    sdf = ep.apply_to(sdf)
+    columns = sdf.columns
+    assert "exceedance_probability" in columns
+
     ev.spark.stop()
 
 

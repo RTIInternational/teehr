@@ -180,8 +180,8 @@ def flow_duration_curve_slope(model: MetricsBasemodel) -> Callable:
         # apply any specified transform
         p = _transform(p, model)
 
-        # sort the streamflow values in ascending order
-        p_sorted = p.sort_values(ascending=True).reset_index(drop=True)
+        # sort the streamflow values in descending order
+        p_sorted = p.sort_values(ascending=False).reset_index(drop=True)
 
         # calculate exceedance probabilities
         n = len(p_sorted)
