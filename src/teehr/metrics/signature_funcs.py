@@ -1,4 +1,5 @@
 """Signature functions."""
+from xml.parsers.expat import model
 import pandas as pd
 import numpy as np
 
@@ -188,8 +189,8 @@ def flow_duration_curve_slope(model: MetricsBasemodel) -> Callable:
         fdc_probs = (p_sorted.index/(n+1))
 
         # calculate slope between specified percentiles
-        lower_idx = int(np.ceil((model.lower_percentile) * n)) - 1
-        upper_idx = int(np.ceil((model.upper_percentile) * n)) - 1
+        lower_idx = np.argmin(np.abs(fdc_probs - model.lower_percentile))
+        upper_idx = np.argmin(np.abs(fdc_probs - model.upper_percentile))
         slope = (p_sorted.iloc[upper_idx] - p_sorted.iloc[lower_idx]) / (
             fdc_probs[upper_idx] - fdc_probs[lower_idx]
         )
