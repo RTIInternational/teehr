@@ -269,6 +269,8 @@ def test_add_timeseries_udfs(tmpdir):
     event_count = sdf.select('event_id').distinct().count()
     assert event_count == 219
 
+    pdf = sdf.toPandas()
+
     # test percentile event detection (no event-id)
     sdf = ev.joined_timeseries.to_sdf()
     ped = tcf.PercentileEventDetection(
@@ -294,6 +296,8 @@ def test_add_timeseries_udfs(tmpdir):
     sdf = ep.apply_to(sdf)
     columns = sdf.columns
     assert "exceedance_probability" in columns
+
+    pdf = sdf.toPandas()
 
     ev.spark.stop()
 

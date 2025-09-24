@@ -1,5 +1,4 @@
 """Signature functions."""
-from xml.parsers.expat import model
 import pandas as pd
 import numpy as np
 
@@ -163,11 +162,11 @@ def flow_duration_curve_slope(model: MetricsBasemodel) -> Callable:
     ) -> float:
         """Flow duration curve slope."""
         # ensure percentiles are within valid range
-        if not (0 < model.lower_percentile < 1):
+        if not (0 <= model.lower_percentile <= 1):
             raise ValueError(
                 "Lower percentile must be between 0 and 1"
                 )
-        if not (0 < model.upper_percentile < 1):
+        if not (0 <= model.upper_percentile <= 1):
             raise ValueError(
                 "Upper percentile must be between 0 and 1"
                 )
