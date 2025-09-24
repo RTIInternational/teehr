@@ -66,6 +66,14 @@ PEARSON_ATTRS = {
     "optimal_value": 1.0,
 }
 
+VR_ATTRS = {
+    "short_name": "VR",
+    "display_name": "Variance Ratio",
+    "category": mc.Deterministic,
+    "value_range": [None, None],
+    "optimal_value": 1.0,
+}
+
 R2_ATTRS = {
     "short_name": "r2",
     "display_name": "Coefficient of Determination",
