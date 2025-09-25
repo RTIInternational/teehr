@@ -11,6 +11,23 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def _add_epsilon(
+        p: pd.Series,
+        s: pd.Series,
+        model: MetricsBasemodel
+) -> tuple:
+    """Add epsilon to avoid issues with transforms and denominators."""
+    if model.add_epsilon[0]:
+        epsilon = model.add_epsilon[1]
+        p_adj = p + epsilon
+        s_adj = s + epsilon
+        logger.debug(f"Added epsilon of {epsilon} to input series")
+        return p_adj, s_adj
+
+    else:
+        return p, s
+
+
 def _transform(
         p: pd.Series,
         s: pd.Series,
@@ -107,6 +124,7 @@ def mean_error(model: MetricsBasemodel) -> Callable:
 
     def mean_error_inner(p: pd.Series, s: pd.Series) -> float:
         """Mean Error."""
+        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         difference = s - p
         return np.sum(difference)/len(p)
@@ -123,6 +141,7 @@ def relative_bias(model: MetricsBasemodel) -> Callable:
 
     def relative_bias_inner(p: pd.Series, s: pd.Series) -> float:
         """Relative Bias."""
+        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         difference = s - p
         return np.sum(difference)/np.sum(p)
@@ -140,6 +159,7 @@ def mean_absolute_relative_error(model: MetricsBasemodel) -> Callable:
     def mean_absolute_relative_error_inner(p: pd.Series,
                                            s: pd.Series) -> float:
         """Absolute Relative Error."""
+        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         absolute_difference = np.abs(s - p)
         return np.sum(absolute_difference)/np.sum(p)
@@ -156,6 +176,7 @@ def multiplicative_bias(model: MetricsBasemodel) -> Callable:
 
     def multiplicative_bias_inner(p: pd.Series, s: pd.Series) -> float:
         """Multiplicative Bias."""
+        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         return np.mean(s)/np.mean(p)
 
@@ -171,6 +192,7 @@ def pearson_correlation(model: MetricsBasemodel) -> Callable:
 
     def pearson_correlation_inner(p: pd.Series, s: pd.Series) -> float:
         """Pearson Correlation Coefficient."""
+        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         return np.corrcoef(s, p)[0][1]
 
@@ -186,6 +208,7 @@ def r_squared(model: MetricsBasemodel) -> Callable:
 
     def r_squared_inner(p: pd.Series, s: pd.Series) -> float:
         """R-squared."""
+        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         pearson_correlation_coefficient = np.corrcoef(s, p)[0][1]
         return np.power(pearson_correlation_coefficient, 2)
@@ -202,6 +225,7 @@ def max_value_delta(model: MetricsBasemodel) -> Callable:
 
     def max_value_delta_inner(p: pd.Series, s: pd.Series) -> float:
         """Max value delta."""
+        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         return np.max(s) - np.max(p)
 
@@ -221,6 +245,7 @@ def annual_peak_relative_bias(model: MetricsBasemodel) -> Callable:
         value_time: pd.Series
     ) -> float:
         """Annual peak relative bias."""
+        p, s = _add_epsilon(p, s, model)
         p, s, value_time = _transform(p, s, model, value_time)
         df = pd.DataFrame(
             {
@@ -252,6 +277,7 @@ def spearman_correlation(model: MetricsBasemodel) -> Callable:
 
     def spearman_correlation_inner(p: pd.Series, s: pd.Series) -> float:
         """Spearman Rank Correlation Coefficient."""
+        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
 
         primary_rank = p.rank()
@@ -279,6 +305,7 @@ def nash_sutcliffe_efficiency(model: MetricsBasemodel) -> Callable:
         if np.sum(p) == 0 or np.sum(s) == 0:
             return np.nan
 
+        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
 
         numerator = np.sum(np.subtract(p, s) ** 2)
@@ -310,6 +337,7 @@ def nash_sutcliffe_efficiency_normalized(model: MetricsBasemodel) -> Callable:
         if np.sum(p) == 0 or np.sum(s) == 0:
             return np.nan
 
+        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
 
         numerator = np.sum(np.subtract(p, s) ** 2)
@@ -337,6 +365,7 @@ def kling_gupta_efficiency(model: MetricsBasemodel) -> Callable:
         if np.std(s) == 0 or np.std(p) == 0:
             return np.nan
 
+        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
 
         # Pearson correlation coefficient
@@ -373,6 +402,7 @@ def kling_gupta_efficiency_mod1(model: MetricsBasemodel) -> Callable:
         if np.std(s) == 0 or np.std(p) == 0:
             return np.nan
 
+        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
 
         # Pearson correlation coefficient (same as kge)
@@ -411,6 +441,7 @@ def kling_gupta_efficiency_mod2(model: MetricsBasemodel) -> Callable:
         if np.std(s) == 0 or np.std(p) == 0:
             return np.nan
 
+        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
 
         # Pearson correlation coefficient (same as kge)
@@ -447,6 +478,7 @@ def mean_absolute_error(model: MetricsBasemodel) -> Callable:
 
     def mean_absolute_error_inner(p: pd.Series, s: pd.Series) -> float:
         """Mean absolute error."""
+        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         return _mean_error(p, s)
 
@@ -462,6 +494,7 @@ def mean_squared_error(model: MetricsBasemodel) -> Callable:
 
     def mean_squared_error_inner(p: pd.Series, s: pd.Series) -> float:
         """Mean squared error."""
+        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         return _mean_error(p, s, power=2.0)
 
@@ -477,6 +510,7 @@ def root_mean_squared_error(model: MetricsBasemodel) -> Callable:
 
     def root_mean_squared_error_inner(p: pd.Series, s: pd.Series) -> float:
         """Root mean squared error."""
+        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         return _mean_error(p, s, power=2.0, root=True)
 
@@ -496,6 +530,7 @@ def root_mean_standard_deviation_ratio(model: MetricsBasemodel) -> Callable:
                                                  s: pd.Series
                                                  ) -> float:
         """Root mean standard deviation ratio."""
+        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         rmse = _root_mean_squared_error(p, s)
         obs_std_dev = np.std(p)
@@ -518,6 +553,7 @@ def max_value_timedelta(model: MetricsBasemodel) -> Callable:
         value_time: pd.Series
     ) -> float:
         """Max value time delta."""
+        p, s = _add_epsilon(p, s, model)
         p, s, value_time = _transform(p, s, model, value_time)
         p_max_time = value_time[p.idxmax()]
         s_max_time = value_time[s.idxmax()]

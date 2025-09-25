@@ -9,6 +9,21 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def _add_epsilon(
+        p: pd.Series,
+        model: MetricsBasemodel
+) -> pd.Series:
+    """Add epsilon to avoid issues with transforms and denominators."""
+    if model.add_epsilon[0]:
+        epsilon = model.add_epsilon[1]
+        p_adj = p + epsilon
+        logger.debug(f"Added epsilon of {epsilon} to input series")
+        return p_adj
+
+    else:
+        return p
+
+
 def _transform(
         p: pd.Series,
         model: MetricsBasemodel,
@@ -75,6 +90,7 @@ def max_value_time(model: MetricsBasemodel) -> Callable:
         value_time: pd.Series
     ) -> pd.Timestamp:
         """Max value time."""
+        p = _add_epsilon(p, model)
         p, value_time = _transform(p, model, value_time)
         return value_time[p.idxmax()]
 
@@ -87,6 +103,7 @@ def variance(model: MetricsBasemodel) -> Callable:
 
     def variance_inner(p: pd.Series) -> float:
         """Variance."""
+        p = _add_epsilon(p, model)
         p = _transform(p, model)
         return np.var(p)
 
@@ -99,6 +116,7 @@ def count(model: MetricsBasemodel) -> Callable:
 
     def count_inner(p: pd.Series) -> float:
         """Count."""
+        p = _add_epsilon(p, model)
         p = _transform(p, model)
         return len(p)
 
@@ -111,6 +129,7 @@ def minimum(model: MetricsBasemodel) -> Callable:
 
     def minimum_inner(p: pd.Series) -> float:
         """Minimum."""
+        p = _add_epsilon(p, model)
         p = _transform(p, model)
         return np.min(p)
 
@@ -123,6 +142,7 @@ def maximum(model: MetricsBasemodel) -> Callable:
 
     def maximum_inner(p: pd.Series) -> float:
         """Maximum."""
+        p = _add_epsilon(p, model)
         p = _transform(p, model)
         return np.max(p)
 
@@ -135,6 +155,7 @@ def average(model: MetricsBasemodel) -> Callable:
 
     def average_inner(p: pd.Series) -> float:
         """Average."""
+        p = _add_epsilon(p, model)
         p = _transform(p, model)
         return np.mean(p)
 
@@ -147,6 +168,7 @@ def sum(model: MetricsBasemodel) -> Callable:
 
     def sum_inner(p: pd.Series) -> float:
         """Sum."""
+        p = _add_epsilon(p, model)
         p = _transform(p, model)
         return np.sum(p)
 
