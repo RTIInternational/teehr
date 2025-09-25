@@ -233,10 +233,13 @@ class FlowDurationCurveSlope(DeterministicBasemodel):
         :func:`signature_funcs.flow_duration_curve`.
     input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
         The input field names, by default ["primary_value"].
-    lower_percentile : float
-        The lower percentile for slope calculation, by default 0.25.
-    upper_percentile : float
-        The upper percentile for slope calculation, by default 0.85.
+    lower_quantile : float
+        The lower quantile for slope calculation, by default 0.25.
+    upper_quantile : float
+        The upper quantile for slope calculation, by default 0.85.
+    as_percentile : bool
+        Whether calculate slope using exceedance_probability as a percentile
+        (0-100) or a fraction (0-1), by default False.
     attrs : Dict
         The static attributes for the metric.
     """
@@ -248,9 +251,10 @@ class FlowDurationCurveSlope(DeterministicBasemodel):
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
         default=["primary_value"]
     )
-    lower_percentile: float = Field(default=0.25)
-    upper_percentile: float = Field(default=0.85)
-    attrs: Dict = Field(default=tma.FDC_ATTRS, frozen=True)
+    lower_quantile: float = Field(default=0.25)
+    upper_quantile: float = Field(default=0.85)
+    as_percentile: bool = Field(default=False)
+    attrs: Dict = Field(default=tma.FDC_SLOPE_ATTRS, frozen=True)
 
 
 class SignatureMetrics:

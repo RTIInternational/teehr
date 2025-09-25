@@ -261,10 +261,15 @@ class ExceedanceProbability(CalculatedFieldABC, CalculatedFieldBaseModel):
     This class computes exceedance probability statistics for a given
     timeseries of streamflow data. It adds the column 'exceedance_probability'
     to the DataFrame, representing the probability of exceedance for each flow
-    value.
+    value. The returned column is returned as a float between 0 and 1 unless
+    otherwise specified using the as_percentile property (False by default).
 
     Properties
     ----------
+    - as_percentile: bool
+        Whether to return the exceedance probability as a percentile (0-100)
+        or a probability (0-1). Returns probability by default.
+        Default: False
     - value_time_field_name:
         The name of the column containing the timestamp.
         Default: "value_time"
@@ -288,6 +293,10 @@ class ExceedanceProbability(CalculatedFieldABC, CalculatedFieldBaseModel):
             ]
 
     """
+
+    as_percentile: bool = Field(
+        default=False
+    )
     value_time_field_name: str = Field(
         default="value_time"
     )
@@ -304,6 +313,7 @@ class ExceedanceProbability(CalculatedFieldABC, CalculatedFieldBaseModel):
     @staticmethod
     def add_EP(
         sdf,
+        as_percentile,
         output_field,
         input_field,
         time_field,
@@ -319,7 +329,8 @@ class ExceedanceProbability(CalculatedFieldABC, CalculatedFieldBaseModel):
         def exceedance_probability(pdf: pd.DataFrame,
                                    input_field,
                                    time_field,
-                                   output_field) -> pd.DataFrame:
+                                   output_field,
+                                   as_percentile) -> pd.DataFrame:
             # Convert to numpy array
             values = pdf[input_field].values
 
@@ -328,15 +339,19 @@ class ExceedanceProbability(CalculatedFieldABC, CalculatedFieldBaseModel):
 
             # Calculate exceedance probability directly
             n = len(values)
-            pdf[output_field] = ranks / (n + 1)
+            if as_percentile:
+                pdf[output_field] = (ranks / (n + 1)) * 100
+            else:
+                pdf[output_field] = ranks / (n + 1)
 
             return pdf
 
-        def wrapper(pdf, input_field, time_field, output_field):
+        def wrapper(pdf, input_field, time_field, output_field, as_percentile):
             return exceedance_probability(pdf,
                                           input_field,
                                           time_field,
-                                          output_field)
+                                          output_field,
+                                          as_percentile)
 
         # group the data and apply the UDF
         sdf = sdf.orderBy(
@@ -346,7 +361,8 @@ class ExceedanceProbability(CalculatedFieldABC, CalculatedFieldBaseModel):
             lambda pdf: wrapper(pdf,
                                 input_field,
                                 time_field,
-                                output_field
+                                output_field,
+                                as_percentile
                                 ),
             schema=output_schema
         )
@@ -358,6 +374,7 @@ class ExceedanceProbability(CalculatedFieldABC, CalculatedFieldBaseModel):
             self.uniqueness_fields = UNIQUENESS_FIELDS
         sdf = self.add_EP(
             sdf=sdf,
+            as_percentile=self.as_percentile,
             output_field=self.output_field_name,
             input_field=self.value_field_name,
             time_field=self.value_time_field_name,
