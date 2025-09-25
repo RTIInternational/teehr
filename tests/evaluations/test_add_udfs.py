@@ -5,6 +5,7 @@ from teehr import RowLevelCalculatedFields as rcf
 from teehr import TimeseriesAwareCalculatedFields as tcf
 
 import pyspark.sql.types as T
+import pyspark.sql.functions as F
 import numpy as np
 import baseflow
 import pandas as pd
@@ -293,6 +294,14 @@ def test_add_timeseries_udfs(tmpdir):
     ep = tcf.ExceedanceProbability()
     sdf = ep.apply_to(sdf)
     columns = sdf.columns
+    min_ep = sdf.select(
+        F.min("exceedance_probability")
+        ).collect()[0][0]
+    max_ep = sdf.select(
+        F.max("exceedance_probability")
+        ).collect()[0][0]
+    assert np.isclose(min_ep, 0.0, atol=0.001)
+    assert np.isclose(max_ep, 1.0, atol=0.001)
     assert "exceedance_probability" in columns
 
     ev.spark.stop()

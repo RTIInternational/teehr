@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import pyspark.sql.types as T
 import pyspark.sql as ps
+from scipy.stats import rankdata
 from teehr.models.calculated_fields.base import CalculatedFieldABC, CalculatedFieldBaseModel
 
 UNIQUENESS_FIELDS = [
@@ -319,24 +320,15 @@ class ExceedanceProbability(CalculatedFieldABC, CalculatedFieldBaseModel):
                                    input_field,
                                    time_field,
                                    output_field) -> pd.DataFrame:
-            # extract relevant data from dataframe
-            working_df = pdf[[input_field, time_field]].copy()
+            # Convert to numpy array
+            values = pdf[input_field].values
 
-            # sort the streamflow values in ascending order, add rank via index
-            working_df.sort_values(by=input_field,
-                                   ascending=False,
-                                   inplace=True)
-            working_df.reset_index(drop=True, inplace=True)
+            # negative ranks for descending order
+            ranks = rankdata(-values, method='ordinal')
 
-            # add probability of exceedance column
-            n = len(working_df)
-            working_df[output_field] = (working_df.index / (n+1))
-
-            # merge the new column back to the original dataframe
-            pdf = pdf.merge(working_df[[input_field, output_field]],
-                            on=input_field,
-                            how='left'
-                            )
+            # Calculate exceedance probability directly
+            n = len(values)
+            pdf[output_field] = ranks / (n + 1)
 
             return pdf
 
