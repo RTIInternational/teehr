@@ -70,7 +70,7 @@ VR_ATTRS = {
     "short_name": "VR",
     "display_name": "Variance Ratio",
     "category": mc.Deterministic,
-    "value_range": [None, None],
+    "value_range": [0.0, None],
     "optimal_value": 1.0,
 }
 
