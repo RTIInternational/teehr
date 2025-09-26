@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import pyspark.sql.types as T
 import pyspark.sql as ps
+from scipy.stats import rankdata
 from teehr.models.calculated_fields.base import CalculatedFieldABC, CalculatedFieldBaseModel
 
 UNIQUENESS_FIELDS = [
@@ -250,6 +251,135 @@ class PercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
                 output_field=self.output_event_id_field_name,
                 group_by=self.uniqueness_fields
             )
+
+        return sdf
+
+
+class ExceedanceProbability(CalculatedFieldABC, CalculatedFieldBaseModel):
+    """Calculates exceedance probability for a flow duration curve.
+
+    This class computes exceedance probability statistics for a given
+    timeseries of streamflow data. It adds the column 'exceedance_probability'
+    to the DataFrame, representing the probability of exceedance for each flow
+    value. The returned column is returned as a float between 0 and 1 unless
+    otherwise specified using the as_percentile property (False by default).
+
+    Properties
+    ----------
+    - as_percentile: bool
+        Whether to return the exceedance probability as a percentile (0-100)
+        or a probability (0-1). Returns probability by default.
+        Default: False
+    - value_time_field_name:
+        The name of the column containing the timestamp.
+        Default: "value_time"
+    - value_field_name:
+        The name of the column containing the streamflow values.
+        Default: "primary_value"
+    - output_field_name:
+        The name of the column to store the exceedance probability information.
+        Default: "exceedance_probability"
+    - uniqueness_fields:
+        The columns to use to uniquely identify each timeseries.
+
+        .. code-block:: python
+
+            Default: [
+                'reference_time',
+                'primary_location_id',
+                'configuration_name',
+                'variable_name',
+                'unit_name'
+            ]
+
+    """
+
+    as_percentile: bool = Field(
+        default=False
+    )
+    value_time_field_name: str = Field(
+        default="value_time"
+    )
+    value_field_name: str = Field(
+        default="primary_value"
+    )
+    output_field_name: str = Field(
+        default="exceedance_probability"
+    )
+    uniqueness_fields: Union[str, List[str]] = Field(
+        default=None
+    )
+
+    @staticmethod
+    def add_EP(
+        sdf,
+        as_percentile,
+        output_field,
+        input_field,
+        time_field,
+        group_by,
+        return_type=T.DoubleType()
+    ):
+        # get the schema of the input DataFrame
+        input_schema = sdf.schema
+
+        # create a copy of the schema and add the new column
+        output_schema = T.StructType(input_schema.fields + [T.StructField(output_field, return_type, True)])
+
+        def exceedance_probability(pdf: pd.DataFrame,
+                                   input_field,
+                                   time_field,
+                                   output_field,
+                                   as_percentile) -> pd.DataFrame:
+            # Convert to numpy array
+            values = pdf[input_field].values
+
+            # negative ranks for descending order
+            ranks = rankdata(-values, method='ordinal')
+
+            # Calculate exceedance probability directly
+            n = len(values)
+            if as_percentile:
+                pdf[output_field] = (ranks / (n + 1)) * 100
+            else:
+                pdf[output_field] = ranks / (n + 1)
+
+            return pdf
+
+        def wrapper(pdf, input_field, time_field, output_field, as_percentile):
+            return exceedance_probability(pdf,
+                                          input_field,
+                                          time_field,
+                                          output_field,
+                                          as_percentile)
+
+        # group the data and apply the UDF
+        sdf = sdf.orderBy(
+            *group_by,
+            time_field
+            ).groupby(group_by).applyInPandas(
+            lambda pdf: wrapper(pdf,
+                                input_field,
+                                time_field,
+                                output_field,
+                                as_percentile
+                                ),
+            schema=output_schema
+        )
+
+        return sdf
+
+    def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
+        if self.uniqueness_fields is None:
+            self.uniqueness_fields = UNIQUENESS_FIELDS
+        sdf = self.add_EP(
+            sdf=sdf,
+            as_percentile=self.as_percentile,
+            output_field=self.output_field_name,
+            input_field=self.value_field_name,
+            time_field=self.value_time_field_name,
+            group_by=self.uniqueness_fields
+        )
 
         return sdf
 
@@ -2050,7 +2180,8 @@ class TimeseriesAwareCalculatedFields():
     Available Calculated Fields:
 
     - PercentileEventDetection
-    - BaseflowDominatedPeriods
+    - ExceedanceProbability
+    - BaseflowPeriodDetection
     - LyneHollickBaseflow
     - ChapmanBaseflow
     - ChapmanMaxwellBaseflow
@@ -2063,6 +2194,7 @@ class TimeseriesAwareCalculatedFields():
     """
 
     PercentileEventDetection = PercentileEventDetection
+    ExceedanceProbability = ExceedanceProbability
     BaseflowPeriodDetection = BaseflowPeriodDetection
     LyneHollickBaseflow = LyneHollickBaseflow
     ChapmanBaseflow = ChapmanBaseflow
