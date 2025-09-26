@@ -46,18 +46,21 @@ def create_schema_evolution_support(
     Returns:
       None
     """
+    # Note. Spark calls 'schema_evolution' a "namespace" or "schema" or "database"
     if not spark.catalog.databaseExists(f'{catalog_name}.schema_evolution'):
         spark.sql(f"""
           CREATE SCHEMA IF NOT EXISTS {catalog_name}.schema_evolution;
         """)
+        logger.info(f"✅ Created schema: {catalog_name}.schema_evolution")
 
     if not spark.catalog.tableExists(f'{catalog_name}.schema_evolution.schema_version_history'):
         spark.sql(f"""
           CREATE TABLE IF NOT EXISTS {catalog_name}.schema_evolution.schema_version_history (
             version INT,
             applied_on BIGINT
-          )
+          ) USING iceberg
         """)
+        logger.info(f"✅ Created table: {catalog_name}.schema_evolution.schema_version_history")
 
 
 def fetch_applied_catalog_schema_version(
@@ -161,7 +164,7 @@ def determine_schema_version_delta(
 
 
 def load_schema_version_evolution_statements(
-    catalog_dir_path: Union[str, Path],
+    migrations_dir_path: Union[str, Path],
     catalog_name: str,
     schema_version: int
 ) -> list[str]:
@@ -176,7 +179,7 @@ def load_schema_version_evolution_statements(
       list[str]: A list of SQL statements to execute to evolve the schema to the specified version.
     """
     schema_version_statements = []
-    version_dir_name = f'{catalog_dir_path}/migrations/{catalog_name}/{schema_version:04}'
+    version_dir_name = f'{migrations_dir_path}/migrations/{catalog_name}/{schema_version:04}'
 
     schema_file_names = os.listdir(version_dir_name)
     for f in schema_file_names:
@@ -208,6 +211,8 @@ def apply_schema_version_evolution_statements(
     Returns:
       None
     """
+    # NOTE: Here in spark, "schema" = "namespace" = "database"
+
     logger.info(f"Applying schema version {schema_version} to {catalog_name}.{schema_name}")
 
     spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog_name}.{schema_name};")
@@ -222,7 +227,7 @@ def apply_schema_version_evolution_statements(
 
 def evolve_catalog_schema(
     spark: SparkSession,
-    catalog_dir_path: Union[str, Path],
+    migrations_dir_path: Union[str, Path],
     catalog_name: str,
     schema_name: str
 ):
@@ -241,21 +246,28 @@ def evolve_catalog_schema(
         The name of the schema within the catalog to evolve.
     """
     available_schema_versions = read_available_schema_versions(
-      catalog_dir_path=catalog_dir_path,
+      catalog_dir_path=migrations_dir_path,
       catalog_name=catalog_name
     )
     applied_schema_version = fetch_applied_catalog_schema_version(
       spark=spark,
       catalog_name=catalog_name
     )
+    # applied_schema_version = 0
     schema_version_delta = determine_schema_version_delta(
       available_schema_versions=available_schema_versions,
       applied_schema_version=applied_schema_version
     )
 
+    if len(schema_version_delta) == 0:
+        logger.info(
+          f"No new schema versions to apply to {catalog_name}.{schema_name}."
+        )
+        return
+
     for schema_version in schema_version_delta:
         evolution_statements = load_schema_version_evolution_statements(
-          catalog_dir_path=catalog_dir_path,
+          migrations_dir_path=migrations_dir_path,
           catalog_name=catalog_name,
           schema_version=schema_version
         )
@@ -266,5 +278,3 @@ def evolve_catalog_schema(
           schema_name=schema_name,
           evolution_statements=evolution_statements
         )
-
-    # spark.stop()

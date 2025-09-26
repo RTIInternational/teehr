@@ -69,10 +69,15 @@ class Evaluation(EvaluationBase):
         dir_path: Union[str, Path, S3Path],
         warehouse_path: Union[str, Path, S3Path] = None,
         catalog_name: str = "local",
+        catalog_type: str = "hadoop",
+        catalog_uri: str = "http://127.0.0.1:9001",
         create_dir: bool = False,
         spark: SparkSession = None,
         check_evaluation_version: bool = True,
-        schema_name: str = "db"
+        schema_name: str = "teehr",
+        app_name: str = "teehr-iceberg",
+        driver_memory: Union[str, int, float] = None,
+        driver_maxresultsize: Union[str, int, float] = None
     ):
         """
         Initialize the Evaluation class.
@@ -97,8 +102,10 @@ class Evaluation(EvaluationBase):
         self.schema_name = schema_name
 
         if warehouse_path is None:
-            warehouse_path = Path(dir_path, "warehouse")
-        self.warehouse_path = to_path_or_s3path(warehouse_path)
+            self.warehouse_path = Path(dir_path, "warehouse")
+        else:
+            self.warehouse_path = warehouse_path
+        # self.warehouse_path = to_path_or_s3path(warehouse_path)  # needed?
 
         self.spark = spark
 
@@ -130,7 +137,12 @@ class Evaluation(EvaluationBase):
             logger.info("Creating a new Spark session.")
             self.spark = create_spark_session(
                 warehouse_path=self.warehouse_path,
-                catalog_name=self.catalog_name
+                catalog_name=self.catalog_name,
+                driver_maxresultsize=driver_maxresultsize,
+                catalog_type=catalog_type,
+                catalog_uri=catalog_uri,
+                driver_memory=driver_memory,
+                app_name=app_name
             )
 
         pass
@@ -265,7 +277,7 @@ class Evaluation(EvaluationBase):
         # Create initial iceberg tables.
         apply_migrations.evolve_catalog_schema(
             spark=self.spark,
-            catalog_dir_path=self.dir_path,
+            migrations_dir_path=self.dir_path,
             catalog_name=self.catalog_name,
             schema_name=schema_name
         )
@@ -515,7 +527,7 @@ class Evaluation(EvaluationBase):
         """Migrate v0.5 Evalution to v0.6 Iceberg tables."""
         apply_migrations.evolve_catalog_schema(
             spark=self.spark,
-            catalog_dir_path=self.dir_path,
+            migrations_dir_path=self.dir_path,
             catalog_name=self.catalog_name,
             schema_name=schema_name
         )

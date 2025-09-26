@@ -55,7 +55,7 @@ def convert_evaluation(
     )
     apply_migrations.evolve_catalog_schema(
         spark=spark,
-        catalog_dir_path=dir_path,
+        migrations_dir_path=dir_path,
         catalog_name=catalog_name,
         schema_name=schema_name
     )
