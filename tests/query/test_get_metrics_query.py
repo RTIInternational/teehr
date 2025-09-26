@@ -61,7 +61,7 @@ def test_executing_deterministic_metrics(tmpdir):
 
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
-    assert metrics_df.columns.size == 20
+    assert metrics_df.columns.size == 21
 
 
 def test_executing_signature_metrics(tmpdir):
