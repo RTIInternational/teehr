@@ -293,6 +293,36 @@ class PearsonCorrelation(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.PEARSON_ATTRS, frozen=True)
 
 
+class VariabilityRatio(DeterministicBasemodel):
+    """Variability Ratio.
+
+    Parameters
+    ----------
+    bootstrap : DeterministicBasemodel
+        The bootstrap model, by default None.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "variability_ratio".
+    func : Callable
+        The function to apply to the data, by default
+        :func:`deterministic_funcs.variability_ratio`.
+    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+        The input field names, by default ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
+
+    bootstrap: BootstrapBasemodel = Field(default=None)
+    transform: TransformEnum = Field(default=None)
+    output_field_name: str = Field(default="variability_ratio")
+    func: Callable = Field(metric_funcs.variability_ratio, frozen=True)
+    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+        default=["primary_value", "secondary_value"]
+    )
+    attrs: Dict = Field(default=tma.VR_ATTRS, frozen=True)
+
+
 class Rsquared(DeterministicBasemodel):
     """Coefficient of Determination.
 
@@ -745,6 +775,7 @@ class DeterministicMetrics:
     MeanSquareError = MeanSquareError
     MultiplicativeBias = MultiplicativeBias
     PearsonCorrelation = PearsonCorrelation
+    VariabilityRatio = VariabilityRatio
     NashSutcliffeEfficiency = NashSutcliffeEfficiency
     NormalizedNashSutcliffeEfficiency = NormalizedNashSutcliffeEfficiency
     RelativeBias = RelativeBias

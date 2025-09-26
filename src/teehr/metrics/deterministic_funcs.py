@@ -199,6 +199,21 @@ def pearson_correlation(model: MetricsBasemodel) -> Callable:
     return pearson_correlation_inner
 
 
+def variability_ratio(model: MetricsBasemodel) -> Callable:
+    """Create the Variability Ratio metric function.
+
+    :math:`VR=\\frac{\\sigma_{sec}}{\\sigma_{prim}}`
+    """ # noqa
+    logger.debug("Building the variability_ratio metric function")
+
+    def variability_ratio_inner(p: pd.Series, s: pd.Series) -> float:
+        """Variability Ratio."""
+        p, s = _transform(p, s, model)
+        return np.std(s)/np.std(p)
+
+    return variability_ratio_inner
+
+
 def r_squared(model: MetricsBasemodel) -> Callable:
     """Create the R-squared metric function.
 
