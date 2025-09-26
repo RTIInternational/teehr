@@ -208,6 +208,7 @@ def variability_ratio(model: MetricsBasemodel) -> Callable:
 
     def variability_ratio_inner(p: pd.Series, s: pd.Series) -> float:
         """Variability Ratio."""
+        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         return np.std(s)/np.std(p)
 

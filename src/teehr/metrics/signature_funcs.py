@@ -200,6 +200,7 @@ def flow_duration_curve_slope(model: MetricsBasemodel) -> Callable:
                 )
 
         # apply any specified transform
+        p = _add_epsilon(p, model)
         p = _transform(p, model)
 
         # sort the streamflow values in descending order

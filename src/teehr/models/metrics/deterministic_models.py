@@ -300,6 +300,9 @@ class VariabilityRatio(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: tuple
+        Whether to add epsilon to input series and the value of epsilon,
+        by default (False, 0.001).
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -314,6 +317,7 @@ class VariabilityRatio(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: tuple = Field(default=(False, 0.001))
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="variability_ratio")
     func: Callable = Field(metric_funcs.variability_ratio, frozen=True)
