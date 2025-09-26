@@ -85,7 +85,7 @@ def test_executing_signature_metrics(tmpdir):
 
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
-    assert metrics_df.columns.size == 8
+    assert metrics_df.columns.size == 9
 
 
 def test_metrics_filter_and_geometry(tmpdir):
