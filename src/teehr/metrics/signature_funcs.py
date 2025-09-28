@@ -8,16 +8,17 @@ from typing import Callable, Optional
 import logging
 logger = logging.getLogger(__name__)
 
+EPSILON = 1e-6  # Small constant to avoid division by zero
+
 
 def _add_epsilon(
         p: pd.Series,
         model: MetricsBasemodel
 ) -> pd.Series:
     """Add epsilon to avoid issues with transforms and denominators."""
-    if model.add_epsilon[0]:
-        epsilon = model.add_epsilon[1]
-        p_adj = p + epsilon
-        logger.debug(f"Added epsilon of {epsilon} to input series")
+    if model.add_epsilon:
+        p_adj = p + EPSILON
+        logger.debug(f"Added epsilon of {EPSILON} to input series")
         return p_adj
 
     else:
