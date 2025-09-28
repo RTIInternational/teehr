@@ -10,7 +10,7 @@ def test_clone_template(tmpdir):
     """Test creating a new study."""
     from teehr import Evaluation
 
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
+    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
     ev.clone_template()
 
     tbls_df = ev.list_tables()

@@ -20,14 +20,14 @@ def test_upgrade_evaluation():
         # This should raise an error due to the version.
         with pytest.raises(ValueError):
             ev = teehr.Evaluation(
-                dir_path=v04_ev_dir,
+                local_warehouse_dir=v04_ev_dir,
             )
 
         convert_evaluation(v04_ev_dir)
 
         # Now we should be able to load the evaluation and read from the warehouse.
         ev = teehr.Evaluation(
-            dir_path=v04_ev_dir,
+            local_warehouse_dir=v04_ev_dir,
         )
 
         # Test a spark query.

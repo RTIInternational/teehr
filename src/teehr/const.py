@@ -2,6 +2,10 @@
  used throughout the package."""
 import os
 
+# Iceberg warehouse
+CATALOG_REST_URI = "http://dev-teehr-sys-iceberg-alb-2105268770.us-east-2.elb.amazonaws.com"
+WAREHOUSE_S3_PATH = "s3://dev-teehr-sys-iceberg-warehouse/teehr-warehouse/"
+
 # Primary evaluation directories
 DATASET_DIR = "dataset"
 CACHE_DIR = "cache"

@@ -16,13 +16,13 @@ def test_eaas_interface(tmpdir):
     from teehr import Evaluation
 
     ev = Evaluation(
-        dir_path=tmpdir,
-        create_dir=True,
+        local_warehouse_dir=tmpdir,
+        create_local_dir=True,
         catalog_name="iceberg",
         catalog_uri=CATALOG_URI,
         catalog_type="rest",
-        schema_name="teehr",  # aka namespace, database
-        warehouse_path=WAREHOUSE_PATH,
+        local_namespace_name="teehr",  # aka namespace, database
+        remote_warehouse_dir=WAREHOUSE_PATH,
         check_evaluation_version=False,
     )
 

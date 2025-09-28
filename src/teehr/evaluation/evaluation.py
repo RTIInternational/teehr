@@ -40,6 +40,7 @@ from teehr.evaluation.write import Write
 from teehr.evaluation.extract import DataExtractor
 from teehr.evaluation.validate import Validator
 from teehr.evaluation.workflows import Workflow
+from teehr.evaluation.read import Read
 from teehr.evaluation.utils import (
     create_spark_session,
     copy_schema_dir,
@@ -57,6 +58,9 @@ from teehr.models.evaluation_base import EvaluationBase
 
 logger = logging.getLogger(__name__)
 
+# CATALOG_URI = "http://dev-teehr-sys-iceberg-alb-2105268770.us-east-2.elb.amazonaws.com"
+# WAREHOUSE_PATH = "s3://dev-teehr-sys-iceberg-warehouse/teehr-warehouse/"
+
 
 class Evaluation(EvaluationBase):
     """The Evaluation class.
@@ -66,15 +70,19 @@ class Evaluation(EvaluationBase):
 
     def __init__(
         self,
-        dir_path: Union[str, Path, S3Path],
-        warehouse_path: Union[str, Path, S3Path] = None,
-        catalog_name: str = "local",
-        catalog_type: str = "hadoop",
-        catalog_uri: str = "http://127.0.0.1:9001",
-        create_dir: bool = False,
+        local_warehouse_dir: Union[str, Path, S3Path],
+        local_catalog_name: str = "local",
+        local_catalog_type: str = "hadoop",
+        local_catalog_uri: str = "http://127.0.0.1:9001",
+        local_namespace_name: str = "teehr",
+        create_local_dir: bool = False,
+        remote_warehouse_dir: str = const.WAREHOUSE_S3_PATH,
+        remote_catalog_name: str = "iceberg",
+        remote_catalog_type: str = "rest",
+        remote_catalog_uri: str = const.CATALOG_REST_URI,
+        remote_namespace_name: str = "teehr",
         spark: SparkSession = None,
         check_evaluation_version: bool = True,
-        schema_name: str = "teehr",
         app_name: str = "teehr-iceberg",
         driver_memory: Union[str, int, float] = None,
         driver_maxresultsize: Union[str, int, float] = None
@@ -89,58 +97,56 @@ class Evaluation(EvaluationBase):
         spark : SparkSession, optional
             The SparkSession object, by default None
         """
-        self.dir_path = to_path_or_s3path(dir_path)
+        # Local settings
+        self.local_warehouse_dir = local_warehouse_dir
+        self.local_catalog_name = local_catalog_name
+        self.local_catalog_type = local_catalog_type
+        self.local_catalog_uri = local_catalog_uri
+        self.local_namespace_name = local_namespace_name
+        self.local_dataset_dir = Path(local_warehouse_dir) / Path(const.DATASET_DIR)
+        self.local_cache_dir = Path(local_warehouse_dir) / Path(const.CACHE_DIR)
+        self.local_scripts_dir = Path(local_warehouse_dir) / Path(const.SCRIPTS_DIR)
 
-        self.is_s3 = False
-        if isinstance(self.dir_path, S3Path):
-            self.is_s3 = True
-            logger.info(
-                f"Using S3 path {self.dir_path}.  Evaluation will be read-only"
-            )
+        # Remote settings
+        self.remote_warehouse_dir = remote_warehouse_dir
+        self.remote_catalog_name = remote_catalog_name
+        self.remote_namespace_name = remote_namespace_name
+        self.remote_catalog_type = remote_catalog_type
+        self.remote_catalog_uri = remote_catalog_uri
+        self.remote_dataset_dir = Path(remote_warehouse_dir) / Path(const.DATASET_DIR)
+        self.remote_cache_dir = Path(remote_warehouse_dir) / Path(const.CACHE_DIR)
+        self.remote_scripts_dir = Path(remote_warehouse_dir) / Path(const.SCRIPTS_DIR)
 
-        self.catalog_name = catalog_name
-        self.schema_name = schema_name
-
-        if warehouse_path is None:
-            self.warehouse_path = Path(dir_path, "warehouse")
-        else:
-            self.warehouse_path = warehouse_path
-        # self.warehouse_path = to_path_or_s3path(warehouse_path)  # needed?
-
-        self.spark = spark
-
-        self.dataset_dir = to_path_or_s3path(
-            self.dir_path, const.DATASET_DIR
-        )
-        self.cache_dir = to_path_or_s3path(
-            self.dir_path, const.CACHE_DIR
-        )
-        self.scripts_dir = to_path_or_s3path(
-            self.dir_path, const.SCRIPTS_DIR
-        )
-
-        if not self.is_s3 and not Path(self.dir_path).is_dir():
-            if create_dir:
-                logger.info(f"Creating directory {self.dir_path}.")
-                Path(self.dir_path).mkdir(parents=True, exist_ok=True)
+        # Create local directory if it does not exist.
+        if not Path(self.local_warehouse_dir).is_dir():
+            if create_local_dir:
+                logger.info(f"Creating directory {self.local_warehouse_dir}.")
+                Path(self.local_warehouse_dir).mkdir(parents=True, exist_ok=True)
             else:
-                logger.error(f"Directory {self.dir_path} does not exist.")
+                logger.error(f"Directory {self.local_warehouse_dir} does not exist.")
                 raise NotADirectoryError
 
         # Check version of Evaluation
         if check_evaluation_version is True:
-            if create_dir is False:
+            if create_local_dir is False:
                 self.check_evaluation_version()
+
+        # Spark session
+        self.spark = spark
 
         # Create a local Spark Session if one is not provided.
         if not self.spark:
             logger.info("Creating a new Spark session.")
             self.spark = create_spark_session(
-                warehouse_path=self.warehouse_path,
-                catalog_name=self.catalog_name,
+                local_warehouse_dir=self.local_warehouse_dir,
+                local_catalog_name=self.local_catalog_name,
+                local_catalog_type=self.local_catalog_type,
+                local_catalog_uri=self.local_catalog_uri,
+                remote_warehouse_dir=self.remote_warehouse_dir,
+                remote_catalog_name=self.remote_catalog_name,
+                remote_catalog_type=self.remote_catalog_type,
+                remote_catalog_uri=self.remote_catalog_uri,
                 driver_maxresultsize=driver_maxresultsize,
-                catalog_type=catalog_type,
-                catalog_uri=catalog_uri,
                 driver_memory=driver_memory,
                 app_name=app_name
             )
@@ -166,6 +172,11 @@ class Evaluation(EvaluationBase):
     def write(self) -> Write:
         """The write component class for writing data."""
         return Write(self)
+
+    @property
+    def read(self) -> Read:
+        """The read component class for reading data."""
+        return Read(self)
 
     @property
     def generate(self) -> GeneratedTimeseries:

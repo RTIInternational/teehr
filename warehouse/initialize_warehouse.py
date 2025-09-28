@@ -11,29 +11,42 @@ WAREHOUSE_PATH = "s3://dev-teehr-sys-iceberg-warehouse/teehr-warehouse/"
 def main():
     """Run the code to initialize the warehouse schema."""
     catalog_name = "iceberg"
-    schema_name = "teehr"  # aka namespace, database
+    namespace = "teehr"  # aka schema, database
 
+    # Load data from an existing local e4 Evaluation
+    # e4_evaluation_path = Path("/mnt/c/data/ciroh/teehr/e4_evaluations/e1_camels_daily_streamflow")
+    e4_evaluation_path = Path("/mnt/c/data/ciroh/teehr/test_stuff/teehr/warehouse")  # TEMP!
+
+    # All other defaults should be good
     ev = Evaluation(
-        dir_path="/tmp/teehr-eval",  # this has no meaning here?
-        create_dir=True,
-        catalog_name=catalog_name,
-        catalog_uri=CATALOG_URI,
-        catalog_type="rest",
-        schema_name=schema_name,
-        warehouse_path=WAREHOUSE_PATH,
+        local_warehouse_dir=e4_evaluation_path,
+        local_namespace_name="db",
+        create_local_dir=False,
         check_evaluation_version=False,
     )
 
+    # Now, for all table-based functions like read/query/write we can pass in
+    # the catalog, namespace, and table name to operate on:
+    # - catalog_name
+    # - namespace_name
+    # - table_name
+    sdf = ev.read.from_warehouse(
+        catalog_name="iceberg",
+        namespace="teehr",
+        table="units"
+    )
+
+    pass
+
+    # Should this also be a component class?
     evolve_catalog_schema(
         spark=ev.spark,
         migrations_dir_path=Path(__file__).parent,
         catalog_name=catalog_name,
-        schema_name=schema_name
+        schema_name=namespace
     )
 
-    # Load data from an existing local e4 Evaluation
-    e4_evaluation_path = Path("/mnt/c/data/ciroh/teehr/e4_evaluations/e1_camels_daily_streamflow")
-
+    # We should be able to read in the tables from the local evaluation.
     options = {
         "header": "true",
         "ignoreMissingFiles": "true"

@@ -64,7 +64,7 @@ def convert_evaluation(
 
     # Now you have to copy over the data!
     ev = teehr.Evaluation(
-        dir_path=dir_path,
+        local_warehouse_dir=dir_path,
         check_evaluation_version=False,
 
     )

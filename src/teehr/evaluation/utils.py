@@ -13,6 +13,7 @@ import pyspark
 from sedona.spark import SedonaContext
 
 from teehr.utils.s3path import S3Path
+import teehr.const as const
 
 logger = logging.getLogger(__name__)
 
@@ -52,13 +53,17 @@ def copy_schema_dir(
 
 
 def create_spark_session(
-    warehouse_path: Union[str, Path, S3Path],
-    catalog_name: str,
-    catalog_type: str,
-    catalog_uri: str,
-    driver_memory: Union[str, int, float],
-    driver_maxresultsize: Union[str, int, float],
-    app_name: str,
+    local_warehouse_dir: Union[str, Path],
+    local_catalog_name: str = "local",
+    local_catalog_type: str = "hadoop",
+    local_catalog_uri: str = "http://127.0.0.1:9001",
+    remote_warehouse_dir: str = const.WAREHOUSE_S3_PATH,
+    remote_catalog_name: str = "iceberg",
+    remote_catalog_type: str = "rest",
+    remote_catalog_uri: str = const.CATALOG_REST_URI,
+    driver_memory: Union[str, int, float] = None,
+    driver_maxresultsize: Union[str, int, float] = None,
+    app_name: str = "TEEHR Evaluation",
 ) -> SparkSession:
     """Create and return a Spark session for evaluation."""
     memory_info = psutil.virtual_memory()
@@ -67,7 +72,12 @@ def create_spark_session(
     if driver_maxresultsize is None:
         driver_maxresultsize = 0.5 * driver_memory
 
-    # =================================================
+    if isinstance(local_warehouse_dir, Path):
+        local_warehouse_dir = local_warehouse_dir / local_catalog_name  # wtf?
+        local_warehouse_dir = local_warehouse_dir.as_posix()
+    if isinstance(remote_warehouse_dir, Path):
+        remote_warehouse_dir = remote_warehouse_dir.as_posix()
+
     # Use the builder approach
     builder = SparkSession.builder.appName(app_name)
 
@@ -85,13 +95,19 @@ def create_spark_session(
     # Iceberg extensions (enable iceberg-specific SQL commands such as time travel, merge-into, etc.)
     builder = builder.config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
 
-    # Catalog configuration
-    builder = builder.config(f"spark.sql.catalog.{catalog_name}", "org.apache.iceberg.spark.SparkCatalog")
-    builder = builder.config(f"spark.sql.catalog.{catalog_name}.type", catalog_type)
-    builder = builder.config(f"spark.sql.catalog.{catalog_name}.uri", catalog_uri)
-    builder = builder.config(f"spark.sql.catalog.{catalog_name}.warehouse", warehouse_path)
-    builder = builder.config(f"spark.sql.catalog.{catalog_name}.io-impl", "org.apache.iceberg.aws.s3.S3FileIO")
-    # builder = builder.config("spark.sql.defaultCatalog", catalog_name)
+    # Remote catalog configuration
+    builder = builder.config(f"spark.sql.catalog.{remote_catalog_name}", "org.apache.iceberg.spark.SparkCatalog")
+    builder = builder.config(f"spark.sql.catalog.{remote_catalog_name}.type", remote_catalog_type)
+    builder = builder.config(f"spark.sql.catalog.{remote_catalog_name}.uri", remote_catalog_uri)
+    builder = builder.config(f"spark.sql.catalog.{remote_catalog_name}.warehouse", remote_warehouse_dir)
+    builder = builder.config(f"spark.sql.catalog.{remote_catalog_name}.io-impl", "org.apache.iceberg.aws.s3.S3FileIO")
+
+    # Local catalog configuration
+    builder = builder.config(f"spark.sql.catalog.{local_catalog_name}", "org.apache.iceberg.spark.SparkCatalog")
+    builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.type", local_catalog_type)
+    # builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.uri", local_catalog_uri)
+    builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.warehouse", local_warehouse_dir)
+    # builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.io-impl", "org.apache.iceberg.aws.s3.S3FileIO")
 
     # EMR optimizations
     builder = builder.config("spark.sql.adaptive.enabled", "true")
@@ -115,51 +131,15 @@ def create_spark_session(
     # builder = builder.config("spark.dynamicAllocation.minExecutors", "1")
     # builder = builder.config("spark.dynamicAllocation.maxExecutors", "8")
 
-    # S3 stuff
+    # S3 stuff -- is S3AFileSystem needed?
     builder = builder.config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
     builder = builder.config("spark.hadoop.fs.s3a.aws.credentials.provider", "com.amazonaws.auth.DefaultAWSCredentialsProviderChain")
 
     spark = builder.getOrCreate()
-    spark.catalog.setCurrentCatalog(catalogName=catalog_name)
+    spark.catalog.setCurrentCatalog(catalogName=local_catalog_name)
+    spark.catalog.setCurrentCatalog(catalogName=remote_catalog_name)
     sedona_spark = SedonaContext.create(spark)
     logger.info("Spark session created for TEEHR Evaluation.")
-    # =================================================
-
-    # # The old way
-    # conf = (
-    #     SparkConf()
-    #     .setAppName(app_name)
-    #     .setMaster("local[*]")
-    #     .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")  # can improve performance?
-    #     .set("spark.driver.memory", f"{int(driver_memory)}g")
-    #     .set("spark.driver.maxResultSize", f"{int(driver_maxresultsize)}g")
-    #     .set("spark.sql.sources.partitionOverwriteMode", "dynamic")
-    #     .set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-    #     .set("spark.hadoop.fs.s3a.aws.credentials.provider", "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider")
-    #     .set("spark.sql.execution.arrow.pyspark.enabled", "true")
-    #     .set("spark.sql.session.timeZone", "UTC")
-    #     # .set("spark.sql.parquet.enableVectorizedReader", "false")  # why was it set to false?
-    #     .set(
-    #         "spark.jars.packages",
-    #         "org.apache.hadoop:hadoop-aws:3.4.1,"  # SEEMS TO CAUSE HIGH MEMORY USAGE? Also 3.4.2 seems to fail.
-    #         "com.amazonaws:aws-java-sdk-bundle:1.12.791,"
-    #         f"org.apache.sedona:sedona-spark-shaded-{PYSPARK_VERSION}_{SCALA_VERSION}:{SEDONA_VERSION},"
-    #         f"org.apache.iceberg:iceberg-spark-runtime-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION},"
-    #         "org.datasyslab:geotools-wrapper:1.8.0-33.1,"  # for raster ops
-    #         f"org.apache.iceberg:iceberg-spark-extensions-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION},"
-    #     )
-    #     .set("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
-    #     .set(f"spark.sql.catalog.{catalog_name}", "org.apache.iceberg.spark.SparkCatalog")
-    #     .set(f"spark.sql.catalog.{catalog_name}.type", catalog_type)
-    #     .set(f"spark.sql.catalog.{catalog_name}.warehouse", f"{warehouse_path}/{catalog_name}")
-    #     .set(f"spark.sql.catalog.{catalog_name}.uri", catalog_uri)
-    #     .set(f"spark.sql.catalog.{catalog_name}.io-impl", "org.apache.iceberg.aws.s3.S3FileIO")
-    #     .set("spark.sql.defaultCatalog", catalog_name)
-    # )
-
-    # spark = SparkSession.builder.config(conf=conf).getOrCreate()
-    # sedona_spark = SedonaContext.create(spark)
-    # logger.info("Spark session created for TEEHR Evaluation.")
 
     return sedona_spark
 

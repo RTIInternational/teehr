@@ -301,7 +301,7 @@ def test_gumboot_bootstrapping(tmpdir):
     """Test get_metrics method gumboot bootstrapping."""
     # Manually create an evaluation using timseries from the R
     # Gumboot package vignette.
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
+    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
     ev.clone_template()
     # Write the staged joined_timeseries data to the warehouse.
     joined_timeseries_filepath = Path(
@@ -456,7 +456,7 @@ def test_ensemble_metrics(tmpdir):
         "usgs_hefs_06711565.parquet"
     )
 
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
+    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
     ev.enable_logging()
     ev.clone_template()
 

@@ -137,7 +137,7 @@ if __name__ == "__main__":
     test_eval_dir = Path("/mnt/data/ciroh/teehr/test_stuff/temp_repartition_ev/temp_ev")
 
     # Create an Evaluation object and create the directory
-    ev = teehr.Evaluation(dir_path=test_eval_dir)
+    ev = teehr.Evaluation(local_warehouse_dir=test_eval_dir)
 
     # Re-write the primary timeseries with reference time as a partition,
     # if it is not null.

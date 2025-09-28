@@ -110,7 +110,7 @@ def test_locations_map(tmpdir):
     setup_nwm_example(tmpdir=test_eval_dir)
 
     # Initialize the evaluation.
-    ev = teehr.Evaluation(dir_path=test_eval_dir, create_dir=True)
+    ev = teehr.Evaluation(local_warehouse_dir=test_eval_dir, create_local_dir=True)
 
     # add polygons from parquet in test data
     location_data_path = Path(test_eval_dir, "three_huc10s_radford.parquet")
@@ -160,7 +160,7 @@ def test_location_attributes_map(tmpdir):
     setup_nwm_example(tmpdir=test_eval_dir)
 
     # Initialize the evaluation.
-    ev = teehr.Evaluation(dir_path=test_eval_dir, create_dir=True)
+    ev = teehr.Evaluation(local_warehouse_dir=test_eval_dir, create_local_dir=True)
 
     # add polygons from parquet in test data
     location_data_path = Path(test_eval_dir, "three_huc10s_radford.parquet")

@@ -9,7 +9,7 @@ import teehr.example_data.nwm_gridded_example_data as fetch_nwm_grid_data
 def setup_nwm_example(tmpdir):
     """Set up the NWM streamflow fetching example."""
     # Create an Evaluation object and create the directory
-    ev = teehr.Evaluation(dir_path=tmpdir, create_dir=True)
+    ev = teehr.Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
 
     # Clone the template
     ev.clone_template()
@@ -92,6 +92,6 @@ if __name__ == "__main__":
     setup_nwm_example(tmpdir=test_eval_dir)
 
     # Initialize the evaluation.
-    ev = teehr.Evaluation(dir_path=test_eval_dir)
+    ev = teehr.Evaluation(local_warehouse_dir=test_eval_dir)
 
     pass
