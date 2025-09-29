@@ -70,10 +70,10 @@ class Evaluation(EvaluationBase):
 
     def __init__(
         self,
-        local_warehouse_dir: Union[str, Path, S3Path],
+        local_warehouse_dir: Union[str, Path] = None,  # maybe you don't want a local evaluation?
         local_catalog_name: str = "local",
         local_catalog_type: str = "hadoop",
-        local_catalog_uri: str = "http://127.0.0.1:9001",
+        local_catalog_uri: str = "http://127.0.0.1:9001",  # remove?
         local_namespace_name: str = "teehr",
         create_local_dir: bool = False,
         remote_warehouse_dir: str = const.WAREHOUSE_S3_PATH,
@@ -97,7 +97,7 @@ class Evaluation(EvaluationBase):
         spark : SparkSession, optional
             The SparkSession object, by default None
         """
-        # Local settings
+        # Local settings -- should these be pydantic models?
         self.local_warehouse_dir = local_warehouse_dir
         self.local_catalog_name = local_catalog_name
         self.local_catalog_type = local_catalog_type

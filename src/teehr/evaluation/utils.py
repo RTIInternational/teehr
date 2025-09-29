@@ -72,9 +72,10 @@ def create_spark_session(
     if driver_maxresultsize is None:
         driver_maxresultsize = 0.5 * driver_memory
 
-    if isinstance(local_warehouse_dir, Path):
-        local_warehouse_dir = local_warehouse_dir / local_catalog_name  # wtf?
-        local_warehouse_dir = local_warehouse_dir.as_posix()
+    local_warehouse_dir = Path(local_warehouse_dir)
+    local_warehouse_dir = local_warehouse_dir / local_catalog_name  # wtf?
+    local_warehouse_dir = local_warehouse_dir.as_posix()
+
     if isinstance(remote_warehouse_dir, Path):
         remote_warehouse_dir = remote_warehouse_dir.as_posix()
 
@@ -105,7 +106,7 @@ def create_spark_session(
     # Local catalog configuration
     builder = builder.config(f"spark.sql.catalog.{local_catalog_name}", "org.apache.iceberg.spark.SparkCatalog")
     builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.type", local_catalog_type)
-    # builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.uri", local_catalog_uri)
+    # builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.uri", local_catalog_uri)  # if local rest catalog
     builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.warehouse", local_warehouse_dir)
     # builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.io-impl", "org.apache.iceberg.aws.s3.S3FileIO")
 
