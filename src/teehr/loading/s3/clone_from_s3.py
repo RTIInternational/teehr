@@ -118,6 +118,14 @@ def clone_from_s3(
 
     Note: future version will allow subsetting the tables to clone.
     """
+    # This will become:
+    #   1. Set up local evaluation directory
+    #   2. Clone template
+    #   3. For each table
+    #      - read from remote
+    #      - subsetting/filtering if provided
+    #      - write to local warehouse
+
     # Make the Evaluation directories
     logger.info(f"Creating template evaluation: {evaluation_name}")
     ev.clone_template()
@@ -169,8 +177,13 @@ def clone_from_s3(
 
         logger.debug(f"Cloning {table.name} from {s3_dataset_path}/{table.name}/ to {table.dir}")
 
-        sdf_in = table._read_files_from_cache_or_s3(
+        # sdf_in = table._read_files_from_cache_or_s3(
+        #     path=f"{s3_dataset_path}/{table.name}/",
+        #     show_missing_table_warning=True
+        # )
+        sdf_in = ev.read.from_cache(
             path=f"{s3_dataset_path}/{table.name}/",
+            table_schema_func=table.schema_func(),
             show_missing_table_warning=True
         )
 
