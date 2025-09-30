@@ -109,7 +109,6 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             **kwargs
         )
         # Read the converted files to Spark DataFrame
-        # df = self._read_files_from_cache_or_s3(self.cache_dir)
         df = self._read.from_cache(
             path=self.cache_dir,
             table_schema_func=self.schema_func()

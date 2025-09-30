@@ -557,6 +557,7 @@ class Evaluation(EvaluationBase):
         )
         return version
 
+    # TODO: Remove?
     def filter(
         self,
         table_name: TableNamesEnum = None,
