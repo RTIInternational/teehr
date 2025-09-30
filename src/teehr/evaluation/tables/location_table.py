@@ -145,8 +145,6 @@ class LocationTable(BaseTable):
         df = self._read.from_cache(
             path=self.cache_dir,
             table_schema_func=self.schema_func(),
-            file_format=self.format,
-            pattern=pattern,
         )
 
         # Add or replace location_id prefix if provided

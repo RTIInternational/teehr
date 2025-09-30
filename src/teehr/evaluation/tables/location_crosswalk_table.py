@@ -84,9 +84,6 @@ class LocationCrosswalkTable(BaseTable):
         # df = self._read_files_from_cache_or_s3(self.cache_dir)
         df = self._read.from_cache(
             path=self.cache_dir,
-            pattern=pattern,
-            file_format=self.format,
-            show_missing_table_warning=False,
             table_schema_func=self.schema_func()
         )
 

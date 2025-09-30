@@ -37,8 +37,8 @@ class Read:
         self,
         path: Union[str, Path],
         table_schema_func: SparkDataFrameSchema | PandasDataFrameSchema,
-        pattern: str,
-        file_format: str,
+        pattern: str = "**/*.parquet",
+        file_format: str = "parquet",
         show_missing_table_warning: bool = False,
         **options
     ) -> ps.DataFrame:

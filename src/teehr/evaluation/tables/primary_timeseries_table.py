@@ -88,6 +88,7 @@ class PrimaryTimeseriesTable(TimeseriesTable):
         # Thought. This could almost be:
         # self._ev.extract.to_cache(...).validate(...).write.to_warehouse(...)
 
+        # Write files to cache in parquet format
         self._extract.to_cache(
             in_datapath=in_path,
             field_mapping=field_mapping,
@@ -107,9 +108,6 @@ class PrimaryTimeseriesTable(TimeseriesTable):
         # df = self._read_files_from_cache_or_s3(self.cache_dir)
         df = self._read.from_cache(
             path=self.cache_dir,
-            pattern=pattern,
-            file_format=self.format,
-            show_missing_table_warning=False,
             table_schema_func=self.schema_func()
         )
 
