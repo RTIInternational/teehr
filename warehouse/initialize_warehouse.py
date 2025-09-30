@@ -33,14 +33,15 @@ def main():
     remote_sdf = ev.read.from_warehouse(
         catalog_name="iceberg",
         namespace="teehr",
-        table="units"
-    )
+        table="units",
+        filters="name = 'mm/s'"
+    ).to_sdf()
 
     local_sdf = ev.read.from_warehouse(
         catalog_name="local",
         namespace="db",
         table="units"
-    )
+    ).to_sdf()
 
     pass
 

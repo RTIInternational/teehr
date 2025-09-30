@@ -4,10 +4,7 @@ from teehr.models.str_enum import StrEnum
 from teehr.querying.filter_format import validate_and_apply_filters
 import pyspark.sql as ps
 from typing import List, Union
-from pathlib import Path
 from teehr.querying.utils import order_df
-from teehr.utils.s3path import S3Path
-from teehr.utils.utils import to_path_or_s3path, path_to_spark
 from teehr.models.filters import FilterBaseModel
 from teehr.models.table_enums import TableWriteEnum
 from teehr.loading.utils import (
@@ -52,74 +49,6 @@ class BaseTable:
         )
         logger.error(err_msg)
         raise ValueError(err_msg)
-
-    # def _read_files_from_cache_or_s3(
-    #     self,
-    #     path: Union[str, Path, S3Path],
-    #     pattern: str = None,
-    #     show_missing_table_warning: bool = False,
-    #     **options
-    # ) -> ps.DataFrame:
-    #     """Read data from table directory as a spark dataframe.
-
-    #     Parameters
-    #     ----------
-    #     path : Union[str, Path, S3Path]
-    #         The path to the directory containing the files.
-    #     pattern : str, optional
-    #         The pattern to match files.
-    #     show_missing_table_warning : bool, optional
-    #         If True, show the warning an empty table was returned.
-    #         The default is True.
-    #     **options
-    #         Additional options to pass to the spark read method.
-
-    #     Returns
-    #     -------
-    #     df : ps.DataFrame
-    #         The spark dataframe.
-    #     """
-    #     logger.info(f"Reading files from {path}.")
-    #     if len(options) == 0:
-    #         options = {
-    #             "header": "true",
-    #             "ignoreMissingFiles": "true"
-    #         }
-
-    #     path = to_path_or_s3path(path)
-
-    #     path = path_to_spark(path, pattern)
-    #     # First, read the file with the schema and check if it's empty.
-    #     # If it's not empty and it's the joined timeseries table,
-    #     # read it again without the schema to ensure all fields are included.
-    #     # Otherwise, continue.
-    #     schema = self.schema_func().to_structtype()
-    #     df = self._ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
-    #     if df.isEmpty():
-    #         if show_missing_table_warning:
-    #             logger.warning(f"An empty dataframe was returned for '{self.name}'.")
-
-    #     return df
-
-    # def _read_from_warehouse(
-    #     self,
-    # ) -> ps.DataFrame:
-    #     """Read data from table as a spark dataframe.
-
-    #     Returns
-    #     -------
-    #     df : ps.DataFrame
-    #         The spark dataframe.
-    #     """
-    #     logger.info(
-    #         f"Reading files from {self._ev.catalog_name}.{self._ev.namespace}."
-    #         f"{self.name}."
-    #     )
-    #     sdf = (self._ev.spark.read.format("iceberg").load(
-    #             f"{self._ev.catalog_name}.{self._ev.namespace}.{self.name}"
-    #         )
-    #     )
-    #     return sdf
 
     def _load_table(self):
         """Load the table from the directory to self.df.

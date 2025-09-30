@@ -85,7 +85,7 @@ class LocationCrosswalkTable(BaseTable):
         df = self._read.from_cache(
             path=self.cache_dir,
             table_schema_func=self.schema_func()
-        )
+        ).to_sdf()
 
         # Add or replace primary location_id prefix if provided
         if primary_location_id_prefix:

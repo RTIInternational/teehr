@@ -113,7 +113,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         df = self._read.from_cache(
             path=self.cache_dir,
             table_schema_func=self.schema_func()
-        )
+        ).to_sdf()
 
         if persist_dataframe:
             df = df.persist()

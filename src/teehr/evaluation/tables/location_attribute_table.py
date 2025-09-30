@@ -91,7 +91,7 @@ class LocationAttributeTable(BaseTable):
         df = self._read.from_cache(
             path=self.cache_dir,
             table_schema_func=self.schema_func()
-        )
+        ).to_sdf()
 
         # Add or replace location_id prefix if provided
         if location_id_prefix:
