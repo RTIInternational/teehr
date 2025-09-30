@@ -82,6 +82,9 @@ def create_spark_session(
     # Use the builder approach
     builder = SparkSession.builder.appName(app_name)
 
+    # General Spark settings
+    builder = builder.config("spark.sql.session.timeZone", "UTC")
+
     # EMR comes with pre-installed jars, use compatible versions for PySpark 4
     builder = builder.config(
         "spark.jars.packages",
