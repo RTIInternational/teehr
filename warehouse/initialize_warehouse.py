@@ -30,20 +30,27 @@ def main():
     # - catalog_name
     # - namespace_name
     # - table_name
-    sdf = ev.read.from_warehouse(
+    remote_sdf = ev.read.from_warehouse(
         catalog_name="iceberg",
         namespace="teehr",
+        table="units"
+    )
+
+    local_sdf = ev.read.from_warehouse(
+        catalog_name="local",
+        namespace="db",
         table="units"
     )
 
     pass
 
     # Should this also be a component class?
+    # Or use ev.apply_schema_migration()?
     evolve_catalog_schema(
         spark=ev.spark,
         migrations_dir_path=Path(__file__).parent,
         catalog_name=catalog_name,
-        schema_name=namespace
+        namespace=namespace
     )
 
     # We should be able to read in the tables from the local evaluation.

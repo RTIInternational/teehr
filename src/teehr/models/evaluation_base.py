@@ -1,5 +1,7 @@
 """Base model for Evaluation class."""
-# from pydantic import BaseModel as PydanticBaseModel, ConfigDict
+from pathlib import Path
+
+from pydantic import BaseModel as PydanticBaseModel, ConfigDict, Field
 
 
 class EvaluationBase:
@@ -17,3 +19,23 @@ class EvaluationBase:
     #     validate_assignment=True,
     #     extra='forbid'  # raise an error if extra fields are passed
     # )
+
+
+class CatalogConfigBase(PydanticBaseModel):
+    """Base model for catalog configuration."""
+
+    warehouse_dir: str | Path | None = Field(default=None)
+    catalog_name: str | None = Field(default=None)
+    namespace_name: str | None = Field(default=None)
+    catalog_type: str | None = Field(default=None)
+    catalog_uri: str | None = Field(default=None)
+    dataset_dir: str | Path | None = Field(default=None)
+    cache_dir: str | Path | None = Field(default=None)
+    scripts_dir: str | Path | None = Field(default=None)
+    scripts_dir: str | Path | None = Field(default=None)
+
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        validate_assignment=True,
+        extra='forbid'  # raise an error if extra fields are passed
+    )

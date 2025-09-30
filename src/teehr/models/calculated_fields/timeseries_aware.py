@@ -459,7 +459,7 @@ class BaseflowPeriodDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
             sdf=sdf,
             input_field=self.value_field_name,
             baseflow_field=self.baseflow_field_name,
-            event_threshold=self.event_threshold,
+            event_threshold=self._event_threshold,
             output_field=self.output_baseflow_period_field_name,
             group_by=self.uniqueness_fields
         )

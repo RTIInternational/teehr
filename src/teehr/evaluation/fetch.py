@@ -53,7 +53,7 @@ class Fetch:
     def __init__(self, ev) -> None:
         """Initialize the Fetch class."""
         # Now we have access to the Evaluation object.
-        self.ev = ev
+        self._ev = ev
         self.usgs_cache_dir = Path(
             ev.cache_dir,
             const.FETCHING_CACHE_DIR,
@@ -77,7 +77,7 @@ class Fetch:
 
     def _get_secondary_location_ids(self, prefix: str) -> List[str]:
         """Get the secondary location IDs corresponding to primary IDs."""
-        lcw_df = self.ev.location_crosswalks.query(
+        lcw_df = self._ev.location_crosswalks.query(
             filters={
                 "column": "secondary_location_id",
                 "operator": "like",
@@ -110,7 +110,7 @@ class Fetch:
         True: Configuration name exists in the table.
         False: Configuration name does not exist in the table.
         """
-        sdf = self.ev.configurations.filter(
+        sdf = self._ev.configurations.filter(
             {
                 "column": "name",
                 "operator": "=",
@@ -236,7 +236,7 @@ class Fetch:
         >>> )
         """  # noqa
         logger.info("Getting primary location IDs.")
-        locations_df = self.ev.locations.query(
+        locations_df = self._ev.locations.query(
             filters={
                 "column": "id",
                 "operator": "like",
@@ -270,7 +270,7 @@ class Fetch:
         if (
             not self._configuration_name_exists(USGS_CONFIGURATION_NAME)
         ):
-            self.ev.configurations.add(
+            self._ev.configurations.add(
                 Configuration(
                     name=USGS_CONFIGURATION_NAME,
                     type="primary",
@@ -279,7 +279,7 @@ class Fetch:
             )
 
         validate_and_insert_timeseries(
-            ev=self.ev,
+            ev=self._ev,
             in_path=Path(
                 self.usgs_cache_dir
             ),
@@ -432,7 +432,7 @@ class Fetch:
         if (
             not self._configuration_name_exists(ev_configuration_name)
         ):
-            self.ev.configurations.add(
+            self._ev.configurations.add(
                 Configuration(
                     name=ev_configuration_name,
                     type=timeseries_type,
@@ -441,7 +441,7 @@ class Fetch:
             )
 
         validate_and_insert_timeseries(
-            ev=self.ev,
+            ev=self._ev,
             in_path=Path(
                 self.nwm_cache_dir
             ),
@@ -589,9 +589,9 @@ class Fetch:
         # defining the zone_polygons argument.
         logger.info("Getting primary location IDs.")
         if location_id_prefix is None:
-            locations_gdf = self.ev.locations.to_geopandas()
+            locations_gdf = self._ev.locations.to_geopandas()
         else:
-            locations_gdf = self.ev.locations.query(
+            locations_gdf = self._ev.locations.query(
                 filters={
                     "column": "id",
                     "operator": "like",
@@ -630,7 +630,7 @@ class Fetch:
         if (
             not self._configuration_name_exists(ev_configuration_name)
         ):
-            self.ev.configurations.add(
+            self._ev.configurations.add(
                 Configuration(
                     name=ev_configuration_name,
                     type=timeseries_type,
@@ -639,7 +639,7 @@ class Fetch:
             )
 
         validate_and_insert_timeseries(
-            ev=self.ev,
+            ev=self._ev,
             in_path=Path(
                 self.nwm_cache_dir
             ),
@@ -896,7 +896,7 @@ class Fetch:
                 ev_config["name"]
             )
         ):
-            self.ev.configurations.add(
+            self._ev.configurations.add(
                 Configuration(
                     name=ev_config["name"],
                     type=timeseries_type,
@@ -905,7 +905,7 @@ class Fetch:
             )
 
         validate_and_insert_timeseries(
-            ev=self.ev,
+            ev=self._ev,
             in_path=Path(
                 self.nwm_cache_dir
             ),
@@ -1149,9 +1149,9 @@ class Fetch:
         # defining the zone_polygons argument.
         logger.info("Getting primary location IDs.")
         if location_id_prefix is None:
-            locations_gdf = self.ev.locations.to_geopandas()
+            locations_gdf = self._ev.locations.to_geopandas()
         else:
-            locations_gdf = self.ev.locations.query(
+            locations_gdf = self._ev.locations.query(
                 filters={
                     "column": "id",
                     "operator": "like",
@@ -1202,7 +1202,7 @@ class Fetch:
                 ev_config["name"]
             )
         ):
-            self.ev.configurations.add(
+            self._ev.configurations.add(
                 Configuration(
                     name=ev_config["name"],
                     type=timeseries_type,
@@ -1211,7 +1211,7 @@ class Fetch:
             )
 
         validate_and_insert_timeseries(
-            ev=self.ev,
+            ev=self._ev,
             in_path=Path(self.nwm_cache_dir),
             timeseries_type=timeseries_type,
             write_mode=write_mode,

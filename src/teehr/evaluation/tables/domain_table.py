@@ -36,7 +36,7 @@ class DomainTable(BaseTable):
         logger.info(
             f"Validating {len(obj)} objects before adding to {self.name} table"
             )
-        new_df_validated = self.ev.validate.schema(
+        new_df_validated = self._ev.validate.schema(
             sdf=new_df,
             table_schema=self.schema_func(),
             foreign_keys=self.foreign_keys,
@@ -56,14 +56,14 @@ class DomainTable(BaseTable):
             logger.info(
                 f"Validating {self.name} table after adding {len(obj)} objects"
                 )
-            validated_df = self.ev.validate.schema(
+            validated_df = self._ev.validate.schema(
                 sdf=combined_df,
                 table_schema=self.schema_func(),
                 foreign_keys=self.foreign_keys,
                 uniqueness_fields=self.uniqueness_fields
             )
 
-            self.ev.write.to_warehouse(
+            self._ev.write.to_warehouse(
                 source_data=validated_df,
                 target_table=self.name,
                 write_mode=write_mode,
@@ -108,14 +108,14 @@ class DomainTable(BaseTable):
                 f"Validating {self.name} table after adding "
                 f"{new_df_not_matched.count()} new objects"
             )
-            validated_df = self.ev.validate.schema(
+            validated_df = self._ev.validate.schema(
                 sdf=combined_df,
                 table_schema=self.schema_func(),
                 foreign_keys=self.foreign_keys,
                 uniqueness_fields=self.uniqueness_fields
             )
 
-            self.ev.write.to_warehouse(
+            self._ev.write.to_warehouse(
                 source_data=validated_df,
                 target_table=self.name,
                 write_mode=write_mode,

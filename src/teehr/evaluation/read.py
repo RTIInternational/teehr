@@ -8,6 +8,8 @@ from pathlib import Path
 # from pyarrow import schema as arrow_schema
 # import geopandas as gpd
 import pyspark.sql as ps
+from pandera.pyspark import DataFrameSchema as SparkDataFrameSchema
+from pandera import DataFrameSchema as PandasDataFrameSchema
 
 from teehr.utils.utils import path_to_spark
 # from teehr.evaluation.utils import get_table_instance
@@ -29,12 +31,14 @@ class Read:
             the classes static methods only.
         """
         if ev is not None:  # needed?
-            self.ev = ev
+            self._ev = ev
 
     def from_cache(
         self,
         path: Union[str, Path],
-        pattern: str = None,
+        table_schema_func: SparkDataFrameSchema | PandasDataFrameSchema,
+        pattern: str,
+        file_format: str,
         show_missing_table_warning: bool = False,
         **options
     ) -> ps.DataFrame:
@@ -69,8 +73,10 @@ class Read:
         # If it's not empty and it's the joined timeseries table,
         # read it again without the schema to ensure all fields are included.
         # Otherwise, continue.
-        schema = self.schema_func().to_structtype()
-        df = self.ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
+        # TODO: What if it's Pandas schema?
+        if isinstance(table_schema_func, SparkDataFrameSchema):
+            schema = table_schema_func.to_structtype()
+        df = self._ev.spark.read.format(file_format).options(**options).load(path, schema=schema)
         if df.isEmpty():
             if show_missing_table_warning:
                 logger.warning(
@@ -81,9 +87,9 @@ class Read:
 
     def from_warehouse(
         self,
-        catalog_name: str,
-        namespace: str,
-        table: str
+        table: str,
+        catalog_name: str = None,
+        namespace: str = None,
     ) -> ps.DataFrame:
         """Read data from table as a spark dataframe.
 
@@ -92,10 +98,14 @@ class Read:
         df : ps.DataFrame
             The spark dataframe.
         """
+        if catalog_name is None:
+            catalog_name = self._ev.active_catalog.catalog_name
+        if namespace is None:
+            namespace = self._ev.active_catalog.namespace_name
         logger.info(
             f"Reading files from {catalog_name}.{namespace}.{table}."
         )
-        sdf = (self.ev.spark.read.format("iceberg").load(
+        sdf = (self._ev.spark.read.format("iceberg").load(
                 f"{catalog_name}.{namespace}.{table}"
             )
         )

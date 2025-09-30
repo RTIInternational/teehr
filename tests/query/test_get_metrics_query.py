@@ -314,7 +314,7 @@ def test_gumboot_bootstrapping(tmpdir):
     sdf = ev.spark.read.parquet(joined_timeseries_filepath.as_posix())
     (
         sdf.writeTo(
-            f"{ev.catalog_name}.{ev.schema_name}.joined_timeseries"
+            f"{ev.catalog_name}.{ev.namespace}.joined_timeseries"
         )
         .using("iceberg")
         .createOrReplace()
@@ -326,7 +326,7 @@ def test_gumboot_bootstrapping(tmpdir):
     )
     (
         sdf.writeTo(
-            f"{ev.catalog_name}.{ev.schema_name}.locations"
+            f"{ev.catalog_name}.{ev.namespace}.locations"
         )
         .using("iceberg")
         .createOrReplace()

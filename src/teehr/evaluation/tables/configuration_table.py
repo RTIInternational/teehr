@@ -15,7 +15,7 @@ class ConfigurationTable(DomainTable):
         """Initialize class."""
         super().__init__(ev)
         self.name = "configurations"
-        self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
+        self.dir = to_path_or_s3path(ev.active_catalog.dataset_dir, self.name)
         self.filter_model = ConfigurationFilter
         self.schema_func = schemas.configuration_schema
         self.uniqueness_fields = ["name"]

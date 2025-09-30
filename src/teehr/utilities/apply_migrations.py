@@ -197,7 +197,7 @@ def apply_schema_version_evolution_statements(
     spark: SparkSession,
     catalog_name: str,
     schema_version: int,
-    schema_name: str,
+    namespace: str,
     evolution_statements: list[str]
 ):
     """
@@ -213,11 +213,11 @@ def apply_schema_version_evolution_statements(
     """
     # NOTE: Here in spark, "schema" = "namespace" = "database"
 
-    logger.info(f"Applying schema version {schema_version} to {catalog_name}.{schema_name}")
+    logger.info(f"Applying schema version {schema_version} to {catalog_name}.{namespace}")
 
-    spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog_name}.{schema_name};")
+    spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog_name}.{namespace};")
     spark.sql(f"USE {catalog_name};")
-    spark.sql(f"USE SCHEMA {schema_name};")
+    spark.sql(f"USE SCHEMA {namespace};")
 
     for stmt in evolution_statements:
         spark.sql(stmt)
@@ -229,7 +229,7 @@ def evolve_catalog_schema(
     spark: SparkSession,
     migrations_dir_path: Union[str, Path],
     catalog_name: str,
-    schema_name: str
+    namespace: str
 ):
     """
     Evolve a catalog schema by applying any new schema versions.
@@ -242,7 +242,7 @@ def evolve_catalog_schema(
         The directory path where the catalog schema versions are stored.
     catalog_name : str
         The name of the catalog to evolve.
-    schema_name : str
+    namespace : str
         The name of the schema within the catalog to evolve.
     """
     available_schema_versions = read_available_schema_versions(
@@ -261,7 +261,7 @@ def evolve_catalog_schema(
 
     if len(schema_version_delta) == 0:
         logger.info(
-          f"No new schema versions to apply to {catalog_name}.{schema_name}."
+          f"No new schema versions to apply to {catalog_name}.{namespace}."
         )
         return
 
@@ -275,6 +275,6 @@ def evolve_catalog_schema(
           spark=spark,
           catalog_name=catalog_name,
           schema_version=schema_version,
-          schema_name=schema_name,
+          namespace=namespace,
           evolution_statements=evolution_statements
         )

@@ -29,7 +29,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         """Initialize class."""
         super().__init__(ev)
         self.name = "secondary_timeseries"
-        self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
+        self.dir = to_path_or_s3path(ev.active_catalog.dataset_dir, self.name)
         self.schema_func = schemas.secondary_timeseries_schema
         self.uniqueness_fields = [
             "location_id",
@@ -63,8 +63,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             }
         ]
         self.cache_dir = Path(
-            self.ev.dir_path,
-            const.CACHE_DIR,
+            self._ev.active_catalog.cache_dir,
             const.LOADING_CACHE_DIR,
             const.SECONDARY_TIMESERIES_DIR
         )
@@ -95,7 +94,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         # Clear the cache directory if it exists.
         remove_dir_if_exists(self.cache_dir)
 
-        self.ev.extract.to_cache(
+        self._extract.to_cache(
             in_datapath=in_path,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
@@ -110,7 +109,14 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             **kwargs
         )
         # Read the converted files to Spark DataFrame
-        df = self._read_files_from_cache_or_s3(self.cache_dir)
+        # df = self._read_files_from_cache_or_s3(self.cache_dir)
+        df = self._read.from_cache(
+            path=self.cache_dir,
+            pattern=pattern,
+            file_format=self.format,
+            show_missing_table_warning=False,
+            table_schema_func=self.schema_func()
+        )
 
         if persist_dataframe:
             df = df.persist()
@@ -122,7 +128,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
                 column_name="location_id",
                 prefix=location_id_prefix,
             )
-        validated_df = self.ev.validate.schema(
+        validated_df = self._validate.schema(
             sdf=df,
             table_schema=self.schema_func(),
             drop_duplicates=drop_duplicates,
@@ -130,7 +136,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             uniqueness_fields=self.uniqueness_fields,
             add_missing_columns=True
         )
-        self.ev.write.to_warehouse(
+        self._write.to_warehouse(
             source_data=validated_df,
             target_table=self.name,
             write_mode=write_mode,
@@ -143,7 +149,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         """Join geometry."""
         logger.debug("Joining locations geometry.")
 
-        joined_df = self.ev.sql("""
+        joined_df = self._ev.sql("""
             SELECT
                 sf.*,
                 lf.geometry as geometry

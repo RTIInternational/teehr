@@ -53,7 +53,7 @@ from fsspec.implementations.local import LocalFileSystem
 import pyspark.sql as ps
 from teehr.querying.filter_format import validate_and_apply_filters
 from teehr.utilities import apply_migrations
-from teehr.models.evaluation_base import EvaluationBase
+from teehr.models.evaluation_base import EvaluationBase, CatalogConfigBase
 
 
 logger = logging.getLogger(__name__)
@@ -98,32 +98,61 @@ class Evaluation(EvaluationBase):
             The SparkSession object, by default None
         """
         # Local settings -- should these be pydantic models?
-        self.local_warehouse_dir = local_warehouse_dir
-        self.local_catalog_name = local_catalog_name
-        self.local_catalog_type = local_catalog_type
-        self.local_catalog_uri = local_catalog_uri
-        self.local_namespace_name = local_namespace_name
-        self.local_dataset_dir = Path(local_warehouse_dir) / Path(const.DATASET_DIR)
-        self.local_cache_dir = Path(local_warehouse_dir) / Path(const.CACHE_DIR)
-        self.local_scripts_dir = Path(local_warehouse_dir) / Path(const.SCRIPTS_DIR)
+        self.local_catalog = CatalogConfigBase(
+            warehouse_dir=local_warehouse_dir,
+            catalog_name=local_catalog_name,
+            namespace_name=local_namespace_name,
+            catalog_type=local_catalog_type,
+            catalog_uri=local_catalog_uri,
+            dataset_dir=Path(local_warehouse_dir) / Path(const.DATASET_DIR)
+            if local_warehouse_dir is not None else None,
+            cache_dir=Path(local_warehouse_dir) / Path(const.CACHE_DIR)
+            if local_warehouse_dir is not None else None,
+            scripts_dir=Path(local_warehouse_dir) / Path(const.SCRIPTS_DIR)
+            if local_warehouse_dir is not None else None,
+        )
+        # self.local_warehouse_dir = local_warehouse_dir
+        # self.local_catalog_name = local_catalog_name
+        # self.local_catalog_type = local_catalog_type
+        # # self.local_catalog_uri = local_catalog_uri
+        # self.local_namespace_name = local_namespace_name
+        # self.local_dataset_dir = Path(local_warehouse_dir) / Path(const.DATASET_DIR)
+        # self.local_cache_dir = Path(local_warehouse_dir) / Path(const.CACHE_DIR)
+        # self.local_scripts_dir = Path(local_warehouse_dir) / Path(const.SCRIPTS_DIR)
 
-        # Remote settings
-        self.remote_warehouse_dir = remote_warehouse_dir
-        self.remote_catalog_name = remote_catalog_name
-        self.remote_namespace_name = remote_namespace_name
-        self.remote_catalog_type = remote_catalog_type
-        self.remote_catalog_uri = remote_catalog_uri
-        self.remote_dataset_dir = Path(remote_warehouse_dir) / Path(const.DATASET_DIR)
-        self.remote_cache_dir = Path(remote_warehouse_dir) / Path(const.CACHE_DIR)
-        self.remote_scripts_dir = Path(remote_warehouse_dir) / Path(const.SCRIPTS_DIR)
+        # # Remote settings
+        # self.remote_warehouse_dir = remote_warehouse_dir
+        # self.remote_catalog_name = remote_catalog_name
+        # self.remote_namespace_name = remote_namespace_name
+        # self.remote_catalog_type = remote_catalog_type
+        # self.remote_catalog_uri = remote_catalog_uri
+        # self.remote_dataset_dir = Path(remote_warehouse_dir) / Path(const.DATASET_DIR)
+        # self.remote_cache_dir = Path(remote_warehouse_dir) / Path(const.CACHE_DIR)
+        # self.remote_scripts_dir = Path(remote_warehouse_dir) / Path(const.SCRIPTS_DIR)
+
+        self.remote_catalog = CatalogConfigBase(
+            warehouse_dir=remote_warehouse_dir,
+            catalog_name=remote_catalog_name,
+            namespace_name=remote_namespace_name,
+            catalog_type=remote_catalog_type,
+            catalog_uri=remote_catalog_uri,
+            dataset_dir=Path(remote_warehouse_dir) / Path(const.DATASET_DIR)
+            if remote_warehouse_dir is not None else None,
+            cache_dir=Path(remote_warehouse_dir) / Path(const.CACHE_DIR)
+            if remote_warehouse_dir is not None else None,
+            scripts_dir=Path(remote_warehouse_dir) / Path(const.SCRIPTS_DIR)
+            if remote_warehouse_dir is not None else None
+        )
+
+        self.active_catalog = self.local_catalog
 
         # Create local directory if it does not exist.
-        if not Path(self.local_warehouse_dir).is_dir():
+        if not Path(self.active_catalog.warehouse_dir).is_dir():
             if create_local_dir:
-                logger.info(f"Creating directory {self.local_warehouse_dir}.")
-                Path(self.local_warehouse_dir).mkdir(parents=True, exist_ok=True)
+                logger.info(f"Creating directory {self.active_catalog.warehouse_dir}.")
+                Path(self.active_catalog.warehouse_dir).mkdir(parents=True, exist_ok=True)
             else:
-                logger.error(f"Directory {self.local_warehouse_dir} does not exist.")
+                logger.error(f"Directory {self.active_catalog.warehouse_dir} does not exist.")
                 raise NotADirectoryError
 
         # Check version of Evaluation
@@ -138,14 +167,14 @@ class Evaluation(EvaluationBase):
         if not self.spark:
             logger.info("Creating a new Spark session.")
             self.spark = create_spark_session(
-                local_warehouse_dir=self.local_warehouse_dir,
-                local_catalog_name=self.local_catalog_name,
-                local_catalog_type=self.local_catalog_type,
-                local_catalog_uri=self.local_catalog_uri,
-                remote_warehouse_dir=self.remote_warehouse_dir,
-                remote_catalog_name=self.remote_catalog_name,
-                remote_catalog_type=self.remote_catalog_type,
-                remote_catalog_uri=self.remote_catalog_uri,
+                local_warehouse_dir=self.local_catalog.warehouse_dir,
+                local_catalog_name=self.local_catalog.catalog_name,
+                local_catalog_type=self.local_catalog.catalog_type,
+                # local_catalog_uri=self.local_catalog.local_catalog_uri,
+                remote_warehouse_dir=self.remote_catalog.warehouse_dir,
+                remote_catalog_name=self.remote_catalog.catalog_name,
+                remote_catalog_type=self.remote_catalog.catalog_type,
+                remote_catalog_uri=self.remote_catalog.catalog_uri,
                 driver_maxresultsize=driver_maxresultsize,
                 driver_memory=driver_memory,
                 app_name=app_name
@@ -247,14 +276,31 @@ class Evaluation(EvaluationBase):
         """Access the joined timeseries table."""
         return JoinedTimeseriesTable(self)
 
+    def set_active_catalog(self, catalog: Literal["local", "remote"]):
+        """Set the active catalog to either local or remote.
+
+        Parameters
+        ----------
+        catalog : Literal["local", "remote"]
+            The catalog to set as active.
+        """
+        if catalog == "local":
+            self.active_catalog = self.local_catalog
+            logger.info("Active catalog set to local.")
+        elif catalog == "remote":
+            self.active_catalog = self.remote_catalog
+            logger.info("Active catalog set to remote.")
+        else:
+            raise ValueError("Catalog must be either 'local' or 'remote'.")
+
     def enable_logging(self):
         """Enable logging."""
         logger = logging.getLogger("teehr")
         # logger.addHandler(logging.StreamHandler())
-        if self.is_s3:
-            logger_path = Path(Path.home, 'teehr.log')
-        else:
-            logger_path = Path(self.dir_path, 'teehr.log')
+        # if self.is_s3:
+        #     logger_path = Path(Path.home, 'teehr.log')
+        # else:
+        logger_path = Path(self.active_catalog.warehouse_dir, 'teehr.log')
 
         handler = logging.FileHandler(logger_path)
         handler.setFormatter(
@@ -267,32 +313,44 @@ class Evaluation(EvaluationBase):
         )
         logger.setLevel(logging.DEBUG)
 
-    def clone_template(self, schema_name: str = "db"):
+    def clone_template(
+        self,
+        catalog_name: str = None,
+        namespace: str = None,
+        warehouse_dir: Union[str, Path] = None
+    ):
         """Create a study from the standard template.
 
         This method mainly copies the template directory to the specified
         evaluation directory.
         """
-        if self.is_s3:
-            logger.error("Cannot clone template to S3.")
-            raise Exception("Cannot clone template to S3.")
+        # if self.is_s3:
+        #     logger.error("Cannot clone template to S3.")
+        #     raise Exception("Cannot clone template to S3.")
+
+        # Set to local by default.
+        if catalog_name is None:
+            catalog_name = self.active_catalog.catalog_name
+        if namespace is None:
+            namespace = self.active_catalog.namespace_name
+        if warehouse_dir is None:
+            warehouse_dir = self.active_catalog.warehouse_dir
 
         teehr_root = Path(__file__).parent.parent
         template_dir = Path(teehr_root, "template")
-        logger.info(f"Copying template from {template_dir} to {self.dir_path}")
-        copy_template_to(template_dir, self.dir_path)
+        logger.info(f"Copying template from {template_dir} to {warehouse_dir}")
+        copy_template_to(template_dir, warehouse_dir)
         # Copy in the schema
         copy_schema_dir(
-            target_dir=self.dir_path
+            target_dir=warehouse_dir
         )
         # Create initial iceberg tables.
         apply_migrations.evolve_catalog_schema(
             spark=self.spark,
-            migrations_dir_path=self.dir_path,
-            catalog_name=self.catalog_name,
-            schema_name=schema_name
+            migrations_dir_path=warehouse_dir,
+            catalog_name=catalog_name,
+            namespace=namespace
         )
-        self.schema_name = schema_name
 
     @staticmethod
     def list_s3_evaluations(
@@ -308,75 +366,75 @@ class Evaluation(EvaluationBase):
         """
         return list_s3_evaluations(format=format)
 
-    def clone_from_s3(
-        self,
-        evaluation_name: str,
-        primary_location_ids: List[str] = None,
-        start_date: Union[str, datetime] = None,
-        end_date: Union[str, datetime] = None,
-    ):
-        """Fetch the study data from S3.
+    # def clone_from_s3(
+    #     self,
+    #     evaluation_name: str,
+    #     primary_location_ids: List[str] = None,
+    #     start_date: Union[str, datetime] = None,
+    #     end_date: Union[str, datetime] = None,
+    # ):
+    #     """Fetch the study data from S3.
 
-        Copies the study from s3 to the local directory, with the option
-        to subset the dataset by primary location ID, start and end dates.
+    #     Copies the study from s3 to the local directory, with the option
+    #     to subset the dataset by primary location ID, start and end dates.
 
-        Parameters
-        ----------
-        evaluation_name : str
-            The name of the evaluation to clone from S3.
-            Use the list_s3_evaluations method to get the available
-            evaluations.
-        primary_location_ids : List[str], optional
-            The list of primary location ids to subset the data.
-            The default is None.
-        start_date : Union[str, datetime], optional
-            The start date to subset the data.
-            The default is None.
-        end_date : Union[str, datetime], optional
-            The end date to subset the data.
-            The default is None.
+    #     Parameters
+    #     ----------
+    #     evaluation_name : str
+    #         The name of the evaluation to clone from S3.
+    #         Use the list_s3_evaluations method to get the available
+    #         evaluations.
+    #     primary_location_ids : List[str], optional
+    #         The list of primary location ids to subset the data.
+    #         The default is None.
+    #     start_date : Union[str, datetime], optional
+    #         The start date to subset the data.
+    #         The default is None.
+    #     end_date : Union[str, datetime], optional
+    #         The end date to subset the data.
+    #         The default is None.
 
-        Notes
-        -----
-        Includes the following tables:
-            - units
-            - variables
-            - attributes
-            - configurations
-            - locations
-            - location_attributes
-            - location_crosswalks
-            - primary_timeseries
-            - secondary_timeseries
-            - joined_timeseries
+    #     Notes
+    #     -----
+    #     Includes the following tables:
+    #         - units
+    #         - variables
+    #         - attributes
+    #         - configurations
+    #         - locations
+    #         - location_attributes
+    #         - location_crosswalks
+    #         - primary_timeseries
+    #         - secondary_timeseries
+    #         - joined_timeseries
 
-        Also includes the user_defined_fields.py script.
+    #     Also includes the user_defined_fields.py script.
 
-        """
-        if self.is_s3:
-            logger.error("Cannot clone from S3 to S3.")
-            raise Exception("Cannot clone from S3 to S3.")
+    #     """
+    #     # if self.is_s3:
+    #     #     logger.error("Cannot clone from S3 to S3.")
+    #     #     raise Exception("Cannot clone from S3 to S3.")
 
-        return clone_from_s3(
-            self,
-            evaluation_name,
-            primary_location_ids,
-            start_date,
-            end_date
-        )
+    #     return clone_from_s3(
+    #         self,
+    #         evaluation_name,
+    #         primary_location_ids,
+    #         start_date,
+    #         end_date
+    #     )
 
     def clean_cache(self):
         """Clean temporary files.
 
         Includes removing temporary files.
         """
-        if self.is_s3:
-            logger.error("Cannot clean cache on S3.")
-            raise Exception("Cannot clean cache on S3.")
+        # if self.is_s3:
+        #     logger.error("Cannot clean cache on S3.")
+        #     raise Exception("Cannot clean cache on S3.")
 
-        logger.info(f"Removing temporary files from {self.cache_dir}")
-        remove_dir_if_exists(self.cache_dir)
-        self.cache_dir.mkdir()
+        logger.info(f"Removing temporary files from {self.active_catalog.cache_dir}")
+        remove_dir_if_exists(self.active_catalog.cache_dir)
+        self.active_catalog.cache_dir.mkdir()
 
     def sql(self, query: str, create_temp_views: List[str]):
         """Run a SQL query on the Spark session against the TEEHR tables.
@@ -444,19 +502,23 @@ class Evaluation(EvaluationBase):
 
         return self.spark.sql(query)
 
-    def check_evaluation_version(self):
+    def check_evaluation_version(self, warehouse_dir: Union[str, Path] = None) -> str:
         """Check the version of the TEEHR Evaluation."""
-        if self.is_s3:
-            fs = s3fs.S3FileSystem(anon=True)
-            version_file = self.dir_path.path + "/" + "version"
-        else:
-            fs = LocalFileSystem()
-            version_file = Path(self.dir_path, "version")
+        # if self.is_s3:
+        #     fs = s3fs.S3FileSystem(anon=True)
+        #     version_file = self.active_catalog.warehouse_dir.path + "/" + "version"
+        # else:
+        if warehouse_dir is not None:
+            self.active_catalog.warehouse_dir = warehouse_dir
+
+        fs = LocalFileSystem()
+        version_file = Path(warehouse_dir, "version")
+
         if not fs.exists(version_file):
-            logger.error(f"Version file not found in {self.dir_path}.")
+            logger.error(f"Version file not found in {warehouse_dir}.")
             if self.is_s3:
                 err_msg = (
-                    f"Please create a version file in {self.dir_path}."
+                    f"Please create a version file in {warehouse_dir}."
                 )
                 logger.error(err_msg)
                 raise Exception(err_msg)
@@ -464,7 +526,7 @@ class Evaluation(EvaluationBase):
                 # Raise an error if no version file is found.
                 err_msg = (
                     "Incompatible Evaluation version."
-                    " No version file found in {self.dir_path}."
+                    f" No version file found in {warehouse_dir}."
                     " TEEHR v0.6 requires a version file to be present"
                     " in the evaluation directory."
                 )
@@ -475,7 +537,7 @@ class Evaluation(EvaluationBase):
                 version_txt = str(f.read().strip())
             match = re.findall(r'(\d+\.\d+\.\d+)', version_txt)  # Assumes semantic versioning
             if len(match) != 1:
-                err_msg = f"Invalid version format in {self.dir_path}: {version_txt}"
+                err_msg = f"Invalid version format in {warehouse_dir}: {version_txt}"
                 logger.error(err_msg)
                 raise ValueError(err_msg)
             else:
@@ -483,13 +545,13 @@ class Evaluation(EvaluationBase):
         # Raise an error requiring migration to v0.6 warehouse.
         if version < "0.6.0":
             err_msg = (
-                f"Evaluation version {version} in {self.dir_path} is less than 0.6."
+                f"Evaluation version {version} in {warehouse_dir} is less than 0.6."
                 " Please run the migration to upgrade to the latest version."
             )
             logger.error(err_msg)
             raise ValueError(err_msg)
         logger.info(
-            f"Found evaluation version {version} in {self.dir_path}."
+            f"Found evaluation version {version} in {warehouse_dir}."
             " Future versions v0.6 and greater will require a conversion"
             " to a new format."
         )
@@ -533,21 +595,37 @@ class Evaluation(EvaluationBase):
 
     def apply_schema_migration(
         self,
-        schema_name: str = "db"
+        catalog_name: str = None,
+        namespace: str = None,
+        warehouse_dir: Union[str, Path] = None
     ):
         """Migrate v0.5 Evalution to v0.6 Iceberg tables."""
+        if catalog_name is None:
+            catalog_name = self.active_catalog.catalog_name
+        if namespace is None:
+            namespace = self.active_catalog.namespace
+        if warehouse_dir is None:
+            warehouse_dir = Path(self.active_catalog.warehouse_dir) / "migrations"
         apply_migrations.evolve_catalog_schema(
             spark=self.spark,
-            migrations_dir_path=self.dir_path,
-            catalog_name=self.catalog_name,
-            schema_name=schema_name
+            migrations_dir_path=warehouse_dir,
+            catalog_name=catalog_name,
+            namespace=namespace
         )
-        logger.info(f"Schema evolution completed for {self.catalog_name}.")
+        logger.info(f"Schema evolution completed for {catalog_name}.")
 
-    def list_tables(self) -> pd.DataFrame:
+    def list_tables(
+        self,
+        catalog_name: str = None,
+        namespace: str = None
+    ) -> pd.DataFrame:
         """List the tables in the catalog returning a Pandas DataFrame."""
+        if catalog_name is None:
+            catalog_name = self.local_catalog_name
+        if namespace is None:
+            namespace = self.local_namespace_name
         tbl_list = self.spark.catalog.listTables(
-            f"{self.catalog_name}.{self.schema_name}"
+            f"{catalog_name}.{namespace}"
         )
         metadata = []
         # Note. "EXTERNAL" tables are those managed by REST catalog?

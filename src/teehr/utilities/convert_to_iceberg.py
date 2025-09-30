@@ -18,7 +18,7 @@ def convert_evaluation(
     warehouse_path: Union[str, Path, S3Path] = None,
     catalog_name: str = "local",
     migrations_path: Union[str, Path, S3Path] = None,
-    schema_name: str = "db"
+    namespace: str = "db"
 ):
     """Convert TEEHR Evaluation to v0.6 Iceberg.
 
@@ -34,7 +34,7 @@ def convert_evaluation(
         The directory path where the catalog schema versions are stored
         (default is None, in which case the schema(s) from the template
         Evaluation are used).
-    schema_name : str, optional
+    namespace : str, optional
         The name of the Iceberg schema (default is "db").
     """
     dir_path = Path(dir_path)
@@ -57,7 +57,7 @@ def convert_evaluation(
         spark=spark,
         migrations_dir_path=dir_path,
         catalog_name=catalog_name,
-        schema_name=schema_name
+        namespace=namespace
     )
     logger.info(f"Schema evolution completed for {catalog_name}.")
     spark.stop()
@@ -76,69 +76,69 @@ def convert_evaluation(
     units_table = ev.units
     schema = units_table.schema_func().to_structtype()
     units_sdf = ev.spark.read.format(units_table.format).options(**options).load(units_table.dir.as_posix(), schema=schema)
-    units_sdf.writeTo(f"{catalog_name}.{schema_name}.units").append()
+    units_sdf.writeTo(f"{catalog_name}.{namespace}.units").append()
 
     configuration_table = ev.configurations
     schema = configuration_table.schema_func().to_structtype()
     configuration_sdf = ev.spark.read.format(configuration_table.format).options(**options).load(configuration_table.dir.as_posix(), schema=schema)
     configuration_sdf.writeTo(
-        f"{catalog_name}.{schema_name}.configurations"
+        f"{catalog_name}.{namespace}.configurations"
     ).append()
 
     variables_table = ev.variables
     schema = variables_table.schema_func().to_structtype()
     variables_sdf = ev.spark.read.format(variables_table.format).options(**options).load(variables_table.dir.as_posix(), schema=schema)
     variables_sdf.writeTo(
-        f"{catalog_name}.{schema_name}.variables"
+        f"{catalog_name}.{namespace}.variables"
     ).append()
 
     attributes_table = ev.attributes
     schema = attributes_table.schema_func().to_structtype()
     attributes_sdf = ev.spark.read.format(attributes_table.format).options(**options).load(attributes_table.dir.as_posix(), schema=schema)
     attributes_sdf.writeTo(
-        f"{catalog_name}.{schema_name}.attributes"
+        f"{catalog_name}.{namespace}.attributes"
     ).append()
 
     locations_table = ev.locations
     schema = locations_table.schema_func().to_structtype()
     locations_sdf = ev.spark.read.format(locations_table.format).options(**options).load(locations_table.dir.as_posix(), schema=schema)
     locations_sdf.writeTo(
-        f"{catalog_name}.{schema_name}.locations"
+        f"{catalog_name}.{namespace}.locations"
     ).append()
 
     location_attrs_table = ev.location_attributes
     schema = location_attrs_table.schema_func().to_structtype()
     location_attrs_sdf = ev.spark.read.format(location_attrs_table.format).options(**options).load(location_attrs_table.dir.as_posix(), schema=schema)
     location_attrs_sdf.writeTo(
-        f"{catalog_name}.{schema_name}.location_attributes"
+        f"{catalog_name}.{namespace}.location_attributes"
     ).append()
 
     primary_timeseries_table = ev.primary_timeseries
     schema = primary_timeseries_table.schema_func().to_structtype()
     primary_timeseries_sdf = ev.spark.read.format(primary_timeseries_table.format).options(**options).load(primary_timeseries_table.dir.as_posix(), schema=schema)
     primary_timeseries_sdf.writeTo(
-        f"{catalog_name}.{schema_name}.primary_timeseries"
+        f"{catalog_name}.{namespace}.primary_timeseries"
     ).append()
 
     secondary_timeseries_table = ev.secondary_timeseries
     schema = secondary_timeseries_table.schema_func().to_structtype()
     secondary_timeseries_sdf = ev.spark.read.format(secondary_timeseries_table.format).options(**options).load(secondary_timeseries_table.dir.as_posix(), schema=schema)
     secondary_timeseries_sdf.writeTo(
-        f"{catalog_name}.{schema_name}.secondary_timeseries"
+        f"{catalog_name}.{namespace}.secondary_timeseries"
     ).append()
 
     joined_timeseries_table = ev.joined_timeseries
     schema = joined_timeseries_table.schema_func().to_structtype()
     joined_timeseries_sdf = ev.spark.read.format(joined_timeseries_table.format).options(**options).load(joined_timeseries_table.dir.as_posix(), schema=schema)
     joined_timeseries_sdf.writeTo(
-        f"{catalog_name}.{schema_name}.joined_timeseries"
+        f"{catalog_name}.{namespace}.joined_timeseries"
     ).append()
 
     location_crosswalk_table = ev.location_crosswalks
     schema = location_crosswalk_table.schema_func().to_structtype()
     location_crosswalk_sdf = ev.spark.read.format(location_crosswalk_table.format).options(**options).load(location_crosswalk_table.dir.as_posix(), schema=schema)
     location_crosswalk_sdf.writeTo(
-        f"{catalog_name}.{schema_name}.location_crosswalks"
+        f"{catalog_name}.{namespace}.location_crosswalks"
     ).append()
     logger.info(f"Local warehouse created in {dir_path}/warehouse.")
 
@@ -183,7 +183,7 @@ if __name__ == "__main__":
         help="Name of the Iceberg catalog, default is 'local'."
     )
     parser.add_argument(
-        "--schema_name",
+        "--namespace",
         default="db",
         help="Name of the Iceberg schema, default is 'db'."
     )
@@ -194,5 +194,5 @@ if __name__ == "__main__":
         warehouse_path=args.warehouse_path,
         catalog_name=args.catalog_name,
         migrations_path=args.migrations_path,
-        schema_name=args.schema_name
+        namespace=args.namespace
     )

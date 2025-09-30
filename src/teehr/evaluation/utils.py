@@ -118,6 +118,8 @@ def create_spark_session(
     builder = builder.config("spark.driver.memory", f"{int(driver_memory)}g")
     builder = builder.config("spark.driver.maxResultSize", f"{int(driver_maxresultsize)}g")
 
+    # TODO: Could we also configure BigQuery settings here for NWM data?
+
     # # Other optimizations to consider
     # # Memory management
     # builder = builder.config("spark.sql.adaptive.advisoryPartitionSizeInBytes", "128MB")

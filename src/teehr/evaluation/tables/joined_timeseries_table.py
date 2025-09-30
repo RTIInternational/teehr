@@ -23,7 +23,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
         """Initialize class."""
         super().__init__(ev)
         self.name = "joined_timeseries"
-        self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
+        self.dir = to_path_or_s3path(ev.active_catalog.dataset_dir, self.name)
         self.filter_model = JoinedTimeseriesFilter
         self.validate_filter_field_types = False
         self.strict_validation = False
@@ -59,13 +59,13 @@ class JoinedTimeseriesTable(TimeseriesTable):
         """Return GeoPandas DataFrame."""
         self._check_load_table()
         return join_geometry(
-            self.df, self.ev.locations.to_sdf(),
+            self.df, self._ev.locations.to_sdf(),
             "primary_location_id"
         )
 
     def _join(self) -> ps.DataFrame:
         """Join primary and secondary timeseries."""
-        joined_df = self.ev.sql("""
+        joined_df = self._ev.sql("""
             SELECT
                 sf.reference_time
                 , sf.value_time as value_time
@@ -95,7 +95,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
                   joined_df: ps.DataFrame,
                   attr_list: List[str] = None) -> ps.DataFrame:
         """Add attributes to the joined timeseries dataframe."""
-        location_attributes_sdf = self.ev.location_attributes.to_sdf()
+        location_attributes_sdf = self._ev.location_attributes.to_sdf()
         if location_attributes_sdf.isEmpty():
             logger.warning(
                 "No location attributes found. Skipping adding attributes to "
@@ -128,7 +128,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
                 )
         else:
             logger.info("No attribute list provided. Adding all attributes.")
-            valid_atts = self.ev.location_attributes.distinct_values(
+            valid_atts = self._ev.location_attributes.distinct_values(
                 "attribute_name")
 
         # Pivot the table
@@ -189,7 +189,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
     def write(self, write_mode: str = "create_or_replace"):
         """Write the joined timeseries table to the warehouse."""
         # TODO: What should default write mode be?
-        self.ev.write.to_warehouse(
+        self._ev.write.to_warehouse(
             source_data=self.df,
             target_table=self.name,
             write_mode=write_mode,
@@ -202,12 +202,12 @@ class JoinedTimeseriesTable(TimeseriesTable):
     def _run_script(self, joined_df: ps.DataFrame) -> ps.DataFrame:
         """Add UDFs to the joined timeseries dataframe."""
         try:
-            sys.path.append(str(Path(self.ev.scripts_dir).resolve()))
+            sys.path.append(str(Path(self._ev.scripts_dir).resolve()))
             import user_defined_fields as udf # noqa
             joined_df = udf.add_user_defined_fields(joined_df)
         except ImportError:
             logger.info(
-                f"No user-defined fields found in {self.ev.scripts_dir}."
+                f"No user-defined fields found in {self._ev.scripts_dir}."
                 "Not adding user-defined fields."
             )
             return joined_df
@@ -246,7 +246,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
         if execute_scripts:
             joined_df = self._run_script(joined_df)
 
-        validated_df = self.ev.validate.schema(
+        validated_df = self._ev.validate.schema(
             sdf=joined_df,
             strict=False,
             table_schema=self.schema_func(),
@@ -254,7 +254,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
             foreign_keys=self.foreign_keys,
             uniqueness_fields=self.uniqueness_fields
         )
-        self.ev.write.to_warehouse(
+        self._ev.write.to_warehouse(
             source_data=validated_df,
             target_table=self.name,
             write_mode=write_mode,
@@ -304,9 +304,9 @@ class JoinedTimeseriesTable(TimeseriesTable):
         # read it again without the schema to ensure all fields are included.
         # Otherwise, continue.
         schema = self.schema_func().to_structtype()
-        df = self.ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
+        df = self._ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
         if df.isEmpty():
             if show_missing_table_warning:
                 logger.warning(f"An empty dataframe was returned for '{self.name}'.")
                 return df
-        return self.ev.spark.read.format(self.format).options(**options).load(path)
+        return self._ev.spark.read.format(self.format).options(**options).load(path)

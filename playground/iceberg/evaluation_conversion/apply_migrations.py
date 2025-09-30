@@ -206,7 +206,7 @@ def apply_schema_version_evolution_statements(
     spark: SparkSession,
     catalog_name: str,
     schema_version: int,
-    schema_name: str,
+    namespace: str,
     evolution_statements: list[str]
 ):
     """
@@ -220,11 +220,11 @@ def apply_schema_version_evolution_statements(
     Returns:
       None
     """
-    print(f"Applying schema version {schema_version} to {catalog_name}.{schema_name}")
+    print(f"Applying schema version {schema_version} to {catalog_name}.{namespace}")
 
-    spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog_name}.{schema_name};")
+    spark.sql(f"CREATE SCHEMA IF NOT EXISTS {catalog_name}.{namespace};")
     spark.sql(f"USE {catalog_name};")
-    spark.sql(f"USE SCHEMA {schema_name};")
+    spark.sql(f"USE SCHEMA {namespace};")
 
     for stmt in evolution_statements:
         spark.sql(stmt)
@@ -235,7 +235,7 @@ def apply_schema_version_evolution_statements(
 def evolve_catalog_schema(
     spark: SparkSession,
     catalog_name: str,
-    schema_name: str
+    namespace: str
 ):
     """
     Evolve a catalog schema by applying any new schema versions.
@@ -252,17 +252,17 @@ def evolve_catalog_schema(
 
     for schema_version in schema_version_delta:
         evolution_statements = load_schema_version_evolution_statements(catalog_name, schema_version)
-        apply_schema_version_evolution_statements(spark, catalog_name, schema_version, schema_name, evolution_statements)
+        apply_schema_version_evolution_statements(spark, catalog_name, schema_version, namespace, evolution_statements)
 
 
 # if __name__ == "__main__":
 #     # Example usage
 #     catalog_name = 'local'
-#     schema_name = 'db'
+#     namespace = 'db'
 #     warehouse_path = str(Path.home() / "temp" / "iceberg" / "evaluation" / "spark-warehouse")
 
 #     spark = get_spark_session(catalog_name, warehouse_path=warehouse_path)
 
-#     evolve_catalog_schema(spark, catalog_name, schema_name)
+#     evolve_catalog_schema(spark, catalog_name, namespace)
 #     print(f"Schema evolution completed for {catalog_name}.")
 #     spark.stop()

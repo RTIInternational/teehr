@@ -32,7 +32,7 @@ def test_upgrade_evaluation():
 
         # Test a spark query.
         attribute_names = [row.attribute_name for row in ev.spark.sql(f"""
-            SELECT DISTINCT(attribute_name) FROM {ev.catalog_name}.{ev.schema_name}.location_attributes
+            SELECT DISTINCT(attribute_name) FROM {ev.catalog_name}.{ev.namespace}.location_attributes
         """).collect()]
         attribute_names_sql = ", ".join([f"'{name}'" for name in attribute_names])
 

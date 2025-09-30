@@ -26,7 +26,7 @@ class BaseTable:
 
     def __init__(self, ev):
         """Initialize class."""
-        self.ev = ev
+        self._ev = ev  # Still needed?
         self.name = None
         self.dir = None
         self.schema_func = None
@@ -38,6 +38,10 @@ class BaseTable:
         self.strict_validation = True
         self.validate_filter_field_types = True
         self.foreign_keys = []
+        self._read = ev.read
+        self._write = ev.write
+        self._validate = ev.validate
+        self._extract = ev.extract
 
     @staticmethod
     def _raise_missing_table_error(table_name: str):
@@ -49,73 +53,73 @@ class BaseTable:
         logger.error(err_msg)
         raise ValueError(err_msg)
 
-    def _read_files_from_cache_or_s3(
-        self,
-        path: Union[str, Path, S3Path],
-        pattern: str = None,
-        show_missing_table_warning: bool = False,
-        **options
-    ) -> ps.DataFrame:
-        """Read data from table directory as a spark dataframe.
+    # def _read_files_from_cache_or_s3(
+    #     self,
+    #     path: Union[str, Path, S3Path],
+    #     pattern: str = None,
+    #     show_missing_table_warning: bool = False,
+    #     **options
+    # ) -> ps.DataFrame:
+    #     """Read data from table directory as a spark dataframe.
 
-        Parameters
-        ----------
-        path : Union[str, Path, S3Path]
-            The path to the directory containing the files.
-        pattern : str, optional
-            The pattern to match files.
-        show_missing_table_warning : bool, optional
-            If True, show the warning an empty table was returned.
-            The default is True.
-        **options
-            Additional options to pass to the spark read method.
+    #     Parameters
+    #     ----------
+    #     path : Union[str, Path, S3Path]
+    #         The path to the directory containing the files.
+    #     pattern : str, optional
+    #         The pattern to match files.
+    #     show_missing_table_warning : bool, optional
+    #         If True, show the warning an empty table was returned.
+    #         The default is True.
+    #     **options
+    #         Additional options to pass to the spark read method.
 
-        Returns
-        -------
-        df : ps.DataFrame
-            The spark dataframe.
-        """
-        logger.info(f"Reading files from {path}.")
-        if len(options) == 0:
-            options = {
-                "header": "true",
-                "ignoreMissingFiles": "true"
-            }
+    #     Returns
+    #     -------
+    #     df : ps.DataFrame
+    #         The spark dataframe.
+    #     """
+    #     logger.info(f"Reading files from {path}.")
+    #     if len(options) == 0:
+    #         options = {
+    #             "header": "true",
+    #             "ignoreMissingFiles": "true"
+    #         }
 
-        path = to_path_or_s3path(path)
+    #     path = to_path_or_s3path(path)
 
-        path = path_to_spark(path, pattern)
-        # First, read the file with the schema and check if it's empty.
-        # If it's not empty and it's the joined timeseries table,
-        # read it again without the schema to ensure all fields are included.
-        # Otherwise, continue.
-        schema = self.schema_func().to_structtype()
-        df = self.ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
-        if df.isEmpty():
-            if show_missing_table_warning:
-                logger.warning(f"An empty dataframe was returned for '{self.name}'.")
+    #     path = path_to_spark(path, pattern)
+    #     # First, read the file with the schema and check if it's empty.
+    #     # If it's not empty and it's the joined timeseries table,
+    #     # read it again without the schema to ensure all fields are included.
+    #     # Otherwise, continue.
+    #     schema = self.schema_func().to_structtype()
+    #     df = self._ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
+    #     if df.isEmpty():
+    #         if show_missing_table_warning:
+    #             logger.warning(f"An empty dataframe was returned for '{self.name}'.")
 
-        return df
+    #     return df
 
-    def _read_from_warehouse(
-        self,
-    ) -> ps.DataFrame:
-        """Read data from table as a spark dataframe.
+    # def _read_from_warehouse(
+    #     self,
+    # ) -> ps.DataFrame:
+    #     """Read data from table as a spark dataframe.
 
-        Returns
-        -------
-        df : ps.DataFrame
-            The spark dataframe.
-        """
-        logger.info(
-            f"Reading files from {self.ev.catalog_name}.{self.ev.schema_name}."
-            f"{self.name}."
-        )
-        sdf = (self.ev.spark.read.format("iceberg").load(
-                f"{self.ev.catalog_name}.{self.ev.schema_name}.{self.name}"
-            )
-        )
-        return sdf
+    #     Returns
+    #     -------
+    #     df : ps.DataFrame
+    #         The spark dataframe.
+    #     """
+    #     logger.info(
+    #         f"Reading files from {self._ev.catalog_name}.{self._ev.namespace}."
+    #         f"{self.name}."
+    #     )
+    #     sdf = (self._ev.spark.read.format("iceberg").load(
+    #             f"{self._ev.catalog_name}.{self._ev.namespace}.{self.name}"
+    #         )
+    #     )
+    #     return sdf
 
     def _load_table(self):
         """Load the table from the directory to self.df.
@@ -126,10 +130,15 @@ class BaseTable:
             Additional options to pass to the spark read method.
         """
         logger.info(
-            f"Loading files from {self.ev.catalog_name}.{self.ev.schema_name}."
+            f"Loading files from {self._ev.active_catalog.catalog_name}."
+            f"{self._ev.active_catalog.namespace_name}."
             f"{self.name}."
         )
-        self.df = self._read_from_warehouse()
+        self.df = self._read.from_warehouse(
+            catalog_name=self._ev.active_catalog.catalog_name,
+            namespace=self._ev.active_catalog.namespace_name,
+            table=self.name
+        )
 
     def _check_load_table(self):
         """Check if the table is loaded.
@@ -159,7 +168,7 @@ class BaseTable:
     def validate(self):
         """Validate the dataset table against the schema."""
         self._check_load_table()
-        self.ev.validate.schema(
+        self._ev.validate.schema(
             sdf=self.df,
             table_schema=self.schema_func(),
             drop_duplicates=self.drop_duplicates,
@@ -550,7 +559,7 @@ class BaseTable:
             )
             return
         # self.schema_func(type="pandas").columns.keys()
-        self.ev.extract._merge_field_mapping(
+        self._ev.extract._merge_field_mapping(
             table_fields=self.field_enum(),
             field_mapping=field_mapping,
             constant_field_values=constant_field_values
@@ -579,7 +588,7 @@ class BaseTable:
                 column_name="location_id",
                 prefix=location_id_prefix,
             )
-        validated_df = self.ev.validate.schema(
+        validated_df = self._ev.validate.schema(
             sdf=df,
             table_schema=self.schema_func(),
             drop_duplicates=drop_duplicates,
@@ -587,7 +596,7 @@ class BaseTable:
             uniqueness_fields=self.uniqueness_fields,
             add_missing_columns=True
         )
-        self.ev.write.to_warehouse(
+        self._ev.write.to_warehouse(
             source_data=validated_df,
             target_table=self.name,
             write_mode=write_mode,

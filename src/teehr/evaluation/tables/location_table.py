@@ -31,14 +31,13 @@ class LocationTable(BaseTable):
         """Initialize class."""
         super().__init__(ev)
         self.name = "locations"
-        self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
+        self.dir = to_path_or_s3path(ev.active_catalog.dataset_dir, self.name)
         self.format = "parquet"
         self.filter_model = LocationFilter
         self.schema_func = schemas.locations_schema
         self.uniqueness_fields = ["id"]
         self.cache_dir = Path(
-            self.ev.dir_path,
-            const.CACHE_DIR,
+            ev.active_catalog.cache_dir,
             const.LOADING_CACHE_DIR,
             const.LOCATIONS_DIR
         )
@@ -129,7 +128,7 @@ class LocationTable(BaseTable):
         # Clear the cache directory if it exists.
         remove_dir_if_exists(self.cache_dir)
 
-        self.ev.extract.to_cache(
+        self._ev.extract.to_cache(
             in_datapath=in_path,
             field_mapping=field_mapping,
             pattern=pattern,
@@ -142,7 +141,13 @@ class LocationTable(BaseTable):
         )
 
         # Read the converted files to Spark DataFrame
-        df = self._read_files_from_cache_or_s3(self.cache_dir)
+        # df = self._read_files_from_cache_or_s3(self.cache_dir)
+        df = self._read.from_cache(
+            path=self.cache_dir,
+            table_schema_func=self.schema_func(),
+            file_format=self.format,
+            pattern=pattern,
+        )
 
         # Add or replace location_id prefix if provided
         if location_id_prefix:
@@ -152,7 +157,7 @@ class LocationTable(BaseTable):
                 prefix=location_id_prefix,
             )
 
-        validated_df = self.ev.validate.schema(
+        validated_df = self._ev.validate.schema(
             sdf=df,
             table_schema=self.schema_func(),
             drop_duplicates=drop_duplicates,
@@ -160,7 +165,7 @@ class LocationTable(BaseTable):
             uniqueness_fields=self.uniqueness_fields
         )
 
-        self.ev.write.to_warehouse(
+        self._ev.write.to_warehouse(
             source_data=validated_df,
             target_table=self.name,
             write_mode=write_mode,
@@ -228,14 +233,14 @@ class LocationTable(BaseTable):
                 column_name="location_id",
                 prefix=location_id_prefix,
             )
-        validated_df = self.ev.validate.schema(
+        validated_df = self._ev.validate.schema(
             sdf=df,
             table_schema=self.schema_func(),
             drop_duplicates=drop_duplicates,
             foreign_keys=self.foreign_keys,
             uniqueness_fields=self.uniqueness_fields
         )
-        self.ev.write.to_warehouse(
+        self._ev.write.to_warehouse(
             source_data=validated_df,
             target_table=self.name,
             write_mode=write_mode,
