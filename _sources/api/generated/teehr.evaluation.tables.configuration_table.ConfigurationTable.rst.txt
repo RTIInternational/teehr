@@ -1,0 +1,34 @@
+﻿ConfigurationTable
+==================
+
+.. currentmodule:: teehr.evaluation.tables.configuration_table
+
+.. autoclass:: ConfigurationTable
+   :members:
+   :show-inheritance:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~ConfigurationTable.add
+      ~ConfigurationTable.distinct_values
+      ~ConfigurationTable.field_enum
+      ~ConfigurationTable.fields
+      ~ConfigurationTable.filter
+      ~ConfigurationTable.order_by
+      ~ConfigurationTable.query
+      ~ConfigurationTable.to_geopandas
+      ~ConfigurationTable.to_pandas
+      ~ConfigurationTable.to_sdf
+      ~ConfigurationTable.validate
+   
+   
+
+   
+   
+   
