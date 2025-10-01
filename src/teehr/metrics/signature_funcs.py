@@ -8,6 +8,8 @@ from typing import Callable, Optional
 import logging
 logger = logging.getLogger(__name__)
 
+EPSILON = 1e-6  # Small constant to avoid division by zero
+
 
 def _transform(
         p: pd.Series,
@@ -19,6 +21,9 @@ def _transform(
     if model.transform is not None:
         match model.transform:
             case TransformEnum.log:
+                if model.add_epsilon:
+                    logger.debug("Adding epsilon to avoid log(0)")
+                    p = p + EPSILON
                 logger.debug("Applying log transform")
                 p = np.log(p)
             case TransformEnum.sqrt:
@@ -34,6 +39,9 @@ def _transform(
                 logger.debug("Applying exponential transform")
                 p = np.exp(p)
             case TransformEnum.inv:
+                if model.add_epsilon:
+                    logger.debug("Adding epsilon to avoid division by zero")
+                    p = p + EPSILON
                 logger.debug("Applying inverse transform")
                 p = 1.0 / p
             case TransformEnum.abs:
@@ -196,9 +204,14 @@ def flow_duration_curve_slope(model: MetricsBasemodel) -> Callable:
             fdc_probs = fdc_probs * 100
 
         # calculate slope between the two quantiles
-        slope = (p_sorted.iloc[upper_idx] - p_sorted.iloc[lower_idx]) / (
-            fdc_probs[upper_idx] - fdc_probs[lower_idx]
-        )
+        if model.add_epsilon:
+            slope = (p_sorted.iloc[upper_idx] - p_sorted.iloc[lower_idx]) / ((
+                fdc_probs[upper_idx] - fdc_probs[lower_idx]
+            ) + EPSILON)
+        else:
+            slope = (p_sorted.iloc[upper_idx] - p_sorted.iloc[lower_idx]) / (
+                fdc_probs[upper_idx] - fdc_probs[lower_idx]
+            )
 
         return slope
 

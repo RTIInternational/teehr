@@ -19,6 +19,9 @@ class MeanError(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -34,6 +37,7 @@ class MeanError(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="mean_error")
     func: Callable = Field(metric_funcs.mean_error, frozen=True)
@@ -50,6 +54,9 @@ class RelativeBias(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -65,6 +72,7 @@ class RelativeBias(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="relative_bias")
     func: Callable = Field(metric_funcs.relative_bias, frozen=True)
@@ -81,6 +89,9 @@ class MultiplicativeBias(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -96,6 +107,7 @@ class MultiplicativeBias(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="multiplicative_bias")
     func: Callable = Field(metric_funcs.multiplicative_bias, frozen=True)
@@ -112,6 +124,9 @@ class MeanSquareError(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -127,6 +142,7 @@ class MeanSquareError(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="mean_square_error")
     func: Callable = Field(metric_funcs.mean_squared_error, frozen=True)
@@ -143,6 +159,9 @@ class RootMeanSquareError(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -158,6 +177,7 @@ class RootMeanSquareError(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="root_mean_square_error")
     func: Callable = Field(metric_funcs.root_mean_squared_error, frozen=True)
@@ -174,6 +194,9 @@ class MeanAbsoluteError(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -189,6 +212,7 @@ class MeanAbsoluteError(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="mean_absolute_error")
     func: Callable = Field(metric_funcs.mean_absolute_error, frozen=True)
@@ -205,6 +229,9 @@ class MeanAbsoluteRelativeError(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -220,6 +247,7 @@ class MeanAbsoluteRelativeError(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="mean_absolute_relative_error")
     func: Callable = Field(metric_funcs.mean_absolute_relative_error,
@@ -237,6 +265,9 @@ class PearsonCorrelation(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -252,6 +283,7 @@ class PearsonCorrelation(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="pearson_correlation")
     func: Callable = Field(metric_funcs.pearson_correlation, frozen=True)
@@ -268,6 +300,9 @@ class VariabilityRatio(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -282,6 +317,7 @@ class VariabilityRatio(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="variability_ratio")
     func: Callable = Field(metric_funcs.variability_ratio, frozen=True)
@@ -298,6 +334,9 @@ class Rsquared(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -313,6 +352,7 @@ class Rsquared(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="r_squared")
     func: Callable = Field(metric_funcs.r_squared, frozen=True)
@@ -329,6 +369,9 @@ class NashSutcliffeEfficiency(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -344,6 +387,7 @@ class NashSutcliffeEfficiency(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="nash_sutcliffe_efficiency")
     func: Callable = Field(metric_funcs.nash_sutcliffe_efficiency, frozen=True)
@@ -360,6 +404,9 @@ class NormalizedNashSutcliffeEfficiency(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -375,6 +422,7 @@ class NormalizedNashSutcliffeEfficiency(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(
         default="nash_sutcliffe_efficiency_normalized"
@@ -394,6 +442,9 @@ class KlingGuptaEfficiency(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -414,6 +465,7 @@ class KlingGuptaEfficiency(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency")
     func: Callable = Field(metric_funcs.kling_gupta_efficiency, frozen=True)
@@ -433,6 +485,9 @@ class KlingGuptaEfficiencyMod1(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -453,6 +508,7 @@ class KlingGuptaEfficiencyMod1(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency_mod1")
     func: Callable = Field(metric_funcs.kling_gupta_efficiency_mod1,
@@ -473,6 +529,9 @@ class KlingGuptaEfficiencyMod2(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -493,6 +552,7 @@ class KlingGuptaEfficiencyMod2(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="kling_gupta_efficiency_mod2")
     func: Callable = Field(metric_funcs.kling_gupta_efficiency_mod2,
@@ -513,6 +573,9 @@ class SpearmanCorrelation(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -527,6 +590,7 @@ class SpearmanCorrelation(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="spearman_correlation")
     func: Callable = Field(metric_funcs.spearman_correlation, frozen=True)
@@ -543,6 +607,9 @@ class MaxValueDelta(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -556,6 +623,7 @@ class MaxValueDelta(DeterministicBasemodel):
         The static attributes for the metric.
     """
 
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="max_value_delta")
     func: Callable = Field(metric_funcs.max_value_delta, frozen=True)
@@ -572,6 +640,9 @@ class MaxValueTimeDelta(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -586,6 +657,7 @@ class MaxValueTimeDelta(DeterministicBasemodel):
         The static attributes for the metric.
     """
 
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="max_value_time_delta")
     func: Callable = Field(metric_funcs.max_value_timedelta, frozen=True)
@@ -602,6 +674,9 @@ class AnnualPeakRelativeBias(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -617,6 +692,7 @@ class AnnualPeakRelativeBias(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="annual_peak_flow_bias")
     func: Callable = Field(metric_funcs.annual_peak_relative_bias, frozen=True)
@@ -633,6 +709,9 @@ class RootMeanStandardDeviationRatio(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -648,6 +727,7 @@ class RootMeanStandardDeviationRatio(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="root_mean_standard_deviation_ratio")  # noqa: E501
     func: Callable = Field(metric_funcs.root_mean_standard_deviation_ratio,
