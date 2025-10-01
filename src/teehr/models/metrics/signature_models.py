@@ -20,7 +20,8 @@ class Count(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to the input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -52,7 +53,8 @@ class Minimum(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to the input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -84,7 +86,8 @@ class Maximum(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to the input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -116,7 +119,8 @@ class Average(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to the input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -148,7 +152,8 @@ class Sum(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to the input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -180,7 +185,8 @@ class Variance(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to the input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -213,7 +219,8 @@ class MaxValueTime(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to the input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -246,7 +253,8 @@ class FlowDurationCurveSlope(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to the input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str

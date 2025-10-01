@@ -20,7 +20,8 @@ class MeanError(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -54,7 +55,8 @@ class RelativeBias(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -88,7 +90,8 @@ class MultiplicativeBias(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -122,7 +125,8 @@ class MeanSquareError(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -156,7 +160,8 @@ class RootMeanSquareError(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -190,7 +195,8 @@ class MeanAbsoluteError(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -224,7 +230,8 @@ class MeanAbsoluteRelativeError(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -259,7 +266,8 @@ class PearsonCorrelation(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -293,7 +301,8 @@ class VariabilityRatio(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -326,7 +335,8 @@ class Rsquared(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -360,7 +370,8 @@ class NashSutcliffeEfficiency(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -394,7 +405,8 @@ class NormalizedNashSutcliffeEfficiency(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -431,7 +443,8 @@ class KlingGuptaEfficiency(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -473,7 +486,8 @@ class KlingGuptaEfficiencyMod1(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -516,7 +530,8 @@ class KlingGuptaEfficiencyMod2(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -559,7 +574,8 @@ class SpearmanCorrelation(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -592,7 +608,8 @@ class MaxValueDelta(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -624,7 +641,8 @@ class MaxValueTimeDelta(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -657,7 +675,8 @@ class AnnualPeakRelativeBias(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -691,7 +710,8 @@ class RootMeanStandardDeviationRatio(DeterministicBasemodel):
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
-        Whether to add epsilon to input series, by default False.
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str

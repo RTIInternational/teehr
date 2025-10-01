@@ -11,20 +11,6 @@ logger = logging.getLogger(__name__)
 EPSILON = 1e-6  # Small constant to avoid division by zero
 
 
-def _add_epsilon(
-        p: pd.Series,
-        model: MetricsBasemodel
-) -> pd.Series:
-    """Add epsilon to avoid issues with transforms and denominators."""
-    if model.add_epsilon:
-        p_adj = p + EPSILON
-        logger.debug(f"Added epsilon of {EPSILON} to input series")
-        return p_adj
-
-    else:
-        return p
-
-
 def _transform(
         p: pd.Series,
         model: MetricsBasemodel,
@@ -35,6 +21,9 @@ def _transform(
     if model.transform is not None:
         match model.transform:
             case TransformEnum.log:
+                if model.add_epsilon:
+                    logger.debug("Adding epsilon to avoid log(0)")
+                    p = p + EPSILON
                 logger.debug("Applying log transform")
                 p = np.log(p)
             case TransformEnum.sqrt:
@@ -50,6 +39,9 @@ def _transform(
                 logger.debug("Applying exponential transform")
                 p = np.exp(p)
             case TransformEnum.inv:
+                if model.add_epsilon:
+                    logger.debug("Adding epsilon to avoid division by zero")
+                    p = p + EPSILON
                 logger.debug("Applying inverse transform")
                 p = 1.0 / p
             case TransformEnum.abs:
@@ -91,7 +83,6 @@ def max_value_time(model: MetricsBasemodel) -> Callable:
         value_time: pd.Series
     ) -> pd.Timestamp:
         """Max value time."""
-        p = _add_epsilon(p, model)
         p, value_time = _transform(p, model, value_time)
         return value_time[p.idxmax()]
 
@@ -104,7 +95,6 @@ def variance(model: MetricsBasemodel) -> Callable:
 
     def variance_inner(p: pd.Series) -> float:
         """Variance."""
-        p = _add_epsilon(p, model)
         p = _transform(p, model)
         return np.var(p)
 
@@ -117,7 +107,6 @@ def count(model: MetricsBasemodel) -> Callable:
 
     def count_inner(p: pd.Series) -> float:
         """Count."""
-        p = _add_epsilon(p, model)
         p = _transform(p, model)
         return len(p)
 
@@ -130,7 +119,6 @@ def minimum(model: MetricsBasemodel) -> Callable:
 
     def minimum_inner(p: pd.Series) -> float:
         """Minimum."""
-        p = _add_epsilon(p, model)
         p = _transform(p, model)
         return np.min(p)
 
@@ -143,7 +131,6 @@ def maximum(model: MetricsBasemodel) -> Callable:
 
     def maximum_inner(p: pd.Series) -> float:
         """Maximum."""
-        p = _add_epsilon(p, model)
         p = _transform(p, model)
         return np.max(p)
 
@@ -156,7 +143,6 @@ def average(model: MetricsBasemodel) -> Callable:
 
     def average_inner(p: pd.Series) -> float:
         """Average."""
-        p = _add_epsilon(p, model)
         p = _transform(p, model)
         return np.mean(p)
 
@@ -169,7 +155,6 @@ def sum(model: MetricsBasemodel) -> Callable:
 
     def sum_inner(p: pd.Series) -> float:
         """Sum."""
-        p = _add_epsilon(p, model)
         p = _transform(p, model)
         return np.sum(p)
 
@@ -201,7 +186,6 @@ def flow_duration_curve_slope(model: MetricsBasemodel) -> Callable:
                 )
 
         # apply any specified transform
-        p = _add_epsilon(p, model)
         p = _transform(p, model)
 
         # sort the streamflow values in descending order
@@ -220,9 +204,14 @@ def flow_duration_curve_slope(model: MetricsBasemodel) -> Callable:
             fdc_probs = fdc_probs * 100
 
         # calculate slope between the two quantiles
-        slope = (p_sorted.iloc[upper_idx] - p_sorted.iloc[lower_idx]) / (
-            fdc_probs[upper_idx] - fdc_probs[lower_idx]
-        )
+        if model.add_epsilon:
+            slope = (p_sorted.iloc[upper_idx] - p_sorted.iloc[lower_idx]) / ((
+                fdc_probs[upper_idx] - fdc_probs[lower_idx]
+            ) + EPSILON)
+        else:
+            slope = (p_sorted.iloc[upper_idx] - p_sorted.iloc[lower_idx]) / (
+                fdc_probs[upper_idx] - fdc_probs[lower_idx]
+            )
 
         return slope
 

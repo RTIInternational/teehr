@@ -13,22 +13,6 @@ logger = logging.getLogger(__name__)
 EPSILON = 1e-6  # Small constant to avoid division by zero
 
 
-def _add_epsilon(
-        p: pd.Series,
-        s: pd.Series,
-        model: MetricsBasemodel
-) -> tuple:
-    """Add epsilon to avoid issues with transforms and denominators."""
-    if model.add_epsilon:
-        p_adj = p + EPSILON
-        s_adj = s + EPSILON
-        logger.debug(f"Added epsilon of {EPSILON} to input series")
-        return p_adj, s_adj
-
-    else:
-        return p, s
-
-
 def _transform(
         p: pd.Series,
         s: pd.Series,
@@ -40,6 +24,12 @@ def _transform(
     if model.transform is not None:
         match model.transform:
             case TransformEnum.log:
+                if model.add_epsilon:
+                    logger.debug(
+                        "Applying epsilon before log transform"
+                    )
+                    p = p + EPSILON
+                    s = s + EPSILON
                 logger.debug("Applying log transform")
                 p = np.log(p)
                 s = np.log(s)
@@ -60,6 +50,12 @@ def _transform(
                 p = np.exp(p)
                 s = np.exp(s)
             case TransformEnum.inv:
+                if model.add_epsilon:
+                    logger.debug(
+                        "Applying epsilon before inverse transform"
+                    )
+                    p = p + EPSILON
+                    s = s + EPSILON
                 logger.debug("Applying inverse transform")
                 p = 1.0 / p
                 s = 1.0 / s
@@ -125,7 +121,6 @@ def mean_error(model: MetricsBasemodel) -> Callable:
 
     def mean_error_inner(p: pd.Series, s: pd.Series) -> float:
         """Mean Error."""
-        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         difference = s - p
         return np.sum(difference)/len(p)
@@ -142,10 +137,14 @@ def relative_bias(model: MetricsBasemodel) -> Callable:
 
     def relative_bias_inner(p: pd.Series, s: pd.Series) -> float:
         """Relative Bias."""
-        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         difference = s - p
-        return np.sum(difference)/np.sum(p)
+        if model.add_epsilon:
+            result = np.sum(difference)/(np.sum(p) + EPSILON)
+        else:
+            result = np.sum(difference)/np.sum(p)
+
+        return result
 
     return relative_bias_inner
 
@@ -160,10 +159,14 @@ def mean_absolute_relative_error(model: MetricsBasemodel) -> Callable:
     def mean_absolute_relative_error_inner(p: pd.Series,
                                            s: pd.Series) -> float:
         """Absolute Relative Error."""
-        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         absolute_difference = np.abs(s - p)
-        return np.sum(absolute_difference)/np.sum(p)
+        if model.add_epsilon:
+            result = np.sum(absolute_difference)/(np.sum(p) + EPSILON)
+        else:
+            result = np.sum(absolute_difference)/np.sum(p)
+
+        return result
 
     return mean_absolute_relative_error_inner
 
@@ -177,9 +180,13 @@ def multiplicative_bias(model: MetricsBasemodel) -> Callable:
 
     def multiplicative_bias_inner(p: pd.Series, s: pd.Series) -> float:
         """Multiplicative Bias."""
-        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
-        return np.mean(s)/np.mean(p)
+        if model.add_epsilon:
+            result = np.mean(s)/(np.mean(p) + EPSILON)
+        else:
+            result = np.mean(s)/np.mean(p)
+
+        return result
 
     return multiplicative_bias_inner
 
@@ -193,7 +200,6 @@ def pearson_correlation(model: MetricsBasemodel) -> Callable:
 
     def pearson_correlation_inner(p: pd.Series, s: pd.Series) -> float:
         """Pearson Correlation Coefficient."""
-        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         return np.corrcoef(s, p)[0][1]
 
@@ -209,9 +215,13 @@ def variability_ratio(model: MetricsBasemodel) -> Callable:
 
     def variability_ratio_inner(p: pd.Series, s: pd.Series) -> float:
         """Variability Ratio."""
-        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
-        return np.std(s)/np.std(p)
+        if model.add_epsilon:
+            result = (np.std(s))/(np.std(p) + EPSILON)
+        else:
+            result = np.std(s)/np.std(p)
+
+        return result
 
     return variability_ratio_inner
 
@@ -225,7 +235,6 @@ def r_squared(model: MetricsBasemodel) -> Callable:
 
     def r_squared_inner(p: pd.Series, s: pd.Series) -> float:
         """R-squared."""
-        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         pearson_correlation_coefficient = np.corrcoef(s, p)[0][1]
         return np.power(pearson_correlation_coefficient, 2)
@@ -242,7 +251,6 @@ def max_value_delta(model: MetricsBasemodel) -> Callable:
 
     def max_value_delta_inner(p: pd.Series, s: pd.Series) -> float:
         """Max value delta."""
-        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         return np.max(s) - np.max(p)
 
@@ -262,7 +270,6 @@ def annual_peak_relative_bias(model: MetricsBasemodel) -> Callable:
         value_time: pd.Series
     ) -> float:
         """Annual peak relative bias."""
-        p, s = _add_epsilon(p, s, model)
         p, s, value_time = _transform(p, s, model, value_time)
         df = pd.DataFrame(
             {
@@ -277,10 +284,18 @@ def annual_peak_relative_bias(model: MetricsBasemodel) -> Callable:
         secondary_yearly_max_values = df.groupby(
             df.value_time.dt.year
         ).secondary_value.max()
-        return np.sum(
-            secondary_yearly_max_values
-            - primary_yearly_max_values
-            ) / np.sum(primary_yearly_max_values)
+        if model.add_epsilon:
+            result = np.sum(
+                secondary_yearly_max_values
+                - primary_yearly_max_values
+                ) / (np.sum(primary_yearly_max_values) + EPSILON)
+        else:
+            result = np.sum(
+                secondary_yearly_max_values
+                - primary_yearly_max_values
+                ) / np.sum(primary_yearly_max_values)
+
+        return result
 
     return annual_peak_relative_bias_inner
 
@@ -294,16 +309,23 @@ def spearman_correlation(model: MetricsBasemodel) -> Callable:
 
     def spearman_correlation_inner(p: pd.Series, s: pd.Series) -> float:
         """Spearman Rank Correlation Coefficient."""
-        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
 
         primary_rank = p.rank()
         secondary_rank = s.rank()
         count = len(p)
-        return 1 - (
-            6 * np.sum(np.abs(primary_rank - secondary_rank)**2)
-            / (count * (count**2 - 1))
-            )
+        if model.add_epsilon:
+            result = 1 - (
+                6 * np.sum(np.abs(primary_rank - secondary_rank)**2)
+                / (count * (count**2 - 1)) + EPSILON
+                )
+        else:
+            result = 1 - (
+                6 * np.sum(np.abs(primary_rank - secondary_rank)**2)
+                / (count * (count**2 - 1))
+                )
+
+        return result
 
     return spearman_correlation_inner
 
@@ -322,11 +344,13 @@ def nash_sutcliffe_efficiency(model: MetricsBasemodel) -> Callable:
         if np.sum(p) == 0 or np.sum(s) == 0:
             return np.nan
 
-        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
 
         numerator = np.sum(np.subtract(p, s) ** 2)
-        denominator = np.sum(np.subtract(p, np.mean(p)) ** 2)
+        if model.add_epsilon:
+            denominator = np.sum(np.subtract(p, np.mean(p)) ** 2) + EPSILON
+        else:
+            denominator = np.sum(np.subtract(p, np.mean(p)) ** 2)
         if numerator == np.nan or denominator == np.nan:
             return np.nan
         if denominator == 0:
@@ -354,11 +378,13 @@ def nash_sutcliffe_efficiency_normalized(model: MetricsBasemodel) -> Callable:
         if np.sum(p) == 0 or np.sum(s) == 0:
             return np.nan
 
-        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
 
         numerator = np.sum(np.subtract(p, s) ** 2)
-        denominator = np.sum(np.subtract(p, np.mean(p)) ** 2)
+        if model.add_epsilon:
+            denominator = np.sum(np.subtract(p, np.mean(p)) ** 2) + EPSILON
+        else:
+            denominator = np.sum(np.subtract(p, np.mean(p)) ** 2)
         if numerator == np.nan or denominator == np.nan:
             return np.nan
         if denominator == 0:
@@ -382,17 +408,22 @@ def kling_gupta_efficiency(model: MetricsBasemodel) -> Callable:
         if np.std(s) == 0 or np.std(p) == 0:
             return np.nan
 
-        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
 
         # Pearson correlation coefficient
         linear_correlation = np.corrcoef(s, p)[0, 1]
 
         # Relative variability
-        relative_variability = np.std(s) / np.std(p)
+        if model.add_epsilon:
+            relative_variability = np.std(s) / (np.std(p) + EPSILON)
+        else:
+            relative_variability = np.std(s) / np.std(p)
 
         # Relative mean
-        relative_mean = np.mean(s) / np.mean(p)
+        if model.add_epsilon:
+            relative_mean = np.mean(s) / (np.mean(p) + EPSILON)
+        else:
+            relative_mean = np.mean(s) / np.mean(p)
 
         # Scaled Euclidean distance
         euclidean_distance = np.sqrt(
@@ -419,20 +450,27 @@ def kling_gupta_efficiency_mod1(model: MetricsBasemodel) -> Callable:
         if np.std(s) == 0 or np.std(p) == 0:
             return np.nan
 
-        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
 
         # Pearson correlation coefficient (same as kge)
         linear_correlation = np.corrcoef(s, p)[0, 1]
 
         # Variability_ratio
-        variability_ratio = (
-            (np.std(s) / np.mean(s))
-            / (np.std(p) / np.mean(p))
-        )
-
+        if model.add_epsilon:
+            variability_ratio = (
+                (np.std(s) / (np.mean(s) + EPSILON))
+                / (np.std(p) / (np.mean(p) + EPSILON))
+            )
+        else:
+            variability_ratio = (
+                (np.std(s) / np.mean(s))
+                / (np.std(p) / np.mean(p))
+            )
         # Relative mean (same as kge)
-        relative_mean = (np.mean(s) / np.mean(p))
+        if model.add_epsilon:
+            relative_mean = (np.mean(s) / (np.mean(p) + EPSILON))
+        else:
+            relative_mean = (np.mean(s) / np.mean(p))
 
         # Scaled Euclidean distance
         euclidean_distance = np.sqrt(
@@ -458,21 +496,30 @@ def kling_gupta_efficiency_mod2(model: MetricsBasemodel) -> Callable:
         if np.std(s) == 0 or np.std(p) == 0:
             return np.nan
 
-        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
 
         # Pearson correlation coefficient (same as kge)
         linear_correlation = np.corrcoef(s, p)[0, 1]
 
         # Relative variability (same as kge)
-        relative_variability = (np.std(s) / np.std(p))
+        if model.add_epsilon:
+            relative_variability = (np.std(s) / (np.std(p) + EPSILON))
+        else:
+            relative_variability = (np.std(s) / np.std(p))
 
         # bias component
-        bias_component = (
-            ((np.mean(s) - np.mean(p)) ** 2)
-            /
-            (np.std(p) ** 2)
-        )
+        if model.add_epsilon:
+            bias_component = (
+                ((np.mean(s) - np.mean(p)) ** 2)
+                /
+                ((np.std(p) ** 2) + EPSILON)
+            )
+        else:
+            bias_component = (
+                ((np.mean(s) - np.mean(p)) ** 2)
+                /
+                (np.std(p) ** 2)
+            )
 
         # Scaled Euclidean distance
         euclidean_distance = np.sqrt(
@@ -495,7 +542,6 @@ def mean_absolute_error(model: MetricsBasemodel) -> Callable:
 
     def mean_absolute_error_inner(p: pd.Series, s: pd.Series) -> float:
         """Mean absolute error."""
-        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         return _mean_error(p, s)
 
@@ -511,7 +557,6 @@ def mean_squared_error(model: MetricsBasemodel) -> Callable:
 
     def mean_squared_error_inner(p: pd.Series, s: pd.Series) -> float:
         """Mean squared error."""
-        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         return _mean_error(p, s, power=2.0)
 
@@ -527,7 +572,6 @@ def root_mean_squared_error(model: MetricsBasemodel) -> Callable:
 
     def root_mean_squared_error_inner(p: pd.Series, s: pd.Series) -> float:
         """Root mean squared error."""
-        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         return _mean_error(p, s, power=2.0, root=True)
 
@@ -547,11 +591,15 @@ def root_mean_standard_deviation_ratio(model: MetricsBasemodel) -> Callable:
                                                  s: pd.Series
                                                  ) -> float:
         """Root mean standard deviation ratio."""
-        p, s = _add_epsilon(p, s, model)
         p, s = _transform(p, s, model)
         rmse = _root_mean_squared_error(p, s)
         obs_std_dev = np.std(p)
-        return rmse / obs_std_dev
+        if model.add_epsilon:
+            result = rmse / (obs_std_dev + EPSILON)
+        else:
+            result = rmse / obs_std_dev
+
+        return result
 
     return root_mean_standard_deviation_ratio_inner
 
@@ -570,7 +618,6 @@ def max_value_timedelta(model: MetricsBasemodel) -> Callable:
         value_time: pd.Series
     ) -> float:
         """Max value time delta."""
-        p, s = _add_epsilon(p, s, model)
         p, s, value_time = _transform(p, s, model, value_time)
         p_max_time = value_time[p.idxmax()]
         s_max_time = value_time[s.idxmax()]
