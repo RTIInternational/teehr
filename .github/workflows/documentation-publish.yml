@@ -3,13 +3,14 @@ name: build-publish-documentation
 on:
   pull_request:
     types: [opened, reopened, ready_for_review]
+    branches: [main]
   # workflow_run:
   #   workflows: ["run-tests"]     # Triggered by "run-tests" workflow
   #   types: [completed]           # Trigger when "run-tests" completes
   #   branches:
   #     - "475-update-python-dependencies"
-  # push:
-  #   branches: [511-update-class-references-in-api-docs]
+  push:
+    branches: [main]
 
 
 permissions:
