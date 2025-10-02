@@ -123,6 +123,7 @@ def relative_bias(model: MetricsBasemodel) -> Callable:
 
     def relative_bias_inner(p: pd.Series, s: pd.Series) -> float:
         """Relative Bias."""
+        # p, s = np.array(p), np.array(s)
         p, s = _transform(p, s, model)
         difference = s - p
         return np.sum(difference)/np.sum(p)
@@ -140,6 +141,7 @@ def mean_absolute_relative_error(model: MetricsBasemodel) -> Callable:
     def mean_absolute_relative_error_inner(p: pd.Series,
                                            s: pd.Series) -> float:
         """Absolute Relative Error."""
+        # p, s = np.array(p), np.array(s)
         p, s = _transform(p, s, model)
         absolute_difference = np.abs(s - p)
         return np.sum(absolute_difference)/np.sum(p)
@@ -289,6 +291,7 @@ def nash_sutcliffe_efficiency(model: MetricsBasemodel) -> Callable:
 
     def nash_sutcliffe_efficiency_inner(p: pd.Series, s: pd.Series) -> float:
         """Nash-Sutcliffe Efficiency."""
+        # p, s = np.array(p), np.array(s)
         if len(p) == 0 or len(s) == 0:
             return np.nan
         if np.sum(p) == 0 or np.sum(s) == 0:
@@ -349,6 +352,7 @@ def kling_gupta_efficiency(model: MetricsBasemodel) -> Callable:
                                      s: pd.Series,
                                      ) -> float:
         """Kling-Gupta Efficiency (2009)."""
+        # p, s = np.array(p), np.array(s)
         if np.std(s) == 0 or np.std(p) == 0:
             return np.nan
 
