@@ -5,7 +5,7 @@ import logging
 import argparse
 
 import teehr
-from teehr.evaluation.utils import create_spark_session, copy_schema_dir
+from teehr.evaluation.utils import create_spark_session, copy_migrations_dir
 from teehr.utilities import apply_migrations
 from teehr.utils.s3path import S3Path
 
@@ -15,10 +15,9 @@ logger = logging.getLogger(__name__)
 
 def convert_evaluation(
     dir_path: Union[str, Path, S3Path],
-    warehouse_path: Union[str, Path, S3Path] = None,
     catalog_name: str = "local",
     migrations_path: Union[str, Path, S3Path] = None,
-    namespace: str = "db"
+    namespace: str = "e0_2_location_example"
 ):
     """Convert TEEHR Evaluation to v0.6 Iceberg.
 
@@ -26,8 +25,6 @@ def convert_evaluation(
     ----------
     dir_path : Union[str, Path, S3Path]
         The directory path to the Evaluation to upgrade.
-    warehouse_path : Union[str, Path, S3Path]
-        The path to the Iceberg warehouse.
     catalog_name : str, optional
         The name of the Iceberg catalog (default is "local").
     migrations_path : Union[str, Path, S3Path], optional
@@ -35,43 +32,46 @@ def convert_evaluation(
         (default is None, in which case the schema(s) from the template
         Evaluation are used).
     namespace : str, optional
-        The name of the Iceberg schema (default is "db").
+        The name of the Iceberg schema (default is "teehr").
     """
     dir_path = Path(dir_path)
 
-    if warehouse_path is None:
-        warehouse_path = Path(dir_path) / "warehouse"
+    # Initialize the warehouse schema inside the evaluation directory.
+    # if migrations_path is None:
+    #     teehr_root = Path(__file__).parent.parent
+    #     migrations_path = Path(teehr_root, "template")
 
-    if migrations_path is None:
-        teehr_root = Path(__file__).parent.parent
-        migrations_path = Path(teehr_root, "template")
-
-    spark = create_spark_session(
-        warehouse_path=warehouse_path,
-        catalog_name=catalog_name
-    )
-    copy_schema_dir(
-        target_dir=dir_path
-    )
-    apply_migrations.evolve_catalog_schema(
-        spark=spark,
-        migrations_dir_path=dir_path,
-        catalog_name=catalog_name,
-        namespace=namespace
-    )
-    logger.info(f"Schema evolution completed for {catalog_name}.")
-    spark.stop()
+    # spark = create_spark_session(
+    #     local_warehouse_dir=dir_path,
+    #     local_catalog_name=catalog_name
+    # )
+    # copy_schema_dir(
+    #     target_dir=dir_path
+    # )
+    # apply_migrations.evolve_catalog_schema(
+    #     spark=spark,
+    #     migrations_dir_path=dir_path,
+    #     catalog_name=catalog_name,
+    #     namespace=namespace
+    # )
+    # logger.info(f"Schema evolution completed for {catalog_name}.")
+    # spark.stop()
 
     # Now you have to copy over the data!
     ev = teehr.Evaluation(
         local_warehouse_dir=dir_path,
         check_evaluation_version=False,
-
+        create_local_dir=False,
+        local_catalog_name=catalog_name,
+        local_namespace_name=namespace,
+        remote_namespace_name=namespace,
     )
     options = {
         "header": "true",
         "ignoreMissingFiles": "true"
     }
+
+    # remote_catalog_name = ev.remote_catalog.catalog_name
 
     units_table = ev.units
     schema = units_table.schema_func().to_structtype()
@@ -156,43 +156,46 @@ def convert_evaluation(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Convert a pre-v0.6 Evaluation dataset to Iceberg."
-    )
-    parser.add_argument(
-        "dir_path",
-        help="The directory path to the Evaluation to upgrade."
-    )
-    parser.add_argument(
-        "--warehouse_path",
-        default=None,
-        help="Name of the Iceberg warehouse. Unless specified, the warehouse"
-        " will be created in the 'warehouse' subdirectory of"
-        " the Evaluation directory."
-    )
-    parser.add_argument(
-        "--migrations_path",
-        default=None,
-        help="The directory path where the schema migrations are stored."
-        " Unless specified, the migrations from the template Evaluation"
-        " will be used."
-    )
-    parser.add_argument(
-        "--catalog_name",
-        default="local",
-        help="Name of the Iceberg catalog, default is 'local'."
-    )
-    parser.add_argument(
-        "--namespace",
-        default="db",
-        help="Name of the Iceberg schema, default is 'db'."
-    )
-    args = parser.parse_args()
 
-    convert_evaluation(
-        dir_path=args.dir_path,
-        warehouse_path=args.warehouse_path,
-        catalog_name=args.catalog_name,
-        migrations_path=args.migrations_path,
-        namespace=args.namespace
-    )
+    convert_evaluation(dir_path="/mnt/c/data/ciroh/teehr/e4_evaluations/e0_2_location_example")
+
+    # parser = argparse.ArgumentParser(
+    #     description="Convert a pre-v0.6 Evaluation dataset to Iceberg."
+    # )
+    # parser.add_argument(
+    #     "dir_path",
+    #     help="The directory path to the Evaluation to upgrade."
+    # )
+    # parser.add_argument(
+    #     "--warehouse_path",
+    #     default=None,
+    #     help="Name of the Iceberg warehouse. Unless specified, the warehouse"
+    #     " will be created in the 'warehouse' subdirectory of"
+    #     " the Evaluation directory."
+    # )
+    # parser.add_argument(
+    #     "--migrations_path",
+    #     default=None,
+    #     help="The directory path where the schema migrations are stored."
+    #     " Unless specified, the migrations from the template Evaluation"
+    #     " will be used."
+    # )
+    # parser.add_argument(
+    #     "--catalog_name",
+    #     default="local",
+    #     help="Name of the Iceberg catalog, default is 'local'."
+    # )
+    # parser.add_argument(
+    #     "--namespace",
+    #     default="db",
+    #     help="Name of the Iceberg schema, default is 'db'."
+    # )
+    # args = parser.parse_args()
+
+    # convert_evaluation(
+    #     dir_path=args.dir_path,
+    #     warehouse_path=args.warehouse_path,
+    #     catalog_name=args.catalog_name,
+    #     migrations_path=args.migrations_path,
+    #     namespace=args.namespace
+    # )

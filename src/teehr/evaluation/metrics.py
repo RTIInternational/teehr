@@ -33,7 +33,7 @@ class Metrics:
     def __init__(self, ev) -> None:
         """Initialize the Metrics class."""
         self.spark = ev.spark
-        self.dataset_dir = ev.dataset_dir
+        self.dataset_dir = ev.active_catalog.dataset_dir
         self.locations = ev.locations
         self.joined_timeseries = ev.joined_timeseries
         self.df = self.joined_timeseries.to_sdf()

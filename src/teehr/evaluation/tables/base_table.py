@@ -67,7 +67,7 @@ class BaseTable:
             catalog_name=self._ev.active_catalog.catalog_name,
             namespace=self._ev.active_catalog.namespace_name,
             table=self.name
-        )
+        ).to_sdf()
 
     def _check_load_table(self):
         """Check if the table is loaded.

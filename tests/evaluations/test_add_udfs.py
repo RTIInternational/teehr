@@ -17,11 +17,19 @@ from data.setup_v0_3_study import setup_v0_3_study  # noqa
 
 def test_add_row_udfs_null_reference(tmpdir):
     """Test adding row level UDFs with null reference time."""
+    # ev = teehr.Evaluation(
+    #     # local_warehouse_dir=tmpdir,
+    #     # create_local_dir=True
+    #     remote_namespace_name="e0_2_location_example",
+    #     check_evaluation_version=False,
+    # )
     ev = teehr.Evaluation(
         local_warehouse_dir=tmpdir,
-        create_local_dir=True
+        create_local_dir=True,
+        check_evaluation_version=False,
     )
-    ev.clone_from_s3("e0_2_location_example")
+    ev.clone_from_s3(remote_namespace_name="e0_2_location_example")
+
     ev.joined_timeseries.create(add_attrs=False, execute_scripts=False)
 
     ev.joined_timeseries.add_calculated_fields([

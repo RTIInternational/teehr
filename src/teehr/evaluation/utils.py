@@ -40,10 +40,10 @@ def get_table_instance(ev, table_name: str):
     return table
 
 
-def copy_schema_dir(
+def copy_migrations_dir(
     target_dir: Union[str, Path, S3Path]
 ):
-    """Copy the schema directory from source to target."""
+    """Copy the migrations directory from source to target."""
     shutil.copytree(
         src=Path(__file__).parent.parent / "migrations",
         dst=Path(target_dir, "migrations"),
@@ -53,7 +53,7 @@ def copy_schema_dir(
 
 
 def create_spark_session(
-    local_warehouse_dir: Union[str, Path],
+    local_warehouse_dir: Union[str, Path] = None,
     local_catalog_name: str = "local",
     local_catalog_type: str = "hadoop",
     local_catalog_uri: str = "http://127.0.0.1:9001",
@@ -72,9 +72,10 @@ def create_spark_session(
     if driver_maxresultsize is None:
         driver_maxresultsize = 0.5 * driver_memory
 
-    local_warehouse_dir = Path(local_warehouse_dir)
-    local_warehouse_dir = local_warehouse_dir / local_catalog_name  # wtf?
-    local_warehouse_dir = local_warehouse_dir.as_posix()
+    if local_warehouse_dir is not None:
+        local_warehouse_dir = Path(local_warehouse_dir)
+        local_warehouse_dir = local_warehouse_dir / local_catalog_name  # wtf?
+        local_warehouse_dir = local_warehouse_dir.as_posix()
 
     if isinstance(remote_warehouse_dir, Path):
         remote_warehouse_dir = remote_warehouse_dir.as_posix()
@@ -106,12 +107,13 @@ def create_spark_session(
     builder = builder.config(f"spark.sql.catalog.{remote_catalog_name}.warehouse", remote_warehouse_dir)
     builder = builder.config(f"spark.sql.catalog.{remote_catalog_name}.io-impl", "org.apache.iceberg.aws.s3.S3FileIO")
 
-    # Local catalog configuration
-    builder = builder.config(f"spark.sql.catalog.{local_catalog_name}", "org.apache.iceberg.spark.SparkCatalog")
-    builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.type", local_catalog_type)
-    # builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.uri", local_catalog_uri)  # if local rest catalog
-    builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.warehouse", local_warehouse_dir)
-    # builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.io-impl", "org.apache.iceberg.aws.s3.S3FileIO")
+    if local_warehouse_dir is not None:
+        # Local catalog configuration -- Any reason to configure the catalog if the warehouse dir is None??
+        builder = builder.config(f"spark.sql.catalog.{local_catalog_name}", "org.apache.iceberg.spark.SparkCatalog")
+        builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.type", local_catalog_type)
+        # builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.uri", local_catalog_uri)  # if local rest catalog
+        builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.warehouse", local_warehouse_dir)
+        # builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.io-impl", "org.apache.iceberg.aws.s3.S3FileIO")
 
     # EMR optimizations
     builder = builder.config("spark.sql.adaptive.enabled", "true")
@@ -142,7 +144,8 @@ def create_spark_session(
     builder = builder.config("spark.hadoop.fs.s3a.aws.credentials.provider", "com.amazonaws.auth.DefaultAWSCredentialsProviderChain")
 
     spark = builder.getOrCreate()
-    spark.catalog.setCurrentCatalog(catalogName=local_catalog_name)
+    if local_warehouse_dir is not None:
+        spark.catalog.setCurrentCatalog(catalogName=local_catalog_name)
     spark.catalog.setCurrentCatalog(catalogName=remote_catalog_name)
     sedona_spark = SedonaContext.create(spark)
     logger.info("Spark session created for TEEHR Evaluation.")
