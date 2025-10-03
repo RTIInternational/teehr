@@ -1,54 +1,87 @@
-"""Base class for tables."""
+"""Base class to represent generic tables."""
+from typing import List, Dict, Any, Union
+from pathlib import Path
+import logging
+
+from pydantic import (
+    BaseModel as PydanticBaseModel,
+    ConfigDict,
+    Field,
+    model_validator,
+)
+import pyspark.sql as ps
 
 from teehr.models.str_enum import StrEnum
-from teehr.querying.filter_format import validate_and_apply_filters
-import pyspark.sql as ps
-from typing import List, Union
 from teehr.querying.utils import order_df
+from teehr.models.evaluation_base import EvaluationBase
 from teehr.models.filters import FilterBaseModel
-from teehr.models.table_enums import TableWriteEnum
-from teehr.loading.utils import (
-    add_or_replace_sdf_column_prefix
-)
-import logging
-from pyspark.sql.functions import lit
-import pandas as pd
+from teehr.models.table_properties import TBLPROPERTIES as tbl_properties
 
 
 logger = logging.getLogger(__name__)
 
 
-class BaseTable:
-    """Base table class."""
+class Table:
+    """Base class to represent generic tables."""
 
-    def __init__(self, ev):
-        """Initialize class."""
-        self._ev = ev  # Still needed?
-        self.name = None
-        self.dir = None
-        self.schema_func = None
-        self.format = None
-        self.partition_by = None
-        self.spark = ev.spark
-        self.sdf: ps.DataFrame = None
-        self.filter_model: FilterBaseModel = None
-        self.strict_validation = True
-        self.validate_filter_field_types = True
-        self.foreign_keys = []
+    def __init__(self, ev: EvaluationBase):
+        """Initialize the Table class."""
+        self._ev = ev
         self._read = ev.read
-        self._write = ev.write
-        self._validate = ev.validate
-        self._extract = ev.extract
+        self.write = ev.write
+        # self._validate = ev.validate
+        # self._extract = ev.extract
 
-    @staticmethod
-    def _raise_missing_table_error(table_name: str):
-        """Raise an error if the table does not exist."""
-        err_msg = (
-            f"The '{table_name}' table does not exist in the dataset."
-            " Please load it first."
-        )
-        logger.error(err_msg)
-        raise ValueError(err_msg)
+    def __call__(
+        self,
+        table_name: str,
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None,
+    ) -> "Table":
+        """Initialize the Table class."""
+        self.table_name = table_name
+        self.sdf = None
+
+        if namespace_name is None:
+            self.namespace_name = self._ev.active_catalog.namespace_name
+        else:
+            self.namespace_name = namespace_name
+        if catalog_name is None:
+            self.catalog_name = self._ev.active_catalog.catalog_name
+        else:
+            self.catalog_name = catalog_name
+
+        # What if the table doesn't exist yet?
+        # self.sdf = self._ev.read.from_warehouse(
+        #     table_name=self.table_name,
+        #     namespace_name=self.namespace_name,
+        #     catalog_name=self.catalog_name
+        # ).to_sdf()
+
+        if table_name in tbl_properties:
+            # Just set self.table_properties here?
+            table_props = tbl_properties[self.table_name]
+            self.uniqueness_fields: List[str] = table_props["uniqueness_fields"]
+            self.foreign_keys: List[Dict[str, str]] = table_props["foreign_keys"]
+            self.schema_func = table_props["schema_func"]
+            self.filter_model: FilterBaseModel = table_props["filter_model"]
+            self.strict_validation = table_props["strict_validation"]
+            self.validate_filter_field_types = table_props["validate_filter_field_types"]
+        else:
+            self.uniqueness_fields: List[str] = None
+            self.foreign_keys: List[Dict[str, str]] = None
+            self.schema_func = None
+            self.filter_model: FilterBaseModel = None
+            self.strict_validation = None
+            self.validate_filter_field_types = None
+
+        # self.cache_dir = Path(
+        #     self._ev.active_catalog.cache_dir,
+        #     const.LOADING_CACHE_DIR,
+        #     const.PRIMARY_TIMESERIES_DIR
+        # )
+
+        return self
 
     def _load_table(self):
         """Load the table from the directory to self.sdf.
@@ -59,14 +92,14 @@ class BaseTable:
             Additional options to pass to the spark read method.
         """
         logger.info(
-            f"Loading files from {self._ev.active_catalog.catalog_name}."
-            f"{self._ev.active_catalog.namespace_name}."
-            f"{self.name}."
+            f"Loading files from {self.catalog_name}."
+            f"{self.namespace_name}."
+            f"{self.table_name}."
         )
         self.sdf = self._read.from_warehouse(
-            catalog_name=self._ev.active_catalog.catalog_name,
-            namespace_name=self._ev.active_catalog.namespace_name,
-            table_name=self.name
+            catalog_name=self.catalog_name,
+            namespace_name=self.namespace_name,
+            table_name=self.table_name
         ).to_sdf()
 
     def _check_load_table(self):
@@ -77,8 +110,8 @@ class BaseTable:
         """
         if self.sdf is None:
             self._load_table()
-        if self.sdf is None:
-            self._raise_missing_table_error(table_name=self.name)
+        # if self.sdf is None:
+        #     self._raise_missing_table_error(table_name=self.table_name)
 
     def _get_schema(self, type: str = "pyspark"):
         """Get the primary timeseries schema.
@@ -94,16 +127,16 @@ class BaseTable:
 
         return self.schema_func()
 
-    # def validate(self):
-    #     """Validate the dataset table against the schema."""
-    #     self._check_load_table()
-    #     self._ev.validate.schema(
-    #         sdf=self.sdf,
-    #         table_schema=self.schema_func(),
-    #         drop_duplicates=self.drop_duplicates,
-    #         foreign_keys=self.foreign_keys,
-    #         uniqueness_fields=self.uniqueness_fields,
-    #     )
+    def validate(self, drop_duplicates: bool = True):
+        """Validate the dataset table against the schema."""
+        self._check_load_table()
+        self._ev.validate.schema(
+            sdf=self.sdf,
+            table_schema=self.schema_func(),
+            drop_duplicates=drop_duplicates,
+            foreign_keys=self.foreign_keys,
+            uniqueness_fields=self.uniqueness_fields,
+        )
 
     def query(
         self,
@@ -203,14 +236,13 @@ class BaseTable:
         logger.info("Performing the query.")
         self._check_load_table()
         if filters is not None:
-            self.sdf = validate_and_apply_filters(
-                sdf=self.sdf,
+            self.sdf = self._read.from_warehouse(
+                catalog_name=self.catalog_name,
+                namespace_name=self.namespace_name,
+                table_name=self.table_name,
                 filters=filters,
-                filter_model=self.filter_model,
-                fields_enum=self.field_enum(),
-                dataframe_schema=self._get_schema("pandas"),
-                validate=self.validate_filter_field_types
-            )
+                validate_filter_field_types=self.validate_filter_field_types,
+            ).to_sdf()
         if order_by is not None:
             self.sdf = order_df(self.sdf, order_by)
         return self
@@ -303,14 +335,13 @@ class BaseTable:
         """
         logger.info(f"Setting filter {filter}.")
         self._check_load_table()
-        self.sdf = validate_and_apply_filters(
-            sdf=self.sdf,
+        self.sdf = self._read.from_warehouse(
+            catalog_name=self.catalog_name,
+            namespace_name=self.namespace_name,
+            table_name=self.table_name,
             filters=filters,
-            filter_model=self.filter_model,
-            fields_enum=self.field_enum(),
-            dataframe_schema=self._get_schema("pandas"),
-            validate=self.validate_filter_field_types
-        )
+            validate_filter_field_types=self.validate_filter_field_types,
+        ).to_sdf()
         return self
 
     def order_by(
@@ -428,15 +459,15 @@ class BaseTable:
                 lambda x: x
                 ).collect()
 
-    def field_enum(self) -> StrEnum:
-        """Get the fields enum."""
-        raise NotImplementedError("field_enum method must be implemented.")
+    # def field_enum(self) -> StrEnum:
+    #     """Get the fields enum."""
+    #     raise NotImplementedError("field_enum method must be implemented.")
 
     def to_pandas(self):
         """Return Pandas DataFrame."""
         self._check_load_table()
         df = self.sdf.toPandas()
-        df.attrs['table_type'] = self.name
+        df.attrs['table_type'] = self.table_name
         df.attrs['fields'] = self.fields()
         return df
 
@@ -467,69 +498,3 @@ class BaseTable:
         """
         self._check_load_table()
         return self.sdf
-
-    def _load_dataframe(
-        self,
-        df: Union[pd.DataFrame, ps.DataFrame],
-        field_mapping: dict,
-        constant_field_values: dict,
-        location_id_prefix: str,
-        write_mode: TableWriteEnum,
-        persist_dataframe: bool,
-        drop_duplicates: bool
-    ):
-        """Load a timeseries from an in-memory dataframe."""
-        if (isinstance(df, ps.DataFrame) and df.isEmpty()) or (
-            isinstance(df, pd.DataFrame) and df.empty
-        ):
-            logger.debug(
-                "The input dataframe is empty. "
-                "No data will be loaded into the table."
-            )
-            return
-        # self.schema_func(type="pandas").columns.keys()
-        self._ev.extract._merge_field_mapping(
-            table_fields=self.field_enum(),
-            field_mapping=field_mapping,
-            constant_field_values=constant_field_values
-        )
-        # Convert the input DataFrame to Spark DataFrame
-        if isinstance(df, pd.DataFrame):
-            df = self.spark.createDataFrame(df)
-        elif not isinstance(df, ps.DataFrame):
-            raise TypeError(
-                "Input dataframe must be a Pandas DataFrame or a PySpark DataFrame."
-            )
-        # Apply field mapping and constant field values
-        if field_mapping:
-            df = df.withColumnsRenamed(field_mapping)
-
-        if constant_field_values:
-            for field, value in constant_field_values.items():
-                df = df.withColumn(field, lit(value))
-
-        if persist_dataframe:
-            df = df.persist()
-
-        if location_id_prefix:
-            df = add_or_replace_sdf_column_prefix(
-                sdf=df,
-                column_name="location_id",
-                prefix=location_id_prefix,
-            )
-        validated_df = self._ev.validate.schema(
-            sdf=df,
-            table_schema=self.schema_func(),
-            drop_duplicates=drop_duplicates,
-            foreign_keys=self.foreign_keys,
-            uniqueness_fields=self.uniqueness_fields,
-            add_missing_columns=True
-        )
-        self._ev.write.to_warehouse(
-            source_data=validated_df,
-            table_name=self.name,
-            write_mode=write_mode,
-            uniqueness_fields=self.uniqueness_fields
-        )
-
-        df.unpersist()

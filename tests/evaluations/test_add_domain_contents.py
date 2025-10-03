@@ -15,6 +15,8 @@ def test_add_domains(tmpdir):
     ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
     ev.clone_template()
 
+    new_tbl = ev.table(table_name="new_table")
+
     # Check configurations.add doesn't add columns
     cols = ev.configurations.to_pandas().columns
 

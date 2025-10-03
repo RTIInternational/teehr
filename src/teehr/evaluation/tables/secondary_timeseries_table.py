@@ -134,7 +134,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         )
         self._write.to_warehouse(
             source_data=validated_df,
-            target_table=self.name,
+            table_name=self.name,
             write_mode=write_mode,
             uniqueness_fields=self.uniqueness_fields
         )

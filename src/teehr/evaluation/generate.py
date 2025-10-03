@@ -38,18 +38,18 @@ class GeneratedTimeSeriesBasemodel:
         if destination_table == "primary_timeseries":
             tbl = self._ev.primary_timeseries
         elif destination_table == "secondary_timeseries":
-            # Note. This assumes the location_id's in self.df
+            # Note. This assumes the location_id's in self.sdf
             # are in the crosswalk table secondary column.
             tbl = self._ev.secondary_timeseries
-            if "member" not in self.df.columns:
-                self.df = self.df.withColumn("member", F.lit(None))
+            if "member" not in self.sdf.columns:
+                self.sdf = self.sdf.withColumn("member", F.lit(None))
         else:
             raise ValueError(
                 f"Invalid destination table: {destination_table}"
                 " Must be one of: primary_timeseries, secondary_timeseries"
             )
         validated_df = self._ev.validate.schema(
-            sdf=self.df,
+            sdf=self.sdf,
             table_schema=tbl.schema_func(),
             drop_duplicates=drop_duplicates,
             foreign_keys=tbl.foreign_keys,
@@ -58,16 +58,16 @@ class GeneratedTimeSeriesBasemodel:
         )
         self._ev.write.to_warehouse(
             source_data=validated_df,
-            target_table=tbl.name,
+            table_name=tbl.name,
             write_mode=write_mode,
             uniqueness_fields=tbl.uniqueness_fields
         )
 
     def to_pandas(self):
         """Return Pandas DataFrame."""
-        df = self.df.toPandas()
+        df = self.sdf.toPandas()
         # df.attrs['table_type'] = self.tsm.timeseries_type.__str__()
-        df.attrs['fields'] = self.df.columns
+        df.attrs['fields'] = self.sdf.columns
         return df
 
     def to_sdf(self):
@@ -78,7 +78,7 @@ class GeneratedTimeSeriesBasemodel:
         is called.  For example, calling `show()`, `collect()` or toPandas().
         This can be useful for further processing or analysis.
         """
-        return self.df
+        return self.sdf
 
 
 class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
@@ -87,7 +87,7 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
     def __init__(self, ev) -> None:
         """Initialize the Generator class."""
         self._ev = ev
-        self.df = None
+        self.sdf = None
 
     def signature_timeseries(
         self,
@@ -157,14 +157,14 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
             end_datetime=end_datetime,
             timestep=timestep
         )
-        self.df = method.generate(
+        self.sdf = method.generate(
             input_dataframe=input_dataframe,
             output_dataframe=output_dataframe,
             fillna=fillna,
             dropna=dropna
         )
         if update_variable_table is True:
-            variable_names = self.df.select(
+            variable_names = self.sdf.select(
                 "variable_name"
             ).distinct().collect()
             variable_names = [row.variable_name for row in variable_names]
@@ -230,7 +230,7 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
                 " Check the parameters of the template_timeseries."
             )
 
-        self.df = method.generate(
+        self.sdf = method.generate(
             ev=self._ev,
             reference_sdf=reference_dataframe,
             template_sdf=template_dataframe,

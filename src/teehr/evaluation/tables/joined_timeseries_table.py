@@ -41,7 +41,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
     def field_enum(self) -> JoinedTimeseriesFields:
         """Get the joined timeseries fields enum."""
         self._check_load_table()
-        fields_list = self.df.columns
+        fields_list = self.sdf.columns
         return JoinedTimeseriesFields(
             "JoinedTimeseriesFields",
             {field: field for field in fields_list}
@@ -50,7 +50,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
     def to_pandas(self):
         """Return Pandas DataFrame for Joined Timeseries."""
         self._check_load_table()
-        df = self.df.toPandas()
+        df = self.sdf.toPandas()
         df.attrs['table_type'] = 'joined_timeseries'
         df.attrs['fields'] = self.fields()
         return df
@@ -59,7 +59,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
         """Return GeoPandas DataFrame."""
         self._check_load_table()
         return join_geometry(
-            self.df, self._ev.locations.to_sdf(),
+            self.sdf, self._ev.locations.to_sdf(),
             "primary_location_id"
         )
 
@@ -182,7 +182,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
             cfs = [cfs]
 
         for cf in cfs:
-            self.df = cf.apply_to(self.df)
+            self.sdf = cf.apply_to(self.sdf)
 
         return self
 
@@ -190,8 +190,8 @@ class JoinedTimeseriesTable(TimeseriesTable):
         """Write the joined timeseries table to the warehouse."""
         # TODO: What should default write mode be?
         self._ev.write.to_warehouse(
-            source_data=self.df,
-            target_table=self.name,
+            source_data=self.sdf,
+            table_name=self.name,
             write_mode=write_mode,
             uniqueness_fields=self.uniqueness_fields,
             partition_by=self.partition_by,
@@ -256,7 +256,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
         )
         self._ev.write.to_warehouse(
             source_data=validated_df,
-            target_table=self.name,
+            table_name=self.name,
             write_mode=write_mode,
             partition_by=self.partition_by,
         )

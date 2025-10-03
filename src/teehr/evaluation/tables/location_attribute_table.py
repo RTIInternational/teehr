@@ -126,7 +126,7 @@ class LocationAttributeTable(BaseTable):
 
         self._ev.write.to_warehouse(
             source_data=validated_df,
-            target_table=self.name,
+            table_name=self.name,
             write_mode=write_mode,
             uniqueness_fields=self.uniqueness_fields
         )
@@ -142,7 +142,7 @@ class LocationAttributeTable(BaseTable):
     def to_pandas(self):
         """Return Pandas DataFrame for Location Attributes."""
         self._check_load_table()
-        df = self.df.toPandas()
+        df = self.sdf.toPandas()
         df.attrs['table_type'] = self.name
         df.attrs['fields'] = self.fields()
         return df
@@ -150,7 +150,7 @@ class LocationAttributeTable(BaseTable):
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
         self._check_load_table()
-        gdf = join_geometry(self.df, self._ev.locations.to_sdf())
+        gdf = join_geometry(self.sdf, self._ev.locations.to_sdf())
         gdf.attrs['table_type'] = self.name
         gdf.attrs['fields'] = self.fields()
         return gdf

@@ -25,7 +25,7 @@ def test_table_writes(tmpdir):
 
     ev.write.to_warehouse(
         source_data=sdf,
-        target_table="units",
+        table_name="units",
         write_mode="append",
         # uniqueness_fields=["name"]
     )

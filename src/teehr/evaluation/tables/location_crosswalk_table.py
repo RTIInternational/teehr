@@ -112,7 +112,7 @@ class LocationCrosswalkTable(BaseTable):
 
         self._ev.write.to_warehouse(
             source_data=validated_df,
-            target_table=self.name,
+            table_name=self.name,
             write_mode=write_mode,
             uniqueness_fields=self.uniqueness_fields
         )
@@ -128,7 +128,7 @@ class LocationCrosswalkTable(BaseTable):
     def to_pandas(self):
         """Return Pandas DataFrame for Location Crosswalk."""
         self._check_load_table()
-        df = self.df.toPandas()
+        df = self.sdf.toPandas()
         df.attrs['table_type'] = self.name
         df.attrs['fields'] = self.fields()
         return df
@@ -137,7 +137,7 @@ class LocationCrosswalkTable(BaseTable):
         """Return GeoPandas DataFrame."""
         self._check_load_table()
         gdf = join_geometry(
-            self.df, self._ev.locations.to_sdf(),
+            self.sdf, self._ev.locations.to_sdf(),
             "primary_location_id"
         )
         gdf.attrs['table_type'] = self.name

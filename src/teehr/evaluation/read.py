@@ -19,6 +19,7 @@ from teehr.evaluation.utils import get_table_instance
 logger = logging.getLogger(__name__)
 
 
+# NOTE: Should this inherit the Table class?
 class Read:
     """Class to handle reading evaluation results from storage."""
 
@@ -34,7 +35,7 @@ class Read:
         """
         if ev is not None:  # needed?
             self._ev = ev
-        self.df: ps.DataFrame = None
+        self.sdf: ps.DataFrame = None
 
     def from_cache(
         self,
@@ -85,14 +86,14 @@ class Read:
                 logger.warning(
                     f"An empty dataframe was returned from '{path}'."
                 )
-        self.df = df
+        self.sdf = df
         return self
 
     def from_warehouse(
         self,
-        table: str,
+        table_name: str,
         catalog_name: str = None,
-        namespace: str = None,
+        namespace_name: str = None,
         filters: Union[
             str, dict, FilterBaseModel,
             List[Union[str, dict, FilterBaseModel]]
@@ -108,27 +109,28 @@ class Read:
         """
         if catalog_name is None:
             catalog_name = self._ev.active_catalog.catalog_name
-        if namespace is None:
-            namespace = self._ev.active_catalog.namespace_name
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
         logger.info(
-            f"Reading files from {catalog_name}.{namespace}.{table}."
+            f"Reading files from {catalog_name}.{namespace_name}.{table_name}."
         )
 
         # This is the guts of validate_and_apply_filters re-configured a bit.
         # Should it be moved to it's own function?:
         if filters is None:
             # No filter applied, just read the whole table
-            self.df = (self._ev.spark.read.format("iceberg").load(
-                    f"{catalog_name}.{namespace}.{table}"
+            self.sdf = (self._ev.spark.read.format("iceberg").load(
+                    f"{catalog_name}.{namespace_name}.{table_name}"
                 )
             )
             return self
 
         if isinstance(filters, str):
-            logger.debug(f"Filter {filters} is already string.  Applying as is.")
-            # self.df = sdf.filter(filters)
-            self.df = (self._ev.spark.read.format("iceberg").load(
-                    f"{catalog_name}.{namespace}.{table}"
+            logger.debug(
+                f"Filter {filters} is already string.  Applying as is."
+            )
+            self.sdf = (self._ev.spark.read.format("iceberg").load(
+                    f"{catalog_name}.{namespace_name}.{table_name}"
                 ).filter(filters)
             )
             return self
@@ -137,14 +139,14 @@ class Read:
             logger.debug("Filter is not a list.  Making a list.")
             filters = [filters]
 
-        tbl_instance = get_table_instance(table)
+        tbl_instance = get_table_instance(table_name)
         filter_model = tbl_instance.filter_model
         fields_enum = tbl_instance.field_enum()
         dataframe_schema = tbl_instance.schema_func().to_structtype()
 
         sdf = (
             self._ev.spark.read.format("iceberg").load(
-                    f"{catalog_name}.{namespace}.{table}"
+                    f"{catalog_name}.{namespace_name}.{table_name}"
                 )
         )
         for filter in filters:
@@ -162,17 +164,17 @@ class Read:
 
             sdf = sdf.filter(filter)
 
-            self.df = sdf
+            self.sdf = sdf
             return self
 
     def to_pandas(self):
         """Return Pandas DataFrame."""
-        if self.df is None:
+        if self.sdf is None:
             raise ValueError(
                 "No data has been read, please read data first using the "
                 "from_warehouse() or from_cache() methods."
             )
-        df = self.df.toPandas()
+        df = self.sdf.toPandas()
         return df
 
     def to_geopandas(self):
@@ -201,9 +203,9 @@ class Read:
         >>> )
         >>> ts_df.head()
         """
-        if self.df is None:
+        if self.sdf is None:
             raise ValueError(
                 "No data has been read, please read data first using the "
                 "from_warehouse() or from_cache() methods."
             )
-        return self.df
+        return self.sdf

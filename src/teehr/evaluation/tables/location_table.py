@@ -53,7 +53,7 @@ class LocationTable(BaseTable):
     def to_pandas(self):
         """Return Pandas DataFrame for Location Table."""
         self._check_load_table()
-        df = self.df.toPandas()
+        df = self.sdf.toPandas()
         df.attrs['table_type'] = self.name
         df.attrs['fields'] = self.fields()
         return df
@@ -164,7 +164,7 @@ class LocationTable(BaseTable):
 
         self._ev.write.to_warehouse(
             source_data=validated_df,
-            target_table=self.name,
+            table_name=self.name,
             write_mode=write_mode,
             uniqueness_fields=self.uniqueness_fields
         )
@@ -239,7 +239,7 @@ class LocationTable(BaseTable):
         )
         self._ev.write.to_warehouse(
             source_data=validated_df,
-            target_table=self.name,
+            table_name=self.name,
             write_mode=write_mode,
             uniqueness_fields=self.uniqueness_fields
         )

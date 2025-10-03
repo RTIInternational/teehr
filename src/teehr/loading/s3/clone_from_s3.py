@@ -199,9 +199,9 @@ def clone_from_s3(
             f"{remote_namespace_name}.{table.name}."
         )
         sdf_in = ev.read.from_warehouse(
-            table=table.name,
+            table_name=table.name,
             catalog_name=remote_catalog_name,
-            namespace=remote_namespace_name
+            namespace_name=remote_namespace_name
         ).to_sdf()
         for filter in filters:
             if filter is not None:
@@ -212,8 +212,8 @@ def clone_from_s3(
             ev.write.to_warehouse(
                 source_data=sdf_in,
                 catalog_name=local_catalog_name,
-                namespace=local_namespace_name,
-                target_table=table.name,
+                namespace_name=local_namespace_name,
+                table_name=table.name,
                 write_mode="create_or_replace",
                 uniqueness_fields=table.uniqueness_fields,
                 partition_by=table.partition_by
@@ -222,8 +222,8 @@ def clone_from_s3(
             ev.write.to_warehouse(
                 source_data=sdf_in,
                 catalog_name=local_catalog_name,
-                namespace=local_namespace_name,
-                target_table=table.name,
+                namespace_name=local_namespace_name,
+                table_name=table.name,
                 write_mode="upsert",
                 uniqueness_fields=table.uniqueness_fields,
                 partition_by=table.partition_by

@@ -85,6 +85,8 @@ def create_spark_session(
 
     # General Spark settings
     builder = builder.config("spark.sql.session.timeZone", "UTC")
+    if local_warehouse_dir is not None:
+        builder = builder.config("spark.local.dir", local_warehouse_dir)
 
     # EMR comes with pre-installed jars, use compatible versions for PySpark 4
     builder = builder.config(

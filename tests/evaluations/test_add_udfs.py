@@ -32,12 +32,18 @@ def test_add_row_udfs_null_reference(tmpdir):
 
     ev.joined_timeseries.create(add_attrs=False, execute_scripts=False)
 
-    ev.joined_timeseries.add_calculated_fields([
-        rcf.Month(),
-        rcf.Year(),
-        rcf.WaterYear(),
-        rcf.Seasons()
-    ]).write()
+    # ev.joined_timeseries.add_calculated_fields([
+    #     rcf.Month(),
+    #     rcf.Year(),
+    #     rcf.WaterYear(),
+    #     rcf.Seasons()
+    # ]).write()
+
+    nse = teehr.DeterministicMetrics.NashSutcliffeEfficiency()
+    ev.metrics.query(
+        include_metrics=[nse],
+        group_by=["primary_location_id"]
+    ).write_to_warehouse(table_name="metrics", write_mode="create_or_replace")
 
     ev.spark.stop()
 

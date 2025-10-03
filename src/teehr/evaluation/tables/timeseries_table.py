@@ -43,7 +43,7 @@ class TimeseriesTable(BaseTable):
     def to_pandas(self):
         """Return Pandas DataFrame for Timeseries."""
         self._check_load_table()
-        df = self.df.toPandas()
+        df = self.sdf.toPandas()
         df.attrs['table_type'] = self.name
         df.attrs['fields'] = self.fields()
         return df
@@ -51,7 +51,7 @@ class TimeseriesTable(BaseTable):
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
         self._check_load_table()
-        return join_geometry(self.df, self._ev.locations.to_sdf())
+        return join_geometry(self.sdf, self._ev.locations.to_sdf())
 
     def load_parquet(
         self,

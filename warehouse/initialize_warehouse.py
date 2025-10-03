@@ -76,8 +76,8 @@ def main():
     units_sdf = ev.spark.read.format(units_table.format).options(**options).load(units_table_dir.as_posix(), schema=schema)
     ev.write.to_warehouse(
         source_data=units_sdf,
-        target_table="units",
-        namespace=namespace
+        table_name="units",
+        namespace_name=namespace
     )
 
     configuration_table_dir = e4_evaluation_path / "dataset" / "configurations"
@@ -86,8 +86,8 @@ def main():
     configuration_sdf = ev.spark.read.format(configuration_table.format).options(**options).load(configuration_table_dir.as_posix(), schema=schema)
     ev.write.to_warehouse(
         source_data=configuration_sdf,
-        target_table="configurations",
-        namespace=namespace
+        table_name="configurations",
+        namespace_name=namespace
     )
 
     variables_table_dir = e4_evaluation_path / "dataset" / "variables"
@@ -96,8 +96,8 @@ def main():
     variables_sdf = ev.spark.read.format(variables_table.format).options(**options).load(variables_table_dir.as_posix(), schema=schema)
     ev.write.to_warehouse(
         source_data=variables_sdf,
-        target_table="variables",
-        namespace=namespace
+        table_name="variables",
+        namespace_name=namespace
     )
 
     attributes_table_dir = e4_evaluation_path / "dataset" / "attributes"
@@ -106,8 +106,8 @@ def main():
     attributes_sdf = ev.spark.read.format(attributes_table.format).options(**options).load(attributes_table_dir.as_posix(), schema=schema)
     ev.write.to_warehouse(
         source_data=attributes_sdf,
-        target_table="attributes",
-        namespace=namespace
+        table_name="attributes",
+        namespace_name=namespace
     )
 
     locations_table_dir = e4_evaluation_path / "dataset" / "locations"
@@ -116,8 +116,8 @@ def main():
     locations_sdf = ev.spark.read.format(locations_table.format).options(**options).load(locations_table_dir.as_posix(), schema=schema)
     ev.write.to_warehouse(
         source_data=locations_sdf,
-        target_table="locations",
-        namespace=namespace
+        table_name="locations",
+        namespace_name=namespace
     )
 
     location_attrs_table_dir = e4_evaluation_path / "dataset" / "location_attributes"
@@ -126,8 +126,8 @@ def main():
     location_attrs_sdf = ev.spark.read.format(location_attrs_table.format).options(**options).load(location_attrs_table_dir.as_posix(), schema=schema)
     ev.write.to_warehouse(
         source_data=location_attrs_sdf,
-        target_table="location_attributes",
-        namespace=namespace
+        table_name="location_attributes",
+        namespace_name=namespace
     )
 
     primary_timeseries_table_dir = e4_evaluation_path / "dataset" / "primary_timeseries"
@@ -136,8 +136,8 @@ def main():
     primary_timeseries_sdf = ev.spark.read.format(primary_timeseries_table.format).options(**options).load(primary_timeseries_table_dir.as_posix(), schema=schema)
     ev.write.to_warehouse(
         source_data=primary_timeseries_sdf,
-        target_table="primary_timeseries",
-        namespace=namespace
+        table_name="primary_timeseries",
+        namespace_name=namespace
     )
 
     secondary_timeseries_table_dir = e4_evaluation_path / "dataset" / "secondary_timeseries"
@@ -146,8 +146,8 @@ def main():
     secondary_timeseries_sdf = ev.spark.read.format(secondary_timeseries_table.format).options(**options).load(secondary_timeseries_table_dir.as_posix(), schema=schema)
     ev.write.to_warehouse(
         source_data=secondary_timeseries_sdf,
-        target_table="secondary_timeseries",
-        namespace=namespace
+        table_name="secondary_timeseries",
+        namespace_name=namespace
     )
 
     joined_timeseries_table_dir = e4_evaluation_path / "dataset" / "joined_timeseries"
@@ -156,8 +156,8 @@ def main():
     joined_timeseries_sdf = ev.spark.read.format(joined_timeseries_table.format).options(**options).load(joined_timeseries_table_dir.as_posix(), schema=schema)
     ev.write.to_warehouse(
         source_data=joined_timeseries_sdf,
-        target_table="joined_timeseries",
-        namespace=namespace
+        table_name="joined_timeseries",
+        namespace_name=namespace
     )
 
     location_crosswalk_table_dir = e4_evaluation_path / "dataset" / "location_crosswalks"
@@ -166,8 +166,8 @@ def main():
     location_crosswalk_sdf = ev.spark.read.format(location_crosswalk_table.format).options(**options).load(location_crosswalk_table_dir.as_posix(), schema=schema)
     ev.write.to_warehouse(
         source_data=location_crosswalk_sdf,
-        target_table="location_crosswalks",
-        namespace=namespace
+        table_name="location_crosswalks",
+        namespace_name=namespace
     )
 
     pass

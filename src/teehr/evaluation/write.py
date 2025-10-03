@@ -8,6 +8,7 @@ from pyarrow import schema as arrow_schema
 import geopandas as gpd
 
 from teehr.evaluation.utils import get_table_instance
+from teehr.models.table_properties import TBLPROPERTIES
 
 
 # TODO: Should the Writer class contain DELETE FROM? That's how it's
@@ -32,22 +33,23 @@ class Write:
     def _create_or_replace(
         self,
         source_view: str,
-        target_table: str,
-        partition_by: List[str],
+        table_name: str,
         catalog_name: str,
-        namespace: str
+        namespace_name: str,
+        partition_by: List[str] = None
     ):
         """Upsert the DataFrame to the specified target in the catalog."""
-        if partition_by is None:
-            raise ValueError(
-                "partition_by fields must be provided when using"
-                " write_mode='create_or_replace'"
-            )
+        # if partition_by is None:
+        #     raise ValueError(
+        #         "partition_by fields must be provided when using"
+        #         " write_mode='create_or_replace'"
+        #     )
+        # PARTITIONED BY ({', '.join(partition_by)})
+
         # Use the <=> operator for null-safe equality comparison
         # so that two null values are considered equal.
         sql_query = f"""
-            CREATE OR REPLACE TABLE {catalog_name}.{namespace}.{target_table}
-            PARTITIONED BY ({', '.join(partition_by)})
+            CREATE OR REPLACE TABLE {catalog_name}.{namespace_name}.{table_name}
             AS SELECT * FROM {source_view}
         """  # noqa: E501
         self._ev.spark.sql(sql_query)
@@ -55,10 +57,10 @@ class Write:
     def _upsert(
         self,
         source_view: str,
-        target_table: str,
+        table_name: str,
         uniqueness_fields: List[str],
         catalog_name: str,
-        namespace: str
+        namespace_name: str
     ):
         """Upsert the DataFrame to the specified target in the catalog."""
         # TODO: Does this do what we want it to do? Should there be a
@@ -78,7 +80,7 @@ class Write:
             [f"t.{fld} = s.{fld}" for fld in update_fields]
         )
         sql_query = f"""
-            MERGE INTO {catalog_name}.{namespace}.{target_table} t
+            MERGE INTO {catalog_name}.{namespace_name}.{table_name} t
             USING {source_view} s
             ON {on_sql}
             WHEN MATCHED THEN UPDATE SET {update_set_sql}
@@ -89,10 +91,10 @@ class Write:
     def _append(
         self,
         source_view: str,
-        target_table: str,
+        table_name: str,
         uniqueness_fields: List[str],
         catalog_name: str,
-        namespace: str
+        namespace_name: str
     ):
         """Append the DataFrame to the specified target in the catalog."""
         # Use the <=> operator for null-safe equality comparison
@@ -101,7 +103,7 @@ class Write:
             [f"t.{fld} <=> s.{fld}" for fld in uniqueness_fields]
         )
         sql_query = f"""
-            MERGE INTO {catalog_name}.{namespace}.{target_table} t
+            MERGE INTO {catalog_name}.{namespace_name}.{table_name} t
             USING {source_view} s
             ON {on_sql}
             WHEN NOT MATCHED THEN INSERT *
@@ -111,10 +113,10 @@ class Write:
     def _overwrite(
         self,
         source_view: str,
-        target_table: str,
+        table_name: str,
         # uniqueness_fields: List[str],
         catalog_name: str,
-        namespace: str
+        namespace_name: str
     ):
         """Replace the target table values with matching Dataframe values."""
         # Use the <=> operator for null-safe equality comparison
@@ -131,7 +133,7 @@ class Write:
         #     [f"t.{fld} = s.{fld}" for fld in update_fields]
         # )
         sql_query = f"""
-            INSERT OVERWRITE TABLE {catalog_name}.{namespace}.{target_table}
+            INSERT OVERWRITE TABLE {catalog_name}.{namespace_name}.{table_name}
             SELECT * FROM {source_view}
         """  # noqa: E501
         self._ev.spark.sql(sql_query)
@@ -139,12 +141,12 @@ class Write:
     def to_warehouse(
         self,
         source_data: DataFrame | str,
-        target_table: str,
+        table_name: str,
         write_mode: str = "append",
         uniqueness_fields: List[str] | None = None,
         partition_by: List[str] = None,
         catalog_name: str = None,
-        namespace: str = None
+        namespace_name: str = None
     ):
         """Write the DataFrame to the specified target in the catalog.
 
@@ -154,7 +156,7 @@ class Write:
             The Spark DataFrame to write.
         source_data : DataFrame | str
             The Spark DataFrame or temporary view name to write.
-        target_table : str
+        table_name : str
             The target table name in the catalog.
         write_mode : str, optional
             The mode to use when writing the DataFrame
@@ -168,15 +170,11 @@ class Write:
         """
         if catalog_name is None:
             catalog_name = self._ev.active_catalog.catalog_name
-        if namespace is None:
-            namespace = self._ev.active_catalog.namespace_name
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
 
-        if uniqueness_fields is None:
-            table_instance = get_table_instance(
-                self._ev, target_table
-            )
-            if table_instance is not None:
-                uniqueness_fields = table_instance.uniqueness_fields
+        if uniqueness_fields is None and table_name in TBLPROPERTIES:
+            uniqueness_fields = TBLPROPERTIES[table_name].get("uniqueness_fields")
 
         if isinstance(source_data, DataFrame):
             source_data.createOrReplaceTempView("source_data")
@@ -185,32 +183,32 @@ class Write:
         if write_mode == "append":
             self._append(
                 source_view=source_data,
-                target_table=target_table,
+                table_name=table_name,
                 uniqueness_fields=uniqueness_fields,
                 catalog_name=catalog_name,
-                namespace=namespace
+                namespace_name=namespace_name
             )
         elif write_mode == "upsert":
             self._upsert(
                 source_view=source_data,
-                target_table=target_table,
+                table_name=table_name,
                 uniqueness_fields=uniqueness_fields,
                 catalog_name=catalog_name,
-                namespace=namespace
+                namespace_name=namespace_name
             )
         elif write_mode == "create_or_replace":
             self._create_or_replace(
                 source_view=source_data,
-                target_table=target_table,
-                partition_by=partition_by,
+                table_name=table_name,
+                partition_by=None,
                 catalog_name=catalog_name,
-                namespace=namespace
+                namespace_name=namespace_name
             )
         # TODO: Is something like this needed?
         # elif write_mode == "overwrite":
         #     self._overwrite(
         #         source_view=source_data,
-        #         target_table=target_table,
+        #         table_name=table_name,
         #         # uniqueness_fields=uniqueness_fields,
         #     )
         else:

@@ -111,6 +111,7 @@ def test_create_joined_timeseries(tmpdir):
                                 execute_scripts=True,
                                 attr_list=attr_list)
 
+
     columns = ev.joined_timeseries.to_sdf().columns
     expected_columns = [
         'reference_time',

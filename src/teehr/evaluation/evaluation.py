@@ -40,6 +40,7 @@ from teehr.evaluation.write import Write
 from teehr.evaluation.extract import DataExtractor
 from teehr.evaluation.validate import Validator
 from teehr.evaluation.workflows import Workflow
+from teehr.evaluation.tables.generic_table import Table
 from teehr.evaluation.read import Read
 from teehr.evaluation.utils import (
     create_spark_session,
@@ -53,7 +54,11 @@ from fsspec.implementations.local import LocalFileSystem
 import pyspark.sql as ps
 from teehr.querying.filter_format import validate_and_apply_filters
 from teehr.utilities import apply_migrations
-from teehr.models.evaluation_base import EvaluationBase, LocalCatalog, RemoteCatalog
+from teehr.models.evaluation_base import (
+    EvaluationBase,
+    LocalCatalog,
+    RemoteCatalog
+)
 
 
 logger = logging.getLogger(__name__)
@@ -73,7 +78,6 @@ class Evaluation(EvaluationBase):
         local_warehouse_dir: Union[str, Path] = None,  # maybe you don't want/need a local evaluation? -- if you just want to query against remote?
         local_catalog_name: str = "local",
         local_catalog_type: str = "hadoop",
-        local_catalog_uri: str = "http://127.0.0.1:9001",  # remove?
         local_namespace_name: str = "teehr",
         create_local_dir: bool = False,
         remote_warehouse_dir: str = const.WAREHOUSE_S3_PATH,
@@ -144,8 +148,19 @@ class Evaluation(EvaluationBase):
         # Set the local catalog as the active catalog by default.
         if local_warehouse_dir is not None:
             self.set_active_catalog("local")
+            self.cache_dir = to_path_or_s3path(
+                local_warehouse_dir, const.CACHE_DIR
+            )
+            self.scripts_dir = to_path_or_s3path(
+                local_warehouse_dir, const.SCRIPTS_DIR
+            )
         else:
             self.set_active_catalog("remote")
+
+    @property
+    def table(self) -> Table:
+        """The table component class for managing data tables."""
+        return Table(self)
 
     @property
     def validate(self) -> Validator:

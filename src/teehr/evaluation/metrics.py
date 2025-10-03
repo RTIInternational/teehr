@@ -36,7 +36,8 @@ class Metrics:
         self.dataset_dir = ev.active_catalog.dataset_dir
         self.locations = ev.locations
         self.joined_timeseries = ev.joined_timeseries
-        self.df = self.joined_timeseries.to_sdf()
+        self.sdf = self.joined_timeseries.to_sdf()
+        self._write = ev.write
 
     def query(
         self,
@@ -132,8 +133,8 @@ class Metrics:
         logger.info("Calculating performance metrics.")
         if filters is not None:
             logger.debug("Applying filters to the metrics query.")
-            self.df = validate_and_apply_filters(
-                sdf=self.df,
+            self.sdf = validate_and_apply_filters(
+                sdf=self.sdf,
                 filter_model=self.joined_timeseries.filter_model,
                 filters=filters,
                 fields_enum=self.joined_timeseries.field_enum(),
@@ -141,46 +142,46 @@ class Metrics:
             )
 
         logger.debug(f"Grouping the metrics query {group_by}.")
-        self.df = group_df(self.df, group_by)
+        self.sdf = group_df(self.sdf, group_by)
 
-        self.df = apply_aggregation_metrics(
-            self.df,
+        self.sdf = apply_aggregation_metrics(
+            self.sdf,
             include_metrics,
         )
 
-        self.df = self._post_process_metric_results(
+        self.sdf = self._post_process_metric_results(
             include_metrics,
             group_by
         )
 
         if order_by is not None:
             logger.debug(f"Ordering the metrics by: {order_by}.")
-            self.df = order_df(self.df, order_by)
+            self.sdf = order_df(self.sdf, order_by)
 
         return self
 
     def to_pandas(self) -> pd.DataFrame:
         """Convert the DataFrame to a Pandas DataFrame."""
-        df = self.df.toPandas()
+        df = self.sdf.toPandas()
         df.attrs['table_type'] = 'metrics'
         return df
 
     def to_geopandas(self) -> gpd.GeoDataFrame:
         """Convert the DataFrame to a GeoPandas DataFrame."""
-        if "primary_location_id" not in self.df.columns:
+        if "primary_location_id" not in self.sdf.columns:
             err_msg = "The primary_location_id field must be included in " \
                       "the group_by to include geometry."
             logger.error(err_msg)
             raise ValueError(err_msg)
         return join_geometry(
-            self.df,
+            self.sdf,
             self.locations.to_sdf(),
             "primary_location_id"
         )
 
     def to_sdf(self) -> ps.DataFrame:
         """Return the Spark DataFrame."""
-        return self.df
+        return self.sdf
 
     def add_calculated_fields(self, cfs: Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]):
         """Add calculated fields to the joined timeseries DataFrame before running metrics.
@@ -209,7 +210,7 @@ class Metrics:
             cfs = [cfs]
 
         for cf in cfs:
-            self.df = cf.apply_to(self.df)
+            self.sdf = cf.apply_to(self.sdf)
 
         return self
 
@@ -239,19 +240,19 @@ class Metrics:
         """
         for model in include_metrics:
             if model.reference_configuration is not None:
-                self.df = self._calculate_metric_skill_score(
+                self.sdf = self._calculate_metric_skill_score(
                     model.output_field_name,
                     model.reference_configuration,
                     group_by
                 )
 
             if model.unpack_results:
-                self.df = model.unpack_function(
-                    self.df,
+                self.sdf = model.unpack_function(
+                    self.sdf,
                     model.output_field_name
                 )
 
-        return self.df
+        return self.sdf
 
     def _calculate_metric_skill_score(
         self,
@@ -274,18 +275,18 @@ class Metrics:
         group_by_strings.remove("configuration_name")
 
         pivot_sdf = (
-            self.df
+            self.sdf
             .groupBy(group_by_strings).
             pivot("configuration_name").
             agg(F.first(metric_field))
         )
         # Get all configuration names except the reference configuration
-        configurations = self.df.select("configuration_name").distinct().collect()
+        configurations = self.sdf.select("configuration_name").distinct().collect()
         configurations = [row.configuration_name for row in configurations]
         configurations.remove(reference_configuration)
 
         skill_score_col = f"{metric_field}_skill_score"
-        sdf = self.df.withColumn(skill_score_col, F.lit(None))
+        sdf = self.sdf.withColumn(skill_score_col, F.lit(None))
 
         for config in configurations:
             # Pivot and calculate the skill score.
@@ -323,3 +324,38 @@ class Metrics:
             )
 
         return sdf
+
+    def write_to_warehouse(
+        self,
+        table_name: str = "metrics",
+        write_mode: str = "create_or_replace"
+    ):
+        """Write the metrics DataFrame to the warehouse.
+
+        Parameters
+        ----------
+        table_name : str, optional
+            The name of the table to write to, by default "metrics"
+        write_mode : str, optional
+            The write mode to use, by default "create_or_replace"
+            Options are: "create", "append", "overwrite", "create_or_replace"
+
+        Examples
+        --------
+        >>> import teehr
+        >>> ev = teehr.Evaluation()
+        >>> metrics_df = ev.metrics.query(
+        >>>     include_metrics=[...],
+        >>>     group_by=["primary_location_id"]
+        >>> ).write_to_warehouse(
+        >>>     table_name="metrics",
+        >>>     write_mode="create_or_replace"
+        >>> )
+        """
+        logger.info(f"Writing metrics results to the warehouse table: {table_name}.")
+        self._write.to_warehouse(
+            source_data=self.sdf,
+            table_name=table_name,
+            write_mode=write_mode
+        )
+        return self
