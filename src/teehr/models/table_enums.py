@@ -23,6 +23,7 @@ class TableWriteEnum(StrEnum):
     append = "append"
     upsert = "upsert"
     overwrite = "overwrite"
+    create_or_replace = "create_or_replace"
 
 
 class ConfigurationFields(StrEnum):

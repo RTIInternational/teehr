@@ -1,6 +1,6 @@
 """Location Attribute Table class."""
 import teehr.const as const
-from teehr.evaluation.tables.base_table import BaseTable
+from teehr.evaluation.tables.generic_table import Table
 from teehr.loading.location_attributes import (
     convert_single_location_attributes
 )
@@ -26,7 +26,7 @@ from teehr.models.pydantic_table_models import Attribute
 logger = logging.getLogger(__name__)
 
 
-class LocationAttributeTable(BaseTable):
+class LocationAttributeTable(Table):
     """Access methods to location attributes table."""
 
     def __init__(self, ev):

@@ -1,6 +1,6 @@
 """Location Crosswalk Table."""
 import teehr.const as const
-from teehr.evaluation.tables.base_table import BaseTable
+from teehr.evaluation.tables.generic_table import Table
 # from teehr.loading.location_crosswalks import convert_location_crosswalks
 from teehr.loading.utils import (
     validate_input_is_csv,
@@ -26,7 +26,7 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-class LocationCrosswalkTable(BaseTable):
+class LocationCrosswalkTable(Table):
     """Access methods to location crosswalks table."""
 
     def __init__(self, ev):

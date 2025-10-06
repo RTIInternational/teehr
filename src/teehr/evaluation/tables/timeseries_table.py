@@ -3,15 +3,13 @@ from pathlib import Path
 from typing import Union
 import logging
 
-from teehr.evaluation.tables.base_table import BaseTable
+from teehr.evaluation.tables.generic_table import Table
 from teehr.loading.utils import (
     validate_input_is_xml,
     validate_input_is_csv,
     validate_input_is_netcdf,
     validate_input_is_parquet
 )
-from teehr.models.filters import TimeseriesFilter
-from teehr.querying.utils import join_geometry
 from teehr.models.table_enums import TableWriteEnum
 from teehr.const import MAX_CPUS
 from teehr.loading.timeseries import convert_single_timeseries
@@ -19,41 +17,13 @@ from teehr.loading.timeseries import convert_single_timeseries
 logger = logging.getLogger(__name__)
 
 
-class TimeseriesTable(BaseTable):
+class TimeseriesTable(Table):
     """Access methods to timeseries table."""
 
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        # self.format = "parquet"
-        # self.partition_by = [
-        #     "configuration_name",
-        #     "variable_name",
-        #     # "reference_time"
-        # ]
-        # self.filter_model = TimeseriesFilter
-        # self.uniqueness_fields = [
-        #     "location_id",
-        #     "value_time",
-        #     "reference_time",
-        #     "variable_name",
-        #     "unit_name",
-        #     "configuration_name"
-        # ]
         self._load = ev.load
-
-    def to_pandas(self):
-        """Return Pandas DataFrame for Timeseries."""
-        self._check_load_table()
-        df = self.sdf.toPandas()
-        df.attrs['table_type'] = self.table_name
-        df.attrs['fields'] = self.fields()
-        return df
-
-    def to_geopandas(self):
-        """Return GeoPandas DataFrame."""
-        self._check_load_table()
-        return join_geometry(self.sdf, self._ev.locations.to_sdf())
 
     def load_parquet(
         self,

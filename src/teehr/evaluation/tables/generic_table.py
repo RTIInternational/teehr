@@ -1,15 +1,6 @@
 """Base class to represent generic tables."""
-from typing import List, Dict, Any, Union
-from pathlib import Path
+from typing import List, Dict, Union
 import logging
-
-from pydantic import (
-    BaseModel as PydanticBaseModel,
-    ConfigDict,
-    Field,
-    model_validator,
-)
-import pyspark.sql as ps
 
 from teehr.models.str_enum import StrEnum
 from teehr.querying.utils import order_df
@@ -51,13 +42,6 @@ class Table:
         else:
             self.catalog_name = catalog_name
 
-        # What if the table doesn't exist yet?
-        # self.sdf = self._ev.read.from_warehouse(
-        #     table_name=self.table_name,
-        #     namespace_name=self.table_namespace_name,
-        #     catalog_name=self.catalog_name
-        # ).to_sdf()
-
         if table_name in TBLPROPERTIES:
             # Just set self.table_properties here?
             table_props = TBLPROPERTIES[self.table_name]
@@ -74,12 +58,6 @@ class Table:
             self.filter_model: FilterBaseModel = None
             self.strict_validation = None
             self.validate_filter_field_types = None
-
-        # self.cache_dir = Path(
-        #     self._ev.active_catalog.cache_dir,
-        #     const.LOADING_CACHE_DIR,
-        #     const.PRIMARY_TIMESERIES_DIR
-        # )
 
         return self
 

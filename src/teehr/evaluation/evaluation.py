@@ -212,47 +212,56 @@ class Evaluation(EvaluationBase):
     @property
     def units(self) -> UnitTable:
         """Access the units table."""
-        return UnitTable(self)
+        tbl = UnitTable(self)
+        return tbl()
 
     @property
     def variables(self) -> VariableTable:
         """Access the variables table."""
-        return VariableTable(self)
+        tbl = VariableTable(self)
+        return tbl()
 
     @property
     def attributes(self) -> AttributeTable:
         """Access the attributes table."""
-        return AttributeTable(self)
+        tbl = AttributeTable(self)
+        return tbl()
 
     @property
     def configurations(self) -> ConfigurationTable:
         """Access the configurations table."""
-        return ConfigurationTable(self)
+        tbl = ConfigurationTable(self)
+        return tbl()
 
     @property
     def locations(self) -> LocationTable:
         """Access the locations table."""
-        return LocationTable(self)
+        tbl = LocationTable(self)
+        return tbl()
 
     @property
     def location_attributes(self) -> LocationAttributeTable:
         """Access the location attributes table."""
-        return LocationAttributeTable(self)
+        tbl = LocationAttributeTable(self)
+        return tbl()
 
     @property
     def location_crosswalks(self) -> LocationCrosswalkTable:
         """Access the location crosswalks table."""
-        return LocationCrosswalkTable(self)
+        tbl = LocationCrosswalkTable(self)
+        return tbl()
 
     @property
     def primary_timeseries(self) -> PrimaryTimeseriesTable:
         """Access the primary timeseries table."""
-        return PrimaryTimeseriesTable(self)
+        tbl = PrimaryTimeseriesTable(self)
+        return tbl()
 
     @property
     def secondary_timeseries(self) -> SecondaryTimeseriesTable:
         """Access the secondary timeseries table."""
-        return SecondaryTimeseriesTable(self)
+        tbl = SecondaryTimeseriesTable(self)
+        return tbl()
 
     @property
     def joined_timeseries(self) -> JoinedTimeseriesTable:

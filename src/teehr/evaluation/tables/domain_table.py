@@ -1,5 +1,5 @@
 """Domain table class."""
-from teehr.evaluation.tables.base_table import BaseTable
+from teehr.evaluation.tables.generic_table import Table
 from teehr.models.pydantic_table_models import TableBaseModel
 import pandas as pd
 from typing import List, Union
@@ -8,20 +8,19 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class DomainTable(BaseTable):
+class DomainTable(Table):
     """Domain table class."""
 
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.format = "csv"
 
     def _add(
         self,
         obj: Union[TableBaseModel, List[TableBaseModel]],
         write_mode: str = "append"
     ):
-        logger.info(f"Adding attribute to {self.dir}")
+        # logger.info(f"Adding attribute to {self.dir}")
         self._check_load_table()
 
         org_df = self.to_sdf()
@@ -30,17 +29,16 @@ class DomainTable(BaseTable):
             obj = [obj]
 
         # validate the data to be added
-        new_df = self.spark.createDataFrame(
+        new_df = self._ev.spark.createDataFrame(
             pd.DataFrame([o.model_dump() for o in obj])
             )
         logger.info(
             f"Validating {len(obj)} objects before adding to {self.table_name} table"
             )
-        new_df_validated = self._ev.validate.schema(
-            sdf=new_df,
+        # if self.foreign_keys is not None:
+        new_df_validated = self._ev.validate.data(
+            df=new_df,
             table_schema=self.schema_func(),
-            foreign_keys=self.foreign_keys,
-            uniqueness_fields=self.uniqueness_fields
         )
 
         # warn user if rows in added data already exist in the original table
@@ -56,13 +54,11 @@ class DomainTable(BaseTable):
             logger.info(
                 f"Validating {self.table_name} table after adding {len(obj)} objects"
                 )
-            validated_df = self._ev.validate.schema(
-                sdf=combined_df,
-                table_schema=self.schema_func(),
-                foreign_keys=self.foreign_keys,
-                uniqueness_fields=self.uniqueness_fields
-            )
 
+            validated_df = self._ev.validate.data(
+                df=combined_df,
+                table_schema=self.schema_func(),
+            )
             self._ev.write.to_warehouse(
                 source_data=validated_df,
                 table_name=self.table_name,
@@ -93,7 +89,6 @@ class DomainTable(BaseTable):
                 f"Duplicate values in {self.uniqueness_fields}: "
                 f"{matched_values_str}"
             )
-
             # add data that is not already in the original table
             new_df_not_matched = new_df_validated.join(
                 org_df, on=self.uniqueness_fields, how="left_anti"
@@ -108,11 +103,9 @@ class DomainTable(BaseTable):
                 f"Validating {self.table_name} table after adding "
                 f"{new_df_not_matched.count()} new objects"
             )
-            validated_df = self._ev.validate.schema(
-                sdf=combined_df,
+            validated_df = self._ev.validate.data(
+                df=combined_df,
                 table_schema=self.schema_func(),
-                foreign_keys=self.foreign_keys,
-                uniqueness_fields=self.uniqueness_fields
             )
 
             self._ev.write.to_warehouse(

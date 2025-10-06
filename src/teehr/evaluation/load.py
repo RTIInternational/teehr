@@ -1,12 +1,13 @@
 """Load class for TEEHR evaluations."""
-from typing import List
+# from typing import List
 from pathlib import Path
 import logging
 
+import pyspark.sql.functions as F
 import pyspark.sql as ps
 import pandas as pd
-from pyarrow import schema as arrow_schema
-import geopandas as gpd
+# from pyarrow import schema as arrow_schema
+# import geopandas as gpd
 
 from teehr.models.pydantic_table_models import Attribute
 from teehr import const
@@ -34,6 +35,9 @@ class Load:
         if ev is not None:
             self._ev = ev
             self._read = ev.read
+            self._extract = ev.extract
+            self._validate = ev.validate
+            self._write = ev.write
 
     def dataframe(
         self,
@@ -55,7 +59,7 @@ class Load:
             )
             return
         # self.schema_func(type="pandas").columns.keys()
-        self._ev.extract._merge_field_mapping(
+        self._extract._merge_field_mapping(
             table_fields=self.field_enum(),
             field_mapping=field_mapping,
             constant_field_values=constant_field_values
@@ -73,7 +77,7 @@ class Load:
 
         if constant_field_values:
             for field, value in constant_field_values.items():
-                df = df.withColumn(field, lit(value))
+                df = df.withColumn(field, F.lit(value))
 
         if persist_dataframe:
             df = df.persist()
@@ -84,7 +88,7 @@ class Load:
                 column_name="location_id",
                 prefix=location_id_prefix,
             )
-        validated_df = self._ev.validate.schema(
+        validated_df = self._validate.schema(
             sdf=df,
             table_schema=self.schema_func(),
             drop_duplicates=drop_duplicates,
@@ -92,9 +96,9 @@ class Load:
             uniqueness_fields=self.uniqueness_fields,
             add_missing_columns=True
         )
-        self._ev.write.to_warehouse(
+        self._write.to_warehouse(
             source_data=validated_df,
-            table_name=self.name,
+            table_name=self.table_name,
             write_mode=write_mode,
             uniqueness_fields=self.uniqueness_fields
         )
@@ -121,6 +125,8 @@ class Load:
         **kwargs
     ):
         """Load location attributes helper."""
+        # TODO: remove persist_dataframe?
+
         # Clear the cache directory if it exists.
         table_cache_dir = Path(
             self._ev.cache_dir,
@@ -150,7 +156,7 @@ class Load:
         fields = list(schema_func().columns.keys())
 
         # Begin the ETL process.
-        self._ev.extract.to_cache(
+        self._extract.to_cache(
             in_datapath=in_path,
             field_mapping=field_mapping,
             pattern=pattern,
@@ -193,14 +199,20 @@ class Load:
                 )
             self._ev.attributes.add(attr_list)
 
-        validated_df = self._ev.validate.schema(
-            sdf=sdf,
-            table_schema=schema_func(),
-            drop_duplicates=drop_duplicates,
-            foreign_keys=foreign_keys,
-            uniqueness_fields=uniqueness_fields
-        )
-        self._ev.write.to_warehouse(
+        if foreign_keys is not None:
+            validated_df = self._validate.schema(
+                sdf=sdf,
+                table_schema=schema_func(),
+                drop_duplicates=drop_duplicates,
+                foreign_keys=foreign_keys,
+                uniqueness_fields=uniqueness_fields
+            )
+        else:
+            validated_df = self._validate.data(
+                df=sdf,
+                table_schema=schema_func(),
+            )
+        self._write.to_warehouse(
             source_data=validated_df,
             table_name=table_name,
             namespace_name=namespace_name,
@@ -208,3 +220,11 @@ class Load:
             write_mode=write_mode,
             uniqueness_fields=uniqueness_fields
         )
+
+
+    # def domain_value(
+    #     self,
+    #     table_name: str,
+    #     domain_model:
+    # )
+    # Include "add()" here for domain values? Not really loading though?
