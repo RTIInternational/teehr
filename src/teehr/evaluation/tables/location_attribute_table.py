@@ -63,12 +63,10 @@ class LocationAttributeTable(Table):
         extraction_function: callable = convert_single_location_attributes,
         pattern: str = "**/*.parquet",
         field_mapping: dict = None,
-        primary_location_id_prefix: str = None,
-        secondary_location_id_prefix: str = None,
+        location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True,
-        primary_location_id_field: str = "primary_location_id",
-        secondary_location_id_field: str = "secondary_location_id",
+        location_id_field: str = "location_id",
         **kwargs
     ):
         """Import location attributes from parquet file format.
@@ -129,10 +127,8 @@ class LocationAttributeTable(Table):
             catalog_name=catalog_name,
             extraction_function=extraction_function,
             field_mapping=field_mapping,
-            primary_location_id_prefix=primary_location_id_prefix,
-            primary_location_id_field=primary_location_id_field,
-            secondary_location_id_prefix=secondary_location_id_prefix,
-            secondary_location_id_field=secondary_location_id_field,
+            primary_location_id_prefix=location_id_prefix,
+            primary_location_id_field=location_id_field,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
             **kwargs
@@ -147,12 +143,10 @@ class LocationAttributeTable(Table):
         extraction_function: callable = convert_single_location_attributes,
         pattern: str = "**/*.csv",
         field_mapping: dict = None,
-        primary_location_id_prefix: str = None,
-        secondary_location_id_prefix: str = None,
+        location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True,
-        primary_location_id_field: str = "primary_location_id",
-        secondary_location_id_field: str = "secondary_location_id",
+        location_id_field: str = "location_id",
         **kwargs
     ):
         """Import location attributes from CSV file format.
@@ -212,10 +206,8 @@ class LocationAttributeTable(Table):
             catalog_name=catalog_name,
             extraction_function=extraction_function,
             field_mapping=field_mapping,
-            primary_location_id_prefix=primary_location_id_prefix,
-            primary_location_id_field=primary_location_id_field,
-            secondary_location_id_prefix=secondary_location_id_prefix,
-            secondary_location_id_field=secondary_location_id_field,
+            primary_location_id_prefix=location_id_prefix,
+            primary_location_id_field=location_id_field,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
             **kwargs
@@ -229,13 +221,11 @@ class LocationAttributeTable(Table):
         catalog_name: str = None,
         field_mapping: dict = None,
         constant_field_values: dict = None,
-        primary_location_id_prefix: str = None,
-        secondary_location_id_prefix: str = None,
+        location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         persist_dataframe: bool = False,
         drop_duplicates: bool = True,
-        primary_location_id_field: str = "primary_location_id",
-        secondary_location_id_field: str = "secondary_location_id",
+        location_id_field: str = "location_id",
     ):
         """Import data from an in-memory dataframe.
 
@@ -282,10 +272,8 @@ class LocationAttributeTable(Table):
             catalog_name=catalog_name,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
-            primary_location_id_prefix=primary_location_id_prefix,
-            secondary_location_id_prefix=secondary_location_id_prefix,
-            primary_location_id_field=primary_location_id_field,
-            secondary_location_id_field=secondary_location_id_field,
+            primary_location_id_prefix=location_id_prefix,
+            primary_location_id_field=location_id_field,
             write_mode=write_mode,
             persist_dataframe=persist_dataframe,
             drop_duplicates=drop_duplicates

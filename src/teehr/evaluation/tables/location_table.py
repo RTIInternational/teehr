@@ -61,7 +61,7 @@ class LocationTable(Table):
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True,
-        location_id_field: str = "location_id",
+        location_id_field: str = "id",
         **kwargs
     ):
         """Import geometry data.
@@ -147,7 +147,7 @@ class LocationTable(Table):
         write_mode: TableWriteEnum = "append",
         persist_dataframe: bool = False,
         drop_duplicates: bool = True,
-        location_id_field: str = "location_id",
+        location_id_field: str = "id",
     ):
         """Load data from an in-memory dataframe.
 

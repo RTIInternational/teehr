@@ -41,9 +41,9 @@ MIZU_LOCATIONS = Path(
 )
 
 
-def test_dropping_duplicates(tmpdir):
+def test_dropping_duplicates(tmp_path):
     """Test the dropping duplicates function."""
-    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
+    ev = Evaluation(local_warehouse_dir=tmp_path, create_local_dir=True)
     ev.enable_logging()
     ev.clone_template()
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
@@ -99,9 +99,9 @@ def test_dropping_duplicates(tmpdir):
     ).index.size == 78
 
 
-def test_validate_and_insert_timeseries(tmpdir):
+def test_validate_and_insert_timeseries(tmp_path):
     """Test the validate_locations function."""
-    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
+    ev = Evaluation(local_warehouse_dir=tmp_path, create_local_dir=True)
     ev.enable_logging()
     ev.clone_template()
 
@@ -184,9 +184,9 @@ def test_validate_and_insert_timeseries(tmpdir):
     assert prim_df.index.size == 114
 
 
-def test_validate_and_insert_timeseries_set_const(tmpdir):
+def test_validate_and_insert_timeseries_set_const(tmp_path):
     """Test the validate_locations function."""
-    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
+    ev = Evaluation(local_warehouse_dir=tmp_path, create_local_dir=True)
 
     ev.enable_logging()
 
@@ -252,9 +252,9 @@ def test_validate_and_insert_timeseries_set_const(tmpdir):
     assert True
 
 
-def test_validate_and_insert_summa_nc_timeseries(tmpdir):
+def test_validate_and_insert_summa_nc_timeseries(tmp_path):
     """Test the validate_locations function."""
-    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
+    ev = Evaluation(local_warehouse_dir=tmp_path, create_local_dir=True)
 
     ev.enable_logging()
 
@@ -308,9 +308,9 @@ def test_validate_and_insert_summa_nc_timeseries(tmpdir):
     assert (np.sort(teehr_values) == np.sort(nc_values)).all()
 
 
-def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
+def test_validate_and_insert_mizu_nc_timeseries(tmp_path):
     """Test the validate_locations function."""
-    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
+    ev = Evaluation(local_warehouse_dir=tmp_path, create_local_dir=True)
 
     ev.enable_logging()
 
@@ -364,7 +364,7 @@ def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
     assert (np.sort(teehr_values) == np.sort(nc_values)).all()
 
 
-def test_validate_and_insert_fews_xml_timeseries(tmpdir):
+def test_validate_and_insert_fews_xml_timeseries(tmp_path):
     """Test the validate_locations function."""
     usgs_location = Path(
         TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_location.parquet"
@@ -380,7 +380,7 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
         "usgs_hefs_06711565.parquet"
     )
 
-    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
+    ev = Evaluation(local_warehouse_dir=tmp_path, create_local_dir=True)
     ev.enable_logging()
     ev.clone_template()
 
@@ -433,9 +433,9 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
     assert metrics_df["primary_location_id"].nunique() == 1
 
 
-def test_validate_and_insert_in_memory_timeseries(tmpdir):
+def test_validate_and_insert_in_memory_timeseries(tmp_path):
     """Test the validate_locations function."""
-    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
+    ev = Evaluation(local_warehouse_dir=tmp_path, create_local_dir=True)
     ev.enable_logging()
     ev.clone_template()
 
@@ -468,7 +468,6 @@ def test_validate_and_insert_in_memory_timeseries(tmpdir):
             long_name="Streamflow"
         )
     )
-
     df = pd.read_parquet(PRIMARY_TIMESERIES_FILEPATH)
     ev.primary_timeseries.load_dataframe(
         df=df,

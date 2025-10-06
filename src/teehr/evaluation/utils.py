@@ -83,6 +83,8 @@ def create_spark_session(
     builder = SparkSession.builder.appName(app_name)
 
     # General Spark settings
+    # builder = builder.config("spark.driver.host", "localhost")
+    # builder = builder.config("spark.master", "local[*]")
     builder = builder.config("spark.sql.session.timeZone", "UTC")
     if local_warehouse_dir is not None:
         builder = builder.config("spark.local.dir", local_warehouse_dir)

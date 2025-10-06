@@ -63,7 +63,7 @@ def test_validate_and_insert_location_attributes(tmpdir):
         pattern="test_attr_*.parquet",
         location_id_prefix="usgs",
     )
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
 if __name__ == "__main__":
