@@ -31,12 +31,15 @@ class Validator:
         foreign_keys: List[Dict[str, str]]
     ):
         """Enforce foreign keys relationships on the timeseries tables."""
+        if foreign_keys is None:
+            raise ValueError("foreign_keys cannot be None.")
+
         if len(foreign_keys) > 0:
             logger.info(
                 "Enforcing foreign key constraints."
             )
+        sdf.createOrReplaceTempView("temp_table")
         for fk in foreign_keys:
-            sdf.createOrReplaceTempView("temp_table")  # TODO: Should this be outside the loop? Does it matter?
             sql = f"""
                 SELECT t.* from temp_table t
                 LEFT ANTI JOIN {fk['domain_table']} d
@@ -45,14 +48,15 @@ class Validator:
             result_sdf = self.ev.sql(
                 query=sql, create_temp_views=[fk["domain_table"]]
             )
-            self.ev.spark.catalog.dropTempView("temp_table")
             self.ev.spark.catalog.dropTempView(fk["domain_table"])
             if not result_sdf.isEmpty():
+                self.ev.spark.catalog.dropTempView("temp_table")
                 raise ValueError(
                     f"Foreign key constraint violation: "
                     f"A {fk['column']} entry is not found in "
                     f"the {fk['domain_column']} column in {fk['domain_table']}"
                 )
+        self.ev.spark.catalog.dropTempView("temp_table")
 
     @staticmethod
     def data(

@@ -88,7 +88,7 @@ TBLPROPERTIES = {
         "validate_filter_field_types": True,
         "extraction_func": convert_single_location_attributes
     },
-    "location_croswalks": {
+    "location_crosswalks": {
         "uniqueness_fields": ["secondary_location_id"],
         "foreign_keys": [
             {

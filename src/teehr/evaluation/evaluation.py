@@ -266,7 +266,8 @@ class Evaluation(EvaluationBase):
     @property
     def joined_timeseries(self) -> JoinedTimeseriesTable:
         """Access the joined timeseries table."""
-        return JoinedTimeseriesTable(self)
+        tbl = JoinedTimeseriesTable(self)
+        return tbl()
 
     def set_active_catalog(self, catalog: Literal["local", "remote"]):
         """Set the active catalog to either local or remote.

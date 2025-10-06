@@ -2,16 +2,12 @@
 import sys
 from pathlib import Path
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
-from teehr.models.filters import JoinedTimeseriesFilter
 from teehr.models.table_enums import JoinedTimeseriesFields
 from teehr.querying.utils import join_geometry
-import teehr.models.pandera_dataframe_schemas as schemas
 import pyspark.sql as ps
 import logging
 from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
 from typing import List, Union
-from teehr.utils.s3path import S3Path
-from teehr.utils.utils import to_path_or_s3path, path_to_spark
 
 logger = logging.getLogger(__name__)
 
@@ -22,21 +18,26 @@ class JoinedTimeseriesTable(TimeseriesTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.table_name = "joined_timeseries"
-        self.dir = to_path_or_s3path(ev.active_catalog.dataset_dir, self.table_name)
-        self.filter_model = JoinedTimeseriesFilter
-        self.validate_filter_field_types = False
-        self.strict_validation = False
-        self.schema_func = schemas.joined_timeseries_schema
-        self.uniqueness_fields = [
-            "primary_location_id",
-            "secondary_location_id",
-            "value_time",
-            "reference_time",
-            "variable_name",
-            "unit_name",
-            "configuration_name",
-        ]
+
+    def __call__(
+        self,
+        table_name: str = "joined_timeseries",
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None,
+    ):
+        """Get an instance of the joined timeseries table.
+
+        Note
+        ----
+        Creates an instance of a Table class with 'joined_timeseries'
+        properties. If namespace_name or catalog_name are None, they are
+        derived from the active catalog, which is 'local' by default.
+        """
+        return super().__call__(
+            table_name=table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name
+        )
 
     def field_enum(self) -> JoinedTimeseriesFields:
         """Get the joined timeseries fields enum."""
@@ -47,14 +48,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
             {field: field for field in fields_list}
         )
 
-    def to_pandas(self):
-        """Return Pandas DataFrame for Joined Timeseries."""
-        self._check_load_table()
-        df = self.sdf.toPandas()
-        df.attrs['table_type'] = 'joined_timeseries'
-        df.attrs['fields'] = self.fields()
-        return df
-
+    # TODO: Can't this be in the Table class?
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
         self._check_load_table()
@@ -220,7 +214,8 @@ class JoinedTimeseriesTable(TimeseriesTable):
         execute_scripts: bool = False,
         drop_duplicates: bool = False,
         attr_list: List[str] = None,
-        write_mode: str = "create_or_replace"
+        write_mode: str = "create_or_replace",
+        partition_by: List[str] = ["configuration_name", "variable_name"],
     ):
         """Create joined timeseries table.
 
@@ -246,19 +241,23 @@ class JoinedTimeseriesTable(TimeseriesTable):
         if execute_scripts:
             joined_df = self._run_script(joined_df)
 
-        validated_df = self._ev.validate.schema(
-            sdf=joined_df,
-            strict=False,
-            table_schema=self.schema_func(),
-            drop_duplicates=drop_duplicates,
-            foreign_keys=self.foreign_keys,
-            uniqueness_fields=self.uniqueness_fields
+        validated_df = self._ev.validate.data(
+            df=joined_df,
+            table_schema=self.schema_func()
         )
+        # validated_df = self._ev.validate.schema(
+        #     sdf=joined_df,
+        #     strict=False,
+        #     table_schema=self.schema_func(),
+        #     drop_duplicates=drop_duplicates,
+        #     foreign_keys=self.foreign_keys,
+        #     uniqueness_fields=self.uniqueness_fields
+        # )
         self._ev.write.to_warehouse(
             source_data=validated_df,
             table_name=self.table_name,
             write_mode=write_mode,
-            partition_by=self.partition_by,
+            partition_by=partition_by,
         )
         logger.info("Joined timeseries table created.")
         self._load_table()

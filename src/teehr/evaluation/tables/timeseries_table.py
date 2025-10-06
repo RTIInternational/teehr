@@ -3,6 +3,9 @@ from pathlib import Path
 from typing import Union
 import logging
 
+import pandas as pd
+import pyspark.sql as ps
+
 from teehr.evaluation.tables.generic_table import Table
 from teehr.loading.utils import (
     validate_input_is_xml,
@@ -121,13 +124,13 @@ class TimeseriesTable(Table):
             extraction_function=extraction_function,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
-            location_id_prefix=location_id_prefix,
+            primary_location_id_prefix=location_id_prefix,
             write_mode=write_mode,
             parallel=parallel,
             max_workers=max_workers,
             persist_dataframe=persist_dataframe,
             drop_duplicates=drop_duplicates,
-            location_id_field=location_id_field,
+            primary_location_id_field=location_id_field,
             **kwargs
         )
         self._load_table()
@@ -217,7 +220,7 @@ class TimeseriesTable(Table):
         if namespace_name is None:
             namespace_name = self._ev.active_catalog.namespace_name
         if catalog_name is None:
-            catalog_name = self._ev.active_catalog.name
+            catalog_name = self._ev.active_catalog.catalog_name
 
         table_name = self.table_name
 
@@ -230,13 +233,13 @@ class TimeseriesTable(Table):
             extraction_function=extraction_function,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
-            location_id_prefix=location_id_prefix,
+            primary_location_id_prefix=location_id_prefix,
             write_mode=write_mode,
             parallel=parallel,
             max_workers=max_workers,
             persist_dataframe=persist_dataframe,
             drop_duplicates=drop_duplicates,
-            location_id_field=location_id_field,
+            primary_location_id_field=location_id_field,
             **kwargs
         )
         self._load_table()
@@ -326,7 +329,7 @@ class TimeseriesTable(Table):
         if namespace_name is None:
             namespace_name = self._ev.active_catalog.namespace_name
         if catalog_name is None:
-            catalog_name = self._ev.active_catalog.name
+            catalog_name = self._ev.active_catalog.catalog_name
 
         table_name = self.table_name
 
@@ -339,13 +342,13 @@ class TimeseriesTable(Table):
             extraction_function=extraction_function,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
-            location_id_prefix=location_id_prefix,
+            primary_location_id_prefix=location_id_prefix,
             write_mode=write_mode,
             parallel=parallel,
             max_workers=max_workers,
             persist_dataframe=persist_dataframe,
             drop_duplicates=drop_duplicates,
-            location_id_field=location_id_field,
+            primary_location_id_field=location_id_field,
             **kwargs
         )
         self._load_table()
@@ -463,7 +466,7 @@ class TimeseriesTable(Table):
         if namespace_name is None:
             namespace_name = self._ev.active_catalog.namespace_name
         if catalog_name is None:
-            catalog_name = self._ev.active_catalog.name
+            catalog_name = self._ev.active_catalog.catalog_name
 
         table_name = self.table_name
 
@@ -476,13 +479,81 @@ class TimeseriesTable(Table):
             extraction_function=extraction_function,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
-            location_id_prefix=location_id_prefix,
+            primary_location_id_prefix=location_id_prefix,
             write_mode=write_mode,
             parallel=parallel,
             max_workers=max_workers,
             persist_dataframe=persist_dataframe,
             drop_duplicates=drop_duplicates,
-            location_id_field=location_id_field,
+            primary_location_id_field=location_id_field,
             **kwargs
+        )
+        self._load_table()
+
+    def load_dataframe(
+        self,
+        df: Union[pd.DataFrame, ps.DataFrame],
+        namespace_name: str = None,
+        catalog_name: str = None,
+        field_mapping: dict = None,
+        constant_field_values: dict = None,
+        location_id_prefix: str = None,
+        write_mode: TableWriteEnum = "append",
+        persist_dataframe: bool = False,
+        drop_duplicates: bool = True,
+        location_id_field: str = "location_id",
+    ):
+        """Load data from an in-memory dataframe.
+
+        Parameters
+        ----------
+        df : Union[pd.DataFrame, ps.DataFrame]
+            Pandas or PySparkDataFrame to load into the table.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+        constant_field_values : dict, optional
+            A dictionary mapping field names to constant values.
+            Format: {field_name: value}.
+        location_id_prefix : str, optional
+            The prefix to add to location IDs.
+            Used to ensure unique location IDs across configurations.
+            Note, the methods for fetching USGS and NWM data automatically
+            prefix location IDs with "usgs" or the nwm version
+            ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table.
+            Options are "append", "upsert", and "overwrite".
+            If "append", the table will be appended with new data that does
+            already exist.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
+            If "overwrite", existing partitions receiving new data are overwritten.
+        persist_dataframe : bool, optional (default: False)
+            Whether to repartition and persist the pyspark dataframe after
+            reading from the cache. This can improve performance when loading
+            a large number of files from the cache.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the dataframe.
+        """ # noqa
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
+        if catalog_name is None:
+            catalog_name = self._ev.active_catalog.catalog_name
+
+        table_name = self.table_name
+
+        self._load.dataframe(
+            df=df,
+            table_name=table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
+            field_mapping=field_mapping,
+            constant_field_values=constant_field_values,
+            primary_location_id_prefix=location_id_prefix,
+            primary_location_id_field=location_id_field,
+            write_mode=write_mode,
+            persist_dataframe=persist_dataframe,
+            drop_duplicates=drop_duplicates
         )
         self._load_table()

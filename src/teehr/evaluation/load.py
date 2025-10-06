@@ -7,7 +7,7 @@ import pyspark.sql.functions as F
 import pyspark.sql as ps
 import pandas as pd
 # from pyarrow import schema as arrow_schema
-# import geopandas as gpd
+import geopandas as gpd
 
 from teehr.models.pydantic_table_models import Attribute
 from teehr import const
@@ -42,14 +42,31 @@ class Load:
     def dataframe(
         self,
         df: pd.DataFrame | ps.DataFrame,
-        field_mapping: dict,
-        constant_field_values: dict,
-        location_id_prefix: str,
-        write_mode: TableWriteEnum,
-        persist_dataframe: bool,
-        drop_duplicates: bool
+        table_name: str,
+        namespace_name: str = None,
+        catalog_name: str = None,
+        field_mapping: dict = None,
+        constant_field_values: dict = None,
+        primary_location_id_prefix: str = None,
+        primary_location_id_field: str = "location_id",
+        secondary_location_id_prefix: str = None,
+        secondary_location_id_field: str = None,
+        write_mode: TableWriteEnum = "append",
+        persist_dataframe: bool = False,
+        drop_duplicates: bool = True
     ):
         """Load a timeseries from an in-memory dataframe."""
+        table_props = TBLPROPERTIES.get(table_name)
+        # TODO: Should we allow loading to a new table?
+        if not table_props:
+            raise ValueError(f"Table properties for {table_name} not found.")
+
+        schema_func = table_props.get("schema_func")
+        uniqueness_fields = table_props.get("uniqueness_fields")
+        foreign_keys = table_props.get("foreign_keys")
+        # Aren't the table fields fixed and defined in the schema?
+        fields = list(schema_func().columns.keys())
+
         if (isinstance(df, ps.DataFrame) and df.isEmpty()) or (
             isinstance(df, pd.DataFrame) and df.empty
         ):
@@ -58,22 +75,36 @@ class Load:
                 "No data will be loaded into the table."
             )
             return
-        # self.schema_func(type="pandas").columns.keys()
-        self._extract._merge_field_mapping(
-            table_fields=self.field_enum(),
+        field_mapping = self._extract._merge_field_mapping(
+            table_fields=fields,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values
         )
+        if field_mapping is not None:
+            df = df.rename(columns=field_mapping)
+
         # Convert the input DataFrame to Spark DataFrame
-        if isinstance(df, pd.DataFrame):
-            df = self.spark.createDataFrame(df)
+        if isinstance(df, gpd.GeoDataFrame):
+            # This is a bit of a workaround due to spark failing when converting
+            # a pd.DataFrame with all null columns. We can pass in a schema, but
+            # first we validate with pandera to ensure all columns are present.
+            df = schema_func("pandas").validate(df)
+            df = df.to_wkb()
+            df = self._ev.spark.createDataFrame(
+                df, schema=schema_func().to_structtype()
+            )
+        elif isinstance(df, pd.DataFrame):
+            # This is a bit of a workaround due to spark failing when converting
+            # a pd.DataFrame with all null columns. We can pass in a schema, but
+            # first we validate with pandera to ensure all columns are present.
+            df = schema_func("pandas").validate(df)
+            df = self._ev.spark.createDataFrame(
+                df, schema=schema_func().to_structtype()
+            )
         elif not isinstance(df, ps.DataFrame):
             raise TypeError(
-                "Input dataframe must be a Pandas DataFrame or a PySpark DataFrame."
+                "Input dataframe must be one of Pandas, GeoPandas, or PySpark."
             )
-        # Apply field mapping and constant field values
-        if field_mapping:
-            df = df.withColumnsRenamed(field_mapping)
 
         if constant_field_values:
             for field, value in constant_field_values.items():
@@ -82,25 +113,38 @@ class Load:
         if persist_dataframe:
             df = df.persist()
 
-        if location_id_prefix:
+        if primary_location_id_prefix:
             df = add_or_replace_sdf_column_prefix(
                 sdf=df,
-                column_name="location_id",
-                prefix=location_id_prefix,
+                column_name=primary_location_id_field,
+                prefix=primary_location_id_prefix,
             )
-        validated_df = self._validate.schema(
-            sdf=df,
-            table_schema=self.schema_func(),
-            drop_duplicates=drop_duplicates,
-            foreign_keys=self.foreign_keys,
-            uniqueness_fields=self.uniqueness_fields,
-            add_missing_columns=True
-        )
+        if secondary_location_id_prefix:
+            df = add_or_replace_sdf_column_prefix(
+                sdf=df,
+                column_name=secondary_location_id_field,
+                prefix=secondary_location_id_prefix,
+            )
+        if foreign_keys is not None:
+            validated_df = self._validate.schema(
+                sdf=df,
+                table_schema=schema_func(),
+                drop_duplicates=drop_duplicates,
+                foreign_keys=foreign_keys,
+                uniqueness_fields=uniqueness_fields
+            )
+        else:
+            validated_df = self._validate.data(
+                df=df,
+                table_schema=schema_func(),
+            )
         self._write.to_warehouse(
             source_data=validated_df,
-            table_name=self.table_name,
+            table_name=table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
             write_mode=write_mode,
-            uniqueness_fields=self.uniqueness_fields
+            uniqueness_fields=uniqueness_fields
         )
 
         df.unpersist()
@@ -114,13 +158,15 @@ class Load:
         extraction_function: callable = None,
         pattern: str = None,
         field_mapping: dict = None,
-        location_id_prefix: str = None,
+        primary_location_id_prefix: str = None,
+        primary_location_id_field: str = "location_id",
+        secondary_location_id_prefix: str = None,
+        secondary_location_id_field: str = None,
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True,
         update_attrs_table: bool = True,
         parallel: bool = False,
         max_workers: int = 1,
-        location_id_field: str = "location_id",
         persist_dataframe: bool = False,
         **kwargs
     ):
@@ -174,12 +220,18 @@ class Load:
             path=table_cache_dir,
             table_schema_func=schema_func()
         ).to_sdf()
-        # Add or replace location_id prefix if provided
-        if location_id_prefix:
+        # Add or replace primary_location_id prefix if provided
+        if primary_location_id_prefix:
             sdf = add_or_replace_sdf_column_prefix(
                 sdf=sdf,
-                column_name=location_id_field,
-                prefix=location_id_prefix,
+                column_name=primary_location_id_field,
+                prefix=primary_location_id_prefix,
+            )
+        if secondary_location_id_prefix:
+            sdf = add_or_replace_sdf_column_prefix(
+                sdf=sdf,
+                column_name=secondary_location_id_field,
+                prefix=secondary_location_id_prefix,
             )
         # Only valid when table_name = 'location_attributes'
         # What happens if not? -- the select fails

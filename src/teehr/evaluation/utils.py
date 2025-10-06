@@ -56,7 +56,6 @@ def create_spark_session(
     local_warehouse_dir: Union[str, Path] = None,
     local_catalog_name: str = "local",
     local_catalog_type: str = "hadoop",
-    local_catalog_uri: str = "http://127.0.0.1:9001",
     remote_warehouse_dir: str = const.WAREHOUSE_S3_PATH,
     remote_catalog_name: str = "iceberg",
     remote_catalog_type: str = "rest",
@@ -88,7 +87,7 @@ def create_spark_session(
     if local_warehouse_dir is not None:
         builder = builder.config("spark.local.dir", local_warehouse_dir)
 
-    # EMR comes with pre-installed jars, use compatible versions for PySpark 4
+    # Get jars, use compatible versions for PySpark 4
     builder = builder.config(
         "spark.jars.packages",
         f"org.apache.sedona:sedona-spark-shaded-{PYSPARK_VERSION}_{SCALA_VERSION}:{SEDONA_VERSION},"
@@ -117,7 +116,7 @@ def create_spark_session(
         builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.warehouse", local_warehouse_dir)
         # builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.io-impl", "org.apache.iceberg.aws.s3.S3FileIO")
 
-    # EMR optimizations
+    # Other optimizations
     builder = builder.config("spark.sql.adaptive.enabled", "true")
     builder = builder.config("spark.sql.adaptive.coalescePartitions.enabled", "true")
     builder = builder.config("spark.sql.adaptive.skewJoin.enabled", "true")
@@ -126,20 +125,6 @@ def create_spark_session(
     builder = builder.config("spark.driver.maxResultSize", f"{int(driver_maxresultsize)}g")
 
     # TODO: Could we also configure BigQuery settings here for NWM data?
-
-    # # Other optimizations to consider
-    # # Memory management
-    # builder = builder.config("spark.sql.adaptive.advisoryPartitionSizeInBytes", "128MB")
-    # builder = builder.config("spark.sql.adaptive.maxShuffledHashJoinLocalMapThreshold", "0")
-
-    # # I/O optimizations
-    # builder = builder.config("spark.sql.files.maxPartitionBytes", "128MB")
-    # builder = builder.config("spark.sql.files.openCostInBytes", "4MB")
-
-    # # Dynamic allocation (useful for EMR)
-    # builder = builder.config("spark.dynamicAllocation.enabled", "true")
-    # builder = builder.config("spark.dynamicAllocation.minExecutors", "1")
-    # builder = builder.config("spark.dynamicAllocation.maxExecutors", "8")
 
     # S3 stuff -- is S3AFileSystem needed?
     builder = builder.config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
