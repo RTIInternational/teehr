@@ -352,7 +352,9 @@ class Metrics:
         >>>     write_mode="create_or_replace"
         >>> )
         """
-        logger.info(f"Writing metrics results to the warehouse table: {table_name}.")
+        logger.info(
+            f"Writing metrics results to the warehouse table: {table_name}."
+        )
         self._write.to_warehouse(
             source_data=self.sdf,
             table_name=table_name,

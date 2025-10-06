@@ -18,8 +18,8 @@ class VariableTable(DomainTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.name = "variables"
-        self.dir = to_path_or_s3path(ev.active_catalog.dataset_dir, self.name)
+        self.table_name = "variables"
+        self.dir = to_path_or_s3path(ev.active_catalog.dataset_dir, self.table_name)
         self.filter_model = VariableFilter
         self.schema_func = schemas.variable_schema
         self.uniqueness_fields = ["name"]

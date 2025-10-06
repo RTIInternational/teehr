@@ -114,7 +114,6 @@ class Read:
         logger.info(
             f"Reading files from {catalog_name}.{namespace_name}.{table_name}."
         )
-
         # This is the guts of validate_and_apply_filters re-configured a bit.
         # Should it be moved to it's own function?:
         if filters is None:

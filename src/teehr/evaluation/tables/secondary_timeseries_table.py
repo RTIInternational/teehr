@@ -28,8 +28,8 @@ class SecondaryTimeseriesTable(TimeseriesTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.name = "secondary_timeseries"
-        self.dir = to_path_or_s3path(ev.active_catalog.dataset_dir, self.name)
+        self.table_name = "secondary_timeseries"
+        self.dir = to_path_or_s3path(ev.active_catalog.dataset_dir, self.table_name)
         self.schema_func = schemas.secondary_timeseries_schema
         self.uniqueness_fields = [
             "location_id",
@@ -134,7 +134,7 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         )
         self._write.to_warehouse(
             source_data=validated_df,
-            table_name=self.name,
+            table_name=self.table_name,
             write_mode=write_mode,
             uniqueness_fields=self.uniqueness_fields
         )

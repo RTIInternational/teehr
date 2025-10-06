@@ -42,6 +42,7 @@ from teehr.evaluation.validate import Validator
 from teehr.evaluation.workflows import Workflow
 from teehr.evaluation.tables.generic_table import Table
 from teehr.evaluation.read import Read
+from teehr.evaluation.load import Load
 from teehr.evaluation.utils import (
     create_spark_session,
     copy_migrations_dir,
@@ -119,17 +120,20 @@ class Evaluation(EvaluationBase):
             if create_local_dir:
                 logger.info(f"Creating directory {local_warehouse_dir}.")
                 Path(local_warehouse_dir).mkdir(parents=True, exist_ok=True)
-            # else:
-            #     logger.error(f"Directory {local_warehouse_dir} does not exist.")
-            #     raise NotADirectoryError
+
+        # Initialize cache and scripts dir. These are only valid
+        # when using a local catalog.
+        self.cache_dir = None
+        self.scripts_dir = None
 
         # Check version of Evaluation
         if check_evaluation_version is True:
             if create_local_dir is False:
                 self.check_evaluation_version()
 
-        # Spark session
+        # If a Spark session is provided.
         self.spark = spark
+
         # Create a Spark Session if one is not provided.
         if not self.spark:
             logger.info("Creating a new Spark session.")
@@ -148,12 +152,6 @@ class Evaluation(EvaluationBase):
         # Set the local catalog as the active catalog by default.
         if local_warehouse_dir is not None:
             self.set_active_catalog("local")
-            self.cache_dir = to_path_or_s3path(
-                local_warehouse_dir, const.CACHE_DIR
-            )
-            self.scripts_dir = to_path_or_s3path(
-                local_warehouse_dir, const.SCRIPTS_DIR
-            )
         else:
             self.set_active_catalog("remote")
 
@@ -166,6 +164,11 @@ class Evaluation(EvaluationBase):
     def validate(self) -> Validator:
         """The validate component class for validating data."""
         return Validator(self)
+
+    @property
+    def load(self) -> Load:
+        """The load component class for loading data."""
+        return Load(self)
 
     @property
     def extract(self) -> DataExtractor:
@@ -268,6 +271,12 @@ class Evaluation(EvaluationBase):
             self.active_catalog = self.local_catalog
             self.spark.catalog.setCurrentCatalog(
                 self.local_catalog.catalog_name
+            )
+            self.cache_dir = to_path_or_s3path(
+                self.local_catalog.warehouse_dir, const.CACHE_DIR
+            )
+            self.scripts_dir = to_path_or_s3path(
+                self.local_catalog.warehouse_dir, const.SCRIPTS_DIR
             )
             logger.info("Active catalog set to local.")
         elif catalog == "remote":

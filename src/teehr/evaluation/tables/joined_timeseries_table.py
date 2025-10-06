@@ -22,8 +22,8 @@ class JoinedTimeseriesTable(TimeseriesTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.name = "joined_timeseries"
-        self.dir = to_path_or_s3path(ev.active_catalog.dataset_dir, self.name)
+        self.table_name = "joined_timeseries"
+        self.dir = to_path_or_s3path(ev.active_catalog.dataset_dir, self.table_name)
         self.filter_model = JoinedTimeseriesFilter
         self.validate_filter_field_types = False
         self.strict_validation = False
@@ -191,7 +191,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
         # TODO: What should default write mode be?
         self._ev.write.to_warehouse(
             source_data=self.sdf,
-            table_name=self.name,
+            table_name=self.table_name,
             write_mode=write_mode,
             uniqueness_fields=self.uniqueness_fields,
             partition_by=self.partition_by,
@@ -256,7 +256,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
         )
         self._ev.write.to_warehouse(
             source_data=validated_df,
-            table_name=self.name,
+            table_name=self.table_name,
             write_mode=write_mode,
             partition_by=self.partition_by,
         )
@@ -307,6 +307,6 @@ class JoinedTimeseriesTable(TimeseriesTable):
     #     df = self._ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
     #     if df.isEmpty():
     #         if show_missing_table_warning:
-    #             logger.warning(f"An empty dataframe was returned for '{self.name}'.")
+    #             logger.warning(f"An empty dataframe was returned for '{self.table_name}'.")
     #             return df
     #     return self._ev.spark.read.format(self.format).options(**options).load(path)

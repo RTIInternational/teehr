@@ -6,6 +6,14 @@
 
 import teehr.models.pandera_dataframe_schemas as schemas
 import teehr.models.filters as table_filters
+from teehr.loading.locations import convert_single_locations
+from teehr.loading.location_attributes import (
+    convert_single_location_attributes
+)
+from teehr.loading.location_crosswalks import (
+    convert_single_location_crosswalks
+)
+from teehr.loading.timeseries import convert_single_timeseries
 
 
 TBLPROPERTIES = {
@@ -16,7 +24,8 @@ TBLPROPERTIES = {
         "schema_func": schemas.unit_schema,
         "file_format": "csv",
         "strict_validation": True,
-        "validate_filter_field_types": True
+        "validate_filter_field_types": True,
+        "extraction_func": None
     },
     "variables": {
         "uniqueness_fields": ["name"],
@@ -25,7 +34,8 @@ TBLPROPERTIES = {
         "schema_func": schemas.variable_schema,
         "file_format": "csv",
         "strict_validation": True,
-        "validate_filter_field_types": True
+        "validate_filter_field_types": True,
+        "extraction_func": None
     },
     "configurations": {
         "uniqueness_fields": ["name"],
@@ -34,7 +44,8 @@ TBLPROPERTIES = {
         "schema_func": schemas.configuration_schema,
         "file_format": "csv",
         "strict_validation": True,
-        "validate_filter_field_types": True
+        "validate_filter_field_types": True,
+        "extraction_func": None
     },
     "attributes": {
         "uniqueness_fields": ["name"],
@@ -43,7 +54,8 @@ TBLPROPERTIES = {
         "schema_func": schemas.attribute_schema,
         "file_format": "csv",
         "strict_validation": True,
-        "validate_filter_field_types": True
+        "validate_filter_field_types": True,
+        "extraction_func": None
     },
     "locations": {
         "uniqueness_fields": ["id"],
@@ -52,7 +64,8 @@ TBLPROPERTIES = {
         "schema_func": schemas.locations_schema,
         "file_format": "parquet",
         "strict_validation": True,
-        "validate_filter_field_types": True
+        "validate_filter_field_types": True,
+        "extraction_func": convert_single_locations
     },
     "location_attributes": {
         "uniqueness_fields": ["location_id", "attribute_name"],
@@ -72,7 +85,8 @@ TBLPROPERTIES = {
         "schema_func": schemas.location_attributes_schema,
         "file_format": "parquet",
         "strict_validation": True,
-        "validate_filter_field_types": True
+        "validate_filter_field_types": True,
+        "extraction_func": convert_single_location_attributes
     },
     "location_croswalks": {
         "uniqueness_fields": ["secondary_location_id"],
@@ -87,7 +101,8 @@ TBLPROPERTIES = {
         "schema_func": schemas.location_crosswalks_schema,
         "file_format": "parquet",
         "strict_validation": True,
-        "validate_filter_field_types": True
+        "validate_filter_field_types": True,
+        "extraction_func": convert_single_location_crosswalks
     },
     "primary_timeseries": {
         "uniqueness_fields": [
@@ -124,7 +139,8 @@ TBLPROPERTIES = {
         "schema_func": schemas.primary_timeseries_schema,
         "file_format": "parquet",
         "strict_validation": True,
-        "validate_filter_field_types": True
+        "validate_filter_field_types": True,
+        "extraction_func": convert_single_timeseries
     },
     "secondary_timeseries": {
         "uniqueness_fields": [
@@ -161,7 +177,8 @@ TBLPROPERTIES = {
         "schema_func": schemas.secondary_timeseries_schema,
         "file_format": "parquet",
         "strict_validation": True,
-        "validate_filter_field_types": True
+        "validate_filter_field_types": True,
+        "extraction_func": convert_single_timeseries
     },
     "joined_timeseries": {
         "uniqueness_fields": [
@@ -178,6 +195,7 @@ TBLPROPERTIES = {
         "schema_func": schemas.joined_timeseries_schema,
         "file_format": "parquet",
         "strict_validation": False,
-        "validate_filter_field_types": False
+        "validate_filter_field_types": False,
+        "extraction_func": None
     }
 }

@@ -24,7 +24,7 @@ class BaseTable:
     def __init__(self, ev):
         """Initialize class."""
         self._ev = ev  # Still needed?
-        self.name = None
+        self.table_name = None
         self.dir = None
         self.schema_func = None
         self.format = None
@@ -61,12 +61,12 @@ class BaseTable:
         logger.info(
             f"Loading files from {self._ev.active_catalog.catalog_name}."
             f"{self._ev.active_catalog.namespace_name}."
-            f"{self.name}."
+            f"{self.table_name}."
         )
         self.sdf = self._read.from_warehouse(
             catalog_name=self._ev.active_catalog.catalog_name,
             namespace_name=self._ev.active_catalog.namespace_name,
-            table_name=self.name
+            table_name=self.table_name
         ).to_sdf()
 
     def _check_load_table(self):
@@ -78,7 +78,7 @@ class BaseTable:
         if self.sdf is None:
             self._load_table()
         if self.sdf is None:
-            self._raise_missing_table_error(table_name=self.name)
+            self._raise_missing_table_error(table_name=self.table_name)
 
     def _get_schema(self, type: str = "pyspark"):
         """Get the primary timeseries schema.
@@ -379,7 +379,7 @@ class BaseTable:
         self._check_load_table()
         if column not in self.sdf.columns:
             raise ValueError(
-                f"Invalid column: '{column}' for table: '{self.name}'"
+                f"Invalid column: '{column}' for table: '{self.table_name}'"
             )
         if location_prefixes:
             # ensure valid table
@@ -389,10 +389,10 @@ class BaseTable:
                             'locations',
                             'location_attributes',
                             'location_crosswalks']
-            if self.name not in valid_tables:
+            if self.table_name not in valid_tables:
                 raise ValueError(
                     f"""
-                    Invalid table: '{self.name}' with argument
+                    Invalid table: '{self.table_name}' with argument
                     location_prefixes==True. Valid tables are: {valid_tables}
                     """
                     )
@@ -406,12 +406,12 @@ class BaseTable:
                              'location_crosswalks': ['primary_location_id',
                                                      'secondary_location_id']
                              }
-            if column not in valid_columns[self.name]:
+            if column not in valid_columns[self.table_name]:
                 raise ValueError(
                     f"""
-                    Invalid column: '{column}' for table: '{self.name}' with
+                    Invalid column: '{column}' for table: '{self.table_name}' with
                     argument location_prefixes==True. Valid columns are:
-                    {valid_columns[self.name]}
+                    {valid_columns[self.table_name]}
                     """
                 )
             # get unique location prefixes
@@ -436,7 +436,7 @@ class BaseTable:
         """Return Pandas DataFrame."""
         self._check_load_table()
         df = self.sdf.toPandas()
-        df.attrs['table_type'] = self.name
+        df.attrs['table_type'] = self.table_name
         df.attrs['fields'] = self.fields()
         return df
 
@@ -527,7 +527,7 @@ class BaseTable:
         )
         self._ev.write.to_warehouse(
             source_data=validated_df,
-            table_name=self.name,
+            table_name=self.table_name,
             write_mode=write_mode,
             uniqueness_fields=self.uniqueness_fields
         )

@@ -32,8 +32,8 @@ class LocationCrosswalkTable(BaseTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.name = "location_crosswalks"
-        self.dir = to_path_or_s3path(ev.active_catalog.dataset_dir, self.name)
+        self.table_name = "location_crosswalks"
+        self.dir = to_path_or_s3path(ev.active_catalog.dataset_dir, self.table_name)
         self.format = "parquet"
         self.filter_model = LocationCrosswalkFilter
         self.schema_func = schemas.location_crosswalks_schema
@@ -112,7 +112,7 @@ class LocationCrosswalkTable(BaseTable):
 
         self._ev.write.to_warehouse(
             source_data=validated_df,
-            table_name=self.name,
+            table_name=self.table_name,
             write_mode=write_mode,
             uniqueness_fields=self.uniqueness_fields
         )
@@ -129,7 +129,7 @@ class LocationCrosswalkTable(BaseTable):
         """Return Pandas DataFrame for Location Crosswalk."""
         self._check_load_table()
         df = self.sdf.toPandas()
-        df.attrs['table_type'] = self.name
+        df.attrs['table_type'] = self.table_name
         df.attrs['fields'] = self.fields()
         return df
 
@@ -140,7 +140,7 @@ class LocationCrosswalkTable(BaseTable):
             self.sdf, self._ev.locations.to_sdf(),
             "primary_location_id"
         )
-        gdf.attrs['table_type'] = self.name
+        gdf.attrs['table_type'] = self.table_name
         gdf.attrs['fields'] = self.fields()
         return gdf
 

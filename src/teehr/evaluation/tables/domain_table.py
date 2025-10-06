@@ -34,7 +34,7 @@ class DomainTable(BaseTable):
             pd.DataFrame([o.model_dump() for o in obj])
             )
         logger.info(
-            f"Validating {len(obj)} objects before adding to {self.name} table"
+            f"Validating {len(obj)} objects before adding to {self.table_name} table"
             )
         new_df_validated = self._ev.validate.schema(
             sdf=new_df,
@@ -49,12 +49,12 @@ class DomainTable(BaseTable):
         )
         if df_matched.count() == 0:
             # add the validated new data to the existing data
-            logger.info(f"Adding {len(obj)} objects to {self.name} table")
+            logger.info(f"Adding {len(obj)} objects to {self.table_name} table")
             combined_df = org_df.unionByName(new_df_validated).repartition(1)
 
             # validate the combined data
             logger.info(
-                f"Validating {self.name} table after adding {len(obj)} objects"
+                f"Validating {self.table_name} table after adding {len(obj)} objects"
                 )
             validated_df = self._ev.validate.schema(
                 sdf=combined_df,
@@ -65,7 +65,7 @@ class DomainTable(BaseTable):
 
             self._ev.write.to_warehouse(
                 source_data=validated_df,
-                table_name=self.name,
+                table_name=self.table_name,
                 write_mode=write_mode,
                 uniqueness_fields=self.uniqueness_fields
             )
@@ -74,7 +74,7 @@ class DomainTable(BaseTable):
             matched_count = df_matched.count()
             logger.warning(
                 f"{matched_count} rows in the added data already exist in the "
-                f"{self.name} table. Skipping these duplicates. "
+                f"{self.table_name} table. Skipping these duplicates. "
                 )
             # Include a warning detailing which values are duplicates
             matched_values = df_matched.select(
@@ -100,12 +100,12 @@ class DomainTable(BaseTable):
             )
             logger.info(
                 f"Adding {new_df_not_matched.count()} new objects to "
-                f"{self.name} table"
+                f"{self.table_name} table"
             )
             combined_df = org_df.unionByName(new_df_not_matched).repartition(1)
             # validate the combined data
             logger.info(
-                f"Validating {self.name} table after adding "
+                f"Validating {self.table_name} table after adding "
                 f"{new_df_not_matched.count()} new objects"
             )
             validated_df = self._ev.validate.schema(
@@ -117,7 +117,7 @@ class DomainTable(BaseTable):
 
             self._ev.write.to_warehouse(
                 source_data=validated_df,
-                table_name=self.name,
+                table_name=self.table_name,
                 write_mode=write_mode,
                 uniqueness_fields=self.uniqueness_fields
             )

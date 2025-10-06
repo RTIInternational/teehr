@@ -7,7 +7,7 @@ import pandas as pd
 from pyarrow import schema as arrow_schema
 import geopandas as gpd
 
-from teehr.evaluation.utils import get_table_instance
+# from teehr.evaluation.utils import get_table_instance
 from teehr.models.table_properties import TBLPROPERTIES
 
 
@@ -140,7 +140,7 @@ class Write:
 
     def to_warehouse(
         self,
-        source_data: DataFrame | str,
+        source_data: pd.DataFrame | DataFrame | str,
         table_name: str,
         write_mode: str = "append",
         uniqueness_fields: List[str] | None = None,
@@ -154,8 +154,8 @@ class Write:
         ----------
         sdf : DataFrame
             The Spark DataFrame to write.
-        source_data : DataFrame | str
-            The Spark DataFrame or temporary view name to write.
+        source_data : pd.DataFrame | DataFrame | str
+            The Spark or Pandas DataFrame or temporary view name to write.
         table_name : str
             The target table name in the catalog.
         write_mode : str, optional
@@ -175,6 +175,9 @@ class Write:
 
         if uniqueness_fields is None and table_name in TBLPROPERTIES:
             uniqueness_fields = TBLPROPERTIES[table_name].get("uniqueness_fields")
+
+        if isinstance(source_data, pd.DataFrame):
+            source_data = self.spark.createDataFrame(source_data)
 
         if isinstance(source_data, DataFrame):
             source_data.createOrReplaceTempView("source_data")

@@ -15,7 +15,7 @@ from teehr.models.str_enum import StrEnum
 from teehr.querying.utils import order_df
 from teehr.models.evaluation_base import EvaluationBase
 from teehr.models.filters import FilterBaseModel
-from teehr.models.table_properties import TBLPROPERTIES as tbl_properties
+from teehr.models.table_properties import TBLPROPERTIES
 
 
 logger = logging.getLogger(__name__)
@@ -43,9 +43,9 @@ class Table:
         self.sdf = None
 
         if namespace_name is None:
-            self.namespace_name = self._ev.active_catalog.namespace_name
+            self.table_namespace_name = self._ev.active_catalog.namespace_name
         else:
-            self.namespace_name = namespace_name
+            self.table_namespace_name = namespace_name
         if catalog_name is None:
             self.catalog_name = self._ev.active_catalog.catalog_name
         else:
@@ -54,13 +54,13 @@ class Table:
         # What if the table doesn't exist yet?
         # self.sdf = self._ev.read.from_warehouse(
         #     table_name=self.table_name,
-        #     namespace_name=self.namespace_name,
+        #     namespace_name=self.table_namespace_name,
         #     catalog_name=self.catalog_name
         # ).to_sdf()
 
-        if table_name in tbl_properties:
+        if table_name in TBLPROPERTIES:
             # Just set self.table_properties here?
-            table_props = tbl_properties[self.table_name]
+            table_props = TBLPROPERTIES[self.table_name]
             self.uniqueness_fields: List[str] = table_props["uniqueness_fields"]
             self.foreign_keys: List[Dict[str, str]] = table_props["foreign_keys"]
             self.schema_func = table_props["schema_func"]
@@ -93,12 +93,12 @@ class Table:
         """
         logger.info(
             f"Loading files from {self.catalog_name}."
-            f"{self.namespace_name}."
+            f"{self.table_namespace_name}."
             f"{self.table_name}."
         )
         self.sdf = self._read.from_warehouse(
             catalog_name=self.catalog_name,
-            namespace_name=self.namespace_name,
+            namespace_name=self.table_namespace_name,
             table_name=self.table_name
         ).to_sdf()
 
@@ -238,7 +238,7 @@ class Table:
         if filters is not None:
             self.sdf = self._read.from_warehouse(
                 catalog_name=self.catalog_name,
-                namespace_name=self.namespace_name,
+                namespace_name=self.table_namespace_name,
                 table_name=self.table_name,
                 filters=filters,
                 validate_filter_field_types=self.validate_filter_field_types,
@@ -337,7 +337,7 @@ class Table:
         self._check_load_table()
         self.sdf = self._read.from_warehouse(
             catalog_name=self.catalog_name,
-            namespace_name=self.namespace_name,
+            namespace_name=self.table_namespace_name,
             table_name=self.table_name,
             filters=filters,
             validate_filter_field_types=self.validate_filter_field_types,
@@ -410,7 +410,7 @@ class Table:
         self._check_load_table()
         if column not in self.sdf.columns:
             raise ValueError(
-                f"Invalid column: '{column}' for table: '{self.name}'"
+                f"Invalid column: '{column}' for table: '{self.table_name}'"
             )
         if location_prefixes:
             # ensure valid table
@@ -420,10 +420,10 @@ class Table:
                             'locations',
                             'location_attributes',
                             'location_crosswalks']
-            if self.name not in valid_tables:
+            if self.table_name not in valid_tables:
                 raise ValueError(
                     f"""
-                    Invalid table: '{self.name}' with argument
+                    Invalid table: '{self.table_name}' with argument
                     location_prefixes==True. Valid tables are: {valid_tables}
                     """
                     )
@@ -437,12 +437,12 @@ class Table:
                              'location_crosswalks': ['primary_location_id',
                                                      'secondary_location_id']
                              }
-            if column not in valid_columns[self.name]:
+            if column not in valid_columns[self.table_name]:
                 raise ValueError(
                     f"""
-                    Invalid column: '{column}' for table: '{self.name}' with
+                    Invalid column: '{column}' for table: '{self.table_name}' with
                     argument location_prefixes==True. Valid columns are:
-                    {valid_columns[self.name]}
+                    {valid_columns[self.table_name]}
                     """
                 )
             # get unique location prefixes

@@ -18,8 +18,8 @@ class UnitTable(DomainTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.name = "units"
-        self.dir = to_path_or_s3path(ev.active_catalog.dataset_dir, self.name)
+        self.table_name = "units"
+        self.dir = to_path_or_s3path(ev.active_catalog.dataset_dir, self.table_name)
         self.filter_model = UnitFilter
         self.schema_func = schemas.unit_schema
         self.uniqueness_fields = ["name"]

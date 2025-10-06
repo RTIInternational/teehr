@@ -30,8 +30,8 @@ class LocationTable(BaseTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.name = "locations"
-        self.dir = to_path_or_s3path(ev.active_catalog.dataset_dir, self.name)
+        self.table_name = "locations"
+        self.dir = to_path_or_s3path(ev.active_catalog.dataset_dir, self.table_name)
         self.format = "parquet"
         self.filter_model = LocationFilter
         self.schema_func = schemas.locations_schema
@@ -54,7 +54,7 @@ class LocationTable(BaseTable):
         """Return Pandas DataFrame for Location Table."""
         self._check_load_table()
         df = self.sdf.toPandas()
-        df.attrs['table_type'] = self.name
+        df.attrs['table_type'] = self.table_name
         df.attrs['fields'] = self.fields()
         return df
 
@@ -62,7 +62,7 @@ class LocationTable(BaseTable):
         """Return GeoPandas DataFrame."""
         self._check_load_table()
         gdf = df_to_gdf(self.to_pandas())
-        gdf.attrs['table_type'] = self.name
+        gdf.attrs['table_type'] = self.table_name
         gdf.attrs['fields'] = self.fields()
         return gdf
 
@@ -164,7 +164,7 @@ class LocationTable(BaseTable):
 
         self._ev.write.to_warehouse(
             source_data=validated_df,
-            table_name=self.name,
+            table_name=self.table_name,
             write_mode=write_mode,
             uniqueness_fields=self.uniqueness_fields
         )
@@ -239,7 +239,7 @@ class LocationTable(BaseTable):
         )
         self._ev.write.to_warehouse(
             source_data=validated_df,
-            table_name=self.name,
+            table_name=self.table_name,
             write_mode=write_mode,
             uniqueness_fields=self.uniqueness_fields
         )
