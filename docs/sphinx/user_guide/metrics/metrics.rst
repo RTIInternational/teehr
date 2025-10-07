@@ -16,78 +16,92 @@ To download a pdf of the equations corresponding to the metrics listed in the ta
      - Description
      - Short Name
      - Equation
+     - API Reference
    * - :material-regular:`check;1.5em;sd-text-success`
      - Mean Error
      - :math:`Mean\ Error`
      - :math:`\frac{\sum(sec-prim)}{count}`
+     - `MeanError <https://rtiinternational.github.io/teehr/api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics.MeanError>`__
    * - :material-regular:`check;1.5em;sd-text-success`
      - Relative Bias
      - :math:`Relative\ Bias`
      - :math:`\frac{\sum(sec-prim)}{\sum(prim)}`
+     - `Relative Bias <https://rtiinternational.github.io/teehr/api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics.RelativeBias>`__
    * - :material-regular:`check;1.5em;sd-text-success`
      - Multiplicative Bias
      - :math:`Mult.\ Bias`
      - :math:`\frac{\mu_{sec}}{\mu_{prim}}`
+     - `Multiplicative Bias <https://rtiinternational.github.io/teehr/api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics.MultiplicativeBias>`__
    * - :material-regular:`check;1.5em;sd-text-success`
      - Mean Square Error
      - :math:`MSE`
      - :math:`\frac{\sum(sec-prim)^2}{count}`
+     - `Mean Square Error <https://rtiinternational.github.io/teehr/api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics.MeanSquareError>`__
    * - :material-regular:`check;1.5em;sd-text-success`
      - Root Mean Square Error
      - :math:`RMSE`
      - :math:`\sqrt{\frac{\sum(sec-prim)^2}{count}}`
+     - `Root Mean Square Error <https://rtiinternational.github.io/teehr/api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics.RootMeanSquareError>`__
    * - :material-regular:`check;1.5em;sd-text-success`
      - Mean Absolute Error
      - :math:`MAE`
      - :math:`\frac{\sum|sec-prim|}{count}`
+      - `Mean Absolute Error <https://rtiinternational.github.io/teehr/api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics.MeanAbsoluteError>`__
    * - :material-regular:`check;1.5em;sd-text-success`
      - Mean Absolute Relative Error
      - :math:`Relative\ MAE`
      - :math:`\frac{\sum|sec-prim|}{\sum(prim)}`
+     - `Mean Absolute Relative Error <https://rtiinternational.github.io/teehr/api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics.MeanAbsoluteRelativeError>`__
    * - :material-regular:`check;1.5em;sd-text-success`
      - Pearson Correlation Coefficient
      - :math:`r`
      - :math:`r(sec, prim)`
+      - `Pearson Correlation Coefficient <https://rtiinternational.github.io/teehr/api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics.PearsonCorrelationCoefficient>`__
    * - :material-regular:`check;1.5em;sd-text-success`
      - Coefficient of Determination
      - :math:`r^2`
      - :math:`r(sec, prim)^2`
+      - `Coefficient of Determination <https://rtiinternational.github.io/teehr/api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics.CoefficientOfDetermination>`__
    * - :material-regular:`check;1.5em;sd-text-success`
      - Nash-Sutcliffe Efficiency
      - :math:`NSE`
      - :math:`1-\frac{\sum(prim-sec)^2}{\sum(prim-\mu_{prim}^2)}`
+      - `Nash-Sutcliffe Efficiency <https://rtiinternational.github.io/teehr/api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics.NashSutcliffeEfficiency>`__
    * - :material-regular:`check;1.5em;sd-text-success`
      - Normalized Nash-Sutcliffe Efficiency
      - :math:`NNSE`
      - :math:`\frac{1}{(2-NSE)}`
+      - `Normalized Nash-Sutcliffe Efficiency <https://rtiinternational.github.io/teehr/api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics.NormalizedNashSutcliffeEfficiency>`__
    * - :material-regular:`check;1.5em;sd-text-success`
      - Kling Gupta Efficiency - original
      - :math:`KGE`
      - :math:`1-\sqrt{(r(sec, prim)-1)^2+(\frac{\sigma_{sec}}{\sigma_{prim}}-1)^2+(\frac{\mu_{sec}}{\mu_{sec}/\mu_{prim}}-1)^2}`
+      - `Kling Gupta Efficiency - original <https://rtiinternational.github.io/teehr/api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics.KlingGuptaEfficiency>`__
    * - :material-regular:`check;1.5em;sd-text-success`
      - Kling Gupta Efficiency - modified 1 (2012)
      - :math:`KGE'`
      - :math:`1-\sqrt{(r(sec, prim)-1)^2+(\frac{\sigma_{sec}/\mu_{sec}}{\sigma_{prim}/\mu_{prim}}-1)^2+(\frac{\mu_{sec}}{\mu_{sec}/\mu_{prim}}-1)^2}`
+      - `Kling Gupta Efficiency - modified 1 <https://rtiinternational.github.io/teehr/api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics.KlingGuptaEfficiencyMod1>`__
    * - :material-regular:`check;1.5em;sd-text-success`
      - Kling Gupta Efficiency - modified 2 (2021)
      - :math:`KGE''`
      - :math:`1-\sqrt{(r(sec, prim)-1)^2+(\frac{\sigma_{sec}}{\sigma_{prim}}-1)^2+\frac{(\mu_{sec}-\mu_{prim})^2}{\sigma_{prim}^2}}`
-   * - `Coming Soon`
-     - Nash-Sutcliffe Efficiency of Log Flows
-     - :math:`NSE(log)`
-     - :math:`1-\frac{\sum(log(prim)-log(sec))^2}{\sum(log(prim)-\mu(log(prim)))^2}`
-   * - `Coming Soon`
-     - Annual Peak Flow Relative Bias
+      - `Kling Gupta Efficiency - modified 2 <https://rtiinternational.github.io/teehr/api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics.KlingGuptaEfficiencyMod2>`__
+   * - :material-regular:`check;1.5em;sd-text-success`
+     - Annual Peak Relative Bias
      - :math:`Ann\ PF\ Bias`
      - :math:`\frac{\sum(ann.\ peak_{sec}-ann.\ peak_{prim})}{\sum(ann.\ peak_{prim})}`
-   * - `Coming Soon`
+     - `Annual Peak Relative Bias <https://rtiinternational.github.io/teehr/api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics.AnnualPeakRelativeBias>`__
+   * - :material-regular:`check;1.5em;sd-text-success`
      - Spearman Rank Correlation Coefficient
      - :math:`r_s`
      - :math:`1-\frac{6*\sum|rank_{prim}-rank_{sec}|^2}{count(count^2-1)}`
+     - `Spearman Rank Correlation Coefficient <https://rtiinternational.github.io/teehr/api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics.SpearmanCorrelation>`__
    * - `Coming Soon`
      - Flow Duration Curve Slope Error
      - :math:`Slope\ FDC\ Error`
      - :math:`\frac{q66_{sec}-q33_{sec}}{33}-\frac{q66_{prim}-q33_{prim}}{33}`
+     - `N/A`
    * - `Coming Soon`
      - Event Peak Flow Relative Bias
      - :math:`Peak\ Bias`
