@@ -39,7 +39,7 @@ def test_add_row_udfs_null_reference(tmp_path):
         group_by=["primary_location_id"]
     ).write(table_name="metrics", write_mode="create_or_replace")
 
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
 def test_add_row_udfs(tmp_path):
@@ -132,7 +132,7 @@ def test_add_row_udfs(tmp_path):
     for row in check_vals:
         assert row["day_of_year"] in [1, 2]
 
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
 def test_add_timeseries_udfs(tmp_path):
@@ -299,7 +299,7 @@ def test_add_timeseries_udfs(tmp_path):
     quantile = distinct_quantiles[0][0]
     assert np.isclose(quantile, 37.66, atol=0.01)
 
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
 def test_add_udfs_write(tmp_path):
@@ -319,7 +319,7 @@ def test_add_udfs_write(tmp_path):
     assert "event_id" in cols
     # assert "forecast_lead_time" in cols
 
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
 def test_location_event_detection(tmp_path):
@@ -349,7 +349,7 @@ def test_location_event_detection(tmp_path):
     assert "max_primary_value" in sdf.columns
     assert "max_secondary_value" in sdf.columns
 
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
 if __name__ == "__main__":
