@@ -6,7 +6,7 @@ on:
 
 jobs:
   call-docker-build:
-    uses: RTIInternational/teehr-hub/.github/workflows/build-and-push-image.yaml@update-deployment
+    uses: RTIInternational/teehr-hub/.github/workflows/build-and-push-image.yaml@main
     secrets: inherit
     with:
       image-tag: "dev"
