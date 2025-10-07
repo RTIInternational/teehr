@@ -23,7 +23,7 @@ jobs:
           echo "package_version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
 
   call-docker-build:
-    uses: RTIInternational/teehr-hub/.github/workflows/build-and-push-image.yaml@update-deployment
+    uses: RTIInternational/teehr-hub/.github/workflows/build-and-push-image.yaml@main
     secrets: inherit
     needs: get-existing-version
     with:
