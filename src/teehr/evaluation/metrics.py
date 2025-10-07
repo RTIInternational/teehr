@@ -325,7 +325,7 @@ class Metrics:
 
         return sdf
 
-    def write_to_warehouse(
+    def write(
         self,
         table_name: str = "metrics",
         write_mode: str = "create_or_replace"

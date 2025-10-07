@@ -19,7 +19,7 @@ class Table:
         """Initialize the Table class."""
         self._ev = ev
         self._read = ev.read
-        self.write = ev.write
+        # self._write = ev.write
         # self._validate = ev.validate
         # self._extract = ev.extract
 

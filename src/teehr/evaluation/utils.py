@@ -96,7 +96,7 @@ def create_spark_session(
         f"org.apache.iceberg:iceberg-spark-runtime-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION},"
         "org.datasyslab:geotools-wrapper:1.8.0-33.1,"  # for raster ops
         f"org.apache.iceberg:iceberg-spark-extensions-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION},"
-        "org.apache.hadoop:hadoop-aws:3.4.1,"  # SEEMS TO CAUSE HIGH MEMORY USAGE? Also 3.4.2 seems to fail.
+        "org.apache.hadoop:hadoop-aws:3.4.2,"  # SEEMS TO CAUSE HIGH MEMORY USAGE?
         "com.amazonaws:aws-java-sdk-bundle:1.12.791"
     )
 
@@ -125,6 +125,7 @@ def create_spark_session(
     builder = builder.config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
     builder = builder.config("spark.driver.memory", f"{int(driver_memory)}g")
     builder = builder.config("spark.driver.maxResultSize", f"{int(driver_maxresultsize)}g")
+    # builder = builder.config("spark.executor.memory", f"{int(driver_memory)}g")
 
     # TODO: Could we also configure BigQuery settings here for NWM data?
 

@@ -8,11 +8,11 @@ from teehr.models.pydantic_table_models import (
 import tempfile
 
 
-def test_add_domains(tmpdir):
+def test_add_domains(tmp_path):
     """Test creating a new study."""
     from teehr import Evaluation
 
-    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
+    ev = Evaluation(local_warehouse_dir=tmp_path, create_local_dir=True)
     ev.clone_template()
 
     new_tbl = ev.table(table_name="new_table")

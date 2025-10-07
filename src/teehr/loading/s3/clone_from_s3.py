@@ -40,53 +40,6 @@ def list_s3_evaluations(
     return yaml_dict["evaluations"]
 
 
-# def subset_the_table(
-#     ev,
-#     table,
-#     sdf_in: pyspark.sql.DataFrame,
-#     primary_location_ids: Union[None, List[str]],
-#     start_date: Union[str, datetime, None],
-#     end_date: Union[str, datetime, None],
-# ) -> pyspark.sql.DataFrame:
-#     """Subset the dataset based on location and start/end time."""
-#     if table.name == "locations" and primary_location_ids is not None:
-#         sdf_in = sdf_in.filter(sdf_in.id.isin(primary_location_ids))
-#     elif table.name == "location_attributes" and primary_location_ids is not None:
-#         sdf_in = sdf_in.filter(sdf_in.location_id.isin(primary_location_ids))
-#     elif table.name == "location_crosswalks" and primary_location_ids is not None:
-#         sdf_in = sdf_in.filter(
-#             sdf_in.primary_location_id.isin(primary_location_ids)
-#         )
-#     elif table.name == "primary_timeseries":
-#         if primary_location_ids is not None:
-#             sdf_in = sdf_in.filter(
-#                 sdf_in.location_id.isin(primary_location_ids)
-#             )
-#     elif table.name == "secondary_timeseries":
-#         if primary_location_ids is not None:
-#             secondary_ids = (
-#                 ev.location_crosswalks.to_sdf()
-#                 .select("secondary_location_id").rdd.flatMap(lambda x: x).collect()
-#             )
-#             sdf_in = sdf_in.filter(sdf_in.location_id.isin(secondary_ids))
-#     elif table.name == "joined_timeseries":
-#         if primary_location_ids is not None:
-#             sdf_in = sdf_in.filter(
-#                 sdf_in.primary_location_id.isin(primary_location_ids)
-#             )
-#     if (
-#         table.name == "primary_timeseries"
-#         or table.name == "secondary_timeseries"
-#         or table.name == "joined_timeseries"
-#     ):
-#         if start_date is not None:
-#             sdf_in = sdf_in.filter(sdf_in.value_time >= start_date)
-#         if end_date is not None:
-#             sdf_in = sdf_in.filter(sdf_in.value_time <= end_date)
-
-#     return sdf_in
-
-
 def clone_from_s3(
     ev,
     local_catalog_name: str,
@@ -195,11 +148,11 @@ def clone_from_s3(
         filters = table["filters"]
         table = table["table"]
         logger.debug(
-            f"Cloning {table.name} from {remote_catalog_name}."
-            f"{remote_namespace_name}.{table.name}."
+            f"Cloning {table.table_name} from {remote_catalog_name}."
+            f"{remote_namespace_name}.{table.table_name}."
         )
         sdf_in = ev.read.from_warehouse(
-            table_name=table.name,
+            table_name=table.table_name,
             catalog_name=remote_catalog_name,
             namespace_name=remote_namespace_name
         ).to_sdf()
@@ -208,23 +161,23 @@ def clone_from_s3(
                 logger.debug(f"Applying filter: {filter}")
                 sdf_in = sdf_in.filter(filter)
 
-        if table.name == "joined_timeseries":
+        if table.table_name == "joined_timeseries":
             ev.write.to_warehouse(
                 source_data=sdf_in,
                 catalog_name=local_catalog_name,
                 namespace_name=local_namespace_name,
-                table_name=table.name,
+                table_name=table.table_name,
                 write_mode="create_or_replace",
                 uniqueness_fields=table.uniqueness_fields,
-                partition_by=table.partition_by
+                # partition_by=table.partition_by
             )
         else:
             ev.write.to_warehouse(
                 source_data=sdf_in,
                 catalog_name=local_catalog_name,
                 namespace_name=local_namespace_name,
-                table_name=table.name,
+                table_name=table.table_name,
                 write_mode="upsert",
                 uniqueness_fields=table.uniqueness_fields,
-                partition_by=table.partition_by
+                # partition_by=table.partition_by
             )

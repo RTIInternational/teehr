@@ -15,16 +15,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from data.setup_v0_3_study import setup_v0_3_study  # noqa
 
 
-def test_add_row_udfs_null_reference(tmpdir):
+def test_add_row_udfs_null_reference(tmp_path):
     """Test adding row level UDFs with null reference time."""
-    # ev = teehr.Evaluation(
-    #     # local_warehouse_dir=tmpdir,
-    #     # create_local_dir=True
-    #     remote_namespace_name="e0_2_location_example",
-    #     check_evaluation_version=False,
-    # )
     ev = teehr.Evaluation(
-        local_warehouse_dir=tmpdir,
+        local_warehouse_dir=tmp_path,
         create_local_dir=True,
         check_evaluation_version=False,
     )
@@ -32,12 +26,12 @@ def test_add_row_udfs_null_reference(tmpdir):
 
     ev.joined_timeseries.create(add_attrs=False, execute_scripts=False)
 
-    # ev.joined_timeseries.add_calculated_fields([
-    #     rcf.Month(),
-    #     rcf.Year(),
-    #     rcf.WaterYear(),
-    #     rcf.Seasons()
-    # ]).write()
+    ev.joined_timeseries.add_calculated_fields([
+        rcf.Month(),
+        rcf.Year(),
+        rcf.WaterYear(),
+        rcf.Seasons()
+    ]).write()
 
     nse = teehr.DeterministicMetrics.NashSutcliffeEfficiency()
     ev.metrics.query(
@@ -48,9 +42,9 @@ def test_add_row_udfs_null_reference(tmpdir):
     ev.spark.stop()
 
 
-def test_add_row_udfs(tmpdir):
+def test_add_row_udfs(tmp_path):
     """Test adding row level UDFs."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmp_path)
     sdf = ev.joined_timeseries.to_sdf()
 
     sdf = rcf.Month().apply_to(sdf)
@@ -141,10 +135,10 @@ def test_add_row_udfs(tmpdir):
     ev.spark.stop()
 
 
-def test_add_timeseries_udfs(tmpdir):
+def test_add_timeseries_udfs(tmp_path):
     """Test adding a timeseries aware UDF."""
     # utilize e0_2_location_example from s3 to satisfy baseflow POR reqs
-    ev = teehr.Evaluation(tmpdir, create_local_dir=True)
+    ev = teehr.Evaluation(tmp_path, create_local_dir=True)
     ev.clone_from_s3(evaluation_name="e0_2_location_example",
                      primary_location_ids=["usgs-14316700"])
     sdf = ev.joined_timeseries.to_sdf()
@@ -308,9 +302,9 @@ def test_add_timeseries_udfs(tmpdir):
     ev.spark.stop()
 
 
-def test_add_udfs_write(tmpdir):
+def test_add_udfs_write(tmp_path):
     """Test adding UDFs and write DataFrame back to table."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmp_path)
 
     ped = tcf.PercentileEventDetection()
     ev.joined_timeseries.add_calculated_fields(ped).write()
@@ -328,9 +322,9 @@ def test_add_udfs_write(tmpdir):
     ev.spark.stop()
 
 
-def test_location_event_detection(tmpdir):
+def test_location_event_detection(tmp_path):
     """Test event detection and metrics per event."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmp_path)
 
     ped = tcf.PercentileEventDetection()
     sdf = ev.metrics.add_calculated_fields(ped).query(

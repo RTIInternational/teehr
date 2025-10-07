@@ -134,7 +134,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
         # Create a view
         pivot_df.createTempView("attrs")
 
-        joined_df = self.spark.sql("""
+        joined_df = self._ev.spark.sql("""
             SELECT
                 joined.*
                 , attrs.*
@@ -143,8 +143,8 @@ class JoinedTimeseriesTable(TimeseriesTable):
                 on joined.primary_location_id = attrs.location_id
         """).drop("location_id")
 
-        self.spark.catalog.dropTempView("joined")
-        self.spark.catalog.dropTempView("attrs")
+        self._ev.spark.catalog.dropTempView("joined")
+        self._ev.spark.catalog.dropTempView("attrs")
 
         return joined_df
 
@@ -188,7 +188,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
             table_name=self.table_name,
             write_mode=write_mode,
             uniqueness_fields=self.uniqueness_fields,
-            partition_by=self.partition_by,
+            # partition_by=self.partition_by,
         )
         logger.info("Joined timeseries table written to the warehouse.")
         self._load_table()
@@ -261,6 +261,8 @@ class JoinedTimeseriesTable(TimeseriesTable):
         )
         logger.info("Joined timeseries table created.")
         self._load_table()
+
+        return self
 
     # def _read_files_from_cache_or_s3(
     #     self,
