@@ -218,3 +218,19 @@ CRPS_ENSEMBLE_ATTRS = {
     "value_range": [None, None],
     "optimal_value": 0.0,
 }
+
+VR_ATTRS = {
+    "short_name": "VR",
+    "display_name": "Variance Ratio",
+    "category": mc.Deterministic,
+    "value_range": [0.0, None],
+    "optimal_value": 1.0,
+}
+
+FDC_SLOPE_ATTRS = {
+    "short_name": "fdc_slope",
+    "display_name": "Flow Duration Curve Slope",
+    "category": mc.Signature,
+    "value_range": [None, None],
+    "optimal_value": None,
+}

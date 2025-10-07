@@ -12,6 +12,8 @@ def test_add_domains(tmp_path):
     """Test creating a new study."""
     from teehr import Evaluation
 
+    # ev = Evaluation()  # Connects to remote by default
+
     ev = Evaluation(local_warehouse_dir=tmp_path, create_local_dir=True)
     ev.clone_template()
 

@@ -50,7 +50,6 @@ from teehr.evaluation.utils import (
 )
 import pandas as pd
 import re
-# import s3fs
 from fsspec.implementations.local import LocalFileSystem
 import pyspark.sql as ps
 from teehr.querying.filter_format import validate_and_apply_filters
@@ -63,9 +62,6 @@ from teehr.models.evaluation_base import (
 
 
 logger = logging.getLogger(__name__)
-
-# CATALOG_URI = "http://dev-teehr-sys-iceberg-alb-2105268770.us-east-2.elb.amazonaws.com"
-# WAREHOUSE_PATH = "s3://dev-teehr-sys-iceberg-warehouse/teehr-warehouse/"
 
 
 class Evaluation(EvaluationBase):
@@ -127,7 +123,7 @@ class Evaluation(EvaluationBase):
         self.scripts_dir = None
 
         # Check version of Evaluation
-        if check_evaluation_version is True:
+        if check_evaluation_version is True and local_warehouse_dir is not None:
             if create_local_dir is False:
                 self.check_evaluation_version()
 
@@ -428,62 +424,6 @@ class Evaluation(EvaluationBase):
             end_date=end_date
         )
 
-    # def clone_from_s3(
-    #     self,
-    #     evaluation_name: str,
-    #     primary_location_ids: List[str] = None,
-    #     start_date: Union[str, datetime] = None,
-    #     end_date: Union[str, datetime] = None,
-    # ):
-    #     """Fetch the study data from S3.
-
-    #     Copies the study from s3 to the local directory, with the option
-    #     to subset the dataset by primary location ID, start and end dates.
-
-    #     Parameters
-    #     ----------
-    #     evaluation_name : str
-    #         The name of the evaluation to clone from S3.
-    #         Use the list_s3_evaluations method to get the available
-    #         evaluations.
-    #     primary_location_ids : List[str], optional
-    #         The list of primary location ids to subset the data.
-    #         The default is None.
-    #     start_date : Union[str, datetime], optional
-    #         The start date to subset the data.
-    #         The default is None.
-    #     end_date : Union[str, datetime], optional
-    #         The end date to subset the data.
-    #         The default is None.
-
-    #     Notes
-    #     -----
-    #     Includes the following tables:
-    #         - units
-    #         - variables
-    #         - attributes
-    #         - configurations
-    #         - locations
-    #         - location_attributes
-    #         - location_crosswalks
-    #         - primary_timeseries
-    #         - secondary_timeseries
-    #         - joined_timeseries
-
-    #     Also includes the user_defined_fields.py script.
-
-    #     """
-    #     # if self.is_s3:
-    #     #     logger.error("Cannot clone from S3 to S3.")
-    #     #     raise Exception("Cannot clone from S3 to S3.")
-
-    #     return clone_from_s3(
-    #         self,
-    #         evaluation_name,
-    #         primary_location_ids,
-    #         start_date,
-    #         end_date
-    #     )
 
     def clean_cache(self):
         """Clean temporary files.

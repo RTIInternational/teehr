@@ -37,7 +37,7 @@ def test_add_row_udfs_null_reference(tmp_path):
     ev.metrics.query(
         include_metrics=[nse],
         group_by=["primary_location_id"]
-    ).write_to_warehouse(table_name="metrics", write_mode="create_or_replace")
+    ).write(table_name="metrics", write_mode="create_or_replace")
 
     ev.spark.stop()
 
