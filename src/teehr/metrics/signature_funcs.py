@@ -8,6 +8,8 @@ from typing import Callable, Optional
 import logging
 logger = logging.getLogger(__name__)
 
+EPSILON = 1e-6  # Small constant to avoid division by zero
+
 
 def _transform(
         p: pd.Series,
@@ -19,6 +21,9 @@ def _transform(
     if model.transform is not None:
         match model.transform:
             case TransformEnum.log:
+                if model.add_epsilon:
+                    logger.debug("Adding epsilon to avoid log(0)")
+                    p = p + EPSILON
                 logger.debug("Applying log transform")
                 p = np.log(p)
             case TransformEnum.sqrt:
@@ -34,6 +39,9 @@ def _transform(
                 logger.debug("Applying exponential transform")
                 p = np.exp(p)
             case TransformEnum.inv:
+                if model.add_epsilon:
+                    logger.debug("Adding epsilon to avoid division by zero")
+                    p = p + EPSILON
                 logger.debug("Applying inverse transform")
                 p = 1.0 / p
             case TransformEnum.abs:
@@ -151,3 +159,60 @@ def sum(model: MetricsBasemodel) -> Callable:
         return np.sum(p)
 
     return sum_inner
+
+
+def flow_duration_curve_slope(model: MetricsBasemodel) -> Callable:
+    """Create flow duration curve slope metric function."""
+    logger.debug("Building the flow duration curve slope metric function")
+
+    def flow_duration_curve_slope_inner(
+        p: pd.Series,
+    ) -> float:
+        """Flow duration curve slope."""
+        # ensure percentiles are within valid range
+        if not (0 <= model.lower_quantile <= 1):
+            raise ValueError(
+                "Lower quantile must be between 0 and 1"
+                )
+        if not (0 <= model.upper_quantile <= 1):
+            raise ValueError(
+                "Upper quantile must be between 0 and 1"
+                )
+
+        # ensure lower quantile is less than upper quantile
+        if model.lower_quantile >= model.upper_quantile:
+            raise ValueError(
+                "Lower quantile must be less than upper quantile"
+                )
+
+        # apply any specified transform
+        p = _transform(p, model)
+
+        # sort the streamflow values in descending order
+        p_sorted = p.sort_values(ascending=False).reset_index(drop=True)
+
+        # calculate exceedance probabilities
+        n = len(p_sorted)
+        fdc_probs = (p_sorted.index/(n+1))
+
+        # determine indices for the specified quantiles
+        lower_idx = np.argmin(np.abs(fdc_probs - model.lower_quantile))
+        upper_idx = np.argmin(np.abs(fdc_probs - model.upper_quantile))
+
+        # check for as_percentile flag
+        if model.as_percentile:
+            fdc_probs = fdc_probs * 100
+
+        # calculate slope between the two quantiles
+        if model.add_epsilon:
+            slope = (p_sorted.iloc[upper_idx] - p_sorted.iloc[lower_idx]) / ((
+                fdc_probs[upper_idx] - fdc_probs[lower_idx]
+            ) + EPSILON)
+        else:
+            slope = (p_sorted.iloc[upper_idx] - p_sorted.iloc[lower_idx]) / (
+                fdc_probs[upper_idx] - fdc_probs[lower_idx]
+            )
+
+        return slope
+
+    return flow_duration_curve_slope_inner

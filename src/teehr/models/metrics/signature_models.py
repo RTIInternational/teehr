@@ -19,6 +19,9 @@ class Count(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -33,6 +36,7 @@ class Count(DeterministicBasemodel):
     """
 
     output_field_name: str = Field(default="count")
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     func: Callable = Field(default=sig_funcs.count, frozen=True)
     input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
@@ -48,6 +52,9 @@ class Minimum(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -61,6 +68,7 @@ class Minimum(DeterministicBasemodel):
         The static attributes for the metric.
     """
 
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="minimum")
     func: Callable = Field(default=sig_funcs.minimum, frozen=True)
@@ -77,6 +85,9 @@ class Maximum(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -90,6 +101,7 @@ class Maximum(DeterministicBasemodel):
         The static attributes for the metric.
     """
 
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="maximum")
     func: Callable = Field(default=sig_funcs.maximum, frozen=True)
@@ -106,6 +118,9 @@ class Average(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -119,6 +134,7 @@ class Average(DeterministicBasemodel):
         The static attributes for the metric.
     """
 
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="average")
     func: Callable = Field(default=sig_funcs.average, frozen=True)
@@ -135,6 +151,9 @@ class Sum(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -148,6 +167,7 @@ class Sum(DeterministicBasemodel):
         The static attributes for the metric.
     """
 
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="sum")
     func: Callable = Field(default=sig_funcs.sum, frozen=True)
@@ -164,6 +184,9 @@ class Variance(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -178,6 +201,7 @@ class Variance(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="variance")
     func: Callable = Field(default=sig_funcs.variance, frozen=True)
@@ -194,6 +218,9 @@ class MaxValueTime(DeterministicBasemodel):
     ----------
     bootstrap : DeterministicBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     output_field_name : str
@@ -207,6 +234,7 @@ class MaxValueTime(DeterministicBasemodel):
         The static attributes for the metric.
     """
 
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="max_value_time")
     func: Callable = Field(default=sig_funcs.max_value_time, frozen=True)
@@ -215,6 +243,50 @@ class MaxValueTime(DeterministicBasemodel):
     )
     attrs: Dict = Field(default=tma.MAX_VAL_TIME_ATTRS, frozen=True)
     return_type: str = Field(default="timestamp", frozen=True)
+
+
+class FlowDurationCurveSlope(DeterministicBasemodel):
+    """Flow Duration Curve Slope.
+
+    Parameters
+    ----------
+    bootstrap : DeterministicBasemodel
+        The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    output_field_name : str
+        The output field name, by default "flow_duration_curve".
+    func : Callable
+        The function to apply to the data, by default
+        :func:`signature_funcs.flow_duration_curve`.
+    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+        The input field names, by default ["primary_value"].
+    lower_quantile : float
+        The lower quantile for slope calculation, by default 0.25.
+    upper_quantile : float
+        The upper quantile for slope calculation, by default 0.85.
+    as_percentile : bool
+        Whether calculate slope using exceedance_probability as a percentile
+        (0-100) or a fraction (0-1), by default False.
+    attrs : Dict
+        The static attributes for the metric.
+    """
+
+    add_epsilon: bool = Field(default=False)
+    transform: TransformEnum = Field(default=None)
+    output_field_name: str = Field(default="flow_duration_curve_slope")
+    func: Callable = Field(default=sig_funcs.flow_duration_curve_slope,
+                           frozen=True)
+    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+        default=["primary_value"]
+    )
+    lower_quantile: float = Field(default=0.25)
+    upper_quantile: float = Field(default=0.85)
+    as_percentile: bool = Field(default=False)
+    attrs: Dict = Field(default=tma.FDC_SLOPE_ATTRS, frozen=True)
 
 
 class SignatureMetrics:
