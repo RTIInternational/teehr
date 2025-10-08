@@ -18,7 +18,7 @@ LOCATION_ATTRIBUTES_FILEPATH = Path(
 GEO_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo")
 
 
-def test_convert_location_attributes():
+def test_convert_location_attributes(tmpdir):
     """Test conversion of single location_attributes file."""
     df = convert_single_location_attributes(
         in_filepath=LOCATION_ATTRIBUTES_FILEPATH,
@@ -27,9 +27,9 @@ def test_convert_location_attributes():
     assert df.index.size == 3
 
 
-def test_validate_and_insert_location_attributes(tmp_path):
+def test_validate_and_insert_location_attributes(tmpdir):
     """Test the validate location_attributes function."""
-    ev = Evaluation(local_warehouse_dir=tmp_path, create_local_dir=True)
+    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
     ev.clone_template()
 
     ev.enable_logging()

@@ -98,6 +98,8 @@ class Evaluation(EvaluationBase):
         spark : SparkSession, optional
             The SparkSession object, by default None
         """
+        if local_warehouse_dir is not None:
+            local_warehouse_dir = Path(local_warehouse_dir)
         self.local_catalog = LocalCatalog(
             warehouse_dir=local_warehouse_dir,
             catalog_name=local_catalog_name,
