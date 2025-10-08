@@ -1,9 +1,10 @@
 """Base class to represent generic tables."""
 from typing import List, Dict, Union
 import logging
+import geopandas as gpd
 
 from teehr.models.str_enum import StrEnum
-from teehr.querying.utils import order_df
+from teehr.querying.utils import order_df, join_geometry, df_to_gdf
 from teehr.models.evaluation_base import EvaluationBase
 from teehr.models.filters import FilterBaseModel
 from teehr.models.table_properties import TBLPROPERTIES
@@ -449,9 +450,41 @@ class Table:
         df.attrs['fields'] = self.fields()
         return df
 
-    def to_geopandas(self):
-        """Return GeoPandas DataFrame."""
-        raise NotImplementedError("to_geopandas method must be implemented.")
+    def _join_geometry_using_crosswalk(self):
+        """Join geometry."""
+        logger.debug("Joining locations geometry via the crosswalk.")
+        joined_df = self._ev.sql("""
+            SELECT
+                sf.*,
+                lf.geometry as geometry
+            FROM secondary_timeseries sf
+            JOIN location_crosswalks cf
+                on cf.secondary_location_id = sf.location_id
+            JOIN locations lf
+                on cf.primary_location_id = lf.id
+        """,
+        create_temp_views=["secondary_timeseries", "location_crosswalks", "locations"])
+        return df_to_gdf(joined_df.toPandas())
+
+    def to_geopandas(self) -> gpd.GeoDataFrame:
+        """Convert the DataFrame to a GeoPandas DataFrame."""
+        self._check_load_table()
+        if "location_id" not in self.sdf.columns:
+            err_msg = "The location_id field was not found in the table."
+            logger.error(err_msg)
+            raise ValueError(err_msg)
+        locations_sdf = self._read.from_warehouse(
+            catalog_name=self.catalog_name,
+            namespace_name=self.table_namespace_name,
+            table_name="locations"
+        ).to_sdf()
+        if self.table_name == "secondary_timeseries":
+            return self._join_geometry_using_crosswalk()
+        return join_geometry(
+            self.sdf,
+            locations_sdf,
+            "location_id"
+        )
 
     def to_sdf(self):
         """Return PySpark DataFrame.

@@ -13,7 +13,7 @@ from teehr.loading.utils import (
     validate_input_is_netcdf,
     validate_input_is_parquet
 )
-from teehr.models.table_enums import TableWriteEnum
+from teehr.models.table_enums import TableWriteEnum, TimeseriesFields
 from teehr.const import MAX_CPUS
 from teehr.loading.timeseries import convert_single_timeseries
 
@@ -27,6 +27,14 @@ class TimeseriesTable(Table):
         """Initialize class."""
         super().__init__(ev)
         self._load = ev.load
+
+    def field_enum(self) -> TimeseriesFields:
+        """Get the timeseries fields enum."""
+        fields = self._get_schema("pandas").columns.keys()
+        return TimeseriesFields(
+            "TimeseriesFields",
+            {field: field for field in fields}
+        )
 
     def load_parquet(
         self,

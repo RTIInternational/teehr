@@ -168,6 +168,7 @@ class Read:
             logger.debug("Filter is not a list.  Making a list.")
             filters = [filters]
 
+        # TODO: Re-do this, no longer needed.
         tbl_instance = get_table_instance(table_name)
         filter_model = tbl_instance.filter_model
         fields_enum = tbl_instance.field_enum()

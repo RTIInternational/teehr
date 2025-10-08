@@ -1,21 +1,15 @@
 """Location Crosswalk Table."""
-import teehr.const as const
 from teehr.evaluation.tables.generic_table import Table
-# from teehr.loading.location_crosswalks import convert_location_crosswalks
 from teehr.loading.utils import (
     validate_input_is_csv,
     validate_input_is_parquet
 )
-from teehr.models.filters import LocationCrosswalkFilter
 from teehr.models.table_enums import LocationCrosswalkFields
 from teehr.querying.utils import join_geometry
-import teehr.models.pandera_dataframe_schemas as schemas
 from pathlib import Path
 from typing import Union
 import logging
-from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
 from teehr.models.table_enums import TableWriteEnum
-from teehr.loading.utils import add_or_replace_sdf_column_prefix
 from teehr.loading.location_crosswalks import (
     convert_single_location_crosswalks
 )
@@ -54,16 +48,24 @@ class LocationCrosswalkTable(Table):
             catalog_name=catalog_name
         )
 
-    # def to_geopandas(self):
-    #     """Return GeoPandas DataFrame."""
-    #     self._check_load_table()
-    #     gdf = join_geometry(
-    #         self.sdf, self._ev.locations.to_sdf(),
-    #         "primary_location_id"
-    #     )
-    #     gdf.attrs['table_type'] = self.table_name
-    #     gdf.attrs['fields'] = self.fields()
-    #     return gdf
+    def field_enum(self) -> LocationCrosswalkFields:
+        """Get the location crosswalk fields enum."""
+        fields = self._get_schema("pandas").columns.keys()
+        return LocationCrosswalkFields(
+            "LocationCrosswalkFields",
+            {field: field for field in fields}
+        )
+
+    def to_geopandas(self):
+        """Return GeoPandas DataFrame."""
+        self._check_load_table()
+        gdf = join_geometry(
+            self.sdf, self._ev.locations.to_sdf(),
+            "primary_location_id"
+        )
+        gdf.attrs['table_type'] = self.table_name
+        gdf.attrs['fields'] = self.fields()
+        return gdf
 
     def load_parquet(
         self,

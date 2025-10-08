@@ -15,10 +15,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from data.setup_v0_3_study import setup_v0_3_study  # noqa
 
 
-def test_add_row_udfs_null_reference(tmp_path):
+def test_add_row_udfs_null_reference(tmpdir):
     """Test adding row level UDFs with null reference time."""
+    tmpdir = Path(tmpdir)
     ev = teehr.Evaluation(
-        local_warehouse_dir=tmp_path,
+        local_warehouse_dir=tmpdir,
         create_local_dir=True,
         check_evaluation_version=False,
     )
@@ -42,9 +43,10 @@ def test_add_row_udfs_null_reference(tmp_path):
     # ev.spark.stop()
 
 
-def test_add_row_udfs(tmp_path):
+def test_add_row_udfs(tmpdir):
     """Test adding row level UDFs."""
-    ev = setup_v0_3_study(tmp_path)
+    tmpdir = Path(tmpdir)
+    ev = setup_v0_3_study(tmpdir)
     sdf = ev.joined_timeseries.to_sdf()
 
     sdf = rcf.Month().apply_to(sdf)
@@ -136,10 +138,11 @@ def test_add_row_udfs(tmp_path):
     # ev.spark.stop()
 
 
-def test_add_timeseries_udfs(tmp_path):
+def test_add_timeseries_udfs(tmpdir):
     """Test adding a timeseries aware UDF."""
+    tmpdir = Path(tmpdir)
     # utilize e0_2_location_example from s3 to satisfy baseflow POR reqs
-    ev = teehr.Evaluation(tmp_path, create_local_dir=True)
+    ev = teehr.Evaluation(tmpdir, create_local_dir=True)
     ev.clone_from_s3(remote_namespace_name="e0_2_location_example",
                      primary_location_ids=["usgs-14316700"])
     sdf = ev.joined_timeseries.to_sdf()
@@ -303,9 +306,10 @@ def test_add_timeseries_udfs(tmp_path):
     # ev.spark.stop()
 
 
-def test_add_udfs_write(tmp_path):
+def test_add_udfs_write(tmpdir):
     """Test adding UDFs and write DataFrame back to table."""
-    ev = setup_v0_3_study(tmp_path)
+    tmpdir = Path(tmpdir)
+    ev = setup_v0_3_study(tmpdir)
 
     ped = tcf.PercentileEventDetection()
     ev.joined_timeseries.add_calculated_fields(ped).write()
@@ -322,9 +326,10 @@ def test_add_udfs_write(tmp_path):
     # ev.spark.stop()
 
 
-def test_location_event_detection(tmp_path):
+def test_location_event_detection(tmpdir):
     """Test event detection and metrics per event."""
-    ev = setup_v0_3_study(tmp_path)
+    tmpdir = Path(tmpdir)
+    ev = setup_v0_3_study(tmpdir)
 
     ped = tcf.PercentileEventDetection()
     sdf = ev.metrics.add_calculated_fields(ped).query(

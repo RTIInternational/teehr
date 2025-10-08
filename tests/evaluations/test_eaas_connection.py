@@ -2,10 +2,12 @@
 from teehr.models.pydantic_table_models import Configuration
 from teehr import Evaluation
 import tempfile
+from pathlib import Path
 
 
 def test_eaas_interface(tmpdir):
     """Test creating a new study."""
+    tmpdir = Path(tmpdir)
     # Connects to remote by default unless otherwise specified.
     ev = Evaluation(
         local_warehouse_dir=tmpdir,

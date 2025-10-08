@@ -10,6 +10,9 @@ import geopandas as gpd
 from teehr.models.table_enums import TableWriteEnum
 from teehr.evaluation.tables.generic_table import Table
 from teehr.loading.locations import convert_single_locations
+from teehr.querying.utils import df_to_gdf
+from teehr.models.table_enums import LocationFields
+
 
 logger = logging.getLogger(__name__)
 
@@ -42,13 +45,21 @@ class LocationTable(Table):
             catalog_name=catalog_name
         )
 
-    # def to_geopandas(self):
-    #     """Return GeoPandas DataFrame."""
-    #     self._check_load_table()
-    #     gdf = df_to_gdf(self.to_pandas())
-    #     gdf.attrs['table_type'] = self.table_name
-    #     gdf.attrs['fields'] = self.fields()
-    #     return gdf
+    def field_enum(self) -> LocationFields:
+        """Get the location fields enum."""
+        fields = self._get_schema("pandas").columns.keys()
+        return LocationFields(
+            "LocationFields",
+            {field: field for field in fields}
+        )
+
+    def to_geopandas(self):
+        """Return GeoPandas DataFrame."""
+        self._check_load_table()
+        gdf = df_to_gdf(self.to_pandas())
+        gdf.attrs['table_type'] = self.table_name
+        gdf.attrs['fields'] = self.fields()
+        return gdf
 
     def load_spatial(
         self,
