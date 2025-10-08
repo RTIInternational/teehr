@@ -229,7 +229,7 @@ Probabilistic metrics compare a value against a distribution of predicted values
    * - :material-regular:`check;1.5em;sd-text-success`
      - Continuous Ranked Probability Score
      - :math:`CRPS`
-     - :math:`\frac{1}{n}\sum\int_{-\infty}^{+\infty}(F_{sec}(x)-F_{prim}(x))^2dx`
+     - :math:`\int_{-\infty}^{\infty} (F(x) - \mathbf{1}_{x \geq y})^2 dx`
      - `Continuous Ranked Probability Score <https://rtiinternational.github.io/teehr/api/generated/teehr.ProbabilisticMetrics.html#teehr.ProbabilisticMetrics.ContinuousRankedProbabilityScore>`__
    * - `Coming Soon`
      - Brier Score
