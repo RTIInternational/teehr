@@ -194,9 +194,9 @@ class Evaluation(EvaluationBase):
     @property
     def fetch(self) -> Fetch:
         """The fetch component class for accessing external data."""
-        if self.is_s3:
-            logger.error("Cannot fetch data and save to S3 yet.")
-            raise Exception("Cannot fetch data and save to S3 yet.")
+        # if self.is_s3:
+        #     logger.error("Cannot fetch data and save to S3 yet.")
+        #     raise Exception("Cannot fetch data and save to S3 yet.")
 
         return Fetch(self)
 

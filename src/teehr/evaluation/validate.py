@@ -100,14 +100,12 @@ class Validator:
         return table_schema.validate(df)
 
     def table_filters(
+        self,
         table_name: str,
         filters: Union[
             str, dict, FilterBaseModel,
             List[Union[str, dict, FilterBaseModel]]
         ],
-        # filter_model: FilterBaseModel,
-        # fields_enum: Enum,
-        # dataframe_schema: ps.DataFrame | pd.DataFrame,
         validate_filter_field_types: bool = True
     ) -> Union[
             str, dict, FilterBaseModel,
@@ -122,17 +120,13 @@ class Validator:
             logger.debug("Filter is not a list.  Making a list.")
             filters = [filters]
 
-        # tbl_instance = get_table_instance(table)
-        # filter_model = tbl_instance.filter_model
-        # fields_enum = tbl_instance.field_enum()
-        # dataframe_schema = tbl_instance.schema_func().to_structtype()
 
         validated_filters = []
         for filter in filters:
             logger.debug(f"Validating and applying {filter}")
 
             if not isinstance(filter, str):
-                filter = filter_model.model_validate(
+                filter = self.filter_model.model_validate(
                     filter,
                     context={"fields_enum": fields_enum}
                 )

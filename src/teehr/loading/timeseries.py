@@ -2,12 +2,12 @@
 from typing import Union
 from pathlib import Path
 import pandas as pd
-from pyspark.sql.functions import lit
+# from pyspark.sql.functions import lit
 from teehr.loading.utils import (
     read_and_convert_netcdf_to_df,
     read_and_convert_xml_to_df
 )
-from teehr.models.table_enums import TableWriteEnum
+# from teehr.models.table_enums import TableWriteEnum
 
 import logging
 
@@ -71,82 +71,82 @@ def convert_single_timeseries(
     return timeseries
 
 
-# TODO: Update/remove this function. This is only used by fetching.
-# Should this be part of a Loader class? This general workflow is repeated
-# for each table.
-def validate_and_insert_timeseries(
-    ev,
-    in_path: Union[str, Path],
-    timeseries_type: str,
-    pattern: str = "**/*.parquet",
-    write_mode: TableWriteEnum = "append",
-    drop_duplicates: bool = True,
-    drop_overlapping_assimilation_values: bool = False
-):
-    """Validate and insert primary timeseries data.
+# # TODO: Update/remove this function. This is only used by fetching.
+# # Should this be part of a Loader class? This general workflow is repeated
+# # for each table.
+# def validate_and_insert_timeseries(
+#     ev,
+#     in_path: Union[str, Path],
+#     timeseries_type: str,
+#     pattern: str = "**/*.parquet",
+#     write_mode: TableWriteEnum = "append",
+#     drop_duplicates: bool = True,
+#     drop_overlapping_assimilation_values: bool = False
+# ):
+#     """Validate and insert primary timeseries data.
 
-    Parameters
-    ----------
-    ev : Evaluation
-        The Evaluation object.
-    in_path : Union[str, Path]
-        Directory path or file path to the primary timeseries data.
-    timeseries_type : str
-        The type of timeseries data.
-        Valid values: "primary", "secondary"
-    pattern : str, optional (default: "**/*.parquet")
-        The pattern to match files.
-    write_mode : TableWriteEnum, optional (default: "append")
-        The write mode for the table. Options are "append" or "upsert".
-        If "append", the Evaluation table will be appended with new data
-        that does not already exist.
-        If "upsert", existing data will be replaced and new data that
-        does not exist will be appended.
-    drop_duplicates : bool, optional (default: True)
-        Whether to drop duplicates in the dataframe before writing
-        to the table.
-    drop_overlapping_assimilation_values: Optional[bool] = True
-        Whether to drop overlapping assimilation values. Default is True.
-        If True, values that overlap in value_time are dropped, keeping those with
-        the most recent reference_time. In this case, all reference_time values
-        are set to None. If False, overlapping values are kept and reference_time
-        is retained.
-    """ # noqa
-    in_path = Path(in_path)
-    logger.info(f"Validating and inserting timeseries data from {in_path}")
+#     Parameters
+#     ----------
+#     ev : Evaluation
+#         The Evaluation object.
+#     in_path : Union[str, Path]
+#         Directory path or file path to the primary timeseries data.
+#     timeseries_type : str
+#         The type of timeseries data.
+#         Valid values: "primary", "secondary"
+#     pattern : str, optional (default: "**/*.parquet")
+#         The pattern to match files.
+#     write_mode : TableWriteEnum, optional (default: "append")
+#         The write mode for the table. Options are "append" or "upsert".
+#         If "append", the Evaluation table will be appended with new data
+#         that does not already exist.
+#         If "upsert", existing data will be replaced and new data that
+#         does not exist will be appended.
+#     drop_duplicates : bool, optional (default: True)
+#         Whether to drop duplicates in the dataframe before writing
+#         to the table.
+#     drop_overlapping_assimilation_values: Optional[bool] = True
+#         Whether to drop overlapping assimilation values. Default is True.
+#         If True, values that overlap in value_time are dropped, keeping those with
+#         the most recent reference_time. In this case, all reference_time values
+#         are set to None. If False, overlapping values are kept and reference_time
+#         is retained.
+#     """ # noqa
+#     in_path = Path(in_path)
+#     logger.info(f"Validating and inserting timeseries data from {in_path}")
 
-    if timeseries_type == "primary":
-        table = ev.primary_timeseries
-    elif timeseries_type == "secondary":
-        table = ev.secondary_timeseries
-    else:
-        raise ValueError("Invalid timeseries type.")
+#     if timeseries_type == "primary":
+#         table = ev.primary_timeseries
+#     elif timeseries_type == "secondary":
+#         table = ev.secondary_timeseries
+#     else:
+#         raise ValueError("Invalid timeseries type.")
 
-    # Read the converted files to Spark DataFrame
-    df = ev.read.from_cache(
-        path=in_path,
-        table_schema_func=table.schema_func(),
-        pattern=pattern,
-    ).to_sdf()
+#     # Read the converted files to Spark DataFrame
+#     df = ev.read.from_cache(
+#         path=in_path,
+#         table_schema_func=table.schema_func(),
+#         pattern=pattern,
+#     ).to_sdf()
 
-    if drop_overlapping_assimilation_values:
-        df = df.withColumn("reference_time", lit(None))
+#     if drop_overlapping_assimilation_values:
+#         df = df.withColumn("reference_time", lit(None))
 
-    # Validate datatypes, foreign keys, and drop duplicates.
-    validated_df = ev.validate.schema(
-        sdf=df,
-        table_schema=table.schema_func(),
-        drop_duplicates=drop_duplicates,
-        foreign_keys=table.foreign_keys,
-        uniqueness_fields=table.uniqueness_fields
-    )
-    # Write to the table
-    ev.write.to_warehouse(
-        source_data=validated_df,
-        table_name=table.table_name,
-        write_mode=write_mode,
-        uniqueness_fields=table.uniqueness_fields
-    )
+#     # Validate datatypes, foreign keys, and drop duplicates.
+#     validated_df = ev.validate.schema(
+#         sdf=df,
+#         table_schema=table.schema_func(),
+#         drop_duplicates=drop_duplicates,
+#         foreign_keys=table.foreign_keys,
+#         uniqueness_fields=table.uniqueness_fields
+#     )
+#     # Write to the table
+#     ev.write.to_warehouse(
+#         source_data=validated_df,
+#         table_name=table.table_name,
+#         write_mode=write_mode,
+#         uniqueness_fields=table.uniqueness_fields
+#     )
 
-    # Reload the table
-    table._load_table()
+#     # Reload the table
+#     table._load_table()

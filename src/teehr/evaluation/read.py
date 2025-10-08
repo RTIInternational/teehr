@@ -16,6 +16,7 @@ from teehr.querying.filter_format import (
     validate_filter
 )
 from teehr.evaluation.utils import get_table_instance
+from teehr.models.table_properties import TBLPROPERTIES
 
 
 logger = logging.getLogger(__name__)
@@ -168,12 +169,11 @@ class Read:
             logger.debug("Filter is not a list.  Making a list.")
             filters = [filters]
 
-        # TODO: Re-do this, no longer needed.
-        tbl_instance = get_table_instance(table_name)
-        filter_model = tbl_instance.filter_model
-        fields_enum = tbl_instance.field_enum()
-        dataframe_schema = tbl_instance.schema_func().to_structtype()
-
+        filter_model = TBLPROPERTIES[table_name].get("filter_model")
+        dataframe_schema = TBLPROPERTIES[table_name].get("schema_func")
+        # fields_enum = list(dataframe_schema().columns.keys())
+        # TODO: Should the field_enum be added to the TBLPROPERTIES?
+        fields_enum = get_table_instance(ev=self._ev, table_name=table_name).field_enum()
         sdf = (
             self._ev.spark.read.format("iceberg").load(
                     f"{catalog_name}.{namespace_name}.{table_name}"
@@ -189,7 +189,7 @@ class Read:
                 )
                 logger.debug(f"Filter: {filter.model_dump_json()}")
                 if validate_filter_field_types is True:
-                    filter = validate_filter(filter, dataframe_schema)
+                    filter = validate_filter(filter, dataframe_schema())
                 filter = format_filter(filter)
 
             sdf = sdf.filter(filter)

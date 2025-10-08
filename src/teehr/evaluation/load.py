@@ -273,10 +273,67 @@ class Load:
             uniqueness_fields=uniqueness_fields
         )
 
+    def from_cache(
+        self,
+        in_path: Path | str,
+        table_name: str,
+        namespace_name: str = None,
+        catalog_name: str = None,
+        write_mode: TableWriteEnum = "append",
+        drop_duplicates: bool = True,
+        update_attrs_table: bool = True
+    ):
+        """Load data from the cache."""
+        # Get the cache directory path.
+        in_path = Path(in_path)
 
-    # def domain_value(
-    #     self,
-    #     table_name: str,
-    #     domain_model:
-    # )
-    # Include "add()" here for domain values? Not really loading though?
+        table_props = TBLPROPERTIES.get(table_name)
+        if not table_props:
+            raise ValueError(f"Table properties for {table_name} not found.")
+
+        schema_func = table_props.get("schema_func")
+        uniqueness_fields = table_props.get("uniqueness_fields")
+        foreign_keys = table_props.get("foreign_keys")
+
+        sdf = self._read.from_cache(
+            path=in_path,
+            table_schema_func=schema_func()
+        ).to_sdf()
+
+        if update_attrs_table and table_name == "location_attributes":
+            attr_names = [
+                row.attribute_name for row in
+                sdf.select("attribute_name").distinct().collect()
+            ]
+            attr_list = []
+            for attr_name in attr_names:
+                attr_list.append(
+                    Attribute(
+                        name=attr_name,
+                        type="continuous",
+                        description=f"{attr_name} default description"
+                    )
+                )
+            self._ev.attributes.add(attr_list)
+
+        if foreign_keys is not None:
+            validated_df = self._validate.schema(
+                sdf=sdf,
+                table_schema=schema_func(),
+                drop_duplicates=drop_duplicates,
+                foreign_keys=foreign_keys,
+                uniqueness_fields=uniqueness_fields
+            )
+        else:
+            validated_df = self._validate.data(
+                df=sdf,
+                table_schema=schema_func(),
+            )
+        self._write.to_warehouse(
+            source_data=validated_df,
+            table_name=table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
+            write_mode=write_mode,
+            uniqueness_fields=uniqueness_fields
+        )
