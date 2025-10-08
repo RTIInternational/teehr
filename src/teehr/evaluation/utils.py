@@ -117,6 +117,7 @@ def create_spark_session(
         # builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.uri", local_catalog_uri)  # if local rest catalog
         builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.warehouse", local_warehouse_dir)
         # builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.io-impl", "org.apache.iceberg.aws.s3.S3FileIO")
+        # builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.default.write.metadata-flush-after-create", "true")  # TEST: Immediately write metadata after table creation.
 
     # Other optimizations
     builder = builder.config("spark.sql.adaptive.enabled", "true")

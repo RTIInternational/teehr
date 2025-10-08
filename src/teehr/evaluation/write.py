@@ -10,6 +10,8 @@ import geopandas as gpd
 # from teehr.evaluation.utils import get_table_instance
 from teehr.models.table_properties import TBLPROPERTIES
 
+DATATYPE_WRITE_TRANSFORMS = {"forecast_lead_time": "BIGINT"}
+
 
 # TODO: Should the Writer class contain DELETE FROM? That's how it's
 # organized in the docs: https://iceberg.apache.org/docs/1.9.1/spark-writes/#delete-from
@@ -29,6 +31,24 @@ class Write:
         """
         if ev is not None:
             self._ev = ev
+
+    def _apply_datatype_transform(self) -> str:
+        """Cast fields in the DataFrame to the pre-defined types."""
+        all_columns = self._ev.spark.table("source_data").columns
+        select_clauses = []
+        except_clauses = []
+        for col in all_columns:
+            if col in DATATYPE_WRITE_TRANSFORMS:
+                except_clauses.append(f"EXCEPT({col})")
+                select_clauses.append(f"CAST({col} AS {DATATYPE_WRITE_TRANSFORMS[col]}) AS {col}")
+        select_sql = ", ".join(select_clauses)
+        except_sql = ", ".join(except_clauses)
+
+        self._ev.spark.sql(f"""
+            SELECT * {except_sql},
+            {select_sql}
+            FROM source_data
+        """).createOrReplaceTempView("source_data")
 
     def _create_or_replace(
         self,
@@ -182,6 +202,10 @@ class Write:
         if isinstance(source_data, DataFrame):
             source_data.createOrReplaceTempView("source_data")
             source_data = "source_data"
+
+        tbl_columns = self._ev.spark.table(source_data).columns
+        if any(item in DATATYPE_WRITE_TRANSFORMS for item in tbl_columns):
+            self._apply_datatype_transform()
 
         if write_mode == "append":
             self._append(

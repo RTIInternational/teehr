@@ -76,11 +76,10 @@ def clone_from_s3(
 
     Note: future version will allow subsetting the tables to clone.
     """
-    logger.info(f"Cloning evaluation from remote warehouse")
-    # Properties needed:
-    # - table name
-    # - uniqueness fields
-    # - partition by fields
+    logger.info("Cloning evaluation from remote warehouse")
+    # TODO: Better way to filter and subset from the remote warehouse?
+    if primary_location_ids is not None:
+        primary_location_ids = f"('{', '.join(primary_location_ids)}')"
     tables = [
         {
             "table": ev.units,

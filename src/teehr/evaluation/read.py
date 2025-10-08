@@ -3,6 +3,8 @@ from typing import Union, List
 import logging
 from pathlib import Path
 
+import pyspark.sql.types as T
+import pyspark.sql.functions as F
 import pyspark.sql as ps
 from pandera.pyspark import DataFrameSchema as SparkDataFrameSchema
 from pandera import DataFrameSchema as PandasDataFrameSchema
@@ -17,6 +19,8 @@ from teehr.evaluation.utils import get_table_instance
 
 
 logger = logging.getLogger(__name__)
+
+DATATYPE_READ_TRANSFORMS = {"forecast_lead_time": T.DayTimeIntervalType(0, 3)}
 
 
 # NOTE: Should this inherit the Table class?
@@ -36,6 +40,27 @@ class Read:
         if ev is not None:  # needed?
             self._ev = ev
         self.sdf: ps.DataFrame = None
+
+    @staticmethod
+    def _apply_datatype_transform(sdf: ps.DataFrame) -> ps.DataFrame:
+        """Apply datatype transformations to the Spark DataFrame.
+
+        Parameters
+        ----------
+        sdf : ps.DataFrame
+            The Spark DataFrame to transform.
+
+        Returns
+        -------
+        ps.DataFrame
+            The transformed Spark DataFrame.
+        """
+        tbl_columns = sdf.columns
+        if any(item in DATATYPE_READ_TRANSFORMS for item in tbl_columns):
+            for col, datatype in DATATYPE_READ_TRANSFORMS.items():
+                if col in tbl_columns:
+                    sdf = sdf.withColumn(col, F.col(col).cast(datatype))
+        return sdf
 
     def from_cache(
         self,
@@ -115,23 +140,28 @@ class Read:
             f"Reading files from {catalog_name}.{namespace_name}.{table_name}."
         )
         # This is the guts of validate_and_apply_filters re-configured a bit.
-        # Should it be moved to it's own function?:
+        # Should it be moved to it's own function?
+        # TODO: Replace with ev.validate.filters?
         if filters is None:
             # No filter applied, just read the whole table
-            self.sdf = (self._ev.spark.read.format("iceberg").load(
+            sdf = (self._ev.spark.read.format("iceberg").load(
                     f"{catalog_name}.{namespace_name}.{table_name}"
                 )
             )
+            sdf = self._apply_datatype_transform(sdf)
+            self.sdf = sdf
             return self
 
         if isinstance(filters, str):
             logger.debug(
                 f"Filter {filters} is already string.  Applying as is."
             )
-            self.sdf = (self._ev.spark.read.format("iceberg").load(
+            sdf = (self._ev.spark.read.format("iceberg").load(
                     f"{catalog_name}.{namespace_name}.{table_name}"
                 ).filter(filters)
             )
+            sdf = self._apply_datatype_transform(sdf)
+            self.sdf = sdf
             return self
 
         if not isinstance(filters, List):
@@ -162,7 +192,7 @@ class Read:
                 filter = format_filter(filter)
 
             sdf = sdf.filter(filter)
-
+            sdf = self._apply_datatype_transform(sdf)
             self.sdf = sdf
             return self
 
