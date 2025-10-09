@@ -1,5 +1,5 @@
 """Domain table class."""
-from teehr.evaluation.tables.generic_table import Table
+from teehr.evaluation.tables.base_table import Table
 from teehr.models.pydantic_table_models import TableBaseModel
 import pandas as pd
 from typing import List, Union

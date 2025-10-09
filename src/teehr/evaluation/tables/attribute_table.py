@@ -32,14 +32,6 @@ class AttributeTable(DomainTable):
             catalog_name=catalog_name
         )
 
-    def field_enum(self) -> AttributeFields:
-        """Get the attribute fields enum."""
-        fields = self._get_schema("pandas").columns.keys()
-        return AttributeFields(
-            "AttributeFields",
-            {field: field for field in fields}
-        )
-
     def add(
         self,
         attribute: Union[Attribute, List[Attribute]]

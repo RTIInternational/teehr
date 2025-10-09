@@ -33,4 +33,3 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             namespace_name=namespace_name,
             catalog_name=catalog_name
         )
-

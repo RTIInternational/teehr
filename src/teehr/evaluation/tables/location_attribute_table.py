@@ -1,5 +1,5 @@
 """Location Attribute Table class."""
-from teehr.evaluation.tables.generic_table import Table
+from teehr.evaluation.tables.base_table import Table
 from teehr.loading.location_attributes import (
     convert_single_location_attributes
 )
@@ -11,7 +11,7 @@ from teehr.querying.utils import join_geometry
 from pathlib import Path
 from typing import Union
 import logging
-from teehr.models.table_enums import TableWriteEnum, LocationAttributeFields
+from teehr.models.table_enums import TableWriteEnum
 import pyspark.sql as ps
 import pandas as pd
 
@@ -45,14 +45,6 @@ class LocationAttributeTable(Table):
             table_name=table_name,
             namespace_name=namespace_name,
             catalog_name=catalog_name
-        )
-
-    def field_enum(self) -> LocationAttributeFields:
-        """Get the location attribute fields enum."""
-        fields = self._get_schema("pandas").columns.keys()
-        return LocationAttributeFields(
-            "LocationAttributeFields",
-            {field: field for field in fields}
         )
 
     def to_geopandas(self):

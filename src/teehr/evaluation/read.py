@@ -15,7 +15,6 @@ from teehr.querying.filter_format import (
     format_filter,
     validate_filter
 )
-from teehr.evaluation.utils import get_table_instance
 from teehr.models.table_properties import TBLPROPERTIES
 
 
@@ -171,9 +170,7 @@ class Read:
 
         filter_model = TBLPROPERTIES[table_name].get("filter_model")
         dataframe_schema = TBLPROPERTIES[table_name].get("schema_func")
-        # fields_enum = list(dataframe_schema().columns.keys())
-        # TODO: Should the field_enum be added to the TBLPROPERTIES?
-        fields_enum = get_table_instance(ev=self._ev, table_name=table_name).field_enum()
+        fields_enum = TBLPROPERTIES[table_name].get("field_enum_model")
         sdf = (
             self._ev.spark.read.format("iceberg").load(
                     f"{catalog_name}.{namespace_name}.{table_name}"

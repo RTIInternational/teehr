@@ -1,10 +1,9 @@
 """Location Crosswalk Table."""
-from teehr.evaluation.tables.generic_table import Table
+from teehr.evaluation.tables.base_table import Table
 from teehr.loading.utils import (
     validate_input_is_csv,
     validate_input_is_parquet
 )
-from teehr.models.table_enums import LocationCrosswalkFields
 from teehr.querying.utils import join_geometry
 from pathlib import Path
 from typing import Union
@@ -46,14 +45,6 @@ class LocationCrosswalkTable(Table):
             table_name=table_name,
             namespace_name=namespace_name,
             catalog_name=catalog_name
-        )
-
-    def field_enum(self) -> LocationCrosswalkFields:
-        """Get the location crosswalk fields enum."""
-        fields = self._get_schema("pandas").columns.keys()
-        return LocationCrosswalkFields(
-            "LocationCrosswalkFields",
-            {field: field for field in fields}
         )
 
     def to_geopandas(self):

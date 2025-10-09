@@ -113,30 +113,30 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        # test_get_configuration_fields(
-        #     tempfile.mkdtemp(
-        #         prefix="1-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_get_unit_fields(
-        #     tempfile.mkdtemp(
-        #         prefix="2-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_get_variable_fields(
-        #     tempfile.mkdtemp(
-        #         prefix="3-",
-        #         dir=tempdir
-        #     )
-        # )
-        # test_get_attribute_fields(
-        #     tempfile.mkdtemp(
-        #         prefix="4-",
-        #         dir=tempdir
-        #     )
-        # )
+        test_get_configuration_fields(
+            tempfile.mkdtemp(
+                prefix="1-",
+                dir=tempdir
+            )
+        )
+        test_get_unit_fields(
+            tempfile.mkdtemp(
+                prefix="2-",
+                dir=tempdir
+            )
+        )
+        test_get_variable_fields(
+            tempfile.mkdtemp(
+                prefix="3-",
+                dir=tempdir
+            )
+        )
+        test_get_attribute_fields(
+            tempfile.mkdtemp(
+                prefix="4-",
+                dir=tempdir
+            )
+        )
         test_get_location_fields(
             tempfile.mkdtemp(
                 prefix="5-",

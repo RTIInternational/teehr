@@ -40,7 +40,7 @@ from teehr.evaluation.write import Write
 from teehr.evaluation.extract import DataExtractor
 from teehr.evaluation.validate import Validator
 from teehr.evaluation.workflows import Workflow
-from teehr.evaluation.tables.generic_table import Table
+from teehr.evaluation.tables.base_table import Table
 from teehr.evaluation.read import Read
 from teehr.evaluation.load import Load
 from teehr.evaluation.utils import (
@@ -588,6 +588,7 @@ class Evaluation(EvaluationBase):
             filters = table_filter.filters
         if table_name is None:
             raise ValueError("Table name must be specified.")
+        # TODO: Instantiate generic table?
         base_table = get_table_instance(self, table_name)
         return validate_and_apply_filters(
             sdf=base_table.to_sdf(),

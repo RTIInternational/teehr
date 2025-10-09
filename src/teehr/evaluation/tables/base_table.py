@@ -44,7 +44,6 @@ class Table:
             self.catalog_name = catalog_name
 
         if table_name in TBLPROPERTIES:
-            # Just set self.table_properties here?
             table_props = TBLPROPERTIES[self.table_name]
             self.uniqueness_fields: List[str] = table_props["uniqueness_fields"]
             self.foreign_keys: List[Dict[str, str]] = table_props["foreign_keys"]
@@ -52,6 +51,7 @@ class Table:
             self.filter_model: FilterBaseModel = table_props["filter_model"]
             self.strict_validation = table_props["strict_validation"]
             self.validate_filter_field_types = table_props["validate_filter_field_types"]
+            self.field_enum_model = table_props["field_enum_model"]
         else:
             self.uniqueness_fields: List[str] = None
             self.foreign_keys: List[Dict[str, str]] = None
@@ -59,6 +59,7 @@ class Table:
             self.filter_model: FilterBaseModel = None
             self.strict_validation = None
             self.validate_filter_field_types = None
+            self.field_enum_model = None  # Load the sdf and get the fields?
 
         return self
 
@@ -363,10 +364,22 @@ class Table:
         self._check_load_table()
         return self.sdf.columns
 
-    def distinct_values(self,
-                        column: str,
-                        location_prefixes: bool = False
-                        ) -> List[str]:
+    # def field_enum(self) -> ConfigurationFields:
+    #     """Get the configuration fields enum."""
+    #     fields = self._get_schema("pandas").columns.keys()
+    #     return ConfigurationFields(
+    #         "ConfigurationFields",
+    #         {field: field for field in fields}
+    #     )
+    def field_enum(self) -> StrEnum:
+        """Get the fields enum."""
+        return self.field_enum_model
+
+    def distinct_values(
+        self,
+        column: str,
+        location_prefixes: bool = False
+    ) -> List[str]:
         """Return distinct values for a column.
 
         Parameters

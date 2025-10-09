@@ -32,15 +32,6 @@ class ConfigurationTable(DomainTable):
             catalog_name=catalog_name
         )
 
-    # TODO: Needed?
-    def field_enum(self) -> ConfigurationFields:
-        """Get the configuration fields enum."""
-        fields = self._get_schema("pandas").columns.keys()
-        return ConfigurationFields(
-            "ConfigurationFields",
-            {field: field for field in fields}
-        )
-
     def add(
         self,
         configuration: Union[Configuration, List[Configuration]]

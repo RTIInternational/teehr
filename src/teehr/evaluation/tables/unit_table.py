@@ -36,14 +36,6 @@ class UnitTable(DomainTable):
             catalog_name=catalog_name
         )
 
-    def field_enum(self) -> UnitFields:
-        """Get the unit fields enum."""
-        fields = self._get_schema("pandas").columns.keys()
-        return UnitFields(
-            "UnitFields",
-            {field: field for field in fields}
-        )
-
     def add(
         self,
         unit: Union[Unit, List[Unit]]

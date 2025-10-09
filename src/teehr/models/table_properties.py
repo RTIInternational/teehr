@@ -14,6 +14,17 @@ from teehr.loading.location_crosswalks import (
     convert_single_location_crosswalks
 )
 from teehr.loading.timeseries import convert_single_timeseries
+from teehr.models.table_enums import (
+    AttributeFields,
+    UnitFields,
+    VariableFields,
+    ConfigurationFields,
+    LocationFields,
+    LocationAttributeFields,
+    LocationCrosswalkFields,
+    TimeseriesFields,
+    JoinedTimeseriesFields
+)
 
 
 TBLPROPERTIES = {
@@ -25,7 +36,11 @@ TBLPROPERTIES = {
         "file_format": "csv",
         "strict_validation": True,
         "validate_filter_field_types": True,
-        "extraction_func": None
+        "extraction_func": None,
+        "field_enum_model": UnitFields(
+            "UnitFields",
+            {field: field for field in schemas.unit_schema("pandas").columns.keys()}
+        )
     },
     "variables": {
         "uniqueness_fields": ["name"],
@@ -35,7 +50,11 @@ TBLPROPERTIES = {
         "file_format": "csv",
         "strict_validation": True,
         "validate_filter_field_types": True,
-        "extraction_func": None
+        "extraction_func": None,
+        "field_enum_model": VariableFields(
+            "VariableFields",
+            {field: field for field in schemas.variable_schema("pandas").columns.keys()}
+        )
     },
     "configurations": {
         "uniqueness_fields": ["name"],
@@ -45,7 +64,11 @@ TBLPROPERTIES = {
         "file_format": "csv",
         "strict_validation": True,
         "validate_filter_field_types": True,
-        "extraction_func": None
+        "extraction_func": None,
+        "field_enum_model": ConfigurationFields(
+            "ConfigurationFields",
+            {field: field for field in schemas.configuration_schema("pandas").columns.keys()}
+        )
     },
     "attributes": {
         "uniqueness_fields": ["name"],
@@ -55,7 +78,11 @@ TBLPROPERTIES = {
         "file_format": "csv",
         "strict_validation": True,
         "validate_filter_field_types": True,
-        "extraction_func": None
+        "extraction_func": None,
+        "field_enum_model": AttributeFields(
+            "AttributeFields",
+            {field: field for field in schemas.attribute_schema("pandas").columns.keys()}
+        )
     },
     "locations": {
         "uniqueness_fields": ["id"],
@@ -65,7 +92,11 @@ TBLPROPERTIES = {
         "file_format": "parquet",
         "strict_validation": True,
         "validate_filter_field_types": True,
-        "extraction_func": convert_single_locations
+        "extraction_func": convert_single_locations,
+        "field_enum_model": LocationFields(
+            "LocationFields",
+            {field: field for field in schemas.locations_schema("pandas").columns.keys()}
+        )
     },
     "location_attributes": {
         "uniqueness_fields": ["location_id", "attribute_name"],
@@ -86,7 +117,11 @@ TBLPROPERTIES = {
         "file_format": "parquet",
         "strict_validation": True,
         "validate_filter_field_types": True,
-        "extraction_func": convert_single_location_attributes
+        "extraction_func": convert_single_location_attributes,
+        "field_enum_model": LocationAttributeFields(
+            "LocationAttributeFields",
+            {field: field for field in schemas.location_attributes_schema("pandas").columns.keys()}
+        )
     },
     "location_crosswalks": {
         "uniqueness_fields": ["secondary_location_id"],
@@ -102,7 +137,11 @@ TBLPROPERTIES = {
         "file_format": "parquet",
         "strict_validation": True,
         "validate_filter_field_types": True,
-        "extraction_func": convert_single_location_crosswalks
+        "extraction_func": convert_single_location_crosswalks,
+        "field_enum_model": LocationCrosswalkFields(
+            "LocationCrosswalkFields",
+            {field: field for field in schemas.location_crosswalks_schema("pandas").columns.keys()}
+        )
     },
     "primary_timeseries": {
         "uniqueness_fields": [
@@ -140,7 +179,11 @@ TBLPROPERTIES = {
         "file_format": "parquet",
         "strict_validation": True,
         "validate_filter_field_types": True,
-        "extraction_func": convert_single_timeseries
+        "extraction_func": convert_single_timeseries,
+        "field_enum_model": TimeseriesFields(
+            "TimeseriesFields",
+            {field: field for field in schemas.primary_timeseries_schema("pandas").columns.keys()}
+        )
     },
     "secondary_timeseries": {
         "uniqueness_fields": [
@@ -178,7 +221,11 @@ TBLPROPERTIES = {
         "file_format": "parquet",
         "strict_validation": True,
         "validate_filter_field_types": True,
-        "extraction_func": convert_single_timeseries
+        "extraction_func": convert_single_timeseries,
+        "field_enum_model": TimeseriesFields(
+            "TimeseriesFields",
+            {field: field for field in schemas.secondary_timeseries_schema("pandas").columns.keys()}
+        )
     },
     "joined_timeseries": {
         "uniqueness_fields": [
@@ -196,6 +243,10 @@ TBLPROPERTIES = {
         "file_format": "parquet",
         "strict_validation": False,
         "validate_filter_field_types": False,
-        "extraction_func": None
+        "extraction_func": None,
+        "field_enum_model": JoinedTimeseriesFields(
+            "JoinedTimeseriesFields",
+            {field: field for field in schemas.joined_timeseries_schema("pandas").columns.keys()}
+        )
     }
 }

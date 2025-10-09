@@ -36,14 +36,6 @@ class VariableTable(DomainTable):
             catalog_name=catalog_name
         )
 
-    def field_enum(self) -> VariableFields:
-        """Get the variable fields enum."""
-        fields = self._get_schema("pandas").columns.keys()
-        return VariableFields(
-            "VariableFields",
-            {field: field for field in fields}
-        )
-
     def add(
         self,
         variable: Union[Variable, List[Variable]]
