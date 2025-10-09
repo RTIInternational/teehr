@@ -320,7 +320,7 @@ class Evaluation(EvaluationBase):
     def clone_template(
         self,
         catalog_name: str = None,
-        namespace: str = None,
+        namespace_name: str = None,
         local_warehouse_dir: Union[str, Path] = None
     ):
         """Create a study from the standard template.
@@ -335,8 +335,8 @@ class Evaluation(EvaluationBase):
         # Set to local by default.
         if catalog_name is None:
             catalog_name = self.active_catalog.catalog_name
-        if namespace is None:
-            namespace = self.active_catalog.namespace_name
+        if namespace_name is None:
+            namespace_name = self.active_catalog.namespace_name
         if local_warehouse_dir is None:
             local_warehouse_dir = self.active_catalog.warehouse_dir
 
@@ -359,7 +359,7 @@ class Evaluation(EvaluationBase):
             spark=self.spark,
             migrations_dir_path=local_warehouse_dir,
             catalog_name=catalog_name,
-            namespace=namespace
+            namespace=namespace_name
         )
 
     @staticmethod
