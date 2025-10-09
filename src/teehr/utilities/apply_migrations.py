@@ -6,7 +6,6 @@ from pathlib import Path
 import logging
 
 from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, IntegerType, LongType, StringType
 
 
 logger = logging.getLogger(__name__)

@@ -609,9 +609,15 @@ class Evaluation(EvaluationBase):
         if catalog_name is None:
             catalog_name = self.active_catalog.catalog_name
         if namespace is None:
-            namespace = self.active_catalog.namespace
+            namespace = self.active_catalog.namespace_name
         if warehouse_dir is None:
-            warehouse_dir = Path(self.active_catalog.warehouse_dir) / "migrations"
+            warehouse_dir = Path(self.active_catalog.warehouse_dir)
+
+        if Path(warehouse_dir, "migrations").exists() is False:
+            logger.info("Copying migration scripts to evaluation directory.")
+            copy_migrations_dir(
+                target_dir=warehouse_dir
+            )
         apply_migrations.evolve_catalog_schema(
             spark=self.spark,
             migrations_dir_path=warehouse_dir,

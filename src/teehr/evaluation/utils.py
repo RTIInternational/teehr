@@ -86,8 +86,8 @@ def create_spark_session(
     # builder = builder.config("spark.driver.host", "localhost")
     # builder = builder.config("spark.master", "local[*]")
     builder = builder.config("spark.sql.session.timeZone", "UTC")
-    if local_warehouse_dir is not None:
-        builder = builder.config("spark.local.dir", local_warehouse_dir)
+    # if local_warehouse_dir is not None:
+    #     builder = builder.config("spark.local.dir", local_warehouse_dir)  # Include spark stuff in the warehouse dir?
 
     # Get jars, use compatible versions for PySpark 4
     builder = builder.config(
@@ -117,7 +117,7 @@ def create_spark_session(
         # builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.uri", local_catalog_uri)  # if local rest catalog
         builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.warehouse", local_warehouse_dir)
         # builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.io-impl", "org.apache.iceberg.aws.s3.S3FileIO")
-        builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.default.write.metadata-flush-after-create", "true")  # TEST: Immediately write metadata after table creation.
+        # builder = builder.config(f"spark.sql.catalog.{local_catalog_name}.default.write.metadata-flush-after-create", "true")  # TEST: Immediately write metadata after table creation.
 
     # Other optimizations
     builder = builder.config("spark.sql.adaptive.enabled", "true")
