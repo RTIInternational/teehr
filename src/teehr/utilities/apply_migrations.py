@@ -119,27 +119,11 @@ def update_applied_schema_version(
     Returns:
       None
     """
-    # NOTE. This will fail without updating existing schema_version_history
-    # tables to include namespace field.
-    schema = StructType([
-        StructField("namespace", StringType(), True),
-        StructField("version", IntegerType(), True),
-        StructField("applied_on", LongType(), True)
-    ])
-
-    schema_version_df = spark.createDataFrame(
-      data=[
-        (namespace, applied_schema_version, time.time_ns() // 1000000)
-      ],
-      schema=schema
-    )
-
-    schema_version_df \
-        .writeTo(f'{catalog_name}.schema_evolution.schema_version_history') \
-        .using("iceberg") \
-        .append()
-
-    pass
+    current_time_ms = time.time_ns() // 1000000
+    spark.sql(f"""
+        INSERT INTO {catalog_name}.schema_evolution.schema_version_history
+        VALUES ('{namespace}', {applied_schema_version}, {current_time_ms})
+    """)
 
 
 def determine_schema_version_delta(
@@ -281,7 +265,7 @@ def evolve_catalog_schema(
         )
         return
 
-    schema_version_delta = [1]  # HACK
+    # schema_version_delta = [1]  # HACK
 
     for schema_version in schema_version_delta:
         evolution_statements = load_schema_version_evolution_statements(

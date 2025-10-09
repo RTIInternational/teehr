@@ -615,14 +615,14 @@ def test_metrics_transforms(tmpdir):
     mvtd_t.transform = 'log'
 
     # get metrics_df
-    metrics_df_tansformed_e = eval.metrics.query(
+    metrics_df_tansformed_e = ev.metrics.query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             kge_t_e,
             mvtd_t
         ]
     ).to_pandas()
-    metrics_df_transformed = eval.metrics.query(
+    metrics_df_transformed = ev.metrics.query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             kge_t,
@@ -722,12 +722,12 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        # test_executing_deterministic_metrics(
-        #     tempfile.mkdtemp(
-        #         prefix="1-",
-        #         dir=tempdir
-        #     )
-        # )
+        test_executing_deterministic_metrics(
+            tempfile.mkdtemp(
+                prefix="1-",
+                dir=tempdir
+            )
+        )
         test_executing_signature_metrics(
             tempfile.mkdtemp(
                 prefix="2-",
@@ -777,11 +777,13 @@ if __name__ == "__main__":
                 dir=tempdir
             )
         )
+        # TODO: High memory usage?
         test_metrics_transforms(
             tempfile.mkdtemp(
                 prefix="10-",
                 dir=tempdir)
         )
+        # TODO: High memory usage?
         test_bootstrapping_transforms(
             tempfile.mkdtemp(
                 prefix="11-",
