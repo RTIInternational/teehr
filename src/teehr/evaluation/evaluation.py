@@ -46,8 +46,7 @@ from teehr.evaluation.read import Read
 from teehr.evaluation.load import Load
 from teehr.evaluation.utils import (
     create_spark_session,
-    copy_migrations_dir,
-    get_table_instance
+    copy_migrations_dir
 )
 import pandas as pd
 import re

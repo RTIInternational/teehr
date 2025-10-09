@@ -34,12 +34,6 @@ SEDONA_VERSION = "1.8.0"
 SPARK_HOME = pyspark.__path__[0]
 
 
-def get_table_instance(ev, table_name: str):
-    """Get a table instance from the catalog."""
-    table = getattr(ev, table_name, None)
-    return table
-
-
 def copy_migrations_dir(
     target_dir: Union[str, Path, S3Path]
 ):
