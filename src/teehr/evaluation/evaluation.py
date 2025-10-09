@@ -31,6 +31,7 @@ from teehr.loading.s3.clone_from_s3 import (
     list_s3_evaluations,
     clone_from_s3
 )
+from teehr.models.table_properties import TBLPROPERTIES
 from teehr.models.filters import TableFilter, FilterBaseModel, TableNamesEnum
 import teehr.const as const
 from teehr.evaluation.fetch import Fetch
@@ -588,15 +589,14 @@ class Evaluation(EvaluationBase):
             filters = table_filter.filters
         if table_name is None:
             raise ValueError("Table name must be specified.")
-        # TODO: Instantiate generic table?
-        base_table = get_table_instance(self, table_name)
+        tbl_props = TBLPROPERTIES[table_name]
         return validate_and_apply_filters(
-            sdf=base_table.to_sdf(),
+            sdf=self.table(table_name=table_name).to_sdf(),
             filters=filters,
-            filter_model=base_table.filter_model,
-            fields_enum=base_table.field_enum(),
-            dataframe_schema=base_table._get_schema("pandas"),
-            validate=base_table.validate_filter_field_types
+            filter_model=tbl_props["filter_model"],
+            fields_enum=tbl_props["field_enum_model"],
+            dataframe_schema=tbl_props["schema_func"]("pandas"),
+            validate=tbl_props["validate_filter_field_types"]
         )
 
     def apply_schema_migration(
