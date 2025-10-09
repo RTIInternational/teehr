@@ -32,12 +32,29 @@ class Metrics:
 
     def __init__(self, ev) -> None:
         """Initialize the Metrics class."""
+        self._ev = ev
         self.spark = ev.spark
-        self.dataset_dir = ev.active_catalog.dataset_dir
         self.locations = ev.locations
-        self.joined_timeseries = ev.joined_timeseries
-        self.sdf = self.joined_timeseries.to_sdf()
+        # self.joined_timeseries = ev.joined_timeseries
+        # self.sdf = self.joined_timeseries.to_sdf()
         self._write = ev.write
+
+    def __call__(
+        self,
+        table_name: str = "joined_timeseries",
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None,
+    ) -> "Metrics":
+        """Initialize the Metrics class."""
+        self.table_name = table_name
+        self.table = self._ev.table(
+            table_name=table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
+        )
+        self.sdf = self.table.to_sdf()
+
+        return self
 
     def query(
         self,
@@ -135,9 +152,9 @@ class Metrics:
             logger.debug("Applying filters to the metrics query.")
             self.sdf = validate_and_apply_filters(
                 sdf=self.sdf,
-                filter_model=self.joined_timeseries.filter_model,
+                filter_model=self.table.filter_model,
                 filters=filters,
-                fields_enum=self.joined_timeseries.field_enum(),
+                fields_enum=self.table.field_enum(),
                 validate=False
             )
 

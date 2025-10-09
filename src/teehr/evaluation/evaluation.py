@@ -205,7 +205,8 @@ class Evaluation(EvaluationBase):
     @property
     def metrics(self) -> Metrics:
         """The metrics component class for calculating performance metrics."""
-        return Metrics(self)
+        cls = Metrics(self)
+        return cls()
 
     @property
     def units(self) -> UnitTable:
@@ -425,7 +426,6 @@ class Evaluation(EvaluationBase):
             start_date=start_date,
             end_date=end_date
         )
-
 
     def clean_cache(self):
         """Clean temporary files.

@@ -12,8 +12,6 @@ from pathlib import Path
 
 def test_add_domains(tmpdir):
     """Test creating a new study."""
-    tmpdir = Path(tmpdir)
-
     # ev = Evaluation()  # Connects to remote by default
 
     ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)

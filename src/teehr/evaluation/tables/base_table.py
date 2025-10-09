@@ -20,9 +20,12 @@ class Table:
         """Initialize the Table class."""
         self._ev = ev
         self._read = ev.read
-        # self._write = ev.write
-        # self._validate = ev.validate
-        # self._extract = ev.extract
+        # We could make these available to generic tables,
+        # but then they're available to table classes. Is that bad?
+        # self.write = ev.write
+        # self.validate = ev.validate
+        # self.extract = ev.extract
+        # self.load = ev.load
 
     def __call__(
         self,

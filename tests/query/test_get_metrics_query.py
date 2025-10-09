@@ -59,6 +59,13 @@ def test_executing_deterministic_metrics(tmpdir):
         order_by=[flds.primary_location_id],
     ).to_pandas()
 
+    metrics_df2 = ev.metrics(table_name="joined_timeseries").query(
+        include_metrics=include_all_metrics,
+        group_by=[flds.primary_location_id],
+        order_by=[flds.primary_location_id],
+    ).to_pandas()
+
+    assert metrics_df.equals(metrics_df2)
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
     assert metrics_df.columns.size == 20
@@ -84,9 +91,22 @@ def test_executing_signature_metrics(tmpdir):
         order_by=[flds.primary_location_id],
     ).to_pandas()
 
+    sum_metric = SignatureMetrics.Sum()
+    sum_metric.input_field_names = ["value"]
+
+    metrics_df2 = ev.metrics(table_name="primary_timeseries").query(
+        include_metrics=[sum_metric],
+        group_by=["location_id"],
+        order_by=["location_id"],
+        filters=["location_id = 'gage-A'"],
+    ).to_pandas()
+
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
     assert metrics_df.columns.size == 8
+    assert len(metrics_df2) == 1
+    assert metrics_df2.location_id.values[0] == "gage-A"
+    assert np.isclose(metrics_df2["sum"].values[0], 31.3)
     ev.spark.stop()
 
 
@@ -702,12 +722,12 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_executing_deterministic_metrics(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
+        # test_executing_deterministic_metrics(
+        #     tempfile.mkdtemp(
+        #         prefix="1-",
+        #         dir=tempdir
+        #     )
+        # )
         test_executing_signature_metrics(
             tempfile.mkdtemp(
                 prefix="2-",
