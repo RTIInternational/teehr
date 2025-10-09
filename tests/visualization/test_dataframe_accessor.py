@@ -110,17 +110,9 @@ def test_locations_map(tmpdir):
     setup_nwm_example(tmpdir=test_eval_dir)
 
     # Initialize the evaluation.
-    ev = teehr.Evaluation(local_warehouse_dir=test_eval_dir, create_local_dir=True)
-
-    # add polygons from parquet in test data
-    location_data_path = Path(test_eval_dir, "three_huc10s_radford.parquet")
-    ev.locations.load_spatial(
-        location_data_path,
-        field_mapping={
-            "huc10": "id"
-        },
-        location_id_prefix="wbd",
-        write_mode="append"  # this is the default
+    ev = teehr.Evaluation(
+        local_warehouse_dir=test_eval_dir,
+        check_evaluation_version=False
     )
 
     # output locations map w/ points and polygons
@@ -160,17 +152,9 @@ def test_location_attributes_map(tmpdir):
     setup_nwm_example(tmpdir=test_eval_dir)
 
     # Initialize the evaluation.
-    ev = teehr.Evaluation(local_warehouse_dir=test_eval_dir, create_local_dir=True)
-
-    # add polygons from parquet in test data
-    location_data_path = Path(test_eval_dir, "three_huc10s_radford.parquet")
-    ev.locations.load_spatial(
-        location_data_path,
-        field_mapping={
-            "huc10": "id"
-        },
-        location_id_prefix="wbd",
-        write_mode="append"  # this is the default
+    ev = teehr.Evaluation(
+        local_warehouse_dir=test_eval_dir,
+        check_evaluation_version=False
     )
 
     # add dummy attributes to evaluation

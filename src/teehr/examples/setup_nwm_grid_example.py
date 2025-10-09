@@ -43,38 +43,26 @@ def setup_nwm_example(tmpdir):
     fetch_nwm_grid_data.fetch_file("nwm30_forcing_analysis_assim_pixel_weights.parquet", weights_path)
 
     # Manually load the data into the Evaluation
-    # joined timeseries
-    shutil.move(
-        src=joined_timeseries_path,
-        dst=ev.joined_timeseries.dir
+    ev.locations.load_spatial(
+        wbd_location_data_path,
+        field_mapping={
+            "huc10": "id"
+        },
+        location_id_prefix="wbd",
+        write_mode="append"  # this is the default
     )
-    # configurations
-    shutil.move(
-        src=configurations_path,
-        dst=ev.configurations.dir
+    ev.location_crosswalks.load_parquet(
+        in_path=forcing_crosswalk_data_path,
+        write_mode="append"  # this is the default
     )
-    # secondary
-    shutil.move(
-        src=secondary_timeseries_path,
-        dst=ev.secondary_timeseries.dir
-    )
-    # primary
-    shutil.move(
-        src=primary_timeseries_path,
-        dst=ev.primary_timeseries.dir
-    )
-    # location crosswalks
-    shutil.move(
-        src=crosswalk_data_path,
-        dst=ev.location_crosswalks.dir
-    )
-    # locations
-    shutil.move(
-        src=location_data_path,
-        dst=ev.locations.dir
-    )
+    ev.load.from_cache(in_path=location_data_path, table_name="locations")
+    ev.load.from_cache(in_path=crosswalk_data_path, table_name="location_crosswalks")
+    ev.load.from_cache(in_path=configurations_path, table_name="configurations")
+    ev.load.from_cache(in_path=primary_timeseries_path, table_name="primary_timeseries")
+    ev.load.from_cache(in_path=secondary_timeseries_path, table_name="secondary_timeseries")
+    ev.load.from_cache(in_path=joined_timeseries_path, table_name="joined_timeseries")
 
-    # weights file
+    # Weights file
     Path(ev.cache_dir, "fetching", "weights", "nwm30_forcing_analysis_assim").mkdir(parents=True)
     shutil.move(
         src=weights_path,
