@@ -78,8 +78,17 @@ def clone_from_s3(
     """
     logger.info("Cloning evaluation from remote warehouse")
     # TODO: Better way to filter and subset from the remote warehouse?
+    secondary_location_ids = None
     if primary_location_ids is not None:
         primary_location_ids = f"('{', '.join(primary_location_ids)}')"
+        secondary_location_ids = ev.read.from_warehouse(
+            table_name="location_crosswalks",
+            catalog_name=remote_catalog_name,
+            namespace_name=remote_namespace_name
+        ).to_sdf().filter("primary_location_id in {}".format(primary_location_ids)).select("secondary_location_id").rdd.flatMap(lambda x: x).collect()
+        secondary_location_ids = f"('{', '.join(secondary_location_ids)}')"
+        pass
+
     tables = [
         {
             "table": ev.units,
@@ -126,7 +135,7 @@ def clone_from_s3(
         {
             "table": ev.secondary_timeseries,
             "filters": [
-                f"location_id in {primary_location_ids}" if primary_location_ids is not None else None,
+                f"location_id in {secondary_location_ids}" if secondary_location_ids is not None else None,
                 f"value_time >= '{start_date}'" if start_date is not None else None,
                 f"value_time <= '{end_date}'" if end_date is not None else None
             ]

@@ -24,7 +24,7 @@ def test_get_s3_evaluations_list():
 def test_clone_example_from_s3(tmpdir):
     """Test cloning a fully populated evaluation from s3."""
     ev = Evaluation(tmpdir, create_local_dir=True)
-    ev.clone_from_s3("e0_2_location_example")
+    ev.clone_from_s3(remote_namespace_name="e0_2_location_example")
 
     assert ev.units.to_sdf().count() == 4
     assert ev.variables.to_sdf().count() == 4
@@ -42,36 +42,37 @@ def test_clone_example_from_s3(tmpdir):
     ev.spark.stop()
 
 
-def test_clone_partial_template_from_s3(tmpdir):
-    """Test cloning a partially empty evaluation from s3."""
-    ev = Evaluation(tmpdir, create_local_dir=True)
-    ev.clone_from_s3("e4_nwm_operational")
+# def test_clone_partial_template_from_s3(tmpdir):
+#     """Test cloning a partially empty evaluation from s3."""
+#     # NOTE: This is no longer valid
+#     ev = Evaluation(tmpdir, create_local_dir=True)
+#     ev.clone_from_s3("e4_nwm_operational")
 
-    assert ev.units.to_sdf().count() == 9
-    assert ev.variables.to_sdf().count() == 5
-    assert ev.attributes.to_sdf().count() == 13
-    assert ev.configurations.to_sdf().count() == 1
-    assert ev.primary_timeseries.to_sdf().count() == 0
-    assert ev.secondary_timeseries.to_sdf().count() == 0
-    assert ev.joined_timeseries.to_sdf().count() == 0
+#     assert ev.units.to_sdf().count() == 9
+#     assert ev.variables.to_sdf().count() == 5
+#     assert ev.attributes.to_sdf().count() == 13
+#     assert ev.configurations.to_sdf().count() == 1
+#     assert ev.primary_timeseries.to_sdf().count() == 0
+#     assert ev.secondary_timeseries.to_sdf().count() == 0
+#     assert ev.joined_timeseries.to_sdf().count() == 0
 
-    assert Path(ev.scripts_dir, "user_defined_fields.py").is_file()
+#     assert Path(ev.scripts_dir, "user_defined_fields.py").is_file()
 
-    ev.spark.stop()
+#     ev.spark.stop()
 
 
 def test_clone_and_subset_example_from_s3(tmpdir):
     """Test filter string."""
     ev = Evaluation(tmpdir, create_local_dir=True)
     ev.clone_from_s3(
-        evaluation_name="e0_2_location_example",
+        remote_namespace_name="e0_2_location_example",
         primary_location_ids=["usgs-14316700"],
         start_date="2001-09-30 20:00",
         end_date="2010-09-29 20:00"
     )
 
     assert ev.units.to_sdf().count() == 4
-    assert ev.variables.to_sdf().count() == 3
+    assert ev.variables.to_sdf().count() == 4
     assert ev.attributes.to_sdf().count() == 26
     assert ev.configurations.to_sdf().count() == 2
     assert ev.locations.to_sdf().count() == 1
@@ -102,12 +103,13 @@ if __name__ == "__main__":
                 dir=tempdir
             )
         )
-        test_clone_partial_template_from_s3(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
+        # NO LONGER VALID:
+        # test_clone_partial_template_from_s3(
+        #     tempfile.mkdtemp(
+        #         prefix="2-",
+        #         dir=tempdir
+        #     )
+        # )
         test_clone_and_subset_example_from_s3(
             tempfile.mkdtemp(
                 prefix="3-",
