@@ -197,7 +197,7 @@ class Write:
             uniqueness_fields = TBLPROPERTIES[table_name].get("uniqueness_fields")
 
         if isinstance(source_data, pd.DataFrame):
-            source_data = self.spark.createDataFrame(source_data)
+            source_data = self._ev.spark.createDataFrame(source_data)
 
         if isinstance(source_data, DataFrame):
             source_data.createOrReplaceTempView("source_data")

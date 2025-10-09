@@ -23,11 +23,13 @@ def test_table_writes(tmpdir):
       schema=schema
     )
 
+    df = sdf.toPandas()
+
+    # Can pass a spark dataframe, pandas dataframe, or named view (str)
     ev.write.to_warehouse(
-        source_data=sdf,
+        source_data=df,
         table_name="units",
         write_mode="append",
-        # uniqueness_fields=["name"]
     )
 
     ev.spark.stop()
