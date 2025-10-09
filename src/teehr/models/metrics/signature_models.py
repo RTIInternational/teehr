@@ -313,3 +313,4 @@ class SignatureMetrics:
     Minimum = Minimum
     Sum = Sum
     Variance = Variance
+    FlowDurationCurveSlope = FlowDurationCurveSlope
