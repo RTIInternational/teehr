@@ -10,6 +10,8 @@ from typing import Union, Literal, List
 import logging
 import pyspark
 
+from teehr.models.evaluation_base import LocalCatalog, RemoteCatalog
+
 logger = logging.getLogger(__name__)
 
 
@@ -38,56 +40,12 @@ def list_s3_evaluations(
     return yaml_dict["evaluations"]
 
 
-def subset_the_table(
-    ev,
-    table,
-    sdf_in: pyspark.sql.DataFrame,
-    primary_location_ids: Union[None, List[str]],
-    start_date: Union[str, datetime, None],
-    end_date: Union[str, datetime, None],
-) -> pyspark.sql.DataFrame:
-    """Subset the dataset based on location and start/end time."""
-    if table.name == "locations" and primary_location_ids is not None:
-        sdf_in = sdf_in.filter(sdf_in.id.isin(primary_location_ids))
-    elif table.name == "location_attributes" and primary_location_ids is not None:
-        sdf_in = sdf_in.filter(sdf_in.location_id.isin(primary_location_ids))
-    elif table.name == "location_crosswalks" and primary_location_ids is not None:
-        sdf_in = sdf_in.filter(
-            sdf_in.primary_location_id.isin(primary_location_ids)
-        )
-    elif table.name == "primary_timeseries":
-        if primary_location_ids is not None:
-            sdf_in = sdf_in.filter(
-                sdf_in.location_id.isin(primary_location_ids)
-            )
-    elif table.name == "secondary_timeseries":
-        if primary_location_ids is not None:
-            secondary_ids = (
-                ev.location_crosswalks.to_sdf()
-                .select("secondary_location_id").rdd.flatMap(lambda x: x).collect()
-            )
-            sdf_in = sdf_in.filter(sdf_in.location_id.isin(secondary_ids))
-    elif table.name == "joined_timeseries":
-        if primary_location_ids is not None:
-            sdf_in = sdf_in.filter(
-                sdf_in.primary_location_id.isin(primary_location_ids)
-            )
-    if (
-        table.name == "primary_timeseries"
-        or table.name == "secondary_timeseries"
-        or table.name == "joined_timeseries"
-    ):
-        if start_date is not None:
-            sdf_in = sdf_in.filter(sdf_in.value_time >= start_date)
-        if end_date is not None:
-            sdf_in = sdf_in.filter(sdf_in.value_time <= end_date)
-
-    return sdf_in
-
-
 def clone_from_s3(
     ev,
-    evaluation_name: str,
+    local_catalog_name: str,
+    local_namespace_name: str,
+    remote_catalog_name: str,
+    remote_namespace_name: str,
     primary_location_ids: Union[None, List[str]],
     start_date: Union[str, datetime, None],
     end_date: Union[str, datetime, None]
@@ -118,105 +76,116 @@ def clone_from_s3(
 
     Note: future version will allow subsetting the tables to clone.
     """
-    # Make the Evaluation directories
-    logger.info(f"Creating template evaluation: {evaluation_name}")
-    ev.clone_template()
+    logger.info("Cloning evaluation from remote warehouse")
+    # TODO: Better way to filter and subset from the remote warehouse?
+    secondary_location_ids = None
+    if primary_location_ids is not None:
+        primary_location_ids = f"('{', '.join(primary_location_ids)}')"
+        secondary_location_ids = ev.read.from_warehouse(
+            table_name="location_crosswalks",
+            catalog_name=remote_catalog_name,
+            namespace_name=remote_namespace_name
+        ).to_sdf().filter("primary_location_id in {}".format(primary_location_ids)).select("secondary_location_id").rdd.flatMap(lambda x: x).collect()
+        secondary_location_ids = f"('{', '.join(secondary_location_ids)}')"
+        pass
 
-    logger.info(f"Cloning evaluation from s3: {evaluation_name}")
     tables = [
         {
-            "table": ev.units
+            "table": ev.units,
+            "filters": [None]
         },
         {
-            "table": ev.variables
+            "table": ev.variables,
+            "filters": [None]
         },
         {
-            "table": ev.attributes
+            "table": ev.attributes,
+            "filters": [None]
         },
         {
-            "table": ev.configurations
+            "table": ev.configurations,
+            "filters": [None]
         },
         {
-            "table": ev.locations
+            "table": ev.locations,
+            "filters": [
+                f"id in {primary_location_ids}" if primary_location_ids is not None else None
+            ]
         },
         {
-            "table": ev.location_attributes
+            "table": ev.location_attributes,
+            "filters": [
+                f"location_id in {primary_location_ids}" if primary_location_ids is not None else None
+            ]
         },
         {
-            "table": ev.location_crosswalks
+            "table": ev.location_crosswalks,
+            "filters": [
+                f"primary_location_id in {primary_location_ids}" if primary_location_ids is not None else None
+            ]
         },
         {
-            "table": ev.primary_timeseries
+            "table": ev.primary_timeseries,
+            "filters": [
+                f"location_id in {primary_location_ids}" if primary_location_ids is not None else None,
+                f"value_time >= '{start_date}'" if start_date is not None else None,
+                f"value_time <= '{end_date}'" if end_date is not None else None
+            ]
         },
         {
-            "table": ev.secondary_timeseries
+            "table": ev.secondary_timeseries,
+            "filters": [
+                f"location_id in {secondary_location_ids}" if secondary_location_ids is not None else None,
+                f"value_time >= '{start_date}'" if start_date is not None else None,
+                f"value_time <= '{end_date}'" if end_date is not None else None
+            ]
         },
         {
-            "table": ev.joined_timeseries
+            "table": ev.joined_timeseries,
+            "filters": [
+                f"primary_location_id in {primary_location_ids}" if primary_location_ids is not None else None,
+                f"value_time >= '{start_date}'" if start_date is not None else None,
+                f"value_time <= '{end_date}'" if end_date is not None else None
+            ]
         },
     ]
 
-    protocol_list = list_s3_evaluations(format="list")
-    protocol = [p for p in protocol_list if p["name"] == evaluation_name][0]
-    url = protocol["url"]
-    url = url.replace("s3://", "s3a://")
-    s3_dataset_path = f"{url}/dataset"
-
-    logger.info(f"Cloning evaluation from s3: {s3_dataset_path}")
+    logger.info(f"Cloning evaluation from s3: {ev.remote_catalog.warehouse_dir}")
 
     for table in tables:
+        filters = table["filters"]
         table = table["table"]
-
-        logger.debug(f"Cloning {table.name} from {s3_dataset_path}/{table.name}/ to {table.dir}")
-
-        sdf_in = table._read_files_from_cache_or_s3(
-            path=f"{s3_dataset_path}/{table.name}/",
-            show_missing_table_warning=True
+        logger.debug(
+            f"Cloning {table.table_name} from {remote_catalog_name}."
+            f"{remote_namespace_name}.{table.table_name}."
         )
+        sdf_in = ev.read.from_warehouse(
+            table_name=table.table_name,
+            catalog_name=remote_catalog_name,
+            namespace_name=remote_namespace_name
+        ).to_sdf()
+        for filter in filters:
+            if filter is not None:
+                logger.debug(f"Applying filter: {filter}")
+                sdf_in = sdf_in.filter(filter)
 
-        sdf_in = subset_the_table(
-            ev=ev,
-            sdf_in=sdf_in,
-            table=table,
-            primary_location_ids=primary_location_ids,
-            start_date=start_date,
-            end_date=end_date
-        )
-
-        if table.name == "joined_timeseries":
+        if table.table_name == "joined_timeseries":
             ev.write.to_warehouse(
                 source_data=sdf_in,
-                target_table=table.name,
+                catalog_name=local_catalog_name,
+                namespace_name=local_namespace_name,
+                table_name=table.table_name,
                 write_mode="create_or_replace",
                 uniqueness_fields=table.uniqueness_fields,
-                partition_by=table.partition_by
+                # partition_by=table.partition_by
             )
         else:
             ev.write.to_warehouse(
                 source_data=sdf_in,
-                target_table=table.name,
+                catalog_name=local_catalog_name,
+                namespace_name=local_namespace_name,
+                table_name=table.table_name,
                 write_mode="upsert",
                 uniqueness_fields=table.uniqueness_fields,
-                partition_by=table.partition_by
+                # partition_by=table.partition_by
             )
-
-    # copy scripts path to ev.scripts_dir
-    source = f"{url}/scripts/user_defined_fields.py"
-    dest = f"{ev.scripts_dir}/user_defined_fields.py"
-    logger.debug(f"Copying from {source}/ to {dest}")
-
-    # ToDo: there is a permission issue that prevents copying the entire directory.
-    # This works for now.
-    with fsspec.open(source, 'r', anon=True) as file:
-        with open(dest, 'w') as f:
-            f.write(file.read())
-
-    # TEMP: Also copy version file to the evaluation directory
-    source = f"{url}/version"
-    dest = f"{ev.dir_path}/version"
-    logger.debug(f"Copying from {source}/ to {dest}")
-    file_exists = s3fs.S3FileSystem("s3").exists(source)
-    if file_exists is True:
-        with fsspec.open(source, 'r', anon=True) as file:
-            with open(dest, 'w') as f:
-                f.write(file.read())

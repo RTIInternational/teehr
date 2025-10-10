@@ -25,7 +25,8 @@ GEO_FILEPATH = Path(TEST_DATA_DIR, "geo")
 
 def test_create_joined_timeseries(tmpdir):
     """Test the validate_locations function."""
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
+    tmpdir = Path(tmpdir)
+    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
 
     # Enable logging
     ev.enable_logging()
@@ -111,6 +112,7 @@ def test_create_joined_timeseries(tmpdir):
                                 execute_scripts=True,
                                 attr_list=attr_list)
 
+
     columns = ev.joined_timeseries.to_sdf().columns
     expected_columns = [
         'reference_time',
@@ -141,11 +143,12 @@ def test_create_joined_timeseries(tmpdir):
     ])
     assert len(columns) == len(expected_columns)
     assert sorted(columns) == sorted(expected_columns)
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
 def test_distinct_values(tmpdir):
     """Test base_table.distinct_values() using joined_timeseries."""
+    tmpdir = Path(tmpdir)
     ev = setup_v0_3_study(tmpdir)
 
     # test primary_timeseries with location_prefixes==False (valid)
@@ -234,7 +237,7 @@ def test_distinct_values(tmpdir):
     # test invalid column handling for location_prefixes==False
     with pytest.raises(ValueError):
         prefixes = ev.joined_timeseries.distinct_values(column='test')
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
 if __name__ == "__main__":

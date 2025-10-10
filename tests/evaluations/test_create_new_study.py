@@ -8,9 +8,10 @@ from teehr.models.pydantic_table_models import (
 
 def test_clone_template(tmpdir):
     """Test creating a new study."""
+    tmpdir = Path(tmpdir)
     from teehr import Evaluation
 
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
+    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
     ev.clone_template()
 
     tbls_df = ev.list_tables()
@@ -35,7 +36,7 @@ def test_clone_template(tmpdir):
     assert Path(tmpdir, "cache").is_dir()
     assert Path(tmpdir, "scripts").is_dir()
     assert Path(tmpdir, ".gitignore").is_file()
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
 if __name__ == "__main__":

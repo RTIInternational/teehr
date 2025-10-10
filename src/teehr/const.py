@@ -1,11 +1,15 @@
-"""This module contains constants
- used throughout the package."""
+"""This module contains constants used throughout the package."""
 import os
+
+# Iceberg warehouse
+CATALOG_REST_URI = "http://dev-teehr-sys-iceberg-alb-2105268770.us-east-2.elb.amazonaws.com"
+WAREHOUSE_S3_PATH = "s3://dev-teehr-sys-iceberg-warehouse/warehouse/"
 
 # Primary evaluation directories
 DATASET_DIR = "dataset"
 CACHE_DIR = "cache"
 SCRIPTS_DIR = "scripts"
+# These are no longer needed?
 LOCATIONS_DIR = "locations"
 PRIMARY_TIMESERIES_DIR = "primary_timeseries"
 LOCATION_CROSSWALKS_DIR = "location_crosswalks"

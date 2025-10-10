@@ -20,7 +20,7 @@ GEO_FILEPATH = Path(TEST_DATA_DIR, "geo")
 
 def setup_v0_3_study(tmpdir):
     """Set up a v0.3 study."""
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
+    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
 
     # Enable logging
     ev.enable_logging()

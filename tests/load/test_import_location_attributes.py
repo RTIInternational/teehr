@@ -29,7 +29,7 @@ def test_convert_location_attributes(tmpdir):
 
 def test_validate_and_insert_location_attributes(tmpdir):
     """Test the validate location_attributes function."""
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
+    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
     ev.clone_template()
 
     ev.enable_logging()
@@ -63,7 +63,7 @@ def test_validate_and_insert_location_attributes(tmpdir):
         pattern="test_attr_*.parquet",
         location_id_prefix="usgs",
     )
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
 if __name__ == "__main__":

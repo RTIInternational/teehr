@@ -1,124 +1,77 @@
-"""Base class for tables."""
+"""Base class to represent generic tables."""
+from typing import List, Dict, Union
+import logging
+import geopandas as gpd
 
 from teehr.models.str_enum import StrEnum
-from teehr.querying.filter_format import validate_and_apply_filters
-import pyspark.sql as ps
-from typing import List, Union
-from pathlib import Path
-from teehr.querying.utils import order_df
-from teehr.utils.s3path import S3Path
-from teehr.utils.utils import to_path_or_s3path, path_to_spark
+from teehr.querying.utils import order_df, join_geometry, df_to_gdf
+from teehr.models.evaluation_base import EvaluationBase
 from teehr.models.filters import FilterBaseModel
-from teehr.models.table_enums import TableWriteEnum
-from teehr.loading.utils import (
-    add_or_replace_sdf_column_prefix
-)
-import logging
-from pyspark.sql.functions import lit
-import pandas as pd
-
+from teehr.models.table_properties import TBLPROPERTIES
 
 logger = logging.getLogger(__name__)
 
 
-class BaseTable:
-    """Base table class."""
+class Table:
+    """Base class to represent generic tables."""
 
-    def __init__(self, ev):
-        """Initialize class."""
-        self.ev = ev
-        self.name = None
-        self.dir = None
+    def __init__(self, ev: EvaluationBase):
+        """Initialize the Table class."""
+        self._ev = ev
+        self._read = ev.read
+        self.uniqueness_fields: List[str] = None
+        self.foreign_keys: List[Dict[str, str]] = None
         self.schema_func = None
-        self.format = None
-        self.partition_by = None
-        self.spark = ev.spark
-        self.df: ps.DataFrame = None
         self.filter_model: FilterBaseModel = None
-        self.strict_validation = True
-        self.validate_filter_field_types = True
-        self.foreign_keys = []
+        self.strict_validation = None
+        self.validate_filter_field_types = None
+        self.field_enum_model = None
+        self.extraction_func = None
+        # We could also make these available to generic tables,
+        # but then they're available to table classes. Is that bad?
+        # self.write = ev.write
+        # self.validate = ev.validate
+        # self.extract = ev.extract
+        # self.load = ev.load
 
-    @staticmethod
-    def _raise_missing_table_error(table_name: str):
-        """Raise an error if the table does not exist."""
-        err_msg = (
-            f"The '{table_name}' table does not exist in the dataset."
-            " Please load it first."
-        )
-        logger.error(err_msg)
-        raise ValueError(err_msg)
-
-    def _read_files_from_cache_or_s3(
+    def __call__(
         self,
-        path: Union[str, Path, S3Path],
-        pattern: str = None,
-        show_missing_table_warning: bool = False,
-        **options
-    ) -> ps.DataFrame:
-        """Read data from table directory as a spark dataframe.
-
-        Parameters
-        ----------
-        path : Union[str, Path, S3Path]
-            The path to the directory containing the files.
-        pattern : str, optional
-            The pattern to match files.
-        show_missing_table_warning : bool, optional
-            If True, show the warning an empty table was returned.
-            The default is True.
-        **options
-            Additional options to pass to the spark read method.
-
-        Returns
-        -------
-        df : ps.DataFrame
-            The spark dataframe.
-        """
-        logger.info(f"Reading files from {path}.")
-        if len(options) == 0:
-            options = {
-                "header": "true",
-                "ignoreMissingFiles": "true"
-            }
-
-        path = to_path_or_s3path(path)
-
-        path = path_to_spark(path, pattern)
-        # First, read the file with the schema and check if it's empty.
-        # If it's not empty and it's the joined timeseries table,
-        # read it again without the schema to ensure all fields are included.
-        # Otherwise, continue.
-        schema = self.schema_func().to_structtype()
-        df = self.ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
-        if df.isEmpty():
-            if show_missing_table_warning:
-                logger.warning(f"An empty dataframe was returned for '{self.name}'.")
-
-        return df
-
-    def _read_from_warehouse(
-        self,
-    ) -> ps.DataFrame:
-        """Read data from table as a spark dataframe.
-
-        Returns
-        -------
-        df : ps.DataFrame
-            The spark dataframe.
-        """
-        logger.info(
-            f"Reading files from {self.ev.catalog_name}.{self.ev.schema_name}."
-            f"{self.name}."
-        )
-        sdf = (self.ev.spark.read.format("iceberg").load(
-                f"{self.ev.catalog_name}.{self.ev.schema_name}.{self.name}"
+        table_name: str,
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None
+    ) -> "Table":
+        """Initialize the Table class."""
+        self.table_name = table_name
+        self.sdf = None
+        tbl_props = TBLPROPERTIES.get(table_name)
+        if tbl_props is None:
+            logger.warning(
+                f"No table properties found for table: '{table_name}'."
+                " Proceeding without table properties."
             )
-        )
-        return sdf
+        else:
+            self.uniqueness_fields = tbl_props.get("uniqueness_fields")
+            self.foreign_keys = tbl_props.get("foreign_keys")
+            self.schema_func = tbl_props.get("schema_func")
+            self.filter_model = tbl_props.get("filter_model")
+            self.strict_validation = tbl_props.get("strict_validation")
+            self.validate_filter_field_types = tbl_props.get("validate_filter_field_types")
+            self.field_enum_model = tbl_props.get("field_enum_model")
+            self.extraction_func = tbl_props.get("extraction_func")
+
+        if namespace_name is None:
+            self.table_namespace_name = self._ev.active_catalog.namespace_name
+        else:
+            self.table_namespace_name = namespace_name
+        if catalog_name is None:
+            self.catalog_name = self._ev.active_catalog.catalog_name
+        else:
+            self.catalog_name = catalog_name
+
+        return self
 
     def _load_table(self):
-        """Load the table from the directory to self.df.
+        """Load the table from the directory to self.sdf.
 
         Parameters
         ----------
@@ -126,10 +79,15 @@ class BaseTable:
             Additional options to pass to the spark read method.
         """
         logger.info(
-            f"Loading files from {self.ev.catalog_name}.{self.ev.schema_name}."
-            f"{self.name}."
+            f"Loading files from {self.catalog_name}."
+            f"{self.table_namespace_name}."
+            f"{self.table_name}."
         )
-        self.df = self._read_from_warehouse()
+        self.sdf = self._read.from_warehouse(
+            catalog_name=self.catalog_name,
+            namespace_name=self.table_namespace_name,
+            table_name=self.table_name
+        ).to_sdf()
 
     def _check_load_table(self):
         """Check if the table is loaded.
@@ -137,10 +95,10 @@ class BaseTable:
         If the table is not loaded, try to load it.  If the table is still
         not loaded, raise an error.
         """
-        if self.df is None:
+        if self.sdf is None:
             self._load_table()
-        if self.df is None:
-            self._raise_missing_table_error(table_name=self.name)
+        # if self.sdf is None:
+        #     self._raise_missing_table_error(table_name=self.table_name)
 
     def _get_schema(self, type: str = "pyspark"):
         """Get the primary timeseries schema.
@@ -156,13 +114,13 @@ class BaseTable:
 
         return self.schema_func()
 
-    def validate(self):
+    def validate(self, drop_duplicates: bool = True):
         """Validate the dataset table against the schema."""
         self._check_load_table()
-        self.ev.validate.schema(
-            sdf=self.df,
+        self._ev.validate.schema(
+            sdf=self.sdf,
             table_schema=self.schema_func(),
-            drop_duplicates=self.drop_duplicates,
+            drop_duplicates=drop_duplicates,
             foreign_keys=self.foreign_keys,
             uniqueness_fields=self.uniqueness_fields,
         )
@@ -265,16 +223,15 @@ class BaseTable:
         logger.info("Performing the query.")
         self._check_load_table()
         if filters is not None:
-            self.df = validate_and_apply_filters(
-                sdf=self.df,
+            self.sdf = self._read.from_warehouse(
+                catalog_name=self.catalog_name,
+                namespace_name=self.table_namespace_name,
+                table_name=self.table_name,
                 filters=filters,
-                filter_model=self.filter_model,
-                fields_enum=self.field_enum(),
-                dataframe_schema=self._get_schema("pandas"),
-                validate=self.validate_filter_field_types
-            )
+                validate_filter_field_types=self.validate_filter_field_types,
+            ).to_sdf()
         if order_by is not None:
-            self.df = order_df(self.df, order_by)
+            self.sdf = order_df(self.sdf, order_by)
         return self
 
     def filter(
@@ -365,14 +322,13 @@ class BaseTable:
         """
         logger.info(f"Setting filter {filter}.")
         self._check_load_table()
-        self.df = validate_and_apply_filters(
-            sdf=self.df,
+        self.sdf = self._read.from_warehouse(
+            catalog_name=self.catalog_name,
+            namespace_name=self.table_namespace_name,
+            table_name=self.table_name,
             filters=filters,
-            filter_model=self.filter_model,
-            fields_enum=self.field_enum(),
-            dataframe_schema=self._get_schema("pandas"),
-            validate=self.validate_filter_field_types
-        )
+            validate_filter_field_types=self.validate_filter_field_types,
+        ).to_sdf()
         return self
 
     def order_by(
@@ -407,18 +363,28 @@ class BaseTable:
         """
         logger.info(f"Setting order_by {fields}.")
         self._check_load_table()
-        self.df = order_df(self.df, fields)
+        self.sdf = order_df(self.sdf, fields)
         return self
 
     def fields(self) -> List[str]:
         """Return table columns as a list."""
         self._check_load_table()
-        return self.df.columns
+        return self.sdf.columns
 
-    def distinct_values(self,
-                        column: str,
-                        location_prefixes: bool = False
-                        ) -> List[str]:
+    def field_enum(self) -> StrEnum:
+        """Get the joined timeseries fields enum."""
+        self._check_load_table()
+        fields_list = self.sdf.columns
+        return self.field_enum_model(
+            self.field_enum_model.__name__,
+            {field: field for field in fields_list}
+        )
+
+    def distinct_values(
+        self,
+        column: str,
+        location_prefixes: bool = False
+    ) -> List[str]:
         """Return distinct values for a column.
 
         Parameters
@@ -439,9 +405,9 @@ class BaseTable:
             The distinct values for the column.
         """
         self._check_load_table()
-        if column not in self.df.columns:
+        if column not in self.sdf.columns:
             raise ValueError(
-                f"Invalid column: '{column}' for table: '{self.name}'"
+                f"Invalid column: '{column}' for table: '{self.table_name}'"
             )
         if location_prefixes:
             # ensure valid table
@@ -451,10 +417,10 @@ class BaseTable:
                             'locations',
                             'location_attributes',
                             'location_crosswalks']
-            if self.name not in valid_tables:
+            if self.table_name not in valid_tables:
                 raise ValueError(
                     f"""
-                    Invalid table: '{self.name}' with argument
+                    Invalid table: '{self.table_name}' with argument
                     location_prefixes==True. Valid tables are: {valid_tables}
                     """
                     )
@@ -468,16 +434,16 @@ class BaseTable:
                              'location_crosswalks': ['primary_location_id',
                                                      'secondary_location_id']
                              }
-            if column not in valid_columns[self.name]:
+            if column not in valid_columns[self.table_name]:
                 raise ValueError(
                     f"""
-                    Invalid column: '{column}' for table: '{self.name}' with
+                    Invalid column: '{column}' for table: '{self.table_name}' with
                     argument location_prefixes==True. Valid columns are:
-                    {valid_columns[self.name]}
+                    {valid_columns[self.table_name]}
                     """
                 )
             # get unique location prefixes
-            unique_locations = self.df.select(column).distinct().rdd.flatMap(
+            unique_locations = self.sdf.select(column).distinct().rdd.flatMap(
                 lambda x: x
                 ).collect()
             prefixes = [location.split('-')[0] for location
@@ -486,25 +452,53 @@ class BaseTable:
             return list(set(prefixes))
 
         else:
-            return self.df.select(column).distinct().rdd.flatMap(
+            return self.sdf.select(column).distinct().rdd.flatMap(
                 lambda x: x
                 ).collect()
-
-    def field_enum(self) -> StrEnum:
-        """Get the fields enum."""
-        raise NotImplementedError("field_enum method must be implemented.")
 
     def to_pandas(self):
         """Return Pandas DataFrame."""
         self._check_load_table()
-        df = self.df.toPandas()
-        df.attrs['table_type'] = self.name
+        df = self.sdf.toPandas()
+        df.attrs['table_type'] = self.table_name
         df.attrs['fields'] = self.fields()
         return df
 
-    def to_geopandas(self):
-        """Return GeoPandas DataFrame."""
-        raise NotImplementedError("to_geopandas method must be implemented.")
+    def _join_geometry_using_crosswalk(self):
+        """Join geometry."""
+        logger.debug("Joining locations geometry via the crosswalk.")
+        joined_df = self._ev.sql("""
+            SELECT
+                sf.*,
+                lf.geometry as geometry
+            FROM secondary_timeseries sf
+            JOIN location_crosswalks cf
+                on cf.secondary_location_id = sf.location_id
+            JOIN locations lf
+                on cf.primary_location_id = lf.id
+        """,
+        create_temp_views=["secondary_timeseries", "location_crosswalks", "locations"])
+        return df_to_gdf(joined_df.toPandas())
+
+    def to_geopandas(self) -> gpd.GeoDataFrame:
+        """Convert the DataFrame to a GeoPandas DataFrame."""
+        self._check_load_table()
+        if "location_id" not in self.sdf.columns:
+            err_msg = "The location_id field was not found in the table."
+            logger.error(err_msg)
+            raise ValueError(err_msg)
+        locations_sdf = self._read.from_warehouse(
+            catalog_name=self.catalog_name,
+            namespace_name=self.table_namespace_name,
+            table_name="locations"
+        ).to_sdf()
+        if self.table_name == "secondary_timeseries":
+            return self._join_geometry_using_crosswalk()
+        return join_geometry(
+            self.sdf,
+            locations_sdf,
+            "location_id"
+        )
 
     def to_sdf(self):
         """Return PySpark DataFrame.
@@ -528,70 +522,4 @@ class BaseTable:
         >>> ts_df.head()
         """
         self._check_load_table()
-        return self.df
-
-    def _load_dataframe(
-        self,
-        df: Union[pd.DataFrame, ps.DataFrame],
-        field_mapping: dict,
-        constant_field_values: dict,
-        location_id_prefix: str,
-        write_mode: TableWriteEnum,
-        persist_dataframe: bool,
-        drop_duplicates: bool
-    ):
-        """Load a timeseries from an in-memory dataframe."""
-        if (isinstance(df, ps.DataFrame) and df.isEmpty()) or (
-            isinstance(df, pd.DataFrame) and df.empty
-        ):
-            logger.debug(
-                "The input dataframe is empty. "
-                "No data will be loaded into the table."
-            )
-            return
-        # self.schema_func(type="pandas").columns.keys()
-        self.ev.extract._merge_field_mapping(
-            table_fields=self.field_enum(),
-            field_mapping=field_mapping,
-            constant_field_values=constant_field_values
-        )
-        # Convert the input DataFrame to Spark DataFrame
-        if isinstance(df, pd.DataFrame):
-            df = self.spark.createDataFrame(df)
-        elif not isinstance(df, ps.DataFrame):
-            raise TypeError(
-                "Input dataframe must be a Pandas DataFrame or a PySpark DataFrame."
-            )
-        # Apply field mapping and constant field values
-        if field_mapping:
-            df = df.withColumnsRenamed(field_mapping)
-
-        if constant_field_values:
-            for field, value in constant_field_values.items():
-                df = df.withColumn(field, lit(value))
-
-        if persist_dataframe:
-            df = df.persist()
-
-        if location_id_prefix:
-            df = add_or_replace_sdf_column_prefix(
-                sdf=df,
-                column_name="location_id",
-                prefix=location_id_prefix,
-            )
-        validated_df = self.ev.validate.schema(
-            sdf=df,
-            table_schema=self.schema_func(),
-            drop_duplicates=drop_duplicates,
-            foreign_keys=self.foreign_keys,
-            uniqueness_fields=self.uniqueness_fields,
-            add_missing_columns=True
-        )
-        self.ev.write.to_warehouse(
-            source_data=validated_df,
-            target_table=self.name,
-            write_mode=write_mode,
-            uniqueness_fields=self.uniqueness_fields
-        )
-
-        df.unpersist()
+        return self.sdf

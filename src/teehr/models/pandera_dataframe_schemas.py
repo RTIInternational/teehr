@@ -28,7 +28,9 @@ def valid_unit_name(pyspark_obj) -> bool:
     """Ensure name column matches ^[a-zA-Z0-9_^/]+$."""
     return pyspark_obj.filter(pyspark_obj["name"].rlike(r"^[a-zA-Z0-9_^/]+$")).count() == pyspark_obj.count()
 
+
 def format_datetime64(s: pd.Series) -> pd.Series:
+    """Format a pandas Series to datetime64[ms] in UTC."""
     # Convert to UTC.
     # if s.dt.tz is not None:
     #     s = s.dt.tz_convert("UTC")
@@ -36,7 +38,9 @@ def format_datetime64(s: pd.Series) -> pd.Series:
     s = s.dt.tz_localize(None)
     return s.astype("datetime64[ms]")
 
+
 def configuration_schema(type: str = "pyspark") -> ps.DataFrameSchema:
+    """Return the schema for configuration data."""
     if type == "pandas":
         return pa.DataFrameSchema(
             columns={
@@ -377,10 +381,12 @@ pandas_value_type = pa.Float32()
 pyspark_value_type = T.FloatType()
 pyarrow_value_type = pyarrow.float32()
 
+
 # PySpark Pandera Models
 def primary_timeseries_schema(
         type: str = "pyspark",
 ) -> ps.DataFrameSchema:
+    """Return the schema for primary timeseries data."""
     if type == "pandas":
         return pa.DataFrameSchema(
             columns={
@@ -459,8 +465,8 @@ def primary_timeseries_schema(
         )
     if type == "arrow":
         return pyarrow.schema([
-            ("reference_time", pyarrow.timestamp("us")),
-            ("value_time", pyarrow.timestamp("us")),
+            ("reference_time", pyarrow.timestamp("ms")),
+            ("value_time", pyarrow.timestamp("ms")),
             ("value", pyarrow_value_type),
             ("variable_name", pyarrow.string()),
             ("configuration_name", pyarrow.string()),
@@ -468,9 +474,11 @@ def primary_timeseries_schema(
             ("location_id", pyarrow.string()),
         ])
 
+
 def secondary_timeseries_schema(
         type: str = "pyspark",
 ) -> ps.DataFrameSchema:
+    """Return the schema for secondary timeseries data."""
     if type == "pandas":
         return pa.DataFrameSchema(
             columns={
@@ -556,8 +564,8 @@ def secondary_timeseries_schema(
         )
     if type == "arrow":
         return pyarrow.schema([
-            ("reference_time", pyarrow.timestamp("us")),
-            ("value_time", pyarrow.timestamp("us")),
+            ("reference_time", pyarrow.timestamp("ms")),
+            ("value_time", pyarrow.timestamp("ms")),
             ("value", pyarrow_value_type),
             ("variable_name", pyarrow.string()),
             ("configuration_name", pyarrow.string()),
@@ -570,6 +578,7 @@ def secondary_timeseries_schema(
 def joined_timeseries_schema(
     type: str = "pyspark",
 ) -> ps.DataFrameSchema:
+    """Return the schema for joined timeseries data."""
     if type == "pandas":
         return pa.DataFrameSchema(
             columns={
@@ -667,8 +676,8 @@ def joined_timeseries_schema(
         )
     if type == "arrow":  # is this needed for joined?
         return pyarrow.schema([
-            ("reference_time", pyarrow.timestamp("us")),
-            ("value_time", pyarrow.timestamp("us")),
+            ("reference_time", pyarrow.timestamp("ms")),
+            ("value_time", pyarrow.timestamp("ms")),
             ("primary_value", pyarrow_value_type),
             ("secondary_value", pyarrow_value_type),
             ("variable_name", pyarrow.string()),

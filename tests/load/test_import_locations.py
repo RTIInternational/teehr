@@ -23,7 +23,8 @@ def test_convert_locations_geojson(tmpdir):
 
 def test_validate_and_insert_locations(tmpdir):
     """Test the validate_locations function."""
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
+    tmpdir = Path(tmpdir)
+    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
     ev.clone_template()
     # Load and replace the location ID prefix
     ev.locations.load_spatial(
@@ -57,7 +58,8 @@ def test_validate_and_insert_locations(tmpdir):
 
 def test_validate_and_insert_locations_adding_prefix(tmpdir):
     """Test the validate_locations function."""
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
+    tmpdir = Path(tmpdir)
+    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
     ev.clone_template()
 
     # Add a new location ID prefix

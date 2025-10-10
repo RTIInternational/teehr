@@ -1,6 +1,5 @@
 """Location Attribute Table class."""
-import teehr.const as const
-from teehr.evaluation.tables.base_table import BaseTable
+from teehr.evaluation.tables.base_table import Table
 from teehr.loading.location_attributes import (
     convert_single_location_attributes
 )
@@ -8,163 +7,68 @@ from teehr.loading.utils import (
     validate_input_is_csv,
     validate_input_is_parquet
 )
-from teehr.models.filters import LocationAttributeFilter
-from teehr.models.table_enums import LocationAttributeFields
 from teehr.querying.utils import join_geometry
-import teehr.models.pandera_dataframe_schemas as schemas
 from pathlib import Path
 from typing import Union
 import logging
-from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
-from teehr.loading.utils import add_or_replace_sdf_column_prefix
 from teehr.models.table_enums import TableWriteEnum
 import pyspark.sql as ps
 import pandas as pd
-from teehr.models.pydantic_table_models import Attribute
-
 
 logger = logging.getLogger(__name__)
 
 
-class LocationAttributeTable(BaseTable):
+class LocationAttributeTable(Table):
     """Access methods to location attributes table."""
 
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.name = "location_attributes"
-        self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
-        self.format = "parquet"
-        self.filter_model = LocationAttributeFilter
-        self.schema_func = schemas.location_attributes_schema
-        self.uniqueness_fields = [
-            "location_id",
-            "attribute_name"
-        ]
-        self.foreign_keys = [
-            {
-                "column": "location_id",
-                "domain_table": "locations",
-                "domain_column": "id",
-            },
-            {
-                "column": "attribute_name",
-                "domain_table": "attributes",
-                "domain_column": "name",
-            }
-        ]
-        self.cache_dir = Path(
-            self.ev.dir_path,
-            const.CACHE_DIR,
-            const.LOADING_CACHE_DIR,
-            const.LOCATION_ATTRIBUTES_DIR
-        )
+        self._load = ev.load
 
-    def _load(
+    def __call__(
         self,
-        in_path: Union[Path, str],
-        pattern: str = None,
-        field_mapping: dict = None,
-        location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
-        drop_duplicates: bool = True,
-        update_attrs_table: bool = True,
-        **kwargs
+        table_name: str = "location_attributes",
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None,
     ):
-        """Load location attributes helper."""
-        # Clear the cache directory if it exists.
-        remove_dir_if_exists(self.cache_dir)
+        """Get an instance of the location attributes table.
 
-        self.ev.extract.to_cache(
-            in_datapath=in_path,
-            field_mapping=field_mapping,
-            pattern=pattern,
-            cache_dir=self.cache_dir,
-            table_fields=self.fields(),
-            table_schema_func=self.schema_func(type="pandas"),
-            write_schema_func=self.schema_func(type="arrow"),
-            extraction_func=convert_single_location_attributes,
-            **kwargs
+        Note
+        ----
+        Creates an instance of a Table class with 'location_attributes'
+        properties. If namespace_name or catalog_name are None, they are
+        derived from the active catalog, which is 'local' by default.
+        """
+        return super().__call__(
+            table_name=table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name
         )
-
-        # Read the converted files to Spark DataFrame
-        df = self._read_files_from_cache_or_s3(self.cache_dir)
-
-        # Add or replace location_id prefix if provided
-        if location_id_prefix:
-            df = add_or_replace_sdf_column_prefix(
-                sdf=df,
-                column_name="location_id",
-                prefix=location_id_prefix,
-            )
-
-        if update_attrs_table:
-            attr_names = [
-                row.attribute_name for row in
-                df.select("attribute_name").distinct().collect()
-            ]
-            attr_list = []
-            for attr_name in attr_names:
-                attr_list.append(
-                    Attribute(
-                        name=attr_name,
-                        type="continuous",
-                        description=f"{attr_name} default description"
-                    )
-                )
-            self.ev.attributes.add(attr_list)
-
-        validated_df = self.ev.validate.schema(
-            sdf=df,
-            table_schema=self.schema_func(),
-            drop_duplicates=drop_duplicates,
-            foreign_keys=self.foreign_keys,
-            uniqueness_fields=self.uniqueness_fields
-        )
-
-        self.ev.write.to_warehouse(
-            source_data=validated_df,
-            target_table=self.name,
-            write_mode=write_mode,
-            uniqueness_fields=self.uniqueness_fields
-        )
-
-    def field_enum(self) -> LocationAttributeFields:
-        """Get the location attribute fields enum."""
-        fields = self._get_schema("pandas").columns.keys()
-        return LocationAttributeFields(
-            "LocationAttributeFields",
-            {field: field for field in fields}
-        )
-
-    def to_pandas(self):
-        """Return Pandas DataFrame for Location Attributes."""
-        self._check_load_table()
-        df = self.df.toPandas()
-        df.attrs['table_type'] = self.name
-        df.attrs['fields'] = self.fields()
-        return df
 
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
         self._check_load_table()
-        gdf = join_geometry(self.df, self.ev.locations.to_sdf())
-        gdf.attrs['table_type'] = self.name
+        gdf = join_geometry(self.sdf, self._ev.locations.to_sdf())
+        gdf.attrs['table_type'] = self.table_name
         gdf.attrs['fields'] = self.fields()
         return gdf
 
     def load_parquet(
         self,
         in_path: Union[Path, str],
+        namespace_name: str = None,
+        catalog_name: str = None,
+        extraction_function: callable = convert_single_location_attributes,
         pattern: str = "**/*.parquet",
         field_mapping: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True,
-        update_attrs_table: bool = True,
+        location_id_field: str = "location_id",
         **kwargs
     ):
-        """Import location_attributes from parquet file format.
+        """Import location attributes from parquet file format.
 
         Parameters
         ----------
@@ -174,8 +78,14 @@ class LocationAttributeTable(BaseTable):
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
-        location_id_prefix : str, optional
-            The prefix to add to location IDs.
+        primary_location_id_prefix : str, optional
+            The prefix to add to primary location IDs.
+            Used to ensure unique location IDs across configurations.
+            Note, the methods for fetching USGS and NWM data automatically
+            prefix location IDs with "usgs" or the nwm version
+            ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
+        secondary_location_id_prefix : str, optional
+            The prefix to add to secondary location IDs.
             Used to ensure unique location IDs across configurations.
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
@@ -191,31 +101,35 @@ class LocationAttributeTable(BaseTable):
             overwritten.
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the DataFrame.
-        update_attrs_table : bool, optional (default: True)
-            Whether to add default attributes for the location attributes.
-            If True, it will add default attributes for each unique attribute
-            name found in the data with category="continuous" and the
-            default description "<attribute_name> default description".
         **kwargs
-            Additional keyword arguments are passed to pd.read_parquet().
+            Additional keyword arguments are passed to pd.read_csv()
+            or pd.read_parquet().
 
         Notes
         -----
-        The TEEHR Location Attribute table schema includes fields:
+        The TEEHR Location Crosswalk table schema includes fields:
 
-        - location_id
-        - attribute_name
-        - value
+        - primary_location_id
+        - secondary_location_id
         """
         validate_input_is_parquet(in_path)
-        self._load(
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
+        if catalog_name is None:
+            catalog_name = self._ev.active_catalog.catalog_name
+
+        self._load.file(
             in_path=in_path,
             pattern=pattern,
+            table_name=self.table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
+            extraction_function=extraction_function,
             field_mapping=field_mapping,
-            location_id_prefix=location_id_prefix,
+            primary_location_id_prefix=location_id_prefix,
+            primary_location_id_field=location_id_field,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
-            update_attrs_table=update_attrs_table,
             **kwargs
         )
         self._load_table()
@@ -223,15 +137,18 @@ class LocationAttributeTable(BaseTable):
     def load_csv(
         self,
         in_path: Union[Path, str],
+        namespace_name: str = None,
+        catalog_name: str = None,
+        extraction_function: callable = convert_single_location_attributes,
         pattern: str = "**/*.csv",
         field_mapping: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True,
-        update_attrs_table: bool = True,
+        location_id_field: str = "location_id",
         **kwargs
     ):
-        """Import location_attributes from CSV file format.
+        """Import location attributes from CSV file format.
 
         Parameters
         ----------
@@ -241,8 +158,14 @@ class LocationAttributeTable(BaseTable):
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
-        location_id_prefix : str, optional
-            The prefix to add to location IDs.
+        primary_location_id_prefix : str, optional
+            The prefix to add to primary location IDs.
+            Used to ensure unique location IDs across configurations.
+            Note, the methods for fetching USGS and NWM data automatically
+            prefix location IDs with "usgs" or the nwm version
+            ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
+        secondary_location_id_prefix : str, optional
+            The prefix to add to secondary location IDs.
             Used to ensure unique location IDs across configurations.
             Note, the methods for fetching USGS and NWM data automatically
             prefix location IDs with "usgs" or the nwm version
@@ -257,31 +180,35 @@ class LocationAttributeTable(BaseTable):
             If "overwrite", existing partitions receiving new data are overwritten
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the DataFrame.
-        update_attrs_table : bool, optional (default: True)
-            Whether to add default attributes for the location attributes.
-            If True, it will add default attributes for each unique attribute
-            name found in the data with category="continuous" and the
-            default description "<attribute_name> default description".
         **kwargs
-            Additional keyword arguments are passed to pd.read_parquet().
+            Additional keyword arguments are passed to pd.read_csv()
+            or pd.read_parquet().
 
         Notes
         -----
-        The TEEHR Location Attribute table schema includes fields:
+        The TEEHR Location Crosswalk table schema includes fields:
 
-        - location_id
-        - attribute_name
-        - value
+        - primary_location_id
+        - secondary_location_id
         """ # noqa
         validate_input_is_csv(in_path)
-        self._load(
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
+        if catalog_name is None:
+            catalog_name = self._ev.active_catalog.catalog_name
+
+        self._load.file(
             in_path=in_path,
             pattern=pattern,
+            table_name=self.table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
+            extraction_function=extraction_function,
             field_mapping=field_mapping,
-            location_id_prefix=location_id_prefix,
+            primary_location_id_prefix=location_id_prefix,
+            primary_location_id_field=location_id_field,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
-            update_attrs_table=update_attrs_table,
             **kwargs
         )
         self._load_table()
@@ -289,12 +216,15 @@ class LocationAttributeTable(BaseTable):
     def load_dataframe(
         self,
         df: Union[pd.DataFrame, ps.DataFrame],
+        namespace_name: str = None,
+        catalog_name: str = None,
         field_mapping: dict = None,
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         persist_dataframe: bool = False,
         drop_duplicates: bool = True,
+        location_id_field: str = "location_id",
     ):
         """Import data from an in-memory dataframe.
 
@@ -329,14 +259,22 @@ class LocationAttributeTable(BaseTable):
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the dataframe.
         """ # noqa
-        self._load_dataframe(
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
+        if catalog_name is None:
+            catalog_name = self._ev.active_catalog.catalog_name
+
+        self._load.dataframe(
             df=df,
+            table_name=self.table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
-            location_id_prefix=location_id_prefix,
+            primary_location_id_prefix=location_id_prefix,
+            primary_location_id_field=location_id_field,
             write_mode=write_mode,
             persist_dataframe=persist_dataframe,
             drop_duplicates=drop_duplicates
         )
-
         self._load_table()

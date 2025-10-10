@@ -26,7 +26,8 @@ def test_convert_location_crosswalk(tmpdir):
 
 def test_validate_and_insert_crosswalks(tmpdir):
     """Test the validate crosswalks function."""
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
+    tmpdir = Path(tmpdir)
+    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
     ev.clone_template()
 
     ev.locations.load_spatial(
@@ -53,7 +54,7 @@ def test_validate_and_insert_crosswalks(tmpdir):
     ]
 
     assert True
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
 def test_convert_location_crosswalk_netcdf(tmpdir):

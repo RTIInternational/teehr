@@ -59,6 +59,13 @@ def test_executing_deterministic_metrics(tmpdir):
         order_by=[flds.primary_location_id],
     ).to_pandas()
 
+    metrics_df2 = ev.metrics(table_name="joined_timeseries").query(
+        include_metrics=include_all_metrics,
+        group_by=[flds.primary_location_id],
+        order_by=[flds.primary_location_id],
+    ).to_pandas()
+
+    assert metrics_df.equals(metrics_df2)
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
     assert metrics_df.columns.size == 20
@@ -84,9 +91,22 @@ def test_executing_signature_metrics(tmpdir):
         order_by=[flds.primary_location_id],
     ).to_pandas()
 
+    sum_metric = SignatureMetrics.Sum()
+    sum_metric.input_field_names = ["value"]
+
+    metrics_df2 = ev.metrics(table_name="primary_timeseries").query(
+        include_metrics=[sum_metric],
+        group_by=["location_id"],
+        order_by=["location_id"],
+        filters=["location_id = 'gage-A'"],
+    ).to_pandas()
+
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
     assert metrics_df.columns.size == 9
+    assert len(metrics_df2) == 1
+    assert metrics_df2.location_id.values[0] == "gage-A"
+    assert np.isclose(metrics_df2["sum"].values[0], 31.3)
     ev.spark.stop()
 
 
@@ -301,7 +321,7 @@ def test_gumboot_bootstrapping(tmpdir):
     """Test get_metrics method gumboot bootstrapping."""
     # Manually create an evaluation using timseries from the R
     # Gumboot package vignette.
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
+    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
     ev.clone_template()
     # Write the staged joined_timeseries data to the warehouse.
     joined_timeseries_filepath = Path(
@@ -314,7 +334,7 @@ def test_gumboot_bootstrapping(tmpdir):
     sdf = ev.spark.read.parquet(joined_timeseries_filepath.as_posix())
     (
         sdf.writeTo(
-            f"{ev.catalog_name}.{ev.schema_name}.joined_timeseries"
+            f"{ev.catalog_name}.{ev.namespace}.joined_timeseries"
         )
         .using("iceberg")
         .createOrReplace()
@@ -326,7 +346,7 @@ def test_gumboot_bootstrapping(tmpdir):
     )
     (
         sdf.writeTo(
-            f"{ev.catalog_name}.{ev.schema_name}.locations"
+            f"{ev.catalog_name}.{ev.namespace}.locations"
         )
         .using("iceberg")
         .createOrReplace()
@@ -456,7 +476,7 @@ def test_ensemble_metrics(tmpdir):
         "usgs_hefs_06711565.parquet"
     )
 
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
+    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
     ev.enable_logging()
     ev.clone_template()
 
@@ -584,12 +604,24 @@ def test_metrics_transforms(tmpdir):
     kge_t = DeterministicMetrics.KlingGuptaEfficiency()
     kge_t.transform = 'log'
 
+    # add epsilon to avoid log(0)
+    kge_t_e = DeterministicMetrics.KlingGuptaEfficiency()
+    kge_t_e.transform = 'log'
+    kge_t_e.add_epsilon = (True, 0.001)
+
     # define metric requiring p,s,t
     mvtd = DeterministicMetrics.MaxValueTimeDelta()
     mvtd_t = DeterministicMetrics.MaxValueTimeDelta()
     mvtd_t.transform = 'log'
 
     # get metrics_df
+    metrics_df_tansformed_e = ev.metrics.query(
+        group_by=["primary_location_id", "configuration_name"],
+        include_metrics=[
+            kge_t_e,
+            mvtd_t
+        ]
+    ).to_pandas()
     metrics_df_transformed = ev.metrics.query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
@@ -608,11 +640,14 @@ def test_metrics_transforms(tmpdir):
     # get results for comparison
     result_kge = metrics_df.kling_gupta_efficiency.values[0]
     result_kge_t = metrics_df_transformed.kling_gupta_efficiency.values[0]
+    result_kge_t_e = metrics_df_tansformed_e.kling_gupta_efficiency.values[0]
     result_mvtd = metrics_df.max_value_time_delta.values[0]
     result_mvtd_t = metrics_df_transformed.max_value_time_delta.values[0]
 
     # metrics_df_transformed is created, transforms are applied
+    assert isinstance(metrics_df_tansformed_e, pd.DataFrame)
     assert isinstance(metrics_df_transformed, pd.DataFrame)
+    assert result_kge_t != result_kge_t_e
     assert result_kge != result_kge_t
     assert result_mvtd == result_mvtd_t
     ev.spark.stop()
@@ -742,11 +777,13 @@ if __name__ == "__main__":
                 dir=tempdir
             )
         )
+        # TODO: High memory usage?
         test_metrics_transforms(
             tempfile.mkdtemp(
                 prefix="10-",
                 dir=tempdir)
         )
+        # TODO: High memory usage?
         test_bootstrapping_transforms(
             tempfile.mkdtemp(
                 prefix="11-",

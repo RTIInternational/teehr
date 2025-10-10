@@ -1,13 +1,8 @@
 """Variable table class."""
 from teehr.evaluation.tables.domain_table import DomainTable
-from teehr.models.filters import VariableFilter
-from teehr.models.table_enums import VariableFields
 from teehr.models.pydantic_table_models import Variable
-import teehr.models.pandera_dataframe_schemas as schemas
 from typing import List, Union
 import logging
-from teehr.utils.utils import to_path_or_s3path
-
 
 logger = logging.getLogger(__name__)
 
@@ -18,18 +13,25 @@ class VariableTable(DomainTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.name = "variables"
-        self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
-        self.filter_model = VariableFilter
-        self.schema_func = schemas.variable_schema
-        self.uniqueness_fields = ["name"]
 
-    def field_enum(self) -> VariableFields:
-        """Get the variable fields enum."""
-        fields = self._get_schema("pandas").columns.keys()
-        return VariableFields(
-            "VariableFields",
-            {field: field for field in fields}
+    def __call__(
+        self,
+        table_name: str = "variables",
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None,
+    ):
+        """Get an instance of the variables table.
+
+        Note
+        ----
+        Creates an instance of a Table class with 'variables'
+        properties. If namespace_name or catalog_name are None, they are
+        derived from the active catalog, which is 'local' by default.
+        """
+        return super().__call__(
+            table_name=table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name
         )
 
     def add(

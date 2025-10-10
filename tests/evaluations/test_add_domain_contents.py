@@ -6,14 +6,18 @@ from teehr.models.pydantic_table_models import (
     Attribute,
 )
 import tempfile
+from teehr import Evaluation
+from pathlib import Path
 
 
 def test_add_domains(tmpdir):
     """Test creating a new study."""
-    from teehr import Evaluation
+    # ev = Evaluation()  # Connects to remote by default
 
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
+    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
     ev.clone_template()
+
+    new_tbl = ev.table(table_name="new_table")
 
     # Check configurations.add doesn't add columns
     cols = ev.configurations.to_pandas().columns

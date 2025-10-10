@@ -8,7 +8,7 @@ from teehr import Evaluation
 
 def test_table_writes(tmpdir):
     """Test creating a new study."""
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
+    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
     ev.clone_template()
 
     schema = StructType([
@@ -23,11 +23,13 @@ def test_table_writes(tmpdir):
       schema=schema
     )
 
+    df = sdf.toPandas()
+
+    # Can pass a spark dataframe, pandas dataframe, or named view (str)
     ev.write.to_warehouse(
-        source_data=sdf,
-        target_table="units",
+        source_data=df,
+        table_name="units",
         write_mode="append",
-        # uniqueness_fields=["name"]
     )
 
     ev.spark.stop()

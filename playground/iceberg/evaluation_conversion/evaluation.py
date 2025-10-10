@@ -525,13 +525,13 @@ class Evaluation:
 
     def apply_schema_migration(
         self,
-        schema_name: str = "db"
+        namespace: str = "db"
     ):
         """Migrate v0.5 Evalution to v0.6 Iceberg tables."""
         apply_migrations.evolve_catalog_schema(
             self.spark,
             self.catalog_name,
-            schema_name
+            namespace
         )
         print(f"Schema evolution completed for {self.catalog_name}.")
 

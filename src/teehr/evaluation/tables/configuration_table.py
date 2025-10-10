@@ -1,11 +1,7 @@
 """Configuration table class."""
 from teehr.evaluation.tables.domain_table import DomainTable
-from teehr.models.filters import ConfigurationFilter
-from teehr.models.table_enums import ConfigurationFields
 from teehr.models.pydantic_table_models import Configuration
-import teehr.models.pandera_dataframe_schemas as schemas
 from typing import List, Union
-from teehr.utils.utils import to_path_or_s3path
 
 
 class ConfigurationTable(DomainTable):
@@ -14,18 +10,25 @@ class ConfigurationTable(DomainTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.name = "configurations"
-        self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
-        self.filter_model = ConfigurationFilter
-        self.schema_func = schemas.configuration_schema
-        self.uniqueness_fields = ["name"]
 
-    def field_enum(self) -> ConfigurationFields:
-        """Get the configuration fields enum."""
-        fields = self._get_schema("pandas").columns.keys()
-        return ConfigurationFields(
-            "ConfigurationFields",
-            {field: field for field in fields}
+    def __call__(
+        self,
+        table_name: str = "configurations",
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None,
+    ):
+        """Get an instance of the configurations table.
+
+        Note
+        ----
+        Creates an instance of a Table class with 'configurations'
+        properties. If namespace_name or catalog_name are None, they are
+        derived from the active catalog, which is 'local' by default.
+        """
+        return super().__call__(
+            table_name=table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name
         )
 
     def add(

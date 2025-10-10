@@ -1,61 +1,39 @@
 """Timeseries table base class."""
-from teehr.evaluation.tables.base_table import BaseTable
+from pathlib import Path
+from typing import Union
+import logging
+
+import pandas as pd
+import pyspark.sql as ps
+
+from teehr.evaluation.tables.base_table import Table
 from teehr.loading.utils import (
     validate_input_is_xml,
     validate_input_is_csv,
     validate_input_is_netcdf,
     validate_input_is_parquet
 )
-from teehr.models.filters import TimeseriesFilter
-from teehr.querying.utils import join_geometry
 from teehr.models.table_enums import TableWriteEnum
 from teehr.const import MAX_CPUS
-
-from pathlib import Path
-from typing import Union
-import logging
+from teehr.loading.timeseries import convert_single_timeseries
 
 logger = logging.getLogger(__name__)
 
 
-class TimeseriesTable(BaseTable):
+class TimeseriesTable(Table):
     """Access methods to timeseries table."""
 
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.format = "parquet"
-        self.partition_by = [
-            "configuration_name",
-            "variable_name",
-            # "reference_time"
-        ]
-        self.filter_model = TimeseriesFilter
-        self.uniqueness_fields = [
-            "location_id",
-            "value_time",
-            "reference_time",
-            "variable_name",
-            "unit_name",
-            "configuration_name"
-        ]
-
-    def to_pandas(self):
-        """Return Pandas DataFrame for Timeseries."""
-        self._check_load_table()
-        df = self.df.toPandas()
-        df.attrs['table_type'] = self.name
-        df.attrs['fields'] = self.fields()
-        return df
-
-    def to_geopandas(self):
-        """Return GeoPandas DataFrame."""
-        self._check_load_table()
-        return join_geometry(self.df, self.ev.locations.to_sdf())
+        self._load = ev.load
 
     def load_parquet(
         self,
         in_path: Union[Path, str],
+        namespace_name: str = None,
+        catalog_name: str = None,
+        extraction_function: callable = convert_single_timeseries,
         pattern: str = "**/*.parquet",
         field_mapping: dict = None,
         constant_field_values: dict = None,
@@ -65,6 +43,7 @@ class TimeseriesTable(BaseTable):
         max_workers: Union[int, None] = MAX_CPUS,
         persist_dataframe: bool = False,
         drop_duplicates: bool = True,
+        location_id_field: str = "location_id",
         **kwargs
     ):
         """Import timeseries parquet data.
@@ -127,19 +106,31 @@ class TimeseriesTable(BaseTable):
         - location_id
         """
         logger.info(f"Loading timeseries parquet data: {in_path}")
-
         validate_input_is_parquet(in_path)
-        self._load(
+
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
+        if catalog_name is None:
+            catalog_name = self._ev.active_catalog.catalog_name
+
+        table_name = self.table_name
+
+        self._load.file(
             in_path=in_path,
             pattern=pattern,
+            table_name=table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
+            extraction_function=extraction_function,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
-            location_id_prefix=location_id_prefix,
+            primary_location_id_prefix=location_id_prefix,
             write_mode=write_mode,
             parallel=parallel,
             max_workers=max_workers,
             persist_dataframe=persist_dataframe,
             drop_duplicates=drop_duplicates,
+            primary_location_id_field=location_id_field,
             **kwargs
         )
         self._load_table()
@@ -147,6 +138,9 @@ class TimeseriesTable(BaseTable):
     def load_csv(
         self,
         in_path: Union[Path, str],
+        namespace_name: str = None,
+        catalog_name: str = None,
+        extraction_function: callable = convert_single_timeseries,
         pattern: str = "**/*.csv",
         field_mapping: dict = None,
         constant_field_values: dict = None,
@@ -156,6 +150,7 @@ class TimeseriesTable(BaseTable):
         max_workers: Union[int, None] = MAX_CPUS,
         persist_dataframe: bool = False,
         drop_duplicates: bool = True,
+        location_id_field: str = "location_id",
         **kwargs
     ):
         """Import timeseries csv data.
@@ -220,19 +215,31 @@ class TimeseriesTable(BaseTable):
         - location_id
         """
         logger.info(f"Loading timeseries csv data: {in_path}")
-
         validate_input_is_csv(in_path)
-        self._load(
+
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
+        if catalog_name is None:
+            catalog_name = self._ev.active_catalog.catalog_name
+
+        table_name = self.table_name
+
+        self._load.file(
             in_path=in_path,
             pattern=pattern,
+            table_name=table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
+            extraction_function=extraction_function,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
-            location_id_prefix=location_id_prefix,
+            primary_location_id_prefix=location_id_prefix,
             write_mode=write_mode,
             parallel=parallel,
             max_workers=max_workers,
             persist_dataframe=persist_dataframe,
             drop_duplicates=drop_duplicates,
+            primary_location_id_field=location_id_field,
             **kwargs
         )
         self._load_table()
@@ -240,6 +247,9 @@ class TimeseriesTable(BaseTable):
     def load_netcdf(
         self,
         in_path: Union[Path, str],
+        namespace_name: str = None,
+        catalog_name: str = None,
+        extraction_function: callable = convert_single_timeseries,
         pattern: str = "**/*.nc",
         field_mapping: dict = None,
         constant_field_values: dict = None,
@@ -249,6 +259,7 @@ class TimeseriesTable(BaseTable):
         max_workers: Union[int, None] = MAX_CPUS,
         persist_dataframe: bool = False,
         drop_duplicates: bool = True,
+        location_id_field: str = "location_id",
         **kwargs
     ):
         """Import timeseries netcdf data.
@@ -313,19 +324,31 @@ class TimeseriesTable(BaseTable):
         - location_id
         """
         logger.info(f"Loading timeseries netcdf data: {in_path}")
-
         validate_input_is_netcdf(in_path)
-        self._load(
+
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
+        if catalog_name is None:
+            catalog_name = self._ev.active_catalog.catalog_name
+
+        table_name = self.table_name
+
+        self._load.file(
             in_path=in_path,
             pattern=pattern,
+            table_name=table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
+            extraction_function=extraction_function,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
-            location_id_prefix=location_id_prefix,
+            primary_location_id_prefix=location_id_prefix,
             write_mode=write_mode,
             parallel=parallel,
             max_workers=max_workers,
             persist_dataframe=persist_dataframe,
             drop_duplicates=drop_duplicates,
+            primary_location_id_field=location_id_field,
             **kwargs
         )
         self._load_table()
@@ -333,6 +356,9 @@ class TimeseriesTable(BaseTable):
     def load_fews_xml(
         self,
         in_path: Union[Path, str],
+        namespace_name: str = None,
+        catalog_name: str = None,
+        extraction_function: callable = convert_single_timeseries,
         pattern: str = "**/*.xml",
         field_mapping: dict = {
             "locationId": "location_id",
@@ -350,6 +376,8 @@ class TimeseriesTable(BaseTable):
         max_workers: Union[int, None] = MAX_CPUS,
         persist_dataframe: bool = False,
         drop_duplicates: bool = True,
+        location_id_field: str = "location_id",
+        **kwargs
     ):
         """Import timeseries from FEWS PI-XML data format.
 
@@ -433,18 +461,99 @@ class TimeseriesTable(BaseTable):
         - member
         """
         logger.info(f"Loading timeseries xml data: {in_path}")
-
         validate_input_is_xml(in_path)
-        self._load(
+
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
+        if catalog_name is None:
+            catalog_name = self._ev.active_catalog.catalog_name
+
+        table_name = self.table_name
+
+        self._load.file(
             in_path=in_path,
             pattern=pattern,
+            table_name=table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
+            extraction_function=extraction_function,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
-            location_id_prefix=location_id_prefix,
+            primary_location_id_prefix=location_id_prefix,
             write_mode=write_mode,
             parallel=parallel,
             max_workers=max_workers,
             persist_dataframe=persist_dataframe,
             drop_duplicates=drop_duplicates,
+            primary_location_id_field=location_id_field,
+            **kwargs
+        )
+        self._load_table()
+
+    def load_dataframe(
+        self,
+        df: Union[pd.DataFrame, ps.DataFrame],
+        namespace_name: str = None,
+        catalog_name: str = None,
+        field_mapping: dict = None,
+        constant_field_values: dict = None,
+        location_id_prefix: str = None,
+        write_mode: TableWriteEnum = "append",
+        persist_dataframe: bool = False,
+        drop_duplicates: bool = True,
+        location_id_field: str = "location_id",
+    ):
+        """Load data from an in-memory dataframe.
+
+        Parameters
+        ----------
+        df : Union[pd.DataFrame, ps.DataFrame]
+            Pandas or PySparkDataFrame to load into the table.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+        constant_field_values : dict, optional
+            A dictionary mapping field names to constant values.
+            Format: {field_name: value}.
+        location_id_prefix : str, optional
+            The prefix to add to location IDs.
+            Used to ensure unique location IDs across configurations.
+            Note, the methods for fetching USGS and NWM data automatically
+            prefix location IDs with "usgs" or the nwm version
+            ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table.
+            Options are "append", "upsert", and "overwrite".
+            If "append", the table will be appended with new data that does
+            already exist.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
+            If "overwrite", existing partitions receiving new data are overwritten.
+        persist_dataframe : bool, optional (default: False)
+            Whether to repartition and persist the pyspark dataframe after
+            reading from the cache. This can improve performance when loading
+            a large number of files from the cache.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the dataframe.
+        """ # noqa
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
+        if catalog_name is None:
+            catalog_name = self._ev.active_catalog.catalog_name
+
+        table_name = self.table_name
+
+        self._load.dataframe(
+            df=df,
+            table_name=table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
+            field_mapping=field_mapping,
+            constant_field_values=constant_field_values,
+            primary_location_id_prefix=location_id_prefix,
+            primary_location_id_field=location_id_field,
+            write_mode=write_mode,
+            persist_dataframe=persist_dataframe,
+            drop_duplicates=drop_duplicates
         )
         self._load_table()

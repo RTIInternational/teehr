@@ -13,9 +13,6 @@ from teehr.fetching.nwm.nwm_points import nwm_to_parquet
 from teehr.fetching.nwm.nwm_grids import nwm_grids_to_parquet
 from teehr.fetching.nwm.retrospective_points import nwm_retro_to_parquet
 from teehr.fetching.nwm.retrospective_grids import nwm_retro_grids_to_parquet
-from teehr.loading.timeseries import (
-    validate_and_insert_timeseries,
-)
 from teehr.fetching.utils import (
     format_nwm_variable_name,
     format_nwm_configuration_metadata
@@ -53,7 +50,8 @@ class Fetch:
     def __init__(self, ev) -> None:
         """Initialize the Fetch class."""
         # Now we have access to the Evaluation object.
-        self.ev = ev
+        self._ev = ev
+        self._load = ev.load
         self.usgs_cache_dir = Path(
             ev.cache_dir,
             const.FETCHING_CACHE_DIR,
@@ -77,7 +75,7 @@ class Fetch:
 
     def _get_secondary_location_ids(self, prefix: str) -> List[str]:
         """Get the secondary location IDs corresponding to primary IDs."""
-        lcw_df = self.ev.location_crosswalks.query(
+        lcw_df = self._ev.location_crosswalks.query(
             filters={
                 "column": "secondary_location_id",
                 "operator": "like",
@@ -110,7 +108,7 @@ class Fetch:
         True: Configuration name exists in the table.
         False: Configuration name does not exist in the table.
         """
-        sdf = self.ev.configurations.filter(
+        sdf = self._ev.configurations.filter(
             {
                 "column": "name",
                 "operator": "=",
@@ -130,6 +128,7 @@ class Fetch:
         convert_to_si: bool = True,
         overwrite_output: Optional[bool] = False,
         timeseries_type: TimeseriesTypeEnum = "primary",
+        table_name: str = None,
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True,
     ):
@@ -170,6 +169,10 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
+        table_name : str
+            The name of the table to load the data into. Must be either
+            "primary_timeseries" or "secondary_timeseries". This is redundant to,
+            and takes precedence over timeseries_type, which is deprecated.
         write_mode : TableWriteEnum, optional (default: "append")
             The write mode for the table. Options are "append" or "upsert".
             If "append", the Evaluation table will be appended with new data
@@ -236,7 +239,7 @@ class Fetch:
         >>> )
         """  # noqa
         logger.info("Getting primary location IDs.")
-        locations_df = self.ev.locations.query(
+        locations_df = self._ev.locations.query(
             filters={
                 "column": "id",
                 "operator": "like",
@@ -270,7 +273,7 @@ class Fetch:
         if (
             not self._configuration_name_exists(USGS_CONFIGURATION_NAME)
         ):
-            self.ev.configurations.add(
+            self._ev.configurations.add(
                 Configuration(
                     name=USGS_CONFIGURATION_NAME,
                     type="primary",
@@ -278,14 +281,22 @@ class Fetch:
                 )
             )
 
-        validate_and_insert_timeseries(
-            ev=self.ev,
-            in_path=Path(
-                self.usgs_cache_dir
-            ),
-            timeseries_type=timeseries_type,
+        # For backwards compatibility
+        if table_name is None:
+            if timeseries_type == "primary":
+                table_name = "primary_timeseries"
+            elif timeseries_type == "secondary":
+                table_name = "secondary_timeseries"
+        elif table_name not in ["primary_timeseries", "secondary_timeseries"]:
+            raise ValueError(
+                "table_name must be 'primary_timeseries' or"
+                " 'secondary_timeseries'."
+            )
+        self._load.from_cache(
+            in_path=Path(self.usgs_cache_dir),
             write_mode=write_mode,
-            drop_duplicates=drop_duplicates
+            drop_duplicates=drop_duplicates,
+            table_name=table_name
         )
 
     def nwm_retrospective_points(
@@ -298,6 +309,7 @@ class Fetch:
         overwrite_output: Optional[bool] = False,
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
         timeseries_type: TimeseriesTypeEnum = "secondary",
+        table_name: str = None,
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True,
     ):
@@ -345,6 +357,10 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
+        table_name : str
+            The name of the table to load the data into. Must be either
+            "primary_timeseries" or "secondary_timeseries". This is redundant to,
+            and takes precendence over timeseries_type, which is deprecated.
         write_mode : TableWriteEnum, optional (default: "append")
             The write mode for the table. Options are "append" or "upsert".
             If "append", the Evaluation table will be appended with new data
@@ -432,22 +448,29 @@ class Fetch:
         if (
             not self._configuration_name_exists(ev_configuration_name)
         ):
-            self.ev.configurations.add(
+            self._ev.configurations.add(
                 Configuration(
                     name=ev_configuration_name,
                     type=timeseries_type,
                     description=f"{nwm_version} retrospective"
                 )
             )
-
-        validate_and_insert_timeseries(
-            ev=self.ev,
-            in_path=Path(
-                self.nwm_cache_dir
-            ),
-            timeseries_type=timeseries_type,
+        # For backwards compatibility
+        if table_name is None:
+            if timeseries_type == "primary":
+                table_name = "primary_timeseries"
+            elif timeseries_type == "secondary":
+                table_name = "secondary_timeseries"
+        elif table_name not in ["primary_timeseries", "secondary_timeseries"]:
+            raise ValueError(
+                "table_name must be 'primary_timeseries' or"
+                " 'secondary_timeseries'."
+            )
+        self._load.from_cache(
+            in_path=Path(self.nwm_cache_dir),
             write_mode=write_mode,
-            drop_duplicates=drop_duplicates
+            drop_duplicates=drop_duplicates,
+            table_name=table_name
         )
 
     def nwm_retrospective_grids(
@@ -462,6 +485,7 @@ class Fetch:
         domain: Optional[SupportedNWMRetroDomainsEnum] = "CONUS",
         location_id_prefix: Optional[str] = None,
         timeseries_type: TimeseriesTypeEnum = "primary",
+        table_name: str = None,
         write_mode: TableWriteEnum = "append",
         zonal_weights_filepath: Optional[Union[Path, str]] = None,
         drop_duplicates: bool = True,
@@ -523,6 +547,10 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "primary".
+        table_name : str
+            The name of the table to load the data into. Must be either
+            "primary_timeseries" or "secondary_timeseries". This is redundant to,
+            and takes precedence over timeseries_type, which is deprecated.
         zonal_weights_filepath : Optional[Union[Path, str]]
             The path to the zonal weights file. If None and calculate_zonal_weights
             is False, the weights file must exist in the cache for the configuration.
@@ -589,9 +617,9 @@ class Fetch:
         # defining the zone_polygons argument.
         logger.info("Getting primary location IDs.")
         if location_id_prefix is None:
-            locations_gdf = self.ev.locations.to_geopandas()
+            locations_gdf = self._ev.locations.to_geopandas()
         else:
-            locations_gdf = self.ev.locations.query(
+            locations_gdf = self._ev.locations.query(
                 filters={
                     "column": "id",
                     "operator": "like",
@@ -630,22 +658,29 @@ class Fetch:
         if (
             not self._configuration_name_exists(ev_configuration_name)
         ):
-            self.ev.configurations.add(
+            self._ev.configurations.add(
                 Configuration(
                     name=ev_configuration_name,
                     type=timeseries_type,
                     description=f"{nwm_version} retrospective"
                 )
             )
-
-        validate_and_insert_timeseries(
-            ev=self.ev,
-            in_path=Path(
-                self.nwm_cache_dir
-            ),
-            timeseries_type=timeseries_type,
+        # For backwards compatibility
+        if table_name is None:
+            if timeseries_type == "primary":
+                table_name = "primary_timeseries"
+            elif timeseries_type == "secondary":
+                table_name = "secondary_timeseries"
+        elif table_name not in ["primary_timeseries", "secondary_timeseries"]:
+            raise ValueError(
+                "table_name must be 'primary_timeseries' or"
+                " 'secondary_timeseries'."
+            )
+        self._load.from_cache(
+            in_path=Path(self.nwm_cache_dir),
             write_mode=write_mode,
-            drop_duplicates=drop_duplicates
+            drop_duplicates=drop_duplicates,
+            table_name=table_name
         )
 
     def nwm_operational_points(
@@ -666,6 +701,7 @@ class Fetch:
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
         timeseries_type: TimeseriesTypeEnum = "secondary",
+        table_name: str = None,
         starting_z_hour: Optional[int] = None,
         ending_z_hour: Optional[int] = None,
         write_mode: TableWriteEnum = "append",
@@ -756,6 +792,10 @@ class Fetch:
         timeseries_type : str
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "secondary".
+        table_name : str
+            The name of the table to load the data into. Must be either
+            "primary_timeseries" or "secondary_timeseries". This is redundant to,
+            and takes precedence over timeseries_type, which is deprecated.
         starting_z_hour : Optional[int]
             The starting z_hour to include in the output. If None, z_hours
             for the first day are determined by ``start_date``. Default is None.
@@ -896,23 +936,29 @@ class Fetch:
                 ev_config["name"]
             )
         ):
-            self.ev.configurations.add(
+            self._ev.configurations.add(
                 Configuration(
                     name=ev_config["name"],
                     type=timeseries_type,
                     description=ev_config["description"]
                 )
             )
-
-        validate_and_insert_timeseries(
-            ev=self.ev,
-            in_path=Path(
-                self.nwm_cache_dir
-            ),
-            timeseries_type=timeseries_type,
+        # For backwards compatibility
+        if table_name is None:
+            if timeseries_type == "primary":
+                table_name = "primary_timeseries"
+            elif timeseries_type == "secondary":
+                table_name = "secondary_timeseries"
+        elif table_name not in ["primary_timeseries", "secondary_timeseries"]:
+            raise ValueError(
+                "table_name must be 'primary_timeseries' or"
+                " 'secondary_timeseries'."
+            )
+        self._load.from_cache(
+            in_path=Path(self.nwm_cache_dir),
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
-            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values  # noqa
+            table_name=table_name
         )
 
     def nwm_operational_grids(
@@ -933,6 +979,7 @@ class Fetch:
         ignore_missing_file: Optional[bool] = True,
         overwrite_output: Optional[bool] = False,
         timeseries_type: TimeseriesTypeEnum = "secondary",
+        table_name: str = None,
         starting_z_hour: Optional[int] = None,
         ending_z_hour: Optional[int] = None,
         write_mode: TableWriteEnum = "append",
@@ -1027,6 +1074,10 @@ class Fetch:
             Whether to consider as the "primary" or "secondary" timeseries.
             Default is "secondary", unless the configuration is a analysis containing
             assimilation, in which case the default is "primary".
+        table_name : str
+            The name of the table to load the data into. Must be either
+            "primary_timeseries" or "secondary_timeseries". This is redundant to,
+            and takes precedence over timeseries_type, which is deprecated.
         starting_z_hour : Optional[int]
             The starting z_hour to include in the output. If None, z_hours
             for the first day are determined by ``start_date``. Default is None.
@@ -1149,9 +1200,9 @@ class Fetch:
         # defining the zone_polygons argument.
         logger.info("Getting primary location IDs.")
         if location_id_prefix is None:
-            locations_gdf = self.ev.locations.to_geopandas()
+            locations_gdf = self._ev.locations.to_geopandas()
         else:
-            locations_gdf = self.ev.locations.query(
+            locations_gdf = self._ev.locations.query(
                 filters={
                     "column": "id",
                     "operator": "like",
@@ -1202,19 +1253,27 @@ class Fetch:
                 ev_config["name"]
             )
         ):
-            self.ev.configurations.add(
+            self._ev.configurations.add(
                 Configuration(
                     name=ev_config["name"],
                     type=timeseries_type,
                     description=ev_config["description"]
                 )
             )
-
-        validate_and_insert_timeseries(
-            ev=self.ev,
+        # For backwards compatibility
+        if table_name is None:
+            if timeseries_type == "primary":
+                table_name = "primary_timeseries"
+            elif timeseries_type == "secondary":
+                table_name = "secondary_timeseries"
+        elif table_name not in ["primary_timeseries", "secondary_timeseries"]:
+            raise ValueError(
+                "table_name must be 'primary_timeseries' or"
+                " 'secondary_timeseries'."
+            )
+        self._load.from_cache(
             in_path=Path(self.nwm_cache_dir),
-            timeseries_type=timeseries_type,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
-            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values  # noqa
+            table_name=table_name
         )

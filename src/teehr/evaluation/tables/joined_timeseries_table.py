@@ -2,16 +2,11 @@
 import sys
 from pathlib import Path
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
-from teehr.models.filters import JoinedTimeseriesFilter
-from teehr.models.table_enums import JoinedTimeseriesFields
 from teehr.querying.utils import join_geometry
-import teehr.models.pandera_dataframe_schemas as schemas
 import pyspark.sql as ps
 import logging
 from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
 from typing import List, Union
-from teehr.utils.s3path import S3Path
-from teehr.utils.utils import to_path_or_s3path, path_to_spark
 
 logger = logging.getLogger(__name__)
 
@@ -22,50 +17,39 @@ class JoinedTimeseriesTable(TimeseriesTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.name = "joined_timeseries"
-        self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
-        self.filter_model = JoinedTimeseriesFilter
-        self.validate_filter_field_types = False
-        self.strict_validation = False
-        self.schema_func = schemas.joined_timeseries_schema
-        self.uniqueness_fields = [
-            "primary_location_id",
-            "secondary_location_id",
-            "value_time",
-            "reference_time",
-            "variable_name",
-            "unit_name",
-            "configuration_name",
-        ]
 
-    def field_enum(self) -> JoinedTimeseriesFields:
-        """Get the joined timeseries fields enum."""
-        self._check_load_table()
-        fields_list = self.df.columns
-        return JoinedTimeseriesFields(
-            "JoinedTimeseriesFields",
-            {field: field for field in fields_list}
+    def __call__(
+        self,
+        table_name: str = "joined_timeseries",
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None,
+    ):
+        """Get an instance of the joined timeseries table.
+
+        Note
+        ----
+        Creates an instance of a Table class with 'joined_timeseries'
+        properties. If namespace_name or catalog_name are None, they are
+        derived from the active catalog, which is 'local' by default.
+        """
+        return super().__call__(
+            table_name=table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name
         )
 
-    def to_pandas(self):
-        """Return Pandas DataFrame for Joined Timeseries."""
-        self._check_load_table()
-        df = self.df.toPandas()
-        df.attrs['table_type'] = 'joined_timeseries'
-        df.attrs['fields'] = self.fields()
-        return df
-
+    # TODO: Can't this be in the Table class?
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
         self._check_load_table()
         return join_geometry(
-            self.df, self.ev.locations.to_sdf(),
+            self.sdf, self._ev.locations.to_sdf(),
             "primary_location_id"
         )
 
     def _join(self) -> ps.DataFrame:
         """Join primary and secondary timeseries."""
-        joined_df = self.ev.sql("""
+        joined_df = self._ev.sql("""
             SELECT
                 sf.reference_time
                 , sf.value_time as value_time
@@ -95,7 +79,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
                   joined_df: ps.DataFrame,
                   attr_list: List[str] = None) -> ps.DataFrame:
         """Add attributes to the joined timeseries dataframe."""
-        location_attributes_sdf = self.ev.location_attributes.to_sdf()
+        location_attributes_sdf = self._ev.location_attributes.to_sdf()
         if location_attributes_sdf.isEmpty():
             logger.warning(
                 "No location attributes found. Skipping adding attributes to "
@@ -128,7 +112,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
                 )
         else:
             logger.info("No attribute list provided. Adding all attributes.")
-            valid_atts = self.ev.location_attributes.distinct_values(
+            valid_atts = self._ev.location_attributes.distinct_values(
                 "attribute_name")
 
         # Pivot the table
@@ -140,7 +124,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
         # Create a view
         pivot_df.createTempView("attrs")
 
-        joined_df = self.spark.sql("""
+        joined_df = self._ev.spark.sql("""
             SELECT
                 joined.*
                 , attrs.*
@@ -149,8 +133,8 @@ class JoinedTimeseriesTable(TimeseriesTable):
                 on joined.primary_location_id = attrs.location_id
         """).drop("location_id")
 
-        self.spark.catalog.dropTempView("joined")
-        self.spark.catalog.dropTempView("attrs")
+        self._ev.spark.catalog.dropTempView("joined")
+        self._ev.spark.catalog.dropTempView("attrs")
 
         return joined_df
 
@@ -182,19 +166,19 @@ class JoinedTimeseriesTable(TimeseriesTable):
             cfs = [cfs]
 
         for cf in cfs:
-            self.df = cf.apply_to(self.df)
+            self.sdf = cf.apply_to(self.sdf)
 
         return self
 
     def write(self, write_mode: str = "create_or_replace"):
         """Write the joined timeseries table to the warehouse."""
         # TODO: What should default write mode be?
-        self.ev.write.to_warehouse(
-            source_data=self.df,
-            target_table=self.name,
+        self._ev.write.to_warehouse(
+            source_data=self.sdf,
+            table_name=self.table_name,
             write_mode=write_mode,
             uniqueness_fields=self.uniqueness_fields,
-            partition_by=self.partition_by,
+            # partition_by=self.partition_by,
         )
         logger.info("Joined timeseries table written to the warehouse.")
         self._load_table()
@@ -202,12 +186,12 @@ class JoinedTimeseriesTable(TimeseriesTable):
     def _run_script(self, joined_df: ps.DataFrame) -> ps.DataFrame:
         """Add UDFs to the joined timeseries dataframe."""
         try:
-            sys.path.append(str(Path(self.ev.scripts_dir).resolve()))
+            sys.path.append(str(Path(self._ev.scripts_dir).resolve()))
             import user_defined_fields as udf # noqa
             joined_df = udf.add_user_defined_fields(joined_df)
         except ImportError:
             logger.info(
-                f"No user-defined fields found in {self.ev.scripts_dir}."
+                f"No user-defined fields found in {self._ev.scripts_dir}."
                 "Not adding user-defined fields."
             )
             return joined_df
@@ -220,7 +204,8 @@ class JoinedTimeseriesTable(TimeseriesTable):
         execute_scripts: bool = False,
         drop_duplicates: bool = False,
         attr_list: List[str] = None,
-        write_mode: str = "create_or_replace"
+        write_mode: str = "create_or_replace",
+        partition_by: List[str] = ["configuration_name", "variable_name"],
     ):
         """Create joined timeseries table.
 
@@ -246,67 +231,73 @@ class JoinedTimeseriesTable(TimeseriesTable):
         if execute_scripts:
             joined_df = self._run_script(joined_df)
 
-        validated_df = self.ev.validate.schema(
-            sdf=joined_df,
-            strict=False,
-            table_schema=self.schema_func(),
-            drop_duplicates=drop_duplicates,
-            foreign_keys=self.foreign_keys,
-            uniqueness_fields=self.uniqueness_fields
+        validated_df = self._ev.validate.data(
+            df=joined_df,
+            table_schema=self.schema_func()
         )
-        self.ev.write.to_warehouse(
+        # validated_df = self._ev.validate.schema(
+        #     sdf=joined_df,
+        #     strict=False,
+        #     table_schema=self.schema_func(),
+        #     drop_duplicates=drop_duplicates,
+        #     foreign_keys=self.foreign_keys,
+        #     uniqueness_fields=self.uniqueness_fields
+        # )
+        self._ev.write.to_warehouse(
             source_data=validated_df,
-            target_table=self.name,
+            table_name=self.table_name,
             write_mode=write_mode,
-            partition_by=self.partition_by,
+            partition_by=partition_by,
         )
         logger.info("Joined timeseries table created.")
         self._load_table()
 
-    def _read_files_from_cache_or_s3(
-        self,
-        path: Union[str, Path, S3Path],
-        pattern: str = None,
-        show_missing_table_warning: bool = False,
-        **options
-    ) -> ps.DataFrame:
-        """Read data from table directory as a spark dataframe.
+        return self
 
-        Parameters
-        ----------
-        path : Union[str, Path, S3Path]
-            The path to the directory containing the files.
-        pattern : str, optional
-            The pattern to match files.
-        show_missing_table_warning : bool, optional
-            If True, show the warning an empty table was returned.
-            The default is True.
-        **options
-            Additional options to pass to the spark read method.
+    # def _read_files_from_cache_or_s3(
+    #     self,
+    #     path: Union[str, Path, S3Path],
+    #     pattern: str = None,
+    #     show_missing_table_warning: bool = False,
+    #     **options
+    # ) -> ps.DataFrame:
+    #     """Read data from table directory as a spark dataframe.
 
-        Returns
-        -------
-        df : ps.DataFrame
-            The spark dataframe.
-        """
-        logger.info(f"Reading files from {path}.")
-        if len(options) == 0:
-            options = {
-                "header": "true",
-                "ignoreMissingFiles": "true"
-            }
+    #     Parameters
+    #     ----------
+    #     path : Union[str, Path, S3Path]
+    #         The path to the directory containing the files.
+    #     pattern : str, optional
+    #         The pattern to match files.
+    #     show_missing_table_warning : bool, optional
+    #         If True, show the warning an empty table was returned.
+    #         The default is True.
+    #     **options
+    #         Additional options to pass to the spark read method.
 
-        path = to_path_or_s3path(path)
+    #     Returns
+    #     -------
+    #     df : ps.DataFrame
+    #         The spark dataframe.
+    #     """
+    #     logger.info(f"Reading files from {path}.")
+    #     if len(options) == 0:
+    #         options = {
+    #             "header": "true",
+    #             "ignoreMissingFiles": "true"
+    #         }
 
-        path = path_to_spark(path, pattern)
-        # First, read the file with the schema and check if it's empty.
-        # If it's not empty and it's the joined timeseries table,
-        # read it again without the schema to ensure all fields are included.
-        # Otherwise, continue.
-        schema = self.schema_func().to_structtype()
-        df = self.ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
-        if df.isEmpty():
-            if show_missing_table_warning:
-                logger.warning(f"An empty dataframe was returned for '{self.name}'.")
-                return df
-        return self.ev.spark.read.format(self.format).options(**options).load(path)
+    #     path = to_path_or_s3path(path)
+
+    #     path = path_to_spark(path, pattern)
+    #     # First, read the file with the schema and check if it's empty.
+    #     # If it's not empty and it's the joined timeseries table,
+    #     # read it again without the schema to ensure all fields are included.
+    #     # Otherwise, continue.
+    #     schema = self.schema_func().to_structtype()
+    #     df = self._ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
+    #     if df.isEmpty():
+    #         if show_missing_table_warning:
+    #             logger.warning(f"An empty dataframe was returned for '{self.table_name}'.")
+    #             return df
+    #     return self._ev.spark.read.format(self.format).options(**options).load(path)

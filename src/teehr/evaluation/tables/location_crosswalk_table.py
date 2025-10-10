@@ -1,156 +1,76 @@
 """Location Crosswalk Table."""
-import teehr.const as const
-from teehr.evaluation.tables.base_table import BaseTable
-# from teehr.loading.location_crosswalks import convert_location_crosswalks
+from teehr.evaluation.tables.base_table import Table
 from teehr.loading.utils import (
     validate_input_is_csv,
     validate_input_is_parquet
 )
-from teehr.models.filters import LocationCrosswalkFilter
-from teehr.models.table_enums import LocationCrosswalkFields
 from teehr.querying.utils import join_geometry
-import teehr.models.pandera_dataframe_schemas as schemas
 from pathlib import Path
 from typing import Union
 import logging
-from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
 from teehr.models.table_enums import TableWriteEnum
-from teehr.loading.utils import add_or_replace_sdf_column_prefix
 from teehr.loading.location_crosswalks import (
     convert_single_location_crosswalks
 )
 import pyspark.sql as ps
 import pandas as pd
 
-
 logger = logging.getLogger(__name__)
 
 
-class LocationCrosswalkTable(BaseTable):
+class LocationCrosswalkTable(Table):
     """Access methods to location crosswalks table."""
 
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.name = "location_crosswalks"
-        self.dir = to_path_or_s3path(ev.dataset_dir, self.name)
-        self.format = "parquet"
-        self.filter_model = LocationCrosswalkFilter
-        self.schema_func = schemas.location_crosswalks_schema
-        self.uniqueness_fields = [
-            "secondary_location_id"
-        ]
-        self.foreign_keys = [
-            {
-                "column": "primary_location_id",
-                "domain_table": "locations",
-                "domain_column": "id",
-            }
-        ]
-        self.cache_dir = Path(
-            self.ev.dir_path,
-            const.CACHE_DIR,
-            const.LOADING_CACHE_DIR,
-            const.LOCATION_CROSSWALKS_DIR
-        )
+        self._load = ev.load
 
-    def _load(
+    def __call__(
         self,
-        in_path: Union[Path, str],
-        field_mapping: dict = None,
-        pattern: str = None,
-        primary_location_id_prefix: str = None,
-        secondary_location_id_prefix: str = None,
-        write_mode: TableWriteEnum = "append",
-        drop_duplicates: bool = True,
-        **kwargs
+        table_name: str = "location_crosswalks",
+        namespace_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None,
     ):
-        """Load location crosswalks helper."""
-        # Clear the cache directory if it exists.
-        remove_dir_if_exists(self.cache_dir)
+        """Get an instance of the location crosswalks table.
 
-        self.ev.extract.to_cache(
-            in_datapath=in_path,
-            field_mapping=field_mapping,
-            pattern=pattern,
-            cache_dir=self.cache_dir,
-            table_fields=self.fields(),
-            table_schema_func=self.schema_func(type="pandas"),
-            write_schema_func=self.schema_func(type="arrow"),
-            extraction_func=convert_single_location_crosswalks,
-            **kwargs
+        Note
+        ----
+        Creates an instance of a Table class with 'location_crosswalks'
+        properties. If namespace_name or catalog_name are None, they are
+        derived from the active catalog, which is 'local' by default.
+        """
+        return super().__call__(
+            table_name=table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name
         )
-
-        # Read the converted files to Spark DataFrame
-        df = self._read_files_from_cache_or_s3(self.cache_dir)
-
-        # Add or replace primary location_id prefix if provided
-        if primary_location_id_prefix:
-            df = add_or_replace_sdf_column_prefix(
-                sdf=df,
-                column_name="primary_location_id",
-                prefix=primary_location_id_prefix,
-            )
-
-        # Add or replace secondary location_id prefix if provided
-        if secondary_location_id_prefix:
-            df = add_or_replace_sdf_column_prefix(
-                sdf=df,
-                column_name="secondary_location_id",
-                prefix=secondary_location_id_prefix,
-            )
-
-        validated_df = self.ev.validate.schema(
-            sdf=df,
-            table_schema=self.schema_func(),
-            drop_duplicates=drop_duplicates,
-            foreign_keys=self.foreign_keys,
-            uniqueness_fields=self.uniqueness_fields
-        )
-
-        self.ev.write.to_warehouse(
-            source_data=validated_df,
-            target_table=self.name,
-            write_mode=write_mode,
-            uniqueness_fields=self.uniqueness_fields
-        )
-
-    def field_enum(self) -> LocationCrosswalkFields:
-        """Get the location crosswalk fields enum."""
-        fields = self._get_schema("pandas").columns.keys()
-        return LocationCrosswalkFields(
-            "LocationCrosswalkFields",
-            {field: field for field in fields}
-        )
-
-    def to_pandas(self):
-        """Return Pandas DataFrame for Location Crosswalk."""
-        self._check_load_table()
-        df = self.df.toPandas()
-        df.attrs['table_type'] = self.name
-        df.attrs['fields'] = self.fields()
-        return df
 
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
         self._check_load_table()
         gdf = join_geometry(
-            self.df, self.ev.locations.to_sdf(),
+            self.sdf, self._ev.locations.to_sdf(),
             "primary_location_id"
         )
-        gdf.attrs['table_type'] = self.name
+        gdf.attrs['table_type'] = self.table_name
         gdf.attrs['fields'] = self.fields()
         return gdf
 
     def load_parquet(
         self,
         in_path: Union[Path, str],
+        namespace_name: str = None,
+        catalog_name: str = None,
+        extraction_function: callable = convert_single_location_crosswalks,
         pattern: str = "**/*.parquet",
         field_mapping: dict = None,
         primary_location_id_prefix: str = None,
         secondary_location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True,
+        primary_location_id_field: str = "primary_location_id",
+        secondary_location_id_field: str = "secondary_location_id",
         **kwargs
     ):
         """Import location crosswalks from parquet file format.
@@ -198,12 +118,23 @@ class LocationCrosswalkTable(BaseTable):
         - secondary_location_id
         """
         validate_input_is_parquet(in_path)
-        self._load(
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
+        if catalog_name is None:
+            catalog_name = self._ev.active_catalog.catalog_name
+
+        self._load.file(
             in_path=in_path,
-            field_mapping=field_mapping,
             pattern=pattern,
+            table_name=self.table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
+            extraction_function=extraction_function,
+            field_mapping=field_mapping,
             primary_location_id_prefix=primary_location_id_prefix,
+            primary_location_id_field=primary_location_id_field,
             secondary_location_id_prefix=secondary_location_id_prefix,
+            secondary_location_id_field=secondary_location_id_field,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
             **kwargs
@@ -213,12 +144,17 @@ class LocationCrosswalkTable(BaseTable):
     def load_csv(
         self,
         in_path: Union[Path, str],
+        namespace_name: str = None,
+        catalog_name: str = None,
+        extraction_function: callable = convert_single_location_crosswalks,
         pattern: str = "**/*.csv",
         field_mapping: dict = None,
         primary_location_id_prefix: str = None,
         secondary_location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True,
+        primary_location_id_field: str = "primary_location_id",
+        secondary_location_id_field: str = "secondary_location_id",
         **kwargs
     ):
         """Import location crosswalks from CSV file format.
@@ -265,12 +201,23 @@ class LocationCrosswalkTable(BaseTable):
         - secondary_location_id
         """ # noqa
         validate_input_is_csv(in_path)
-        self._load(
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
+        if catalog_name is None:
+            catalog_name = self._ev.active_catalog.catalog_name
+
+        self._load.file(
             in_path=in_path,
-            field_mapping=field_mapping,
             pattern=pattern,
+            table_name=self.table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
+            extraction_function=extraction_function,
+            field_mapping=field_mapping,
             primary_location_id_prefix=primary_location_id_prefix,
+            primary_location_id_field=primary_location_id_field,
             secondary_location_id_prefix=secondary_location_id_prefix,
+            secondary_location_id_field=secondary_location_id_field,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
             **kwargs
@@ -280,12 +227,17 @@ class LocationCrosswalkTable(BaseTable):
     def load_dataframe(
         self,
         df: Union[pd.DataFrame, ps.DataFrame],
+        namespace_name: str = None,
+        catalog_name: str = None,
         field_mapping: dict = None,
         constant_field_values: dict = None,
-        location_id_prefix: str = None,
+        primary_location_id_prefix: str = None,
+        secondary_location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         persist_dataframe: bool = False,
         drop_duplicates: bool = True,
+        primary_location_id_field: str = "primary_location_id",
+        secondary_location_id_field: str = "secondary_location_id",
     ):
         """Import data from an in-memory dataframe.
 
@@ -320,14 +272,24 @@ class LocationCrosswalkTable(BaseTable):
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the dataframe.
         """ # noqa
-        self._load_dataframe(
+        if namespace_name is None:
+            namespace_name = self._ev.active_catalog.namespace_name
+        if catalog_name is None:
+            catalog_name = self._ev.active_catalog.catalog_name
+
+        self._load.dataframe(
             df=df,
+            table_name=self.table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values,
-            location_id_prefix=location_id_prefix,
+            primary_location_id_prefix=primary_location_id_prefix,
+            secondary_location_id_prefix=secondary_location_id_prefix,
+            primary_location_id_field=primary_location_id_field,
+            secondary_location_id_field=secondary_location_id_field,
             write_mode=write_mode,
             persist_dataframe=persist_dataframe,
             drop_duplicates=drop_duplicates
         )
-
         self._load_table()

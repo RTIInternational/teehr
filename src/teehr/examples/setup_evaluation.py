@@ -27,7 +27,7 @@ SECONDARY_TIMESERIES_FILEPATH = Path(
 GEO_FILEPATH = Path(TEST_DATA_DIR, "geo")
 
 # Create an Evaluation object
-ev = Evaluation(dir_path=TEST_STUDY_DIR)
+ev = Evaluation(local_warehouse_dir=TEST_STUDY_DIR)
 
 # Enable logging
 ev.enable_logging()

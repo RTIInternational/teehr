@@ -36,38 +36,38 @@ class GeneratedTimeSeriesBasemodel:
             The write mode for the DataFrame (e.g., "append", "overwrite").
         """
         if destination_table == "primary_timeseries":
-            tbl = self.ev.primary_timeseries
+            tbl = self._ev.primary_timeseries
         elif destination_table == "secondary_timeseries":
-            # Note. This assumes the location_id's in self.df
+            # Note. This assumes the location_id's in self.sdf
             # are in the crosswalk table secondary column.
-            tbl = self.ev.secondary_timeseries
-            if "member" not in self.df.columns:
-                self.df = self.df.withColumn("member", F.lit(None))
+            tbl = self._ev.secondary_timeseries
+            if "member" not in self.sdf.columns:
+                self.sdf = self.sdf.withColumn("member", F.lit(None))
         else:
             raise ValueError(
                 f"Invalid destination table: {destination_table}"
                 " Must be one of: primary_timeseries, secondary_timeseries"
             )
-        validated_df = self.ev.validate.schema(
-            sdf=self.df,
+        validated_df = self._ev.validate.schema(
+            sdf=self.sdf,
             table_schema=tbl.schema_func(),
             drop_duplicates=drop_duplicates,
             foreign_keys=tbl.foreign_keys,
             uniqueness_fields=tbl.uniqueness_fields,
             add_missing_columns=True
         )
-        self.ev.write.to_warehouse(
+        self._ev.write.to_warehouse(
             source_data=validated_df,
-            target_table=tbl.name,
+            table_name=tbl.name,
             write_mode=write_mode,
             uniqueness_fields=tbl.uniqueness_fields
         )
 
     def to_pandas(self):
         """Return Pandas DataFrame."""
-        df = self.df.toPandas()
+        df = self.sdf.toPandas()
         # df.attrs['table_type'] = self.tsm.timeseries_type.__str__()
-        df.attrs['fields'] = self.df.columns
+        df.attrs['fields'] = self.sdf.columns
         return df
 
     def to_sdf(self):
@@ -78,7 +78,7 @@ class GeneratedTimeSeriesBasemodel:
         is called.  For example, calling `show()`, `collect()` or toPandas().
         This can be useful for further processing or analysis.
         """
-        return self.df
+        return self.sdf
 
 
 class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
@@ -86,8 +86,8 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
 
     def __init__(self, ev) -> None:
         """Initialize the Generator class."""
-        self.ev = ev
-        self.df = None
+        self._ev = ev
+        self.sdf = None
 
     def signature_timeseries(
         self,
@@ -143,7 +143,7 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
         The variable naming convention follows the pattern:
         <variable>_<temporal_resolution>_<summary_statistic>
         """
-        input_dataframe = self.ev.filter(table_filter=input_table_filter)
+        input_dataframe = self._ev.filter(table_filter=input_table_filter)
         if input_dataframe.isEmpty():
             raise ValueError(
                 "Input DataFrame is empty!"
@@ -151,25 +151,25 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
             )
 
         output_dataframe = construct_signature_dataframe(
-            spark=self.ev.spark,
+            spark=self._ev.spark,
             input_dataframe=input_dataframe,
             start_datetime=start_datetime,
             end_datetime=end_datetime,
             timestep=timestep
         )
-        self.df = method.generate(
+        self.sdf = method.generate(
             input_dataframe=input_dataframe,
             output_dataframe=output_dataframe,
             fillna=fillna,
             dropna=dropna
         )
         if update_variable_table is True:
-            variable_names = self.df.select(
+            variable_names = self.sdf.select(
                 "variable_name"
             ).distinct().collect()
             variable_names = [row.variable_name for row in variable_names]
             for output_variable_name in variable_names:
-                self.ev.variables.add(
+                self._ev.variables.add(
                     Variable(
                         name=output_variable_name,
                         long_name="Generated signature timeseries variable"
@@ -207,16 +207,16 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
         GeneratedTimeseries
             The generated timeseries class object.
         """
-        reference_dataframe = self.ev.filter(
+        reference_dataframe = self._ev.filter(
             table_filter=reference_table_filter
         )
-        template_dataframe = self.ev.filter(
+        template_dataframe = self._ev.filter(
             table_filter=template_table_filter
         )
         if reference_table_filter.table_name == "primary_timeseries":
-            partition_by = self.ev.primary_timeseries.uniqueness_fields
+            partition_by = self._ev.primary_timeseries.uniqueness_fields
         elif reference_table_filter.table_name == "secondary_timeseries":
-            partition_by = self.ev.secondary_timeseries.uniqueness_fields
+            partition_by = self._ev.secondary_timeseries.uniqueness_fields
         partition_by.remove("value_time")
 
         if reference_dataframe.isEmpty():
@@ -230,8 +230,8 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
                 " Check the parameters of the template_timeseries."
             )
 
-        self.df = method.generate(
-            ev=self.ev,
+        self.sdf = method.generate(
+            ev=self._ev,
             reference_sdf=reference_dataframe,
             template_sdf=template_dataframe,
             partition_by=partition_by,
