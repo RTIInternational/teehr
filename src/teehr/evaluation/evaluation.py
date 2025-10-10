@@ -602,7 +602,7 @@ class Evaluation(EvaluationBase):
         namespace: str = None,
         warehouse_dir: Union[str, Path] = None
     ):
-        """Migrate v0.5 Evalution to v0.6 Iceberg tables."""
+        """Apply the latest schema migration."""
         if catalog_name is None:
             catalog_name = self.active_catalog.catalog_name
         if namespace is None:
