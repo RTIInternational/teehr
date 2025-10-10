@@ -1,9 +1,6 @@
 """Configuration table class."""
 from teehr.evaluation.tables.domain_table import DomainTable
-from teehr.models.table_enums import ConfigurationFields
 from teehr.models.pydantic_table_models import Configuration
-import teehr.models.pandera_dataframe_schemas as schemas
-import teehr.models.filters as table_filters
 from typing import List, Union
 
 
@@ -13,9 +10,6 @@ class ConfigurationTable(DomainTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.filter_model = table_filters.ConfigurationFilter
-        self.schema_func = schemas.configuration_schema
-        self.field_enum_model = ConfigurationFields
 
     def __call__(
         self,

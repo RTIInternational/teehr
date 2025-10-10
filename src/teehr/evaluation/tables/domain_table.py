@@ -14,11 +14,6 @@ class DomainTable(Table):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.uniqueness_fields = ["name"]
-        self.foreign_keys = None
-        self.strict_validation = True
-        self.validate_filter_field_types = True
-        self.extraction_func = None
 
     def _add(
         self,

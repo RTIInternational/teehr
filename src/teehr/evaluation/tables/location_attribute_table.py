@@ -11,12 +11,9 @@ from teehr.querying.utils import join_geometry
 from pathlib import Path
 from typing import Union
 import logging
-from teehr.models.table_enums import TableWriteEnum, LocationAttributeFields
-import teehr.models.pandera_dataframe_schemas as schemas
-import teehr.models.filters as table_filters
+from teehr.models.table_enums import TableWriteEnum
 import pyspark.sql as ps
 import pandas as pd
-
 
 logger = logging.getLogger(__name__)
 
@@ -28,25 +25,6 @@ class LocationAttributeTable(Table):
         """Initialize class."""
         super().__init__(ev)
         self._load = ev.load
-        self.uniqueness_fields = ["location_id", "attribute_name"]
-        self.strict_validation = True
-        self.validate_filter_field_types = True
-        self.extraction_func = convert_single_location_attributes
-        self.filter_model = table_filters.LocationAttributeFilter
-        self.schema_func = schemas.location_attributes_schema
-        self.field_enum_model = LocationAttributeFields
-        self.foreign_keys = [
-            {
-                "column": "location_id",
-                "domain_table": "locations",
-                "domain_column": "id",
-            },
-            {
-                "column": "attribute_name",
-                "domain_table": "attributes",
-                "domain_column": "name",
-            }
-        ]
 
     def __call__(
         self,

@@ -2,10 +2,7 @@
 import sys
 from pathlib import Path
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
-from teehr.models.table_enums import JoinedTimeseriesFields
 from teehr.querying.utils import join_geometry
-import teehr.models.pandera_dataframe_schemas as schemas
-import teehr.models.filters as table_filters
 import pyspark.sql as ps
 import logging
 from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
@@ -20,22 +17,6 @@ class JoinedTimeseriesTable(TimeseriesTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.strict_validation = False
-        self.validate_filter_field_types = False
-        self.filter_model = table_filters.TimeseriesFilter
-        self.field_enum_model = JoinedTimeseriesFields
-        self.schema_func = schemas.joined_timeseries_schema
-        self.extraction_func = None
-        self.foreign_keys = None
-        self.uniqueness_fields = [
-            "primary_location_id",
-            "secondary_location_id",
-            "value_time",
-            "reference_time",
-            "variable_name",
-            "unit_name",
-            "configuration_name",
-        ]
 
     def __call__(
         self,

@@ -7,13 +7,10 @@ import pandas as pd
 import pyspark.sql as ps
 import geopandas as gpd
 
-from teehr.models.table_enums import TableWriteEnum, LocationFields
+from teehr.models.table_enums import TableWriteEnum
 from teehr.evaluation.tables.base_table import Table
 from teehr.loading.locations import convert_single_locations
 from teehr.querying.utils import df_to_gdf
-import teehr.models.pandera_dataframe_schemas as schemas
-import teehr.models.filters as table_filters
-
 
 logger = logging.getLogger(__name__)
 
@@ -25,14 +22,6 @@ class LocationTable(Table):
         """Initialize class."""
         super().__init__(ev)
         self._load = ev.load
-        self.uniqueness_fields = ["id"]
-        self.foreign_keys = None
-        self.strict_validation = True
-        self.validate_filter_field_types = True
-        self.extraction_func = convert_single_locations
-        self.filter_model = table_filters.LocationFilter
-        self.schema_func = schemas.locations_schema
-        self.field_enum_model = LocationFields
 
     def __call__(
         self,

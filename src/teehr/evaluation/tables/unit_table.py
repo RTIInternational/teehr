@@ -1,12 +1,8 @@
 """Unit table class."""
 from teehr.evaluation.tables.domain_table import DomainTable
-from teehr.models.table_enums import UnitFields
 from teehr.models.pydantic_table_models import Unit
-import teehr.models.pandera_dataframe_schemas as schemas
-import teehr.models.filters as table_filters
 from typing import List, Union
 import logging
-
 
 logger = logging.getLogger(__name__)
 
@@ -17,9 +13,6 @@ class UnitTable(DomainTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.filter_model = table_filters.UnitFilter
-        self.schema_func = schemas.unit_schema
-        self.field_enum_model = UnitFields
 
     def __call__(
         self,

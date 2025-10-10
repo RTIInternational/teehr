@@ -7,6 +7,7 @@ from teehr.models.str_enum import StrEnum
 from teehr.querying.utils import order_df, join_geometry, df_to_gdf
 from teehr.models.evaluation_base import EvaluationBase
 from teehr.models.filters import FilterBaseModel
+from teehr.models.table_properties import TBLPROPERTIES
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,6 @@ class Table:
         """Initialize the Table class."""
         self._ev = ev
         self._read = ev.read
-        # Table properties
         self.uniqueness_fields: List[str] = None
         self.foreign_keys: List[Dict[str, str]] = None
         self.schema_func = None
@@ -38,11 +38,26 @@ class Table:
         self,
         table_name: str,
         namespace_name: Union[str, None] = None,
-        catalog_name: Union[str, None] = None,
+        catalog_name: Union[str, None] = None
     ) -> "Table":
         """Initialize the Table class."""
         self.table_name = table_name
         self.sdf = None
+        tbl_props = TBLPROPERTIES.get(table_name)
+        if tbl_props is None:
+            logger.warning(
+                f"No table properties found for table: '{table_name}'."
+                " Proceeding without table properties."
+            )
+        else:
+            self.uniqueness_fields = tbl_props.get("uniqueness_fields")
+            self.foreign_keys = tbl_props.get("foreign_keys")
+            self.schema_func = tbl_props.get("schema_func")
+            self.filter_model = tbl_props.get("filter_model")
+            self.strict_validation = tbl_props.get("strict_validation")
+            self.validate_filter_field_types = tbl_props.get("validate_filter_field_types")
+            self.field_enum_model = tbl_props.get("field_enum_model")
+            self.extraction_func = tbl_props.get("extraction_func")
 
         if namespace_name is None:
             self.table_namespace_name = self._ev.active_catalog.namespace_name

@@ -1,9 +1,7 @@
 """Primary timeseries table class."""
 from teehr.evaluation.tables.timeseries_table import TimeseriesTable
-import teehr.models.pandera_dataframe_schemas as schemas
 from typing import Union
 import logging
-
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +18,6 @@ class PrimaryTimeseriesTable(TimeseriesTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.schema_func = schemas.primary_timeseries_schema
 
     def __call__(
         self,

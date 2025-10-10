@@ -1,12 +1,8 @@
 """Variable table class."""
 from teehr.evaluation.tables.domain_table import DomainTable
-from teehr.models.table_enums import VariableFields
 from teehr.models.pydantic_table_models import Variable
-import teehr.models.pandera_dataframe_schemas as schemas
-import teehr.models.filters as table_filters
 from typing import List, Union
 import logging
-
 
 logger = logging.getLogger(__name__)
 
@@ -17,9 +13,6 @@ class VariableTable(DomainTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
-        self.filter_model = table_filters.VariableFilter
-        self.schema_func = schemas.variable_schema
-        self.field_enum_model = VariableFields
 
     def __call__(
         self,
