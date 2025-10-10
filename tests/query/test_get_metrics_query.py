@@ -103,7 +103,7 @@ def test_executing_signature_metrics(tmpdir):
 
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
-    assert metrics_df.columns.size == 8
+    assert metrics_df.columns.size == 9
     assert len(metrics_df2) == 1
     assert metrics_df2.location_id.values[0] == "gage-A"
     assert np.isclose(metrics_df2["sum"].values[0], 31.3)
