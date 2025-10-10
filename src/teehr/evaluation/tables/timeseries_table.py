@@ -13,9 +13,10 @@ from teehr.loading.utils import (
     validate_input_is_netcdf,
     validate_input_is_parquet
 )
-from teehr.models.table_enums import TableWriteEnum
+from teehr.models.table_enums import TableWriteEnum, TimeseriesFields
 from teehr.const import MAX_CPUS
 from teehr.loading.timeseries import convert_single_timeseries
+import teehr.models.filters as table_filters
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +28,41 @@ class TimeseriesTable(Table):
         """Initialize class."""
         super().__init__(ev)
         self._load = ev.load
+        self.strict_validation = True
+        self.validate_filter_field_types = True
+        self.extraction_func = convert_single_timeseries
+        self.filter_model = table_filters.TimeseriesFilter
+        self.field_enum_model = TimeseriesFields
+        self.uniqueness_fields = [
+            "location_id",
+            "value_time",
+            "reference_time",
+            "variable_name",
+            "unit_name",
+            "configuration_name"
+        ]  # TODO: Need 'member' for secondary?
+        self.foreign_keys = [
+            {
+                "column": "variable_name",
+                "domain_table": "variables",
+                "domain_column": "name",
+            },
+            {
+                "column": "unit_name",
+                "domain_table": "units",
+                "domain_column": "name",
+            },
+            {
+                "column": "configuration_name",
+                "domain_table": "configurations",
+                "domain_column": "name",
+            },
+            {
+                "column": "location_id",
+                "domain_table": "location_crosswalks",
+                "domain_column": "secondary_location_id",
+            }
+        ]
 
     def load_parquet(
         self,

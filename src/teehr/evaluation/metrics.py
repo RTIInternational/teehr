@@ -13,7 +13,6 @@ from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
 from teehr.models.table_enums import (
     JoinedTimeseriesFields
 )
-from teehr.querying.filter_format import validate_and_apply_filters
 from teehr.querying.metric_format import apply_aggregation_metrics
 from teehr.querying.utils import (
     order_df,
@@ -150,13 +149,13 @@ class Metrics:
         logger.info("Calculating performance metrics.")
         if filters is not None:
             logger.debug("Applying filters to the metrics query.")
-            self.sdf = validate_and_apply_filters(
-                sdf=self.sdf,
-                filter_model=self.table.filter_model,
+            validated_filters = self._ev.validate.table_filters(
+                table_name=self.table_name,
                 filters=filters,
-                fields_enum=self.table.field_enum(),
                 validate=False
             )
+            for filter in validated_filters:
+                self.sdf = self.sdf.filter(filter)
 
         logger.debug(f"Grouping the metrics query {group_by}.")
         self.sdf = group_df(self.sdf, group_by)

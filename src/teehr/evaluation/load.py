@@ -12,7 +12,6 @@ import geopandas as gpd
 from teehr.models.pydantic_table_models import Attribute
 from teehr import const
 from teehr.models.table_enums import TableWriteEnum
-from teehr.models.table_properties import TBLPROPERTIES
 from teehr.utils.utils import remove_dir_if_exists
 from teehr.loading.utils import add_or_replace_sdf_column_prefix
 
@@ -56,16 +55,12 @@ class Load:
         drop_duplicates: bool = True
     ):
         """Load a timeseries from an in-memory dataframe."""
-        table_props = TBLPROPERTIES.get(table_name)
-        # TODO: Should we allow loading to a new table?
-        if not table_props:
-            raise ValueError(f"Table properties for {table_name} not found.")
+        tbl = self._ev.table(table_name=table_name)
 
-        schema_func = table_props.get("schema_func")
-        uniqueness_fields = table_props.get("uniqueness_fields")
-        foreign_keys = table_props.get("foreign_keys")
-        # Aren't the table fields fixed and defined in the schema?
-        fields = list(schema_func().columns.keys())
+        schema_func = tbl.schema_func
+        uniqueness_fields = tbl.uniqueness_fields
+        foreign_keys = tbl.foreign_keys
+        fields = tbl.fields()
 
         if (isinstance(df, ps.DataFrame) and df.isEmpty()) or (
             isinstance(df, pd.DataFrame) and df.empty
@@ -182,24 +177,18 @@ class Load:
         remove_dir_if_exists(table_cache_dir)
         in_path = Path(in_path)
 
-        table_props = TBLPROPERTIES.get(table_name)
-        # TODO: Should we allow loading to a new table?
-        if not table_props:
-            raise ValueError(f"Table properties for {table_name} not found.")
-
+        tbl = self._ev.table(table_name=table_name)
         if extraction_function is None:
-            extraction_function = table_props.get("extraction_func")
+            extraction_function = tbl.extraction_func
             if extraction_function is None:
                 raise ValueError(
                     "No extraction function provided and "
                     "none found in table properties."
                 )
-
-        schema_func = table_props.get("schema_func")
-        uniqueness_fields = table_props.get("uniqueness_fields")
-        foreign_keys = table_props.get("foreign_keys")
-        # Aren't the table fields fixed and defined in the schema?
-        fields = list(schema_func().columns.keys())
+        schema_func = tbl.schema_func
+        uniqueness_fields = tbl.uniqueness_fields
+        foreign_keys = tbl.foreign_keys
+        fields = tbl.fields()
 
         # Begin the ETL process.
         self._extract.to_cache(
@@ -287,13 +276,10 @@ class Load:
         # Get the cache directory path.
         in_path = Path(in_path)
 
-        table_props = TBLPROPERTIES.get(table_name)
-        if not table_props:
-            raise ValueError(f"Table properties for {table_name} not found.")
-
-        schema_func = table_props.get("schema_func")
-        uniqueness_fields = table_props.get("uniqueness_fields")
-        foreign_keys = table_props.get("foreign_keys")
+        tbl = self._ev.table(table_name=table_name)
+        schema_func = tbl.schema_func
+        uniqueness_fields = tbl.uniqueness_fields
+        foreign_keys = tbl.foreign_keys
 
         sdf = self._read.from_cache(
             path=in_path,

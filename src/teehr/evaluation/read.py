@@ -11,12 +11,6 @@ from pandera import DataFrameSchema as PandasDataFrameSchema
 
 from teehr.models.filters import FilterBaseModel
 from teehr.utils.utils import path_to_spark
-from teehr.querying.filter_format import (
-    format_filter,
-    validate_filter
-)
-from teehr.models.table_properties import TBLPROPERTIES
-
 
 logger = logging.getLogger(__name__)
 
@@ -139,60 +133,25 @@ class Read:
         logger.info(
             f"Reading files from {catalog_name}.{namespace_name}.{table_name}."
         )
-        # This is the guts of validate_and_apply_filters re-configured a bit.
-        # Should it be moved to it's own function?
-        # TODO: Replace with ev.validate.filters?
-        if filters is None:
-            # No filter applied, just read the whole table
-            sdf = (self._ev.spark.read.format("iceberg").load(
+        sdf = (self._ev.spark.read.format("iceberg").load(
                     f"{catalog_name}.{namespace_name}.{table_name}"
-                )
             )
-            sdf = self._apply_datatype_transform(sdf)
-            self.sdf = sdf
-            return self
-
-        if isinstance(filters, str):
-            logger.debug(
-                f"Filter {filters} is already string.  Applying as is."
-            )
-            sdf = (self._ev.spark.read.format("iceberg").load(
-                    f"{catalog_name}.{namespace_name}.{table_name}"
-                ).filter(filters)
-            )
-            sdf = self._apply_datatype_transform(sdf)
-            self.sdf = sdf
-            return self
-
-        if not isinstance(filters, List):
-            logger.debug("Filter is not a list.  Making a list.")
-            filters = [filters]
-
-        filter_model = TBLPROPERTIES[table_name].get("filter_model")
-        dataframe_schema = TBLPROPERTIES[table_name].get("schema_func")
-        fields_enum = TBLPROPERTIES[table_name].get("field_enum_model")
-        sdf = (
-            self._ev.spark.read.format("iceberg").load(
-                    f"{catalog_name}.{namespace_name}.{table_name}"
-                )
         )
-        for filter in filters:
-            logger.debug(f"Validating and applying {filter}")
-
-            if not isinstance(filter, str):
-                filter = filter_model.model_validate(
-                    filter,
-                    context={"fields_enum": fields_enum}
-                )
-                logger.debug(f"Filter: {filter.model_dump_json()}")
-                if validate_filter_field_types is True:
-                    filter = validate_filter(filter, dataframe_schema())
-                filter = format_filter(filter)
-
-            sdf = sdf.filter(filter)
-            sdf = self._apply_datatype_transform(sdf)
+        sdf = self._apply_datatype_transform(sdf)
+        if filters is None:
             self.sdf = sdf
             return self
+
+        validated_filters = self._ev.validate.table_filters(
+            table_name=table_name,
+            filters=filters,
+            validate=validate_filter_field_types
+        )
+        for filter in validated_filters:
+            sdf = sdf.filter(filter)
+
+        self.sdf = sdf
+        return self
 
     def to_pandas(self):
         """Return Pandas DataFrame."""

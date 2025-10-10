@@ -7,8 +7,6 @@ import pandas as pd
 from pyarrow import schema as arrow_schema
 import geopandas as gpd
 
-from teehr.models.table_properties import TBLPROPERTIES
-
 DATATYPE_WRITE_TRANSFORMS = {"forecast_lead_time": "BIGINT"}
 
 
@@ -192,8 +190,9 @@ class Write:
         if namespace_name is None:
             namespace_name = self._ev.active_catalog.namespace_name
 
-        if uniqueness_fields is None and table_name in TBLPROPERTIES:
-            uniqueness_fields = TBLPROPERTIES[table_name].get("uniqueness_fields")
+        if uniqueness_fields is None:
+            tbl = self._ev.table(table_name=table_name)
+            uniqueness_fields = tbl.uniqueness_fields
 
         if isinstance(source_data, pd.DataFrame):
             source_data = self._ev.spark.createDataFrame(source_data)

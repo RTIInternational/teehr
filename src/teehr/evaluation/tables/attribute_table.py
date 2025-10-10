@@ -2,6 +2,8 @@
 from teehr.evaluation.tables.domain_table import DomainTable
 from teehr.models.table_enums import AttributeFields
 from teehr.models.pydantic_table_models import Attribute
+import teehr.models.pandera_dataframe_schemas as schemas
+import teehr.models.filters as table_filters
 from typing import List, Union
 
 
@@ -11,6 +13,9 @@ class AttributeTable(DomainTable):
     def __init__(self, ev):
         """Initialize class."""
         super().__init__(ev)
+        self.filter_model = table_filters.AttributeFilter
+        self.schema_func = schemas.attribute_schema
+        self.field_enum_model = AttributeFields
 
     def __call__(
         self,

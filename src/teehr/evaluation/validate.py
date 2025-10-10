@@ -23,7 +23,7 @@ class Validator:
     def __init__(self, ev=None) -> None:
         """Initialize the Validator class."""
         if ev is not None:
-            self.ev = ev
+            self._ev = ev
 
     def _enforce_foreign_keys(
         self,
@@ -45,18 +45,18 @@ class Validator:
                 LEFT ANTI JOIN {fk['domain_table']} d
                 ON t.{fk['column']} = d.{fk['domain_column']}
             """
-            result_sdf = self.ev.sql(
+            result_sdf = self._ev.sql(
                 query=sql, create_temp_views=[fk["domain_table"]]
             )
-            self.ev.spark.catalog.dropTempView(fk["domain_table"])
+            self._ev.spark.catalog.dropTempView(fk["domain_table"])
             if not result_sdf.isEmpty():
-                self.ev.spark.catalog.dropTempView("temp_table")
+                self._ev.spark.catalog.dropTempView("temp_table")
                 raise ValueError(
                     f"Foreign key constraint violation: "
                     f"A {fk['column']} entry is not found in "
                     f"the {fk['domain_column']} column in {fk['domain_table']}"
                 )
-        self.ev.spark.catalog.dropTempView("temp_table")
+        self._ev.spark.catalog.dropTempView("temp_table")
 
     @staticmethod
     def data(
@@ -106,7 +106,7 @@ class Validator:
             str, dict, FilterBaseModel,
             List[Union[str, dict, FilterBaseModel]]
         ],
-        validate_filter_field_types: bool = True
+        validate: bool = True
     ) -> Union[
             str, dict, FilterBaseModel,
             List[Union[str, dict, FilterBaseModel]]
@@ -114,26 +114,32 @@ class Validator:
         """Get the list of filters applied to the DataFrame."""
         if isinstance(filters, str):
             logger.debug(f"Filter {filters} is already string, returning as is")
-            return filters
+            # return filters
 
         if not isinstance(filters, List):
             logger.debug("Filter is not a list.  Making a list.")
             filters = [filters]
 
-
+        tbl = self._ev.table(table_name=table_name)
+        filter_model = tbl.filter_model
+        # To handle joined_timeseries fields. Hmmm should all properties
+        # be handled this way? They could still be class properties.
+        fields_enum = self._ev.table(table_name=table_name).field_enum()
         validated_filters = []
         for filter in filters:
             logger.debug(f"Validating and applying {filter}")
 
             if not isinstance(filter, str):
-                filter = self.filter_model.model_validate(
+                filter = filter_model.model_validate(
                     filter,
                     context={"fields_enum": fields_enum}
                 )
                 logger.debug(f"Filter: {filter.model_dump_json()}")
-                if validate_filter_field_types is True:
-                    filter = validate_filter(filter, dataframe_schema)
-                validated_filters.append(format_filter(filter))
+                if validate is True:
+                    filter = validate_filter(filter, tbl.schema_func("pandas"))
+                filter = format_filter(filter)
+
+            validated_filters.append(filter)
 
         return validated_filters
 

@@ -22,7 +22,6 @@ from teehr.evaluation.tables.variable_table import VariableTable
 from teehr.evaluation.tables.joined_timeseries_table import (
     JoinedTimeseriesTable
 )
-from teehr.utils.s3path import S3Path
 from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
 from pyspark.sql import SparkSession
 import logging
@@ -31,7 +30,6 @@ from teehr.loading.s3.clone_from_s3 import (
     list_s3_evaluations,
     clone_from_s3
 )
-from teehr.models.table_properties import TBLPROPERTIES
 from teehr.models.filters import TableFilter, FilterBaseModel, TableNamesEnum
 import teehr.const as const
 from teehr.evaluation.fetch import Fetch
@@ -588,14 +586,14 @@ class Evaluation(EvaluationBase):
             filters = table_filter.filters
         if table_name is None:
             raise ValueError("Table name must be specified.")
-        tbl_props = TBLPROPERTIES[table_name]
+        tbl = self.table(table_name=table_name)
         return validate_and_apply_filters(
-            sdf=self.table(table_name=table_name).to_sdf(),
+            sdf=tbl.to_sdf(),
             filters=filters,
-            filter_model=tbl_props["filter_model"],
-            fields_enum=tbl_props["field_enum_model"],
-            dataframe_schema=tbl_props["schema_func"]("pandas"),
-            validate=tbl_props["validate_filter_field_types"]
+            filter_model=tbl.filter_model,
+            fields_enum=tbl.field_enum_model,
+            dataframe_schema=tbl.schema_func("pandas"),
+            validate=tbl.validate_filter_field_types
         )
 
     def apply_schema_migration(

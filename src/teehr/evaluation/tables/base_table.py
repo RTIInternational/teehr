@@ -7,8 +7,6 @@ from teehr.models.str_enum import StrEnum
 from teehr.querying.utils import order_df, join_geometry, df_to_gdf
 from teehr.models.evaluation_base import EvaluationBase
 from teehr.models.filters import FilterBaseModel
-from teehr.models.table_properties import TBLPROPERTIES
-
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +18,16 @@ class Table:
         """Initialize the Table class."""
         self._ev = ev
         self._read = ev.read
-        # We could make these available to generic tables,
+        # Table properties
+        self.uniqueness_fields: List[str] = None
+        self.foreign_keys: List[Dict[str, str]] = None
+        self.schema_func = None
+        self.filter_model: FilterBaseModel = None
+        self.strict_validation = None
+        self.validate_filter_field_types = None
+        self.field_enum_model = None
+        self.extraction_func = None
+        # We could also make these available to generic tables,
         # but then they're available to table classes. Is that bad?
         # self.write = ev.write
         # self.validate = ev.validate
@@ -45,24 +52,6 @@ class Table:
             self.catalog_name = self._ev.active_catalog.catalog_name
         else:
             self.catalog_name = catalog_name
-
-        if table_name in TBLPROPERTIES:
-            table_props = TBLPROPERTIES[self.table_name]
-            self.uniqueness_fields: List[str] = table_props["uniqueness_fields"]
-            self.foreign_keys: List[Dict[str, str]] = table_props["foreign_keys"]
-            self.schema_func = table_props["schema_func"]
-            self.filter_model: FilterBaseModel = table_props["filter_model"]
-            self.strict_validation = table_props["strict_validation"]
-            self.validate_filter_field_types = table_props["validate_filter_field_types"]
-            self.field_enum_model = table_props["field_enum_model"]
-        else:
-            self.uniqueness_fields: List[str] = None
-            self.foreign_keys: List[Dict[str, str]] = None
-            self.schema_func = None
-            self.filter_model: FilterBaseModel = None
-            self.strict_validation = None
-            self.validate_filter_field_types = None
-            self.field_enum_model = None  # Load the sdf and get the fields?
 
         return self
 
@@ -367,16 +356,14 @@ class Table:
         self._check_load_table()
         return self.sdf.columns
 
-    # def field_enum(self) -> ConfigurationFields:
-    #     """Get the configuration fields enum."""
-    #     fields = self._get_schema("pandas").columns.keys()
-    #     return ConfigurationFields(
-    #         "ConfigurationFields",
-    #         {field: field for field in fields}
-    #     )
     def field_enum(self) -> StrEnum:
-        """Get the fields enum."""
-        return self.field_enum_model
+        """Get the joined timeseries fields enum."""
+        self._check_load_table()
+        fields_list = self.sdf.columns
+        return self.field_enum_model(
+            self.field_enum_model.__name__,
+            {field: field for field in fields_list}
+        )
 
     def distinct_values(
         self,
@@ -453,10 +440,6 @@ class Table:
             return self.sdf.select(column).distinct().rdd.flatMap(
                 lambda x: x
                 ).collect()
-
-    # def field_enum(self) -> StrEnum:
-    #     """Get the fields enum."""
-    #     raise NotImplementedError("field_enum method must be implemented.")
 
     def to_pandas(self):
         """Return Pandas DataFrame."""

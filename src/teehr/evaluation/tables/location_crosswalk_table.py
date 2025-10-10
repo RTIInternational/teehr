@@ -8,6 +8,9 @@ from teehr.querying.utils import join_geometry
 from pathlib import Path
 from typing import Union
 import logging
+from teehr.models.table_enums import LocationCrosswalkFields
+import teehr.models.pandera_dataframe_schemas as schemas
+import teehr.models.filters as table_filters
 from teehr.models.table_enums import TableWriteEnum
 from teehr.loading.location_crosswalks import (
     convert_single_location_crosswalks
@@ -26,6 +29,20 @@ class LocationCrosswalkTable(Table):
         """Initialize class."""
         super().__init__(ev)
         self._load = ev.load
+        self.uniqueness_fields = ["secondary_location_id"]
+        self.strict_validation = True
+        self.validate_filter_field_types = True
+        self.extraction_func = convert_single_location_crosswalks
+        self.filter_model = table_filters.LocationCrosswalkFilter
+        self.schema_func = schemas.location_crosswalks_schema
+        self.field_enum_model = LocationCrosswalkFields
+        self.foreign_keys = [
+            {
+                "column": "primary_location_id",
+                "domain_table": "locations",
+                "domain_column": "id",
+            }
+        ]
 
     def __call__(
         self,
