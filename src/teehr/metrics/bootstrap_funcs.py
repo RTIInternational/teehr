@@ -143,7 +143,7 @@ def create_gumboot_func(model: MetricsBasemodel) -> Callable:
         else:
             return results.ravel()
 
-    if len(model.input_field_names) == 2:
+    if len(model.input_field_names) == 1:
         return signature_bootstrap_func
 
     return bootstrap_func

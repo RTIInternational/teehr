@@ -17,7 +17,7 @@ class Count(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -51,7 +51,7 @@ class Minimum(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -85,7 +85,7 @@ class Maximum(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -119,7 +119,7 @@ class Average(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -153,7 +153,7 @@ class Sum(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -187,7 +187,7 @@ class Variance(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -221,7 +221,7 @@ class MaxValueTime(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -256,7 +256,7 @@ class FlowDurationCurveSlope(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
