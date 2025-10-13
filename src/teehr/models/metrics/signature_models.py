@@ -35,6 +35,7 @@ class Count(DeterministicBasemodel):
         The static attributes for the metric.
     """
 
+    bootstrap: BootstrapBasemodel = Field(default=None)
     output_field_name: str = Field(default="count")
     add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
@@ -68,6 +69,7 @@ class Minimum(DeterministicBasemodel):
         The static attributes for the metric.
     """
 
+    bootstrap: BootstrapBasemodel = Field(default=None)
     add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="minimum")
@@ -101,6 +103,7 @@ class Maximum(DeterministicBasemodel):
         The static attributes for the metric.
     """
 
+    bootstrap: BootstrapBasemodel = Field(default=None)
     add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="maximum")
@@ -134,6 +137,7 @@ class Average(DeterministicBasemodel):
         The static attributes for the metric.
     """
 
+    bootstrap: BootstrapBasemodel = Field(default=None)
     add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="average")
@@ -167,6 +171,7 @@ class Sum(DeterministicBasemodel):
         The static attributes for the metric.
     """
 
+    bootstrap: BootstrapBasemodel = Field(default=None)
     add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="sum")
@@ -234,6 +239,7 @@ class MaxValueTime(DeterministicBasemodel):
         The static attributes for the metric.
     """
 
+    bootstrap: BootstrapBasemodel = Field(default=None)
     add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="max_value_time")
@@ -275,6 +281,7 @@ class FlowDurationCurveSlope(DeterministicBasemodel):
         The static attributes for the metric.
     """
 
+    bootstrap: BootstrapBasemodel = Field(default=None)
     add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="flow_duration_curve_slope")
