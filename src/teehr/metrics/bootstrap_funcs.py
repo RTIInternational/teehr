@@ -4,13 +4,8 @@ import logging
 
 import pandas as pd
 import numpy as np
-# from arch.bootstrap import (
-#     StationaryBootstrap,
-#     CircularBlockBootstrap,
-# )
 
 from teehr.models.metrics.basemodels import MetricsBasemodel
-# from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 
 logger = logging.getLogger(__name__)
 
