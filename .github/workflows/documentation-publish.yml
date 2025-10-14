@@ -4,11 +4,7 @@ on:
   pull_request:
     types: [opened, reopened, ready_for_review]
     branches: [main]
-  # workflow_run:
-  #   workflows: ["run-tests"]     # Triggered by "run-tests" workflow
-  #   types: [completed]           # Trigger when "run-tests" completes
-  #   branches:
-  #     - "475-update-python-dependencies"
+
   push:
     branches: [main]
 
