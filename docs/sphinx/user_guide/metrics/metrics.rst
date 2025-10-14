@@ -5,10 +5,10 @@ Available Metrics
 The metrics currently built into TEEHR are listed in the tables below.
 Please note that some are still in development and planned for inclusion in future versions.
 
-Signature Metrics
-=================
+Signatures
+==========
 
-Signature metrics operate on a single field to characterize timeseries properties.
+Signatures operate on a single field to characterize timeseries properties.
 
 .. list-table::
    :header-rows: 1
