@@ -567,7 +567,7 @@ def test_metrics_transforms(tmpdir):
     # add epsilon to avoid log(0)
     kge_t_e = DeterministicMetrics.KlingGuptaEfficiency()
     kge_t_e.transform = 'log'
-    kge_t_e.add_epsilon = (True, 0.001)
+    kge_t_e.add_epsilon = True
 
     # define metric requiring p,s,t
     mvtd = DeterministicMetrics.MaxValueTimeDelta()
