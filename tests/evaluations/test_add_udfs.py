@@ -265,29 +265,36 @@ def test_add_timeseries_udfs(tmpdir):
     assert event_count == 208
 
     # test percentile event detection (default)
-    ped = tcf.PercentileEventDetection()
+    ped = tcf.AbovePercentileEventDetection()
     sdf = ped.apply_to(sdf)
-    event_count = sdf.select('event_id').distinct().count()
+    event_count = sdf.select('event_above_id').distinct().count()
     assert event_count == 219
 
     # test percentile event detection (no event-id)
     sdf = ev.joined_timeseries.to_sdf()
-    ped = tcf.PercentileEventDetection(
+    ped = tcf.AbovePercentileEventDetection(
         skip_event_id=True
     )
     sdf = ped.apply_to(sdf)
-    num_event_timesteps = sdf.filter(sdf.event == True).count()
+    num_event_timesteps = sdf.filter(sdf.event_above == True).count()
     assert num_event_timesteps == 14823
 
     # test percentile event detection (return quantile value)
     sdf = ev.joined_timeseries.to_sdf()
-    ped = tcf.PercentileEventDetection(
+    ped = tcf.AbovePercentileEventDetection(
         add_quantile_field=True
     )
     sdf = ped.apply_to(sdf)
     distinct_quantiles = sdf.select("quantile_value").distinct().collect()
     quantile = distinct_quantiles[0][0]
     assert np.isclose(quantile, 37.66, atol=0.01)
+
+    # test percentile event detection (below percentile)
+    sdf = ev.joined_timeseries.to_sdf()
+    ped = tcf.BelowPercentileEventDetection()
+    sdf = ped.apply_to(sdf)
+    event_count = sdf.select('event_below_id').distinct().count()
+    assert event_count == 92
 
     # test exceedance probability
     sdf = ev.joined_timeseries.to_sdf()
@@ -311,7 +318,7 @@ def test_add_udfs_write(tmpdir):
     """Test adding UDFs and write DataFrame back to table."""
     ev = setup_v0_3_study(tmpdir)
 
-    ped = tcf.PercentileEventDetection()
+    ped = tcf.AbovePercentileEventDetection()
     ev.joined_timeseries.add_calculated_fields(ped).write()
 
     flt = rcf.ForecastLeadTime()
@@ -320,8 +327,8 @@ def test_add_udfs_write(tmpdir):
     new_sdf = ev.joined_timeseries.to_sdf()
 
     cols = new_sdf.columns
-    assert "event" in cols
-    assert "event_id" in cols
+    assert "event_above" in cols
+    assert "event_above_id" in cols
     assert "forecast_lead_time" in cols
 
     ev.spark.stop()
@@ -331,9 +338,9 @@ def test_location_event_detection(tmpdir):
     """Test event detection and metrics per event."""
     ev = setup_v0_3_study(tmpdir)
 
-    ped = tcf.PercentileEventDetection()
+    ped = tcf.AbovePercentileEventDetection()
     sdf = ev.metrics.add_calculated_fields(ped).query(
-        group_by=["configuration_name", "primary_location_id", "event_id"],
+        group_by=["configuration_name", "primary_location_id", "event_above_id"],
         include_metrics=[
             teehr.SignatureMetrics.Maximum(
                 input_field_names=["primary_value"],
@@ -350,7 +357,7 @@ def test_location_event_detection(tmpdir):
 
     assert "configuration_name" in sdf.columns
     assert "primary_location_id" in sdf.columns
-    assert "event_id" in sdf.columns
+    assert "event_above_id" in sdf.columns
     assert "max_primary_value" in sdf.columns
     assert "max_secondary_value" in sdf.columns
 
