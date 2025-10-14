@@ -83,6 +83,23 @@ def test_executing_signature_metrics(tmpdir):
         order_by=[flds.primary_location_id],
     ).to_pandas()
 
+    fdc = SignatureMetrics.FlowDurationCurveSlope()
+    fdc.bootstrap = Bootstrappers.CircularBlock(
+        seed=40,
+        block_size=100,
+        quantiles=[0.05, 0.5, 0.95],
+        reps=50
+    )
+    fdc.unpack_results = True
+    sig_metrics_df = ev.metrics.query(
+        include_metrics=[fdc],
+        group_by=[flds.primary_location_id],
+        order_by=[flds.primary_location_id],
+    ).to_pandas()
+
+    assert isinstance(sig_metrics_df, pd.DataFrame)
+    assert sig_metrics_df.index.size == 3
+    assert sig_metrics_df.columns.size == 4
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
     assert metrics_df.columns.size == 9

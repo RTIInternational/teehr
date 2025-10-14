@@ -4,13 +4,8 @@ import logging
 
 import pandas as pd
 import numpy as np
-# from arch.bootstrap import (
-#     StationaryBootstrap,
-#     CircularBlockBootstrap,
-# )
 
 from teehr.models.metrics.basemodels import MetricsBasemodel
-# from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +52,33 @@ def create_circularblock_func(model: MetricsBasemodel) -> Callable:
             )
         else:
             return results.ravel()
+
+    def signature_bootstrap_func(p: pd.Series) -> Dict:
+        """Bootstrap function."""
+        bs = CircularBlockBootstrap(
+            model.bootstrap.block_size,
+            p,
+            seed=model.bootstrap.seed,
+            random_state=model.bootstrap.random_state
+        )
+
+        results = bs.apply(
+            model.func(model),
+            model.bootstrap.reps
+        )
+
+        if model.bootstrap.quantiles is not None:
+            return _calculate_quantiles(
+                model.output_field_name,
+                results,
+                model.bootstrap.quantiles,
+            )
+        else:
+            return results.ravel()
+
+    if len(model.input_field_names) == 1:
+        return signature_bootstrap_func
+
     return bootstrap_func
 
 
@@ -91,6 +113,34 @@ def create_gumboot_func(model: MetricsBasemodel) -> Callable:
             )
         else:
             return results.ravel()
+
+    def signature_bootstrap_func(p: pd.Series, vt: pd.Series) -> Dict:
+        """Bootstrap function."""
+        bs = GumbootBootstrap(
+            p,
+            value_time=vt,
+            seed=model.bootstrap.seed,
+            water_year_month=model.bootstrap.water_year_month,
+            boot_year_file=model.bootstrap.boot_year_file
+        )
+
+        results = bs.apply(
+            model.func(model),
+            model.bootstrap.reps
+        )
+
+        if model.bootstrap.quantiles is not None:
+            return _calculate_quantiles(
+                model.output_field_name,
+                results,
+                model.bootstrap.quantiles,
+            )
+        else:
+            return results.ravel()
+
+    if len(model.input_field_names) == 1:
+        return signature_bootstrap_func
+
     return bootstrap_func
 
 
@@ -124,4 +174,31 @@ def create_stationary_func(model: MetricsBasemodel) -> Callable:
             )
         else:
             return results.ravel()
+
+    def signature_bootstrap_func(p: pd.Series) -> Dict:
+        """Bootstrap function."""
+        bs = StationaryBootstrap(
+            model.bootstrap.block_size,
+            p,
+            seed=model.bootstrap.seed,
+            random_state=model.bootstrap.random_state
+        )
+
+        results = bs.apply(
+            model.func(model),
+            model.bootstrap.reps
+        )
+
+        if model.bootstrap.quantiles is not None:
+            return _calculate_quantiles(
+                model.output_field_name,
+                results,
+                model.bootstrap.quantiles,
+            )
+        else:
+            return results.ravel()
+
+    if len(model.input_field_names) == 1:
+        return signature_bootstrap_func
+
     return bootstrap_func
