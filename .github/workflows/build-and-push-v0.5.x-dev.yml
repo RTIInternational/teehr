@@ -2,7 +2,7 @@ name: Build and Push the v0.5.x-dev Docker Image
 
 on:
   push:
-    branches: [main]  # main, 475-update-python-dependencies
+    branches: [main]
   workflow_dispatch:
     inputs:
       image-tag:
@@ -14,6 +14,5 @@ on:
 jobs:
   call-jupyter-driver-build:
     uses: RTIInternational/teehr-hub/.github/workflows/build-and-push-jupyter-driver.yaml@2-update-github-action-and-helm-chart
-    secrets: inherit
     with:
       image-tag: ${{ inputs.image-tag }}

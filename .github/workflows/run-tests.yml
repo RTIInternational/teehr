@@ -5,8 +5,8 @@ on:
     types: [opened, reopened, ready_for_review]
     branches:
       - main
-  # push:
-  #   branches: [535-fix-datatype-issue-in-thresholdvalueexceeded]
+
+  workflow_dispatch:
 
 jobs:
   build:

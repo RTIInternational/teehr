@@ -61,7 +61,6 @@ jobs:
 
   call-build-and-push-release-image:
     uses: RTIInternational/teehr/.github/workflows/build-and-push-release.yml@main
-    secrets: inherit
     needs: publish-to-pypi
     with:
       image-tag: ${{ github.ref_name }}
