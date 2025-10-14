@@ -13,6 +13,6 @@ on:
 
 jobs:
   call-jupyter-driver-build:
-    uses: RTIInternational/teehr-hub/.github/workflows/build-and-push-jupyter-driver.yaml@2-update-github-action-and-helm-chart
+    uses: RTIInternational/teehr-hub/.github/workflows/build-and-push-jupyter-driver.yaml@main
     with:
-      image-tag: ${{ inputs.image-tag }}
+      image-tag: ${{ inputs.image-tag || 'dev' }}

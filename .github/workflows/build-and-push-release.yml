@@ -21,12 +21,12 @@ jobs:
           echo "package_version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
 
   call-jupyter-driver-build:
-    uses: RTIInternational/teehr-hub/.github/workflows/build-and-push-jupyter-driver.yaml@2-update-github-action-and-helm-chart
+    uses: RTIInternational/teehr-hub/.github/workflows/build-and-push-jupyter-driver.yaml@main
     with:
       image-tag: ${{ inputs.image-tag }}
 
   call-deploy-helm-chart:
-    uses: RTIInternational/teehr-hub/.github/workflows/deploy-helm-chart.yaml@2-update-github-action-and-helm-chart
+    uses: RTIInternational/teehr-hub/.github/workflows/deploy-helm-chart.yaml@main
     needs: get-existing-version
     with:
       image-tag: ${{ inputs.image-tag }}
