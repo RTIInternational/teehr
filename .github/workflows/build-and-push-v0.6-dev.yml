@@ -16,6 +16,7 @@ jobs:
     uses: RTIInternational/teehr-hub/.github/workflows/build-and-push-jupyter-driver.yaml@main
     with:
       image-tag: ${{ inputs.image-tag || 'v0.6-dev' }}
+
   call-spark-executor-build:
     uses: RTIInternational/teehr-hub/.github/workflows/build-and-push-spark-executor.yaml@main
     with:

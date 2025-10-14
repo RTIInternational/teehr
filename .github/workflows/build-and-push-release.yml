@@ -25,6 +25,11 @@ jobs:
     with:
       image-tag: ${{ inputs.image-tag }}
 
+  call-spark-executor-build:
+    uses: RTIInternational/teehr-hub/.github/workflows/build-and-push-spark-executor.yaml@main
+    with:
+      image-tag: ${{ inputs.image-tag }}
+
   call-deploy-helm-chart:
     uses: RTIInternational/teehr-hub/.github/workflows/deploy-helm-chart.yaml@main
     needs: get-existing-version
