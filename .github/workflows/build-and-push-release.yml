@@ -7,8 +7,6 @@ on:
         description: "The image tag to use for the Docker image"
         required: true
         type: string
-    # workflows: ["build-publish-package"]  # Triggered by "build-publish-package" workflow
-    # types: [completed]                    # Trigger when "build-publish-package" completes
 
 jobs:
   get-existing-version:
@@ -22,9 +20,18 @@ jobs:
           PACKAGE_VERSION=v$(curl -s https://pypi.org/pypi/teehr/json | jq -r '.info.version')
           echo "package_version=$PACKAGE_VERSION" >> $GITHUB_OUTPUT
 
-  call-docker-build:
-    uses: RTIInternational/teehr-hub/.github/workflows/build-and-push-image.yaml@main
-    secrets: inherit
+  call-jupyter-driver-build:
+    uses: RTIInternational/teehr-hub/.github/workflows/build-and-push-jupyter-driver.yaml@main
+    with:
+      image-tag: ${{ inputs.image-tag }}
+
+  call-spark-executor-build:
+    uses: RTIInternational/teehr-hub/.github/workflows/build-and-push-spark-executor.yaml@main
+    with:
+      image-tag: ${{ inputs.image-tag }}
+
+  call-deploy-helm-chart:
+    uses: RTIInternational/teehr-hub/.github/workflows/deploy-helm-chart.yaml@main
     needs: get-existing-version
     with:
       image-tag: ${{ inputs.image-tag }}

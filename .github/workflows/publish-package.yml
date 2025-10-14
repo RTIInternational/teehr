@@ -5,7 +5,7 @@ on:
     tags: [ 'v*.*.*' ]
 
 jobs:
-  build-and-publish:
+  publish-to-pypi:
     runs-on: ubuntu-latest
     steps:
       #----------------------------------------------
@@ -59,9 +59,8 @@ jobs:
           poetry build
           poetry publish --username __token__ --password ${{ secrets.POETRY_PYPI_TOKEN_TEEHR }}
 
-  call-docker-build:
-    uses: RTIInternational/teehr/.github/workflows/docker-publish-release.yml@main
-    secrets: inherit
-    needs: build-and-publish
+  call-build-and-push-release-image:
+    uses: RTIInternational/teehr/.github/workflows/build-and-push-release.yml@main
+    needs: publish-to-pypi
     with:
       image-tag: ${{ github.ref_name }}
