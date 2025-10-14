@@ -83,6 +83,23 @@ def test_executing_signature_metrics(tmpdir):
         order_by=[flds.primary_location_id],
     ).to_pandas()
 
+    fdc = SignatureMetrics.FlowDurationCurveSlope()
+    fdc.bootstrap = Bootstrappers.CircularBlock(
+        seed=40,
+        block_size=100,
+        quantiles=[0.05, 0.5, 0.95],
+        reps=50
+    )
+    fdc.unpack_results = True
+    sig_metrics_df = ev.metrics.query(
+        include_metrics=[fdc],
+        group_by=[flds.primary_location_id],
+        order_by=[flds.primary_location_id],
+    ).to_pandas()
+
+    assert isinstance(sig_metrics_df, pd.DataFrame)
+    assert sig_metrics_df.index.size == 3
+    assert sig_metrics_df.columns.size == 4
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
     assert metrics_df.columns.size == 9
@@ -564,12 +581,24 @@ def test_metrics_transforms(tmpdir):
     kge_t = DeterministicMetrics.KlingGuptaEfficiency()
     kge_t.transform = 'log'
 
+    # add epsilon to avoid log(0)
+    kge_t_e = DeterministicMetrics.KlingGuptaEfficiency()
+    kge_t_e.transform = 'log'
+    kge_t_e.add_epsilon = (True, 0.001)
+
     # define metric requiring p,s,t
     mvtd = DeterministicMetrics.MaxValueTimeDelta()
     mvtd_t = DeterministicMetrics.MaxValueTimeDelta()
     mvtd_t.transform = 'log'
 
     # get metrics_df
+    metrics_df_tansformed_e = eval.metrics.query(
+        group_by=["primary_location_id", "configuration_name"],
+        include_metrics=[
+            kge_t_e,
+            mvtd_t
+        ]
+    ).to_pandas()
     metrics_df_transformed = eval.metrics.query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
@@ -588,11 +617,14 @@ def test_metrics_transforms(tmpdir):
     # get results for comparison
     result_kge = metrics_df.kling_gupta_efficiency.values[0]
     result_kge_t = metrics_df_transformed.kling_gupta_efficiency.values[0]
+    result_kge_t_e = metrics_df_tansformed_e.kling_gupta_efficiency.values[0]
     result_mvtd = metrics_df.max_value_time_delta.values[0]
     result_mvtd_t = metrics_df_transformed.max_value_time_delta.values[0]
 
     # metrics_df_transformed is created, transforms are applied
+    assert isinstance(metrics_df_tansformed_e, pd.DataFrame)
     assert isinstance(metrics_df_transformed, pd.DataFrame)
+    assert result_kge_t != result_kge_t_e
     assert result_kge != result_kge_t
     assert result_mvtd == result_mvtd_t
 

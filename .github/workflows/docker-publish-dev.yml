@@ -3,11 +3,21 @@ name: build-push-teehr-hub-dev
 on:
   push:
     branches: [main]  # main, 475-update-python-dependencies
+  workflow_dispatch:
+    inputs:
+      image-tag:
+        description: "The image tag to use for the Docker image"
+        required: true
+        type: string
+      previous-image-tag:
+        description: "The previous tag to use in the helm chart"
+        required: true
+        type: string
 
 jobs:
   call-docker-build:
-    uses: RTIInternational/teehr-hub/.github/workflows/build-and-push-image.yaml@update-deployment
+    uses: RTIInternational/teehr-hub/.github/workflows/build-and-push-image.yaml@main
     secrets: inherit
     with:
-      image-tag: "dev"
-      previous-image-tag: "dev"  # does nothing in this case
+      image-tag: ${{ inputs.image-tag || 'dev' }}
+      previous-image-tag: ${{ inputs.previous-image-tag || 'dev' }}
