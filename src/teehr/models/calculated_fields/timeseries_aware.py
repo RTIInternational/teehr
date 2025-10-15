@@ -17,7 +17,7 @@ UNIQUENESS_FIELDS = [
         ]
 
 
-class PercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
+class AbovePercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
     """Adds "event" and "event_id" columns to the DataFrame based on a percentile threshold.
 
     The "event" column (bool) indicates whether the value is above the XXth
@@ -76,10 +76,10 @@ class PercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
         default="primary_value"
     )
     output_event_field_name: str = Field(
-        default="event"
+        default="event_above"
     )
     output_event_id_field_name: str = Field(
-        default="event_id"
+        default="event_above_id"
     )
     output_quantile_field_name: str = Field(
         default="quantile_value"
@@ -156,6 +156,244 @@ class PercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
 
             # Create a new column indicating whether each value is above the XXth percentile
             pdf[output_field] = pvs > percentile
+
+            return pdf
+
+        def wrapper(pdf, input_field, quantile, output_field):
+            return is_event(pdf, input_field, quantile, output_field)
+
+        # Group the data and apply the UDF
+        # lambda pdf: wrapper_function(pdf, threshold_value)
+        sdf = sdf.groupby(group_by).applyInPandas(
+            lambda pdf: wrapper(pdf, input_field, quantile, output_field),
+            schema=output_schema
+        )
+
+        return sdf
+
+    @staticmethod
+    def add_event_ids(
+        sdf,
+        output_field,
+        input_field,
+        time_field,
+        group_by,
+        return_type=T.StringType(),
+
+    ):
+        # Get the schema of the input DataFrame
+        input_schema = sdf.schema
+
+        # Create a copy of the schema and add the new column
+        output_schema = T.StructType(input_schema.fields + [T.StructField(output_field, return_type, True)])
+
+        def event_ids(pdf: pd.DataFrame, input_field, time_field, output_field) -> pd.DataFrame:
+            # Create a new column for continuous segments
+            pdf['segment'] = (pdf[input_field] != pdf[input_field].shift()).cumsum()
+
+            # Filter only the segments where values are over the 90th percentile
+            segments = pdf[pdf[input_field]]
+
+            # Group by segment and create startdate-enddate string
+            segment_ranges = segments.groupby('segment').agg(
+                startdate=(time_field, 'min'),
+                enddate=(time_field, 'max')
+            ).reset_index()
+
+            # Merge the segment ranges back to the original DataFrame
+            pdf = pdf.merge(segment_ranges[['segment', 'startdate', 'enddate']], on='segment', how='left')
+
+            # Create the startdate-enddate string column
+            pdf[output_field] = pdf.apply(
+                lambda row: f"{row['startdate']}-{row['enddate']}" if pd.notnull(row['startdate']) else None,
+                axis=1
+            )
+
+            # Drop the 'segment', 'startdate', and 'enddate' columns before returning
+            pdf.drop(columns=['segment', 'startdate', 'enddate'], inplace=True)
+
+            return pdf
+
+        def wrapper(pdf, input_field, time_field, output_field):
+            return event_ids(pdf, input_field, time_field, output_field)
+
+        # Group the data and apply the UDF
+        sdf = sdf.orderBy(*group_by, time_field).groupby(group_by).applyInPandas(
+            lambda pdf: wrapper(pdf, input_field, time_field, output_field),
+            schema=output_schema
+        )
+
+        return sdf
+
+    def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
+        if self.uniqueness_fields is None:
+            self.uniqueness_fields = UNIQUENESS_FIELDS
+        if self.add_quantile_field:
+            sdf = self.add_quantile_value(
+                sdf=sdf,
+                input_field=self.value_field_name,
+                quantile=self.quantile,
+                output_field=self.output_quantile_field_name,
+                group_by=self.uniqueness_fields
+            )
+        sdf = self.add_is_event(
+            sdf=sdf,
+            input_field=self.value_field_name,
+            quantile=self.quantile,
+            output_field=self.output_event_field_name,
+            group_by=self.uniqueness_fields
+        )
+        if not self.skip_event_id:
+            sdf = self.add_event_ids(
+                sdf=sdf,
+                input_field=self.output_event_field_name,
+                time_field=self.value_time_field_name,
+                output_field=self.output_event_id_field_name,
+                group_by=self.uniqueness_fields
+            )
+
+        return sdf
+
+
+class BelowPercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel):
+    """Adds "event" and "event_id" columns to the DataFrame based on a percentile threshold.
+
+    The "event" column (bool) indicates whether the value is below the XXth
+    percentile. For the "event" column, True values indicate that the
+    corresponding value is below the specified percentile threshold, while
+    False values indicate that the value is above or equal to the threshold.
+    The "event_id" column (string) groups continuous segments of events and
+    assigns a unique ID to each segment in the format "startdate-enddate".
+
+    Properties
+    ----------
+    - quantile:
+        The percentile threshold to use for event detection.
+        Default: 0.15
+    - value_time_field_name:
+        The name of the column containing the timestamp.
+        Default: "value_time"
+    - value_field_name:
+        The name of the column containing the value to detect events on.
+        Default: "primary_value"
+    - output_event_field_name:
+        The name of the column to store the event detection.
+        Default: "event"
+    - output_event_id_field_name:
+        The name of the column to store the event ID.
+        Default: "event_id"
+    - output_quantile_field_name:
+        The name of the column to store the quantile value.
+        Default: "quantile_value"
+    - add_quantile_field:
+        Whether to add the quantile field.
+        Default: False
+    - skip_event_id:
+        Whether to skip the event ID generation.
+        Default: False
+    - uniqueness_fields:
+        The columns to use to uniquely identify each timeseries.
+
+        .. code-block:: python
+
+            Default: [
+                'reference_time',
+                'primary_location_id',
+                'configuration_name',
+                'variable_name',
+                'unit_name'
+            ]
+    """
+    quantile: float = Field(
+        default=0.15
+    )
+    value_time_field_name: str = Field(
+        default="value_time"
+    )
+    value_field_name: str = Field(
+        default="primary_value"
+    )
+    output_event_field_name: str = Field(
+        default="event_below"
+    )
+    output_event_id_field_name: str = Field(
+        default="event_below_id"
+    )
+    output_quantile_field_name: str = Field(
+        default="quantile_value"
+    )
+    add_quantile_field: bool = Field(
+        default=False
+    )
+    skip_event_id: bool = Field(
+        default=False
+    )
+    uniqueness_fields: Union[str, List[str]] = Field(
+        default=None
+    )
+
+    @staticmethod
+    def add_quantile_value(
+        sdf: ps.DataFrame,
+        output_field,
+        input_field,
+        quantile,
+        group_by,
+        return_type=T.DoubleType()
+    ):
+        # Get the schema of the input DataFrame
+        input_schema = sdf.schema
+
+        # Create a copy of the schema and add the new column
+        output_schema = T.StructType(input_schema.fields + [T.StructField(output_field, return_type, True)])
+
+        def compute_quantile(pdf, input_field, quantile, output_field) -> pd.DataFrame:
+            pvs = pdf[input_field]
+
+            # Calculate the XXth percentile
+            percentile = pvs.quantile(quantile)
+
+            # Create a new column with the XXth percentile value
+            pdf[output_field] = percentile
+
+            return pdf
+
+        def wrapper(pdf, input_field, quantile, output_field):
+            return compute_quantile(pdf, input_field, quantile, output_field)
+
+        # Group the data and apply the UDF
+        # lambda pdf: wrapper_function(pdf, threshold_value)
+        sdf = sdf.groupby(group_by).applyInPandas(
+            lambda pdf: wrapper(pdf, input_field, quantile, output_field),
+            schema=output_schema
+        )
+
+        return sdf
+
+    @staticmethod
+    def add_is_event(
+        sdf: ps.DataFrame,
+        output_field,
+        input_field,
+        quantile,
+        group_by,
+        return_type=T.BooleanType()
+
+    ):
+        # Get the schema of the input DataFrame
+        input_schema = sdf.schema
+
+        # Create a copy of the schema and add the new column
+        output_schema = T.StructType(input_schema.fields + [T.StructField(output_field, return_type, True)])
+
+        def is_event(pdf, input_field, quantile, output_field) -> pd.DataFrame:
+            pvs = pdf[input_field]
+
+            # Calculate the XXth percentile
+            percentile = pvs.quantile(quantile)
+
+            # Create a new column indicating whether each value is above the XXth percentile
+            pdf[output_field] = pvs < percentile
 
             return pdf
 
@@ -2179,7 +2417,8 @@ class TimeseriesAwareCalculatedFields():
 
     Available Calculated Fields:
 
-    - PercentileEventDetection
+    - AbovePercentileEventDetection
+    - BelowPercentileEventDetection
     - ExceedanceProbability
     - BaseflowPeriodDetection
     - LyneHollickBaseflow
@@ -2193,7 +2432,8 @@ class TimeseriesAwareCalculatedFields():
     - UKIHBaseflow
     """
 
-    PercentileEventDetection = PercentileEventDetection
+    AbovePercentileEventDetection = AbovePercentileEventDetection
+    BelowPercentileEventDetection = BelowPercentileEventDetection
     ExceedanceProbability = ExceedanceProbability
     BaseflowPeriodDetection = BaseflowPeriodDetection
     LyneHollickBaseflow = LyneHollickBaseflow
