@@ -201,7 +201,32 @@ def pearson_correlation(model: MetricsBasemodel) -> Callable:
     def pearson_correlation_inner(p: pd.Series, s: pd.Series) -> float:
         """Pearson Correlation Coefficient."""
         p, s = _transform(p, s, model)
-        return np.corrcoef(s, p)[0][1]
+
+        if model.add_epsilon:
+            # calculate means
+            mean_p = np.mean(p)
+            mean_s = np.mean(s)
+
+            # calculate numerator and sum of squares
+            numerator = 0
+            sum_sq_x = 0
+            sum_sq_y = 0
+            for i in range(len(p)):
+                diff_p = p[i] - mean_p
+                diff_s = s[i] - mean_s
+                numerator += diff_p * diff_s
+                sum_sq_x += diff_p ** 2
+                sum_sq_y += diff_s ** 2
+
+            # calculate denominator with epsilon
+            denominator = np.sqrt(sum_sq_x * sum_sq_y) + EPSILON
+
+            # calculate result
+            result = numerator / denominator
+        else:
+            result = np.corrcoef(s, p)[0][1]
+
+        return result
 
     return pearson_correlation_inner
 
@@ -236,8 +261,36 @@ def r_squared(model: MetricsBasemodel) -> Callable:
     def r_squared_inner(p: pd.Series, s: pd.Series) -> float:
         """R-squared."""
         p, s = _transform(p, s, model)
-        pearson_correlation_coefficient = np.corrcoef(s, p)[0][1]
-        return np.power(pearson_correlation_coefficient, 2)
+
+        if model.add_epsilon:
+            # calculate means
+            mean_p = np.mean(p)
+            mean_s = np.mean(s)
+
+            # calculate numerator and sum of squares
+            numerator = 0
+            sum_sq_x = 0
+            sum_sq_y = 0
+            for i in range(len(p)):
+                diff_p = p[i] - mean_p
+                diff_s = s[i] - mean_s
+                numerator += diff_p * diff_s
+                sum_sq_x += diff_p ** 2
+                sum_sq_y += diff_s ** 2
+
+            # calculate denominator with epsilon
+            denominator = np.sqrt(sum_sq_x * sum_sq_y) + EPSILON
+
+            # calculate pearson correlation coefficient
+            pearson_correlation_coefficient = numerator / denominator
+
+            result = np.power(pearson_correlation_coefficient, 2)
+
+        else:
+            pearson_correlation_coefficient = np.corrcoef(s, p)[0][1]
+            result = np.power(pearson_correlation_coefficient, 2)
+
+        return result
 
     return r_squared_inner
 

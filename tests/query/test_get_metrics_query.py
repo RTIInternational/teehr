@@ -591,6 +591,14 @@ def test_metrics_transforms(tmpdir):
     mvtd_t = DeterministicMetrics.MaxValueTimeDelta()
     mvtd_t.transform = 'log'
 
+    # test epsilon on R2 and Pearson
+    r2 = DeterministicMetrics.Rsquared()
+    r2_e = DeterministicMetrics.Rsquared()
+    r2_e.add_epsilon = True
+    pearson = DeterministicMetrics.PearsonCorrelation()
+    pearson_e = DeterministicMetrics.PearsonCorrelation()
+    pearson_e.add_epsilon = True
+
     # get metrics_df
     metrics_df_tansformed_e = eval.metrics.query(
         group_by=["primary_location_id", "configuration_name"],
@@ -613,6 +621,20 @@ def test_metrics_transforms(tmpdir):
             mvtd
         ]
     ).to_pandas()
+    metrics_df_e_control = eval.metrics.query(
+        group_by=["primary_location_id", "configuration_name"],
+        include_metrics=[
+            r2,
+            pearson
+        ]
+    ).to_pandas()
+    metrics_df_e_test = eval.metrics.query(
+        group_by=["primary_location_id", "configuration_name"],
+        include_metrics=[
+            r2_e,
+            pearson_e
+        ]
+    ).to_pandas()
 
     # get results for comparison
     result_kge = metrics_df.kling_gupta_efficiency.values[0]
@@ -620,6 +642,10 @@ def test_metrics_transforms(tmpdir):
     result_kge_t_e = metrics_df_tansformed_e.kling_gupta_efficiency.values[0]
     result_mvtd = metrics_df.max_value_time_delta.values[0]
     result_mvtd_t = metrics_df_transformed.max_value_time_delta.values[0]
+    result_r2 = metrics_df_e_control.r_squared.values[0]
+    result_r2_e = metrics_df_e_test.r_squared.values[0]
+    result_pearson = metrics_df_e_control.pearson_correlation.values[0]
+    result_pearson_e = metrics_df_e_test.pearson_correlation.values[0]
 
     # metrics_df_transformed is created, transforms are applied
     assert isinstance(metrics_df_tansformed_e, pd.DataFrame)
@@ -627,6 +653,8 @@ def test_metrics_transforms(tmpdir):
     assert result_kge_t != result_kge_t_e
     assert result_kge != result_kge_t
     assert result_mvtd == result_mvtd_t
+    assert np.isclose(result_r2, result_r2_e, rtol=1e-04)
+    assert np.isclose(result_pearson, result_pearson_e, rtol=1e-04)
 
 
 def test_bootstrapping_transforms(tmpdir):
