@@ -4,6 +4,7 @@ from pathlib import Path
 import psutil
 import logging
 import os
+import socket
 
 from pyspark.sql import SparkSession
 from sedona.spark import SedonaContext
@@ -20,7 +21,7 @@ PYSPARK_VERSION = "4.0"
 ICEBERG_VERSION = "1.10.0"
 SEDONA_VERSION = "1.8.0"
 
-EXECUTOR_CONTAINER_IMAGE = "935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr-spark/teehr-spark-executor:v0.6-dev"
+# EXECUTOR_CONTAINER_IMAGE = "935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr-spark/teehr-spark-executor:v0.6-dev"
 POD_TEMPLATE_PATH = "/opt/teehr/executor-pod-template.yaml"
 
 
@@ -41,13 +42,13 @@ def create_spark_session(
     executor_cores: int = 1,
     driver_memory: str = None,
     driver_max_result_size: str = None,
-    container_image: str = EXECUTOR_CONTAINER_IMAGE,
+    container_image: str = None,
     spark_namespace: str = "spark",
     pod_template_path: Union[str, Path] = POD_TEMPLATE_PATH,
     # Simple extensibility parameters
     extra_packages: List[str] = None,
     extra_configs: Dict[str, str] = None,
-    debug_config: bool = True  # Log final config for debugging
+    debug_config: bool = False  # Log final config for debugging
 ) -> SparkSession:
     """Create and return a Spark session for evaluation."""
     # Get the base builder with common settings
@@ -61,7 +62,10 @@ def create_spark_session(
 
     if start_spark_cluster is False:
         spark = builder.getOrCreate()
+        print("✅ Spark local session created successfully!")
     else:
+        logger.info(f"🚀 Creating Spark session: {app_name}")
+        logger.info(f"📦 Using container image: {container_image}")
         spark = _create_spark_cluster_base_session(
             builder=builder,
             executor_instances=executor_instances,
@@ -72,27 +76,65 @@ def create_spark_session(
             pod_template_path=pod_template_path
         )
 
-    # Apply catalog configurations
-    _configure_catalogs_via_conf(
-        spark,
-        local_warehouse_dir,
-        local_catalog_name,
-        local_catalog_type,
-        remote_warehouse_dir,
-        remote_catalog_name,
-        remote_catalog_type,
-        remote_catalog_uri
-    )
+        print("✅ Spark cluster created successfully!")
+        print(f"   - Application ID: {spark.sparkContext.applicationId}")
+        print(f"   - Executor instances: {executor_instances}")
+        print(f"   - Executor memory: {executor_memory}")
+        print(f"   - Executor cores: {executor_cores}")
 
-    if local_warehouse_dir is not None:
-        spark.catalog.setCurrentCatalog(catalogName=local_catalog_name)
-    spark.catalog.setCurrentCatalog(catalogName=remote_catalog_name)
+    # AWS credentials configuration -- Is this related to the cluster at all?
+    # Try to get AWS credentials from default profile
+    try:
+        import boto3
+        session = boto3.Session()
+        credentials = session.get_credentials()
+
+        if credentials:
+            print("🔑 Found AWS credentials, setting for Spark")
+            # Set explicit credentials for Spark/Hadoop
+            spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", credentials.access_key)
+            spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", credentials.secret_key)
+
+            # Handle session token if present (for temporary credentials)
+            if credentials.token:
+                spark.conf.set("spark.hadoop.fs.s3a.session.token", credentials.token)
+                print("   - Using temporary credentials with session token")
+            else:
+                print("   - Using long-term credentials")
+        else:
+            print("⚠️  No AWS credentials found, falling back to default provider chain")
+            spark.conf.set("spark.hadoop.fs.s3a.aws.credentials.provider", "com.amazonaws.auth.DefaultAWSCredentialsProviderChain")
+    except ImportError:
+        print("⚠️  boto3 not available, using default AWS credentials provider")
+        spark.conf.set("spark.hadoop.fs.s3a.aws.credentials.provider", "com.amazonaws.auth.DefaultAWSCredentialsProviderChain")
+    except Exception as e:
+        print(f"⚠️  Error getting AWS credentials: {e}")
+        print("   Falling back to default provider chain")
+        spark.conf.set("spark.hadoop.fs.s3a.aws.credentials.provider", "com.amazonaws.auth.DefaultAWSCredentialsProviderChain")
+
+    # # Apply catalog configurations
+    # _configure_catalogs_via_conf(
+    #     spark,
+    #     local_warehouse_dir,
+    #     local_catalog_name,
+    #     local_catalog_type,
+    #     remote_warehouse_dir,
+    #     remote_catalog_name,
+    #     remote_catalog_type,
+    #     remote_catalog_uri
+    # )
+
+    # if local_warehouse_dir is not None:
+    #     spark.catalog.setCurrentCatalog(catalogName=local_catalog_name)
+    # spark.catalog.setCurrentCatalog(catalogName=remote_catalog_name)
 
     sedona_spark = SedonaContext.create(spark)
     logger.info("Spark session created for TEEHR Evaluation.")
 
     if debug_config:
         _log_final_config(spark)
+
+    print("🎉 Good to go!")
 
     return sedona_spark
 
@@ -111,10 +153,11 @@ def _create_base_spark_builder(
     """
     # Handle default local memory settings
     memory_info = psutil.virtual_memory()
+    driver_memory_int = int(0.75 * memory_info.available / (1024**3))
     if driver_memory is None:
-        driver_memory = 0.75 * memory_info.available / (1024**3)
+        driver_memory = f"{driver_memory_int}g"
     if driver_maxresultsize is None:
-        driver_maxresultsize = 0.5 * driver_memory
+        driver_maxresultsize = f"{int(0.5 * driver_memory_int)}g"
 
     builder = SparkSession.builder.appName(app_name)
 
@@ -148,6 +191,10 @@ def _create_spark_cluster_base_session(
 
     These settings are considered immutable after session creation.
     """
+    # Default container image - use the same image as the current pod
+    if container_image is None:
+        container_image = os.environ["TEEHR_SPARK_IMAGE"]
+
     # Get Kubernetes API server - use HTTPS port specifically
     k8s_host = os.environ.get('KUBERNETES_SERVICE_HOST', 'kubernetes.default.svc.cluster.local')
     k8s_port_https = os.environ.get('KUBERNETES_SERVICE_PORT_HTTPS', '443')
@@ -161,15 +208,14 @@ def _create_spark_cluster_base_session(
             current_namespace = f.read().strip()
 
     logger.info(f"🔍 Connecting to Kubernetes API: {k8s_api_server}")
-    logger.info(f"🚀 Creating Spark session: {app_name}")
-    logger.info(f"📦 Using container image: {container_image}")
     logger.info(f"🏠 Current namespace: {current_namespace}")
     logger.info(f"🎯 Executor namespace: {spark_namespace}")
     logger.info(f"🔐 Driver service account: default (in {current_namespace})")
     logger.info(f"🔐 Executor service account: spark (in {spark_namespace})")
 
     # Create Spark configuration
-    builder = builder.config("spark.master", f"k8s://{k8s_api_server}")
+    # builder = builder.config("spark.master", f"k8s://{k8s_api_server}")
+    builder = builder.master(f"k8s://{k8s_api_server}")
 
     # Basic Kubernetes settings
     builder = builder.config("spark.executor.instances", str(executor_instances))
@@ -181,8 +227,51 @@ def _create_spark_cluster_base_session(
     builder = builder.config("spark.kubernetes.authenticate.executor.serviceAccountName", "spark")
     builder = builder.config("spark.kubernetes.container.image.pullPolicy", "Always")
 
-    if pod_template_path:
+    if os.path.exists(pod_template_path):
         builder = builder.config("spark.kubernetes.executor.podTemplateFile", pod_template_path)
+    else:
+        print(f"⚠️  Executor pod template not found: {pod_template_path}")
+        print("    You must provide a valid pod template for executors to launch correctly.")
+        raise FileNotFoundError(f"Executor pod template not found: {pod_template_path}")
+
+    builder = builder.config("spark.kubernetes.executor.deleteOnTermination", "true")
+
+    # Authentication - use service account token if available
+    token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+    ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+
+    if os.path.exists(token_file) and os.path.exists(ca_file):
+        print("🔐 Using in-cluster authentication")
+        builder = builder.config("spark.kubernetes.authenticate.submission.oauthTokenFile", token_file)
+        builder = builder.config("spark.kubernetes.authenticate.submission.caCertFile", ca_file)
+        builder = builder.config("spark.kubernetes.authenticate.driver.oauthTokenFile", token_file)
+        builder = builder.config("spark.kubernetes.authenticate.executor.oauthTokenFile", token_file)
+
+        # Critical: Set the CA cert file for SSL validation
+        builder = builder.config("spark.kubernetes.authenticate.caCertFile", ca_file)
+    else:
+        print("⚠️  No service account tokens found - may have authentication issues")
+        print(f"   Checked: {token_file}")
+        print(f"   Checked: {ca_file}")
+
+    # Driver binding configuration - use pod IP for Kubernetes
+    builder = builder.config("spark.driver.bindAddress", "0.0.0.0")
+    builder = builder.config("spark.driver.port", "0")  # Let Spark choose an available port
+
+    # Get pod IP and set as driver host so executors can connect back
+    pod_ip = os.environ.get('POD_IP')
+    if not pod_ip:
+        try:
+            hostname = socket.gethostname()
+            pod_ip = socket.gethostbyname(hostname)
+        except:
+            pod_ip = None
+
+    if pod_ip:
+        print(f"🔗 Setting driver host to pod IP: {pod_ip}")
+        builder = builder.config("spark.driver.host", pod_ip)
+    else:
+        print("⚠️  Could not determine pod IP - using default driver host")
 
     # Return a spark session
     return builder.getOrCreate()
