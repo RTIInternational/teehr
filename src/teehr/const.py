@@ -30,3 +30,8 @@ LOADING_CACHE_DIR = "loading"
 S3_EVALUATIONS_PATH = "s3://ciroh-rti-public-data/teehr-data-warehouse/v0_4_evaluations/evaluations.yaml"
 
 MAX_CPUS = max(os.cpu_count() - 1, 1)
+
+# Spark cluster configuration
+POD_TEMPLATE_PATH = "/opt/teehr/executor-pod-template.yaml"
+SERVICE_ACCOUNT_TOKEN_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+CA_CERTIFICATE_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"

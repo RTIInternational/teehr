@@ -1,6 +1,6 @@
 """Evaluation module."""
 from datetime import datetime
-from typing import Union, Literal, List
+from typing import Union, Literal, List, Dict
 from pathlib import Path
 from teehr.evaluation.tables.attribute_table import AttributeTable
 from teehr.evaluation.tables.configuration_table import ConfigurationTable
@@ -42,9 +42,11 @@ from teehr.evaluation.workflows import Workflow
 from teehr.evaluation.tables.base_table import Table
 from teehr.evaluation.read import Read
 from teehr.evaluation.load import Load
-from teehr.evaluation.utils import (
+from teehr.evaluation.utils import copy_migrations_dir
+from teehr.evaluation.spark_session_utils import (
     create_spark_session,
-    copy_migrations_dir
+    log_session_config,
+    remove_or_update_configs
 )
 import pandas as pd
 import re
@@ -70,7 +72,7 @@ class Evaluation(EvaluationBase):
 
     def __init__(
         self,
-        local_warehouse_dir: Union[str, Path] = None,  # maybe you don't want/need a local evaluation? -- if you just want to query against remote?
+        local_warehouse_dir: Union[str, Path] = None,
         local_catalog_name: str = "local",
         local_catalog_type: str = "hadoop",
         local_namespace_name: str = "teehr",
@@ -82,19 +84,86 @@ class Evaluation(EvaluationBase):
         remote_namespace_name: str = "teehr",
         spark: SparkSession = None,
         check_evaluation_version: bool = True,
-        app_name: str = "teehr-iceberg",
-        driver_memory: Union[str, int, float] = None,
-        driver_maxresultsize: Union[str, int, float] = None
+        app_name: str = "TEEHR Evaluation",
+        # Spark K8'specific parameters
+        start_spark_cluster: bool = False,
+        executor_instances: int = 2,
+        executor_memory: str = "1g",
+        executor_cores: int = 1,
+        executor_image: str = None,
+        executor_namespace: str = None,
+        driver_memory: str = None,
+        driver_max_result_size: str = None,
+        pod_template_path: Union[str, Path] = const.POD_TEMPLATE_PATH,
+        # Simple extensibility parameters
+        extra_packages: List[str] = None,
+        extra_configs: Dict[str, str] = None,
+        debug_config: bool = False
     ):
         """
         Initialize the Evaluation class.
 
         Parameters
         ----------
-        dir_path : Union[str, Path, S3Path]
-            The path to the evaluation directory.
+        local_warehouse_dir : Union[str, Path], optional
+            The local warehouse directory for the local catalog.
+            If None, only the remote catalog is used.
+            The default is None.
+        local_catalog_name : str, optional
+            The name of the local catalog. The default is "local".
+        local_catalog_type : str, optional
+            The type of the local catalog. The default is "hadoop".
+        local_namespace_name : str, optional
+            The namespace for the local catalog. The default is "teehr".
+        create_local_dir : bool, optional
+            Whether to create the local warehouse directory if it does not exist.
+            The default is False.
+        remote_warehouse_dir : str, optional
+            The remote warehouse directory for the remote catalog.
+            The default is const.WAREHOUSE_S3_PATH.
+        remote_catalog_name : str, optional
+            The name of the remote catalog. The default is "iceberg".
+        remote_catalog_type : str, optional
+            The type of the remote catalog. The default is "rest".
+        remote_catalog_uri : str, optional
+            The URI for the remote catalog. The default is const.CATALOG_REST_URI.
+        remote_namespace_name : str, optional
+            The namespace for the remote catalog. The default is "teehr".
         spark : SparkSession, optional
-            The SparkSession object, by default None
+            An existing Spark session. If None, a new Spark session is created.
+            The default is None.
+        check_evaluation_version : bool, optional
+            Whether to check the evaluation version in the local warehouse directory.
+            The default is True.
+        app_name : str, optional
+            The name of the Spark application. The default is "TEEHR Evaluation".
+        start_spark_cluster : bool, optional
+            Whether to start a Spark cluster (Kubernetes). The default is False.
+        executor_instances : int, optional
+            The number of executor instances for the Spark cluster. The default is 2.
+        executor_memory : str, optional
+            The memory allocation for each executor. The default is "1g".
+        executor_cores : int, optional
+            The number of cores for each executor. The default is 1.
+        executor_image : str, optional
+            The Docker image for the Spark executors. The default is None.
+        executor_namespace : str, optional
+            The Kubernetes namespace for the Spark executors. The default is None.
+        driver_memory : str, optional
+            The memory allocation for the Spark driver. The default is None.
+        driver_max_result_size : str, optional
+            The maximum result size for the Spark driver. The default is None.
+        pod_template_path : Union[str, Path], optional
+            The path to the executor pod template for Kubernetes. The default is
+            const.POD_TEMPLATE_PATH.
+        extra_packages : List[str], optional
+            A list of extra packages to include in the Spark session. The default is None.
+            >>> extra_packages=["com.example:my-package:1.0.0"]
+        extra_configs : Dict[str, str], optional
+            A dictionary of extra Spark configurations. The default is None.
+            >>> extra_configs={"spark.sql.shuffle.partitions": "100"}
+        debug_config : bool, optional
+            Whether to enable debug configuration for Spark. The default is False.
         """
         if local_warehouse_dir is not None:
             local_warehouse_dir = Path(local_warehouse_dir)
@@ -112,10 +181,9 @@ class Evaluation(EvaluationBase):
             catalog_uri=remote_catalog_uri,
         )
         # Create local directory if it does not exist.
-        if local_warehouse_dir is not None:
-            if create_local_dir:
-                logger.info(f"Creating directory {local_warehouse_dir}.")
-                Path(local_warehouse_dir).mkdir(parents=True, exist_ok=True)
+        if local_warehouse_dir is not None and create_local_dir is True:
+            logger.info(f"Creating directory {local_warehouse_dir}.")
+            Path(local_warehouse_dir).mkdir(parents=True, exist_ok=True)
 
         # Initialize cache and scripts dir. These are only valid
         # when using a local catalog.
@@ -123,9 +191,12 @@ class Evaluation(EvaluationBase):
         self.scripts_dir = None
 
         # Check version of Evaluation
-        if check_evaluation_version is True and local_warehouse_dir is not None:
-            if create_local_dir is False:
-                self.check_evaluation_version()
+        if (
+            check_evaluation_version is True
+            and local_warehouse_dir is not None
+            and create_local_dir is False
+        ):
+            self.check_evaluation_version()
 
         # If a Spark session is provided.
         self.spark = spark
@@ -141,9 +212,19 @@ class Evaluation(EvaluationBase):
                 remote_catalog_name=self.remote_catalog.catalog_name,
                 remote_catalog_type=self.remote_catalog.catalog_type,
                 remote_catalog_uri=self.remote_catalog.catalog_uri,
-                driver_maxresultsize=driver_maxresultsize,
+                driver_max_result_size=driver_max_result_size,
                 driver_memory=driver_memory,
-                app_name=app_name
+                app_name=app_name,
+                start_spark_cluster=start_spark_cluster,
+                executor_instances=executor_instances,
+                executor_memory=executor_memory,
+                executor_cores=executor_cores,
+                executor_image=executor_image,
+                executor_namespace=executor_namespace,
+                pod_template_path=pod_template_path,
+                extra_packages=extra_packages,
+                extra_configs=extra_configs,
+                debug_config=debug_config
             )
         # Set the local catalog as the active catalog by default.
         if local_warehouse_dir is not None:
@@ -655,3 +736,25 @@ class Evaluation(EvaluationBase):
     def list_views(self) -> pd.DataFrame:
         """List the views in the catalog returning a Pandas DataFrame."""
         return self.spark.sql("SHOW VIEWS").toPandas()
+
+    def log_spark_config(self):
+        """Log the current Spark session configuration."""
+        log_session_config(self.spark)
+
+    def update_spark_config(
+        self,
+        remove_configs: List[str] = None,
+        update_configs: Dict[str, str] = None
+    ):
+        """Update the Spark session configuration.
+
+        Parameters
+        ----------
+        configs : Dict[str, str]
+            A dictionary of Spark configurations to update.
+        """
+        remove_or_update_configs(
+            spark=self.spark,
+            remove_configs=remove_configs,
+            update_configs=update_configs
+        )

@@ -1,4 +1,5 @@
-"""Module to create and configure a Spark session - minimal."""
+"""Module to create and configure a Spark session."""
+# flake8: noqa
 from typing import Dict, List, Union, Any
 from pathlib import Path
 import psutil
@@ -21,9 +22,6 @@ PYSPARK_VERSION = "4.0"
 ICEBERG_VERSION = "1.10.0"
 SEDONA_VERSION = "1.8.0"
 
-# EXECUTOR_CONTAINER_IMAGE = "935462133478.dkr.ecr.us-east-2.amazonaws.com/teehr-spark/teehr-spark-executor:v0.6-dev"
-POD_TEMPLATE_PATH = "/opt/teehr/executor-pod-template.yaml"
-
 
 def create_spark_session(
     # App name and catalog settings
@@ -37,20 +35,74 @@ def create_spark_session(
     remote_catalog_uri: str = const.CATALOG_REST_URI,
     # Spark K8'specific parameters
     start_spark_cluster: bool = False,
-    executor_instances: int = 200,
+    executor_instances: int = 2,
     executor_memory: str = "1g",
     executor_cores: int = 1,
+    executor_image: str = None,
+    executor_namespace: str = None,
     driver_memory: str = None,
     driver_max_result_size: str = None,
-    container_image: str = None,
-    spark_namespace: str = "spark",
-    pod_template_path: Union[str, Path] = POD_TEMPLATE_PATH,
+    pod_template_path: Union[str, Path] = const.POD_TEMPLATE_PATH,
     # Simple extensibility parameters
     extra_packages: List[str] = None,
     extra_configs: Dict[str, str] = None,
-    debug_config: bool = False  # Log final config for debugging
+    debug_config: bool = False
 ) -> SparkSession:
-    """Create and return a Spark session for evaluation."""
+    """Create and return a Spark session for evaluation.
+
+    Parameters
+    ----------
+    app_name : str
+        Name of the Spark application. Default is "TEEHR Evaluation".
+    local_warehouse_dir : Union[str, Path]
+        Local warehouse directory for Iceberg catalog.
+        Default is None (no local catalog).
+    local_catalog_name : str
+        Name of the local Iceberg catalog. Default is "local".
+    local_catalog_type : str
+        Type of the local Iceberg catalog. Default is "hadoop".
+    remote_warehouse_dir : str
+        Remote warehouse directory for Iceberg catalog. Default is TEEHR
+        warehouse S3 path.
+    remote_catalog_name : str
+        Name of the remote Iceberg catalog. Default is "iceberg".
+    remote_catalog_type : str
+        Type of the remote Iceberg catalog. Default is "rest".
+    remote_catalog_uri : str
+        URI for the remote Iceberg catalog. Default is TEEHR catalog REST URI.
+    start_spark_cluster : bool
+        Whether to start a Spark cluster (Kubernetes mode).
+        Default is False (local mode).
+    executor_instances : int
+        Number of executor instances for the Spark cluster. Default is 2.
+    executor_memory : str
+        Memory allocation for each executor. Default is "1g".
+    executor_cores : int
+        Number of CPU cores for each executor. Default is 1.
+    executor_image : str
+        Container image for Spark executors. Default is None.
+    executor_namespace : str
+        Kubernetes namespace for Spark executors. Default is None.
+    driver_memory : str
+        Memory allocation for the Spark driver. Default is None.
+    driver_max_result_size : str
+        Maximum result size for the Spark driver. Default is None.
+    pod_template_path : Union[str, Path]
+        Path to the pod template file for Spark executors.
+        Default is "/opt/teehr/executor-pod-template.yaml".
+    extra_packages : List[str]
+        Additional Spark packages to include. Default is None.
+    extra_configs : Dict[str, str]
+        Additional Spark configurations to set. Default is None.
+    debug_config : bool
+        Whether to log the final Spark configuration for debugging.
+        Default is False.
+
+    Returns
+    -------
+    SparkSession
+        Configured Spark session.
+    """
     # Get the base builder with common settings
     builder = _create_base_spark_builder(
         app_name=app_name,
@@ -62,81 +114,86 @@ def create_spark_session(
 
     if start_spark_cluster is False:
         spark = builder.getOrCreate()
-        print("✅ Spark local session created successfully!")
+        logger.info("✅ Spark local session created successfully!")
     else:
         logger.info(f"🚀 Creating Spark session: {app_name}")
-        logger.info(f"📦 Using container image: {container_image}")
+        logger.info(f"📦 Using container image: {executor_image}")
         spark = _create_spark_cluster_base_session(
             builder=builder,
             executor_instances=executor_instances,
             executor_memory=executor_memory,
             executor_cores=executor_cores,
-            container_image=container_image,
-            spark_namespace=spark_namespace,
+            container_image=executor_image,
+            spark_namespace=executor_namespace,
             pod_template_path=pod_template_path
         )
+        logger.info("✅ Spark cluster created successfully!")
+        logger.info(f"   - Application ID: {spark.sparkContext.applicationId}")
+        logger.info(f"   - Executor instances: {executor_instances}")
+        logger.info(f"   - Executor memory: {executor_memory}")
+        logger.info(f"   - Executor cores: {executor_cores}")
 
-        print("✅ Spark cluster created successfully!")
-        print(f"   - Application ID: {spark.sparkContext.applicationId}")
-        print(f"   - Executor instances: {executor_instances}")
-        print(f"   - Executor memory: {executor_memory}")
-        print(f"   - Executor cores: {executor_cores}")
+    # Set AWS credentials if available
+    _set_aws_credentials_in_spark(spark, remote_catalog_name)
 
-    # AWS credentials configuration -- Is this related to the cluster at all?
-    # Try to get AWS credentials from default profile
+    # Apply catalog configurations
+    _configure_iceberg_catalogs(
+        spark,
+        local_warehouse_dir,
+        local_catalog_name,
+        local_catalog_type,
+        remote_warehouse_dir,
+        remote_catalog_name,
+        remote_catalog_type,
+        remote_catalog_uri
+    )
+
+    if local_warehouse_dir is not None:
+        spark.catalog.setCurrentCatalog(catalogName=local_catalog_name)
+    spark.catalog.setCurrentCatalog(catalogName=remote_catalog_name)
+
+    sedona_spark = SedonaContext.create(spark)
+    logger.info("Spark session created for TEEHR Evaluation.")
+
+    if debug_config:
+        log_session_config(spark)
+
+    logger.info("🎉 Spark session created successfully!")
+
+    return sedona_spark
+
+
+def _set_aws_credentials_in_spark(
+    spark: SparkSession,
+    remote_catalog_name: str
+):
+    """Set AWS credentials in Spark configuration if available."""
     try:
         import boto3
         session = boto3.Session()
         credentials = session.get_credentials()
 
         if credentials:
-            print("🔑 Found AWS credentials, setting for Spark")
+            logger.info("🔑 Found AWS credentials, setting for Spark")
             # Set explicit credentials for Spark/Hadoop
             spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", credentials.access_key)
             spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", credentials.secret_key)
-
             # Handle session token if present (for temporary credentials)
             if credentials.token:
                 spark.conf.set("spark.hadoop.fs.s3a.session.token", credentials.token)
-                print("   - Using temporary credentials with session token")
+                logger.info("   - Using temporary credentials with session token")
             else:
-                print("   - Using long-term credentials")
+                logger.info("   - Using long-term credentials")
         else:
-            print("⚠️  No AWS credentials found, falling back to default provider chain")
+            logger.info("⚠️  No AWS credentials found, falling back to default provider chain")
             spark.conf.set("spark.hadoop.fs.s3a.aws.credentials.provider", "com.amazonaws.auth.DefaultAWSCredentialsProviderChain")
     except ImportError:
-        print("⚠️  boto3 not available, using default AWS credentials provider")
+        logger.info("⚠️  boto3 not available, using default AWS credentials provider")
         spark.conf.set("spark.hadoop.fs.s3a.aws.credentials.provider", "com.amazonaws.auth.DefaultAWSCredentialsProviderChain")
     except Exception as e:
-        print(f"⚠️  Error getting AWS credentials: {e}")
-        print("   Falling back to default provider chain")
+        logger.info(f"⚠️  Error getting AWS credentials: {e}")
+        logger.info("   Falling back to default provider chain")
         spark.conf.set("spark.hadoop.fs.s3a.aws.credentials.provider", "com.amazonaws.auth.DefaultAWSCredentialsProviderChain")
-
-    # # Apply catalog configurations
-    # _configure_catalogs_via_conf(
-    #     spark,
-    #     local_warehouse_dir,
-    #     local_catalog_name,
-    #     local_catalog_type,
-    #     remote_warehouse_dir,
-    #     remote_catalog_name,
-    #     remote_catalog_type,
-    #     remote_catalog_uri
-    # )
-
-    # if local_warehouse_dir is not None:
-    #     spark.catalog.setCurrentCatalog(catalogName=local_catalog_name)
-    # spark.catalog.setCurrentCatalog(catalogName=remote_catalog_name)
-
-    sedona_spark = SedonaContext.create(spark)
-    logger.info("Spark session created for TEEHR Evaluation.")
-
-    if debug_config:
-        _log_final_config(spark)
-
-    print("🎉 Good to go!")
-
-    return sedona_spark
 
 
 def _create_base_spark_builder(
@@ -200,28 +257,33 @@ def _create_spark_cluster_base_session(
     k8s_port_https = os.environ.get('KUBERNETES_SERVICE_PORT_HTTPS', '443')
     k8s_api_server = f"https://{k8s_host}:{k8s_port_https}"
 
-    # Detect current namespace if running in a pod
-    current_namespace = "default"
-    namespace_file = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
-    if os.path.exists(namespace_file):
-        with open(namespace_file, 'r') as f:
-            current_namespace = f.read().strip()
+    # First try getting it from environment variable
+    if spark_namespace is None:
+        spark_namespace = os.environ["TEEHR_NAMESPACE"]
+    logger.info(f"🔍 Initial spark namespace from ENV: {spark_namespace}")
+
+    if spark_namespace is None:
+        # Then get it from here
+        namespace_file = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
+        if os.path.exists(namespace_file):
+            with open(namespace_file, 'r') as f:
+                spark_namespace = f.read().strip()
+
+    # Finally get it here if still None
+    if spark_namespace is None:
+        spark_namespace = "default"  # last resort, will probably fail
 
     logger.info(f"🔍 Connecting to Kubernetes API: {k8s_api_server}")
-    logger.info(f"🏠 Current namespace: {current_namespace}")
     logger.info(f"🎯 Executor namespace: {spark_namespace}")
-    logger.info(f"🔐 Driver service account: default (in {current_namespace})")
     logger.info(f"🔐 Executor service account: spark (in {spark_namespace})")
 
     # Create Spark configuration
-    # builder = builder.config("spark.master", f"k8s://{k8s_api_server}")
     builder = builder.master(f"k8s://{k8s_api_server}")
 
     # Basic Kubernetes settings
     builder = builder.config("spark.executor.instances", str(executor_instances))
     builder = builder.config("spark.executor.memory", executor_memory)
     builder = builder.config("spark.executor.cores", str(executor_cores))
-
     builder = builder.config("spark.kubernetes.container.image", container_image)
     builder = builder.config("spark.kubernetes.namespace", spark_namespace)
     builder = builder.config("spark.kubernetes.authenticate.executor.serviceAccountName", "spark")
@@ -230,18 +292,17 @@ def _create_spark_cluster_base_session(
     if os.path.exists(pod_template_path):
         builder = builder.config("spark.kubernetes.executor.podTemplateFile", pod_template_path)
     else:
-        print(f"⚠️  Executor pod template not found: {pod_template_path}")
-        print("    You must provide a valid pod template for executors to launch correctly.")
+        logger.info(f"⚠️  Executor pod template not found: {pod_template_path}")
+        logger.info("    You must provide a valid pod template for executors to launch correctly.")
         raise FileNotFoundError(f"Executor pod template not found: {pod_template_path}")
 
     builder = builder.config("spark.kubernetes.executor.deleteOnTermination", "true")
 
     # Authentication - use service account token if available
-    token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
-    ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
-
+    token_file = const.SERVICE_ACCOUNT_TOKEN_PATH
+    ca_file = const.CA_CERTIFICATE_PATH
     if os.path.exists(token_file) and os.path.exists(ca_file):
-        print("🔐 Using in-cluster authentication")
+        logger.info("🔐 Using in-cluster authentication")
         builder = builder.config("spark.kubernetes.authenticate.submission.oauthTokenFile", token_file)
         builder = builder.config("spark.kubernetes.authenticate.submission.caCertFile", ca_file)
         builder = builder.config("spark.kubernetes.authenticate.driver.oauthTokenFile", token_file)
@@ -250,9 +311,9 @@ def _create_spark_cluster_base_session(
         # Critical: Set the CA cert file for SSL validation
         builder = builder.config("spark.kubernetes.authenticate.caCertFile", ca_file)
     else:
-        print("⚠️  No service account tokens found - may have authentication issues")
-        print(f"   Checked: {token_file}")
-        print(f"   Checked: {ca_file}")
+        logger.info("⚠️  No service account tokens found - may have authentication issues")
+        logger.info(f"   Checked: {token_file}")
+        logger.info(f"   Checked: {ca_file}")
 
     # Driver binding configuration - use pod IP for Kubernetes
     builder = builder.config("spark.driver.bindAddress", "0.0.0.0")
@@ -268,16 +329,16 @@ def _create_spark_cluster_base_session(
             pod_ip = None
 
     if pod_ip:
-        print(f"🔗 Setting driver host to pod IP: {pod_ip}")
+        logger.info(f"🔗 Setting driver host to pod IP: {pod_ip}")
         builder = builder.config("spark.driver.host", pod_ip)
     else:
-        print("⚠️  Could not determine pod IP - using default driver host")
+        logger.info("⚠️  Could not determine pod IP - using default driver host")
 
     # Return a spark session
     return builder.getOrCreate()
 
 
-def _log_final_config(spark: SparkSession):
+def log_session_config(spark: SparkSession):
     """Log the final Spark configuration for debugging."""
     logger.info("Final Spark configuration:")
     df = pd.DataFrame(list(spark.conf.getAll.items()), columns=["Key", "Value"])
@@ -317,19 +378,18 @@ def _get_spark_defaults() -> Dict[str, Any]:
     return {"packages": base_packages, "spark_configs": base_configs}
 
 
-def _configure_catalogs_via_conf(
+def _configure_iceberg_catalogs(
     spark: SparkSession,
     local_warehouse_dir: Union[str, Path],
     local_catalog_name: str,
     local_catalog_type: str,
-    remote_warehouse_dir: Union[str, Path],
+    remote_warehouse_dir: str,
     remote_catalog_name: str,
     remote_catalog_type: str,
     remote_catalog_uri: str
 ):
     """Configure Iceberg catalogs through spark.conf.set()."""
     logger.info("Configuring Iceberg catalogs...")
-
     # Local catalog configuration
     if local_warehouse_dir is not None:
         local_warehouse_path = Path(local_warehouse_dir) / local_catalog_name
@@ -338,7 +398,6 @@ def _configure_catalogs_via_conf(
             f"spark.sql.catalog.{local_catalog_name}.type": local_catalog_type,
             f"spark.sql.catalog.{local_catalog_name}.warehouse": local_warehouse_path.as_posix()
         }
-
         for key, value in catalog_configs.items():
             spark.conf.set(key, value)
             logger.debug(f"Local catalog: {key}: {value}")
@@ -348,10 +407,9 @@ def _configure_catalogs_via_conf(
         f"spark.sql.catalog.{remote_catalog_name}": "org.apache.iceberg.spark.SparkCatalog",
         f"spark.sql.catalog.{remote_catalog_name}.type": remote_catalog_type,
         f"spark.sql.catalog.{remote_catalog_name}.uri": remote_catalog_uri,
-        f"spark.sql.catalog.{remote_catalog_name}.warehouse": str(remote_warehouse_dir),
+        f"spark.sql.catalog.{remote_catalog_name}.warehouse": remote_warehouse_dir,
         f"spark.sql.catalog.{remote_catalog_name}.io-impl": "org.apache.iceberg.aws.s3.S3FileIO"
     }
-
     for key, value in remote_configs.items():
         spark.conf.set(key, value)
         logger.debug(f"Remote catalog: {key}: {value}")
@@ -377,57 +435,4 @@ def remove_or_update_configs(
     if update_configs is not None:
         for key, value in update_configs.items():
             spark.conf.set(key, value)
-
     return
-
-
-if __name__ == "__main__":
-    # Example 1: Default usage (unchanged)
-    spark = create_spark_session(local_warehouse_dir="/tmp/warehouse")
-
-    # Example 2: Add custom packages
-    spark = create_spark_session(
-        local_warehouse_dir="/tmp/warehouseEXAMPLE2",
-        extra_packages=["com.example:my-package:1.0.0"],
-    )
-
-    # Example 3: Override specific settings
-    spark = create_spark_session(
-        local_warehouse_dir="/tmp/warehouse",
-        extra_configs={
-            "spark.sql.adaptive.enabled": "false",
-            "spark.sql.adaptive.advisoryPartitionSizeInBytes": "512MB"
-        }
-    )
-
-    # # Example 4: Use different preset
-    # spark = create_spark_session(
-    #     local_warehouse_dir="/tmp/warehouse",
-    #     config_preset="s3_optimized"
-    # )
-
-    # Example 5: Combine everything
-    spark = create_spark_session(
-        local_warehouse_dir="/tmp/warehouse",
-        # config_preset="minimal",
-        extra_packages=["org.postgresql:postgresql:42.7.8"],
-        extra_configs={
-            "spark.sql.adaptive.enabled": "true",
-            "spark.eventLog.enabled": "true"   # Requires a /tmp/spark-events directory?
-        }
-    )
-
-    # Try updating the config after session creation
-    remove_or_update_configs(
-        spark,
-        remove_configs=["spark.sql.adaptive.enabled"],
-        update_configs={
-            # "spark.driver.maxResultSize": "16g",  # Can't change this after session creation
-            "spark.sql.adaptive.enabled": "false"
-        }
-    )
-
-    logger.info("=================================================")
-    _log_final_config(spark)
-
-    pass
