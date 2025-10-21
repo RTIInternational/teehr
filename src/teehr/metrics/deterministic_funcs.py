@@ -203,26 +203,15 @@ def pearson_correlation(model: MetricsBasemodel) -> Callable:
         p, s = _transform(p, s, model)
 
         if model.add_epsilon:
-            # calculate means
-            mean_p = np.mean(p)
-            mean_s = np.mean(s)
+            # Calculate covariance between p and s
+            numerator = np.cov(p, s)[0, 1]
 
-            # calculate numerator and sum of squares
-            numerator = 0
-            sum_sq_x = 0
-            sum_sq_y = 0
-            for i in range(len(p)):
-                diff_p = p[i] - mean_p
-                diff_s = s[i] - mean_s
-                numerator += diff_p * diff_s
-                sum_sq_x += diff_p ** 2
-                sum_sq_y += diff_s ** 2
+            # Calculate standard deviations and multiply them
+            denominator = np.nanstd(p) * np.nanstd(s) + EPSILON
 
-            # calculate denominator with epsilon
-            denominator = np.sqrt(sum_sq_x * sum_sq_y) + EPSILON
-
-            # calculate result
+            # Calculate correlation coefficient
             result = numerator / denominator
+
         else:
             result = np.corrcoef(s, p)[0][1]
 
@@ -263,27 +252,14 @@ def r_squared(model: MetricsBasemodel) -> Callable:
         p, s = _transform(p, s, model)
 
         if model.add_epsilon:
-            # calculate means
-            mean_p = np.mean(p)
-            mean_s = np.mean(s)
+            # Calculate covariance between p and s
+            numerator = np.cov(p, s)[0, 1]
 
-            # calculate numerator and sum of squares
-            numerator = 0
-            sum_sq_x = 0
-            sum_sq_y = 0
-            for i in range(len(p)):
-                diff_p = p[i] - mean_p
-                diff_s = s[i] - mean_s
-                numerator += diff_p * diff_s
-                sum_sq_x += diff_p ** 2
-                sum_sq_y += diff_s ** 2
+            # Calculate standard deviations and multiply them
+            denominator = np.nanstd(p) * np.nanstd(s) + EPSILON
 
-            # calculate denominator with epsilon
-            denominator = np.sqrt(sum_sq_x * sum_sq_y) + EPSILON
-
-            # calculate pearson correlation coefficient
+            # Calculate correlation coefficient and square it
             pearson_correlation_coefficient = numerator / denominator
-
             result = np.power(pearson_correlation_coefficient, 2)
 
         else:
