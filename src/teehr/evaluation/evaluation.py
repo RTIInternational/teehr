@@ -99,9 +99,7 @@ class Evaluation(EvaluationBase):
         aws_access_key_id: str = None,
         aws_secret_access_key: str = None,
         aws_session_token: str = None,
-        aws_profile: str = None,
-        aws_region: str = None,
-        use_default_credentials: bool = True,
+        aws_region: str = "us-east-2",
         # Simple extensibility parameters
         extra_packages: List[str] = None,
         extra_configs: Dict[str, str] = None,
@@ -174,13 +172,8 @@ class Evaluation(EvaluationBase):
             AWS secret access key for S3 access. Default is None.
         aws_session_token : str
             AWS session token for temporary credentials. Default is None.
-        aws_profile : str
-            AWS profile name to load credentials from. Default is None.
         aws_region : str
-            AWS region name. Default is None.
-        use_default_credentials : bool
-            Whether to use the default AWS credentials provider chain.
-            Default is True.
+            AWS region name. Default is "us-east-2".
         extra_packages : List[str], optional
             A list of extra packages to include in the Spark session.
             The default is None.
@@ -252,9 +245,7 @@ class Evaluation(EvaluationBase):
                 aws_access_key_id=aws_access_key_id,
                 aws_secret_access_key=aws_secret_access_key,
                 aws_session_token=aws_session_token,
-                aws_profile=aws_profile,
                 aws_region=aws_region,
-                use_default_credentials=use_default_credentials,
                 extra_packages=extra_packages,
                 extra_configs=extra_configs,
                 debug_config=debug_config

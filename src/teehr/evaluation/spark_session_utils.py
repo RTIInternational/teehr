@@ -47,9 +47,7 @@ def create_spark_session(
     aws_access_key_id: str = None,
     aws_secret_access_key: str = None,
     aws_session_token: str = None,
-    aws_profile: str = None,
     aws_region: str = None,
-    use_default_credentials: bool = True,
     # Simple extensibility parameters
     extra_packages: List[str] = None,
     extra_configs: Dict[str, str] = None,
@@ -103,12 +101,8 @@ def create_spark_session(
         AWS secret access key for S3 access. Default is None.
     aws_session_token : str
         AWS session token for temporary credentials. Default is None.
-    aws_profile : str
-        AWS profile name to load credentials from. Default is None.
     aws_region : str
         AWS region name. Default is None.
-    use_default_credentials : bool
-        Whether to use the default AWS credentials provider chain. Default is True.
     extra_packages : List[str]
         Additional Spark packages to include. Default is None.
     extra_configs : Dict[str, str]
@@ -128,7 +122,8 @@ def create_spark_session(
         extra_packages=extra_packages,
         extra_configs=extra_configs,
         driver_memory=driver_memory,
-        driver_maxresultsize=driver_max_result_size
+        driver_maxresultsize=driver_max_result_size,
+        aws_region=aws_region,
     )
 
     if start_spark_cluster is False:
@@ -159,9 +154,7 @@ def create_spark_session(
         aws_access_key_id=aws_access_key_id,
         aws_secret_access_key=aws_secret_access_key,
         aws_session_token=aws_session_token,
-        aws_profile=aws_profile,
-        aws_region=aws_region,
-        use_default_credentials=use_default_credentials
+        aws_region=aws_region
     )
 
     # Apply catalog configurations
@@ -197,12 +190,10 @@ def _set_aws_credentials_in_spark(
     aws_access_key_id: str = None,
     aws_secret_access_key: str = None,
     aws_session_token: str = None,
-    aws_profile: str = None,
     aws_region: str = None,
-    use_default_credentials: bool = True
 ):
     """Set AWS credentials in Spark configuration with multiple options."""
-    # Priority 1: Explicit credentials provided by user
+    # Priority: Explicit credentials provided by user
     if aws_access_key_id and aws_secret_access_key:
         logger.info("🔑 Using user-provided AWS credentials")
         spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", aws_access_key_id)
@@ -222,58 +213,7 @@ def _set_aws_credentials_in_spark(
 
         return
 
-    # Priority 2: Use specific AWS profile
-    if aws_profile:
-        logger.info(f"🔑 Using AWS profile: {aws_profile}")
-        try:
-            import boto3
-            session = boto3.Session(profile_name=aws_profile)
-            credentials = session.get_credentials()
-
-            if credentials:
-                spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", credentials.access_key)
-                spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", credentials.secret_key)
-                spark.conf.set("spark.hadoop.fs.s3a.access.key", credentials.access_key)
-                spark.conf.set("spark.hadoop.fs.s3a.secret.key", credentials.secret_key)
-
-                if credentials.token:
-                    spark.conf.set("spark.hadoop.fs.s3a.session.token", credentials.token)
-
-                logger.info(f"   - Successfully loaded credentials from profile: {aws_profile}")
-                return
-            else:
-                logger.warning(f"   - No credentials found in profile: {aws_profile}")
-        except Exception as e:
-            logger.warning(f"   - Error loading profile {aws_profile}: {e}")
-
-    # Priority 3: Default credential chain (your existing logic)
-    if use_default_credentials:
-        try:
-            import boto3
-            session = boto3.Session()
-            credentials = session.get_credentials()
-
-            if credentials:
-                logger.info("🔑 Found AWS credentials from default provider chain")
-                spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", credentials.access_key)
-                spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", credentials.secret_key)
-                spark.conf.set("spark.hadoop.fs.s3a.access.key", credentials.access_key)
-                spark.conf.set("spark.hadoop.fs.s3a.secret.key", credentials.secret_key)
-
-                if credentials.token:
-                    spark.conf.set("spark.hadoop.fs.s3a.session.token", credentials.token)
-                    logger.info("   - Using temporary credentials with session token")
-                else:
-                    logger.info("   - Using long-term credentials")
-                return
-            else:
-                logger.info("⚠️  No AWS credentials found in default chain")
-        except ImportError:
-            logger.info("⚠️  boto3 not available, using Hadoop default provider")
-        except Exception as e:
-            logger.info(f"⚠️  Error getting AWS credentials: {e}")
-
-    # Fallback: Use Hadoop's default provider chain
+    # Fallback: Use Hadoop's default provider chain (system)
     logger.info("🔑 Falling back to Hadoop's default AWS credentials provider")
     spark.conf.set(
         "spark.hadoop.fs.s3a.aws.credentials.provider",
@@ -283,6 +223,7 @@ def _set_aws_credentials_in_spark(
 
 def _create_base_spark_builder(
     app_name: str,
+    aws_region: str,
     extra_packages: List[str] = None,
     extra_configs: Dict[str, str] = None,
     driver_memory: float = None,
@@ -316,6 +257,9 @@ def _create_base_spark_builder(
     builder = builder.config("spark.jars.packages", ",".join(packages))
     builder = builder.config("spark.driver.memory", f"{driver_memory}")
     builder = builder.config("spark.driver.maxResultSize", f"{driver_maxresultsize}")
+
+    builder = builder.config("spark.driver.extraJavaOptions", f"-Daws.region={aws_region}")
+    builder = builder.config("spark.executor.extraJavaOptions", f"-Daws.region={aws_region}")
 
     return builder
 
