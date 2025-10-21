@@ -627,3 +627,124 @@ def max_value_timedelta(model: MetricsBasemodel) -> Callable:
         return td.total_seconds()
 
     return max_value_timedelta_inner
+
+
+# Categorical Metrics
+def confusion_matrix(model: MetricsBasemodel) -> Callable:
+    """Create the confusion_matrix metric function.
+
+    Returns counts of TP, TN, FP, FN as a tuple.
+
+    :math:`TP=\\sum((prim>=threshold_{prim})\\ and\\ (sec>=threshold_{sec}))`
+    :math:`TN=\\sum((prim<threshold_{prim})\\ and\\ (sec<threshold_{sec}))`
+    :math:`FP=\\sum((prim<threshold_{prim})\\ and\\ (sec>=threshold_{sec}))`
+    :math:`FN=\\sum((prim>=threshold_{prim})\\ and\\ (sec<threshold_{sec}))`
+    """ # noqa
+    logger.debug("Building the confusion_matrix_counts metric function")
+
+    def confusion_matrix_inner(p: pd.Series, s: pd.Series) -> tuple:
+        """Confusion matrix counts."""
+        p, s = _transform(p, s, model)
+
+        tp = np.sum((p >= model.threshold) & (s >= model.threshold))
+        tn = np.sum((p < model.threshold) & (s < model.threshold))
+        fp = np.sum((p < model.threshold) & (s >= model.threshold))
+        fn = np.sum((p >= model.threshold) & (s < model.threshold))
+        result = (tp, tn, fp, fn)
+
+        return result
+
+    return confusion_matrix_inner
+
+
+def false_alarm_ratio(model: MetricsBasemodel) -> Callable:
+    """Create the false_alarm_ratio metric function.
+
+    :math:`FAR=\\frac{FP}{(TP+FP)}`
+    """ # noqa
+    logger.debug("Building the false_alarm_ratio metric function")
+
+    def false_alarm_ratio_inner(p: pd.Series, s: pd.Series) -> float:
+        """False alarm ratio."""
+        p, s = _transform(p, s, model)
+
+        tp = np.sum((p >= model.threshold) & (s >= model.threshold))
+        fp = np.sum((p < model.threshold) & (s >= model.threshold))
+        if (tp + fp) == 0:
+            result = np.nan
+        else:
+            result = fp / (tp + fp)
+
+        return result
+
+    return false_alarm_ratio_inner
+
+
+def probability_of_detection(model: MetricsBasemodel) -> Callable:
+    """Create the probability_of_detection metric function.
+
+    :math:`POD=\\frac{TP}{(TP+FN)}`
+    """ # noqa
+    logger.debug("Building the probability_of_detection metric function")
+
+    def probability_of_detection_inner(p: pd.Series, s: pd.Series) -> float:
+        """Probability of detection."""
+        p, s = _transform(p, s, model)
+
+        tp = np.sum((p >= model.threshold) & (s >= model.threshold))
+        fn = np.sum((p >= model.threshold) & (s < model.threshold))
+        if (tp + fn) == 0:
+            result = np.nan
+        else:
+            result = tp / (tp + fn)
+
+        return result
+
+    return probability_of_detection_inner
+
+
+def probability_of_false_detection(model: MetricsBasemodel) -> Callable:
+    """Create the probability_of_false_detection metric function.
+
+    :math:`POFD=\\frac{FP}{(FP+TN)}`
+    """ # noqa
+    logger.debug("Building the probability_of_false_detection metric function")
+
+    def probability_of_false_detection_inner(p: pd.Series, s: pd.Series) -> float:
+        """Probability of false detection."""
+        p, s = _transform(p, s, model)
+
+        fp = np.sum((p < model.threshold) & (s >= model.threshold))
+        tn = np.sum((p < model.threshold) & (s < model.threshold))
+        if (fp + tn) == 0:
+            result = np.nan
+        else:
+            result = fp / (fp + tn)
+
+        return result
+
+    return probability_of_false_detection_inner
+
+
+def critical_success_index(model: MetricsBasemodel) -> Callable:
+    """Create the critical_success_index metric function.
+
+    :math:`CSI=\\frac{TP}{(TP+FP+FN)}`
+    """ # noqa
+    logger.debug("Building the critical_success_index metric function")
+
+    def critical_success_index_inner(p: pd.Series, s: pd.Series) -> float:
+        """Critical success index."""
+        p, s = _transform(p, s, model)
+
+        tp = np.sum((p >= model.threshold) & (s >= model.threshold))
+        fp = np.sum((p < model.threshold) & (s >= model.threshold))
+        fn = np.sum((p >= model.threshold) & (s < model.threshold))
+        if (tp + fp + fn) == 0:
+            result = np.nan
+        else:
+            result = tp / (tp + fp + fn)
+
+        return result
+
+    return critical_success_index_inner
