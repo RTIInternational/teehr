@@ -43,6 +43,13 @@ def create_spark_session(
     driver_memory: str = None,
     driver_max_result_size: str = None,
     pod_template_path: Union[str, Path] = const.POD_TEMPLATE_PATH,
+    # AWS credential parameters
+    aws_access_key_id: str = None,
+    aws_secret_access_key: str = None,
+    aws_session_token: str = None,
+    aws_profile: str = None,
+    aws_region: str = None,
+    use_default_credentials: bool = True,
     # Simple extensibility parameters
     extra_packages: List[str] = None,
     extra_configs: Dict[str, str] = None,
@@ -90,6 +97,18 @@ def create_spark_session(
     pod_template_path : Union[str, Path]
         Path to the pod template file for Spark executors.
         Default is "/opt/teehr/executor-pod-template.yaml".
+    aws_access_key_id : str
+        AWS access key ID for S3 access. Default is None.
+    aws_secret_access_key : str
+        AWS secret access key for S3 access. Default is None.
+    aws_session_token : str
+        AWS session token for temporary credentials. Default is None.
+    aws_profile : str
+        AWS profile name to load credentials from. Default is None.
+    aws_region : str
+        AWS region name. Default is None.
+    use_default_credentials : bool
+        Whether to use the default AWS credentials provider chain. Default is True.
     extra_packages : List[str]
         Additional Spark packages to include. Default is None.
     extra_configs : Dict[str, str]
@@ -134,18 +153,27 @@ def create_spark_session(
         logger.info(f"   - Executor cores: {executor_cores}")
 
     # Set AWS credentials if available
-    _set_aws_credentials_in_spark(spark, remote_catalog_name)
+    _set_aws_credentials_in_spark(
+        spark=spark,
+        remote_catalog_name=remote_catalog_name,
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key,
+        aws_session_token=aws_session_token,
+        aws_profile=aws_profile,
+        aws_region=aws_region,
+        use_default_credentials=use_default_credentials
+    )
 
     # Apply catalog configurations
     _configure_iceberg_catalogs(
-        spark,
-        local_warehouse_dir,
-        local_catalog_name,
-        local_catalog_type,
-        remote_warehouse_dir,
-        remote_catalog_name,
-        remote_catalog_type,
-        remote_catalog_uri
+        spark=spark,
+        local_warehouse_dir=local_warehouse_dir,
+        local_catalog_name=local_catalog_name,
+        local_catalog_type=local_catalog_type,
+        remote_warehouse_dir=remote_warehouse_dir,
+        remote_catalog_name=remote_catalog_name,
+        remote_catalog_type=remote_catalog_type,
+        remote_catalog_uri=remote_catalog_uri
     )
 
     if local_warehouse_dir is not None:
@@ -165,35 +193,92 @@ def create_spark_session(
 
 def _set_aws_credentials_in_spark(
     spark: SparkSession,
-    remote_catalog_name: str
+    remote_catalog_name: str,
+    aws_access_key_id: str = None,
+    aws_secret_access_key: str = None,
+    aws_session_token: str = None,
+    aws_profile: str = None,
+    aws_region: str = None,
+    use_default_credentials: bool = True
 ):
-    """Set AWS credentials in Spark configuration if available."""
-    try:
-        import boto3
-        session = boto3.Session()
-        credentials = session.get_credentials()
+    """Set AWS credentials in Spark configuration with multiple options."""
+    # Priority 1: Explicit credentials provided by user
+    if aws_access_key_id and aws_secret_access_key:
+        logger.info("🔑 Using user-provided AWS credentials")
+        spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", aws_access_key_id)
+        spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", aws_secret_access_key)
+        spark.conf.set("spark.hadoop.fs.s3a.access.key", aws_access_key_id)
+        spark.conf.set("spark.hadoop.fs.s3a.secret.key", aws_secret_access_key)
 
-        if credentials:
-            logger.info("🔑 Found AWS credentials, setting for Spark")
-            # Set explicit credentials for Spark/Hadoop
-            spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", credentials.access_key)
-            spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", credentials.secret_key)
-            # Handle session token if present (for temporary credentials)
-            if credentials.token:
-                spark.conf.set("spark.hadoop.fs.s3a.session.token", credentials.token)
-                logger.info("   - Using temporary credentials with session token")
-            else:
-                logger.info("   - Using long-term credentials")
+        if aws_session_token:
+            spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", aws_session_token)
+            spark.conf.set("spark.hadoop.fs.s3a.session.token", aws_session_token)
+            logger.info("   - Using temporary credentials with session token")
         else:
-            logger.info("⚠️  No AWS credentials found, falling back to default provider chain")
-            spark.conf.set("spark.hadoop.fs.s3a.aws.credentials.provider", "com.amazonaws.auth.DefaultAWSCredentialsProviderChain")
-    except ImportError:
-        logger.info("⚠️  boto3 not available, using default AWS credentials provider")
-        spark.conf.set("spark.hadoop.fs.s3a.aws.credentials.provider", "com.amazonaws.auth.DefaultAWSCredentialsProviderChain")
-    except Exception as e:
-        logger.info(f"⚠️  Error getting AWS credentials: {e}")
-        logger.info("   Falling back to default provider chain")
-        spark.conf.set("spark.hadoop.fs.s3a.aws.credentials.provider", "com.amazonaws.auth.DefaultAWSCredentialsProviderChain")
+            logger.info("   - Using long-term credentials")
+
+        if aws_region:
+            spark.conf.set("spark.hadoop.fs.s3a.endpoint.region", aws_region)
+
+        return
+
+    # Priority 2: Use specific AWS profile
+    if aws_profile:
+        logger.info(f"🔑 Using AWS profile: {aws_profile}")
+        try:
+            import boto3
+            session = boto3.Session(profile_name=aws_profile)
+            credentials = session.get_credentials()
+
+            if credentials:
+                spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", credentials.access_key)
+                spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", credentials.secret_key)
+                spark.conf.set("spark.hadoop.fs.s3a.access.key", credentials.access_key)
+                spark.conf.set("spark.hadoop.fs.s3a.secret.key", credentials.secret_key)
+
+                if credentials.token:
+                    spark.conf.set("spark.hadoop.fs.s3a.session.token", credentials.token)
+
+                logger.info(f"   - Successfully loaded credentials from profile: {aws_profile}")
+                return
+            else:
+                logger.warning(f"   - No credentials found in profile: {aws_profile}")
+        except Exception as e:
+            logger.warning(f"   - Error loading profile {aws_profile}: {e}")
+
+    # Priority 3: Default credential chain (your existing logic)
+    if use_default_credentials:
+        try:
+            import boto3
+            session = boto3.Session()
+            credentials = session.get_credentials()
+
+            if credentials:
+                logger.info("🔑 Found AWS credentials from default provider chain")
+                spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", credentials.access_key)
+                spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", credentials.secret_key)
+                spark.conf.set("spark.hadoop.fs.s3a.access.key", credentials.access_key)
+                spark.conf.set("spark.hadoop.fs.s3a.secret.key", credentials.secret_key)
+
+                if credentials.token:
+                    spark.conf.set("spark.hadoop.fs.s3a.session.token", credentials.token)
+                    logger.info("   - Using temporary credentials with session token")
+                else:
+                    logger.info("   - Using long-term credentials")
+                return
+            else:
+                logger.info("⚠️  No AWS credentials found in default chain")
+        except ImportError:
+            logger.info("⚠️  boto3 not available, using Hadoop default provider")
+        except Exception as e:
+            logger.info(f"⚠️  Error getting AWS credentials: {e}")
+
+    # Fallback: Use Hadoop's default provider chain
+    logger.info("🔑 Falling back to Hadoop's default AWS credentials provider")
+    spark.conf.set(
+        "spark.hadoop.fs.s3a.aws.credentials.provider",
+        "com.amazonaws.auth.DefaultAWSCredentialsProviderChain"
+    )
 
 
 def _create_base_spark_builder(

@@ -95,6 +95,13 @@ class Evaluation(EvaluationBase):
         driver_memory: str = None,
         driver_max_result_size: str = None,
         pod_template_path: Union[str, Path] = const.POD_TEMPLATE_PATH,
+        # AWS credential parameters
+        aws_access_key_id: str = None,
+        aws_secret_access_key: str = None,
+        aws_session_token: str = None,
+        aws_profile: str = None,
+        aws_region: str = None,
+        use_default_credentials: bool = True,
         # Simple extensibility parameters
         extra_packages: List[str] = None,
         extra_configs: Dict[str, str] = None,
@@ -116,8 +123,8 @@ class Evaluation(EvaluationBase):
         local_namespace_name : str, optional
             The namespace for the local catalog. The default is "teehr".
         create_local_dir : bool, optional
-            Whether to create the local warehouse directory if it does not exist.
-            The default is False.
+            Whether to create the local warehouse directory if it does not
+             exist. The default is False.
         remote_warehouse_dir : str, optional
             The remote warehouse directory for the remote catalog.
             The default is const.WAREHOUSE_S3_PATH.
@@ -126,21 +133,25 @@ class Evaluation(EvaluationBase):
         remote_catalog_type : str, optional
             The type of the remote catalog. The default is "rest".
         remote_catalog_uri : str, optional
-            The URI for the remote catalog. The default is const.CATALOG_REST_URI.
+            The URI for the remote catalog.
+            The default is const.CATALOG_REST_URI.
         remote_namespace_name : str, optional
             The namespace for the remote catalog. The default is "teehr".
         spark : SparkSession, optional
             An existing Spark session. If None, a new Spark session is created.
             The default is None.
         check_evaluation_version : bool, optional
-            Whether to check the evaluation version in the local warehouse directory.
-            The default is True.
+            Whether to check the evaluation version in the local warehouse
+            directory. The default is True.
         app_name : str, optional
-            The name of the Spark application. The default is "TEEHR Evaluation".
+            The name of the Spark application.
+            The default is "TEEHR Evaluation".
         start_spark_cluster : bool, optional
-            Whether to start a Spark cluster (Kubernetes). The default is False.
+            Whether to start a Spark cluster (Kubernetes).
+            The default is False.
         executor_instances : int, optional
-            The number of executor instances for the Spark cluster. The default is 2.
+            The number of executor instances for the Spark cluster.
+            The default is 2.
         executor_memory : str, optional
             The memory allocation for each executor. The default is "1g".
         executor_cores : int, optional
@@ -148,22 +159,38 @@ class Evaluation(EvaluationBase):
         executor_image : str, optional
             The Docker image for the Spark executors. The default is None.
         executor_namespace : str, optional
-            The Kubernetes namespace for the Spark executors. The default is None.
+            The Kubernetes namespace for the Spark executors.
+            The default is None.
         driver_memory : str, optional
             The memory allocation for the Spark driver. The default is None.
         driver_max_result_size : str, optional
             The maximum result size for the Spark driver. The default is None.
         pod_template_path : Union[str, Path], optional
-            The path to the executor pod template for Kubernetes. The default is
-            const.POD_TEMPLATE_PATH.
+            The path to the executor pod template for Kubernetes.
+            The default is const.POD_TEMPLATE_PATH.
+        aws_access_key_id : str
+            AWS access key ID for S3 access. Default is None.
+        aws_secret_access_key : str
+            AWS secret access key for S3 access. Default is None.
+        aws_session_token : str
+            AWS session token for temporary credentials. Default is None.
+        aws_profile : str
+            AWS profile name to load credentials from. Default is None.
+        aws_region : str
+            AWS region name. Default is None.
+        use_default_credentials : bool
+            Whether to use the default AWS credentials provider chain.
+            Default is True.
         extra_packages : List[str], optional
-            A list of extra packages to include in the Spark session. The default is None.
+            A list of extra packages to include in the Spark session.
+            The default is None.
             >>> extra_packages=["com.example:my-package:1.0.0"]
         extra_configs : Dict[str, str], optional
             A dictionary of extra Spark configurations. The default is None.
             >>> extra_configs={"spark.sql.shuffle.partitions": "100"}
         debug_config : bool, optional
-            Whether to enable debug configuration for Spark. The default is False.
+            Whether to enable debug configuration for Spark.
+            The default is False.
         """
         if local_warehouse_dir is not None:
             local_warehouse_dir = Path(local_warehouse_dir)
@@ -222,6 +249,12 @@ class Evaluation(EvaluationBase):
                 executor_image=executor_image,
                 executor_namespace=executor_namespace,
                 pod_template_path=pod_template_path,
+                aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_access_key,
+                aws_session_token=aws_session_token,
+                aws_profile=aws_profile,
+                aws_region=aws_region,
+                use_default_credentials=use_default_credentials,
                 extra_packages=extra_packages,
                 extra_configs=extra_configs,
                 debug_config=debug_config
