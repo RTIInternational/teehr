@@ -482,10 +482,10 @@ def _configure_iceberg_catalogs(
 
     # These are needed only if running local kind cluster against MinIO for testing
     # or something similar
-    # if "os.environ".get("TEEHR_USE_MINIO", "false").lower() == "true":
-    logger.info("⚠️  Configuring remote catalog for MinIO access")
-    remote_configs[f"spark.sql.catalog.{remote_catalog_name}.s3.endpoint"] = "http://minio:9000"
-    remote_configs[f"spark.sql.catalog.{remote_catalog_name}.s3.path-style-access"] = "true"
+    if os.environ.get("IN_CLUSTER", "false").lower() == "true":
+        logger.info("⚠️  Configuring remote catalog for MinIO access")
+        remote_configs[f"spark.sql.catalog.{remote_catalog_name}.s3.endpoint"] = "http://minio:9000"
+        remote_configs[f"spark.sql.catalog.{remote_catalog_name}.s3.path-style-access"] = "true"
 
     for key, value in remote_configs.items():
         spark.conf.set(key, value)
