@@ -185,8 +185,23 @@ class Evaluation(EvaluationBase):
             Whether to enable debug configuration for Spark.
             The default is False.
         """
+        # Create local directory if it does not exist.
         if local_warehouse_dir is not None:
             local_warehouse_dir = Path(local_warehouse_dir)
+            if create_local_dir is True and not local_warehouse_dir.exists():
+                logger.info(f"Creating directory {local_warehouse_dir}.")
+                local_warehouse_dir.mkdir(parents=True, exist_ok=True)
+            elif create_local_dir is True and local_warehouse_dir.exists():
+                logger.info(
+                    f"Directory {local_warehouse_dir} already exists."
+                    " Not creating it again."
+                )
+            elif create_local_dir is False and not local_warehouse_dir.exists():
+                raise ValueError(
+                    f"Local warehouse directory {local_warehouse_dir} does not exist."
+                    " Set create_local_dir=True to create it."
+                )
+
         self.local_catalog = LocalCatalog(
             warehouse_dir=local_warehouse_dir,
             catalog_name=local_catalog_name,
@@ -200,10 +215,6 @@ class Evaluation(EvaluationBase):
             catalog_type=remote_catalog_type,
             catalog_uri=remote_catalog_uri,
         )
-        # Create local directory if it does not exist.
-        if local_warehouse_dir is not None and create_local_dir is True:
-            logger.info(f"Creating directory {local_warehouse_dir}.")
-            Path(local_warehouse_dir).mkdir(parents=True, exist_ok=True)
 
         # Initialize cache and scripts dir. These are only valid
         # when using a local catalog.
@@ -216,13 +227,13 @@ class Evaluation(EvaluationBase):
             and local_warehouse_dir is not None
             and create_local_dir is False
         ):
-            self.check_evaluation_version()
+            self.check_evaluation_version(warehouse_dir=local_warehouse_dir)
 
-        # If a Spark session is provided.
-        self.spark = spark
-
-        # Create a Spark Session if one is not provided.
-        if not self.spark:
+        # Initialize Spark session
+        if spark is not None:
+            logger.info("Using provided Spark session.")
+            self.spark = spark
+        else:
             logger.info("Creating a new Spark session.")
             self.spark = create_spark_session(
                 local_warehouse_dir=self.local_catalog.warehouse_dir,
@@ -611,34 +622,17 @@ class Evaluation(EvaluationBase):
 
     def check_evaluation_version(self, warehouse_dir: Union[str, Path] = None) -> str:
         """Check the version of the TEEHR Evaluation."""
-        # if self.is_s3:
-        #     fs = s3fs.S3FileSystem(anon=True)
-        #     version_file = self.active_catalog.warehouse_dir.path + "/" + "version"
-        # else:
-        if warehouse_dir is not None:
-            self.active_catalog.warehouse_dir = warehouse_dir
-
         fs = LocalFileSystem()
         version_file = Path(warehouse_dir, "version")
 
         if not fs.exists(version_file):
             logger.error(f"Version file not found in {warehouse_dir}.")
-            if self.is_s3:
-                err_msg = (
-                    f"Please create a version file in {warehouse_dir}."
-                )
-                logger.error(err_msg)
-                raise Exception(err_msg)
-            else:
-                # Raise an error if no version file is found.
-                err_msg = (
-                    "Incompatible Evaluation version."
-                    f" No version file found in {warehouse_dir}."
-                    " TEEHR v0.6 requires a version file to be present"
-                    " in the evaluation directory."
-                )
-                logger.error(err_msg)
-                raise ValueError(err_msg)
+            err_msg = (
+                f"Please create a version file in {warehouse_dir},"
+                " or set 'check_evaluation_version'=False."
+            )
+            logger.error(err_msg)
+            raise Exception(err_msg)
         else:
             with fs.open(version_file) as f:
                 version_txt = str(f.read().strip())

@@ -402,7 +402,7 @@ def _get_spark_defaults() -> Dict[str, Any]:
         "spark.sql.extensions": "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions",
         "spark.serializer": "org.apache.spark.serializer.KryoSerializer",
         "spark.hadoop.fs.s3a.impl": "org.apache.hadoop.fs.s3a.S3AFileSystem",
-        "spark.hadoop.fs.s3a.aws.credentials.provider": "com.amazonaws.auth.DefaultAWSCredentialsProviderChain",
+        # "spark.hadoop.fs.s3a.aws.credentials.provider": "com.amazonaws.auth.DefaultAWSCredentialsProviderChain",
     }
     return {"packages": base_packages, "spark_configs": base_configs}
 

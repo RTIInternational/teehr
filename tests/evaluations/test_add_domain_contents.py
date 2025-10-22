@@ -7,14 +7,14 @@ from teehr.models.pydantic_table_models import (
 )
 import tempfile
 from teehr import Evaluation
-from pathlib import Path
 
 
 def test_add_domains(tmpdir):
     """Test creating a new study."""
-    # ev = Evaluation()  # Connects to remote by default
-
-    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
+    ev = Evaluation(
+        local_warehouse_dir=tmpdir,
+        check_evaluation_version=False,
+    )
     ev.clone_template()
 
     new_tbl = ev.table(table_name="new_table")
