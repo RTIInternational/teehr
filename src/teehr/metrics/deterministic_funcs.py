@@ -2,6 +2,7 @@
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+from scipy.stats import rankdata
 
 from teehr.models.metrics.basemodels import MetricsBasemodel
 from teehr.models.metrics.basemodels import TransformEnum
@@ -340,19 +341,21 @@ def spearman_correlation(model: MetricsBasemodel) -> Callable:
         """Spearman Rank Correlation Coefficient."""
         p, s = _transform(p, s, model)
 
-        primary_rank = p.rank()
-        secondary_rank = s.rank()
-        count = len(p)
+        # calculate ranks (average method for ties)
+        primary_ranks = rankdata(p, method='average')
+        secondary_ranks = rankdata(s, method='average')
+
+        # calculate covariance between p_rank and s_rank
+        covariance = np.cov(primary_ranks, secondary_ranks)[0, 1]
+
+        # calculate standard deviations of ranks
+        std_primary = np.std(primary_ranks)
+        std_secondary = np.std(secondary_ranks)
+
         if model.add_epsilon:
-            result = 1 - (
-                6 * np.sum(np.abs(primary_rank - secondary_rank)**2)
-                / (count * (count**2 - 1)) + EPSILON
-                )
+            result = covariance / (std_primary * std_secondary + EPSILON)
         else:
-            result = 1 - (
-                6 * np.sum(np.abs(primary_rank - secondary_rank)**2)
-                / (count * (count**2 - 1))
-                )
+            result = covariance / (std_primary * std_secondary)
 
         return result
 
