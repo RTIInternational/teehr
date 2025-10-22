@@ -72,150 +72,57 @@ class Evaluation(EvaluationBase):
 
     def __init__(
         self,
-        local_warehouse_dir: Union[str, Path] = None,
-        local_catalog_name: str = "local",
-        local_catalog_type: str = "hadoop",
-        local_namespace_name: str = "teehr",
-        create_local_dir: bool = False,
-        remote_warehouse_dir: str = const.WAREHOUSE_S3_PATH,
-        remote_catalog_name: str = "iceberg",
-        remote_catalog_type: str = "rest",
-        remote_catalog_uri: str = const.CATALOG_REST_URI,
-        remote_namespace_name: str = "teehr",
-        spark: SparkSession = None,
+        dir_path: Union[str, Path] = None,
+        create_dir: bool = False,
         check_evaluation_version: bool = True,
-        app_name: str = "TEEHR Evaluation",
-        # Spark K8'specific parameters
-        start_spark_cluster: bool = False,
-        executor_instances: int = 2,
-        executor_memory: str = "1g",
-        executor_cores: int = 1,
-        executor_image: str = None,
-        executor_namespace: str = None,
-        driver_memory: str = None,
-        driver_max_result_size: str = None,
-        pod_template_path: Union[str, Path] = const.POD_TEMPLATE_PATH,
-        # AWS credential parameters
-        aws_access_key_id: str = None,
-        aws_secret_access_key: str = None,
-        aws_session_token: str = None,
-        aws_region: str = "us-east-2",
-        # Simple extensibility parameters
-        extra_packages: List[str] = None,
-        extra_configs: Dict[str, str] = None,
-        debug_config: bool = False
+        spark: SparkSession = None
     ):
         """
         Initialize the Evaluation class.
 
         Parameters
         ----------
-        local_warehouse_dir : Union[str, Path], optional
-            The local warehouse directory for the local catalog.
-            If None, only the remote catalog is used.
-            The default is None.
-        local_catalog_name : str, optional
-            The name of the local catalog. The default is "local".
-        local_catalog_type : str, optional
-            The type of the local catalog. The default is "hadoop".
-        local_namespace_name : str, optional
-            The namespace for the local catalog. The default is "teehr".
-        create_local_dir : bool, optional
-            Whether to create the local warehouse directory if it does not
+        dir_path : Union[str, Path]
+            The path to the evaluation directory.
+        create_dir : bool, optional
+            Whether to create the local directory if it does not
              exist. The default is False.
-        remote_warehouse_dir : str, optional
-            The remote warehouse directory for the remote catalog.
-            The default is const.WAREHOUSE_S3_PATH.
-        remote_catalog_name : str, optional
-            The name of the remote catalog. The default is "iceberg".
-        remote_catalog_type : str, optional
-            The type of the remote catalog. The default is "rest".
-        remote_catalog_uri : str, optional
-            The URI for the remote catalog.
-            The default is const.CATALOG_REST_URI.
-        remote_namespace_name : str, optional
-            The namespace for the remote catalog. The default is "teehr".
-        spark : SparkSession, optional
-            An existing Spark session. If None, a new Spark session is created.
-            The default is None.
         check_evaluation_version : bool, optional
-            Whether to check the evaluation version in the local warehouse
+            Whether to check the evaluation version in the local
             directory. The default is True.
-        app_name : str, optional
-            The name of the Spark application.
-            The default is "TEEHR Evaluation".
-        start_spark_cluster : bool, optional
-            Whether to start a Spark cluster (Kubernetes).
-            The default is False.
-        executor_instances : int, optional
-            The number of executor instances for the Spark cluster.
-            The default is 2.
-        executor_memory : str, optional
-            The memory allocation for each executor. The default is "1g".
-        executor_cores : int, optional
-            The number of cores for each executor. The default is 1.
-        executor_image : str, optional
-            The Docker image for the Spark executors. The default is None.
-        executor_namespace : str, optional
-            The Kubernetes namespace for the Spark executors.
-            The default is None.
-        driver_memory : str, optional
-            The memory allocation for the Spark driver. The default is None.
-        driver_max_result_size : str, optional
-            The maximum result size for the Spark driver. The default is None.
-        pod_template_path : Union[str, Path], optional
-            The path to the executor pod template for Kubernetes.
-            The default is const.POD_TEMPLATE_PATH.
-        aws_access_key_id : str
-            AWS access key ID for S3 access. Default is None.
-        aws_secret_access_key : str
-            AWS secret access key for S3 access. Default is None.
-        aws_session_token : str
-            AWS session token for temporary credentials. Default is None.
-        aws_region : str
-            AWS region name. Default is "us-east-2".
-        extra_packages : List[str], optional
-            A list of extra packages to include in the Spark session.
-            The default is None.
-            >>> extra_packages=["com.example:my-package:1.0.0"]
-        extra_configs : Dict[str, str], optional
-            A dictionary of extra Spark configurations. The default is None.
-            >>> extra_configs={"spark.sql.shuffle.partitions": "100"}
-        debug_config : bool, optional
-            Whether to enable debug configuration for Spark.
-            The default is False.
+        spark : SparkSession, optional
+            The SparkSession object, by default None
         """
         # Create local directory if it does not exist.
-        if local_warehouse_dir is not None:
-            local_warehouse_dir = Path(local_warehouse_dir)
-            if create_local_dir is True and not local_warehouse_dir.exists():
-                logger.info(f"Creating directory {local_warehouse_dir}.")
-                local_warehouse_dir.mkdir(parents=True, exist_ok=True)
-            elif create_local_dir is True and local_warehouse_dir.exists():
+        if dir_path is not None:
+            dir_path = Path(dir_path)
+            if create_dir is True and not dir_path.exists():
+                logger.info(f"Creating directory {dir_path}.")
+                dir_path.mkdir(parents=True, exist_ok=True)
+            elif create_dir is True and dir_path.exists():
                 logger.info(
-                    f"Directory {local_warehouse_dir} already exists."
+                    f"Directory {dir_path} already exists."
                     " Not creating it again."
                 )
-            elif create_local_dir is False and not local_warehouse_dir.exists():
+            elif create_dir is False and not dir_path.exists():
                 raise ValueError(
-                    f"Local warehouse directory {local_warehouse_dir} does not exist."
-                    " Set create_local_dir=True to create it."
+                    f"Local warehouse directory {dir_path} does not exist."
+                    " Set create_dir=True to create it."
                 )
 
         self.local_catalog = LocalCatalog(
-            warehouse_dir=local_warehouse_dir,
-            catalog_name=local_catalog_name,
-            namespace_name=local_namespace_name,
-            catalog_type=local_catalog_type,
+            warehouse_dir=dir_path,
+            catalog_name=const.LOCAL_CATALOG_NAME,
+            namespace_name=const.LOCAL_NAMESPACE_NAME,
+            catalog_type=const.LOCAL_CATALOG_TYPE,
         )
         self.remote_catalog = RemoteCatalog(
-            warehouse_dir=remote_warehouse_dir,
-            catalog_name=remote_catalog_name,
-            namespace_name=remote_namespace_name,
-            catalog_type=remote_catalog_type,
-            catalog_uri=remote_catalog_uri,
+            warehouse_dir=const.WAREHOUSE_S3_PATH,
+            catalog_name=const.REMOTE_CATALOG_NAME,
+            namespace_name=const.REMOTE_NAMESPACE_NAME,
+            catalog_type=const.REMOTE_CATALOG_TYPE,
+            catalog_uri=const.CATALOG_REST_URI,
         )
-
         # Initialize cache and scripts dir. These are only valid
         # when using a local catalog.
         self.cache_dir = None
@@ -224,10 +131,10 @@ class Evaluation(EvaluationBase):
         # Check version of Evaluation
         if (
             check_evaluation_version is True
-            and local_warehouse_dir is not None
-            and create_local_dir is False
+            and dir_path is not None
+            and create_dir is False
         ):
-            self.check_evaluation_version(warehouse_dir=local_warehouse_dir)
+            self.check_evaluation_version(warehouse_dir=dir_path)
 
         # Initialize Spark session
         if spark is not None:
@@ -236,33 +143,11 @@ class Evaluation(EvaluationBase):
         else:
             logger.info("Creating a new Spark session.")
             self.spark = create_spark_session(
-                local_warehouse_dir=self.local_catalog.warehouse_dir,
-                local_catalog_name=self.local_catalog.catalog_name,
-                local_catalog_type=self.local_catalog.catalog_type,
-                remote_warehouse_dir=self.remote_catalog.warehouse_dir,
-                remote_catalog_name=self.remote_catalog.catalog_name,
-                remote_catalog_type=self.remote_catalog.catalog_type,
-                remote_catalog_uri=self.remote_catalog.catalog_uri,
-                driver_max_result_size=driver_max_result_size,
-                driver_memory=driver_memory,
-                app_name=app_name,
-                start_spark_cluster=start_spark_cluster,
-                executor_instances=executor_instances,
-                executor_memory=executor_memory,
-                executor_cores=executor_cores,
-                executor_image=executor_image,
-                executor_namespace=executor_namespace,
-                pod_template_path=pod_template_path,
-                aws_access_key_id=aws_access_key_id,
-                aws_secret_access_key=aws_secret_access_key,
-                aws_session_token=aws_session_token,
-                aws_region=aws_region,
-                extra_packages=extra_packages,
-                extra_configs=extra_configs,
-                debug_config=debug_config
+                dir_path=dir_path,
             )
+
         # Set the local catalog as the active catalog by default.
-        if local_warehouse_dir is not None:
+        if dir_path is not None:
             self.set_active_catalog("local")
         else:
             self.set_active_catalog("remote")

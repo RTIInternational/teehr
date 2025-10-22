@@ -26,12 +26,12 @@ SEDONA_VERSION = "1.8.0"
 def create_spark_session(
     # App name and catalog settings
     app_name: str = "TEEHR Evaluation",
-    local_warehouse_dir: Union[str, Path] = None,
-    local_catalog_name: str = "local",
-    local_catalog_type: str = "hadoop",
+    dir_path: Union[str, Path] = None,
+    local_catalog_name: str = const.LOCAL_CATALOG_NAME,
+    local_catalog_type: str = const.LOCAL_CATALOG_TYPE,
     remote_warehouse_dir: str = const.WAREHOUSE_S3_PATH,
-    remote_catalog_name: str = "iceberg",
-    remote_catalog_type: str = "rest",
+    remote_catalog_name: str = const.REMOTE_CATALOG_NAME,
+    remote_catalog_type: str = const.REMOTE_CATALOG_TYPE,
     remote_catalog_uri: str = const.CATALOG_REST_URI,
     # Spark K8'specific parameters
     start_spark_cluster: bool = False,
@@ -47,7 +47,8 @@ def create_spark_session(
     aws_access_key_id: str = None,
     aws_secret_access_key: str = None,
     aws_session_token: str = None,
-    aws_region: str = None,
+    aws_region: str = const.AWS_REGION,
+    allow_anonymous: bool = False,
     # Simple extensibility parameters
     extra_packages: List[str] = None,
     extra_configs: Dict[str, str] = None,
@@ -59,9 +60,8 @@ def create_spark_session(
     ----------
     app_name : str
         Name of the Spark application. Default is "TEEHR Evaluation".
-    local_warehouse_dir : Union[str, Path]
-        Local warehouse directory for Iceberg catalog.
-        Default is None (no local catalog).
+    dir_path : Union[str, Path]
+        The path to the evaluation directory.
     local_catalog_name : str
         Name of the local Iceberg catalog. Default is "local".
     local_catalog_type : str
@@ -102,7 +102,9 @@ def create_spark_session(
     aws_session_token : str
         AWS session token for temporary credentials. Default is None.
     aws_region : str
-        AWS region name. Default is None.
+        AWS region name. Default is "us-east-2".
+    allow_anonymous : bool
+        Whether to allow anonymous access to S3. Default is False.
     extra_packages : List[str]
         Additional Spark packages to include. Default is None.
     extra_configs : Dict[str, str]
@@ -154,13 +156,14 @@ def create_spark_session(
         aws_access_key_id=aws_access_key_id,
         aws_secret_access_key=aws_secret_access_key,
         aws_session_token=aws_session_token,
-        aws_region=aws_region
+        aws_region=aws_region,
+        allow_anonymous=allow_anonymous
     )
 
     # Apply catalog configurations
     _configure_iceberg_catalogs(
         spark=spark,
-        local_warehouse_dir=local_warehouse_dir,
+        local_warehouse_dir=dir_path,
         local_catalog_name=local_catalog_name,
         local_catalog_type=local_catalog_type,
         remote_warehouse_dir=remote_warehouse_dir,
@@ -169,7 +172,7 @@ def create_spark_session(
         remote_catalog_uri=remote_catalog_uri
     )
 
-    if local_warehouse_dir is not None:
+    if dir_path is not None:
         spark.catalog.setCurrentCatalog(catalogName=local_catalog_name)
     spark.catalog.setCurrentCatalog(catalogName=remote_catalog_name)
 
@@ -187,13 +190,14 @@ def create_spark_session(
 def _set_aws_credentials_in_spark(
     spark: SparkSession,
     remote_catalog_name: str,
-    aws_access_key_id: str = None,
-    aws_secret_access_key: str = None,
-    aws_session_token: str = None,
-    aws_region: str = None,
+    aws_access_key_id: str,
+    aws_secret_access_key: str,
+    aws_session_token: str,
+    aws_region: str,
+    allow_anonymous: bool
 ):
     """Set AWS credentials in Spark configuration with multiple options."""
-    # Priority: Explicit credentials provided by user
+    # Priority 1: Explicit credentials provided by user
     if aws_access_key_id and aws_secret_access_key:
         logger.info("🔑 Using user-provided AWS credentials")
         spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", aws_access_key_id)
@@ -212,7 +216,43 @@ def _set_aws_credentials_in_spark(
             spark.conf.set("spark.hadoop.fs.s3a.endpoint.region", aws_region)
 
         return
+    # Priority 2: Environment variables
+    aws_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID")
+    aws_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
+    aws_session_token = os.environ.get("AWS_SESSION_TOKEN")
+    aws_region = os.environ.get("AWS_REGION")
+    if aws_access_key_id and aws_secret_access_key:
+        logger.info("🔑 Using user-provided AWS credentials")
+        spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", aws_access_key_id)
+        spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", aws_secret_access_key)
+        spark.conf.set("spark.hadoop.fs.s3a.access.key", aws_access_key_id)
+        spark.conf.set("spark.hadoop.fs.s3a.secret.key", aws_secret_access_key)
 
+        if aws_session_token:
+            spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", aws_session_token)
+            spark.conf.set("spark.hadoop.fs.s3a.session.token", aws_session_token)
+            logger.info("   - Using temporary credentials with session token")
+        else:
+            logger.info("   - Using long-term credentials")
+
+        if aws_region:
+            spark.conf.set("spark.hadoop.fs.s3a.endpoint.region", aws_region)
+
+        return
+    # Priority 3: Use anonymous access if allowed otherwise try default provider
+    # Note. Could use boto3 here to first check if default credentials are available
+    # and fallback to anonymous if not?
+    if allow_anonymous:
+        logger.info("🔑 Using anonymous AWS credentials for S3 access")
+        spark.conf.set(
+            "spark.hadoop.fs.s3a.aws.credentials.provider",
+            "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider"
+        )
+        # Also might need to set empty remote catalog credentials to avoid errors?
+        # spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", "")
+        # spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", "")
+        # spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", "")
+        return
     # Fallback: Use Hadoop's default provider chain (system)
     logger.info("🔑 Falling back to Hadoop's default AWS credentials provider")
     spark.conf.set(
@@ -439,6 +479,11 @@ def _configure_iceberg_catalogs(
         f"spark.sql.catalog.{remote_catalog_name}.warehouse": remote_warehouse_dir,
         f"spark.sql.catalog.{remote_catalog_name}.io-impl": "org.apache.iceberg.aws.s3.S3FileIO"
     }
+
+    # These are needed only if running local cluster against MinIO for testing
+    # conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.endpoint", "http://minio:9000")
+    # conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.path-style-access", "true")
+
     for key, value in remote_configs.items():
         spark.conf.set(key, value)
         logger.debug(f"Remote catalog: {key}: {value}")

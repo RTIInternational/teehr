@@ -2,8 +2,16 @@
 import os
 
 # Iceberg warehouse
-CATALOG_REST_URI = "http://dev-teehr-sys-iceberg-alb-2105268770.us-east-2.elb.amazonaws.com"
-WAREHOUSE_S3_PATH = "s3://dev-teehr-sys-iceberg-warehouse/warehouse/"
+CATALOG_REST_URI = os.environ.get("CATALOG_REST_URI", "http://dev-teehr-sys-iceberg-alb-2105268770.us-east-2.elb.amazonaws.com")
+WAREHOUSE_S3_PATH = os.environ.get("WAREHOUSE_S3_PATH", "s3://dev-teehr-sys-iceberg-warehouse/warehouse/")
+LOCAL_CATALOG_NAME = "local"
+LOCAL_CATALOG_TYPE = "hadoop"
+LOCAL_NAMESPACE_NAME = "teehr"
+REMOTE_CATALOG_NAME = "iceberg"
+REMOTE_CATALOG_TYPE = os.environ.get("REMOTE_CATALOG_TYPE", "rest")
+REMOTE_NAMESPACE_NAME = "teehr"
+AWS_REGION = "us-east-2"
+
 
 # Primary evaluation directories
 DATASET_DIR = "dataset"

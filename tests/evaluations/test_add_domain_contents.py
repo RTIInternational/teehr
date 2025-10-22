@@ -12,7 +12,7 @@ from teehr import Evaluation
 def test_add_domains(tmpdir):
     """Test creating a new study."""
     ev = Evaluation(
-        local_warehouse_dir=tmpdir,
+        dir_path=tmpdir,
         check_evaluation_version=False,
     )
     ev.clone_template()
