@@ -220,9 +220,14 @@ def _set_catalog_metadata(
     remote_namespace_name: str
 ):
     """Set catalog metadata in Spark configuration."""
-    local_warehouse_path = Path(dir_path) / local_catalog_name
+    if dir_path is None:
+        local_warehouse_path = None
+    else:
+        local_warehouse_path = (
+            Path(dir_path) / local_catalog_name
+        ).as_posix()
     metadata_configs = {
-        "local_warehouse_dir": local_warehouse_path.as_posix(),
+        "local_warehouse_dir": local_warehouse_path,
         "local_catalog_name": local_catalog_name,
         "local_namespace_name": local_namespace_name,
         "local_catalog_type": local_catalog_type,
