@@ -110,19 +110,6 @@ class Evaluation(EvaluationBase):
                     " Set create_dir=True to create it."
                 )
 
-        self.local_catalog = LocalCatalog(
-            warehouse_dir=dir_path,
-            catalog_name=const.LOCAL_CATALOG_NAME,
-            namespace_name=const.LOCAL_NAMESPACE_NAME,
-            catalog_type=const.LOCAL_CATALOG_TYPE,
-        )
-        self.remote_catalog = RemoteCatalog(
-            warehouse_dir=const.WAREHOUSE_S3_PATH,
-            catalog_name=const.REMOTE_CATALOG_NAME,
-            namespace_name=const.REMOTE_NAMESPACE_NAME,
-            catalog_type=const.REMOTE_CATALOG_TYPE,
-            catalog_uri=const.CATALOG_REST_URI,
-        )
         # Initialize cache and scripts dir. These are only valid
         # when using a local catalog.
         self.cache_dir = None
@@ -146,7 +133,21 @@ class Evaluation(EvaluationBase):
                 dir_path=dir_path,
             )
 
-        # Set the local catalog as the active catalog by default.
+        # Get the catalog metadata that was set during Spark configuration
+        self.local_catalog = LocalCatalog(
+            warehouse_dir=dir_path,
+            catalog_name=self.spark.conf.get("local_catalog_name"),
+            namespace_name=self.spark.conf.get("local_namespace_name"),
+            catalog_type=self.spark.conf.get("local_catalog_type"),
+        )
+        self.remote_catalog = RemoteCatalog(
+            warehouse_dir=self.spark.conf.get("remote_warehouse_dir"),
+            catalog_name=self.spark.conf.get("remote_catalog_name"),
+            namespace_name=self.spark.conf.get("remote_namespace_name"),
+            catalog_type=self.spark.conf.get("remote_catalog_type"),
+            catalog_uri=self.spark.conf.get("remote_catalog_uri"),
+        )
+
         if dir_path is not None:
             self.set_active_catalog("local")
         else:

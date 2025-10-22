@@ -29,10 +29,12 @@ def create_spark_session(
     dir_path: Union[str, Path] = None,
     local_catalog_name: str = const.LOCAL_CATALOG_NAME,
     local_catalog_type: str = const.LOCAL_CATALOG_TYPE,
+    local_namespace_name: str = const.LOCAL_NAMESPACE_NAME,
     remote_warehouse_dir: str = const.WAREHOUSE_S3_PATH,
     remote_catalog_name: str = const.REMOTE_CATALOG_NAME,
     remote_catalog_type: str = const.REMOTE_CATALOG_TYPE,
     remote_catalog_uri: str = const.CATALOG_REST_URI,
+    remote_namespace_name: str = const.REMOTE_NAMESPACE_NAME,
     # Spark K8'specific parameters
     start_spark_cluster: bool = False,
     executor_instances: int = 2,
@@ -66,6 +68,8 @@ def create_spark_session(
         Name of the local Iceberg catalog. Default is "local".
     local_catalog_type : str
         Type of the local Iceberg catalog. Default is "hadoop".
+    local_namespace_name : str
+        Namespace for the local Iceberg catalog. Default is "teehr".
     remote_warehouse_dir : str
         Remote warehouse directory for Iceberg catalog. Default is TEEHR
         warehouse S3 path.
@@ -75,6 +79,8 @@ def create_spark_session(
         Type of the remote Iceberg catalog. Default is "rest".
     remote_catalog_uri : str
         URI for the remote Iceberg catalog. Default is TEEHR catalog REST URI.
+    remote_namespace_name : str
+        Namespace for the remote Iceberg catalog. Default is "teehr".
     start_spark_cluster : bool
         Whether to start a Spark cluster (Kubernetes mode).
         Default is False (local mode).
@@ -160,6 +166,20 @@ def create_spark_session(
         allow_anonymous=allow_anonymous
     )
 
+    # Set catalog metadata in Spark configuration
+    _set_catalog_metadata(
+        spark=spark,
+        dir_path=dir_path,
+        local_catalog_name=local_catalog_name,
+        local_catalog_type=local_catalog_type,
+        remote_catalog_name=remote_catalog_name,
+        remote_catalog_type=remote_catalog_type,
+        remote_catalog_uri=remote_catalog_uri,
+        remote_warehouse_dir=remote_warehouse_dir,
+        local_namespace_name=local_namespace_name,
+        remote_namespace_name=remote_namespace_name
+    )
+
     # Apply catalog configurations
     _configure_iceberg_catalogs(
         spark=spark,
@@ -185,6 +205,36 @@ def create_spark_session(
     logger.info("🎉 Spark session created successfully!")
 
     return sedona_spark
+
+
+def _set_catalog_metadata(
+    spark: SparkSession,
+    dir_path: Union[str, Path],
+    local_namespace_name: str,
+    local_catalog_name: str,
+    local_catalog_type: str,
+    remote_catalog_name: str,
+    remote_catalog_type: str,
+    remote_catalog_uri: str,
+    remote_warehouse_dir: str,
+    remote_namespace_name: str
+):
+    """Set catalog metadata in Spark configuration."""
+    local_warehouse_path = Path(dir_path) / local_catalog_name
+    metadata_configs = {
+        "local_warehouse_dir": local_warehouse_path.as_posix(),
+        "local_catalog_name": local_catalog_name,
+        "local_namespace_name": local_namespace_name,
+        "local_catalog_type": local_catalog_type,
+        "remote_warehouse_dir": remote_warehouse_dir,
+        "remote_catalog_name": remote_catalog_name,
+        "remote_namespace_name": remote_namespace_name,
+        "remote_catalog_type": remote_catalog_type,
+        "remote_catalog_uri": remote_catalog_uri
+    }
+    for key, value in metadata_configs.items():
+        spark.conf.set(key, value)
+        logger.debug(f"Metadata config: {key}: {value}")
 
 
 def _set_aws_credentials_in_spark(
@@ -490,6 +540,16 @@ def _configure_iceberg_catalogs(
     for key, value in remote_configs.items():
         spark.conf.set(key, value)
         logger.debug(f"Remote catalog: {key}: {value}")
+
+    # # Metadata configuration for tracking catalog properties
+    # metadata_configs = {
+    #     "local_catalog_name": local_catalog_name,
+
+    #     "remote_catalog_name": remote_catalog_name
+    # }
+    # for key, value in metadata_configs.items():
+    #     spark.conf.set(key, value)
+    #     logger.debug(f"Metadata config: {key}: {value}")
 
 
 def remove_or_update_configs(
