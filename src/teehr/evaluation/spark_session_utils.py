@@ -110,8 +110,10 @@ def create_spark_session(
         Whether to allow anonymous access to S3. Default is False.
     extra_packages : List[str]
         Additional Spark packages to include. Default is None.
+        >>> extra_packages=["com.example:my-package:1.0.0"]
     extra_configs : Dict[str, str]
         Additional Spark configurations to set. Default is None.
+        >>> extra_configs={"spark.sql.shuffle.partitions": "100"}
     debug_config : bool
         Whether to log the final Spark configuration for debugging.
         Default is False.
@@ -472,7 +474,7 @@ def _get_spark_defaults() -> Dict[str, Any]:
         f"org.apache.iceberg:iceberg-spark-runtime-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}",
         "org.datasyslab:geotools-wrapper:1.8.0-33.1",
         f"org.apache.iceberg:iceberg-spark-extensions-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}",
-        "org.apache.hadoop:hadoop-aws:3.4.2",
+        "org.apache.hadoop:hadoop-aws:3.4.1",  # Note. Need 3.4.1 for S3A support
         "com.amazonaws:aws-java-sdk-bundle:1.12.791"
     ]
     base_configs = {
