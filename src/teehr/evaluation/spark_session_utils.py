@@ -128,7 +128,6 @@ def create_spark_session(
     # Get the base configuration with common settings
     conf = _create_spark_base_session(
         conf=SparkConf(),
-        app_name=app_name,
         aws_region=aws_region,
         extra_packages=extra_packages,
         extra_configs=extra_configs,
@@ -189,7 +188,7 @@ def create_spark_session(
         remote_catalog_uri=remote_catalog_uri
     )
 
-    spark = SparkSession.builder.config(conf=conf).getOrCreate()
+    spark = SparkSession.builder.appName(app_name).config(conf=conf).getOrCreate()
     sedona_spark = SedonaContext.create(spark)
     logger.info("Spark session created for TEEHR Evaluation.")
 

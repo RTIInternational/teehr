@@ -1,6 +1,6 @@
 """Evaluation module."""
 from datetime import datetime
-from typing import Union, Literal, List, Dict
+from typing import Union, Literal, List
 from pathlib import Path
 from teehr.evaluation.tables.attribute_table import AttributeTable
 from teehr.evaluation.tables.configuration_table import ConfigurationTable
@@ -46,7 +46,7 @@ from teehr.evaluation.utils import copy_migrations_dir
 from teehr.evaluation.spark_session_utils import (
     create_spark_session,
     log_session_config,
-    remove_or_update_configs
+    # remove_or_update_configs
 )
 import pandas as pd
 import re
