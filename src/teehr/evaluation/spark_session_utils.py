@@ -260,7 +260,7 @@ def _set_aws_credentials_in_spark(
     aws_session_token = os.environ.get("AWS_SESSION_TOKEN")
     aws_region = os.environ.get("AWS_REGION")
     if aws_access_key_id and aws_secret_access_key:
-        logger.info("🔑 Using user-provided AWS credentials")
+        logger.info("🔑 Using AWS credentials from environment variables")
         spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", aws_access_key_id)
         spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", aws_secret_access_key)
         spark.conf.set("spark.hadoop.fs.s3a.access.key", aws_access_key_id)
