@@ -7,6 +7,7 @@ import logging
 import os
 import socket
 
+from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from sedona.spark import SedonaContext
 import pandas as pd
@@ -123,24 +124,24 @@ def create_spark_session(
     SparkSession
         Configured Spark session.
     """
-    # Get the base builder with common settings
-    builder = _create_base_spark_builder(
+    logger.info(f"🚀 Creating Spark session: {app_name}")
+    # Get the base session with common settings
+    spark = _create_spark_base_session(
+        conf=SparkConf(),
         app_name=app_name,
+        aws_region=aws_region,
         extra_packages=extra_packages,
         extra_configs=extra_configs,
         driver_memory=driver_memory,
-        driver_maxresultsize=driver_max_result_size,
-        aws_region=aws_region,
+        driver_maxresultsize=driver_max_result_size
     )
 
     if start_spark_cluster is False:
-        spark = builder.getOrCreate()
         logger.info("✅ Spark local session created successfully!")
     else:
-        logger.info(f"🚀 Creating Spark session: {app_name}")
         logger.info(f"📦 Using container image: {executor_image}")
-        spark = _create_spark_cluster_base_session(
-            builder=builder,
+        _set_spark_cluster_configuration(
+            spark=spark,
             executor_instances=executor_instances,
             executor_memory=executor_memory,
             executor_cores=executor_cores,
@@ -300,8 +301,11 @@ def _set_aws_credentials_in_spark(
         "com.amazonaws.auth.DefaultAWSCredentialsProviderChain"
     )
 
+    return
 
-def _create_base_spark_builder(
+
+def _create_spark_base_session(
+    conf: SparkConf,
     app_name: str,
     aws_region: str,
     extra_packages: List[str] = None,
@@ -309,11 +313,24 @@ def _create_base_spark_builder(
     driver_memory: float = None,
     driver_maxresultsize: float = None
 ):
-    """Create a base Spark builder.
+    """Create a base Spark builder."""
+    conf.setMaster("local[*]")
 
-    These settings are considered immutable after session creation
-    and are common to both local and cluster modes.
-    """
+    # Append any extra packages to base list
+    base_packages = _get_spark_defaults()["packages"].copy()
+    if extra_packages:
+        base_packages.extend(extra_packages)
+
+    # Set base configs
+    base_configs = _get_spark_defaults()["configs"].copy()
+    for key, value in base_configs.items():
+        conf.set(key, value)
+
+    # Set any extra configs
+    if extra_configs:
+        for key, value in extra_configs.items():
+            conf.set(key, value)
+
     # Handle default local memory settings
     memory_info = psutil.virtual_memory()
     driver_memory_int = int(0.75 * memory_info.available / (1024**3))
@@ -322,30 +339,18 @@ def _create_base_spark_builder(
     if driver_maxresultsize is None:
         driver_maxresultsize = f"{int(0.5 * driver_memory_int)}g"
 
-    builder = SparkSession.builder.appName(app_name)
+    conf.set("spark.jars.packages", ",".join(base_packages))
+    conf.set("spark.driver.memory", f"{driver_memory}")
+    conf.set("spark.driver.maxResultSize", f"{driver_maxresultsize}")
 
-    # Set packages at builder level
-    packages = _get_spark_defaults()["packages"].copy()
-    if extra_packages:
-        packages.extend(extra_packages)
+    conf.set("spark.driver.extraJavaOptions", f"-Daws.region={aws_region}")
+    conf.set("spark.executor.extraJavaOptions", f"-Daws.region={aws_region}")
 
-    # Set base configs at builder level
-    if extra_configs:
-        for key, value in extra_configs.items():
-            builder = builder.config(key, value)
-
-    builder = builder.config("spark.jars.packages", ",".join(packages))
-    builder = builder.config("spark.driver.memory", f"{driver_memory}")
-    builder = builder.config("spark.driver.maxResultSize", f"{driver_maxresultsize}")
-
-    builder = builder.config("spark.driver.extraJavaOptions", f"-Daws.region={aws_region}")
-    builder = builder.config("spark.executor.extraJavaOptions", f"-Daws.region={aws_region}")
-
-    return builder
+    return SparkSession.builder.appName(app_name).config(conf=conf).getOrCreate()
 
 
-def _create_spark_cluster_base_session(
-    builder: SparkSession.Builder,
+def _set_spark_cluster_configuration(
+    spark: SparkSession,
     executor_instances: int,
     executor_memory: str,
     executor_cores: int,
@@ -390,43 +395,43 @@ def _create_spark_cluster_base_session(
     builder = builder.master(f"k8s://{k8s_api_server}")
 
     # Basic Kubernetes settings
-    builder = builder.config("spark.executor.instances", str(executor_instances))
-    builder = builder.config("spark.executor.memory", executor_memory)
-    builder = builder.config("spark.executor.cores", str(executor_cores))
-    builder = builder.config("spark.kubernetes.container.image", container_image)
-    builder = builder.config("spark.kubernetes.namespace", spark_namespace)
-    builder = builder.config("spark.kubernetes.authenticate.executor.serviceAccountName", "spark")
-    builder = builder.config("spark.kubernetes.container.image.pullPolicy", "Always")
+    spark.conf.set("spark.executor.instances", str(executor_instances))
+    spark.conf.set("spark.executor.memory", executor_memory)
+    spark.conf.set("spark.executor.cores", str(executor_cores))
+    spark.conf.set("spark.kubernetes.container.image", container_image)
+    spark.conf.set("spark.kubernetes.namespace", spark_namespace)
+    spark.conf.set("spark.kubernetes.authenticate.executor.serviceAccountName", "spark")
+    spark.conf.set("spark.kubernetes.container.image.pullPolicy", "Always")
 
     if os.path.exists(pod_template_path):
-        builder = builder.config("spark.kubernetes.executor.podTemplateFile", pod_template_path)
+        spark.conf.set("spark.kubernetes.executor.podTemplateFile", pod_template_path)
     else:
         logger.info(f"⚠️  Executor pod template not found: {pod_template_path}")
         logger.info("    You must provide a valid pod template for executors to launch correctly.")
         raise FileNotFoundError(f"Executor pod template not found: {pod_template_path}")
 
-    builder = builder.config("spark.kubernetes.executor.deleteOnTermination", "true")
+    spark.conf.set("spark.kubernetes.executor.deleteOnTermination", "true")
 
     # Authentication - use service account token if available
     token_file = const.SERVICE_ACCOUNT_TOKEN_PATH
     ca_file = const.CA_CERTIFICATE_PATH
     if os.path.exists(token_file) and os.path.exists(ca_file):
         logger.info("🔐 Using in-cluster authentication")
-        builder = builder.config("spark.kubernetes.authenticate.submission.oauthTokenFile", token_file)
-        builder = builder.config("spark.kubernetes.authenticate.submission.caCertFile", ca_file)
-        builder = builder.config("spark.kubernetes.authenticate.driver.oauthTokenFile", token_file)
-        builder = builder.config("spark.kubernetes.authenticate.executor.oauthTokenFile", token_file)
+        spark.conf.set("spark.kubernetes.authenticate.submission.oauthTokenFile", token_file)
+        spark.conf.set("spark.kubernetes.authenticate.submission.caCertFile", ca_file)
+        spark.conf.set("spark.kubernetes.authenticate.driver.oauthTokenFile", token_file)
+        spark.conf.set("spark.kubernetes.authenticate.executor.oauthTokenFile", token_file)
 
         # Critical: Set the CA cert file for SSL validation
-        builder = builder.config("spark.kubernetes.authenticate.caCertFile", ca_file)
+        spark.conf.set("spark.kubernetes.authenticate.caCertFile", ca_file)
     else:
         logger.info("⚠️  No service account tokens found - may have authentication issues")
         logger.info(f"   Checked: {token_file}")
         logger.info(f"   Checked: {ca_file}")
 
     # Driver binding configuration - use pod IP for Kubernetes
-    builder = builder.config("spark.driver.bindAddress", "0.0.0.0")
-    builder = builder.config("spark.driver.port", "0")  # Let Spark choose an available port
+    spark.conf.set("spark.driver.bindAddress", "0.0.0.0")
+    spark.conf.set("spark.driver.port", "0")  # Let Spark choose an available port
 
     # Get pod IP and set as driver host so executors can connect back
     pod_ip = os.environ.get('POD_IP')
@@ -439,12 +444,11 @@ def _create_spark_cluster_base_session(
 
     if pod_ip:
         logger.info(f"🔗 Setting driver host to pod IP: {pod_ip}")
-        builder = builder.config("spark.driver.host", pod_ip)
+        spark.conf.set("spark.driver.host", pod_ip)
     else:
         logger.info("⚠️  Could not determine pod IP - using default driver host")
 
-    # Return a spark session
-    return builder.getOrCreate()
+    return
 
 
 def log_session_config(spark: SparkSession):
@@ -474,16 +478,17 @@ def _get_spark_defaults() -> Dict[str, Any]:
         f"org.apache.iceberg:iceberg-spark-runtime-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}",
         "org.datasyslab:geotools-wrapper:1.8.0-33.1",
         f"org.apache.iceberg:iceberg-spark-extensions-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}",
-        "org.apache.hadoop:hadoop-aws:3.4.1",  # Note. Need 3.4.1 for S3A support
+        "org.apache.hadoop:hadoop-aws:3.4.1",  # Note. Need 3.4.1 for compatibility
         "com.amazonaws:aws-java-sdk-bundle:1.12.791"
     ]
     base_configs = {
         "spark.sql.session.timeZone": "UTC",
         "spark.sql.extensions": "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions",
         "spark.serializer": "org.apache.spark.serializer.KryoSerializer",
-        "spark.hadoop.fs.s3a.impl": "org.apache.hadoop.fs.s3a.S3AFileSystem"
+        "spark.hadoop.fs.s3a.impl": "org.apache.hadoop.fs.s3a.S3AFileSystem",
+        "spark.hadoop.fs.s3a.aws.credentials.provider": "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider"
     }
-    return {"packages": base_packages, "spark_configs": base_configs}
+    return {"packages": base_packages, "configs": base_configs}
 
 
 def _configure_iceberg_catalogs(
