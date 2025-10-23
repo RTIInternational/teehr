@@ -26,7 +26,6 @@ SEDONA_VERSION = "1.8.0"
 def create_spark_session(
     # App name and catalog settings
     app_name: str = "TEEHR Evaluation",
-    dir_path: Union[str, Path] = None,
     local_catalog_name: str = const.LOCAL_CATALOG_NAME,
     local_catalog_type: str = const.LOCAL_CATALOG_TYPE,
     local_namespace_name: str = const.LOCAL_NAMESPACE_NAME,
@@ -62,8 +61,6 @@ def create_spark_session(
     ----------
     app_name : str
         Name of the Spark application. Default is "TEEHR Evaluation".
-    dir_path : Union[str, Path]
-        The path to the evaluation directory.
     local_catalog_name : str
         Name of the local Iceberg catalog. Default is "local".
     local_catalog_type : str
@@ -169,7 +166,6 @@ def create_spark_session(
     # Set catalog metadata in Spark configuration
     _set_catalog_metadata(
         spark=spark,
-        dir_path=dir_path,
         local_catalog_name=local_catalog_name,
         local_catalog_type=local_catalog_type,
         remote_catalog_name=remote_catalog_name,
@@ -183,7 +179,6 @@ def create_spark_session(
     # Apply catalog configurations
     _configure_iceberg_catalogs(
         spark=spark,
-        local_warehouse_dir=dir_path,
         local_catalog_name=local_catalog_name,
         local_catalog_type=local_catalog_type,
         remote_warehouse_dir=remote_warehouse_dir,
@@ -191,10 +186,6 @@ def create_spark_session(
         remote_catalog_type=remote_catalog_type,
         remote_catalog_uri=remote_catalog_uri
     )
-
-    if dir_path is not None:
-        spark.catalog.setCurrentCatalog(catalogName=local_catalog_name)
-    spark.catalog.setCurrentCatalog(catalogName=remote_catalog_name)
 
     sedona_spark = SedonaContext.create(spark)
     logger.info("Spark session created for TEEHR Evaluation.")
@@ -209,7 +200,6 @@ def create_spark_session(
 
 def _set_catalog_metadata(
     spark: SparkSession,
-    dir_path: Union[str, Path],
     local_namespace_name: str,
     local_catalog_name: str,
     local_catalog_type: str,
@@ -220,14 +210,7 @@ def _set_catalog_metadata(
     remote_namespace_name: str
 ):
     """Set catalog metadata in Spark configuration."""
-    if dir_path is None:
-        local_warehouse_path = None
-    else:
-        local_warehouse_path = (
-            Path(dir_path) / local_catalog_name
-        ).as_posix()
     metadata_configs = {
-        "local_warehouse_dir": local_warehouse_path,
         "local_catalog_name": local_catalog_name,
         "local_namespace_name": local_namespace_name,
         "local_catalog_type": local_catalog_type,
@@ -496,15 +479,13 @@ def _get_spark_defaults() -> Dict[str, Any]:
         "spark.sql.session.timeZone": "UTC",
         "spark.sql.extensions": "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions",
         "spark.serializer": "org.apache.spark.serializer.KryoSerializer",
-        "spark.hadoop.fs.s3a.impl": "org.apache.hadoop.fs.s3a.S3AFileSystem",
-        # "spark.hadoop.fs.s3a.aws.credentials.provider": "com.amazonaws.auth.DefaultAWSCredentialsProviderChain",
+        "spark.hadoop.fs.s3a.impl": "org.apache.hadoop.fs.s3a.S3AFileSystem"
     }
     return {"packages": base_packages, "spark_configs": base_configs}
 
 
 def _configure_iceberg_catalogs(
     spark: SparkSession,
-    local_warehouse_dir: Union[str, Path],
     local_catalog_name: str,
     local_catalog_type: str,
     remote_warehouse_dir: str,
@@ -514,17 +495,15 @@ def _configure_iceberg_catalogs(
 ):
     """Configure Iceberg catalogs through spark.conf.set()."""
     logger.info("Configuring Iceberg catalogs...")
-    # Local catalog configuration
-    if local_warehouse_dir is not None:
-        local_warehouse_path = Path(local_warehouse_dir) / local_catalog_name
-        catalog_configs = {
-            f"spark.sql.catalog.{local_catalog_name}": "org.apache.iceberg.spark.SparkCatalog",
-            f"spark.sql.catalog.{local_catalog_name}.type": local_catalog_type,
-            f"spark.sql.catalog.{local_catalog_name}.warehouse": local_warehouse_path.as_posix()
-        }
-        for key, value in catalog_configs.items():
-            spark.conf.set(key, value)
-            logger.debug(f"Local catalog: {key}: {value}")
+    # Note. Local catalog warehouse path gets set in the Evaluation
+    # based on the dir_path provided there.
+    catalog_configs = {
+        f"spark.sql.catalog.{local_catalog_name}": "org.apache.iceberg.spark.SparkCatalog",
+        f"spark.sql.catalog.{local_catalog_name}.type": local_catalog_type,
+    }
+    for key, value in catalog_configs.items():
+        spark.conf.set(key, value)
+        logger.debug(f"Local catalog: {key}: {value}")
 
     # Remote catalog configuration
     remote_configs = {
@@ -534,9 +513,7 @@ def _configure_iceberg_catalogs(
         f"spark.sql.catalog.{remote_catalog_name}.warehouse": remote_warehouse_dir,
         f"spark.sql.catalog.{remote_catalog_name}.io-impl": "org.apache.iceberg.aws.s3.S3FileIO"
     }
-
     # These are needed only if running local kind cluster against MinIO for testing
-    # or something similar
     if os.environ.get("IN_CLUSTER", "false").lower() == "true":
         logger.info("⚠️  Configuring remote catalog for MinIO access")
         remote_configs[f"spark.sql.catalog.{remote_catalog_name}.s3.endpoint"] = "http://minio:9000"
@@ -545,17 +522,6 @@ def _configure_iceberg_catalogs(
     for key, value in remote_configs.items():
         spark.conf.set(key, value)
         logger.debug(f"Remote catalog: {key}: {value}")
-
-    # # Metadata configuration for tracking catalog properties
-    # metadata_configs = {
-    #     "local_catalog_name": local_catalog_name,
-
-    #     "remote_catalog_name": remote_catalog_name
-    # }
-    # for key, value in metadata_configs.items():
-    #     spark.conf.set(key, value)
-    #     logger.debug(f"Metadata config: {key}: {value}")
-
 
 def remove_or_update_configs(
     spark: SparkSession,

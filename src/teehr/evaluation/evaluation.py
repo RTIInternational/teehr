@@ -72,7 +72,7 @@ class Evaluation(EvaluationBase):
 
     def __init__(
         self,
-        dir_path: Union[str, Path] = None,
+        dir_path: Union[str, Path],
         create_dir: bool = False,
         check_evaluation_version: bool = True,
         spark: SparkSession = None
@@ -94,21 +94,20 @@ class Evaluation(EvaluationBase):
             The SparkSession object, by default None
         """
         # Create local directory if it does not exist.
-        if dir_path is not None:
-            dir_path = Path(dir_path)
-            if create_dir is True and not dir_path.exists():
-                logger.info(f"Creating directory {dir_path}.")
-                dir_path.mkdir(parents=True, exist_ok=True)
-            elif create_dir is True and dir_path.exists():
-                logger.info(
-                    f"Directory {dir_path} already exists."
-                    " Not creating it again."
-                )
-            elif create_dir is False and not dir_path.exists():
-                raise ValueError(
-                    f"Local warehouse directory {dir_path} does not exist."
-                    " Set create_dir=True to create it."
-                )
+        dir_path = Path(dir_path)
+        if create_dir is True and not dir_path.exists():
+            logger.info(f"Creating directory {dir_path}.")
+            dir_path.mkdir(parents=True, exist_ok=True)
+        elif create_dir is True and dir_path.exists():
+            logger.info(
+                f"Directory {dir_path} already exists."
+                " Not creating it again."
+            )
+        elif create_dir is False and not dir_path.exists():
+            raise ValueError(
+                f"Local directory {dir_path} does not exist."
+                " Set create_dir=True to create it."
+            )
 
         # Initialize cache and scripts dir. These are only valid
         # when using a local catalog.
@@ -118,7 +117,6 @@ class Evaluation(EvaluationBase):
         # Check version of Evaluation
         if (
             check_evaluation_version is True
-            and dir_path is not None
             and create_dir is False
         ):
             self.check_evaluation_version(warehouse_dir=dir_path)
@@ -132,11 +130,18 @@ class Evaluation(EvaluationBase):
             self.spark = create_spark_session(
                 dir_path=dir_path,
             )
-
+        # Need to update to local warehouse path based on dir_path
+        # Note. Here 'warehouse_dir' should be 'catalog_dir'?
+        local_catalog_name = self.spark.conf.get("local_catalog_name")
+        warehouse_dir = dir_path / local_catalog_name
+        spark.conf.set(
+            f"spark.sql.catalog.{local_catalog_name}.warehouse",
+            warehouse_dir.as_posix()
+        )
         # Get the catalog metadata that was set during Spark configuration
         self.local_catalog = LocalCatalog(
-            warehouse_dir=dir_path,
-            catalog_name=self.spark.conf.get("local_catalog_name"),
+            warehouse_dir=warehouse_dir,
+            catalog_name=local_catalog_name,
             namespace_name=self.spark.conf.get("local_namespace_name"),
             catalog_type=self.spark.conf.get("local_catalog_type"),
         )
@@ -147,11 +152,7 @@ class Evaluation(EvaluationBase):
             catalog_type=self.spark.conf.get("remote_catalog_type"),
             catalog_uri=self.spark.conf.get("remote_catalog_uri"),
         )
-
-        if dir_path is not None:
-            self.set_active_catalog("local")
-        else:
-            self.set_active_catalog("remote")
+        self.set_active_catalog("local")
 
     @property
     def table(self) -> Table:
@@ -196,10 +197,6 @@ class Evaluation(EvaluationBase):
     @property
     def fetch(self) -> Fetch:
         """The fetch component class for accessing external data."""
-        # if self.is_s3:
-        #     logger.error("Cannot fetch data and save to S3 yet.")
-        #     raise Exception("Cannot fetch data and save to S3 yet.")
-
         return Fetch(self)
 
     @property
@@ -328,10 +325,6 @@ class Evaluation(EvaluationBase):
         This method mainly copies the template directory to the specified
         evaluation directory.
         """
-        # if self.is_s3:
-        #     logger.error("Cannot clone template to S3.")
-        #     raise Exception("Cannot clone template to S3.")
-
         # Set to local by default.
         if catalog_name is None:
             catalog_name = self.active_catalog.catalog_name
@@ -432,10 +425,6 @@ class Evaluation(EvaluationBase):
 
         Includes removing temporary files.
         """
-        # if self.is_s3:
-        #     logger.error("Cannot clean cache on S3.")
-        #     raise Exception("Cannot clean cache on S3.")
-
         logger.info(f"Removing temporary files from {self.active_catalog.cache_dir}")
         remove_dir_if_exists(self.active_catalog.cache_dir)
         self.active_catalog.cache_dir.mkdir()
@@ -657,6 +646,11 @@ class Evaluation(EvaluationBase):
         configs : Dict[str, str]
             A dictionary of Spark configurations to update.
         """
+        # NOTE: You could theoretically update catalog configs
+        # here, but they would not be reflected in the Local and
+        # RemoteCatalog objects attached to the Evaluation.
+        # For now, if you want to change the catalog configs,
+        # you need to start a new session.
         remove_or_update_configs(
             spark=self.spark,
             remove_configs=remove_configs,

@@ -11,6 +11,21 @@ from teehr import Evaluation
 
 def test_add_domains(tmpdir):
     """Test creating a new study."""
+    from teehr.evaluation.spark_session_utils import create_spark_session
+
+    spark = create_spark_session(
+        remote_catalog_uri="http://dev-teehr-sys-iceberg-alb-2105268770.us-east-2.elb.amazonaws.com",
+        remote_warehouse_dir="s3://dev-teehr-sys-iceberg-warehouse/warehouse/"
+    )
+
+    ev = Evaluation(
+        spark=spark,
+        check_evaluation_version=False,
+        dir_path=tmpdir,
+    )
+
+    pass
+
     ev = Evaluation(
         dir_path=tmpdir,
         check_evaluation_version=False,
