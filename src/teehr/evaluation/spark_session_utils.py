@@ -30,10 +30,10 @@ def create_spark_session(
     local_catalog_name: str = const.LOCAL_CATALOG_NAME,
     local_catalog_type: str = const.LOCAL_CATALOG_TYPE,
     local_namespace_name: str = const.LOCAL_NAMESPACE_NAME,
-    remote_warehouse_dir: str = const.WAREHOUSE_S3_PATH,
+    remote_warehouse_dir: str = const.REMOTE_WAREHOUSE_S3_PATH,
     remote_catalog_name: str = const.REMOTE_CATALOG_NAME,
     remote_catalog_type: str = const.REMOTE_CATALOG_TYPE,
-    remote_catalog_uri: str = const.CATALOG_REST_URI,
+    remote_catalog_uri: str = const.REMOTE_CATALOG_REST_URI,
     remote_namespace_name: str = const.REMOTE_NAMESPACE_NAME,
     # Spark K8'specific parameters
     start_spark_cluster: bool = False,

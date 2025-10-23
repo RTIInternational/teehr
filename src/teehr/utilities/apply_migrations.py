@@ -224,8 +224,10 @@ def apply_schema_version_evolution_statements(
 def evolve_catalog_schema(
     spark: SparkSession,
     migrations_dir_path: Union[str, Path],
-    catalog_name: str,
-    namespace: str
+    local_catalog_name: str,
+    local_namespace_name: str,
+    target_catalog_name: str,
+    target_namespace_name: str
 ):
     """
     Evolve a catalog schema by applying any new schema versions.
@@ -243,16 +245,15 @@ def evolve_catalog_schema(
     """
     # Shouldn't schema evolution also consider namespace?
     available_schema_versions = read_available_schema_versions(
-      catalog_dir_path=migrations_dir_path,
-      catalog_name=catalog_name,
-      namespace=namespace
+      catalog_dir_path=migrations_dir_path,  # local warehouse dir
+      catalog_name=local_catalog_name,       # local catalog
+      namespace=local_namespace_name         # local namespace
     )
     applied_schema_version = fetch_applied_catalog_schema_version(
       spark=spark,
-      catalog_name=catalog_name,
-      namespace=namespace
+      catalog_name=target_catalog_name,
+      namespace=target_namespace_name
     )
-    # applied_schema_version = 0
     schema_version_delta = determine_schema_version_delta(
       available_schema_versions=available_schema_versions,
       applied_schema_version=applied_schema_version
@@ -260,23 +261,21 @@ def evolve_catalog_schema(
 
     if len(schema_version_delta) == 0:
         logger.info(
-          f"No new schema versions to apply to {catalog_name}.{namespace}."
+          f"No new schema versions to apply to {target_catalog_name}.{target_namespace_name}."
         )
         return
-
-    # schema_version_delta = [1]  # HACK
 
     for schema_version in schema_version_delta:
         evolution_statements = load_schema_version_evolution_statements(
           migrations_dir_path=migrations_dir_path,
-          catalog_name=catalog_name,
+          catalog_name=local_catalog_name,
           schema_version=schema_version,
-          namespace=namespace
+          namespace=local_namespace_name
         )
         apply_schema_version_evolution_statements(
           spark=spark,
-          catalog_name=catalog_name,
+          catalog_name=target_catalog_name,
           schema_version=schema_version,
-          namespace=namespace,
+          namespace=target_namespace_name,
           evolution_statements=evolution_statements
         )

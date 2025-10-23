@@ -59,6 +59,7 @@ from teehr.models.evaluation_base import (
     LocalCatalog,
     RemoteCatalog
 )
+from pydantic import BaseModel as PydanticBaseModel
 
 
 logger = logging.getLogger(__name__)
@@ -570,30 +571,32 @@ class Evaluation(EvaluationBase):
 
     def apply_schema_migration(
         self,
-        catalog_name: str = None,
-        namespace: str = None,
-        warehouse_dir: Union[str, Path] = None
+        source_catalog: PydanticBaseModel = None,
+        target_catalog: PydanticBaseModel = None
     ):
         """Apply the latest schema migration."""
-        if catalog_name is None:
-            catalog_name = self.active_catalog.catalog_name
-        if namespace is None:
-            namespace = self.active_catalog.namespace_name
-        if warehouse_dir is None:
-            warehouse_dir = Path(self.local_catalog.warehouse_dir)
+        if source_catalog is None:
+            source_catalog = self.local_catalog
+        if target_catalog is None:
+            target_catalog = self.remote_catalog
 
-        if Path(warehouse_dir, "migrations").exists() is False:
+        ev_dir = Path(source_catalog.warehouse_dir).parent  # Get the next dir up from here
+        if Path(ev_dir, "migrations").exists() is False:
             logger.info("Copying migration scripts to evaluation directory.")
             copy_migrations_dir(
-                target_dir=warehouse_dir
+                target_dir=ev_dir
             )
         apply_migrations.evolve_catalog_schema(
             spark=self.spark,
-            migrations_dir_path=warehouse_dir,
-            catalog_name=catalog_name,
-            namespace=namespace
+            migrations_dir_path=source_catalog.warehouse_dir,
+            local_catalog_name=source_catalog.catalog_name,
+            local_namespace_name=source_catalog.namespace_name,
+            target_catalog_name=target_catalog.catalog_name,
+            target_namespace_name=target_catalog.namespace_name
         )
-        logger.info(f"Schema evolution completed for {catalog_name}.")
+        logger.info(
+            f"Schema evolution completed for {target_catalog.catalog_name}."
+        )
 
     def list_tables(
         self,
