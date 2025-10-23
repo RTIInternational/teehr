@@ -50,7 +50,7 @@ def create_spark_session(
     aws_secret_access_key: str = None,
     aws_session_token: str = None,
     aws_region: str = const.AWS_REGION,
-    allow_anonymous: bool = False,
+    allow_anonymous: bool = True,
     # Simple extensibility parameters
     extra_packages: List[str] = None,
     extra_configs: Dict[str, str] = None,
@@ -128,7 +128,7 @@ def create_spark_session(
     # at the end.
     logger.info(f"🚀 Creating Spark session: {app_name}")
     # Get the base session with common settings
-    spark = _create_spark_base_session(
+    conf = _create_spark_base_session(
         conf=SparkConf(),
         app_name=app_name,
         aws_region=aws_region,
@@ -139,11 +139,11 @@ def create_spark_session(
     )
 
     if start_spark_cluster is False:
-        logger.info("✅ Spark local session created successfully!")
+        logger.info("✅ Spark local configuration successful!")
     else:
-        logger.info(f"📦 Using container image: {executor_image}")
+        logger.info(f"📦 Configuring Spark cluster with container image: {executor_image}")
         _set_spark_cluster_configuration(
-            spark=spark,
+            conf=conf,
             executor_instances=executor_instances,
             executor_memory=executor_memory,
             executor_cores=executor_cores,
@@ -151,15 +151,14 @@ def create_spark_session(
             spark_namespace=executor_namespace,
             pod_template_path=pod_template_path
         )
-        logger.info("✅ Spark cluster created successfully!")
-        logger.info(f"   - Application ID: {spark.sparkContext.applicationId}")
+        logger.info("✅ Spark cluster configuration successful!")
         logger.info(f"   - Executor instances: {executor_instances}")
         logger.info(f"   - Executor memory: {executor_memory}")
         logger.info(f"   - Executor cores: {executor_cores}")
 
     # Set AWS credentials if available
     _set_aws_credentials_in_spark(
-        spark=spark,
+        conf=conf,
         remote_catalog_name=remote_catalog_name,
         aws_access_key_id=aws_access_key_id,
         aws_secret_access_key=aws_secret_access_key,
@@ -170,7 +169,7 @@ def create_spark_session(
 
     # Set catalog metadata in Spark configuration
     _set_catalog_metadata(
-        spark=spark,
+        conf=conf,
         local_catalog_name=local_catalog_name,
         local_catalog_type=local_catalog_type,
         remote_catalog_name=remote_catalog_name,
@@ -183,7 +182,7 @@ def create_spark_session(
 
     # Apply catalog configurations
     _configure_iceberg_catalogs(
-        spark=spark,
+        conf=conf,
         local_catalog_name=local_catalog_name,
         local_catalog_type=local_catalog_type,
         remote_warehouse_dir=remote_warehouse_dir,
@@ -192,11 +191,12 @@ def create_spark_session(
         remote_catalog_uri=remote_catalog_uri
     )
 
+    spark = SparkSession.builder.config(conf=conf).getOrCreate()
     sedona_spark = SedonaContext.create(spark)
     logger.info("Spark session created for TEEHR Evaluation.")
 
     if debug_config:
-        log_session_config(spark)
+        log_session_config(sedona_spark)
 
     logger.info("🎉 Spark session created successfully!")
 
@@ -204,7 +204,7 @@ def create_spark_session(
 
 
 def _set_catalog_metadata(
-    spark: SparkSession,
+    conf: SparkConf,
     local_namespace_name: str,
     local_catalog_name: str,
     local_catalog_type: str,
@@ -226,12 +226,12 @@ def _set_catalog_metadata(
         "remote_catalog_uri": remote_catalog_uri
     }
     for key, value in metadata_configs.items():
-        spark.conf.set(key, value)
+        conf.set(key, value)
         logger.debug(f"Metadata config: {key}: {value}")
 
 
 def _set_aws_credentials_in_spark(
-    spark: SparkSession,
+    conf: SparkConf,
     remote_catalog_name: str,
     aws_access_key_id: str,
     aws_secret_access_key: str,
@@ -243,20 +243,20 @@ def _set_aws_credentials_in_spark(
     # Priority 1: Explicit credentials provided by user
     if aws_access_key_id and aws_secret_access_key:
         logger.info("🔑 Using user-provided AWS credentials")
-        spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", aws_access_key_id)
-        spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", aws_secret_access_key)
-        spark.conf.set("spark.hadoop.fs.s3a.access.key", aws_access_key_id)
-        spark.conf.set("spark.hadoop.fs.s3a.secret.key", aws_secret_access_key)
+        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", aws_access_key_id)
+        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", aws_secret_access_key)
+        conf.set("spark.hadoop.fs.s3a.access.key", aws_access_key_id)
+        conf.set("spark.hadoop.fs.s3a.secret.key", aws_secret_access_key)
 
         if aws_session_token:
-            spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", aws_session_token)
-            spark.conf.set("spark.hadoop.fs.s3a.session.token", aws_session_token)
+            conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", aws_session_token)
+            conf.set("spark.hadoop.fs.s3a.session.token", aws_session_token)
             logger.info("   - Using temporary credentials with session token")
         else:
             logger.info("   - Using long-term credentials")
 
         if aws_region:
-            spark.conf.set("spark.hadoop.fs.s3a.endpoint.region", aws_region)
+            conf.set("spark.hadoop.fs.s3a.endpoint.region", aws_region)
 
         return
     # Priority 2: Environment variables
@@ -266,20 +266,20 @@ def _set_aws_credentials_in_spark(
     aws_region = os.environ.get("AWS_REGION")
     if aws_access_key_id and aws_secret_access_key:
         logger.info("🔑 Using AWS credentials from environment variables")
-        spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", aws_access_key_id)
-        spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", aws_secret_access_key)
-        spark.conf.set("spark.hadoop.fs.s3a.access.key", aws_access_key_id)
-        spark.conf.set("spark.hadoop.fs.s3a.secret.key", aws_secret_access_key)
+        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", aws_access_key_id)
+        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", aws_secret_access_key)
+        conf.set("spark.hadoop.fs.s3a.access.key", aws_access_key_id)
+        conf.set("spark.hadoop.fs.s3a.secret.key", aws_secret_access_key)
 
         if aws_session_token:
-            spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", aws_session_token)
-            spark.conf.set("spark.hadoop.fs.s3a.session.token", aws_session_token)
+            conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", aws_session_token)
+            conf.set("spark.hadoop.fs.s3a.session.token", aws_session_token)
             logger.info("   - Using temporary credentials with session token")
         else:
             logger.info("   - Using long-term credentials")
 
         if aws_region:
-            spark.conf.set("spark.hadoop.fs.s3a.endpoint.region", aws_region)
+            conf.set("spark.hadoop.fs.s3a.endpoint.region", aws_region)
 
         return
     # Priority 3: Use anonymous access if allowed otherwise try default provider
@@ -287,18 +287,18 @@ def _set_aws_credentials_in_spark(
     # and fallback to anonymous if not?
     if allow_anonymous:
         logger.info("🔑 Using anonymous AWS credentials for S3 access")
-        spark.conf.set(
+        conf.set(
             "spark.hadoop.fs.s3a.aws.credentials.provider",
             "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider"
         )
         # Also might need to set empty remote catalog credentials to avoid errors?
-        # spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", "")
-        # spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", "")
-        # spark.conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", "")
+        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", "")
+        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", "")
+        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", "")
         return
     # Fallback: Use Hadoop's default provider chain (system)
     logger.info("🔑 Falling back to Hadoop's default AWS credentials provider")
-    spark.conf.set(
+    conf.set(
         "spark.hadoop.fs.s3a.aws.credentials.provider",
         "com.amazonaws.auth.DefaultAWSCredentialsProviderChain"
     )
@@ -348,11 +348,12 @@ def _create_spark_base_session(
     conf.set("spark.driver.extraJavaOptions", f"-Daws.region={aws_region}")
     conf.set("spark.executor.extraJavaOptions", f"-Daws.region={aws_region}")
 
-    return SparkSession.builder.appName(app_name).config(conf=conf).getOrCreate()
+    # return SparkSession.builder.appName(app_name).config(conf=conf).getOrCreate()
+    return conf
 
 
 def _set_spark_cluster_configuration(
-    spark: SparkSession,
+    conf: SparkConf,
     executor_instances: int,
     executor_memory: str,
     executor_cores: int,
@@ -394,46 +395,46 @@ def _set_spark_cluster_configuration(
     logger.info(f"🔐 Executor service account: spark (in {spark_namespace})")
 
     # Create Spark configuration
-    builder = builder.master(f"k8s://{k8s_api_server}")
+    conf.setMaster(f"k8s://{k8s_api_server}")
 
     # Basic Kubernetes settings
-    spark.conf.set("spark.executor.instances", str(executor_instances))
-    spark.conf.set("spark.executor.memory", executor_memory)
-    spark.conf.set("spark.executor.cores", str(executor_cores))
-    spark.conf.set("spark.kubernetes.container.image", container_image)
-    spark.conf.set("spark.kubernetes.namespace", spark_namespace)
-    spark.conf.set("spark.kubernetes.authenticate.executor.serviceAccountName", "spark")
-    spark.conf.set("spark.kubernetes.container.image.pullPolicy", "Always")
+    conf.set("spark.executor.instances", str(executor_instances))
+    conf.set("spark.executor.memory", executor_memory)
+    conf.set("spark.executor.cores", str(executor_cores))
+    conf.set("spark.kubernetes.container.image", container_image)
+    conf.set("spark.kubernetes.namespace", spark_namespace)
+    conf.set("spark.kubernetes.authenticate.executor.serviceAccountName", "spark")
+    conf.set("spark.kubernetes.container.image.pullPolicy", "Always")
 
     if os.path.exists(pod_template_path):
-        spark.conf.set("spark.kubernetes.executor.podTemplateFile", pod_template_path)
+        conf.set("spark.kubernetes.executor.podTemplateFile", pod_template_path)
     else:
         logger.info(f"⚠️  Executor pod template not found: {pod_template_path}")
         logger.info("    You must provide a valid pod template for executors to launch correctly.")
         raise FileNotFoundError(f"Executor pod template not found: {pod_template_path}")
 
-    spark.conf.set("spark.kubernetes.executor.deleteOnTermination", "true")
+    conf.set("spark.kubernetes.executor.deleteOnTermination", "true")
 
     # Authentication - use service account token if available
     token_file = const.SERVICE_ACCOUNT_TOKEN_PATH
     ca_file = const.CA_CERTIFICATE_PATH
     if os.path.exists(token_file) and os.path.exists(ca_file):
         logger.info("🔐 Using in-cluster authentication")
-        spark.conf.set("spark.kubernetes.authenticate.submission.oauthTokenFile", token_file)
-        spark.conf.set("spark.kubernetes.authenticate.submission.caCertFile", ca_file)
-        spark.conf.set("spark.kubernetes.authenticate.driver.oauthTokenFile", token_file)
-        spark.conf.set("spark.kubernetes.authenticate.executor.oauthTokenFile", token_file)
+        conf.set("spark.kubernetes.authenticate.submission.oauthTokenFile", token_file)
+        conf.set("spark.kubernetes.authenticate.submission.caCertFile", ca_file)
+        conf.set("spark.kubernetes.authenticate.driver.oauthTokenFile", token_file)
+        conf.set("spark.kubernetes.authenticate.executor.oauthTokenFile", token_file)
 
         # Critical: Set the CA cert file for SSL validation
-        spark.conf.set("spark.kubernetes.authenticate.caCertFile", ca_file)
+        conf.set("spark.kubernetes.authenticate.caCertFile", ca_file)
     else:
         logger.info("⚠️  No service account tokens found - may have authentication issues")
         logger.info(f"   Checked: {token_file}")
         logger.info(f"   Checked: {ca_file}")
 
     # Driver binding configuration - use pod IP for Kubernetes
-    spark.conf.set("spark.driver.bindAddress", "0.0.0.0")
-    spark.conf.set("spark.driver.port", "0")  # Let Spark choose an available port
+    conf.set("spark.driver.bindAddress", "0.0.0.0")
+    conf.set("spark.driver.port", "0")  # Let Spark choose an available port
 
     # Get pod IP and set as driver host so executors can connect back
     pod_ip = os.environ.get('POD_IP')
@@ -446,7 +447,7 @@ def _set_spark_cluster_configuration(
 
     if pod_ip:
         logger.info(f"🔗 Setting driver host to pod IP: {pod_ip}")
-        spark.conf.set("spark.driver.host", pod_ip)
+        conf.set("spark.driver.host", pod_ip)
     else:
         logger.info("⚠️  Could not determine pod IP - using default driver host")
 
@@ -494,7 +495,7 @@ def _get_spark_defaults() -> Dict[str, Any]:
 
 
 def _configure_iceberg_catalogs(
-    spark: SparkSession,
+    conf: SparkConf,
     local_catalog_name: str,
     local_catalog_type: str,
     remote_warehouse_dir: str,
@@ -502,7 +503,7 @@ def _configure_iceberg_catalogs(
     remote_catalog_type: str,
     remote_catalog_uri: str
 ):
-    """Configure Iceberg catalogs through spark.conf.set()."""
+    """Configure Iceberg catalogs through conf.set()."""
     logger.info("Configuring Iceberg catalogs...")
     # Note. Local catalog warehouse path gets set in the Evaluation
     # based on the dir_path provided there.
@@ -511,7 +512,7 @@ def _configure_iceberg_catalogs(
         f"spark.sql.catalog.{local_catalog_name}.type": local_catalog_type,
     }
     for key, value in catalog_configs.items():
-        spark.conf.set(key, value)
+        conf.set(key, value)
         logger.debug(f"Local catalog: {key}: {value}")
 
     # Remote catalog configuration
@@ -529,7 +530,7 @@ def _configure_iceberg_catalogs(
         remote_configs[f"spark.sql.catalog.{remote_catalog_name}.s3.path-style-access"] = "true"
 
     for key, value in remote_configs.items():
-        spark.conf.set(key, value)
+        conf.set(key, value)
         logger.debug(f"Remote catalog: {key}: {value}")
 
 def remove_or_update_configs(
