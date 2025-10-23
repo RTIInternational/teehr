@@ -124,10 +124,8 @@ def create_spark_session(
     SparkSession
         Configured Spark session.
     """
-    # TODO: Update to operate of conf throughout, then start the session
-    # at the end.
     logger.info(f"🚀 Creating Spark session: {app_name}")
-    # Get the base session with common settings
+    # Get the base configuration with common settings
     conf = _create_spark_base_session(
         conf=SparkConf(),
         app_name=app_name,
@@ -308,7 +306,6 @@ def _set_aws_credentials_in_spark(
 
 def _create_spark_base_session(
     conf: SparkConf,
-    app_name: str,
     aws_region: str,
     extra_packages: List[str] = None,
     extra_configs: Dict[str, str] = None,
@@ -348,7 +345,6 @@ def _create_spark_base_session(
     conf.set("spark.driver.extraJavaOptions", f"-Daws.region={aws_region}")
     conf.set("spark.executor.extraJavaOptions", f"-Daws.region={aws_region}")
 
-    # return SparkSession.builder.appName(app_name).config(conf=conf).getOrCreate()
     return conf
 
 
