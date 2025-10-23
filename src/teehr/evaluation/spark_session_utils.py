@@ -124,6 +124,8 @@ def create_spark_session(
     SparkSession
         Configured Spark session.
     """
+    # TODO: Update to operate of conf throughout, then start the session
+    # at the end.
     logger.info(f"🚀 Creating Spark session: {app_name}")
     # Get the base session with common settings
     spark = _create_spark_base_session(

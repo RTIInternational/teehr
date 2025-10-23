@@ -580,7 +580,7 @@ class Evaluation(EvaluationBase):
         if namespace is None:
             namespace = self.active_catalog.namespace_name
         if warehouse_dir is None:
-            warehouse_dir = Path(self.active_catalog.warehouse_dir)
+            warehouse_dir = Path(self.local_catalog.warehouse_dir)
 
         if Path(warehouse_dir, "migrations").exists() is False:
             logger.info("Copying migration scripts to evaluation directory.")

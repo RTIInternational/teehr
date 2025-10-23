@@ -234,7 +234,7 @@ def evolve_catalog_schema(
     ----------
     spark : SparkSession
         The Spark session to use for executing schema evolution statements.
-    catalog_dir_path : Union[str, Path]
+    migrations_dir_path : Union[str, Path]
         The directory path where the catalog schema versions are stored.
     catalog_name : str
         The name of the catalog to evolve.
