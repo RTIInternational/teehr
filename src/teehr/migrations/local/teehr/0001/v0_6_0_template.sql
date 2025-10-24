@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS primary_timeseries (
     variable_name STRING,
     value FLOAT,
     location_id STRING
-) USING iceberg PARTITIONED BY (configuration_name, variable_name);
+) USING iceberg;
 
 CREATE TABLE IF NOT EXISTS secondary_timeseries (
     reference_time TIMESTAMP,
@@ -50,20 +50,7 @@ CREATE TABLE IF NOT EXISTS secondary_timeseries (
     value FLOAT,
     location_id STRING,
     member STRING
-) USING iceberg PARTITIONED BY (configuration_name, variable_name);
-
-CREATE TABLE IF NOT EXISTS joined_timeseries (
-    reference_time TIMESTAMP,
-    value_time TIMESTAMP,
-    configuration_name STRING,
-    unit_name STRING,
-    variable_name STRING,
-    primary_value FLOAT,
-    secondary_value FLOAT,
-    primary_location_id STRING,
-    secondary_location_id STRING,
-    member STRING
-) USING iceberg PARTITIONED BY (configuration_name, variable_name);
+) USING iceberg;
 
 CREATE TABLE IF NOT EXISTS location_attributes(
     location_id STRING,

@@ -2,8 +2,16 @@
 import os
 
 # Iceberg warehouse
-CATALOG_REST_URI = "http://dev-teehr-sys-iceberg-alb-2105268770.us-east-2.elb.amazonaws.com"
-WAREHOUSE_S3_PATH = "s3://dev-teehr-sys-iceberg-warehouse/warehouse/"
+REMOTE_CATALOG_REST_URI = os.environ.get("REMOTE_CATALOG_REST_URI", "http://dev-teehr-sys-iceberg-alb-2105268770.us-east-2.elb.amazonaws.com")
+REMOTE_WAREHOUSE_S3_PATH = os.environ.get("REMOTE_WAREHOUSE_S3_PATH", "s3://dev-teehr-sys-iceberg-warehouse/warehouse/")
+LOCAL_CATALOG_NAME = "local"
+LOCAL_CATALOG_TYPE = "hadoop"
+LOCAL_NAMESPACE_NAME = "teehr"
+REMOTE_CATALOG_NAME = "iceberg"
+REMOTE_CATALOG_TYPE = os.environ.get("REMOTE_CATALOG_TYPE", "rest")
+REMOTE_NAMESPACE_NAME = "teehr"
+AWS_REGION = "us-east-2"
+
 
 # Primary evaluation directories
 DATASET_DIR = "dataset"
@@ -30,3 +38,8 @@ LOADING_CACHE_DIR = "loading"
 S3_EVALUATIONS_PATH = "s3://ciroh-rti-public-data/teehr-data-warehouse/v0_4_evaluations/evaluations.yaml"
 
 MAX_CPUS = max(os.cpu_count() - 1, 1)
+
+# Spark cluster configuration
+POD_TEMPLATE_PATH = "/opt/teehr/executor-pod-template.yaml"
+SERVICE_ACCOUNT_TOKEN_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+CA_CERTIFICATE_PATH = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"

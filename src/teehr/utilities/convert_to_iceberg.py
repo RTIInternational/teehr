@@ -7,6 +7,8 @@ import argparse
 import teehr
 from teehr.utils.s3path import S3Path
 
+from pyspark.sql import SparkSession
+
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +16,8 @@ logger = logging.getLogger(__name__)
 def convert_evaluation(
     dir_path: Union[str, Path, S3Path],
     catalog_name: str = "local",
-    namespace: str = "teehr"
+    namespace: str = "teehr",
+    spark: SparkSession = None,
 ):
     """Convert TEEHR Evaluation to v0.6 Iceberg.
 
@@ -34,6 +37,7 @@ def convert_evaluation(
     dir_path = Path(dir_path)
 
     ev = teehr.Evaluation(
+        spark=spark,
         local_warehouse_dir=dir_path,
         check_evaluation_version=False,
         create_local_dir=False,
