@@ -350,8 +350,10 @@ class Evaluation(EvaluationBase):
         apply_migrations.evolve_catalog_schema(
             spark=self.spark,
             migrations_dir_path=local_warehouse_dir,
-            catalog_name=catalog_name,
-            namespace=namespace_name
+            local_catalog_name=catalog_name,
+            local_namespace_name=namespace_name,
+            target_catalog_name=catalog_name,
+            target_namespace_name=namespace_name
         )
 
     @staticmethod
