@@ -7,8 +7,45 @@ API reference
 #############
 
 This page provides an auto-generated summary of TEEHR's API. For more details
-and examples, refer to the User Guide part of the
-documentation.
+and examples, refer to the User Guide part of the documentation.
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Core Components
+   :hidden:
+
+   core
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Data Management
+   :hidden:
+
+   data
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Analysis & Metrics
+   :hidden:
+
+   analysis
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Visualization
+   :hidden:
+
+   visualization
+
+Quick Start
+===========
+
+The most common workflow:
+
+1. Create an :class:`~teehr.Evaluation`
+2. Fetch data with :class:`~teehr.evaluation.fetch.Fetch`
+3. Calculate metrics with :class:`~teehr.evaluation.metrics.Metrics`
+4. Visualize with :attr:`~pandas.DataFrame.teehr`
 
 
 The Evaluation Class
@@ -65,24 +102,32 @@ Classes for creating, describing, and querying the Evaluation dataset tables.
    secondary_timeseries_table.SecondaryTimeseriesTable
    joined_timeseries_table.JoinedTimeseriesTable
 
-Calculating Metrics
--------------------
+
+The Metrics Class
+-----------------
 
 Methods related to metric calculations.
 
 .. currentmodule:: teehr.evaluation.metrics
 
 .. autosummary::
-   :template: custom-module-template.rst
+   :template: custom-class-template.rst
    :toctree: generated
    :nosignatures:
-   :recursive:
 
-   Metrics.query
-   Metrics.add_calculated_fields
-   Metrics.to_pandas
-   Metrics.to_geopandas
-   Metrics.to_sdf
+   Metrics
+
+.. currentmodule:: teehr.evaluation.metrics.Metrics
+
+.. autosummary::
+   :nosignatures:
+
+   query
+   add_calculated_fields
+   to_pandas
+   to_geopandas
+   to_sdf
+   write
 
 
 Fetching NWM and USGS Data
@@ -93,15 +138,22 @@ Methods for fetching NWM and USGS data from external sources.
 .. currentmodule:: teehr.evaluation.fetch
 
 .. autosummary::
-   :template: custom-module-template.rst
+   :template: custom-class-template.rst
    :toctree: generated
    :nosignatures:
 
-   Fetch.usgs_streamflow
-   Fetch.nwm_retrospective_points
-   Fetch.nwm_operational_points
-   Fetch.nwm_retrospective_grids
-   Fetch.nwm_operational_grids
+   Fetch
+
+.. currentmodule:: teehr.evaluation.fetch.Fetch
+
+.. autosummary::
+   :nosignatures:
+
+   usgs_streamflow
+   nwm_retrospective_points
+   nwm_operational_points
+   nwm_retrospective_grids
+   nwm_operational_grids
 
 
 Metric Functions
