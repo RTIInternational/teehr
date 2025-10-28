@@ -300,7 +300,7 @@ class Evaluation(EvaluationBase):
         # if self.is_s3:
         #     logger_path = Path(Path.home, 'teehr.log')
         # else:
-        logger_path = Path(self.active_catalog.warehouse_dir, 'teehr.log')
+        logger_path = Path(self.local_catalog.warehouse_dir, 'teehr.log')
 
         handler = logging.FileHandler(logger_path)
         handler.setFormatter(
