@@ -665,7 +665,7 @@ def false_alarm_ratio(model: MetricsBasemodel) -> Callable:
     logger.debug("Building the false_alarm_ratio metric function")
 
     def false_alarm_ratio_inner(p: pd.Series, s: pd.Series) -> float:
-        """False alarm ratio."""
+        """Calculate False alarm ratio."""
         p, s = _transform(p, s, model)
 
         tp = np.sum((p >= model.threshold) & (s >= model.threshold))
@@ -710,7 +710,8 @@ def probability_of_false_detection(model: MetricsBasemodel) -> Callable:
     """ # noqa
     logger.debug("Building the probability_of_false_detection metric function")
 
-    def probability_of_false_detection_inner(p: pd.Series, s: pd.Series) -> float:
+    def probability_of_false_detection_inner(p: pd.Series,
+                                             s: pd.Series) -> float:
         """Probability of false detection."""
         p, s = _transform(p, s, model)
 
