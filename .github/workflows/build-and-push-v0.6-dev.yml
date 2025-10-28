@@ -1,8 +1,8 @@
 name: Build and Push the v0.6-dev Docker Image
 
 on:
-  push:
-    branches: [v0.6-dev]
+  # push:
+  #   branches: [v0.6-dev]
   workflow_dispatch:
     inputs:
       image-tag:
