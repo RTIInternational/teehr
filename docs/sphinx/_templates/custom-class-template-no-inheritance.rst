@@ -5,6 +5,7 @@
 .. autoclass:: {{ objname }}
    :members:
    :special-members: __call__, __add__, __mul__
+   :no-inherited-members:
 
    {% block methods %}
    {% if methods %}
@@ -13,8 +14,8 @@
    .. autosummary::
       :nosignatures:
    {% for item in methods %}
-      {%- if not item.startswith('_') %}
-      ~{{ name }}.{{ item }}
+      {%- if item not in inherited_members %}
+         ~{{ name }}.{{ item }}
       {%- endif -%}
    {%- endfor %}
    {% endif %}

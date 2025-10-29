@@ -1,8 +1,23 @@
-======
-Tables
-======
+==================
+Evaluation Dataset
+==================
 
-Classes for creating, describing, and querying the Evaluation dataset tables.
+Evaluation Class
+----------------
+
+.. currentmodule:: teehr
+
+.. autosummary::
+   :template: custom-class-template.rst
+   :toctree: generated
+   :nosignatures:
+
+   Evaluation
+
+.. _ev-tables-label:
+
+Tables
+------
 
 .. currentmodule:: teehr.evaluation.tables
 

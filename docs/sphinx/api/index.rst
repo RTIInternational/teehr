@@ -9,41 +9,21 @@ and examples, refer to the User Guide part of the documentation.
 
 .. toctree::
    :maxdepth: 2
-   :caption: The Evaluation Dataset
    :hidden:
 
-   ev_dataset
-   ev_tables
+   ev_index
 
 .. toctree::
    :maxdepth: 2
-   :caption: Data I/O
    :hidden:
 
-   io_fetch
-   io_load
-   io_extract
-   io_read
-   io_validate
-   io_write
+   io_index
 
 .. toctree::
    :maxdepth: 2
-   :caption: Analysis & Metrics
    :hidden:
 
-   m_metrics
-   m_functions
-   m_models
-   m_calculated_fields
-   m_generate
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Visualization
-   :hidden:
-
-   visualization
+   m_index
 
 .. currentmodule:: teehr
 
@@ -51,91 +31,45 @@ and examples, refer to the User Guide part of the documentation.
 The Evaluation Dataset
 ----------------------
 
-The top-level class for interacting with and exploring a TEEHR Evaluation.
+The top-level class and tables for interacting with and managing a TEEHR Evaluation.
 
-.. include:: ev_dataset.rst
-
-Classes for creating, describing, and querying the Evaluation dataset tables.
-
-.. include:: ev_tables.rst
+*  :class:`The Evaluation Class <teehr.Evaluation>`
+*  :class:`Attributes Table <teehr.evaluation.tables.attribute_table.AttributeTable>`
+*  :class:`Configurations Table <teehr.evaluation.tables.configuration_table.ConfigurationTable>`
+*  :class:`Units Table <teehr.evaluation.tables.unit_table.UnitTable>`
+*  :class:`Variables Table <teehr.evaluation.tables.variable_table.VariableTable>`
+*  :class:`Location Attribute Table <teehr.evaluation.tables.location_attribute_table.LocationAttributeTable>`
+*  :class:`Location Crosswalk Table <teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable>`
+*  :class:`Locations Table <teehr.evaluation.tables.location_table.LocationTable>`
+*  :class:`Primary Timeseries Table <teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable>`
+*  :class:`Secondary Timeseries Table <teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable>`
+*  :class:`Joined Timeseries Table <teehr.evaluation.tables.joined_timeseries_table.JoinedTimeseriesTable>`
 
 Data I/O
 --------
 
-Methods related to data input and output.
+Classes and methods related to data input and output.
 
-.. include:: io_fetch.rst
-.. include:: io_load.rst
-.. include:: io_extract.rst
-.. include:: io_read.rst
-.. include:: io_validate.rst
-.. include:: io_write.rst
+* :class:`Fetching USGS and NWM Data <teehr.evaluation.fetch.Fetch>`
+* :class:`Reading Data <teehr.evaluation.read.Read>`
+* :class:`Writing Data <teehr.evaluation.write.Write>`
+* :class:`Loading Data <teehr.evaluation.load.Load>`
+* :class:`Extracting Data <teehr.evaluation.extract.DataExtractor>`
+* :class:`Validating Data <teehr.evaluation.validate.Validator>`
 
+Analysis & Metrics
+------------------
 
-Metric Functions
-----------------
+Tools for calculating metrics and generating synthetic timeseries.
 
-Functions for calculating metrics.
-
-.. currentmodule:: teehr.metrics
-
-.. autosummary::
-   :toctree: generated
-   :template: custom-module-template.rst
-   :recursive:
-   :nosignatures:
-
-   deterministic_funcs
-   signature_funcs
-   probabilistic_funcs
-
-
-Metric and Bootstrap Models
----------------------------
-
-Classes for defining and customizing metrics and bootstrap models.
-
-.. currentmodule:: teehr
-
-.. autosummary::
-   :toctree: generated
-   :template: custom-class-template.rst
-   :nosignatures:
-
-   DeterministicMetrics
-   SignatureMetrics
-   ProbabilisticMetrics
-   Bootstrappers
-
-
-Calculated Field Models
--------------------------
-
-Classes for defining and customizing user-defined field models.
-
-.. currentmodule:: teehr.models.calculated_fields
-
-.. autosummary::
-   :toctree: generated
-   :template: custom-class-template.rst
-   :recursive:
-   :nosignatures:
-
-
-   row_level.RowLevelCalculatedFields
-   timeseries_aware.TimeseriesAwareCalculatedFields
-
-
-Visualization
--------------
-
-Methods for visualizing Evaluation data.
-
-.. currentmodule:: teehr.visualization.dataframe_accessor
-
-.. autosummary::
-   :template: custom-class-template.rst
-   :toctree: generated
-   :nosignatures:
-
-   TEEHRDataFrameAccessor
+* :class:`The Metrics Class <teehr.evaluation.metrics.Metrics>`
+* :class:`Row-Level Calculated Fields <teehr.models.calculated_fields.row_level.RowLevelCalculatedFields>`
+* :class:`Timeseries-Aware Calculated Fields <teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields>`
+* :mod:`Deterministic Functions <teehr.metrics.deterministic_funcs>`
+* :mod:`Signature Functions <teehr.metrics.signature_funcs>`
+* :mod:`Probabilistic Functions <teehr.metrics.probabilistic_funcs>`
+* :class:`Deterministic Metrics Models <teehr.DeterministicMetrics>`
+* :class:`Probabilistic Metrics Models <teehr.ProbabilisticMetrics>`
+* :class:`Signature Models <teehr.SignatureMetrics>`
+* :class:`Generated Timeseries <teehr.evaluation.generate.GeneratedTimeseries>`
+* :class:`Reference Forecast Model <teehr.models.generate.timeseries_generator_models.ReferenceForecast>`
