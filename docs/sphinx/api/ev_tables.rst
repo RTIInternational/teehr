@@ -1,34 +1,6 @@
-===============
-Data Management
-===============
-
-Fetching Data
--------------
-
-Methods for fetching NWM and USGS data from external sources.
-
-.. currentmodule:: teehr.evaluation.fetch
-
-.. autosummary::
-   :template: custom-class-template.rst
-   :toctree: generated
-   :nosignatures:
-
-   Fetch
-
-.. currentmodule:: teehr.evaluation.fetch.Fetch
-
-.. autosummary::
-   :nosignatures:
-
-   usgs_streamflow
-   nwm_retrospective_points
-   nwm_operational_points
-   nwm_retrospective_grids
-   nwm_operational_grids
-
-Dataset Tables
---------------
+======
+Tables
+======
 
 Classes for creating, describing, and querying the Evaluation dataset tables.
 

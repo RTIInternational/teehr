@@ -1,7 +1,5 @@
 .. _api:
 
-.. currentmodule:: teehr
-
 #############
 API reference
 #############
@@ -11,24 +9,34 @@ and examples, refer to the User Guide part of the documentation.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Core Components
+   :caption: The Evaluation Dataset
    :hidden:
 
-   core
+   ev_dataset
+   ev_tables
 
 .. toctree::
    :maxdepth: 2
-   :caption: Data Management
+   :caption: Data I/O
    :hidden:
 
-   data
+   io_fetch
+   io_load
+   io_extract
+   io_read
+   io_validate
+   io_write
 
 .. toctree::
    :maxdepth: 2
    :caption: Analysis & Metrics
    :hidden:
 
-   analysis
+   m_metrics
+   m_functions
+   m_models
+   m_calculated_fields
+   m_generate
 
 .. toctree::
    :maxdepth: 2
@@ -37,123 +45,31 @@ and examples, refer to the User Guide part of the documentation.
 
    visualization
 
-Quick Start
-===========
-
-The most common workflow:
-
-1. Create an :class:`~teehr.Evaluation`
-2. Fetch data with :class:`~teehr.evaluation.fetch.Fetch`
-3. Calculate metrics with :class:`~teehr.evaluation.metrics.Metrics`
-4. Visualize with :attr:`~pandas.DataFrame.teehr`
-
-
-The Evaluation Class
---------------------
-
-The top-level class for interacting with and exploring a TEEHR Evaluation.
-
-.. autosummary::
-   :template: custom-class-template.rst
-   :toctree: generated
-   :nosignatures:
-
-   Evaluation
-
-
-Creating and Managing an Evaluation
------------------------------------
-
-Methods for creating, cloning, and configuring an Evaluation.
-
-.. currentmodule:: teehr.Evaluation
-
-.. autosummary::
-   :nosignatures:
-
-   clone_template
-   list_s3_evaluations
-   clone_from_s3
-   clean_cache
-   enable_logging
+.. currentmodule:: teehr
 
 
 The Evaluation Dataset
 ----------------------
 
+The top-level class for interacting with and exploring a TEEHR Evaluation.
+
+.. include:: ev_dataset.rst
+
 Classes for creating, describing, and querying the Evaluation dataset tables.
 
-.. currentmodule:: teehr.evaluation.tables
+.. include:: ev_tables.rst
 
-.. autosummary::
-   :template: custom-class-template.rst
-   :toctree: generated
-   :nosignatures:
+Data I/O
+--------
 
-   base_table.BaseTable
-   unit_table.UnitTable
-   variable_table.VariableTable
-   attribute_table.AttributeTable
-   configuration_table.ConfigurationTable
-   location_table.LocationTable
-   location_attribute_table.LocationAttributeTable
-   location_crosswalk_table.LocationCrosswalkTable
-   primary_timeseries_table.PrimaryTimeseriesTable
-   secondary_timeseries_table.SecondaryTimeseriesTable
-   joined_timeseries_table.JoinedTimeseriesTable
+Methods related to data input and output.
 
-
-The Metrics Class
------------------
-
-Methods related to metric calculations.
-
-.. currentmodule:: teehr.evaluation.metrics
-
-.. autosummary::
-   :template: custom-class-template.rst
-   :toctree: generated
-   :nosignatures:
-
-   Metrics
-
-.. currentmodule:: teehr.evaluation.metrics.Metrics
-
-.. autosummary::
-   :nosignatures:
-
-   query
-   add_calculated_fields
-   to_pandas
-   to_geopandas
-   to_sdf
-   write
-
-
-Fetching NWM and USGS Data
---------------------------
-
-Methods for fetching NWM and USGS data from external sources.
-
-.. currentmodule:: teehr.evaluation.fetch
-
-.. autosummary::
-   :template: custom-class-template.rst
-   :toctree: generated
-   :nosignatures:
-
-   Fetch
-
-.. currentmodule:: teehr.evaluation.fetch.Fetch
-
-.. autosummary::
-   :nosignatures:
-
-   usgs_streamflow
-   nwm_retrospective_points
-   nwm_operational_points
-   nwm_retrospective_grids
-   nwm_operational_grids
+.. include:: io_fetch.rst
+.. include:: io_load.rst
+.. include:: io_extract.rst
+.. include:: io_read.rst
+.. include:: io_validate.rst
+.. include:: io_write.rst
 
 
 Metric Functions
