@@ -296,13 +296,13 @@ class FlowDurationCurveSlope(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.FDC_SLOPE_ATTRS, frozen=True)
 
 
-class SignatureMetrics:
-    """Define and customize signature metrics.
+class Signatures:
+    """Define and customize signatures.
 
     Notes
     -----
-    Signature metrics operate on a single field.  Available
-    signature metrics are:
+    Signatures operate on a single field.  Available
+    signatures are:
 
     - Average
     - Count
@@ -311,6 +311,7 @@ class SignatureMetrics:
     - Minimum
     - Sum
     - Variance
+    - FlowDurationCurveSlope
     """
 
     Average = Average

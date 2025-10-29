@@ -33,7 +33,7 @@ Changed
 
 
 0.4.12 - 2025-05-22
-------------------
+-------------------
 
 Changed
 ^^^^^^^
@@ -42,7 +42,7 @@ Changed
 - Removes the repartitioning by `self.partition_by` of the dataframe in the `BaseTable` class when writing to parquet
 
 0.4.11 - 2025-05-19
-------------------
+-------------------
 
 Changed
 ^^^^^^^
@@ -54,7 +54,7 @@ Changed
 - Added the option to skip the dropDuplicates() method when writing dataframes in the BaseTable class.
 
 0.4.10 - 2025-04-14
-------------------
+-------------------
 
 Added
 ^^^^^
@@ -165,7 +165,7 @@ Changed
 
 
 0.4.6 - 2024-12-17
---------------------
+------------------
 
 Added
 ^^^^^
@@ -187,7 +187,7 @@ Changed
 
 
 0.4.5 - 2024-12-09
---------------------
+------------------
 
 Added
 ^^^^^
@@ -201,7 +201,7 @@ Changed
 * Fixes issues with sphinx docs and run the `install_spark_jars.py` script in the build container.
 
 0.4.4 - 2024-12-02
---------------------
+------------------
 
 Added
 ^^^^^
@@ -216,7 +216,7 @@ Changed
 
 
 0.4.3 - 2024-10-19
---------------------
+------------------
 
 Added
 ^^^^^
@@ -227,7 +227,7 @@ Changed
 * Changed paths to the S3 bucket evaluations to reference "e*..." instead of "p*..." naming convention.
 
 0.4.2 - 2024-10-18
---------------------
+------------------
 
 Added
 ^^^^^
@@ -238,7 +238,7 @@ Changed
 * None
 
 0.4.1 - 2024-10-15
---------------------
+------------------
 
 Added
 ^^^^^
@@ -251,7 +251,7 @@ Changed
 * Fixed the API doc build.
 
 0.4.0 - 2024-10-13
---------------------
+------------------
 
 Added
 ^^^^^

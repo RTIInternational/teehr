@@ -135,7 +135,7 @@ Classes for defining and customizing metrics and bootstrap models.
    :nosignatures:
 
    DeterministicMetrics
-   SignatureMetrics
+   Signatures
    ProbabilisticMetrics
    Bootstrappers
 

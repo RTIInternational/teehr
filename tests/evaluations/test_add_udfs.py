@@ -342,11 +342,11 @@ def test_location_event_detection(tmpdir):
     sdf = ev.metrics.add_calculated_fields(ped).query(
         group_by=["configuration_name", "primary_location_id", "event_above_id"],
         include_metrics=[
-            teehr.SignatureMetrics.Maximum(
+            teehr.Signatures.Maximum(
                 input_field_names=["primary_value"],
                 output_field_name="max_primary_value"
             ),
-            teehr.SignatureMetrics.Maximum(
+            teehr.Signatures.Maximum(
                 input_field_names=["secondary_value"],
                 output_field_name="max_secondary_value"
             )
