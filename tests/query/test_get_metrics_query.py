@@ -1,6 +1,6 @@
 """Test evaluation class."""
 from teehr import Configuration
-from teehr import DeterministicMetrics, ProbabilisticMetrics, SignatureMetrics
+from teehr import DeterministicMetrics, ProbabilisticMetrics, Signatures
 from teehr import Operators as ops
 import tempfile
 import shutil
@@ -64,14 +64,14 @@ def test_executing_deterministic_metrics(tmpdir):
     assert metrics_df.columns.size == 21
 
 
-def test_executing_signature_metrics(tmpdir):
+def test_executing_signatures(tmpdir):
     """Test get_metrics method."""
     # Define the evaluation object.
     ev = setup_v0_3_study(tmpdir)
 
     # Test all the metrics.
     include_all_metrics = [
-        func() for func in SignatureMetrics.__dict__.values() if callable(func)
+        func() for func in Signatures.__dict__.values() if callable(func)
     ]
 
     # Get the currently available fields to use in the query.
@@ -83,7 +83,7 @@ def test_executing_signature_metrics(tmpdir):
         order_by=[flds.primary_location_id],
     ).to_pandas()
 
-    fdc = SignatureMetrics.FlowDurationCurveSlope()
+    fdc = Signatures.FlowDurationCurveSlope()
     fdc.bootstrap = Bootstrappers.CircularBlock(
         seed=40,
         block_size=100,
@@ -112,9 +112,9 @@ def test_metrics_filter_and_geometry(tmpdir):
 
     # Define some metrics.
     kge = DeterministicMetrics.KlingGuptaEfficiency()
-    primary_avg = SignatureMetrics.Average()
+    primary_avg = Signatures.Average()
     mvtd = DeterministicMetrics.MaxValueTimeDelta()
-    pmvt = SignatureMetrics.MaxValueTime()
+    pmvt = Signatures.MaxValueTime()
 
     include_metrics = [pmvt, mvtd, primary_avg, kge]
 
@@ -423,7 +423,7 @@ def test_metric_chaining(tmpdir):
         order_by=["primary_location_id"],
         group_by=["primary_location_id"],
         include_metrics=[
-            SignatureMetrics.Average(
+            Signatures.Average(
                 input_field_names="relative_bias",
                 output_field_name="primary_average"
             )
@@ -739,7 +739,7 @@ if __name__ == "__main__":
                 dir=tempdir
             )
         )
-        test_executing_signature_metrics(
+        test_executing_signatures(
             tempfile.mkdtemp(
                 prefix="2-",
                 dir=tempdir

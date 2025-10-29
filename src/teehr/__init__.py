@@ -1,7 +1,7 @@
 """Initialize the TEEHR package."""
 import warnings
 
-__version__ = "0.5.1dev9"
+__version__ = "0.5.1dev10"
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore", UserWarning)
@@ -10,7 +10,7 @@ with warnings.catch_warnings():
 from teehr.evaluation.evaluation import Evaluation  # noqa
 from teehr.models.metrics.deterministic_models import DeterministicMetrics  # noqa
 from teehr.models.metrics.probabilistic_models import ProbabilisticMetrics  # noqa
-from teehr.models.metrics.signature_models import SignatureMetrics  # noqa
+from teehr.models.metrics.signature_models import Signatures  # noqa
 from teehr.models.metrics.bootstrap_models import Bootstrappers  # noqa
 from teehr.models.metrics.basemodels import Operators  # noqa
 from teehr.models.pydantic_table_models import (  # noqa
