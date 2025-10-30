@@ -18,7 +18,8 @@ def _transform(
         p: pd.Series,
         s: pd.Series,
         model: MetricsBasemodel,
-        t: Optional[pd.Series] = None
+        t: Optional[pd.Series] = None,
+        threshold_series: Optional[pd.Series] = None
 ) -> tuple:
     """Apply timeseries transform for metrics calculations."""
     # Apply transform
@@ -31,25 +32,37 @@ def _transform(
                     )
                     p = p + EPSILON
                     s = s + EPSILON
+                    if threshold_series is not None:
+                        threshold_series = threshold_series + EPSILON
                 logger.debug("Applying log transform")
                 p = np.log(p)
                 s = np.log(s)
+                if threshold_series is not None:
+                    threshold_series = np.log(threshold_series)
             case TransformEnum.sqrt:
                 logger.debug("Applying square root transform")
                 p = np.sqrt(p)
                 s = np.sqrt(s)
+                if threshold_series is not None:
+                    threshold_series = np.sqrt(threshold_series)
             case TransformEnum.square:
                 logger.debug("Applying square transform")
                 p = np.square(p)
                 s = np.square(s)
+                if threshold_series is not None:
+                    threshold_series = np.square(threshold_series)
             case TransformEnum.cube:
                 logger.debug("Applying cube transform")
                 p = np.power(p, 3)
                 s = np.power(s, 3)
+                if threshold_series is not None:
+                    threshold_series = np.power(threshold_series, 3)
             case TransformEnum.exp:
                 logger.debug("Applying exponential transform")
                 p = np.exp(p)
                 s = np.exp(s)
+                if threshold_series is not None:
+                    threshold_series = np.exp(threshold_series)
             case TransformEnum.inv:
                 if model.add_epsilon:
                     logger.debug(
@@ -57,13 +70,19 @@ def _transform(
                     )
                     p = p + EPSILON
                     s = s + EPSILON
+                    if threshold_series is not None:
+                        threshold_series = threshold_series + EPSILON
                 logger.debug("Applying inverse transform")
                 p = 1.0 / p
                 s = 1.0 / s
+                if threshold_series is not None:
+                    threshold_series = 1.0 / threshold_series
             case TransformEnum.abs:
                 logger.debug("Applying absolute value transform")
                 p = np.abs(p)
                 s = np.abs(s)
+                if threshold_series is not None:
+                    threshold_series = np.abs(threshold_series)
             case _:
                 raise ValueError(
                     f"Unsupported transform: {model.transform}"
@@ -71,24 +90,41 @@ def _transform(
     else:
         logger.debug("No transform specified, using original values")
 
-    # Remove invalid values and align series
-    if t is not None:
-        if isinstance(t, pd.Series):
+    # Remove invalid values and align series if transform applied
+    if model.transform is not None:
+        logger.debug("Removing invalid values and aligning series")
+        if (t is not None) and (threshold_series is not None):
             valid_mask = np.isfinite(p) & np.isfinite(s)
             p = p[valid_mask]
             s = s[valid_mask]
             t = t[valid_mask]
+            threshold_series = threshold_series[valid_mask]
+        elif t is not None:
+            valid_mask = np.isfinite(p) & np.isfinite(s)
+            p = p[valid_mask]
+            s = s[valid_mask]
+            t = t[valid_mask]
+        elif threshold_series is not None:
+            valid_mask = np.isfinite(p) & np.isfinite(s)
+            p = p[valid_mask]
+            s = s[valid_mask]
+            threshold_series = threshold_series[valid_mask]
         else:
-            raise TypeError(
-                "t must be a pandas Series, not {type(t)}"
+            valid_mask = np.isfinite(p) & np.isfinite(s)
+            p = p[valid_mask]
+            s = s[valid_mask]
+        logger.debug(
+            f"Removed {len(valid_mask) - np.sum(valid_mask)} invalid entries"
+            " from the transformed input series"
             )
-    else:
-        valid_mask = np.isfinite(p) & np.isfinite(s)
-        p = p[valid_mask]
-        s = s[valid_mask]
 
-    if t is not None:
+    # return results
+    if (t is not None) and (threshold_series is not None):
+        return p, s, t, threshold_series
+    elif t is not None:
         return p, s, t
+    elif threshold_series is not None:
+        return p, s, threshold_series
     else:
         return p, s
 
@@ -662,27 +698,47 @@ def max_value_timedelta(model: MetricsBasemodel) -> Callable:
 
 
 # Categorical Metrics
+def _validate_threshold_field(threshold_series: pd.Series) -> float:
+    """Validate threshold input field."""
+    unique_thresholds = threshold_series.unique()
+    if len(unique_thresholds) != 1:
+        raise ValueError(
+            "Threshold field must contain a single unique value for each"
+            " location."
+        )
+    threshold = unique_thresholds[0]
+    return threshold
+
+
 def confusion_matrix(model: MetricsBasemodel) -> Callable:
     """Create the confusion_matrix metric function.
 
-    Returns counts of TP, TN, FP, FN as a tuple.
+    Returns counts of TP, TN, FP, FN as a dictionary.
 
     :math:`TP=\\sum((prim>=threshold_{prim})\\ and\\ (sec>=threshold_{sec}))`
     :math:`TN=\\sum((prim<threshold_{prim})\\ and\\ (sec<threshold_{sec}))`
     :math:`FP=\\sum((prim<threshold_{prim})\\ and\\ (sec>=threshold_{sec}))`
     :math:`FN=\\sum((prim>=threshold_{prim})\\ and\\ (sec<threshold_{sec}))`
     """ # noqa
-    logger.debug("Building the confusion_matrix_counts metric function")
+    logger.debug("Building the confusion_matrix metric function")
 
-    def confusion_matrix_inner(p: pd.Series, s: pd.Series) -> tuple:
+    def confusion_matrix_inner(p: pd.Series,
+                               s: pd.Series,
+                               threshold_series: pd.Series) -> dict:
         """Confusion matrix counts."""
-        p, s = _transform(p, s, model)
+        p, s, threshold_series = _transform(p,
+                                            s,
+                                            model,
+                                            None,
+                                            threshold_series)
 
-        tp = np.sum((p >= model.threshold) & (s >= model.threshold))
-        tn = np.sum((p < model.threshold) & (s < model.threshold))
-        fp = np.sum((p < model.threshold) & (s >= model.threshold))
-        fn = np.sum((p >= model.threshold) & (s < model.threshold))
-        result = (tp, tn, fp, fn)
+        threshold = _validate_threshold_field(threshold_series)
+
+        tp = np.sum((p >= threshold) & (s >= threshold))
+        tn = np.sum((p < threshold) & (s < threshold))
+        fp = np.sum((p < threshold) & (s >= threshold))
+        fn = np.sum((p >= threshold) & (s < threshold))
+        result = {"TP": tp, "TN": tn, "FP": fp, "FN": fn}
 
         return result
 
@@ -696,12 +752,20 @@ def false_alarm_ratio(model: MetricsBasemodel) -> Callable:
     """ # noqa
     logger.debug("Building the false_alarm_ratio metric function")
 
-    def false_alarm_ratio_inner(p: pd.Series, s: pd.Series) -> float:
+    def false_alarm_ratio_inner(p: pd.Series,
+                                s: pd.Series,
+                                threshold_series: pd.Series) -> float:
         """Calculate False alarm ratio."""
-        p, s = _transform(p, s, model)
+        p, s, threshold_series = _transform(p,
+                                            s,
+                                            model,
+                                            None,
+                                            threshold_series)
 
-        tp = np.sum((p >= model.threshold) & (s >= model.threshold))
-        fp = np.sum((p < model.threshold) & (s >= model.threshold))
+        threshold = _validate_threshold_field(threshold_series)
+
+        tp = np.sum((p >= threshold) & (s >= threshold))
+        fp = np.sum((p < threshold) & (s >= threshold))
         if (tp + fp) == 0:
             result = np.nan
         else:
@@ -719,12 +783,20 @@ def probability_of_detection(model: MetricsBasemodel) -> Callable:
     """ # noqa
     logger.debug("Building the probability_of_detection metric function")
 
-    def probability_of_detection_inner(p: pd.Series, s: pd.Series) -> float:
+    def probability_of_detection_inner(p: pd.Series,
+                                       s: pd.Series,
+                                       threshold_series: pd.Series) -> float:
         """Probability of detection."""
-        p, s = _transform(p, s, model)
+        p, s, threshold_series = _transform(p,
+                                            s,
+                                            model,
+                                            None,
+                                            threshold_series)
 
-        tp = np.sum((p >= model.threshold) & (s >= model.threshold))
-        fn = np.sum((p >= model.threshold) & (s < model.threshold))
+        threshold = _validate_threshold_field(threshold_series)
+
+        tp = np.sum((p >= threshold) & (s >= threshold))
+        fn = np.sum((p >= threshold) & (s < threshold))
         if (tp + fn) == 0:
             result = np.nan
         else:
@@ -743,12 +815,20 @@ def probability_of_false_detection(model: MetricsBasemodel) -> Callable:
     logger.debug("Building the probability_of_false_detection metric function")
 
     def probability_of_false_detection_inner(p: pd.Series,
-                                             s: pd.Series) -> float:
+                                             s: pd.Series,
+                                             threshold_series: pd.Series
+                                             ) -> float:
         """Probability of false detection."""
-        p, s = _transform(p, s, model)
+        p, s, threshold_series = _transform(p,
+                                            s,
+                                            model,
+                                            None,
+                                            threshold_series)
 
-        fp = np.sum((p < model.threshold) & (s >= model.threshold))
-        tn = np.sum((p < model.threshold) & (s < model.threshold))
+        threshold = _validate_threshold_field(threshold_series)
+
+        fp = np.sum((p < threshold) & (s >= threshold))
+        tn = np.sum((p < threshold) & (s < threshold))
         if (fp + tn) == 0:
             result = np.nan
         else:
@@ -766,13 +846,21 @@ def critical_success_index(model: MetricsBasemodel) -> Callable:
     """ # noqa
     logger.debug("Building the critical_success_index metric function")
 
-    def critical_success_index_inner(p: pd.Series, s: pd.Series) -> float:
+    def critical_success_index_inner(p: pd.Series,
+                                     s: pd.Series,
+                                     threshold_series: pd.Series) -> float:
         """Critical success index."""
-        p, s = _transform(p, s, model)
+        p, s, threshold_series = _transform(p,
+                                            s,
+                                            model,
+                                            None,
+                                            threshold_series)
 
-        tp = np.sum((p >= model.threshold) & (s >= model.threshold))
-        fp = np.sum((p < model.threshold) & (s >= model.threshold))
-        fn = np.sum((p >= model.threshold) & (s < model.threshold))
+        threshold = _validate_threshold_field(threshold_series)
+
+        tp = np.sum((p >= threshold) & (s >= threshold))
+        fp = np.sum((p < threshold) & (s >= threshold))
+        fn = np.sum((p >= threshold) & (s < threshold))
         if (tp + fp + fn) == 0:
             result = np.nan
         else:

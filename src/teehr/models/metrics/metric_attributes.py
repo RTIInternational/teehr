@@ -8,6 +8,7 @@ ME_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
+    "requires_threshold_field": False,
 }
 
 RBIAS_ATTRS = {
@@ -16,6 +17,7 @@ RBIAS_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
+    "requires_threshold_field": False,
 }
 
 MULTBIAS_ATTRS = {
@@ -24,6 +26,7 @@ MULTBIAS_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 1.0,
+    "requires_threshold_field": False,
 }
 
 MSE_ATTRS = {
@@ -32,6 +35,7 @@ MSE_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
+    "requires_threshold_field": False,
 }
 
 RMSE_ATTRS = {
@@ -40,6 +44,7 @@ RMSE_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
+    "requires_threshold_field": False,
 }
 
 MAE_ATTRS = {
@@ -48,6 +53,7 @@ MAE_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
+    "requires_threshold_field": False,
 }
 
 RMAE_ATTRS = {
@@ -56,6 +62,7 @@ RMAE_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
+    "requires_threshold_field": False,
 }
 
 PEARSON_ATTRS = {
@@ -64,6 +71,7 @@ PEARSON_ATTRS = {
     "category": mc.Deterministic,
     "value_range": [-1.0, 1.0],
     "optimal_value": 1.0,
+    "requires_threshold_field": False,
 }
 
 VR_ATTRS = {
@@ -72,6 +80,7 @@ VR_ATTRS = {
     "category": mc.Deterministic,
     "value_range": [0.0, None],
     "optimal_value": 1.0,
+    "requires_threshold_field": False,
 }
 
 R2_ATTRS = {
@@ -80,6 +89,7 @@ R2_ATTRS = {
     "category": mc.Deterministic,
     "value_range": [0.0, 1.0],
     "optimal_value": 1.0,
+    "requires_threshold_field": False,
 }
 
 NSE_ATTRS = {
@@ -88,6 +98,7 @@ NSE_ATTRS = {
     "category": mc.Deterministic,
     "value_range": [None, 1.0],
     "optimal_value": 1.0,
+    "requires_threshold_field": False,
 }
 
 NNSE_ATTRS = {
@@ -96,6 +107,7 @@ NNSE_ATTRS = {
     "category": mc.Deterministic,
     "value_range": [0.0, 1.0],
     "optimal_value": 1.0,
+    "requires_threshold_field": False,
 }
 
 KGE_ATTRS = {
@@ -104,6 +116,7 @@ KGE_ATTRS = {
     "category": mc.Deterministic,
     "value_range": [0.0, 1.0],
     "optimal_value": 1.0,
+    "requires_threshold_field": False,
 }
 
 KGE1_ATTRS = {
@@ -112,6 +125,7 @@ KGE1_ATTRS = {
     "category": mc.Deterministic,
     "value_range": [0.0, 1.0],
     "optimal_value": 1.0,
+    "requires_threshold_field": False,
 }
 
 KGE2_ATTRS = {
@@ -120,6 +134,7 @@ KGE2_ATTRS = {
     "category": mc.Deterministic,
     "value_range": [0.0, 1.0],
     "optimal_value": 1.0,
+    "requires_threshold_field": False,
 }
 
 COUNT_ATTRS = {
@@ -128,6 +143,7 @@ COUNT_ATTRS = {
     "category": mc.Signature,
     "value_range": None,
     "optimal_value": None,
+    "requires_threshold_field": False,
 }
 
 MINIMUM_ATTRS = {
@@ -136,6 +152,7 @@ MINIMUM_ATTRS = {
     "category": mc.Signature,
     "value_range": None,
     "optimal_value": None,
+    "requires_threshold_field": False,
 }
 
 MAXIMUM_ATTRS = {
@@ -144,6 +161,7 @@ MAXIMUM_ATTRS = {
     "category": mc.Signature,
     "value_range": None,
     "optimal_value": None,
+    "requires_threshold_field": False,
 }
 
 AVERAGE_ATTRS = {
@@ -152,6 +170,7 @@ AVERAGE_ATTRS = {
     "category": mc.Signature,
     "value_range": None,
     "optimal_value": None,
+    "requires_threshold_field": False,
 }
 
 SUM_ATTRS = {
@@ -160,6 +179,7 @@ SUM_ATTRS = {
     "category": mc.Signature,
     "value_range": None,
     "optimal_value": None,
+    "requires_threshold_field": False,
 }
 
 VARIANCE_ATTRS = {
@@ -168,6 +188,7 @@ VARIANCE_ATTRS = {
     "category": mc.Signature,
     "value_range": None,
     "optimal_value": None,
+    "requires_threshold_field": False,
 }
 
 MAX_VALUE_DELTA_ATTRS = {
@@ -176,6 +197,7 @@ MAX_VALUE_DELTA_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": None,
+    "requires_threshold_field": False,
 }
 
 MAX_VAL_TIME_ATTRS = {
@@ -184,6 +206,7 @@ MAX_VAL_TIME_ATTRS = {
     "category": mc.Signature,
     "value_range": None,
     "optimal_value": None,
+    "requires_threshold_field": False,
 }
 
 MAX_VALUE_TIMEDELTA_ATTRS = {
@@ -192,7 +215,8 @@ MAX_VALUE_TIMEDELTA_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": None,
-    "units": "seconds"
+    "units": "seconds",
+    "requires_threshold_field": False,
 }
 
 ANNUAL_PEAK_RBIAS_ATTRS = {
@@ -201,6 +225,7 @@ ANNUAL_PEAK_RBIAS_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": None,
+    "requires_threshold_field": False,
 }
 
 SPEARMAN_R_ATTRS = {
@@ -209,6 +234,7 @@ SPEARMAN_R_ATTRS = {
     "category": mc.Deterministic,
     "value_range": [-1.0, 1.0],
     "optimal_value": 1.0,
+    "requires_threshold_field": False,
 }
 
 RSR_ATTRS = {
@@ -217,6 +243,7 @@ RSR_ATTRS = {
     "category": mc.Deterministic,
     "value_range": [0.0, None],
     "optimal_value": 0.0,
+    "requires_threshold_field": False,
 }
 
 CRPS_ENSEMBLE_ATTRS = {
@@ -225,6 +252,7 @@ CRPS_ENSEMBLE_ATTRS = {
     "category": mc.Probabilistic,
     "value_range": [None, None],
     "optimal_value": 0.0,
+    "requires_threshold_field": False,
 }
 
 FDC_SLOPE_ATTRS = {
@@ -233,4 +261,50 @@ FDC_SLOPE_ATTRS = {
     "category": mc.Signature,
     "value_range": [None, None],
     "optimal_value": None,
+    "requires_threshold_field": False,
+}
+
+CM_ATTRS = {
+    "short_name": "confusion_matrix",
+    "display_name": "Confusion Matrix",
+    "category": mc.Deterministic,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": True,
+}
+
+FAR_ATTRS = {
+    "short_name": "false_alarm_ratio",
+    "display_name": "False Alarm Ratio",
+    "category": mc.Deterministic,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": True,
+}
+
+POD_ATTRS = {
+    "short_name": "probability_of_detection",
+    "display_name": "Probability of Detection",
+    "category": mc.Deterministic,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": True,
+}
+
+POFD_ATTRS = {
+    "short_name": "probability_of_false_detection",
+    "display_name": "Probability of False Detection",
+    "category": mc.Deterministic,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": True,
+}
+
+CSI_ATTRS = {
+    "short_name": "critical_success_index",
+    "display_name": "Critical Success Index",
+    "category": mc.Deterministic,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": True,
 }
