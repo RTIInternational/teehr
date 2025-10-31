@@ -11,7 +11,7 @@ def test_eaas_interface(tmpdir):
     # Connects to remote by default unless otherwise specified.
     ev = Evaluation(
         dir_path=tmpdir,
-        create_local_dir=True,
+        create_dir=True,
         check_evaluation_version=False
     )
     # NOTE: It might take a few seconds for the catalog to be ready?

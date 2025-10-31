@@ -40,7 +40,7 @@ def convert_evaluation(
         spark=spark,
         dir_path=dir_path,
         check_evaluation_version=False,
-        create_local_dir=False,
+        create_dir=False,
         local_catalog_name=catalog_name,
         local_namespace_name=namespace,
         remote_namespace_name=namespace,

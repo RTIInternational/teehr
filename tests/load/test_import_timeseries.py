@@ -43,7 +43,7 @@ MIZU_LOCATIONS = Path(
 
 def test_dropping_duplicates(tmpdir):
     """Test the dropping duplicates function."""
-    ev = Evaluation(dir_path=tmpdir, create_local_dir=True)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
     ev.enable_logging()
     ev.clone_template()
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
@@ -101,7 +101,7 @@ def test_dropping_duplicates(tmpdir):
 
 def test_validate_and_insert_timeseries(tmpdir):
     """Test the validate_locations function."""
-    ev = Evaluation(dir_path=tmpdir, create_local_dir=True)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
     ev.enable_logging()
     ev.clone_template()
 
@@ -186,7 +186,7 @@ def test_validate_and_insert_timeseries(tmpdir):
 
 def test_validate_and_insert_timeseries_set_const(tmpdir):
     """Test the validate_locations function."""
-    ev = Evaluation(dir_path=tmpdir, create_local_dir=True)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
 
     ev.enable_logging()
 
@@ -254,7 +254,7 @@ def test_validate_and_insert_timeseries_set_const(tmpdir):
 
 def test_validate_and_insert_summa_nc_timeseries(tmpdir):
     """Test the validate_locations function."""
-    ev = Evaluation(dir_path=tmpdir, create_local_dir=True)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
 
     ev.enable_logging()
 
@@ -310,7 +310,7 @@ def test_validate_and_insert_summa_nc_timeseries(tmpdir):
 
 def test_validate_and_insert_mizu_nc_timeseries(tmpdir):
     """Test the validate_locations function."""
-    ev = Evaluation(dir_path=tmpdir, create_local_dir=True)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
 
     ev.enable_logging()
 
@@ -381,7 +381,7 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
         "usgs_hefs_06711565.parquet"
     )
 
-    ev = Evaluation(dir_path=tmpdir, create_local_dir=True)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
     ev.enable_logging()
     ev.clone_template()
 
@@ -437,7 +437,7 @@ def test_validate_and_insert_fews_xml_timeseries(tmpdir):
 
 def test_validate_and_insert_in_memory_timeseries(tmpdir):
     """Test the validate_locations function."""
-    ev = Evaluation(dir_path=tmpdir, create_local_dir=True)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
     ev.enable_logging()
     ev.clone_template()
 

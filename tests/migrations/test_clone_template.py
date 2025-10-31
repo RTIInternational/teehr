@@ -10,7 +10,7 @@ def test_clone_template(tmpdir):
     ev = Evaluation(
         dir_path=tmpdir,
         remote_warehouse_dir=Path(tmpdir) / "warehouse",
-        create_local_dir=True,
+        create_dir=True,
     )
     ev.clone_template()
 

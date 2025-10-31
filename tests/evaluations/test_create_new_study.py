@@ -11,7 +11,7 @@ def test_clone_template(tmpdir):
     tmpdir = Path(tmpdir)
     from teehr import Evaluation
 
-    ev = Evaluation(dir_path=tmpdir, create_local_dir=True)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
     ev.clone_template()
 
     tbls_df = ev.list_tables()

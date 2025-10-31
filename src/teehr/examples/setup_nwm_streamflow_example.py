@@ -8,7 +8,7 @@ import teehr.example_data.nwm_streamflow_example_data as fetch_nwm_streamflow_da
 def setup_nwm_example(tmpdir):
     """Set up the NWM streamflow fetching example."""
     # Create an Evaluation object and create the directory
-    ev = teehr.Evaluation(dir_path=tmpdir, create_local_dir=True)
+    ev = teehr.Evaluation(dir_path=tmpdir, create_dir=True)
 
     # Clone the template
     ev.clone_template()
