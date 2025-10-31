@@ -4,8 +4,6 @@
 API reference
 #############
 
-This page provides an auto-generated summary of TEEHR's API. For more details
-and examples, refer to the User Guide part of the documentation.
 
 .. toctree::
    :maxdepth: 2
