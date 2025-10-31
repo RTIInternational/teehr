@@ -19,7 +19,7 @@ from data.setup_v0_3_study import setup_v0_3_study  # noqa
 def test_add_row_udfs_null_reference(tmpdir):
     """Test adding row level UDFs with null reference time."""
     ev = teehr.Evaluation(
-        local_warehouse_dir=tmpdir,
+        dir_path=tmpdir,
         create_local_dir=True,
         check_evaluation_version=False,
     )

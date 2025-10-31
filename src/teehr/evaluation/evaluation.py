@@ -112,8 +112,10 @@ class Evaluation(EvaluationBase):
 
         # Initialize cache and scripts dir. These are only valid
         # when using a local catalog.
+        self.dataset_dir = None
         self.cache_dir = None
         self.scripts_dir = None
+        self.dir_path = dir_path
 
         # Check version of Evaluation
         if (
@@ -277,12 +279,9 @@ class Evaluation(EvaluationBase):
             self.spark.catalog.setCurrentCatalog(
                 self.local_catalog.catalog_name
             )
-            self.cache_dir = to_path_or_s3path(
-                self.local_catalog.warehouse_dir, const.CACHE_DIR
-            )
-            self.scripts_dir = to_path_or_s3path(
-                self.local_catalog.warehouse_dir, const.SCRIPTS_DIR
-            )
+            self.cache_dir = self.local_catalog.cache_dir
+            self.scripts_dir = self.local_catalog.scripts_dir
+            self.dataset_dir = self.local_catalog.dataset_dir
             logger.info("Active catalog set to local.")
         elif catalog == "remote":
             self.active_catalog = self.remote_catalog

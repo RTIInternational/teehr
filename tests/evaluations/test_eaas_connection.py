@@ -10,7 +10,7 @@ def test_eaas_interface(tmpdir):
     tmpdir = Path(tmpdir)
     # Connects to remote by default unless otherwise specified.
     ev = Evaluation(
-        local_warehouse_dir=tmpdir,
+        dir_path=tmpdir,
         create_local_dir=True,
         check_evaluation_version=False
     )

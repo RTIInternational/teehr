@@ -8,7 +8,7 @@ from teehr import Evaluation
 
 def test_table_writes(tmpdir):
     """Test creating a new study."""
-    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
+    ev = Evaluation(dir_path=tmpdir, create_local_dir=True)
     ev.clone_template()
 
     schema = StructType([

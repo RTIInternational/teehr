@@ -13,7 +13,7 @@ TEST_STUDY_DATA_DIR_v0_4 = Path("tests", "data", "test_study")
 
 def test_generate_timeseries_normals(tmpdir):
     """Generate synthetic time series data."""
-    ev = teehr.Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
+    ev = teehr.Evaluation(dir_path=tmpdir, create_local_dir=True)
     ev.clone_template()
     usgs_location = Path(
         TEST_STUDY_DATA_DIR_v0_4,
@@ -116,7 +116,7 @@ def test_generate_timeseries_normals(tmpdir):
 
 def test_generate_reference_forecast(tmpdir):
     """Test the reference forecast calculation."""
-    ev = teehr.Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
+    ev = teehr.Evaluation(dir_path=tmpdir, create_local_dir=True)
     ev.clone_template()
     ev.locations.load_spatial(
         in_path=Path(

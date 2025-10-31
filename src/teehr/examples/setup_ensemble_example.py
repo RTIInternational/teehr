@@ -8,7 +8,7 @@ import teehr.example_data.ensemble_example_data as ensemble_example_data
 def setup_hefs_example(tmpdir):
     """Set up the ensemble metrics example."""
     # Create an Evaluation object and create the directory
-    ev = teehr.Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
+    ev = teehr.Evaluation(dir_path=tmpdir, create_local_dir=True)
 
     # Clone the template
     ev.clone_template()
@@ -60,6 +60,6 @@ if __name__ == "__main__":
     setup_hefs_example(tmpdir=test_eval_dir)
 
     # Initialize the evaluation.
-    ev = teehr.Evaluation(local_warehouse_dir=test_eval_dir)
+    ev = teehr.Evaluation(dir_path=test_eval_dir)
 
     pass

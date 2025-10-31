@@ -111,7 +111,7 @@ def test_locations_map(tmpdir):
 
     # Initialize the evaluation.
     ev = teehr.Evaluation(
-        local_warehouse_dir=test_eval_dir,
+        dir_path=test_eval_dir,
         check_evaluation_version=False
     )
 
@@ -153,7 +153,7 @@ def test_location_attributes_map(tmpdir):
 
     # Initialize the evaluation.
     ev = teehr.Evaluation(
-        local_warehouse_dir=test_eval_dir,
+        dir_path=test_eval_dir,
         check_evaluation_version=False
     )
 

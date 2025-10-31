@@ -38,7 +38,7 @@ def convert_evaluation(
 
     ev = teehr.Evaluation(
         spark=spark,
-        local_warehouse_dir=dir_path,
+        dir_path=dir_path,
         check_evaluation_version=False,
         create_local_dir=False,
         local_catalog_name=catalog_name,

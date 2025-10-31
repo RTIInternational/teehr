@@ -6,7 +6,7 @@ import teehr
 
 def test_ngiab_teehr_mechanics(tmpdir):
     """Test running a workflow class."""
-    ev = teehr.Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
+    ev = teehr.Evaluation(dir_path=tmpdir, create_local_dir=True)
     ev.clone_template()
 
     ev.workflows.ngiab_teehr()
