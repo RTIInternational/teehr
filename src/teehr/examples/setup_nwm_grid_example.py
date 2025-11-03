@@ -60,7 +60,7 @@ def setup_nwm_example(tmpdir):
     ev.load.from_cache(in_path=configurations_path, table_name="configurations")
     ev.load.from_cache(in_path=primary_timeseries_path, table_name="primary_timeseries")
     ev.load.from_cache(in_path=secondary_timeseries_path, table_name="secondary_timeseries")
-    ev.load.from_cache(in_path=joined_timeseries_path, table_name="joined_timeseries")
+    ev.load.from_cache(in_path=joined_timeseries_path, table_name="joined_timeseries", write_mode="create_or_replace")
 
     # Weights file
     Path(ev.cache_dir, "fetching", "weights", "nwm30_forcing_analysis_assim").mkdir(parents=True)
