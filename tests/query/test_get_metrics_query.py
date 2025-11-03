@@ -1,6 +1,6 @@
 """Test evaluation class."""
 from teehr import Configuration
-from teehr import DeterministicMetrics, ProbabilisticMetrics, SignatureMetrics
+from teehr import DeterministicMetrics, ProbabilisticMetrics, Signatures
 from teehr import Operators as ops
 import tempfile
 import pandas as pd
@@ -72,14 +72,14 @@ def test_executing_deterministic_metrics(tmpdir):
     ev.spark.stop()
 
 
-def test_executing_signature_metrics(tmpdir):
+def test_executing_signatures(tmpdir):
     """Test get_metrics method."""
     # Define the evaluation object.
     ev = setup_v0_3_study(tmpdir)
 
     # Test all the metrics.
     include_all_metrics = [
-        func() for func in SignatureMetrics.__dict__.values() if callable(func)
+        func() for func in Signatures.__dict__.values() if callable(func)
     ]
 
     # Get the currently available fields to use in the query.
@@ -91,14 +91,18 @@ def test_executing_signature_metrics(tmpdir):
         order_by=[flds.primary_location_id],
     ).to_pandas()
 
-    sum_metric = SignatureMetrics.Sum()
-    sum_metric.input_field_names = ["value"]
-
-    metrics_df2 = ev.metrics(table_name="primary_timeseries").query(
-        include_metrics=[sum_metric],
-        group_by=["location_id"],
-        order_by=["location_id"],
-        filters=["location_id = 'gage-A'"],
+    fdc = Signatures.FlowDurationCurveSlope()
+    fdc.bootstrap = Bootstrappers.CircularBlock(
+        seed=40,
+        block_size=100,
+        quantiles=[0.05, 0.5, 0.95],
+        reps=50
+    )
+    fdc.unpack_results = True
+    sig_metrics_df = ev.metrics.query(
+        include_metrics=[fdc],
+        group_by=[flds.primary_location_id],
+        order_by=[flds.primary_location_id],
     ).to_pandas()
 
     assert isinstance(metrics_df, pd.DataFrame)
@@ -117,9 +121,9 @@ def test_metrics_filter_and_geometry(tmpdir):
 
     # Define some metrics.
     kge = DeterministicMetrics.KlingGuptaEfficiency()
-    primary_avg = SignatureMetrics.Average()
+    primary_avg = Signatures.Average()
     mvtd = DeterministicMetrics.MaxValueTimeDelta()
-    pmvt = SignatureMetrics.MaxValueTime()
+    pmvt = Signatures.MaxValueTime()
 
     include_metrics = [pmvt, mvtd, primary_avg, kge]
 
@@ -442,7 +446,7 @@ def test_metric_chaining(tmpdir):
         order_by=["primary_location_id"],
         group_by=["primary_location_id"],
         include_metrics=[
-            SignatureMetrics.Average(
+            Signatures.Average(
                 input_field_names="relative_bias",
                 output_field_name="primary_average"
             )
@@ -597,7 +601,7 @@ def test_ensemble_metrics(tmpdir):
 def test_metrics_transforms(tmpdir):
     """Test applying metric transforms (non-bootstrap)."""
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir)
+    test_eval = setup_v0_3_study(tmpdir)
 
     # define metric requiring p,s
     kge = DeterministicMetrics.KlingGuptaEfficiency()
@@ -615,21 +619,21 @@ def test_metrics_transforms(tmpdir):
     mvtd_t.transform = 'log'
 
     # get metrics_df
-    metrics_df_tansformed_e = ev.metrics.query(
+    metrics_df_tansformed_e = test_eval.metrics.query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             kge_t_e,
             mvtd_t
         ]
     ).to_pandas()
-    metrics_df_transformed = ev.metrics.query(
+    metrics_df_transformed = test_eval.metrics.query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             kge_t,
             mvtd_t
         ]
     ).to_pandas()
-    metrics_df = ev.metrics.query(
+    metrics_df = test_eval.metrics.query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             kge,
@@ -651,6 +655,78 @@ def test_metrics_transforms(tmpdir):
     assert result_kge != result_kge_t
     assert result_mvtd == result_mvtd_t
     ev.spark.stop()
+
+    # test epsilon on R2 and Pearson
+    r2 = DeterministicMetrics.Rsquared()
+    r2_e = DeterministicMetrics.Rsquared()
+    r2_e.add_epsilon = True
+    pearson = DeterministicMetrics.PearsonCorrelation()
+    pearson_e = DeterministicMetrics.PearsonCorrelation()
+    pearson_e.add_epsilon = True
+
+    # ensure we can obtain a divide by zero error
+    sdf = test_eval.joined_timeseries.to_sdf()
+    from pyspark.sql.functions import lit
+    sdf = sdf.withColumn("primary_value", lit(100.0))
+    test_eval.joined_timeseries._write_spark_df(sdf, write_mode="overwrite")
+
+    # get metrics df control and assert divide by zero occurs
+    metrics_df_e_control = test_eval.metrics.query(
+        group_by=["primary_location_id", "configuration_name"],
+        include_metrics=[
+            r2,
+            pearson
+        ]
+    ).to_pandas()
+    assert np.isnan(metrics_df_e_control.r_squared.values).all()
+    assert np.isnan(metrics_df_e_control.pearson_correlation.values).all()
+
+    # get metrics df test and ensure no divide by zero occurs
+    metrics_df_e_test = test_eval.metrics.query(
+        group_by=["primary_location_id", "configuration_name"],
+        include_metrics=[
+            r2_e,
+            pearson_e
+        ]
+    ).to_pandas()
+    assert np.isfinite(metrics_df_e_test.r_squared.values).all()
+    assert np.isfinite(metrics_df_e_test.pearson_correlation.values).all()
+
+    # test epsilon on R2 and Pearson
+    r2 = DeterministicMetrics.Rsquared()
+    r2_e = DeterministicMetrics.Rsquared()
+    r2_e.add_epsilon = True
+    pearson = DeterministicMetrics.PearsonCorrelation()
+    pearson_e = DeterministicMetrics.PearsonCorrelation()
+    pearson_e.add_epsilon = True
+
+    # ensure we can obtain a divide by zero error
+    sdf = test_eval.joined_timeseries.to_sdf()
+    from pyspark.sql.functions import lit
+    sdf = sdf.withColumn("primary_value", lit(100.0))
+    test_eval.joined_timeseries._write_spark_df(sdf, write_mode="overwrite")
+
+    # get metrics df control and assert divide by zero occurs
+    metrics_df_e_control = test_eval.metrics.query(
+        group_by=["primary_location_id", "configuration_name"],
+        include_metrics=[
+            r2,
+            pearson
+        ]
+    ).to_pandas()
+    assert np.isnan(metrics_df_e_control.r_squared.values).all()
+    assert np.isnan(metrics_df_e_control.pearson_correlation.values).all()
+
+    # get metrics df test and ensure no divide by zero occurs
+    metrics_df_e_test = test_eval.metrics.query(
+        group_by=["primary_location_id", "configuration_name"],
+        include_metrics=[
+            r2_e,
+            pearson_e
+        ]
+    ).to_pandas()
+    assert np.isfinite(metrics_df_e_test.r_squared.values).all()
+    assert np.isfinite(metrics_df_e_test.pearson_correlation.values).all()
 
 
 def test_bootstrapping_transforms(tmpdir):
@@ -728,7 +804,7 @@ if __name__ == "__main__":
                 dir=tempdir
             )
         )
-        test_executing_signature_metrics(
+        test_executing_signatures(
             tempfile.mkdtemp(
                 prefix="2-",
                 dir=tempdir
