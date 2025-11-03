@@ -96,19 +96,6 @@ class Evaluation(EvaluationBase):
         """
         # Create local directory if it does not exist.
         dir_path = Path(dir_path)
-        if create_dir is True and not dir_path.exists():
-            logger.info(f"Creating directory {dir_path}.")
-            dir_path.mkdir(parents=True, exist_ok=True)
-        elif create_dir is True and dir_path.exists():
-            logger.info(
-                f"Directory {dir_path} already exists."
-                " Not creating it again."
-            )
-        elif create_dir is False and not dir_path.exists():
-            raise ValueError(
-                f"Local directory {dir_path} does not exist."
-                " Set create_dir=True to create it."
-            )
 
         # Initialize cache and scripts dir. These are only valid
         # when using a local catalog.
@@ -117,12 +104,17 @@ class Evaluation(EvaluationBase):
         self.scripts_dir = None
         self.dir_path = dir_path
 
+        if self.dir_path.is_dir():
+            if create_dir:
+                logger.info(f"Creating directory {self.dir_path}.")
+                Path(self.dir_path).mkdir(parents=True, exist_ok=True)
+            else:
+                logger.error(f"Directory {self.dir_path} does not exist.")
+                raise NotADirectoryError
+
         # Check version of Evaluation
-        if (
-            check_evaluation_version is True
-            and create_dir is False
-        ):
-            self.check_evaluation_version(warehouse_dir=dir_path)
+        if create_dir is False and check_evaluation_version is True:
+            self.check_evaluation_version()
 
         # Initialize Spark session
         if spark is not None:
@@ -295,10 +287,12 @@ class Evaluation(EvaluationBase):
     def enable_logging(self):
         """Enable logging."""
         logger = logging.getLogger("teehr")
-        # logger.addHandler(logging.StreamHandler())
-        # if self.is_s3:
-        #     logger_path = Path(Path.home, 'teehr.log')
-        # else:
+        if Path(self.local_catalog.warehouse_dir).is_dir() is False:
+            raise NotADirectoryError(
+                f"Cannot enable logging. Directory"
+                f" {self.local_catalog.warehouse_dir} does not exist."
+                " Please clone the template first."
+            )
         logger_path = Path(self.local_catalog.warehouse_dir, 'teehr.log')
 
         handler = logging.FileHandler(logger_path)

@@ -28,11 +28,11 @@ def test_create_joined_timeseries(tmpdir):
     tmpdir = Path(tmpdir)
     ev = Evaluation(dir_path=tmpdir, create_dir=True)
 
-    # Enable logging
-    ev.enable_logging()
-
     # Clone the template
     ev.clone_template()
+
+    # Enable logging
+    ev.enable_logging()
 
     # Load the location data
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)

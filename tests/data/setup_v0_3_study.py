@@ -22,11 +22,11 @@ def setup_v0_3_study(tmpdir):
     """Set up a v0.3 study."""
     ev = Evaluation(dir_path=tmpdir, create_dir=True)
 
-    # Enable logging
-    ev.enable_logging()
-
     # Clone the template
     ev.clone_template()
+
+    # Enable logging
+    ev.enable_logging()
 
     # Load the location data
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
