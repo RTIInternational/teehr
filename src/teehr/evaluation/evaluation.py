@@ -309,6 +309,18 @@ class Evaluation(EvaluationBase):
 
         This method mainly copies the template directory to the specified
         evaluation directory.
+
+        Parameters
+        ----------
+        catalog_name : str, optional
+            The catalog name to use, by default None which uses the
+            active catalog name.
+        namespace_name : str, optional
+            The namespace name to use, by default None which uses the
+            active namespace name.
+        local_warehouse_dir : Union[str, Path], optional
+            The local warehouse directory to use, by default None which uses the
+            active warehouse directory: Path(dir_path, catalog_name).
         """
         # Set to local by default.
         if catalog_name is None:
@@ -369,6 +381,12 @@ class Evaluation(EvaluationBase):
 
         Parameters
         ----------
+        remote_catalog_name : str, optional
+            The remote catalog name to pull from. The default is None,
+            which uses the remote catalog name of the Evaluation.
+        remote_namespace_name : str, optional
+            The remote namespace name to pull from. The default is None,
+            which uses the remote namespace name of the Evaluation.
         primary_location_ids : List[str], optional
             The list of primary location ids to subset the data.
             The default is None.
@@ -378,11 +396,6 @@ class Evaluation(EvaluationBase):
         end_date : Union[str, datetime], optional
             The end date to subset the data.
             The default is None.
-
-        Notes
-        -----
-        The options for subsetting could really be wide open now?
-
         """
         # You must configure the catalogs when initializing the Evaluation.
         if self.local_catalog.warehouse_dir is None:
@@ -445,20 +458,6 @@ class Evaluation(EvaluationBase):
             - secondary_timeseries
             - joined_timeseries
         """ # noqa
-        # if not create_temp_views:
-        #     create_temp_views = [
-        #         "units",
-        #         "variables",
-        #         "attributes",
-        #         "configurations",
-        #         "locations",
-        #         "location_attributes",
-        #         "location_crosswalks",
-        #         "primary_timeseries",
-        #         "secondary_timeseries",
-        #         "joined_timeseries"
-        #     ]  # joined_timeseries may not exist
-
         if "units" in create_temp_views:
             self.units.to_sdf().createOrReplaceTempView("units")
         if "variables" in create_temp_views:
@@ -562,7 +561,17 @@ class Evaluation(EvaluationBase):
         source_catalog: PydanticBaseModel = None,
         target_catalog: PydanticBaseModel = None
     ):
-        """Apply the latest schema migration."""
+        """Apply the latest schema migration.
+
+        Parameters
+        ----------
+        source_catalog : PydanticBaseModel, optional
+            The source catalog to use for the source of the migration files.
+            The default is None, which uses the local catalog.
+        target_catalog : PydanticBaseModel, optional
+            The target catalog to apply the migrations to.
+            The default is None, which uses the remote catalog.
+        """
         if source_catalog is None:
             source_catalog = self.local_catalog
         if target_catalog is None:
@@ -591,7 +600,17 @@ class Evaluation(EvaluationBase):
         catalog_name: str = None,
         namespace: str = None
     ) -> pd.DataFrame:
-        """List the tables in the catalog returning a Pandas DataFrame."""
+        """List the tables in the catalog returning a Pandas DataFrame.
+
+        Parameters
+        ----------
+        catalog_name : str, optional
+            The catalog name to list tables from, by default None, which means the
+            catalog_name of the active catalog is used.
+        namespace : str, optional
+            The namespace name to list tables from, by default None, which means the
+            namespace_name of the active catalog is used.
+        """
         if catalog_name is None:
             catalog_name = self.active_catalog.catalog_name
         if namespace is None:
