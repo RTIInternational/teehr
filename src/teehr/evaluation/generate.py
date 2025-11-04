@@ -58,7 +58,7 @@ class GeneratedTimeSeriesBasemodel:
         )
         self._ev.write.to_warehouse(
             source_data=validated_df,
-            table_name=tbl.name,
+            table_name=tbl.table_name,
             write_mode=write_mode,
             uniqueness_fields=tbl.uniqueness_fields
         )

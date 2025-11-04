@@ -174,7 +174,6 @@ def test_ensemble_metrics(tmpdir):
     usgs_location = Path(
         TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_location.parquet"
     )
-
     secondary_filename = "MEFP.MBRFC.DNVC2LOCAL.SQIN.xml"
     secondary_filepath = Path(
         TEST_STUDY_DATA_DIR_v0_4,
@@ -361,7 +360,6 @@ def test_metrics_transforms(tmpdir):
     assert result_kge_t != result_kge_t_e
     assert result_kge != result_kge_t
     assert result_mvtd == result_mvtd_t
-    ev.spark.stop()
 
     # test epsilon on R2 and Pearson
     r2 = DeterministicMetrics.Rsquared()
@@ -375,7 +373,11 @@ def test_metrics_transforms(tmpdir):
     sdf = test_eval.joined_timeseries.to_sdf()
     from pyspark.sql.functions import lit
     sdf = sdf.withColumn("primary_value", lit(100.0))
-    test_eval.joined_timeseries._write_spark_df(sdf, write_mode="overwrite")
+    test_eval.write.to_warehouse(
+        source_data=sdf,
+        table_name="joined_timeseries",
+        write_mode="create_or_replace",
+    )
 
     # get metrics df control and assert divide by zero occurs
     metrics_df_e_control = test_eval.metrics.query(
@@ -411,7 +413,11 @@ def test_metrics_transforms(tmpdir):
     sdf = test_eval.joined_timeseries.to_sdf()
     from pyspark.sql.functions import lit
     sdf = sdf.withColumn("primary_value", lit(100.0))
-    test_eval.joined_timeseries._write_spark_df(sdf, write_mode="overwrite")
+    test_eval.write.to_warehouse(
+        source_data=sdf,
+        table_name="joined_timeseries",
+        write_mode="create_or_replace",
+    )
 
     # get metrics df control and assert divide by zero occurs
     metrics_df_e_control = test_eval.metrics.query(
@@ -434,6 +440,7 @@ def test_metrics_transforms(tmpdir):
     ).to_pandas()
     assert np.isfinite(metrics_df_e_test.r_squared.values).all()
     assert np.isfinite(metrics_df_e_test.pearson_correlation.values).all()
+    test_eval.spark.stop()
 
 
 def test_adding_calculated_fields(tmpdir):
@@ -489,14 +496,14 @@ if __name__ == "__main__":
                 dir=tempdir
             )
         )
-        # TODO: High memory usage?
+        # High memory usage?
         test_ensemble_metrics(
             tempfile.mkdtemp(
                 prefix="5-",
                 dir=tempdir
             )
         )
-        # TODO: High memory usage?
+        # High memory usage?
         test_metrics_transforms(
             tempfile.mkdtemp(
                 prefix="6-",

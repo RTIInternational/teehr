@@ -155,7 +155,8 @@ TBLPROPERTIES = {
             "reference_time",
             "variable_name",
             "unit_name",
-            "configuration_name"
+            "configuration_name",
+            "member"
         ],
         "foreign_keys": [
             {

@@ -153,9 +153,7 @@ class TimeseriesTable(Table):
         write_mode: TableWriteEnum = "append",
         parallel: bool = False,
         max_workers: Union[int, None] = MAX_CPUS,
-        persist_dataframe: bool = False,
         drop_duplicates: bool = True,
-        location_id_field: str = "location_id",
         **kwargs
     ):
         """Import timeseries csv data.
@@ -318,10 +316,6 @@ class TimeseriesTable(Table):
             ProcessPoolExecutor. If in_path is a file, this parameter is ignored.
             The default value is max(os.cpu_count() - 1, 1).
             If None, os.process_cpu_count() is used.
-        persist_dataframe : bool, optional (default: False)
-            Whether to repartition and persist the pyspark dataframe after
-            reading from the cache. This can improve performance when loading
-            a large number of files from the cache.
         drop_duplicates : bool, optional (default: True)
             Whether to drop duplicates from the DataFrame during validation.
         **kwargs
