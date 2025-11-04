@@ -538,6 +538,15 @@ class Evaluation(EvaluationBase):
         table_filter: TableFilter
             A TableFilter object containing the table name and filters.
             Defaults to None.
+
+        Example
+        -------
+        Apply a filter at the Evaluation level:
+
+        >>> sdf = ev.filter(
+        ...     table_name="primary_timeseries",
+        ...     filters="configuration_name = 'usgs_observations'"
+        ... )
         """
         if table_filter is not None:
             table_name = table_filter.table_name

@@ -265,7 +265,7 @@ def test_filter_by_lead_time(tmpdir):
     assert len(df) == 9
 
 
-def test_table_filter(tmpdir):
+def test_evaluation_filter(tmpdir):
     """Test table filter model."""
     ev = setup_v0_3_study(tmpdir)
 
@@ -282,6 +282,12 @@ def test_table_filter(tmpdir):
     for tbl_name in TableNamesEnum:
         sdf = ev.filter(table_name=tbl_name)
         assert isinstance(sdf, ps.DataFrame)
+
+    sdf = ev.filter(
+        table_name="primary_timeseries",
+        filters="configuration_name = 'usgs_observations'"
+    )
+    assert sdf.count() == len(df)
 
 
 if __name__ == "__main__":
