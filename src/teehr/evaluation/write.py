@@ -163,7 +163,7 @@ class Write:
             The target table name in the catalog.
         write_mode : str, optional
             The mode to use when writing the DataFrame
-            (e.g., 'append', 'overwrite'), by default "append".
+            (e.g., 'append', 'upsert', 'create_or_replace'), by default "append".
         uniqueness_fields : List[str], optional
             List of fields that uniquely identify a record, by default None,
             which means the uniqueness_fields are taken from the table class.
@@ -251,8 +251,8 @@ class Write:
         write_schema : arrow_schema
             The pyarrow schema to use when writing the parquet file.
         write_mode : str, optional
-            The mode to use when caching the DataFrame
-            (e.g., 'append', 'overwrite'), by default "overwrite".
+            The mode to use when a PySpark DataFrame is written to the cache
+            using PySpark's DataFrame.write.mode. Default is "overwrite".
         """
         # Allow additional kwargs for to_parquet?
         if isinstance(source_data, gpd.GeoDataFrame):
