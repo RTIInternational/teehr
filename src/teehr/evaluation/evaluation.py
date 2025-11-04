@@ -22,7 +22,7 @@ from teehr.evaluation.tables.variable_table import VariableTable
 from teehr.evaluation.tables.joined_timeseries_table import (
     JoinedTimeseriesTable
 )
-from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
+from teehr.utils.utils import remove_dir_if_exists
 from pyspark.sql import SparkSession
 import logging
 from teehr.loading.utils import copy_template_to
@@ -31,13 +31,12 @@ from teehr.loading.s3.clone_from_s3 import (
     clone_from_s3
 )
 from teehr.models.filters import TableFilter, FilterBaseModel, TableNamesEnum
-import teehr.const as const
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.metrics import Metrics
 from teehr.evaluation.generate import GeneratedTimeseries
 from teehr.evaluation.write import Write
-from teehr.evaluation.extract import DataExtractor
-from teehr.evaluation.validate import Validator
+from teehr.evaluation.extract import Extract
+from teehr.evaluation.validate import Validate
 from teehr.evaluation.workflows import Workflow
 from teehr.evaluation.tables.base_table import Table
 from teehr.evaluation.read import Read
@@ -152,9 +151,9 @@ class Evaluation(EvaluationBase):
         return Table(self)
 
     @property
-    def validate(self) -> Validator:
+    def validate(self) -> Validate:
         """The validate component class for validating data."""
-        return Validator(self)
+        return Validate(self)
 
     @property
     def load(self) -> Load:
@@ -162,9 +161,9 @@ class Evaluation(EvaluationBase):
         return Load(self)
 
     @property
-    def extract(self) -> DataExtractor:
+    def extract(self) -> Extract:
         """The extract component class for extracting data."""
-        return DataExtractor(self)
+        return Extract(self)
 
     @property
     def workflows(self) -> Workflow:

@@ -17,11 +17,11 @@ from teehr.querying.filter_format import (
 logger = logging.getLogger(__name__)
 
 
-class Validator:
+class Validate:
     """Class for validating data."""
 
     def __init__(self, ev=None) -> None:
-        """Initialize the Validator class."""
+        """Initialize the Validate class."""
         if ev is not None:
             self._ev = ev
 

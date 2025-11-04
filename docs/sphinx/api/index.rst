@@ -52,8 +52,8 @@ Classes and methods related to data input and output.
 * :class:`Reading Data <teehr.evaluation.read.Read>`
 * :class:`Writing Data <teehr.evaluation.write.Write>`
 * :class:`Loading Data <teehr.evaluation.load.Load>`
-* :class:`Extracting Data <teehr.evaluation.extract.DataExtractor>`
-* :class:`Validating Data <teehr.evaluation.validate.Validator>`
+* :class:`Extracting Data <teehr.evaluation.extract.Extract>`
+* :class:`Validating Data <teehr.evaluation.validate.Validate>`
 
 Analysis & Metrics
 ------------------

@@ -17,7 +17,7 @@ from teehr.loading.utils import (
 logger = logging.getLogger(__name__)
 
 
-class DataExtractor:
+class Extract:
     """Class for extracting data from raw files."""
 
     def __init__(self, ev) -> None:

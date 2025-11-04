@@ -61,7 +61,7 @@ Extracting Data
    :toctree: generated
    :nosignatures:
 
-   DataExtractor
+   Extract
 
 Validating Data
 ---------------
@@ -73,4 +73,4 @@ Validating Data
    :toctree: generated
    :nosignatures:
 
-   Validator
+   Validate

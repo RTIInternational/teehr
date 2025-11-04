@@ -84,7 +84,7 @@ class Metrics:
             str
         ] = None
     ):
-        """Perform a query on the dataset joined timeseries table.
+        """Perform a query on the specified table.
 
         Parameters
         ----------
@@ -156,12 +156,13 @@ class Metrics:
         >>>     filters=filters,
         >>> ).to_geopandas()
 
-        By default, the metrics query operates on the `joined_timeseries` table.
+        By default, the metrics query operates on the ``joined_timeseries`` table.
         To specify a different table, initialize the Metrics class with the
         desired table name.
 
         >>> fdc = teehr.Signatures.FlowDurationCurveSlope()
         >>> fdc.input_field_names = ["value"]
+
         >>> metrics_df = eval.metrics(
         >>>     table_name="primary_timeseries"
         >>> ).query(
@@ -372,7 +373,7 @@ class Metrics:
         table_name: str = "metrics",
         write_mode: str = "create_or_replace"
     ):
-        """Write the metrics DataFrame to the warehouse.
+        """Write the metrics DataFrame to a warehouse table.
 
         Parameters
         ----------
@@ -385,7 +386,9 @@ class Metrics:
         Example
         -------
         >>> import teehr
+
         >>> ev = teehr.Evaluation()
+
         >>> metrics_df = ev.metrics.query(
         >>>     include_metrics=[...],
         >>>     group_by=["primary_location_id"]
