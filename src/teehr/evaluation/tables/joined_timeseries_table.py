@@ -202,7 +202,6 @@ class JoinedTimeseriesTable(TimeseriesTable):
         self,
         add_attrs: bool = True,
         execute_scripts: bool = False,
-        drop_duplicates: bool = False,
         attr_list: List[str] = None,
         write_mode: str = "create_or_replace",
         partition_by: List[str] = ["configuration_name", "variable_name"],
@@ -215,9 +214,6 @@ class JoinedTimeseriesTable(TimeseriesTable):
             Execute UDFs, by default False
         add_attrs : bool, optional
             Add location attributes, by default True
-        drop_duplicates : bool, optional
-            Drop duplicates from the joined timeseries table, by default False.
-            If duplicates exist, the first occurence is retained.
         attr_list : List[str], optional
             List of attributes to add to the joined timeseries table.
             If None, all attributes are added. The default is None.
@@ -235,14 +231,6 @@ class JoinedTimeseriesTable(TimeseriesTable):
             df=joined_df,
             table_schema=self.schema_func()
         )
-        # validated_df = self._ev.validate.schema(
-        #     sdf=joined_df,
-        #     strict=False,
-        #     table_schema=self.schema_func(),
-        #     drop_duplicates=drop_duplicates,
-        #     foreign_keys=self.foreign_keys,
-        #     uniqueness_fields=self.uniqueness_fields
-        # )
         self._ev.write.to_warehouse(
             source_data=validated_df,
             table_name=self.table_name,
@@ -253,51 +241,3 @@ class JoinedTimeseriesTable(TimeseriesTable):
         self._load_table()
 
         return self
-
-    # def _read_files_from_cache_or_s3(
-    #     self,
-    #     path: Union[str, Path, S3Path],
-    #     pattern: str = None,
-    #     show_missing_table_warning: bool = False,
-    #     **options
-    # ) -> ps.DataFrame:
-    #     """Read data from table directory as a spark dataframe.
-
-    #     Parameters
-    #     ----------
-    #     path : Union[str, Path, S3Path]
-    #         The path to the directory containing the files.
-    #     pattern : str, optional
-    #         The pattern to match files.
-    #     show_missing_table_warning : bool, optional
-    #         If True, show the warning an empty table was returned.
-    #         The default is True.
-    #     **options
-    #         Additional options to pass to the spark read method.
-
-    #     Returns
-    #     -------
-    #     df : ps.DataFrame
-    #         The spark dataframe.
-    #     """
-    #     logger.info(f"Reading files from {path}.")
-    #     if len(options) == 0:
-    #         options = {
-    #             "header": "true",
-    #             "ignoreMissingFiles": "true"
-    #         }
-
-    #     path = to_path_or_s3path(path)
-
-    #     path = path_to_spark(path, pattern)
-    #     # First, read the file with the schema and check if it's empty.
-    #     # If it's not empty and it's the joined timeseries table,
-    #     # read it again without the schema to ensure all fields are included.
-    #     # Otherwise, continue.
-    #     schema = self.schema_func().to_structtype()
-    #     df = self._ev.spark.read.format(self.format).options(**options).load(path, schema=schema)
-    #     if df.isEmpty():
-    #         if show_missing_table_warning:
-    #             logger.warning(f"An empty dataframe was returned for '{self.table_name}'.")
-    #             return df
-    #     return self._ev.spark.read.format(self.format).options(**options).load(path)
