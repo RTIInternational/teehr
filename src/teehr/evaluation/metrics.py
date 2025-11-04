@@ -356,8 +356,8 @@ class Metrics:
             The write mode to use, by default "create_or_replace"
             Options are: "create", "append", "overwrite", "create_or_replace"
 
-        Examples
-        --------
+        Example
+        -------
         >>> import teehr
         >>> ev = teehr.Evaluation()
         >>> metrics_df = ev.metrics.query(
