@@ -34,8 +34,6 @@ class Metrics:
         self._ev = ev
         self.spark = ev.spark
         self.locations = ev.locations
-        # self.joined_timeseries = ev.joined_timeseries
-        # self.sdf = self.joined_timeseries.to_sdf()
         self._write = ev.write
 
     def __call__(
@@ -226,7 +224,7 @@ class Metrics:
         return self.sdf
 
     def add_calculated_fields(self, cfs: Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]):
-        """Add calculated fields to the joined timeseries DataFrame before running metrics.
+        """Add in-memory calculated fields to the table before running metrics.
 
         Parameters
         ----------
@@ -242,12 +240,14 @@ class Metrics:
         --------
         >>> import teehr
         >>> from teehr import RowLevelCalculatedFields as rcf
-        >>> ev.join_timeseries.add_calculated_fields([
+        >>> ev.metrics(table_name="joined_timeseries").add_calculated_fields([
         >>>     rcf.Month()
-        >>> ]).write()
+        >>> ]).query(
+        >>>     include_metrics=[fdc],
+        >>>     group_by=[flds.primary_location_id],
+        >>>     order_by=[flds.primary_location_id],
+        >>> ).to_pandas()
         """
-        # self._check_load_table()
-
         if not isinstance(cfs, List):
             cfs = [cfs]
 

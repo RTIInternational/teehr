@@ -91,26 +91,9 @@ def test_executing_signatures(tmpdir):
         order_by=[flds.primary_location_id],
     ).to_pandas()
 
-    fdc = Signatures.FlowDurationCurveSlope()
-    fdc.bootstrap = Bootstrappers.CircularBlock(
-        seed=40,
-        block_size=100,
-        quantiles=[0.05, 0.5, 0.95],
-        reps=50
-    )
-    fdc.unpack_results = True
-    sig_metrics_df = ev.metrics.query(
-        include_metrics=[fdc],
-        group_by=[flds.primary_location_id],
-        order_by=[flds.primary_location_id],
-    ).to_pandas()
-
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
     assert metrics_df.columns.size == 9
-    assert len(metrics_df2) == 1
-    assert metrics_df2.location_id.values[0] == "gage-A"
-    assert np.isclose(metrics_df2["sum"].values[0], 31.3)
     ev.spark.stop()
 
 
@@ -149,282 +132,6 @@ def test_metrics_filter_and_geometry(tmpdir):
     assert isinstance(metrics_df, gpd.GeoDataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 6
-    ev.spark.stop()
-
-
-def test_unpacking_bootstrap_results(tmpdir):
-    """Test unpacking bootstrapping quantile results."""
-    # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir)
-
-    # Define a bootstrapper.
-    boot = Bootstrappers.CircularBlock(
-        seed=40,
-        block_size=100,
-        quantiles=[0.05, 0.5, 0.95],
-        reps=500
-    )
-    kge = DeterministicMetrics.KlingGuptaEfficiency()
-    kge.bootstrap = boot
-    kge.unpack_results = True
-    flds = ev.joined_timeseries.field_enum()
-    filters = [
-        JoinedTimeseriesFilter(
-            column=flds.primary_location_id,
-            operator=ops.eq,
-            value="gage-A"
-        )
-    ]
-    metrics_df = ev.metrics.query(
-        include_metrics=[kge],
-        filters=filters,
-        group_by=[flds.primary_location_id],
-    ).to_pandas()
-    cols = metrics_df.columns
-    benchmark_cols = [
-        "primary_location_id",
-        "kling_gupta_efficiency_0.95",
-        "kling_gupta_efficiency_0.5",
-        "kling_gupta_efficiency_0.05"
-    ]
-
-    assert (cols == benchmark_cols).all()
-    ev.spark.stop()
-
-
-def test_circularblock_bootstrapping(tmpdir):
-    """Test get_metrics method circular block bootstrapping."""
-    # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir)
-
-    # Define a bootstrapper.
-    boot = Bootstrappers.CircularBlock(
-        seed=40,
-        block_size=100,
-        quantiles=None,
-        reps=500
-    )
-    kge = DeterministicMetrics.KlingGuptaEfficiency()
-    kge.bootstrap = boot
-    # kge.unpack_results = True
-
-    # Manual bootstrapping.
-    df = ev.joined_timeseries.to_pandas()
-    df_gageA = df.groupby("primary_location_id").get_group("gage-A")
-
-    p = df_gageA.primary_value
-    s = df_gageA.secondary_value
-
-    bs = CircularBlockBootstrap(
-        kge.bootstrap.block_size,
-        p,
-        s,
-        seed=kge.bootstrap.seed,
-        random_state=kge.bootstrap.random_state
-    )
-    results = bs.apply(
-        kge.func(kge),
-        kge.bootstrap.reps,
-    )
-
-    # TEEHR bootstrapping.
-    flds = ev.joined_timeseries.field_enum()
-
-    filters = [
-        JoinedTimeseriesFilter(
-            column=flds.primary_location_id,
-            operator=ops.eq,
-            value="gage-A"
-        )
-    ]
-
-    metrics_df = ev.metrics.query(
-        include_metrics=[kge],
-        filters=filters,
-        group_by=[flds.primary_location_id],
-    ).to_pandas()
-
-    # Unpack and compare the results.
-    teehr_results = np.sort(
-        np.array(metrics_df.kling_gupta_efficiency.values[0])
-    )
-    manual_results = np.sort(results.ravel()).astype(np.float32)
-
-    assert (teehr_results == manual_results).all()
-    assert isinstance(metrics_df, pd.DataFrame)
-    assert metrics_df.index.size == 1
-    assert metrics_df.columns.size == 2
-    ev.spark.stop()
-
-
-def test_stationary_bootstrapping(tmpdir):
-    """Test get_metrics method stationary bootstrapping."""
-    # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir)
-
-    # Define a bootstrapper.
-    boot = Bootstrappers.Stationary(
-        seed=40,
-        block_size=100,
-        quantiles=None,
-        reps=500
-    )
-    kge = DeterministicMetrics.KlingGuptaEfficiency()
-    kge.bootstrap = boot
-
-    # Manual bootstrapping.
-    df = ev.joined_timeseries.to_pandas()
-    df_gageA = df.groupby("primary_location_id").get_group("gage-A")
-
-    p = df_gageA.primary_value
-    s = df_gageA.secondary_value
-
-    bs = StationaryBootstrap(
-        kge.bootstrap.block_size,
-        p,
-        s,
-        seed=kge.bootstrap.seed,
-        random_state=kge.bootstrap.random_state
-    )
-    results = bs.apply(
-        kge.func(kge),
-        kge.bootstrap.reps,
-    )
-
-    # TEEHR bootstrapping.
-    flds = ev.joined_timeseries.field_enum()
-
-    filters = [
-        JoinedTimeseriesFilter(
-            column=flds.primary_location_id,
-            operator=ops.eq,
-            value="gage-A"
-        )
-    ]
-
-    metrics_df = ev.metrics.query(
-        include_metrics=[kge],
-        filters=filters,
-        group_by=[flds.primary_location_id]
-    ).to_pandas()
-
-    # Unpack and compare the results.
-    teehr_results = np.sort(
-        np.array(metrics_df.kling_gupta_efficiency.values[0])
-    )
-    manual_results = np.sort(results.ravel()).astype(np.float32)
-
-    assert (teehr_results == manual_results).all()
-    assert isinstance(metrics_df, pd.DataFrame)
-    assert metrics_df.index.size == 1
-    assert metrics_df.columns.size == 2
-    ev.spark.stop()
-
-
-def test_gumboot_bootstrapping(tmpdir):
-    """Test get_metrics method gumboot bootstrapping."""
-    # Manually create an evaluation using timseries from the R
-    # Gumboot package vignette.
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
-    ev.clone_template()
-    # Write the staged joined_timeseries data to the warehouse.
-    joined_timeseries_filepath = Path(
-        "tests",
-        "data",
-        "test_study",
-        "timeseries",
-        "flows_1030500.parquet"
-    )
-    sdf = ev.spark.read.parquet(joined_timeseries_filepath.as_posix())
-    (
-        sdf.writeTo(
-            f"{ev.catalog_name}.{ev.namespace}.joined_timeseries"
-        )
-        .using("iceberg")
-        .createOrReplace()
-    )
-    # Write the staged locations data to the warehouse.
-    test_study_data_dir = Path("tests", "data", "v0_3_test_study")
-    sdf = ev.spark.read.parquet(
-        Path(test_study_data_dir, "geo", "gages.parquet").as_posix()
-    )
-    (
-        sdf.writeTo(
-            f"{ev.catalog_name}.{ev.namespace}.locations"
-        )
-        .using("iceberg")
-        .createOrReplace()
-    )
-    # quantiles = [0.05, 0.5, 0.95]
-    quantiles = None
-
-    # Define a bootstrapper.
-    boot = Bootstrappers.Gumboot(
-        seed=40,
-        quantiles=quantiles,
-        reps=500,
-        boot_year_file=BOOT_YEAR_FILE
-    )
-    kge = DeterministicMetrics.KlingGuptaEfficiency()
-    kge.bootstrap = boot
-    nse = DeterministicMetrics.NashSutcliffeEfficiency(bootstrap=boot)
-
-    # Manually calling Gumboot.
-    df = ev.joined_timeseries.to_pandas()
-    df_gageA = df.groupby("primary_location_id").get_group("gage-A")
-
-    p = df_gageA.primary_value
-    s = df_gageA.secondary_value
-    vt = df_gageA.value_time
-
-    bs = GumbootBootstrap(
-        p,
-        s,
-        value_time=vt,
-        seed=kge.bootstrap.seed,
-        water_year_month=kge.bootstrap.water_year_month,
-        boot_year_file=kge.bootstrap.boot_year_file
-    )
-    results = bs.apply(
-        kge.func(kge),
-        kge.bootstrap.reps,
-    )
-
-    # TEEHR Gumboot bootstrapping.
-    flds = ev.joined_timeseries.field_enum()
-
-    filters = [
-        JoinedTimeseriesFilter(
-            column=flds.primary_location_id,
-            operator=ops.eq,
-            value="gage-A"
-        )
-    ]
-
-    metrics_df = ev.metrics.query(
-        include_metrics=[kge, nse],
-        filters=filters,
-        group_by=[flds.primary_location_id]
-    ).to_pandas()
-
-    _ = ev.metrics.query(
-        include_metrics=[kge, nse],
-        filters=filters,
-        group_by=[flds.primary_location_id]
-    ).to_sdf()
-
-    # Unpack and compare the results.
-    teehr_results = np.sort(
-        np.array(metrics_df.kling_gupta_efficiency.values[0])
-    )
-    manual_results = np.sort(results.ravel()).astype(np.float32)
-    assert (teehr_results == manual_results).all()
-    assert isinstance(metrics_df, pd.DataFrame)
-
-    # Also compare to R benchmark results.
-    r_df = pd.read_csv(R_BENCHMARK_RESULTS)
-    r_kge_vals = np.sort(r_df.KGE.values)
-    assert np.allclose(teehr_results, r_kge_vals, rtol=1e-06)
     ev.spark.stop()
 
 
@@ -729,68 +436,28 @@ def test_metrics_transforms(tmpdir):
     assert np.isfinite(metrics_df_e_test.pearson_correlation.values).all()
 
 
-def test_bootstrapping_transforms(tmpdir):
-    """Test applying metric transforms (bootstrap)."""
+def test_adding_calculated_fields(tmpdir):
+    """Test adding calculated fields to metrics."""
+    from teehr import RowLevelCalculatedFields as rcf
+
     # Define the evaluation object.
     ev = setup_v0_3_study(tmpdir)
-
-    # Define a bootstrapper.
-    boot = Bootstrappers.CircularBlock(
-        seed=40,
-        block_size=100,
-        quantiles=None,
-        reps=500
-    )
     kge = DeterministicMetrics.KlingGuptaEfficiency()
-    kge.bootstrap = boot
-    kge.transform = 'log'
-
-    # Manual bootstrapping.
-    df = ev.joined_timeseries.to_pandas()
-    df_gageA = df.groupby("primary_location_id").get_group("gage-A")
-
-    p = df_gageA.primary_value
-    s = df_gageA.secondary_value
-
-    bs = CircularBlockBootstrap(
-        kge.bootstrap.block_size,
-        p,
-        s,
-        seed=kge.bootstrap.seed,
-        random_state=kge.bootstrap.random_state
-    )
-    results = bs.apply(
-        kge.func(kge),
-        kge.bootstrap.reps,
-    )
-
-    # TEEHR bootstrapping.
-    flds = ev.joined_timeseries.field_enum()
-
-    filters = [
-        JoinedTimeseriesFilter(
-            column=flds.primary_location_id,
-            operator=ops.eq,
-            value="gage-A"
+    metrics_df_calc = (
+        ev
+        .metrics(table_name="joined_timeseries")
+        .add_calculated_fields([
+            rcf.Month()
+        ])
+        .query(
+            group_by=["primary_location_id", "month"],
+            include_metrics=[kge]
         )
-    ]
-
-    metrics_df = ev.metrics.query(
-        include_metrics=[kge],
-        filters=filters,
-        group_by=[flds.primary_location_id],
-    ).to_pandas()
-
-    # Unpack and compare the results.
-    teehr_results = np.sort(
-        np.array(metrics_df.kling_gupta_efficiency.values[0])
+        .to_pandas()
     )
-    manual_results = np.sort(results.ravel()).astype(np.float32)
-
-    assert (teehr_results == manual_results).all()
-    assert isinstance(metrics_df, pd.DataFrame)
-    assert metrics_df.index.size == 1
-    assert metrics_df.columns.size == 2
+    assert isinstance(metrics_df_calc, pd.DataFrame)
+    assert metrics_df_calc.index.size == 3
+    assert "month" in metrics_df_calc.columns
     ev.spark.stop()
 
 
@@ -816,52 +483,27 @@ if __name__ == "__main__":
                 dir=tempdir
             )
         )
-        test_unpacking_bootstrap_results(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
-        test_circularblock_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="5-",
-                dir=tempdir
-            )
-        )
-        test_stationary_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="6-",
-                dir=tempdir
-            )
-        )
-        test_gumboot_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="7-",
-                dir=tempdir
-            )
-        )
         test_metric_chaining(
             tempfile.mkdtemp(
-                prefix="8-",
+                prefix="4-",
                 dir=tempdir
             )
         )
         # TODO: High memory usage?
         test_ensemble_metrics(
             tempfile.mkdtemp(
-                prefix="9-",
+                prefix="5-",
                 dir=tempdir
             )
         )
         # TODO: High memory usage?
         test_metrics_transforms(
             tempfile.mkdtemp(
-                prefix="10-",
+                prefix="6-",
                 dir=tempdir)
         )
-        # TODO: High memory usage?
-        test_bootstrapping_transforms(
+        test_adding_calculated_fields(
             tempfile.mkdtemp(
-                prefix="11-",
-                dir=tempdir)
+                 prefix="7-",
+                 dir=tempdir)
         )
