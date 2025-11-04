@@ -275,6 +275,7 @@ class FlowDurationCurveSlope(DeterministicBasemodel):
         The static attributes for the metric.
     """
 
+    bootstrap: BootstrapBasemodel = Field(default=None)
     add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     output_field_name: str = Field(default="flow_duration_curve_slope")

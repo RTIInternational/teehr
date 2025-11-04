@@ -44,7 +44,19 @@ class Metrics:
         namespace_name: Union[str, None] = None,
         catalog_name: Union[str, None] = None,
     ) -> "Metrics":
-        """Initialize the Metrics class."""
+        """Initialize the Metrics class.
+
+        Parameters
+        ----------
+        table_name : str, optional
+            The name of the table to use for metrics calculations, by default "joined_timeseries"
+        namespace_name : Union[str, None], optional
+            The namespace of the table, by default None in which case the
+            namespace_name of the active catalog is used.
+        catalog_name : Union[str, None], optional
+            The catalog of the table, by default None in which case the
+            catalog_name of the active catalog is used.
+        """
         self.table_name = table_name
         self.table = self._ev.table(
             table_name=table_name,
@@ -145,6 +157,20 @@ class Metrics:
         >>>     order_by=[flds.primary_location_id],
         >>>     filters=filters,
         >>> ).to_geopandas()
+
+        By default, the metrics query operates on the `joined_timeseries` table.
+        To specify a different table, initialize the Metrics class with the
+        desired table name.
+
+        >>> fdc = teehr.Signatures.FlowDurationCurveSlope()
+        >>> fdc.input_field_names = ["value"]
+        >>> metrics_df = eval.metrics(
+        >>>     table_name="primary_timeseries"
+        >>> ).query(
+        >>>     include_metrics=[fdc],
+        >>>     group_by=[flds.primary_location_id],
+        >>>     order_by=[flds.primary_location_id],
+        >>> ).to_pandas()
         """ # noqa
         logger.info("Calculating performance metrics.")
         if filters is not None:
