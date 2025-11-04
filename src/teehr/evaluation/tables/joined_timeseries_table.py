@@ -218,6 +218,12 @@ class JoinedTimeseriesTable(TimeseriesTable):
             List of attributes to add to the joined timeseries table.
             If None, all attributes are added. The default is None.
             add_attrs must be True for this to work.
+        write_mode : str, optional
+            Write mode for the joined timeseries table, by default
+            "create_or_replace"
+        partition_by : List[str], optional
+            List of columns to partition the joined timeseries table by,
+            by default ["configuration_name", "variable_name"]
         """
         joined_df = self._join()
 

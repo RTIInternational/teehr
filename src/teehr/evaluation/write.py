@@ -53,18 +53,8 @@ class Write:
         table_name: str,
         catalog_name: str,
         namespace_name: str,
-        partition_by: List[str] = None
     ):
         """Upsert the DataFrame to the specified target in the catalog."""
-        # if partition_by is None:
-        #     raise ValueError(
-        #         "partition_by fields must be provided when using"
-        #         " write_mode='create_or_replace'"
-        #     )
-        # PARTITIONED BY ({', '.join(partition_by)})
-
-        # Use the <=> operator for null-safe equality comparison
-        # so that two null values are considered equal.
         sql_query = f"""
             CREATE OR REPLACE TABLE {catalog_name}.{namespace_name}.{table_name}
             AS SELECT * FROM {source_view}
@@ -131,7 +121,6 @@ class Write:
         self,
         source_view: str,
         table_name: str,
-        # uniqueness_fields: List[str],
         catalog_name: str,
         namespace_name: str
     ):
@@ -161,7 +150,6 @@ class Write:
         table_name: str,
         write_mode: str = "append",
         uniqueness_fields: List[str] | None = None,
-        partition_by: List[str] = None,
         catalog_name: str = None,
         namespace_name: str = None
     ):
@@ -169,8 +157,6 @@ class Write:
 
         Parameters
         ----------
-        sdf : DataFrame
-            The Spark DataFrame to write.
         source_data : pd.DataFrame | DataFrame | str
             The Spark or Pandas DataFrame or temporary view name to write.
         table_name : str
@@ -181,9 +167,12 @@ class Write:
         uniqueness_fields : List[str], optional
             List of fields that uniquely identify a record, by default None,
             which means the uniqueness_fields are taken from the table class.
-        partition_by : List[str], optional
-            List of fields to partition the table by, required if write_mode is
-            'create_or_replace'.
+        catalog_name : str, optional
+            The catalog name to write to, by default None, which means the
+            catalog_name of the active catalog is used.
+        namespace_name : str, optional
+            The namespace name to write to, by default None, which means the
+            namespace_name of the active catalog is used.
         """
         if catalog_name is None:
             catalog_name = self._ev.active_catalog.catalog_name
