@@ -122,6 +122,13 @@ class Table:
         drop_duplicates : bool, optional
             Whether to drop duplicates based on the uniqueness fields.
             Default is True.
+
+        Examples
+        --------
+        Validate a table:
+        >>> ev.table(
+        >>>     table_name="primary_timeseries"
+        >>> ).validate(drop_duplicates=True)
         """
         self._check_load_table()
         self._ev.validate.schema(
@@ -271,7 +278,7 @@ class Table:
 
         Filters as dictionary:
 
-        >>> ts_df = ev.primary_timeseries.filter(
+        >>> ts_df = ev.table(table_name="primary_timeseries").filter(
         >>>     filters=[
         >>>         {
         >>>             "column": "value_time",
@@ -293,7 +300,7 @@ class Table:
 
         Filters as string:
 
-        >>> ts_df = ev.primary_timeseries.filter(
+        >>> ts_df = ev.table(table_name="primary_timeseries").filter(
         >>>     filters=[
         >>>         "value_time > '2022-01-01'",
         >>>         "value_time < '2022-01-02'",
@@ -306,8 +313,8 @@ class Table:
         >>> from teehr.models.filters import TimeseriesFilter
         >>> from teehr.models.filters import FilterOperators
         >>>
-        >>> fields = ev.primary_timeseries.field_enum()
-        >>> ts_df = ev.primary_timeseries.filter(
+        >>> fields = ev.table(table_name="primary_timeseries").field_enum()
+        >>> ts_df = ev.table(table_name="primary_timeseries").filter(
         >>>     filters=[
         >>>         TimeseriesFilter(
         >>>             column=fields.value_time,
@@ -359,12 +366,12 @@ class Table:
         --------
         Order by string:
 
-        >>> ts_df = ev.primary_timeseries.order_by("value_time").to_df()
+        >>> ts_df = ev.table(table_name="primary_timeseries").order_by("value_time").to_df()
 
         Order by StrEnum:
 
         >>> from teehr.querying.field_enums import TimeseriesFields
-        >>> ts_df = ev.primary_timeseries.order_by(
+        >>> ts_df = ev.table(table_name="primary_timeseries").order_by(
         >>>     TimeseriesFields.value_time
         >>> ).to_pandas()
         """
@@ -410,6 +417,21 @@ class Table:
         -------
         List[str]
             The distinct values for the column.
+
+        Examples
+        --------
+        Get distinct location IDs from the primary timeseries table:
+
+        >>> ev.table(table_name="primary_timeseries").distinct_values(
+        >>>     column='location_id',
+        >>>     location_prefixes=False
+        >>> )
+
+        Get distinct location prefixes from the joined timeseries table:
+        >>> ev.table(table_name="joined_timeseries").distinct_values(
+        >>>     column='primary_location_id',
+        >>>     location_prefixes=True
+        >>> )
         """
         self._check_load_table()
         if column not in self.sdf.columns:
