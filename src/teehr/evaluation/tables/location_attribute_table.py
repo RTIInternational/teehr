@@ -170,7 +170,7 @@ class LocationAttributeTable(Table):
             to the TEEHR data model.
         pattern : str, optional
             The glob pattern to use when searching for files in a directory.
-            Default is '**/*.parquet' to search for all parquet files recursively.
+            Default is '**/*.csv' to search for all CSV files recursively.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
