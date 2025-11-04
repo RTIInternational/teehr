@@ -51,7 +51,6 @@ class Load:
         secondary_location_id_prefix: str = None,
         secondary_location_id_field: str = None,
         write_mode: TableWriteEnum = "append",
-        persist_dataframe: bool = False,
         drop_duplicates: bool = True
     ):
         """Load a timeseries from an in-memory dataframe."""
@@ -105,9 +104,6 @@ class Load:
             for field, value in constant_field_values.items():
                 df = df.withColumn(field, F.lit(value))
 
-        if persist_dataframe:
-            df = df.persist()
-
         if primary_location_id_prefix:
             df = add_or_replace_sdf_column_prefix(
                 sdf=df,
@@ -142,8 +138,6 @@ class Load:
             uniqueness_fields=uniqueness_fields
         )
 
-        df.unpersist()
-
     def file(
         self,
         in_path: Path | str,
@@ -162,12 +156,9 @@ class Load:
         update_attrs_table: bool = True,
         parallel: bool = False,
         max_workers: int = 1,
-        persist_dataframe: bool = False,
         **kwargs
     ):
         """Load location attributes helper."""
-        # TODO: remove persist_dataframe?
-
         # Clear the cache directory if it exists.
         table_cache_dir = Path(
             self._ev.cache_dir,
