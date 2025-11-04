@@ -31,11 +31,11 @@ def test_clone_template(tmpdir):
     views_df = ev.list_views()
 
     # Not a complete test, but at least we know the function runs.
-    assert len(tbls_df) == 10
+    assert len(tbls_df) == 9
     assert len(views_df) == 1
-    assert Path(tmpdir, "cache").is_dir()
-    assert Path(tmpdir, "scripts").is_dir()
-    assert Path(tmpdir, ".gitignore").is_file()
+    assert Path(tmpdir, ev.active_catalog.catalog_name, "cache").is_dir()
+    assert Path(tmpdir, ev.active_catalog.catalog_name, "scripts").is_dir()
+    assert Path(tmpdir, ev.active_catalog.catalog_name, ".gitignore").is_file()
     # ev.spark.stop()
 
 
