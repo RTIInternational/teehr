@@ -188,9 +188,9 @@ def create_spark_session(
         remote_catalog_uri=remote_catalog_uri
     )
 
+    logger.info("⚙️ All settings applied. Creating Spark session...")
     spark = SparkSession.builder.appName(app_name).config(conf=conf).getOrCreate()
     sedona_spark = SedonaContext.create(spark)
-    logger.info("Spark session created for TEEHR Evaluation.")
 
     if debug_config:
         log_session_config(sedona_spark)
@@ -371,7 +371,7 @@ def _set_spark_cluster_configuration(
 
     # First try getting it from environment variable
     if spark_namespace is None:
-        spark_namespace = os.environ["TEEHR_NAMESPACE"]
+        spark_namespace = os.environ.get("TEEHR_NAMESPACE", "")
     logger.info(f"🔍 Initial spark namespace from ENV: {spark_namespace}")
 
     if spark_namespace is None:

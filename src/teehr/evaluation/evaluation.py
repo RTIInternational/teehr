@@ -46,7 +46,6 @@ from teehr.evaluation.utils import copy_migrations_dir
 from teehr.evaluation.spark_session_utils import (
     create_spark_session,
     log_session_config,
-    # remove_or_update_configs
 )
 import pandas as pd
 import re
