@@ -286,13 +286,7 @@ class Evaluation(EvaluationBase):
     def enable_logging(self):
         """Enable logging."""
         logger = logging.getLogger("teehr")
-        if Path(self.local_catalog.warehouse_dir).is_dir() is False:
-            raise NotADirectoryError(
-                f"Cannot enable logging. Directory"
-                f" {self.local_catalog.warehouse_dir} does not exist."
-                " Please clone the template first."
-            )
-        logger_path = Path(self.local_catalog.warehouse_dir, 'teehr.log')
+        logger_path = Path(self.dir_path, 'teehr.log')
 
         handler = logging.FileHandler(logger_path)
         handler.setFormatter(
