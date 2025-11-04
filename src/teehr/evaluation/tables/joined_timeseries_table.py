@@ -178,7 +178,6 @@ class JoinedTimeseriesTable(TimeseriesTable):
             table_name=self.table_name,
             write_mode=write_mode,
             uniqueness_fields=self.uniqueness_fields,
-            # partition_by=self.partition_by,
         )
         logger.info("Joined timeseries table written to the warehouse.")
         self._load_table()
@@ -203,8 +202,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
         add_attrs: bool = True,
         execute_scripts: bool = False,
         attr_list: List[str] = None,
-        write_mode: str = "create_or_replace",
-        partition_by: List[str] = ["configuration_name", "variable_name"],
+        write_mode: str = "create_or_replace"
     ):
         """Create joined timeseries table.
 
@@ -221,9 +219,6 @@ class JoinedTimeseriesTable(TimeseriesTable):
         write_mode : str, optional
             Write mode for the joined timeseries table, by default
             "create_or_replace"
-        partition_by : List[str], optional
-            List of columns to partition the joined timeseries table by,
-            by default ["configuration_name", "variable_name"]
         """
         joined_df = self._join()
 
@@ -240,8 +235,7 @@ class JoinedTimeseriesTable(TimeseriesTable):
         self._ev.write.to_warehouse(
             source_data=validated_df,
             table_name=self.table_name,
-            write_mode=write_mode,
-            partition_by=partition_by,
+            write_mode=write_mode
         )
         logger.info("Joined timeseries table created.")
         self._load_table()

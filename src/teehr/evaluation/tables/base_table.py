@@ -115,7 +115,14 @@ class Table:
         return self.schema_func()
 
     def validate(self, drop_duplicates: bool = True):
-        """Validate the dataset table against the schema."""
+        """Validate the dataset table against the schema.
+
+        Parameters
+        ----------
+        drop_duplicates : bool, optional
+            Whether to drop duplicates based on the uniqueness fields.
+            Default is True.
+        """
         self._check_load_table()
         self._ev.validate.schema(
             sdf=self.sdf,
@@ -162,7 +169,7 @@ class Table:
         --------
         Filters as dictionaries:
 
-        >>> ts_df = ev.primary_timeseries.query(
+        >>> ts_df = ev.table(table_name="primary_timeseries").query(
         >>>     filters=[
         >>>         {
         >>>             "column": "value_time",
@@ -185,7 +192,7 @@ class Table:
 
         Filters as SQL strings:
 
-        >>> ts_df = ev.primary_timeseries.query(
+        >>> ts_df = ev.table(table_name="primary_timeseries").query(
         >>>     filters=[
         >>>         "value_time > '2022-01-01'",
         >>>         "value_time < '2022-01-02'",
@@ -199,8 +206,8 @@ class Table:
         >>> from teehr.models.filters import TimeseriesFilter
         >>> from teehr.models.filters import FilterOperators
         >>>
-        >>> fields = ev.primary_timeseries.field_enum()
-        >>> ts_df = ev.primary_timeseries.query(
+        >>> fields = ev.table(table_name="primary_timeseries").field_enum()
+        >>> ts_df = ev.table(table_name="primary_timeseries").query(
         >>>     filters=[
         >>>         TimeseriesFilter(
         >>>             column=fields.value_time,

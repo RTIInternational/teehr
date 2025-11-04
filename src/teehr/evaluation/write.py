@@ -214,7 +214,6 @@ class Write:
             self._create_or_replace(
                 source_view=source_data,
                 table_name=table_name,
-                partition_by=None,
                 catalog_name=catalog_name,
                 namespace_name=namespace_name
             )
