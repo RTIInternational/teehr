@@ -152,15 +152,3 @@ class JoinedTimeseriesFilter(FilterBaseModel):
         List[Union[str, int, float, datetime, timedelta]]
     ]
 
-
-class TableFilter(BaseModel):
-    """A class for filtering a table from an evaluation."""
-
-    table_name: TableNamesEnum = Field(
-        default="primary_timeseries"
-    )
-    filters: Union[
-        str, dict, FilterBaseModel,
-        List[Union[str, dict, FilterBaseModel]]
-    ] = Field(default=None)
-    # Could this be extended to include group_by and metrics?

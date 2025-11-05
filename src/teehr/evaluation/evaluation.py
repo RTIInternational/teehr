@@ -30,7 +30,6 @@ from teehr.loading.s3.clone_from_s3 import (
     list_s3_evaluations,
     clone_from_s3
 )
-from teehr.models.filters import TableFilter, FilterBaseModel, TableNamesEnum
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.metrics import Metrics
 from teehr.evaluation.generate import GeneratedTimeseries
@@ -49,8 +48,6 @@ from teehr.evaluation.spark_session_utils import (
 import pandas as pd
 import re
 from fsspec.implementations.local import LocalFileSystem
-import pyspark.sql as ps
-from teehr.querying.filter_format import validate_and_apply_filters
 from teehr.utilities import apply_migrations
 from teehr.models.evaluation_base import (
     EvaluationBase,
@@ -517,51 +514,6 @@ class Evaluation(EvaluationBase):
             " to a new format."
         )
         return version
-
-    def filter(
-        self,
-        table_name: TableNamesEnum = None,
-        filters: Union[
-            str, dict, FilterBaseModel,
-            List[Union[str, dict, FilterBaseModel]]
-        ] = None,
-        table_filter: TableFilter = None
-    ) -> ps.DataFrame:
-        """Apply filters to a table returning a sdf.
-
-        Parameters
-        ----------
-        table_name: TableNamesEnum
-            The name of the table to filter. Defaults to None.
-        filters: Union[str, dict, FilterBaseModel, List[Union[str, dict, FilterBaseModel]]]
-            The filters to apply to the table. Defaults to None.
-        table_filter: TableFilter
-            A TableFilter object containing the table name and filters.
-            Defaults to None.
-
-        Example
-        -------
-        Apply a filter at the Evaluation level:
-
-        >>> sdf = ev.filter(
-        ...     table_name="primary_timeseries",
-        ...     filters="configuration_name = 'usgs_observations'"
-        ... )
-        """
-        if table_filter is not None:
-            table_name = table_filter.table_name
-            filters = table_filter.filters
-        if table_name is None:
-            raise ValueError("Table name must be specified.")
-        tbl = self.table(table_name=table_name)
-        return validate_and_apply_filters(
-            sdf=tbl.to_sdf(),
-            filters=filters,
-            filter_model=tbl.filter_model,
-            fields_enum=tbl.field_enum_model,
-            dataframe_schema=tbl.schema_func("pandas"),
-            validate=tbl.validate_filter_field_types
-        )
 
     def apply_schema_migration(
         self,

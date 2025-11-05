@@ -7,11 +7,8 @@ import pandas as pd
 import geopandas as gpd
 from pathlib import Path
 import numpy as np
-from arch.bootstrap import CircularBlockBootstrap, StationaryBootstrap
 
-from teehr.models.filters import JoinedTimeseriesFilter, TableFilter
-from teehr.models.metrics.bootstrap_models import Bootstrappers
-from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
+from teehr.models.filters import JoinedTimeseriesFilter
 from teehr.evaluation.evaluation import Evaluation
 from teehr import SignatureTimeseriesGenerators as sts
 from teehr import BenchmarkForecastGenerators as bm
@@ -225,16 +222,13 @@ def test_ensemble_metrics(tmpdir):
     )
 
     # Calculate annual hourly normals from USGS observations.
-    input_ts = TableFilter()
-    input_ts.table_name = "primary_timeseries"
-
     ts_normals = sts.Normals()
     ts_normals.temporal_resolution = "hour_of_year"  # the default
     ts_normals.summary_statistic = "mean"           # the default
 
     ev.generate.signature_timeseries(
         method=ts_normals,
-        input_table_filter=input_ts,
+        input_table_name="primary_timeseries",
         start_datetime="2024-11-19 12:00:00",
         end_datetime="2024-11-21 13:00:00",
         timestep="1 hour",
@@ -255,24 +249,24 @@ def test_ensemble_metrics(tmpdir):
     ref_fcst = bm.ReferenceForecast()
     ref_fcst.aggregate_reference_timeseries = True
 
-    reference_ts = TableFilter()
-    reference_ts.table_name = "primary_timeseries"
-    reference_ts.filters = [
+    reference_table_name = "primary_timeseries"
+    reference_filters = [
         "variable_name = 'streamflow_hour_of_year_mean'",
         "unit_name = 'ft^3/s'"
     ]
 
-    template_ts = TableFilter()
-    template_ts.table_name = "secondary_timeseries"
-    template_ts.filters = [
+    template_table_name = "secondary_timeseries"
+    template_filters = [
         "variable_name = 'streamflow_hourly_inst'",
         "unit_name = 'ft^3/s'",
         "member = '1993'"
     ]
     ev.generate.benchmark_forecast(
         method=ref_fcst,
-        reference_table_filter=reference_ts,
-        template_table_filter=template_ts,
+        reference_table_name=reference_table_name,
+        reference_table_filters=reference_filters,
+        template_table_name=template_table_name,
+        template_table_filters=template_filters,
         output_configuration_name="benchmark_forecast_hourly_normals"
     ).write(destination_table="secondary_timeseries")
 
@@ -468,6 +462,40 @@ def test_adding_calculated_fields(tmpdir):
     ev.spark.stop()
 
 
+def test_table_based_metrics(tmpdir):
+    """Test table-based metrics."""
+    ev = setup_v0_3_study(tmpdir)
+
+    kge = DeterministicMetrics.KlingGuptaEfficiency()
+
+    metrics_df = ev.table(table_name="joined_timeseries").query(
+        include_metrics=[kge],
+        group_by=["primary_location_id"],
+        order_by=["primary_location_id"],
+        filters="season = 'winter'",
+    ).to_pandas()
+
+    assert isinstance(metrics_df, pd.DataFrame)
+    assert metrics_df.index.size == 3
+    assert "primary_location_id" in metrics_df.columns
+
+    primary_avg = Signatures.Average()
+    primary_avg.input_field_names = ["value"]
+
+    sigs_df = ev.table(table_name="primary_timeseries").query(
+        include_metrics=[primary_avg],
+        group_by=["location_id"],
+        order_by=["location_id"],
+        # filters="season = 'winter'",
+    ).to_pandas()
+
+    assert isinstance(sigs_df, pd.DataFrame)
+    assert sigs_df.index.size == 3
+    assert "location_id" in sigs_df.columns
+
+    ev.spark.stop()
+
+
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
@@ -513,4 +541,10 @@ if __name__ == "__main__":
             tempfile.mkdtemp(
                  prefix="7-",
                  dir=tempdir)
+        )
+        test_table_based_metrics(
+            tempfile.mkdtemp(
+                 prefix="8-",
+                 dir=tempdir
+            )
         )

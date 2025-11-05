@@ -144,13 +144,10 @@ class Validate:
 
         tbl = self._ev.table(table_name=table_name)
         filter_model = tbl.filter_model
-        # To handle joined_timeseries fields. Hmmm should all properties
-        # be handled this way? They could still be class properties.
         fields_enum = self._ev.table(table_name=table_name).field_enum()
         validated_filters = []
         for filter in filters:
             logger.debug(f"Validating and applying {filter}")
-
             if not isinstance(filter, str):
                 filter = filter_model.model_validate(
                     filter,

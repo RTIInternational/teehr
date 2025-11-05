@@ -4,10 +4,22 @@ import logging
 import geopandas as gpd
 
 from teehr.models.str_enum import StrEnum
-from teehr.querying.utils import order_df, join_geometry, df_to_gdf
+from teehr.querying.utils import (
+    order_df,
+    join_geometry,
+    df_to_gdf,
+    group_df,
+    post_process_metric_results
+)
 from teehr.models.evaluation_base import EvaluationBase
 from teehr.models.filters import FilterBaseModel
 from teehr.models.table_properties import TBLPROPERTIES
+from teehr.models.metrics.basemodels import MetricsBasemodel
+from teehr.models.table_enums import (
+    JoinedTimeseriesFields
+)
+from teehr.querying.metric_format import apply_aggregation_metrics
+
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +157,15 @@ class Table:
             str, dict, FilterBaseModel,
             List[Union[str, dict, FilterBaseModel]]
         ] = None,
-        order_by: Union[str, StrEnum, List[Union[str, StrEnum]]] = None
+        order_by: Union[str, StrEnum, List[Union[str, StrEnum]]] = None,
+        group_by: Union[
+            str, JoinedTimeseriesFields,
+            List[Union[str, JoinedTimeseriesFields]]
+        ] = None,
+        include_metrics: Union[
+            List[MetricsBasemodel],
+            str
+        ] = None
     ):
         """Run a query against the table with filters and order_by.
 
@@ -244,7 +264,23 @@ class Table:
                 filters=filters,
                 validate_filter_field_types=self.validate_filter_field_types,
             ).to_sdf()
+
+        if include_metrics is not None:
+            logger.debug(f"Grouping by '{group_by}' and applying metrics.")
+            sdf = group_df(self.sdf, group_by)
+
+            sdf = apply_aggregation_metrics(
+                gp=sdf,
+                include_metrics=include_metrics,
+            )
+            self.sdf = post_process_metric_results(
+                sdf=sdf,
+                include_metrics=include_metrics,
+                group_by=group_by
+            )
+
         if order_by is not None:
+            logger.debug(f"Ordering the metrics by: {order_by}.")
             self.sdf = order_df(self.sdf, order_by)
         return self
 
