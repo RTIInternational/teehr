@@ -27,7 +27,6 @@ from pyspark.sql import SparkSession
 import logging
 from teehr.loading.utils import copy_template_to
 from teehr.loading.s3.clone_from_s3 import (
-    list_s3_evaluations,
     clone_from_s3
 )
 from teehr.evaluation.fetch import Fetch
@@ -350,20 +349,6 @@ class Evaluation(EvaluationBase):
             target_namespace_name=namespace_name
         )
 
-    @staticmethod
-    def list_s3_evaluations(
-        format: Literal["pandas", "list"] = "pandas"
-    ) -> Union[list, pd.DataFrame]:
-        """List the evaluations available on S3.
-
-        Parameters
-        ----------
-        format : str, optional
-            The format of the output. Either "pandas" or "list".
-            The default is "pandas".
-        """
-        return list_s3_evaluations(format=format)
-
     def clone_from_s3(
         self,
         remote_catalog_name: str = None,
@@ -373,7 +358,7 @@ class Evaluation(EvaluationBase):
         end_date: Union[str, datetime] = None,
         # spatial_filter: str = None
     ):
-        """Pull down an evaluation from S3, potentially subsetting.
+        """Read data from the remote warehouse, potentially subsetting.
 
         Parameters
         ----------
