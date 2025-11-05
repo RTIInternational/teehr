@@ -68,6 +68,6 @@ Tools for calculating metrics and generating synthetic timeseries.
 * :mod:`Probabilistic Functions <teehr.metrics.probabilistic_funcs>`
 * :class:`Deterministic Metrics Models <teehr.DeterministicMetrics>`
 * :class:`Probabilistic Metrics Models <teehr.ProbabilisticMetrics>`
-* :class:`Signature Models <teehr.SignatureMetrics>`
+* :class:`Signature Models <teehr.Signatures>`
 * :class:`Generated Timeseries <teehr.evaluation.generate.GeneratedTimeseries>`
 * :class:`Reference Forecast Model <teehr.models.generate.timeseries_generator_models.ReferenceForecast>`
