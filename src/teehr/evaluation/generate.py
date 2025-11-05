@@ -149,6 +149,27 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
 
         The variable naming convention follows the pattern:
         <variable>_<temporal_resolution>_<summary_statistic>
+
+        Example
+        -------
+        Generate a daily climatology timeseries from the primary_timeseries.
+
+        >>> from teehr import SignatureTimeseriesGenerators as sts
+
+        Define the signature timeseries method
+
+        >>> ts_normals = sts.Normals()
+        >>> ts_normals.temporal_resolution = "day_of_year"
+        >>> ts_normals.summary_statistic = "mean"
+
+        Generate the signature timeseries, operating on the primary_timeseries.
+
+        >>> ev.generate.signature_timeseries(
+        >>>     method=ts_normals,
+        >>>     input_table_name="primary_timeseries",
+        >>>     start_datetime="1924-11-19 12:00:00",
+        >>>     end_datetime="2024-11-21 13:00:00",
+        >>> ).write()
         """
         # input_dataframe = self._ev.filter(table_filter=input_table_filter)
         input_dataframe = self._ev.read.from_warehouse(
@@ -233,6 +254,47 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
         -------
         GeneratedTimeseries
             The generated timeseries class object.
+
+        Example
+        -------
+        Generate a Climatology benchmark forecast using a previously generated
+        climatology timeseries as the reference and the secondary_timeseries
+        as the template forecast.
+
+        >>> from teehr import BenchmarkForecastGenerators as bmf
+
+        Define the benchmark forecast method
+
+        >>> ref_fcst = bmf.ReferenceForecast()
+        >>> ref_fcst.aggregate_reference_timeseries = True
+
+        Specify the tables and optional filters that define the reference
+        and template timeseries.
+
+        >>> reference_table_name = "primary_timeseries"
+        >>> reference_filters = [
+        >>>     "variable_name = 'streamflow_hour_of_year_mean'",
+        >>>     "unit_name = 'ft^3/s'"
+        >>> ]
+
+        >>> template_table_name = "secondary_timeseries"
+        >>> template_filters = [
+        >>>     "variable_name = 'streamflow_hourly_inst'",
+        >>>     "unit_name = 'ft^3/s'",
+        >>>     "member = '1993'"
+        >>> ]
+
+        Generate the benchmark forecast timeseries and write to secondary_timeseries,
+        with the configuration name 'benchmark_forecast_hourly_normals'.
+
+        >>> ev.generate.benchmark_forecast(
+        >>>     method=ref_fcst,
+        >>>     reference_table_name=reference_table_name,
+        >>>     reference_table_filters=reference_filters,
+        >>>     template_table_name=template_table_name,
+        >>>     template_table_filters=template_filters,
+        >>>     output_configuration_name="benchmark_forecast_hourly_normals"
+        >>> ).write(destination_table="secondary_timeseries")
         """
         reference_dataframe = self._ev.read.from_warehouse(
             table_name=reference_table_name,
