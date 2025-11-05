@@ -190,7 +190,7 @@ class Table:
 
         Returns
         -------
-        self : BaseTable or subclass of BaseTable
+        self : Table or subclass of Table
 
         Examples
         --------
@@ -304,7 +304,7 @@ class Table:
 
         Returns
         -------
-        self : BaseTable or subclass of BaseTable
+        self : Table or subclass of Table
 
         Examples
         --------
@@ -396,7 +396,7 @@ class Table:
 
         Returns
         -------
-        self : BaseTable or subclass of BaseTable
+        self : Table or subclass of Table
 
         Examples
         --------
