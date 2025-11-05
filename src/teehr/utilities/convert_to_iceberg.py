@@ -80,17 +80,17 @@ def convert_evaluation(
 
 if __name__ == "__main__":
 
-    convert_evaluation(dir_path="/mnt/c/data/ciroh/teehr/e4_evaluations/e0_2_location_example")
+    # convert_evaluation(dir_path="/mnt/c/data/ciroh/teehr/e4_evaluations/e0_2_location_example")
 
-    # parser = argparse.ArgumentParser(
-    #     description="Convert a pre-v0.6 Evaluation dataset to Iceberg."
-    # )
-    # parser.add_argument(
-    #     "dir_path",
-    #     help="The directory path to the Evaluation to upgrade."
-    # )
-    # args = parser.parse_args()
+    parser = argparse.ArgumentParser(
+        description="Convert a pre-v0.6 Evaluation dataset to Iceberg."
+    )
+    parser.add_argument(
+        "dir_path",
+        help="The directory path to the Evaluation to upgrade."
+    )
+    args = parser.parse_args()
 
-    # convert_evaluation(
-    #     dir_path=args.dir_path
-    # )
+    convert_evaluation(
+        dir_path=args.dir_path
+    )
