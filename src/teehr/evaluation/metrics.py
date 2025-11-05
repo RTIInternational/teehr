@@ -55,6 +55,15 @@ class Metrics:
         catalog_name : Union[str, None], optional
             The catalog of the table, by default None in which case the
             catalog_name of the active catalog is used.
+
+        Example
+        -------
+        By default, the Metrics class operates on the "joined_timeseries" table.
+        This can be changed by specifying a different table name.
+
+        >>> import teehr
+        >>> ev = teehr.Evaluation()
+        >>> metrics = ev.metrics(table_name="primary_timeseries")
         """
         self.table_name = table_name
         self.table = self._ev.table(
@@ -150,7 +159,7 @@ class Metrics:
 
         Perform the query, returning the results as a GeoPandas DataFrame.
 
-        >>> metrics_df = eval.metrics.query(
+        >>> metrics_df = ev.metrics.query(
         >>>     include_metrics=include_metrics,
         >>>     group_by=[flds.primary_location_id],
         >>>     order_by=[flds.primary_location_id],
@@ -164,7 +173,7 @@ class Metrics:
         >>> fdc = teehr.Signatures.FlowDurationCurveSlope()
         >>> fdc.input_field_names = ["value"]
 
-        >>> metrics_df = eval.metrics(
+        >>> metrics_df = ev.metrics(
         >>>     table_name="primary_timeseries"
         >>> ).query(
         >>>     include_metrics=[fdc],
@@ -241,14 +250,17 @@ class Metrics:
 
         Examples
         --------
+        Add the temporary calculated field "month" to use in the metrics query.
+
         >>> import teehr
         >>> from teehr import RowLevelCalculatedFields as rcf
+
         >>> ev.metrics(table_name="joined_timeseries").add_calculated_fields([
         >>>     rcf.Month()
         >>> ]).query(
         >>>     include_metrics=[fdc],
-        >>>     group_by=[flds.primary_location_id],
-        >>>     order_by=[flds.primary_location_id],
+        >>>     group_by=[flds.primary_location_id, "month"],
+        >>>     order_by=[flds.primary_location_id, "month"],
         >>> ).to_pandas()
         """
         if not isinstance(cfs, List):
@@ -277,9 +289,8 @@ class Metrics:
         Example
         -------
         >>> import teehr
-
         >>> ev = teehr.Evaluation()
-
+        Calculate some metrics and write to the warehouse.
         >>> metrics_df = ev.metrics.query(
         >>>     include_metrics=[...],
         >>>     group_by=["primary_location_id"]
