@@ -464,6 +464,31 @@ class RowLevelCalculatedFields:
     - ThresholdValueExceeded
     - DayOfYear
     - HourOfYear
+
+    Examples
+    --------
+    Add row level calculated fields to the joined timeseries table and write
+    to the warehouse.
+
+    >>> import teehr
+    >>> from teehr import RowLevelCalculatedFields as rcf
+
+    >>> ev.joined_timeseries.add_calculated_fields([
+    ...    rcf.Month(),
+    ...    rcf.Year(),
+    ...    rcf.WaterYear(),
+    ...    rcf.Seasons()
+    ... ]).write()
+
+    We can also use these calculated fields in metrics calculations.
+
+    >>> ev.metrics(table_name="joined_timeseries").add_calculated_fields([
+    ...     rcf.Month()
+    ... ]).query(
+    ...     include_metrics=[fdc],
+    ...     group_by=[flds.primary_location_id, "month"],
+    ...     order_by=[flds.primary_location_id, "month"],
+    ... ).to_pandas()
     """
 
     Month = Month

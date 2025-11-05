@@ -2430,6 +2430,15 @@ class TimeseriesAwareCalculatedFields():
     - EWMABaseflow
     - WillemsBaseflow
     - UKIHBaseflow
+
+    Examples
+    -------
+    Add a timeseries aware calculated field to the joined timeseries table.
+
+    >>> from teehr import TimeseriesAwareCalculatedFields as tcf
+
+    >>> ped = tcf.AbovePercentileEventDetection()
+    >>> ev.joined_timeseries.add_calculated_fields(ped).write()
     """
 
     AbovePercentileEventDetection = AbovePercentileEventDetection
