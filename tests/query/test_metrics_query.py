@@ -165,7 +165,6 @@ def test_metric_chaining(tmpdir):
     ev.spark.stop()
 
 
-# @pytest.mark.skip(reason="Temporary!")
 def test_ensemble_metrics(tmpdir):
     """Test get_metrics method with ensemble metrics."""
     usgs_location = Path(

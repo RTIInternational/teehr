@@ -53,6 +53,7 @@ from teehr.models.evaluation_base import (
     LocalCatalog,
     RemoteCatalog
 )
+from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor # noqa
 from pydantic import BaseModel as PydanticBaseModel
 
 
@@ -98,17 +99,16 @@ class Evaluation(EvaluationBase):
         self.scripts_dir = None
         self.dir_path = dir_path
 
-        if self.dir_path.is_dir():
+        if not self.dir_path.is_dir():
             if create_dir:
                 logger.info(f"Creating directory {self.dir_path}.")
                 Path(self.dir_path).mkdir(parents=True, exist_ok=True)
             else:
-                logger.error(f"Directory {self.dir_path} does not exist.")
+                logger.error(
+                    f"Directory {self.dir_path} does not exist."
+                    " Set create_dir=True to create it."
+                )
                 raise NotADirectoryError
-
-        # Check version of Evaluation
-        if create_dir is False and check_evaluation_version is True:
-            self.check_evaluation_version()
 
         # Initialize Spark session
         if spark is not None:
@@ -140,6 +140,10 @@ class Evaluation(EvaluationBase):
             catalog_uri=self.spark.conf.get("remote_catalog_uri"),
         )
         self.set_active_catalog("local")
+
+        # Check version of Evaluation
+        if create_dir is False and check_evaluation_version is True:
+            self.check_evaluation_version()
 
     @property
     def table(self) -> Table:
@@ -464,6 +468,8 @@ class Evaluation(EvaluationBase):
 
     def check_evaluation_version(self, warehouse_dir: Union[str, Path] = None) -> str:
         """Check the version of the TEEHR Evaluation."""
+        if warehouse_dir is None:
+            warehouse_dir = self.active_catalog.warehouse_dir
         fs = LocalFileSystem()
         version_file = Path(warehouse_dir, "version")
 
