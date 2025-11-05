@@ -4,10 +4,8 @@ import pandera.pandas as pa
 
 from collections.abc import Iterable
 from datetime import datetime, timedelta
-from typing import List, Union
+from typing import Union
 import logging
-from pyspark.sql import DataFrame
-from teehr.models.str_enum import StrEnum
 from teehr.models.filters import FilterBaseModel
 
 logger = logging.getLogger(__name__)
