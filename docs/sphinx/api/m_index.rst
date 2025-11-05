@@ -52,7 +52,7 @@ Metric Models
    :nosignatures:
 
    DeterministicMetrics
-   SignatureMetrics
+   Signatures
    ProbabilisticMetrics
    Bootstrappers
 
