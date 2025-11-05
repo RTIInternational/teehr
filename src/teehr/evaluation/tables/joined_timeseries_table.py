@@ -1,7 +1,7 @@
 """Joined Timeseries Table."""
 import sys
 from pathlib import Path
-from teehr.evaluation.tables.timeseries_table import TimeseriesTable
+from teehr.evaluation.tables.base_table import Table
 from teehr.querying.utils import join_geometry
 import pyspark.sql as ps
 import logging
@@ -11,7 +11,7 @@ from typing import List, Union
 logger = logging.getLogger(__name__)
 
 
-class JoinedTimeseriesTable(TimeseriesTable):
+class JoinedTimeseriesTable(Table):
     """Access methods to joined timeseries table."""
 
     def __init__(self, ev):
