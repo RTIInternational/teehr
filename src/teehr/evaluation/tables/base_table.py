@@ -257,8 +257,8 @@ class Table:
         >>>         ),
         >>> ]).to_pandas()
 
-        Metrics can be calculated on any table by including the ``include_metrics``
-        and ``group_by`` parameters. For example, to calculate the Flow Duration Curve
+        Metrics can be calculated on any table (other than the domain tables) by including the
+        ``include_metrics`` and ``group_by`` parameters. For example, to calculate the Flow Duration Curve
         slope metric for each location in the primary timeseries table:
 
         >>> fdc = teehr.Signatures.FlowDurationCurveSlope()

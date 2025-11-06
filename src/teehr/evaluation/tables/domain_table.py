@@ -1,6 +1,9 @@
 """Domain table class."""
 from teehr.evaluation.tables.base_table import Table
 from teehr.models.pydantic_table_models import TableBaseModel
+from teehr.querying.utils import order_df
+from teehr.models.filters import FilterBaseModel
+from teehr.models.str_enum import StrEnum
 import pandas as pd
 from typing import List, Union
 import logging
@@ -114,3 +117,112 @@ class DomainTable(Table):
                 write_mode=write_mode,
                 uniqueness_fields=self.uniqueness_fields
             )
+
+    def query(
+        self,
+        filters: Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]
+        ] = None,
+        order_by: Union[str, StrEnum, List[Union[str, StrEnum]]] = None,
+    ):
+        """Run a query against the table with filters and order_by.
+
+        In general a user will either use the query methods or the filter and
+        order_by methods.  The query method is a convenience method that will
+        apply filters and order_by in a single call.
+
+        Parameters
+        ----------
+        filters : Union[
+                str, dict, FilterBaseModel,
+                List[Union[str, dict, FilterBaseModel]]
+            ]
+            The filters to apply to the query.  The filters can be an SQL string,
+            dictionary, FilterBaseModel or a list of any of these. The filters
+            will be applied in the order they are provided.
+        order_by : Union[str, List[str], StrEnum, List[StrEnum]]
+            The fields to order the query by.  The fields can be a string,
+            StrEnum or a list of any of these.  The fields will be ordered in
+            the order they are provided.
+
+        Returns
+        -------
+        self : Table or subclass of Table
+
+        Examples
+        --------
+        Filters as dictionaries:
+
+        >>> ts_df = ev.table(table_name="primary_timeseries").query(
+        >>>     filters=[
+        >>>         {
+        >>>             "column": "value_time",
+        >>>             "operator": ">",
+        >>>             "value": "2022-01-01",
+        >>>         },
+        >>>         {
+        >>>             "column": "value_time",
+        >>>             "operator": "<",
+        >>>             "value": "2022-01-02",
+        >>>         },
+        >>>         {
+        >>>             "column": "location_id",
+        >>>             "operator": "=",
+        >>>             "value": "gage-C",
+        >>>         },
+        >>>     ],
+        >>>     order_by=["location_id", "value_time"]
+        >>> ).to_pandas()
+
+        Filters as SQL strings:
+
+        >>> ts_df = ev.table(table_name="primary_timeseries").query(
+        >>>     filters=[
+        >>>         "value_time > '2022-01-01'",
+        >>>         "value_time < '2022-01-02'",
+        >>>         "location_id = 'gage-C'"
+        >>>     ],
+        >>>     order_by=["location_id", "value_time"]
+        >>> ).to_pandas()
+
+        Filters as FilterBaseModels:
+
+        >>> from teehr.models.filters import TimeseriesFilter
+        >>> from teehr.models.filters import FilterOperators
+
+        >>> fields = ev.table(table_name="primary_timeseries").field_enum()
+        >>> ts_df = ev.table(table_name="primary_timeseries").query(
+        >>>     filters=[
+        >>>         TimeseriesFilter(
+        >>>             column=fields.value_time,
+        >>>             operator=FilterOperators.gt,
+        >>>             value="2022-01-01",
+        >>>         ),
+        >>>         TimeseriesFilter(
+        >>>             column=fields.value_time,
+        >>>             operator=FilterOperators.lt,
+        >>>             value="2022-01-02",
+        >>>         ),
+        >>>         TimeseriesFilter(
+        >>>             column=fields.location_id,
+        >>>             operator=FilterOperators.eq,
+        >>>             value="gage-C",
+        >>>         ),
+        >>> ]).to_pandas()
+        """
+        logger.info("Performing the query.")
+        self._check_load_table()
+        if filters is not None:
+            self.sdf = self._read.from_warehouse(
+                catalog_name=self.catalog_name,
+                namespace_name=self.table_namespace_name,
+                table_name=self.table_name,
+                filters=filters,
+                validate_filter_field_types=self.validate_filter_field_types,
+            ).to_sdf()
+
+        if order_by is not None:
+            logger.debug(f"Ordering the metrics by: {order_by}.")
+            self.sdf = order_df(self.sdf, order_by)
+        return self
