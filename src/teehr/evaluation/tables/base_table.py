@@ -182,11 +182,14 @@ class Table:
             The filters to apply to the query.  The filters can be an SQL string,
             dictionary, FilterBaseModel or a list of any of these. The filters
             will be applied in the order they are provided.
-
         order_by : Union[str, List[str], StrEnum, List[StrEnum]]
             The fields to order the query by.  The fields can be a string,
             StrEnum or a list of any of these.  The fields will be ordered in
             the order they are provided.
+        group_by : Union[str, JoinedTimeseriesFields, List[Union[str, JoinedTimeseriesFields]]], optional
+            The fields to group the query by, by default None
+        include_metrics : Union[List[MetricsBasemodel], str], optional
+            The metrics to include in the query, by default None
 
         Returns
         -------
@@ -253,6 +256,24 @@ class Table:
         >>>         ),
         >>> ]).to_pandas()
 
+        Metrics can be calculated on any table by including the ``include_metrics``
+        and ``group_by`` parameters. For example, to calculate the Flow Duration Curve
+        slope metric for each location in the primary timeseries table:
+
+        >>> fdc = teehr.Signatures.FlowDurationCurveSlope()
+        >>> fdc.input_field_names = ["value"]
+
+        >>> metrics_df = ev.table(
+        >>>     table_name="primary_timeseries"
+        >>> ).query(
+        >>>     include_metrics=[fdc],
+        >>>     group_by=[flds.location_id],
+        >>>     order_by=[flds.location_id],
+        >>> ).to_pandas()
+
+        This may not make sense for all table types, but is included for
+        consistency across table types and to allow for metrics to be calculated
+        on user-created tables.
         """
         logger.info("Performing the query.")
         self._check_load_table()

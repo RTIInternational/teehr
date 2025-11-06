@@ -177,8 +177,8 @@ class Metrics:
         >>>     table_name="primary_timeseries"
         >>> ).query(
         >>>     include_metrics=[fdc],
-        >>>     group_by=[flds.primary_location_id],
-        >>>     order_by=[flds.primary_location_id],
+        >>>     group_by=[flds.location_id],
+        >>>     order_by=[flds.location_id],
         >>> ).to_pandas()
         """ # noqa
         logger.info("Calculating performance metrics.")
