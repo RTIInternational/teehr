@@ -256,24 +256,34 @@ def test_gumboot_bootstrapping(tmpdir):
         "flows_1030500.parquet"
     )
     sdf = ev.spark.read.parquet(joined_timeseries_filepath.as_posix())
-    (
-        sdf.writeTo(
-            f"{ev.catalog_name}.{ev.namespace}.joined_timeseries"
-        )
-        .using("iceberg")
-        .createOrReplace()
+    # (
+    #     sdf.writeTo(
+    #         f"{ev.catalog_name}.{ev.namespace}.joined_timeseries"
+    #     )
+    #     .using("iceberg")
+    #     .createOrReplace()
+    # )
+    ev.write.to_warehouse(
+        source_data=sdf,
+        table_name="joined_timeseries",
+        write_mode="create_or_replace"
     )
     # Write the staged locations data to the warehouse.
     test_study_data_dir = Path("tests", "data", "v0_3_test_study")
     sdf = ev.spark.read.parquet(
         Path(test_study_data_dir, "geo", "gages.parquet").as_posix()
     )
-    (
-        sdf.writeTo(
-            f"{ev.catalog_name}.{ev.namespace}.locations"
-        )
-        .using("iceberg")
-        .createOrReplace()
+    # (
+    #     sdf.writeTo(
+    #         f"{ev.catalog_name}.{ev.namespace}.locations"
+    #     )
+    #     .using("iceberg")
+    #     .createOrReplace()
+    # )
+    ev.write.to_warehouse(
+        source_data=sdf,
+        table_name="locations",
+        write_mode="create_or_replace"
     )
     # quantiles = [0.05, 0.5, 0.95]
     quantiles = None
