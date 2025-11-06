@@ -17,7 +17,7 @@ class MeanError(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -52,7 +52,7 @@ class RelativeBias(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -87,7 +87,7 @@ class MultiplicativeBias(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -122,7 +122,7 @@ class MeanSquareError(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -157,7 +157,7 @@ class RootMeanSquareError(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -192,7 +192,7 @@ class MeanAbsoluteError(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -227,7 +227,7 @@ class MeanAbsoluteRelativeError(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -263,7 +263,7 @@ class PearsonCorrelation(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -298,7 +298,7 @@ class VariabilityRatio(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -332,7 +332,7 @@ class Rsquared(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -367,7 +367,7 @@ class NashSutcliffeEfficiency(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -402,7 +402,7 @@ class NormalizedNashSutcliffeEfficiency(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -440,7 +440,7 @@ class KlingGuptaEfficiency(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -483,7 +483,7 @@ class KlingGuptaEfficiencyMod1(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -527,7 +527,7 @@ class KlingGuptaEfficiencyMod2(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -571,7 +571,7 @@ class SpearmanCorrelation(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -605,7 +605,7 @@ class MaxValueDelta(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -638,7 +638,7 @@ class MaxValueTimeDelta(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -672,7 +672,7 @@ class AnnualPeakRelativeBias(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or
@@ -707,7 +707,7 @@ class RootMeanStandardDeviationRatio(DeterministicBasemodel):
 
     Parameters
     ----------
-    bootstrap : DeterministicBasemodel
+    bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
     add_epsilon: bool
         Whether to add epsilon to avoid issues with certain transforms or

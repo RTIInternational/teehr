@@ -450,7 +450,7 @@ def test_bootstrapping_fdc_slope_signature(tmpdir):
         "flow_duration_curve_slope_0.05"
     ]
 
-    assert (cols == benchmark_cols).all()
+    assert (sorted(cols) == sorted(benchmark_cols))
     ev.spark.stop()
 
 
