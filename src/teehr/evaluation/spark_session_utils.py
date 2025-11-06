@@ -529,13 +529,10 @@ def _configure_iceberg_catalogs(
         f"spark.sql.catalog.{remote_catalog_name}.type": remote_catalog_type,
         f"spark.sql.catalog.{remote_catalog_name}.uri": remote_catalog_uri,
         f"spark.sql.catalog.{remote_catalog_name}.warehouse": remote_warehouse_dir,
-        f"spark.sql.catalog.{remote_catalog_name}.io-impl": "org.apache.iceberg.aws.s3.S3FileIO"
+        f"spark.sql.catalog.{remote_catalog_name}.io-impl": "org.apache.iceberg.aws.s3.S3FileIO",
+        f"spark.sql.catalog.{remote_catalog_name}.s3.endpoint": os.environ.get("S3_ENDPOINT", ""),
+        f"spark.sql.catalog.{remote_catalog_name}.s3.path-style-access": os.environ.get("S3_USE_PATH_STYLE_ACCESS", "false").lower(),
     }
-    # These are needed only if running local kind cluster against MinIO for testing
-    if os.environ.get("IN_CLUSTER", "false").lower() == "true":
-        logger.info("⚠️  Configuring remote catalog for MinIO access")
-        remote_configs[f"spark.sql.catalog.{remote_catalog_name}.s3.endpoint"] = "http://minio:9000"
-        remote_configs[f"spark.sql.catalog.{remote_catalog_name}.s3.path-style-access"] = "true"
 
     for key, value in remote_configs.items():
         conf.set(key, value)
