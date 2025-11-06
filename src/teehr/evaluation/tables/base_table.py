@@ -138,6 +138,7 @@ class Table:
         Examples
         --------
         Validate a table:
+
         >>> ev.table(
         >>>     table_name="primary_timeseries"
         >>> ).validate(drop_duplicates=True)
