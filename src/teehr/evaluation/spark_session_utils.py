@@ -11,6 +11,7 @@ from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from sedona.spark import SedonaContext
 import pandas as pd
+import botocore.session
 
 import teehr.const as const
 
@@ -22,6 +23,7 @@ SCALA_VERSION = "2.13"
 PYSPARK_VERSION = "4.0"
 ICEBERG_VERSION = "1.10.0"
 SEDONA_VERSION = "1.8.0"
+
 
 
 def create_spark_session(
@@ -125,6 +127,17 @@ def create_spark_session(
         Configured Spark session.
     """
     logger.info(f"🚀 Creating Spark session: {app_name}")
+
+    # Use boto3 to check for AWS credentials if not provided
+    # and set them in environment variables
+    session = botocore.session.Session()
+    credentials = session.get_credentials()
+    aws_access_key = credentials.access_key
+    aws_secret_key = credentials.secret_key
+    os.environ["AWS_ACCESS_KEY_ID"] = aws_access_key
+    os.environ["AWS_SECRET_ACCESS_KEY"] = aws_secret_key
+    os.environ["AWS_REGION"] = const.AWS_REGION
+
     # Get the base configuration with common settings
     conf = _create_spark_base_session(
         conf=SparkConf(),
