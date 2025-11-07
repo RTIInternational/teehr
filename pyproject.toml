@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "teehr"
-version = "0.6.0dev3"
+version = "0.6.0dev4"
 description = "Tools for Exploratory Evaluation in Hydrologic Research"
 authors = [
     "RTI International",
