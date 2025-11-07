@@ -128,15 +128,15 @@ def create_spark_session(
     """
     logger.info(f"🚀 Creating Spark session: {app_name}")
 
-    # Use botocore to check for AWS credentials
-    # and set them as environment variables
-    session = botocore.session.Session()
-    credentials = session.get_credentials()
-    if credentials is not None:
-        aws_access_key = credentials.access_key
-        aws_secret_key = credentials.secret_key
-        os.environ["AWS_ACCESS_KEY_ID"] = aws_access_key
-        os.environ["AWS_SECRET_ACCESS_KEY"] = aws_secret_key
+    # # Use botocore to check for AWS credentials
+    # # and set them as environment variables
+    # session = botocore.session.Session()
+    # credentials = session.get_credentials()
+    # if credentials is not None:
+    #     aws_access_key = credentials.access_key
+    #     aws_secret_key = credentials.secret_key
+    #     os.environ["AWS_ACCESS_KEY_ID"] = aws_access_key
+    #     os.environ["AWS_SECRET_ACCESS_KEY"] = aws_secret_key
     os.environ["AWS_REGION"] = const.AWS_REGION
 
     # Get the base configuration with common settings
