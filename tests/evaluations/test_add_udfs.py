@@ -1,4 +1,6 @@
 """Tests for the TEEHR UDFs."""
+from teehr.examples.setup_e0_2_example import download_e0_2_example
+
 import tempfile
 import teehr
 from teehr import RowLevelCalculatedFields as rcf
@@ -19,9 +21,6 @@ from data.setup_v0_3_study import setup_v0_3_study  # noqa
 def test_add_row_udfs_null_reference(tmpdir):
     """Test adding row level UDFs with null reference time."""
     ev = setup_v0_3_study(tmpdir)
-
-    ev.joined_timeseries.create(add_attrs=False, execute_scripts=False)
-
     ev.joined_timeseries.add_calculated_fields([
         rcf.Month(),
         rcf.Year(),
@@ -35,7 +34,7 @@ def test_add_row_udfs_null_reference(tmpdir):
         group_by=["primary_location_id"]
     ).write(table_name="metrics", write_mode="create_or_replace")
 
-    # ev.spark.stop()
+    ev.spark.stop()
 
 
 def test_add_row_udfs(tmpdir):
@@ -79,6 +78,7 @@ def test_add_row_udfs(tmpdir):
 
     cols = sdf.columns
     check_sdf = sdf[sdf["primary_location_id"] == "gage-A"]
+    check_sdf = check_sdf.orderBy("value_time")
 
     assert "month" in cols
     assert sdf.schema["month"].dataType == T.IntegerType()
@@ -101,7 +101,7 @@ def test_add_row_udfs(tmpdir):
     assert "normalized_flow" in cols
     assert sdf.schema["normalized_flow"].dataType == T.FloatType()
     check_vals = check_sdf.select("normalized_flow").collect()
-    # assert np.round(check_vals[0]["normalized_flow"], 3) == 0.003  # TODO: Why?
+    # assert np.round(check_vals[0]["normalized_flow"], 3) == 0.003  # TODO: Why? -- need to order by value_time
     assert np.round(check_vals[0]["normalized_flow"], 3) == 0.001
 
     assert "season" in cols
@@ -129,15 +129,21 @@ def test_add_row_udfs(tmpdir):
     for row in check_vals:
         assert row["day_of_year"] in [1, 2]
 
-    # ev.spark.stop()
+    ev.spark.stop()
 
 
 def test_add_timeseries_udfs(tmpdir):
     """Test adding a timeseries aware UDF."""
-    # TODO: Test data needs at least 20 timesteps.
-    # Clone subset from remote?
-    ev = setup_v0_3_study(tmpdir)
-    sdf = ev.joined_timeseries.to_sdf()
+    # Test data needs at least 20 timesteps.
+    # Download an example from s3.
+    download_e0_2_example(temp_dir=tmpdir)
+    ev = teehr.Evaluation(
+        dir_path=Path(tmpdir, "e0_2_location_example"),
+        create_dir=False
+    )
+    sdf = ev.joined_timeseries.filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).to_sdf()
 
     # set up input to baseflow package for native testing
     pdf = sdf.toPandas()
@@ -277,7 +283,9 @@ def test_add_timeseries_udfs(tmpdir):
     assert event_count == 219
 
     # test percentile event detection (no event-id)
-    sdf = ev.joined_timeseries.to_sdf()
+    sdf = ev.joined_timeseries.filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).to_sdf()
     ped = tcf.AbovePercentileEventDetection(
         skip_event_id=True
     )
@@ -286,7 +294,9 @@ def test_add_timeseries_udfs(tmpdir):
     assert num_event_timesteps == 14823
 
     # test percentile event detection (return quantile value)
-    sdf = ev.joined_timeseries.to_sdf()
+    sdf = ev.joined_timeseries.filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).to_sdf()
     ped = tcf.AbovePercentileEventDetection(
         add_quantile_field=True
     )
@@ -296,14 +306,18 @@ def test_add_timeseries_udfs(tmpdir):
     assert np.isclose(quantile, 37.66, atol=0.01)
 
     # test percentile event detection (below percentile)
-    sdf = ev.joined_timeseries.to_sdf()
+    sdf = ev.joined_timeseries.filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).to_sdf()
     ped = tcf.BelowPercentileEventDetection()
     sdf = ped.apply_to(sdf)
     event_count = sdf.select('event_below_id').distinct().count()
     assert event_count == 92
 
     # test exceedance probability
-    sdf = ev.joined_timeseries.to_sdf()
+    sdf = ev.joined_timeseries.filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).to_sdf()
     ep = tcf.ExceedanceProbability()
     sdf = ep.apply_to(sdf)
     columns = sdf.columns
@@ -318,7 +332,9 @@ def test_add_timeseries_udfs(tmpdir):
     assert "exceedance_probability" in columns
 
     # test exceedance probability
-    sdf = ev.joined_timeseries.to_sdf()
+    sdf = ev.joined_timeseries.filter(
+        "primary_location_id = 'usgs-14316700'"
+    ).to_sdf()
     ep = tcf.ExceedanceProbability()
     sdf = ep.apply_to(sdf)
     columns = sdf.columns
@@ -351,7 +367,7 @@ def test_add_udfs_write(tmpdir):
     assert "event_above_id" in cols
     assert "forecast_lead_time" in cols
 
-    # ev.spark.stop()
+    ev.spark.stop()
 
 
 def test_location_event_detection(tmpdir):
@@ -381,7 +397,7 @@ def test_location_event_detection(tmpdir):
     assert "max_primary_value" in sdf.columns
     assert "max_secondary_value" in sdf.columns
 
-    # ev.spark.stop()
+    ev.spark.stop()
 
 
 if __name__ == "__main__":

@@ -501,8 +501,6 @@ class Evaluation(EvaluationBase):
             raise ValueError(err_msg)
         logger.info(
             f"Found evaluation version {version} in {warehouse_dir}."
-            " Future versions v0.6 and greater will require a conversion"
-            " to a new format."
         )
         return version
 
