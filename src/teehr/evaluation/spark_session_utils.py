@@ -128,15 +128,15 @@ def create_spark_session(
     """
     logger.info(f"🚀 Creating Spark session: {app_name}")
 
-    # # Use botocore to check for AWS credentials
-    # # and set them as environment variables
-    # session = botocore.session.Session()
-    # credentials = session.get_credentials()
-    # if credentials is not None:
-    #     aws_access_key = credentials.access_key
-    #     aws_secret_key = credentials.secret_key
-    #     os.environ["AWS_ACCESS_KEY_ID"] = aws_access_key
-    #     os.environ["AWS_SECRET_ACCESS_KEY"] = aws_secret_key
+    # Use botocore to check for AWS credentials
+    # and set them as environment variables
+    session = botocore.session.Session()
+    credentials = session.get_credentials()
+    if credentials is not None:
+        aws_access_key = credentials.access_key
+        aws_secret_key = credentials.secret_key
+        os.environ["AWS_ACCESS_KEY_ID"] = aws_access_key
+        os.environ["AWS_SECRET_ACCESS_KEY"] = aws_secret_key
     os.environ["AWS_REGION"] = const.AWS_REGION
 
     # Get the base configuration with common settings
@@ -277,7 +277,6 @@ def _set_aws_credentials_in_spark(
     aws_region = os.environ.get("AWS_REGION")
     if aws_access_key_id and aws_secret_access_key:
         logger.info("🔑 Using AWS credentials from environment variables")
-        logger.info(f"TEMP ENV VARS: {aws_access_key_id}, {aws_secret_access_key}, {aws_session_token}, {aws_region}")
         conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", aws_access_key_id)
         conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", aws_secret_access_key)
         conf.set("spark.hadoop.fs.s3a.access.key", aws_access_key_id)
@@ -525,6 +524,9 @@ def _configure_iceberg_catalogs(
         conf.set(key, value)
         logger.debug(f"Local catalog: {key}: {value}")
 
+    logger.info(f"TEMP!: REMOTE CATALOG S3 ENDPOINT: {os.environ.get('REMOTE_CATALOG_S3_ENDPOINT', '')}")
+    logger.info(f"TEMP!: REMOTE CATALOG S3 PATH STYLE ACCESS: {os.environ.get('REMOTE_CATALOG_S3_PATH_STYLE_ACCESS', 'false')}")
+
     # Remote catalog configuration
     remote_configs = {
         f"spark.sql.catalog.{remote_catalog_name}": "org.apache.iceberg.spark.SparkCatalog",
@@ -532,8 +534,8 @@ def _configure_iceberg_catalogs(
         f"spark.sql.catalog.{remote_catalog_name}.uri": remote_catalog_uri,
         f"spark.sql.catalog.{remote_catalog_name}.warehouse": remote_warehouse_dir,
         f"spark.sql.catalog.{remote_catalog_name}.io-impl": "org.apache.iceberg.aws.s3.S3FileIO",
-        f"spark.sql.catalog.{remote_catalog_name}.s3.endpoint": os.environ.get("S3_ENDPOINT", ""),
-        f"spark.sql.catalog.{remote_catalog_name}.s3.path-style-access": os.environ.get("S3_USE_PATH_STYLE_ACCESS", "false").lower(),
+        f"spark.sql.catalog.{remote_catalog_name}.s3.endpoint": os.environ.get("REMOTE_CATALOG_S3_ENDPOINT", ""),
+        f"spark.sql.catalog.{remote_catalog_name}.s3.path-style-access": os.environ.get("REMOTE_CATALOG_S3_PATH_STYLE_ACCESS", "false").lower(),
     }
 
     for key, value in remote_configs.items():
