@@ -498,7 +498,7 @@ def _get_spark_defaults() -> Dict[str, Any]:
         "spark.sql.extensions": "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions",
         "spark.serializer": "org.apache.spark.serializer.KryoSerializer",
         "spark.hadoop.fs.s3a.impl": "org.apache.hadoop.fs.s3a.S3AFileSystem",
-        # Need this to read e4 evaluation data via hadoop?
+        # Need this to read e4 evaluation data via hadoop:
         "spark.hadoop.fs.s3a.aws.credentials.provider": "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider"
     }
     return {"packages": base_packages, "configs": base_configs}
@@ -524,9 +524,6 @@ def _configure_iceberg_catalogs(
     for key, value in catalog_configs.items():
         conf.set(key, value)
         logger.debug(f"Local catalog: {key}: {value}")
-
-    logger.info(f"TEMP!: REMOTE CATALOG S3 ENDPOINT: {os.environ.get('REMOTE_CATALOG_S3_ENDPOINT', '')}")
-    logger.info(f"TEMP!: REMOTE CATALOG S3 PATH STYLE ACCESS: {os.environ.get('REMOTE_CATALOG_S3_PATH_STYLE_ACCESS', 'false')}")
 
     # Remote catalog configuration
     remote_configs = {
