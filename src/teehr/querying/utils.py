@@ -2,14 +2,134 @@
 import geopandas as gpd
 import pandas as pd
 from typing import List, Union
-from teehr.models.str_enum import StrEnum
 import pyspark.sql as ps
 from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
+from pydantic import BaseModel as PydanticBaseModel
+
+from teehr.models.str_enum import StrEnum
+# from teehr.models.metrics.basemodels import MetricsBasemodel
+from teehr.models.table_enums import (
+    JoinedTimeseriesFields
+)
 
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def post_process_metric_results(
+    sdf: ps.DataFrame,
+    include_metrics: List[PydanticBaseModel],
+    group_by: Union[
+        str, JoinedTimeseriesFields,
+        List[Union[str, JoinedTimeseriesFields]]
+    ]
+) -> ps.DataFrame:
+    """Post-process the results of the metrics query.
+
+    Notes
+    -----
+    This method includes functionality to update the dataframe returned
+    by the query method depending on metric model attributes.
+
+    If the metric model specifies a reference configuration, it will
+    calculate the skill score of metric values for each configuration
+    relative to the reference configuration. The skill score is calculated
+    as `1 - (metric_value / reference_metric_value)`.
+
+    Additionally, if the metric model specifies unpacking of results,
+    metric results returned as a dictionary will be unpacked into separate
+    columns in the DataFrame.
+    """
+    for model in include_metrics:
+        if model.reference_configuration is not None:
+            sdf = calculate_metric_skill_score(
+                sdf,
+                model.output_field_name,
+                model.reference_configuration,
+                group_by
+            )
+
+        if model.unpack_results:
+            sdf = model.unpack_function(
+                sdf,
+                model.output_field_name
+            )
+
+    return sdf
+
+
+def calculate_metric_skill_score(
+    sdf: ps.DataFrame,
+    metric_field: str,
+    reference_configuration: str,
+    group_by: Union[
+        str, JoinedTimeseriesFields,
+        List[Union[str, JoinedTimeseriesFields]]
+    ]
+) -> ps.DataFrame:
+    """Calculate skill score based on a reference configuration.
+
+    Calculate the skill score of metric values for each configuration
+    relative to the reference configuration. The skill score is calculated
+    as `1 - (metric_value / reference_metric_value)`.
+    """
+    logger.debug("Calculating skill score.")
+    group_by_strings = parse_fields_to_list(group_by)
+    # TODO: Raise error if configuration_name is not in group_by?
+    group_by_strings.remove("configuration_name")
+
+    pivot_sdf = (
+        sdf
+        .groupBy(group_by_strings).
+        pivot("configuration_name").
+        agg(F.first(metric_field))
+    )
+    # Get all configuration names except the reference configuration
+    configurations = sdf.select("configuration_name").distinct().collect()
+    configurations = [row.configuration_name for row in configurations]
+    configurations.remove(reference_configuration)
+
+    skill_score_col = f"{metric_field}_skill_score"
+    sdf = sdf.withColumn(skill_score_col, F.lit(None))
+
+    for config in configurations:
+        # Pivot and calculate the skill score.
+        temp_col = f"{config}_{metric_field}_skill"
+        pivot_sdf = pivot_sdf.withColumn(
+            temp_col,
+            1 - F.col(config) / F.col(reference_configuration)
+        ).withColumn(
+            "configuration_name",
+            F.lit(config)
+        )
+        # Join skill score values from the pivot table.
+        join_cols = group_by_strings + ["configuration_name"]
+        sdf = sdf.join(
+            pivot_sdf,
+            on=join_cols,
+            how="left"
+        ).select(
+            *join_cols,
+            F.col(f"{metric_field}"),
+            F.col(temp_col),
+            F.col(skill_score_col)
+        )
+        # Now update the column based on the configuration name.
+        sdf = sdf.withColumn(
+            skill_score_col,
+            F.when(
+                sdf["configuration_name"] == f"{config}",
+                sdf[temp_col]
+            ).otherwise(sdf[skill_score_col])
+        ).select(
+            *join_cols,
+            F.col(f"{metric_field}"),
+            F.col(skill_score_col)
+        )
+
+    return sdf
 
 
 def unpack_sdf_dict_columns(sdf: DataFrame, column_name: str) -> DataFrame:

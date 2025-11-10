@@ -51,10 +51,51 @@ class Load:
         secondary_location_id_prefix: str = None,
         secondary_location_id_field: str = None,
         write_mode: TableWriteEnum = "append",
-        persist_dataframe: bool = False,
         drop_duplicates: bool = True
     ):
-        """Load a timeseries from an in-memory dataframe."""
+        """Load a timeseries from an in-memory dataframe.
+
+        Parameters
+        ----------
+        df : pd.DataFrame | ps.DataFrame
+            The input dataframe to load into the warehouse.
+        table_name : str
+            The name of the table to load the data into.
+        namespace_name : str, optional
+            The namespace name to load the data into. The default is None,
+            which uses the active namespace of the Evaluation.
+        catalog_name : str, optional
+            The catalog name to load the data into. The default is None,
+            which uses the active catalog of the Evaluation.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+        constant_field_values : dict, optional
+            A dictionary mapping field names to constant values.
+            Format: {field_name: value}.
+        primary_location_id_prefix : str, optional
+            The prefix to add to primary location IDs.
+            Used to ensure unique location IDs across configurations.
+        primary_location_id_field : str, optional
+            The name of the primary location ID field in the dataframe.
+            The default is "location_id".
+        secondary_location_id_prefix : str, optional
+            The prefix to add to secondary location IDs.
+            Used to ensure unique location IDs across configurations.
+        secondary_location_id_field : str, optional
+            The name of the secondary location ID field in the dataframe.
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table.
+            Options are "append", "upsert", and "create_or_replace".
+            If "append", the table will be appended without checking
+            existing data.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
+            If "create_or_replace", a new table will be created or an existing
+            table will be replaced.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the DataFrame during validation.
+        """
         tbl = self._ev.table(table_name=table_name)
 
         schema_func = tbl.schema_func
@@ -105,9 +146,6 @@ class Load:
             for field, value in constant_field_values.items():
                 df = df.withColumn(field, F.lit(value))
 
-        if persist_dataframe:
-            df = df.persist()
-
         if primary_location_id_prefix:
             df = add_or_replace_sdf_column_prefix(
                 sdf=df,
@@ -142,8 +180,6 @@ class Load:
             uniqueness_fields=uniqueness_fields
         )
 
-        df.unpersist()
-
     def file(
         self,
         in_path: Path | str,
@@ -162,12 +198,65 @@ class Load:
         update_attrs_table: bool = True,
         parallel: bool = False,
         max_workers: int = 1,
-        persist_dataframe: bool = False,
         **kwargs
     ):
-        """Load location attributes helper."""
-        # TODO: remove persist_dataframe?
+        """Load location attributes helper.
 
+        Parameters
+        ----------
+        in_path : Path | str
+            The input file or directory path.
+        table_name : str
+            The name of the table to load the data into.
+        namespace_name : str, optional
+            The namespace name to load the data into. The default is None,
+            which uses the active namespace of the Evaluation.
+        catalog_name : str, optional
+            The catalog name to load the data into. The default is None,
+            which uses the active catalog of the Evaluation.
+        extraction_function : callable, optional
+            The function to extract data from the input files into TEEHR's
+            data model. If None, the table's default extraction function
+            is used.
+        pattern : str, optional
+            The glob pattern to match files in the input directory.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+        primary_location_id_prefix : str, optional
+            The prefix to add to primary location IDs.
+            Used to ensure unique location IDs across configurations.
+        primary_location_id_field : str, optional
+            The name of the primary location ID field in the dataframe.
+            The default is "location_id".
+        secondary_location_id_prefix : str, optional
+            The prefix to add to secondary location IDs.
+            Used to ensure unique location IDs across configurations.
+        secondary_location_id_field : str, optional
+            The name of the secondary location ID field in the dataframe.
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table.
+            Options are "append", "upsert", and "create_or_replace".
+            If "append", the table will be appended without checking
+            existing data.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
+            If "create_or_replace", a new table will be created or an existing
+            table will be replaced.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the DataFrame during validation.
+        update_attrs_table : bool, optional (default: True)
+            Whether to update the location attributes table with any new
+            attribute names found in the input data. Only applicable when
+            table_name is "location_attributes".
+        parallel : bool, optional
+            Whether to process timeseries files in parallel. Default is False.
+        max_workers : int, optional
+            The maximum number of worker processes to use if parallel is True.
+            Default is 1. If set to -1, uses the number of CPUs available.
+        **kwargs
+            Additional keyword arguments passed to the extraction function.
+        """
         # Clear the cache directory if it exists.
         table_cache_dir = Path(
             self._ev.cache_dir,
@@ -272,7 +361,36 @@ class Load:
         drop_duplicates: bool = True,
         update_attrs_table: bool = True
     ):
-        """Load data from the cache."""
+        """Load data from the cache.
+
+        Parameters
+        ----------
+        in_path : Path | str
+            The input cache directory path.
+        table_name : str
+            The name of the table to load the data into.
+        namespace_name : str, optional
+            The namespace name to load the data into. The default is None,
+            which uses the active namespace of the Evaluation.
+        catalog_name : str, optional
+            The catalog name to load the data into. The default is None,
+            which uses the active catalog of the Evaluation.
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table.
+            Options are "append", "upsert", and "create_or_replace".
+            If "append", the table will be appended without checking
+            existing data.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
+            If "create_or_replace", a new table will be created or an existing
+            table will be replaced.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the DataFrame during validation.
+        update_attrs_table : bool, optional (default: True)
+            Whether to update the location attributes table with any new
+            attribute names found in the input data. Only applicable when
+            table_name is "location_attributes".
+        """
         # Get the cache directory path.
         in_path = Path(in_path)
 

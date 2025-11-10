@@ -53,18 +53,8 @@ class Write:
         table_name: str,
         catalog_name: str,
         namespace_name: str,
-        partition_by: List[str] = None
     ):
         """Upsert the DataFrame to the specified target in the catalog."""
-        # if partition_by is None:
-        #     raise ValueError(
-        #         "partition_by fields must be provided when using"
-        #         " write_mode='create_or_replace'"
-        #     )
-        # PARTITIONED BY ({', '.join(partition_by)})
-
-        # Use the <=> operator for null-safe equality comparison
-        # so that two null values are considered equal.
         sql_query = f"""
             CREATE OR REPLACE TABLE {catalog_name}.{namespace_name}.{table_name}
             AS SELECT * FROM {source_view}
@@ -131,7 +121,6 @@ class Write:
         self,
         source_view: str,
         table_name: str,
-        # uniqueness_fields: List[str],
         catalog_name: str,
         namespace_name: str
     ):
@@ -161,7 +150,6 @@ class Write:
         table_name: str,
         write_mode: str = "append",
         uniqueness_fields: List[str] | None = None,
-        partition_by: List[str] = None,
         catalog_name: str = None,
         namespace_name: str = None
     ):
@@ -169,21 +157,22 @@ class Write:
 
         Parameters
         ----------
-        sdf : DataFrame
-            The Spark DataFrame to write.
         source_data : pd.DataFrame | DataFrame | str
             The Spark or Pandas DataFrame or temporary view name to write.
         table_name : str
             The target table name in the catalog.
         write_mode : str, optional
             The mode to use when writing the DataFrame
-            (e.g., 'append', 'overwrite'), by default "append".
+            (e.g., 'append', 'upsert', 'create_or_replace'), by default "append".
         uniqueness_fields : List[str], optional
             List of fields that uniquely identify a record, by default None,
             which means the uniqueness_fields are taken from the table class.
-        partition_by : List[str], optional
-            List of fields to partition the table by, required if write_mode is
-            'create_or_replace'.
+        catalog_name : str, optional
+            The catalog name to write to, by default None, which means the
+            catalog_name of the active catalog is used.
+        namespace_name : str, optional
+            The namespace name to write to, by default None, which means the
+            namespace_name of the active catalog is used.
         """
         if catalog_name is None:
             catalog_name = self._ev.active_catalog.catalog_name
@@ -225,7 +214,6 @@ class Write:
             self._create_or_replace(
                 source_view=source_data,
                 table_name=table_name,
-                partition_by=None,
                 catalog_name=catalog_name,
                 namespace_name=namespace_name
             )
@@ -262,8 +250,8 @@ class Write:
         write_schema : arrow_schema
             The pyarrow schema to use when writing the parquet file.
         write_mode : str, optional
-            The mode to use when caching the DataFrame
-            (e.g., 'append', 'overwrite'), by default "overwrite".
+            The mode to use when a PySpark DataFrame is written to the cache
+            using PySpark's DataFrame.write.mode. Default is "overwrite".
         """
         # Allow additional kwargs for to_parquet?
         if isinstance(source_data, gpd.GeoDataFrame):

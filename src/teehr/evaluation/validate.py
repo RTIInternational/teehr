@@ -17,11 +17,11 @@ from teehr.querying.filter_format import (
 logger = logging.getLogger(__name__)
 
 
-class Validator:
+class Validate:
     """Class for validating data."""
 
     def __init__(self, ev=None) -> None:
-        """Initialize the Validator class."""
+        """Initialize the Validate class."""
         if ev is not None:
             self._ev = ev
 
@@ -66,13 +66,13 @@ class Validator:
         """Validate the DataFrame against the provided schema.
 
         This only checks data types, fields, and nullability using
-        the pandera schema.
+        the pandera schema, it does not enforce foreign key relationships.
 
         Parameters
         ----------
-        sdf : ps.DataFrame
+        df : ps.DataFrame
             The Spark DataFrame to validate.
-        schema : SparkDataFrameSchema
+        schema : SparkDataFrameSchema | PandasDataFrameSchema
             The schema to validate against.
 
         Returns
@@ -111,7 +111,29 @@ class Validator:
             str, dict, FilterBaseModel,
             List[Union[str, dict, FilterBaseModel]]
     ]:
-        """Get the list of filters applied to the DataFrame."""
+        """Validate table filter(s).
+
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to validate filters for.
+        filters : Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]
+        ]
+            The filters to validate.
+        validate : bool, optional
+            Whether to validate the filter field types against the table schema.
+            The default is True.
+
+        Returns
+        -------
+        Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]
+        ]
+            The validated filter(s).
+        """
         if isinstance(filters, str):
             logger.debug(f"Filter {filters} is already string, returning as is")
             # return filters
@@ -122,13 +144,10 @@ class Validator:
 
         tbl = self._ev.table(table_name=table_name)
         filter_model = tbl.filter_model
-        # To handle joined_timeseries fields. Hmmm should all properties
-        # be handled this way? They could still be class properties.
         fields_enum = self._ev.table(table_name=table_name).field_enum()
         validated_filters = []
         for filter in filters:
             logger.debug(f"Validating and applying {filter}")
-
             if not isinstance(filter, str):
                 filter = filter_model.model_validate(
                     filter,
@@ -153,17 +172,33 @@ class Validator:
         drop_duplicates: bool = True,
         uniqueness_fields: List[str] = None,
     ) -> ps.DataFrame:
-        """Validate the DataFrame against the warehouse schema.
+        """Validate the DataFrame against the table schema.
 
         This checks data types, fields, and nullability using
         the pandera schema, while also enforcing foreign key relationships,
         optionally dropping duplicates, and optionally adding or removing
-        columns to match the warehouse schema.
+        columns to match the table schema.
 
         Parameters
         ----------
         sdf : ps.DataFrame
             The Spark DataFrame to enforce the schema on.
+        table_schema : SparkDataFrameSchema
+            The schema to enforce.
+        foreign_keys : List[Dict[str, str]]
+            The foreign key relationships to enforce.
+        strict : bool, optional
+            Whether to strictly enforce the schema by including only the
+            columns in the schema. The default is True.
+        add_missing_columns : bool, optional
+            Whether to add missing columns from the schema with null values.
+            The default is False.
+        drop_duplicates : bool, optional
+            Whether to drop duplicate rows based on the uniqueness_fields.
+            The default is True.
+        uniqueness_fields : List[str], optional
+            The fields that uniquely identify a record. Required if
+            drop_duplicates is True. The default is None.
 
         Returns
         -------

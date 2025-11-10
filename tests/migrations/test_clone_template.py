@@ -8,9 +8,9 @@ from teehr import Evaluation
 def test_clone_template(tmpdir):
     """Test creating a new study."""
     ev = Evaluation(
-        local_warehouse_dir=tmpdir,
+        dir_path=tmpdir,
         remote_warehouse_dir=Path(tmpdir) / "warehouse",
-        create_local_dir=True,
+        create_dir=True,
     )
     ev.clone_template()
 

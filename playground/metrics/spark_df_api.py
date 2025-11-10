@@ -8,7 +8,7 @@ from pyspark.sql.types import IntegerType
 
 TEST_STUDY_DIR = Path(Path().home(), "temp", "test_study")
 
-eval = Evaluation(local_warehouse_dir=TEST_STUDY_DIR)
+eval = Evaluation(dir_path=TEST_STUDY_DIR)
 spark = eval.spark
 
 joined_df = (

@@ -177,7 +177,6 @@ def clone_from_s3(
                 table_name=table.table_name,
                 write_mode="create_or_replace",
                 uniqueness_fields=table.uniqueness_fields,
-                # partition_by=table.partition_by
             )
         else:
             ev.write.to_warehouse(
@@ -187,5 +186,4 @@ def clone_from_s3(
                 table_name=table.table_name,
                 write_mode="upsert",
                 uniqueness_fields=table.uniqueness_fields,
-                # partition_by=table.partition_by
             )

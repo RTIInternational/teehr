@@ -11,7 +11,7 @@ TEST_STUDY_DIR = Path(Path().home(), "temp", "real_study")
 TEST_STUDY_DIR.mkdir(parents=True, exist_ok=True)
 
 # Create an Evaluation object
-ev = Evaluation(local_warehouse_dir=TEST_STUDY_DIR)
+ev = Evaluation(dir_path=TEST_STUDY_DIR)
 
 # Enable logging
 ev.enable_logging()

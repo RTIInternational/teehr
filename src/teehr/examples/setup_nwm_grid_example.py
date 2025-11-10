@@ -9,7 +9,7 @@ import teehr.example_data.nwm_gridded_example_data as fetch_nwm_grid_data
 def setup_nwm_example(tmpdir):
     """Set up the NWM streamflow fetching example."""
     # Create an Evaluation object and create the directory
-    ev = teehr.Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
+    ev = teehr.Evaluation(dir_path=tmpdir, create_dir=True)
 
     # Clone the template
     ev.clone_template()
@@ -60,7 +60,7 @@ def setup_nwm_example(tmpdir):
     ev.load.from_cache(in_path=configurations_path, table_name="configurations")
     ev.load.from_cache(in_path=primary_timeseries_path, table_name="primary_timeseries")
     ev.load.from_cache(in_path=secondary_timeseries_path, table_name="secondary_timeseries")
-    ev.load.from_cache(in_path=joined_timeseries_path, table_name="joined_timeseries")
+    ev.load.from_cache(in_path=joined_timeseries_path, table_name="joined_timeseries", write_mode="create_or_replace")
 
     # Weights file
     Path(ev.cache_dir, "fetching", "weights", "nwm30_forcing_analysis_assim").mkdir(parents=True)
@@ -80,6 +80,6 @@ if __name__ == "__main__":
     setup_nwm_example(tmpdir=test_eval_dir)
 
     # Initialize the evaluation.
-    ev = teehr.Evaluation(local_warehouse_dir=test_eval_dir)
+    ev = teehr.Evaluation(dir_path=test_eval_dir)
 
     pass

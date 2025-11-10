@@ -1,173 +1,73 @@
 .. _api:
 
-.. currentmodule:: teehr
-
 #############
 API reference
 #############
 
-This page provides an auto-generated summary of TEEHR's API. For more details
-and examples, refer to the User Guide part of the
-documentation.
 
+.. toctree::
+   :maxdepth: 2
+   :hidden:
 
-The Evaluation Class
---------------------
+   ev_index
 
-The top-level class for interacting with and exploring a TEEHR Evaluation.
+.. toctree::
+   :maxdepth: 2
+   :hidden:
 
-.. autosummary::
-   :template: custom-class-template.rst
-   :toctree: generated
-   :nosignatures:
+   io_index
 
-   Evaluation
+.. toctree::
+   :maxdepth: 2
+   :hidden:
 
+   m_index
 
-Creating and Managing an Evaluation
------------------------------------
-
-Methods for creating, cloning, and configuring an Evaluation.
-
-.. currentmodule:: teehr.Evaluation
-
-.. autosummary::
-   :nosignatures:
-
-   clone_template
-   list_s3_evaluations
-   clone_from_s3
-   clean_cache
-   enable_logging
+.. currentmodule:: teehr
 
 
 The Evaluation Dataset
 ----------------------
 
-Classes for creating, describing, and querying the Evaluation dataset tables.
+The top-level class and tables for interacting with and managing a TEEHR Evaluation.
 
-.. currentmodule:: teehr.evaluation.tables
+*  :class:`The Evaluation Class <teehr.Evaluation>`
+*  :class:`Attributes Table <teehr.evaluation.tables.attribute_table.AttributeTable>`
+*  :class:`Configurations Table <teehr.evaluation.tables.configuration_table.ConfigurationTable>`
+*  :class:`Units Table <teehr.evaluation.tables.unit_table.UnitTable>`
+*  :class:`Variables Table <teehr.evaluation.tables.variable_table.VariableTable>`
+*  :class:`Location Attribute Table <teehr.evaluation.tables.location_attribute_table.LocationAttributeTable>`
+*  :class:`Location Crosswalk Table <teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable>`
+*  :class:`Locations Table <teehr.evaluation.tables.location_table.LocationTable>`
+*  :class:`Primary Timeseries Table <teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable>`
+*  :class:`Secondary Timeseries Table <teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable>`
+*  :class:`Joined Timeseries Table <teehr.evaluation.tables.joined_timeseries_table.JoinedTimeseriesTable>`
 
-.. autosummary::
-   :template: custom-class-template.rst
-   :toctree: generated
-   :nosignatures:
+Data I/O
+--------
 
-   base_table.BaseTable
-   unit_table.UnitTable
-   variable_table.VariableTable
-   attribute_table.AttributeTable
-   configuration_table.ConfigurationTable
-   location_table.LocationTable
-   location_attribute_table.LocationAttributeTable
-   location_crosswalk_table.LocationCrosswalkTable
-   primary_timeseries_table.PrimaryTimeseriesTable
-   secondary_timeseries_table.SecondaryTimeseriesTable
-   joined_timeseries_table.JoinedTimeseriesTable
+Classes and methods related to data input and output.
 
-Calculating Metrics
--------------------
+* :class:`Fetching USGS and NWM Data <teehr.evaluation.fetch.Fetch>`
+* :class:`Reading Data <teehr.evaluation.read.Read>`
+* :class:`Writing Data <teehr.evaluation.write.Write>`
+* :class:`Loading Data <teehr.evaluation.load.Load>`
+* :class:`Extracting Data <teehr.evaluation.extract.Extract>`
+* :class:`Validating Data <teehr.evaluation.validate.Validate>`
 
-Methods related to metric calculations.
+Analysis & Metrics
+------------------
 
-.. currentmodule:: teehr.evaluation.metrics
+Tools for calculating metrics and generating synthetic timeseries.
 
-.. autosummary::
-   :template: custom-module-template.rst
-   :toctree: generated
-   :nosignatures:
-   :recursive:
-
-   Metrics.query
-   Metrics.add_calculated_fields
-   Metrics.to_pandas
-   Metrics.to_geopandas
-   Metrics.to_sdf
-
-
-Fetching NWM and USGS Data
---------------------------
-
-Methods for fetching NWM and USGS data from external sources.
-
-.. currentmodule:: teehr.evaluation.fetch
-
-.. autosummary::
-   :template: custom-module-template.rst
-   :toctree: generated
-   :nosignatures:
-
-   Fetch.usgs_streamflow
-   Fetch.nwm_retrospective_points
-   Fetch.nwm_operational_points
-   Fetch.nwm_retrospective_grids
-   Fetch.nwm_operational_grids
-
-
-Metric Functions
-----------------
-
-Functions for calculating metrics.
-
-.. currentmodule:: teehr.metrics
-
-.. autosummary::
-   :toctree: generated
-   :template: custom-module-template.rst
-   :recursive:
-   :nosignatures:
-
-   deterministic_funcs
-   signature_funcs
-   probabilistic_funcs
-
-
-Metric and Bootstrap Models
----------------------------
-
-Classes for defining and customizing metrics and bootstrap models.
-
-.. currentmodule:: teehr
-
-.. autosummary::
-   :toctree: generated
-   :template: custom-class-template.rst
-   :nosignatures:
-
-   DeterministicMetrics
-   Signatures
-   ProbabilisticMetrics
-   Bootstrappers
-
-
-Calculated Field Models
--------------------------
-
-Classes for defining and customizing user-defined field models.
-
-.. currentmodule:: teehr.models.calculated_fields
-
-.. autosummary::
-   :toctree: generated
-   :template: custom-class-template.rst
-   :recursive:
-   :nosignatures:
-
-
-   row_level.RowLevelCalculatedFields
-   timeseries_aware.TimeseriesAwareCalculatedFields
-
-
-Visualization
--------------
-
-Methods for visualizing Evaluation data.
-
-.. currentmodule:: teehr.visualization.dataframe_accessor
-
-.. autosummary::
-   :template: custom-class-template.rst
-   :toctree: generated
-   :nosignatures:
-
-   TEEHRDataFrameAccessor
+* :class:`The Metrics Class <teehr.evaluation.metrics.Metrics>`
+* :class:`Row-Level Calculated Fields <teehr.models.calculated_fields.row_level.RowLevelCalculatedFields>`
+* :class:`Timeseries-Aware Calculated Fields <teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields>`
+* :mod:`Deterministic Functions <teehr.metrics.deterministic_funcs>`
+* :mod:`Signature Functions <teehr.metrics.signature_funcs>`
+* :mod:`Probabilistic Functions <teehr.metrics.probabilistic_funcs>`
+* :class:`Deterministic Metrics Models <teehr.DeterministicMetrics>`
+* :class:`Probabilistic Metrics Models <teehr.ProbabilisticMetrics>`
+* :class:`Signature Models <teehr.Signatures>`
+* :class:`Generated Timeseries <teehr.evaluation.generate.GeneratedTimeseries>`
+* :class:`Reference Forecast Model <teehr.models.generate.timeseries_generator_models.ReferenceForecast>`

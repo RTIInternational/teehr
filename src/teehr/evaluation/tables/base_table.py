@@ -4,10 +4,22 @@ import logging
 import geopandas as gpd
 
 from teehr.models.str_enum import StrEnum
-from teehr.querying.utils import order_df, join_geometry, df_to_gdf
+from teehr.querying.utils import (
+    order_df,
+    join_geometry,
+    df_to_gdf,
+    group_df,
+    post_process_metric_results
+)
 from teehr.models.evaluation_base import EvaluationBase
 from teehr.models.filters import FilterBaseModel
 from teehr.models.table_properties import TBLPROPERTIES
+from teehr.models.metrics.basemodels import MetricsBasemodel
+from teehr.models.table_enums import (
+    JoinedTimeseriesFields
+)
+from teehr.querying.metric_format import apply_aggregation_metrics
+
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +127,22 @@ class Table:
         return self.schema_func()
 
     def validate(self, drop_duplicates: bool = True):
-        """Validate the dataset table against the schema."""
+        """Validate the dataset table against the schema.
+
+        Parameters
+        ----------
+        drop_duplicates : bool, optional
+            Whether to drop duplicates based on the uniqueness fields.
+            Default is True.
+
+        Examples
+        --------
+        Validate a table:
+
+        >>> ev.table(
+        >>>     table_name="primary_timeseries"
+        >>> ).validate(drop_duplicates=True)
+        """
         self._check_load_table()
         self._ev.validate.schema(
             sdf=self.sdf,
@@ -131,7 +158,15 @@ class Table:
             str, dict, FilterBaseModel,
             List[Union[str, dict, FilterBaseModel]]
         ] = None,
-        order_by: Union[str, StrEnum, List[Union[str, StrEnum]]] = None
+        order_by: Union[str, StrEnum, List[Union[str, StrEnum]]] = None,
+        group_by: Union[
+            str, JoinedTimeseriesFields,
+            List[Union[str, JoinedTimeseriesFields]]
+        ] = None,
+        include_metrics: Union[
+            List[MetricsBasemodel],
+            str
+        ] = None
     ):
         """Run a query against the table with filters and order_by.
 
@@ -148,21 +183,24 @@ class Table:
             The filters to apply to the query.  The filters can be an SQL string,
             dictionary, FilterBaseModel or a list of any of these. The filters
             will be applied in the order they are provided.
-
         order_by : Union[str, List[str], StrEnum, List[StrEnum]]
             The fields to order the query by.  The fields can be a string,
             StrEnum or a list of any of these.  The fields will be ordered in
             the order they are provided.
+        group_by : Union[str, JoinedTimeseriesFields, List[Union[str, JoinedTimeseriesFields]]], optional
+            The fields to group the query by, by default None
+        include_metrics : Union[List[MetricsBasemodel], str], optional
+            The metrics to include in the query, by default None
 
         Returns
         -------
-        self : BaseTable or subclass of BaseTable
+        self : Table or subclass of Table
 
         Examples
         --------
         Filters as dictionaries:
 
-        >>> ts_df = ev.primary_timeseries.query(
+        >>> ts_df = ev.table(table_name="primary_timeseries").query(
         >>>     filters=[
         >>>         {
         >>>             "column": "value_time",
@@ -185,7 +223,7 @@ class Table:
 
         Filters as SQL strings:
 
-        >>> ts_df = ev.primary_timeseries.query(
+        >>> ts_df = ev.table(table_name="primary_timeseries").query(
         >>>     filters=[
         >>>         "value_time > '2022-01-01'",
         >>>         "value_time < '2022-01-02'",
@@ -199,8 +237,8 @@ class Table:
         >>> from teehr.models.filters import TimeseriesFilter
         >>> from teehr.models.filters import FilterOperators
         >>>
-        >>> fields = ev.primary_timeseries.field_enum()
-        >>> ts_df = ev.primary_timeseries.query(
+        >>> fields = ev.table(table_name="primary_timeseries").field_enum()
+        >>> ts_df = ev.table(table_name="primary_timeseries").query(
         >>>     filters=[
         >>>         TimeseriesFilter(
         >>>             column=fields.value_time,
@@ -219,6 +257,24 @@ class Table:
         >>>         ),
         >>> ]).to_pandas()
 
+        Metrics can be calculated on any table (other than the domain tables) by including the
+        ``include_metrics`` and ``group_by`` parameters. For example, to calculate the Flow Duration Curve
+        slope metric for each location in the primary timeseries table:
+
+        >>> fdc = teehr.Signatures.FlowDurationCurveSlope()
+        >>> fdc.input_field_names = ["value"]
+
+        >>> metrics_df = ev.table(
+        >>>     table_name="primary_timeseries"
+        >>> ).query(
+        >>>     include_metrics=[fdc],
+        >>>     group_by=[flds.location_id],
+        >>>     order_by=[flds.location_id],
+        >>> ).to_pandas()
+
+        This may not make sense for all table types, but is included for
+        consistency across table types and to allow for metrics to be calculated
+        on user-created tables.
         """
         logger.info("Performing the query.")
         self._check_load_table()
@@ -230,7 +286,23 @@ class Table:
                 filters=filters,
                 validate_filter_field_types=self.validate_filter_field_types,
             ).to_sdf()
+
+        if include_metrics is not None:
+            logger.debug(f"Grouping by '{group_by}' and applying metrics.")
+            sdf = group_df(self.sdf, group_by)
+
+            sdf = apply_aggregation_metrics(
+                gp=sdf,
+                include_metrics=include_metrics,
+            )
+            self.sdf = post_process_metric_results(
+                sdf=sdf,
+                include_metrics=include_metrics,
+                group_by=group_by
+            )
+
         if order_by is not None:
+            logger.debug(f"Ordering the metrics by: {order_by}.")
             self.sdf = order_df(self.sdf, order_by)
         return self
 
@@ -254,7 +326,7 @@ class Table:
 
         Returns
         -------
-        self : BaseTable or subclass of BaseTable
+        self : Table or subclass of Table
 
         Examples
         --------
@@ -264,7 +336,7 @@ class Table:
 
         Filters as dictionary:
 
-        >>> ts_df = ev.primary_timeseries.filter(
+        >>> ts_df = ev.table(table_name="primary_timeseries").filter(
         >>>     filters=[
         >>>         {
         >>>             "column": "value_time",
@@ -286,7 +358,7 @@ class Table:
 
         Filters as string:
 
-        >>> ts_df = ev.primary_timeseries.filter(
+        >>> ts_df = ev.table(table_name="primary_timeseries").filter(
         >>>     filters=[
         >>>         "value_time > '2022-01-01'",
         >>>         "value_time < '2022-01-02'",
@@ -299,8 +371,8 @@ class Table:
         >>> from teehr.models.filters import TimeseriesFilter
         >>> from teehr.models.filters import FilterOperators
         >>>
-        >>> fields = ev.primary_timeseries.field_enum()
-        >>> ts_df = ev.primary_timeseries.filter(
+        >>> fields = ev.table(table_name="primary_timeseries").field_enum()
+        >>> ts_df = ev.table(table_name="primary_timeseries").filter(
         >>>     filters=[
         >>>         TimeseriesFilter(
         >>>             column=fields.value_time,
@@ -346,18 +418,18 @@ class Table:
 
         Returns
         -------
-        self : BaseTable or subclass of BaseTable
+        self : Table or subclass of Table
 
         Examples
         --------
         Order by string:
 
-        >>> ts_df = ev.primary_timeseries.order_by("value_time").to_df()
+        >>> ts_df = ev.table(table_name="primary_timeseries").order_by("value_time").to_df()
 
         Order by StrEnum:
 
         >>> from teehr.querying.field_enums import TimeseriesFields
-        >>> ts_df = ev.primary_timeseries.order_by(
+        >>> ts_df = ev.table(table_name="primary_timeseries").order_by(
         >>>     TimeseriesFields.value_time
         >>> ).to_pandas()
         """
@@ -403,6 +475,22 @@ class Table:
         -------
         List[str]
             The distinct values for the column.
+
+        Examples
+        --------
+        Get distinct location IDs from the primary timeseries table:
+
+        >>> ev.table(table_name="primary_timeseries").distinct_values(
+        >>>     column='location_id',
+        >>>     location_prefixes=False
+        >>> )
+
+        Get distinct location prefixes from the joined timeseries table:
+
+        >>> ev.table(table_name="joined_timeseries").distinct_values(
+        >>>     column='primary_location_id',
+        >>>     location_prefixes=True
+        >>> )
         """
         self._check_load_table()
         if column not in self.sdf.columns:

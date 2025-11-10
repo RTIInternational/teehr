@@ -62,7 +62,6 @@ class LocationTable(Table):
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True,
-        location_id_field: str = "id",
         **kwargs
     ):
         """Import geometry data.
@@ -72,6 +71,15 @@ class LocationTable(Table):
         in_path : Union[Path, str]
             The input file or directory path.
             Any file format that can be read by GeoPandas.
+        namespace_name : str, optional
+            The namespace name to write to, by default None, which means the
+            namespace_name of the active catalog is used.
+        catalog_name : str, optional
+            The catalog name to write to, by default None, which means the
+            catalog_name of the active catalog is used.
+        extraction_function : callable, optional
+            A function to extract and transform the data from the input files
+            to the TEEHR data model.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
@@ -86,15 +94,15 @@ class LocationTable(Table):
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
         write_mode : TableWriteEnum, optional (default: "append")
             The write mode for the table.
-            Options are "append", "upsert", and "overwrite".
-            If "append", the table will be appended with new data that does
-            already exist.
+            Options are "append", "upsert", and "create_or_replace".
+            If "append", the table will be appended without checking
+            existing data.
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
-            If "overwrite", existing partitions receiving new data are
-            overwritten.
+            If "create_or_replace", a new table will be created or an existing
+            table will be replaced.
         drop_duplicates : bool, optional (default: True)
-            Whether to drop duplicates from the DataFrame.
+            Whether to drop duplicates from the DataFrame during validation.
         **kwargs
             Additional keyword arguments are passed to GeoPandas read_file().
 
@@ -132,7 +140,7 @@ class LocationTable(Table):
             primary_location_id_prefix=location_id_prefix,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
-            primary_location_id_field=location_id_field,
+            primary_location_id_field="id",
             **kwargs
         )
         self._load_table()
@@ -146,9 +154,7 @@ class LocationTable(Table):
         constant_field_values: dict = None,
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
-        persist_dataframe: bool = False,
         drop_duplicates: bool = True,
-        location_id_field: str = "id",
     ):
         """Load data from an in-memory dataframe.
 
@@ -170,18 +176,15 @@ class LocationTable(Table):
             ("nwm12, "nwm21", "nwm22", or "nwm30"), respectively.
         write_mode : TableWriteEnum, optional (default: "append")
             The write mode for the table.
-            Options are "append", "upsert", and "overwrite".
-            If "append", the table will be appended with new data that does
-            already exist.
+            Options are "append", "upsert", and "create_or_replace".
+            If "append", the table will be appended without checking
+            existing data.
             If "upsert", existing data will be replaced and new data that
             does not exist will be appended.
-            If "overwrite", existing partitions receiving new data are overwritten.
-        persist_dataframe : bool, optional (default: False)
-            Whether to repartition and persist the pyspark dataframe after
-            reading from the cache. This can improve performance when loading
-            a large number of files from the cache.
+            If "create_or_replace", a new table will be created or an existing
+            table will be replaced.
         drop_duplicates : bool, optional (default: True)
-            Whether to drop duplicates from the dataframe.
+            Whether to drop duplicates from the DataFrame during validation.
         """ # noqa
         self._load.dataframe(
             df=df,
@@ -192,8 +195,7 @@ class LocationTable(Table):
             constant_field_values=constant_field_values,
             primary_location_id_prefix=location_id_prefix,
             write_mode=write_mode,
-            persist_dataframe=persist_dataframe,
             drop_duplicates=drop_duplicates,
-            primary_location_id_field=location_id_field
+            primary_location_id_field="id"
         )
         self._load_table()

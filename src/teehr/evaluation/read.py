@@ -70,9 +70,13 @@ class Read:
         Parameters
         ----------
         path : Union[str, Path, S3Path]
-            The path to the directory containing the files.
+            The path to the cache directory containing the files.
+        table_schema_func : SparkDataFrameSchema | PandasDataFrameSchema
+            The function to generate the table schema.
         pattern : str, optional
-            The pattern to match files.
+            The pattern to match files. The default is "**/*.parquet".
+        file_format : str, optional
+            The file format to read. The default is "parquet".
         show_missing_table_warning : bool, optional
             If True, show the warning an empty table was returned.
             The default is True.
@@ -121,10 +125,37 @@ class Read:
     ) -> None:
         """Read data from table as a spark dataframe.
 
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to read.
+        catalog_name : str, optional
+            The catalog name. If None, uses the active catalog. The default is None.
+        namespace_name : str, optional
+            The namespace name. If None, uses the active namespace. The default is None.
+        filters : Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]
+        ], optional
+            The filters to apply to the table. The default is None.
+        validate_filter_field_types : bool, optional
+            Whether to validate the filter field types. The default is True.
+
         Returns
         -------
         df : ps.DataFrame
             The spark dataframe.
+
+        Example
+        -------
+        >>> ts_sdf = ev.read.from_warehouse(
+        >>>     table_name="primary_timeseries",
+        >>>     filters=[
+        >>>         "value_time > '2022-01-01'",
+        >>>         "value_time < '2022-01-02'",
+        >>>         "location_id = 'gage-C'"
+        >>>     ]
+        >>> ).to_sdf()
         """
         if catalog_name is None:
             catalog_name = self._ev.active_catalog.catalog_name

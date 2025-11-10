@@ -22,22 +22,19 @@ from teehr.evaluation.tables.variable_table import VariableTable
 from teehr.evaluation.tables.joined_timeseries_table import (
     JoinedTimeseriesTable
 )
-from teehr.utils.utils import to_path_or_s3path, remove_dir_if_exists
+from teehr.utils.utils import remove_dir_if_exists
 from pyspark.sql import SparkSession
 import logging
 from teehr.loading.utils import copy_template_to
 from teehr.loading.s3.clone_from_s3 import (
-    list_s3_evaluations,
     clone_from_s3
 )
-from teehr.models.filters import TableFilter, FilterBaseModel, TableNamesEnum
-import teehr.const as const
 from teehr.evaluation.fetch import Fetch
 from teehr.evaluation.metrics import Metrics
 from teehr.evaluation.generate import GeneratedTimeseries
 from teehr.evaluation.write import Write
-from teehr.evaluation.extract import DataExtractor
-from teehr.evaluation.validate import Validator
+from teehr.evaluation.extract import Extract
+from teehr.evaluation.validate import Validate
 from teehr.evaluation.workflows import Workflow
 from teehr.evaluation.tables.base_table import Table
 from teehr.evaluation.read import Read
@@ -46,19 +43,17 @@ from teehr.evaluation.utils import copy_migrations_dir
 from teehr.evaluation.spark_session_utils import (
     create_spark_session,
     log_session_config,
-    # remove_or_update_configs
 )
 import pandas as pd
 import re
 from fsspec.implementations.local import LocalFileSystem
-import pyspark.sql as ps
-from teehr.querying.filter_format import validate_and_apply_filters
 from teehr.utilities import apply_migrations
 from teehr.models.evaluation_base import (
     EvaluationBase,
     LocalCatalog,
     RemoteCatalog
 )
+from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor # noqa
 from pydantic import BaseModel as PydanticBaseModel
 
 
@@ -96,31 +91,24 @@ class Evaluation(EvaluationBase):
         """
         # Create local directory if it does not exist.
         dir_path = Path(dir_path)
-        if create_dir is True and not dir_path.exists():
-            logger.info(f"Creating directory {dir_path}.")
-            dir_path.mkdir(parents=True, exist_ok=True)
-        elif create_dir is True and dir_path.exists():
-            logger.info(
-                f"Directory {dir_path} already exists."
-                " Not creating it again."
-            )
-        elif create_dir is False and not dir_path.exists():
-            raise ValueError(
-                f"Local directory {dir_path} does not exist."
-                " Set create_dir=True to create it."
-            )
 
         # Initialize cache and scripts dir. These are only valid
         # when using a local catalog.
+        self.dataset_dir = None
         self.cache_dir = None
         self.scripts_dir = None
+        self.dir_path = dir_path
 
-        # Check version of Evaluation
-        if (
-            check_evaluation_version is True
-            and create_dir is False
-        ):
-            self.check_evaluation_version(warehouse_dir=dir_path)
+        if not self.dir_path.is_dir():
+            if create_dir:
+                logger.info(f"Creating directory {self.dir_path}.")
+                Path(self.dir_path).mkdir(parents=True, exist_ok=True)
+            else:
+                logger.error(
+                    f"Directory {self.dir_path} does not exist."
+                    " Set create_dir=True to create it."
+                )
+                raise NotADirectoryError
 
         # Initialize Spark session
         if spark is not None:
@@ -153,15 +141,19 @@ class Evaluation(EvaluationBase):
         )
         self.set_active_catalog("local")
 
+        # Check version of Evaluation
+        if create_dir is False and check_evaluation_version is True:
+            self.check_evaluation_version()
+
     @property
     def table(self) -> Table:
         """The table component class for managing data tables."""
         return Table(self)
 
     @property
-    def validate(self) -> Validator:
+    def validate(self) -> Validate:
         """The validate component class for validating data."""
-        return Validator(self)
+        return Validate(self)
 
     @property
     def load(self) -> Load:
@@ -169,9 +161,9 @@ class Evaluation(EvaluationBase):
         return Load(self)
 
     @property
-    def extract(self) -> DataExtractor:
+    def extract(self) -> Extract:
         """The extract component class for extracting data."""
-        return DataExtractor(self)
+        return Extract(self)
 
     @property
     def workflows(self) -> Workflow:
@@ -277,12 +269,9 @@ class Evaluation(EvaluationBase):
             self.spark.catalog.setCurrentCatalog(
                 self.local_catalog.catalog_name
             )
-            self.cache_dir = to_path_or_s3path(
-                self.local_catalog.warehouse_dir, const.CACHE_DIR
-            )
-            self.scripts_dir = to_path_or_s3path(
-                self.local_catalog.warehouse_dir, const.SCRIPTS_DIR
-            )
+            self.cache_dir = self.local_catalog.cache_dir
+            self.scripts_dir = self.local_catalog.scripts_dir
+            self.dataset_dir = self.local_catalog.dataset_dir
             logger.info("Active catalog set to local.")
         elif catalog == "remote":
             self.active_catalog = self.remote_catalog
@@ -296,11 +285,7 @@ class Evaluation(EvaluationBase):
     def enable_logging(self):
         """Enable logging."""
         logger = logging.getLogger("teehr")
-        # logger.addHandler(logging.StreamHandler())
-        # if self.is_s3:
-        #     logger_path = Path(Path.home, 'teehr.log')
-        # else:
-        logger_path = Path(self.local_catalog.warehouse_dir, 'teehr.log')
+        logger_path = Path(self.dir_path, 'teehr.log')
 
         handler = logging.FileHandler(logger_path)
         handler.setFormatter(
@@ -323,6 +308,18 @@ class Evaluation(EvaluationBase):
 
         This method mainly copies the template directory to the specified
         evaluation directory.
+
+        Parameters
+        ----------
+        catalog_name : str, optional
+            The catalog name to use, by default None which uses the
+            active catalog name.
+        namespace_name : str, optional
+            The namespace name to use, by default None which uses the
+            active namespace name.
+        local_warehouse_dir : Union[str, Path], optional
+            The local warehouse directory to use, by default None which uses the
+            active warehouse directory: Path(dir_path, catalog_name).
         """
         # Set to local by default.
         if catalog_name is None:
@@ -356,20 +353,6 @@ class Evaluation(EvaluationBase):
             target_namespace_name=namespace_name
         )
 
-    @staticmethod
-    def list_s3_evaluations(
-        format: Literal["pandas", "list"] = "pandas"
-    ) -> Union[list, pd.DataFrame]:
-        """List the evaluations available on S3.
-
-        Parameters
-        ----------
-        format : str, optional
-            The format of the output. Either "pandas" or "list".
-            The default is "pandas".
-        """
-        return list_s3_evaluations(format=format)
-
     def clone_from_s3(
         self,
         remote_catalog_name: str = None,
@@ -379,10 +362,16 @@ class Evaluation(EvaluationBase):
         end_date: Union[str, datetime] = None,
         # spatial_filter: str = None
     ):
-        """Pull down an evaluation from S3, potentially subsetting.
+        """Read data from the remote warehouse, potentially subsetting.
 
         Parameters
         ----------
+        remote_catalog_name : str, optional
+            The remote catalog name to pull from. The default is None,
+            which uses the remote catalog name of the Evaluation.
+        remote_namespace_name : str, optional
+            The remote namespace name to pull from. The default is None,
+            which uses the remote namespace name of the Evaluation.
         primary_location_ids : List[str], optional
             The list of primary location ids to subset the data.
             The default is None.
@@ -392,11 +381,6 @@ class Evaluation(EvaluationBase):
         end_date : Union[str, datetime], optional
             The end date to subset the data.
             The default is None.
-
-        Notes
-        -----
-        The options for subsetting could really be wide open now?
-
         """
         # You must configure the catalogs when initializing the Evaluation.
         if self.local_catalog.warehouse_dir is None:
@@ -459,20 +443,6 @@ class Evaluation(EvaluationBase):
             - secondary_timeseries
             - joined_timeseries
         """ # noqa
-        # if not create_temp_views:
-        #     create_temp_views = [
-        #         "units",
-        #         "variables",
-        #         "attributes",
-        #         "configurations",
-        #         "locations",
-        #         "location_attributes",
-        #         "location_crosswalks",
-        #         "primary_timeseries",
-        #         "secondary_timeseries",
-        #         "joined_timeseries"
-        #     ]  # joined_timeseries may not exist
-
         if "units" in create_temp_views:
             self.units.to_sdf().createOrReplaceTempView("units")
         if "variables" in create_temp_views:
@@ -498,6 +468,8 @@ class Evaluation(EvaluationBase):
 
     def check_evaluation_version(self, warehouse_dir: Union[str, Path] = None) -> str:
         """Check the version of the TEEHR Evaluation."""
+        if warehouse_dir is None:
+            warehouse_dir = self.active_catalog.warehouse_dir
         fs = LocalFileSystem()
         version_file = Path(warehouse_dir, "version")
 
@@ -529,54 +501,25 @@ class Evaluation(EvaluationBase):
             raise ValueError(err_msg)
         logger.info(
             f"Found evaluation version {version} in {warehouse_dir}."
-            " Future versions v0.6 and greater will require a conversion"
-            " to a new format."
         )
         return version
-
-    # TODO: Remove?
-    def filter(
-        self,
-        table_name: TableNamesEnum = None,
-        filters: Union[
-            str, dict, FilterBaseModel,
-            List[Union[str, dict, FilterBaseModel]]
-        ] = None,
-        table_filter: TableFilter = None
-    ) -> ps.DataFrame:
-        """Apply filters to a table returning a sdf.
-
-        Parameters
-        ----------
-        table_name: TableNamesEnum
-            The name of the table to filter. Defaults to None.
-        filters: Union[str, dict, FilterBaseModel, List[Union[str, dict, FilterBaseModel]]]
-            The filters to apply to the table. Defaults to None.
-        table_filter: TableFilter
-            A TableFilter object containing the table name and filters.
-            Defaults to None.
-        """
-        if table_filter is not None:
-            table_name = table_filter.table_name
-            filters = table_filter.filters
-        if table_name is None:
-            raise ValueError("Table name must be specified.")
-        tbl = self.table(table_name=table_name)
-        return validate_and_apply_filters(
-            sdf=tbl.to_sdf(),
-            filters=filters,
-            filter_model=tbl.filter_model,
-            fields_enum=tbl.field_enum_model,
-            dataframe_schema=tbl.schema_func("pandas"),
-            validate=tbl.validate_filter_field_types
-        )
 
     def apply_schema_migration(
         self,
         source_catalog: PydanticBaseModel = None,
         target_catalog: PydanticBaseModel = None
     ):
-        """Apply the latest schema migration."""
+        """Apply the latest schema migration.
+
+        Parameters
+        ----------
+        source_catalog : PydanticBaseModel, optional
+            The source catalog to use for the source of the migration files.
+            The default is None, which uses the local catalog.
+        target_catalog : PydanticBaseModel, optional
+            The target catalog to apply the migrations to.
+            The default is None, which uses the remote catalog.
+        """
         if source_catalog is None:
             source_catalog = self.local_catalog
         if target_catalog is None:
@@ -605,7 +548,17 @@ class Evaluation(EvaluationBase):
         catalog_name: str = None,
         namespace: str = None
     ) -> pd.DataFrame:
-        """List the tables in the catalog returning a Pandas DataFrame."""
+        """List the tables in the catalog returning a Pandas DataFrame.
+
+        Parameters
+        ----------
+        catalog_name : str, optional
+            The catalog name to list tables from, by default None, which means the
+            catalog_name of the active catalog is used.
+        namespace : str, optional
+            The namespace name to list tables from, by default None, which means the
+            namespace_name of the active catalog is used.
+        """
         if catalog_name is None:
             catalog_name = self.active_catalog.catalog_name
         if namespace is None:

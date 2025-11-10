@@ -11,6 +11,7 @@ from pyspark import SparkConf
 from pyspark.sql import SparkSession
 from sedona.spark import SedonaContext
 import pandas as pd
+import botocore.session
 
 import teehr.const as const
 
@@ -22,6 +23,7 @@ SCALA_VERSION = "2.13"
 PYSPARK_VERSION = "4.0"
 ICEBERG_VERSION = "1.10.0"
 SEDONA_VERSION = "1.8.0"
+
 
 
 def create_spark_session(
@@ -125,6 +127,18 @@ def create_spark_session(
         Configured Spark session.
     """
     logger.info(f"🚀 Creating Spark session: {app_name}")
+
+    # Use botocore to check for AWS credentials
+    # and set them as environment variables
+    session = botocore.session.Session()
+    credentials = session.get_credentials()
+    if credentials is not None:
+        aws_access_key = credentials.access_key
+        aws_secret_key = credentials.secret_key
+        os.environ["AWS_ACCESS_KEY_ID"] = aws_access_key
+        os.environ["AWS_SECRET_ACCESS_KEY"] = aws_secret_key
+    os.environ["AWS_REGION"] = const.AWS_REGION
+
     # Get the base configuration with common settings
     conf = _create_spark_base_session(
         conf=SparkConf(),
@@ -188,9 +202,9 @@ def create_spark_session(
         remote_catalog_uri=remote_catalog_uri
     )
 
+    logger.info("⚙️ All settings applied. Creating Spark session...")
     spark = SparkSession.builder.appName(app_name).config(conf=conf).getOrCreate()
     sedona_spark = SedonaContext.create(spark)
-    logger.info("Spark session created for TEEHR Evaluation.")
 
     if debug_config:
         log_session_config(sedona_spark)
@@ -371,7 +385,7 @@ def _set_spark_cluster_configuration(
 
     # First try getting it from environment variable
     if spark_namespace is None:
-        spark_namespace = os.environ["TEEHR_NAMESPACE"]
+        spark_namespace = os.environ.get("TEEHR_NAMESPACE", "")
     logger.info(f"🔍 Initial spark namespace from ENV: {spark_namespace}")
 
     if spark_namespace is None:
@@ -484,6 +498,7 @@ def _get_spark_defaults() -> Dict[str, Any]:
         "spark.sql.extensions": "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions",
         "spark.serializer": "org.apache.spark.serializer.KryoSerializer",
         "spark.hadoop.fs.s3a.impl": "org.apache.hadoop.fs.s3a.S3AFileSystem",
+        # Need this to read e4 evaluation data via hadoop:
         "spark.hadoop.fs.s3a.aws.credentials.provider": "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider"
     }
     return {"packages": base_packages, "configs": base_configs}
@@ -516,13 +531,10 @@ def _configure_iceberg_catalogs(
         f"spark.sql.catalog.{remote_catalog_name}.type": remote_catalog_type,
         f"spark.sql.catalog.{remote_catalog_name}.uri": remote_catalog_uri,
         f"spark.sql.catalog.{remote_catalog_name}.warehouse": remote_warehouse_dir,
-        f"spark.sql.catalog.{remote_catalog_name}.io-impl": "org.apache.iceberg.aws.s3.S3FileIO"
+        f"spark.sql.catalog.{remote_catalog_name}.io-impl": "org.apache.iceberg.aws.s3.S3FileIO",
+        f"spark.sql.catalog.{remote_catalog_name}.s3.endpoint": os.environ.get("REMOTE_CATALOG_S3_ENDPOINT", ""),
+        f"spark.sql.catalog.{remote_catalog_name}.s3.path-style-access": os.environ.get("REMOTE_CATALOG_S3_PATH_STYLE_ACCESS", "false").lower(),
     }
-    # These are needed only if running local kind cluster against MinIO for testing
-    if os.environ.get("IN_CLUSTER", "false").lower() == "true":
-        logger.info("⚠️  Configuring remote catalog for MinIO access")
-        remote_configs[f"spark.sql.catalog.{remote_catalog_name}.s3.endpoint"] = "http://minio:9000"
-        remote_configs[f"spark.sql.catalog.{remote_catalog_name}.s3.path-style-access"] = "true"
 
     for key, value in remote_configs.items():
         conf.set(key, value)

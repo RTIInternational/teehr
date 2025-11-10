@@ -2,8 +2,8 @@
 import os
 
 # Iceberg warehouse
-REMOTE_CATALOG_REST_URI = os.environ.get("REMOTE_CATALOG_REST_URI", "http://dev-teehr-sys-iceberg-alb-2105268770.us-east-2.elb.amazonaws.com")
-REMOTE_WAREHOUSE_S3_PATH = os.environ.get("REMOTE_WAREHOUSE_S3_PATH", "s3://dev-teehr-sys-iceberg-warehouse/warehouse/")
+REMOTE_CATALOG_REST_URI = os.environ.get("REMOTE_CATALOG_REST_URI", "")
+REMOTE_WAREHOUSE_S3_PATH = os.environ.get("REMOTE_WAREHOUSE_S3_PATH", "")
 LOCAL_CATALOG_NAME = "local"
 LOCAL_CATALOG_TYPE = "hadoop"
 LOCAL_NAMESPACE_NAME = "teehr"

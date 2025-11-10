@@ -4,7 +4,7 @@ from typing import Union, List
 import pandas as pd
 import geopandas as gpd
 import pyspark.sql as ps
-import pyspark.sql.functions as F
+# import pyspark.sql.functions as F
 from teehr.models.filters import (
     JoinedTimeseriesFilter
 )
@@ -18,7 +18,7 @@ from teehr.querying.utils import (
     order_df,
     group_df,
     join_geometry,
-    parse_fields_to_list
+    post_process_metric_results
 )
 
 import logging
@@ -34,8 +34,6 @@ class Metrics:
         self._ev = ev
         self.spark = ev.spark
         self.locations = ev.locations
-        # self.joined_timeseries = ev.joined_timeseries
-        # self.sdf = self.joined_timeseries.to_sdf()
         self._write = ev.write
 
     def __call__(
@@ -44,7 +42,29 @@ class Metrics:
         namespace_name: Union[str, None] = None,
         catalog_name: Union[str, None] = None,
     ) -> "Metrics":
-        """Initialize the Metrics class."""
+        """Initialize the Metrics class.
+
+        Parameters
+        ----------
+        table_name : str, optional
+            The name of the table to use for metrics calculations,
+            by default "joined_timeseries"
+        namespace_name : Union[str, None], optional
+            The namespace of the table, by default None in which case the
+            namespace_name of the active catalog is used.
+        catalog_name : Union[str, None], optional
+            The catalog of the table, by default None in which case the
+            catalog_name of the active catalog is used.
+
+        Example
+        -------
+        By default, the Metrics class operates on the "joined_timeseries" table.
+        This can be changed by specifying a different table name.
+
+        >>> import teehr
+        >>> ev = teehr.Evaluation()
+        >>> metrics = ev.metrics(table_name="primary_timeseries")
+        """
         self.table_name = table_name
         self.table = self._ev.table(
             table_name=table_name,
@@ -74,7 +94,7 @@ class Metrics:
             str
         ] = None
     ):
-        """Perform a query on the dataset joined timeseries table.
+        """Perform a query on the specified table.
 
         Parameters
         ----------
@@ -139,12 +159,27 @@ class Metrics:
 
         Perform the query, returning the results as a GeoPandas DataFrame.
 
-        >>> metrics_df = eval.metrics.query(
+        >>> metrics_df = ev.metrics.query(
         >>>     include_metrics=include_metrics,
         >>>     group_by=[flds.primary_location_id],
         >>>     order_by=[flds.primary_location_id],
         >>>     filters=filters,
         >>> ).to_geopandas()
+
+        By default, the metrics query operates on the ``joined_timeseries`` table.
+        To specify a different table, initialize the Metrics class with the
+        desired table name.
+
+        >>> fdc = teehr.Signatures.FlowDurationCurveSlope()
+        >>> fdc.input_field_names = ["value"]
+
+        >>> metrics_df = ev.metrics(
+        >>>     table_name="primary_timeseries"
+        >>> ).query(
+        >>>     include_metrics=[fdc],
+        >>>     group_by=[flds.location_id],
+        >>>     order_by=[flds.location_id],
+        >>> ).to_pandas()
         """ # noqa
         logger.info("Calculating performance metrics.")
         if filters is not None:
@@ -165,9 +200,10 @@ class Metrics:
             include_metrics,
         )
 
-        self.sdf = self._post_process_metric_results(
-            include_metrics,
-            group_by
+        self.sdf = post_process_metric_results(
+            sdf=self.sdf,
+            include_metrics=include_metrics,
+            group_by=group_by
         )
 
         if order_by is not None:
@@ -200,7 +236,7 @@ class Metrics:
         return self.sdf
 
     def add_calculated_fields(self, cfs: Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]):
-        """Add calculated fields to the joined timeseries DataFrame before running metrics.
+        """Add in-memory calculated fields to the table before running metrics.
 
         Parameters
         ----------
@@ -214,14 +250,19 @@ class Metrics:
 
         Examples
         --------
+        Add the temporary calculated field "month" to use in the metrics query.
+
         >>> import teehr
         >>> from teehr import RowLevelCalculatedFields as rcf
-        >>> ev.join_timeseries.add_calculated_fields([
-        >>>     rcf.Month()
-        >>> ]).write()
-        """
-        # self._check_load_table()
 
+        >>> ev.metrics(table_name="joined_timeseries").add_calculated_fields([
+        >>>     rcf.Month()
+        >>> ]).query(
+        >>>     include_metrics=[fdc],
+        >>>     group_by=[flds.primary_location_id, "month"],
+        >>>     order_by=[flds.primary_location_id, "month"],
+        >>> ).to_pandas()
+        """
         if not isinstance(cfs, List):
             cfs = [cfs]
 
@@ -230,123 +271,12 @@ class Metrics:
 
         return self
 
-    def _post_process_metric_results(
-        self,
-        include_metrics: List[MetricsBasemodel],
-        group_by: Union[
-            str, JoinedTimeseriesFields,
-            List[Union[str, JoinedTimeseriesFields]]
-        ]
-    ) -> ps.DataFrame:
-        """Post-process the results of the metrics query.
-
-        Notes
-        -----
-        This method includes functionality to update the dataframe returned
-        by the query method depending on metric model attributes.
-
-        If the metric model specifies a reference configuration, it will
-        calculate the skill score of metric values for each configuration
-        relative to the reference configuration. The skill score is calculated
-        as `1 - (metric_value / reference_metric_value)`.
-
-        Additionally, if the metric model specifies unpacking of results,
-        metric results returned as a dictionary will be unpacked into separate
-        columns in the DataFrame.
-        """
-        for model in include_metrics:
-            if model.reference_configuration is not None:
-                self.sdf = self._calculate_metric_skill_score(
-                    model.output_field_name,
-                    model.reference_configuration,
-                    group_by
-                )
-
-            if model.unpack_results:
-                self.sdf = model.unpack_function(
-                    self.sdf,
-                    model.output_field_name
-                )
-
-        return self.sdf
-
-    def _calculate_metric_skill_score(
-        self,
-        metric_field: str,
-        reference_configuration: str,
-        group_by: Union[
-            str, JoinedTimeseriesFields,
-            List[Union[str, JoinedTimeseriesFields]]
-        ]
-    ) -> ps.DataFrame:
-        """Calculate skill score based on a reference configuration.
-
-        Calculate the skill score of metric values for each configuration
-        relative to the reference configuration. The skill score is calculated
-        as `1 - (metric_value / reference_metric_value)`.
-        """
-        logger.debug("Calculating skill score.")
-        group_by_strings = parse_fields_to_list(group_by)
-        # TODO: Raise error if configuration_name is not in group_by?
-        group_by_strings.remove("configuration_name")
-
-        pivot_sdf = (
-            self.sdf
-            .groupBy(group_by_strings).
-            pivot("configuration_name").
-            agg(F.first(metric_field))
-        )
-        # Get all configuration names except the reference configuration
-        configurations = self.sdf.select("configuration_name").distinct().collect()
-        configurations = [row.configuration_name for row in configurations]
-        configurations.remove(reference_configuration)
-
-        skill_score_col = f"{metric_field}_skill_score"
-        sdf = self.sdf.withColumn(skill_score_col, F.lit(None))
-
-        for config in configurations:
-            # Pivot and calculate the skill score.
-            temp_col = f"{config}_{metric_field}_skill"
-            pivot_sdf = pivot_sdf.withColumn(
-                temp_col,
-                1 - F.col(config) / F.col(reference_configuration)
-            ).withColumn(
-                "configuration_name",
-                F.lit(config)
-            )
-            # Join skill score values from the pivot table.
-            join_cols = group_by_strings + ["configuration_name"]
-            sdf = sdf.join(
-                pivot_sdf,
-                on=join_cols,
-                how="left"
-            ).select(
-                *join_cols,
-                F.col(f"{metric_field}"),
-                F.col(temp_col),
-                F.col(skill_score_col)
-            )
-            # Now update the column based on the configuration name.
-            sdf = sdf.withColumn(
-                skill_score_col,
-                F.when(
-                    sdf["configuration_name"] == f"{config}",
-                    sdf[temp_col]
-                ).otherwise(sdf[skill_score_col])
-            ).select(
-                *join_cols,
-                F.col(f"{metric_field}"),
-                F.col(skill_score_col)
-            )
-
-        return sdf
-
     def write(
         self,
         table_name: str = "metrics",
         write_mode: str = "create_or_replace"
     ):
-        """Write the metrics DataFrame to the warehouse.
+        """Write the metrics DataFrame to a warehouse table.
 
         Parameters
         ----------
@@ -356,10 +286,11 @@ class Metrics:
             The write mode to use, by default "create_or_replace"
             Options are: "create", "append", "overwrite", "create_or_replace"
 
-        Examples
-        --------
+        Example
+        -------
         >>> import teehr
         >>> ev = teehr.Evaluation()
+        Calculate some metrics and write to the warehouse.
         >>> metrics_df = ev.metrics.query(
         >>>     include_metrics=[...],
         >>>     group_by=["primary_location_id"]

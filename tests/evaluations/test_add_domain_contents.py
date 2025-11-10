@@ -13,7 +13,7 @@ def test_add_domains(tmpdir):
     """Test creating a new study."""
     ev = Evaluation(
         dir_path=tmpdir,
-        check_evaluation_version=False,
+        create_dir=True
     )
     ev.clone_template()
 

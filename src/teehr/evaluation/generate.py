@@ -1,11 +1,11 @@
 """A component class for generating synthetic time series."""
 import logging
-from typing import Union
+from typing import Union, List
 from datetime import datetime, timedelta
 
 import pyspark.sql.functions as F
 
-from teehr.models.filters import TableFilter
+from teehr.models.filters import FilterBaseModel
 from teehr.models.generate.base import (
     SignatureGeneratorBaseModel,
     BenchmarkGeneratorBaseModel
@@ -58,7 +58,7 @@ class GeneratedTimeSeriesBasemodel:
         )
         self._ev.write.to_warehouse(
             source_data=validated_df,
-            table_name=tbl.name,
+            table_name=tbl.table_name,
             write_mode=write_mode,
             uniqueness_fields=tbl.uniqueness_fields
         )
@@ -92,9 +92,13 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
     def signature_timeseries(
         self,
         method: SignatureGeneratorBaseModel,
-        input_table_filter: TableFilter,
+        input_table_name: str,
         start_datetime: Union[str, datetime],
         end_datetime: Union[str, datetime],
+        input_table_filters: Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]
+        ] = None,
         timestep: Union[str, timedelta] = "1 hour",
         update_variable_table: bool = True,
         fillna: bool = False,
@@ -106,10 +110,8 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
         ----------
         method : TimeseriesGeneratorBaseModel
             The method to use for generating the timeseries.
-        input_table_filter : TableFilter, optional
-            The input table filter. The defines a timeseries
-            that will be queried from the Evaluation and used as the
-            input_dataframe.
+        input_table_name : str
+            The name of the input table to query the timeseries from.
         start_datetime : Union[str, datetime]
             The start datetime for the generated timeseries.
             If provided as a str, the format must be supported by PySpark's
@@ -118,6 +120,11 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
             The end datetime for the generated timeseries.
             If provided as a str, the format must be supported by PySpark's
             ``to_timestamp`` function, such as "yyyy-MM-dd HH:mm:ss".
+        input_table_filters : Union[
+                str, dict, FilterBaseModel, List[Union[str, dict, FilterBaseModel]]
+            ], optional
+            The input table filter(s) that define a timeseries
+            that will be used as the input_dataframe.
         timestep : Union[str, timedelta], optional
             The timestep for the generated timeseries. Defaults to "1 hour".
         update_variable_table : bool, optional
@@ -142,8 +149,33 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
 
         The variable naming convention follows the pattern:
         <variable>_<temporal_resolution>_<summary_statistic>
+
+        Example
+        -------
+        Generate a daily climatology timeseries from the primary_timeseries.
+
+        >>> from teehr import SignatureTimeseriesGenerators as sts
+
+        Define the signature timeseries method
+
+        >>> ts_normals = sts.Normals()
+        >>> ts_normals.temporal_resolution = "day_of_year"
+        >>> ts_normals.summary_statistic = "mean"
+
+        Generate the signature timeseries, operating on the primary_timeseries.
+
+        >>> ev.generate.signature_timeseries(
+        >>>     method=ts_normals,
+        >>>     input_table_name="primary_timeseries",
+        >>>     start_datetime="1924-11-19 12:00:00",
+        >>>     end_datetime="2024-11-21 13:00:00",
+        >>> ).write()
         """
-        input_dataframe = self._ev.filter(table_filter=input_table_filter)
+        # input_dataframe = self._ev.filter(table_filter=input_table_filter)
+        input_dataframe = self._ev.read.from_warehouse(
+            table_name=input_table_name,
+            filters=input_table_filters
+        ).to_sdf()
         if input_dataframe.isEmpty():
             raise ValueError(
                 "Input DataFrame is empty!"
@@ -181,9 +213,17 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
     def benchmark_forecast(
         self,
         method: BenchmarkGeneratorBaseModel,
-        reference_table_filter: TableFilter,
-        template_table_filter: TableFilter,
-        output_configuration_name: str
+        reference_table_name: str,
+        template_table_name: str,
+        output_configuration_name: str,
+        reference_table_filters: Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]
+        ] = None,
+        template_table_filters: Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]
+        ] = None,
     ):
         """Generate a benchmark forecast from two timeseries.
 
@@ -191,31 +231,83 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
         ----------
         method : BenchmarkGeneratorBaseModel
             The method to use for generating the benchmark forecast.
-        reference_table_filter : TableFilter
-            The reference table filter defining the timeseries
+        reference_table_name : str
+            The name of the reference table to query the timeseries from.
+        template_table_name : str
+            The name of the template table to query the timeseries from.
+        output_configuration_name : str
+            The configuration name for the generated benchmark forecast.
+        reference_table_filters : Union[
+                str, dict, FilterBaseModel, List[Union[str, dict, FilterBaseModel]]
+            ], optional
+            The reference table filter(s) defining the timeseries
             containing the values to assign to the template timeseries.
-        template_table_filter : TableFilter
-            The template table filter that defines the timeseries
+        template_table_filters : Union[
+                str, dict, FilterBaseModel, List[Union[str, dict, FilterBaseModel]]
+            ], optional
+            The template table filter(s) that defines the timeseries
             containing the forecast structure
             (lead time, time interval, issuance frequency, etc) to use for
             the benchmark.
-        output_configuration_name : str
-            The configuration name for the generated benchmark forecast.
 
         Returns
         -------
         GeneratedTimeseries
             The generated timeseries class object.
+
+        Example
+        -------
+        Generate a Climatology benchmark forecast using a previously generated
+        climatology timeseries as the reference and the secondary_timeseries
+        as the template forecast.
+
+        >>> from teehr import BenchmarkForecastGenerators as bmf
+
+        Define the benchmark forecast method
+
+        >>> ref_fcst = bmf.ReferenceForecast()
+        >>> ref_fcst.aggregate_reference_timeseries = True
+
+        Specify the tables and optional filters that define the reference
+        and template timeseries.
+
+        >>> reference_table_name = "primary_timeseries"
+        >>> reference_filters = [
+        >>>     "variable_name = 'streamflow_hour_of_year_mean'",
+        >>>     "unit_name = 'ft^3/s'"
+        >>> ]
+
+        >>> template_table_name = "secondary_timeseries"
+        >>> template_filters = [
+        >>>     "variable_name = 'streamflow_hourly_inst'",
+        >>>     "unit_name = 'ft^3/s'",
+        >>>     "member = '1993'"
+        >>> ]
+
+        Generate the benchmark forecast timeseries and write to secondary_timeseries,
+        with the configuration name 'benchmark_forecast_hourly_normals'.
+
+        >>> ev.generate.benchmark_forecast(
+        >>>     method=ref_fcst,
+        >>>     reference_table_name=reference_table_name,
+        >>>     reference_table_filters=reference_filters,
+        >>>     template_table_name=template_table_name,
+        >>>     template_table_filters=template_filters,
+        >>>     output_configuration_name="benchmark_forecast_hourly_normals"
+        >>> ).write(destination_table="secondary_timeseries")
         """
-        reference_dataframe = self._ev.filter(
-            table_filter=reference_table_filter
-        )
-        template_dataframe = self._ev.filter(
-            table_filter=template_table_filter
-        )
-        if reference_table_filter.table_name == "primary_timeseries":
+        reference_dataframe = self._ev.read.from_warehouse(
+            table_name=reference_table_name,
+            filters=reference_table_filters
+        ).to_sdf()
+        template_dataframe = self._ev.read.from_warehouse(
+            table_name=template_table_name,
+            filters=template_table_filters
+        ).to_sdf()
+
+        if reference_table_name == "primary_timeseries":
             partition_by = self._ev.primary_timeseries.uniqueness_fields
-        elif reference_table_filter.table_name == "secondary_timeseries":
+        elif reference_table_name == "secondary_timeseries":
             partition_by = self._ev.secondary_timeseries.uniqueness_fields
         partition_by.remove("value_time")
 

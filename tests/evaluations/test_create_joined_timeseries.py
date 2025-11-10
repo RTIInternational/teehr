@@ -26,13 +26,13 @@ GEO_FILEPATH = Path(TEST_DATA_DIR, "geo")
 def test_create_joined_timeseries(tmpdir):
     """Test the validate_locations function."""
     tmpdir = Path(tmpdir)
-    ev = Evaluation(local_warehouse_dir=tmpdir, create_local_dir=True)
-
-    # Enable logging
-    ev.enable_logging()
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
 
     # Clone the template
     ev.clone_template()
+
+    # Enable logging
+    ev.enable_logging()
 
     # Load the location data
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
@@ -111,7 +111,6 @@ def test_create_joined_timeseries(tmpdir):
     ev.joined_timeseries.create(add_attrs=True,
                                 execute_scripts=True,
                                 attr_list=attr_list)
-
 
     columns = ev.joined_timeseries.to_sdf().columns
     expected_columns = [
