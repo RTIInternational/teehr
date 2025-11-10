@@ -515,30 +515,20 @@ def _configure_iceberg_catalogs(
 ):
     """Configure Iceberg catalogs through conf.set()."""
     logger.info("Configuring Iceberg catalogs...")
-    # Note. Local catalog warehouse path gets set in the Evaluation
-    # based on the dir_path provided there.
-    catalog_configs = {
-        f"spark.sql.catalog.{local_catalog_name}": "org.apache.iceberg.spark.SparkCatalog",
-        f"spark.sql.catalog.{local_catalog_name}.type": local_catalog_type,
-    }
-    for key, value in catalog_configs.items():
-        conf.set(key, value)
-        logger.debug(f"Local catalog: {key}: {value}")
-
+    # Local catalog configuration
+    conf.set(f"spark.sql.catalog.{local_catalog_name}", "org.apache.iceberg.spark.SparkCatalog")
+    conf.set(f"spark.sql.catalog.{local_catalog_name}.type", local_catalog_type)
     # Remote catalog configuration
-    remote_configs = {
-        f"spark.sql.catalog.{remote_catalog_name}": "org.apache.iceberg.spark.SparkCatalog",
-        f"spark.sql.catalog.{remote_catalog_name}.type": remote_catalog_type,
-        f"spark.sql.catalog.{remote_catalog_name}.uri": remote_catalog_uri,
-        f"spark.sql.catalog.{remote_catalog_name}.warehouse": remote_warehouse_dir,
-        f"spark.sql.catalog.{remote_catalog_name}.io-impl": "org.apache.iceberg.aws.s3.S3FileIO",
-        f"spark.sql.catalog.{remote_catalog_name}.s3.endpoint": os.environ.get("REMOTE_CATALOG_S3_ENDPOINT", ""),
-        f"spark.sql.catalog.{remote_catalog_name}.s3.path-style-access": os.environ.get("REMOTE_CATALOG_S3_PATH_STYLE_ACCESS", "false").lower(),
-    }
+    conf.set(f"spark.sql.catalog.{remote_catalog_name}", "org.apache.iceberg.spark.SparkCatalog")
+    conf.set(f"spark.sql.catalog.{remote_catalog_name}.type", remote_catalog_type)
+    conf.set(f"spark.sql.catalog.{remote_catalog_name}.uri", remote_catalog_uri)
+    conf.set(f"spark.sql.catalog.{remote_catalog_name}.warehouse", remote_warehouse_dir)
+    conf.set(f"spark.sql.catalog.{remote_catalog_name}.io-impl", "org.apache.iceberg.aws.s3.S3FileIO")
+    # S3 end point and path style access
+    if os.environ.get("REMOTE_CATALOG_S3_PATH_STYLE_ACCESS", "false").lower() == "true":
+        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.endpoint", os.environ.get("REMOTE_CATALOG_S3_ENDPOINT"))
+        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.path-style-access", os.environ.get("REMOTE_CATALOG_S3_PATH_STYLE_ACCESS").lower())
 
-    for key, value in remote_configs.items():
-        conf.set(key, value)
-        logger.debug(f"Remote catalog: {key}: {value}")
 
 def remove_or_update_configs(
     spark: SparkSession,
