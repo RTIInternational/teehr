@@ -282,10 +282,6 @@ def _set_aws_credentials_in_spark(
         "spark.hadoop.fs.s3a.aws.credentials.provider",
         "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider"
     )
-    # Also might need to set empty remote catalog credentials to avoid errors?
-    conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", "")
-    conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", "")
-    conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", "")
     return
 
 
