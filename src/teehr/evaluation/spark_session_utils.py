@@ -133,10 +133,13 @@ def create_spark_session(
     session = botocore.session.Session()
     credentials = session.get_credentials()
     if credentials is not None:
+        logger.info("🔑 Using AWS credentials from botocore session")
         aws_access_key = credentials.access_key
         aws_secret_key = credentials.secret_key
         os.environ["AWS_ACCESS_KEY_ID"] = aws_access_key
         os.environ["AWS_SECRET_ACCESS_KEY"] = aws_secret_key
+        logger.info(f"Last 4 chars of Access Key ID: {aws_access_key[-4:]}")
+        logger.info(f"Last 4 chars of Secret Access Key: {aws_secret_key[-4:]}")
     os.environ["AWS_REGION"] = const.AWS_REGION
 
     # Get the base configuration with common settings
