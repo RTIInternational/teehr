@@ -704,7 +704,7 @@ def _validate_threshold_field(threshold_series: pd.Series) -> float:
     if len(unique_thresholds) != 1:
         raise ValueError(
             "Threshold field must contain a single unique value for each"
-            " location."
+            " population grouping."
         )
     threshold = unique_thresholds[0]
     return threshold

@@ -746,6 +746,9 @@ class ConfusionMatrix(DeterministicBasemodel):
     ----------
     bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     unpack_results : bool
         Whether to unpack the confusion matrix results into separate fields,
         by default False.
@@ -770,6 +773,7 @@ class ConfusionMatrix(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     unpack_results: bool = Field(default=False)
     return_type: T.DataType = Field(
         default=T.MapType(T.StringType(), T.IntegerType()), frozen=True
@@ -791,6 +795,9 @@ class FalseAlarmRatio(DeterministicBasemodel):
     ----------
     bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     threshold_field_name : str
@@ -809,6 +816,7 @@ class FalseAlarmRatio(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     threshold_field_name: str = Field(default=None)
     output_field_name: str = Field(default="false_alarm_ratio")
@@ -826,6 +834,9 @@ class ProbabilityOfDetection(DeterministicBasemodel):
     ----------
     bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     threshold_field_name : str
@@ -844,6 +855,7 @@ class ProbabilityOfDetection(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     threshold_field_name: str = Field(default=None)
     output_field_name: str = Field(default="probability_of_detection")
@@ -861,6 +873,9 @@ class ProbabilityOfFalseDetection(DeterministicBasemodel):
     ----------
     bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     threshold_field_name : str
@@ -879,6 +894,7 @@ class ProbabilityOfFalseDetection(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     threshold_field_name: str = Field(default=None)
     output_field_name: str = Field(default="probability_of_false_detection")
@@ -897,6 +913,9 @@ class CriticalSuccessIndex(DeterministicBasemodel):
     ----------
     bootstrap : BootstrapBasemodel
         The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
     transform : TransformEnum
         The transformation to apply to the data, by default None.
     threshold_field_name : str
@@ -915,6 +934,7 @@ class CriticalSuccessIndex(DeterministicBasemodel):
     """
 
     bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
     transform: TransformEnum = Field(default=None)
     threshold_field_name: str = Field(default=None)
     output_field_name: str = Field(default="critical_success_index")
