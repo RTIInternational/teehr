@@ -1,6 +1,32 @@
 Release Notes
 =============
 
+0.5.2 - 2025-11-11
+------------------
+
+Changed
+^^^^^^^
+- Updates version number in pyproject.toml and init files
+- No changes in functionality from ``0.5.1dev10``
+
+
+0.5.1dev10 - 2025-11-10
+-----------------------
+
+Changed
+^^^^^^^
+- Rename SignatureMetrics to Signatures
+- Updates Spearman correlation to handle repeating values
+
+Added
+^^^^^
+- Flow Duration Curve Slope
+- VariabilityRatio
+- Epsilon to handle division by zero
+- BelowPercentileEventDetection metric
+- Bootstrapping for signatures
+
+
 0.5.0 - 2025-08-27
 -------------------
 
