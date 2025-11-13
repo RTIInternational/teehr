@@ -8,18 +8,56 @@ Getting started
    :local:
    :depth: 1
 
+Introducing TEEHR
+=================
+
+
+Why TEEHR?
+^^^^^^^^^^
+TEEHR is a python package that provides a framework for the evaluation of hydrologic model performance.
+It is designed to enable iterative and exploratory analysis of hydrologic data, and facilitates this through:
+
+* Scalability - TEEHR's computational engine is built on PySpark, allowing it to take advantage of your available compute resources.
+
+* Data Integrity - TEEHR's internal data model (:doc:`teehr_framework`) makes it easier to work with and validate the various data making up your evaluation, such as model outputs, observations, location attributes, and more.
+
+* Flexibility - TEEHR is designed to be flexible and extensible, allowing you to easily customize metrics, add bootstrapping, and group and filter your data in a variety of ways.
+
+
+Project Objectives
+^^^^^^^^^^^^^^^^^^
+
+* Easy integration into research workflows
+
+* Use of modern and efficient data structures and computing platforms
+
+* Scalable for rapid execution of large-domain/large-sample evaluations
+
+* Simplified exploration of performance trends and potential drivers (e.g., climate, time-period, regulation, and basin characteristics)
+
+* Inclusion of common and emergent evaluation methods (e.g., error statistics, skill scores, categorical metrics, hydrologic signatures, uncertainty quantification, and graphical methods)
+
+* Open source and community-extensible development
+
+
 The TEEHR Data Model and Framework
-----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The :doc:`TEEHR Framework <teehr_framework>` provides an overview of the TEEHR data model,
 the Evaluation directory structure, and the Evaluation tables.
 
+
 An Intro to TEEHR and PySpark
------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Check out the :doc:`Spark Guide <spark_guide>` to learn more about PySpark's integration with
 TEEHR, how to customize its configuration, and how to address some common warnings you may encounter.
 
+
+Installing TEEHR
+================
+
+
 Installation Guide for macOS & Linux
-------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 TEEHR requires the following dependencies:
 
 * Python 3.10 or later
@@ -153,54 +191,8 @@ Currently, TEEHR dependencies require users install on Linux or macOS. To use TE
       pip install teehr
 
 
-Set-up Guide for Docker
------------------------
-If you do not want to install TEEHR in your own virtual environment, you can use Docker. A Dockerfile
-is provided in a separate repository at: https://github.com/RTIInternational/teehr-hub
-
-Clone the repository, build and run the Docker image. The following commands will build and run the Docker image,
-mount your home directory to the Docker container, and start a Jupyter Lab server.
-
-When building the Docker image, specify the version of TEEHR you want to use by passing it in as a build
-argument. Pass "dev" to use the latest development version.
-
-.. code-block:: bash
-
-   git clone https://github.com/RTIInternational/teehr-hub.git
-   cd teehr-hub
-   docker build --build-arg IMAGE_TAG="dev" -t teehr:dev .
-   docker run -it --rm --volume $HOME:$HOME -p 8888:8888 teehr:dev jupyter lab --ip 0.0.0.0 $HOME
-
-Project Objectives
-------------------
-
-* Easy integration into research workflows
-
-* Use of modern and efficient data structures and computing platforms
-
-* Scalable for rapid execution of large-domain/large-sample evaluations
-
-* Simplified exploration of performance trends and potential drivers (e.g., climate, time-period, regulation, and basin characteristics)
-
-* Inclusion of common and emergent evaluation methods (e.g., error statistics, skill scores, categorical metrics, hydrologic signatures, uncertainty quantification, and graphical methods)
-
-* Open source and community-extensible development
-
-
-Why TEEHR?
-----------
-TEEHR is a python package that provides a framework for the evaluation of hydrologic model performance.
-It is designed to enable iterative and exploratory analysis of hydrologic data, and facilitates this through:
-
-* Scalability - TEEHR's computational engine is built on PySpark, allowing it to take advantage of your available compute resources.
-
-* Data Integrity - TEEHR's internal data model (:doc:`teehr_framework`) makes it easier to work with and validate the various data making up your evaluation, such as model outputs, observations, location attributes, and more.
-
-* Flexibility - TEEHR is designed to be flexible and extensible, allowing you to easily customize metrics, add bootstrapping, and group and filter your data in a variety of ways.
-
-
 TEEHR Evaluation Example
-------------------------
+========================
 The following is an example of initializing a TEEHR Evaluation, cloning a dataset from the TEEHR S3 bucket,
 and calculating two versions of KGE (one with bootstrap uncertainty and one without).
 
