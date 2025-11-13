@@ -1,0 +1,35 @@
+﻿LocationTable
+=============
+
+.. currentmodule:: teehr.evaluation.tables.location_table
+
+.. autoclass:: LocationTable
+   :members:
+   :show-inheritance:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~LocationTable.distinct_values
+      ~LocationTable.field_enum
+      ~LocationTable.fields
+      ~LocationTable.filter
+      ~LocationTable.load_dataframe
+      ~LocationTable.load_spatial
+      ~LocationTable.order_by
+      ~LocationTable.query
+      ~LocationTable.to_geopandas
+      ~LocationTable.to_pandas
+      ~LocationTable.to_sdf
+      ~LocationTable.validate
+   
+   
+
+   
+   
+   
