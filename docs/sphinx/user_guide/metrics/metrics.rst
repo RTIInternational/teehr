@@ -23,42 +23,42 @@ Signatures operate on a single field to characterize timeseries properties.
      - Average
      - :math:`Average`
      - :math:`\frac{\sum(prim)}{count}`
-     - `Average <https://rtiinternational.github.io/teehr/api/generated/teehr.SignatureMetrics.html#teehr.SignatureMetrics.Average>`__
+     - `Average <https://rtiinternational.github.io/teehr/api/generated/teehr.Signatures.html#teehr.Signatures.Average>`__
    * - :material-regular:`check;1.5em;sd-text-success`
      - Count
      - :math:`Count`
      - :math:`count`
-     - `Count <https://rtiinternational.github.io/teehr/api/generated/teehr.SignatureMetrics.html#teehr.SignatureMetrics.Count>`__
+     - `Count <https://rtiinternational.github.io/teehr/api/generated/teehr.Signatures.html#teehr.Signatures.Count>`__
    * - :material-regular:`check;1.5em;sd-text-success`
      - Flow Duration Curve Slope
      - :math:`FDC\ Slope`
      - :math:`\frac{q85-q25}{p85-p25}`
-     - `Flow Duration Curve Slope <https://rtiinternational.github.io/teehr/api/generated/teehr.SignatureMetrics.html#teehr.SignatureMetrics.FlowDurationCurveSlope>`__
+     - `Flow Duration Curve Slope <https://rtiinternational.github.io/teehr/api/generated/teehr.Signatures.html#teehr.Signatures.FlowDurationCurveSlope>`__
    * - :material-regular:`check;1.5em;sd-text-success`
      - Max Value Time
      - :math:`Max\ Value\ Time`
      - :math:`peak\ time_{prim}`
-     - `Max Value Time <https://rtiinternational.github.io/teehr/api/generated/teehr.SignatureMetrics.html#teehr.SignatureMetrics.MaxValueTime>`__
+     - `Max Value Time <https://rtiinternational.github.io/teehr/api/generated/teehr.Signatures.html#teehr.Signatures.MaxValueTime>`__
    * - :material-regular:`check;1.5em;sd-text-success`
      - Maximum
      - :math:`Max`
      - :math:`max(prim)`
-     - `Maximum <https://rtiinternational.github.io/teehr/api/generated/teehr.SignatureMetrics.html#teehr.SignatureMetrics.Maximum>`__
+     - `Maximum <https://rtiinternational.github.io/teehr/api/generated/teehr.Signatures.html#teehr.Signatures.Maximum>`__
    * - :material-regular:`check;1.5em;sd-text-success`
      - Minimum
      - :math:`Min`
      - :math:`min(prim)`
-     - `Minimum <https://rtiinternational.github.io/teehr/api/generated/teehr.SignatureMetrics.html#teehr.SignatureMetrics.Minimum>`__
+     - `Minimum <https://rtiinternational.github.io/teehr/api/generated/teehr.Signatures.html#teehr.Signatures.Minimum>`__
    * - :material-regular:`check;1.5em;sd-text-success`
      - Sum
      - :math:`Sum`
      - :math:`\sum(prim)`
-     - `Sum <https://rtiinternational.github.io/teehr/api/generated/teehr.SignatureMetrics.html#teehr.SignatureMetrics.Sum>`__
+     - `Sum <https://rtiinternational.github.io/teehr/api/generated/teehr.Signatures.html#teehr.Signatures.Sum>`__
    * - :material-regular:`check;1.5em;sd-text-success`
      - Variance
      - :math:`Variance`
      - :math:`\sigma^2_{prim}`
-     - `Variance <https://rtiinternational.github.io/teehr/api/generated/teehr.SignatureMetrics.html#teehr.SignatureMetrics.Variance>`__
+     - `Variance <https://rtiinternational.github.io/teehr/api/generated/teehr.Signatures.html#teehr.Signatures.Variance>`__
 
 
 Deterministic Metrics
