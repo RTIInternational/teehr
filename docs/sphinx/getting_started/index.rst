@@ -64,8 +64,6 @@ TEEHR requires the following dependencies:
 
 * Java 17 or later for Spark
 
-* Poetry v2 or later
-
 
 The easiest way to install TEEHR is from PyPI using `pip`.
 If using `pip` to install TEEHR, we recommend installing TEEHR in a virtual environment.
