@@ -108,9 +108,11 @@ def test_create_joined_timeseries(tmpdir):
     # Create the joined timeseries with only specified attributes
     # include one invalid attribute 'tester' alongside valid attributes
     attr_list = ['drainage_area', 'ecoregion', 'tester']
-    ev.joined_timeseries.create(add_attrs=True,
-                                execute_scripts=True,
-                                attr_list=attr_list)
+    ev.joined_timeseries.create(
+        add_attrs=True,
+        execute_scripts=True,
+        attr_list=attr_list
+    )
 
     columns = ev.joined_timeseries.to_sdf().columns
     expected_columns = [
@@ -142,6 +144,127 @@ def test_create_joined_timeseries(tmpdir):
     ])
     assert len(columns) == len(expected_columns)
     assert sorted(columns) == sorted(expected_columns)
+    # ev.spark.stop()
+
+
+def test_create_filtered_joined_timeseries(tmpdir):
+    """Test the validate_locations function."""
+    tmpdir = Path(tmpdir)
+    ev = Evaluation(dir_path=tmpdir, create_dir=True)
+
+    # Clone the template
+    ev.clone_template()
+
+    # Enable logging
+    ev.enable_logging()
+
+    # Load the location data
+    ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
+
+    ev.configurations.add(
+        Configuration(
+            name="usgs_observations",
+            type="primary",
+            description="test primary configuration"
+        )
+    )
+
+    # Load the timeseries data and map over the fields and set constants
+    ev.primary_timeseries.load_parquet(
+        in_path=PRIMARY_TIMESERIES_FILEPATH,
+        field_mapping={
+            "reference_time": "reference_time",
+            "value_time": "value_time",
+            "configuration": "configuration_name",
+            "measurement_unit": "unit_name",
+            "variable_name": "variable_name",
+            "value": "value",
+            "location_id": "location_id"
+        },
+        constant_field_values={
+            "unit_name": "m^3/s",
+            "variable_name": "streamflow_hourly_inst",
+            "configuration_name": "usgs_observations"
+        }
+    )
+
+    # Load the crosswalk data
+    ev.location_crosswalks.load_csv(
+        in_path=CROSSWALK_FILEPATH
+    )
+
+    ev.configurations.add(
+        Configuration(
+            name="nwm30_retrospective",
+            type="secondary",
+            description="test secondary configuration"
+        )
+    )
+
+    # Load the secondary timeseries data and map over the fields
+    #  and set constants
+    ev.secondary_timeseries.load_parquet(
+        in_path=SECONDARY_TIMESERIES_FILEPATH,
+        field_mapping={
+            "reference_time": "reference_time",
+            "value_time": "value_time",
+            "configuration": "configuration_name",
+            "measurement_unit": "unit_name",
+            "variable_name": "variable_name",
+            "value": "value",
+            "location_id": "location_id"
+        },
+        constant_field_values={
+            "unit_name": "m^3/s",
+            "variable_name": "streamflow_hourly_inst",
+            "configuration_name": "nwm30_retrospective"
+        }
+    )
+
+    # Load the location attribute data
+    ev.location_attributes.load_parquet(
+        in_path=GEO_FILEPATH,
+        field_mapping={"attribute_value": "value"},
+        pattern="test_attr_*.parquet",
+        update_attrs_table=True
+    )
+
+    # Create the joined timeseries with only specified attributes
+    # include one invalid attribute 'tester' alongside valid attributes
+    attr_list = ['drainage_area', 'ecoregion', 'tester']
+    ev.joined_timeseries.create(
+        add_attrs=True,
+        execute_scripts=True,
+        attr_list=attr_list,
+        secondary_filters=["location_id = 'fcst-1'"]
+    )
+
+    columns = ev.joined_timeseries.to_sdf().columns
+    expected_columns = [
+        'reference_time',
+        'value_time',
+        'primary_location_id',
+        'secondary_location_id',
+        'primary_value',
+        'secondary_value',
+        'unit_name',
+        'drainage_area',
+        'ecoregion',
+        'month',
+        'year',
+        'water_year',
+        'configuration_name',
+        'variable_name',
+        'member',
+        'season'
+    ]
+
+    assert len(columns) == len(expected_columns)
+    assert sorted(columns) == sorted(expected_columns)
+
+    joined_df = ev.joined_timeseries.to_pandas()
+    assert all(joined_df['secondary_location_id'].unique() == ['fcst-1'])
+
     # ev.spark.stop()
 
 
@@ -249,9 +372,15 @@ if __name__ == "__main__":
                 dir=tempdir
             )
         )
-        test_distinct_values(
+        test_create_filtered_joined_timeseries(
             tempfile.mkdtemp(
                 prefix="2-",
+                dir=tempdir
+            )
+        )
+        test_distinct_values(
+            tempfile.mkdtemp(
+                prefix="3-",
                 dir=tempdir
             )
         )
