@@ -43,6 +43,7 @@ protobuf = "5.28.3"
 psutil = ">=7.0.0,<8"
 baseflow = "^0.1.0"
 apache-sedona = ">=1.8.0,<2"
+h5netcdf = "^1.7.3"
 
 [tool.poetry.group.test.dependencies]
 pytest = ">=7.4.3"
