@@ -2,6 +2,7 @@
 import sys
 from pathlib import Path
 from teehr.evaluation.tables.base_table import Table
+from teehr.models.filters import FilterBaseModel
 from teehr.querying.utils import join_geometry
 import pyspark.sql as ps
 import logging
@@ -47,9 +48,38 @@ class JoinedTimeseriesTable(Table):
             "primary_location_id"
         )
 
-    def _join(self) -> ps.DataFrame:
-        """Join primary and secondary timeseries."""
-        joined_df = self._ev.sql("""
+    def _join(self,
+            primary_filters: Union[
+                str, dict, FilterBaseModel,
+                List[Union[str, dict, FilterBaseModel]]
+            ] = None,
+            secondary_filters: Union[
+                str, dict, FilterBaseModel,
+                List[Union[str, dict, FilterBaseModel]]
+            ] = None,
+        ) -> ps.DataFrame:
+        """Join primary and secondary timeseries.
+
+        Parameters
+        ----------
+        primary_filters : Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]], optional
+            Filters to apply to the primary timeseries before joining,
+            by default None
+        secondary_filters : Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]], optional
+            Filters to apply to the secondary timeseries before joining,
+            by default None"""
+
+        self._ev.primary_timeseries.filter(primary_filters).to_sdf().createOrReplaceTempView("filtered_primary_timeseries")
+
+        self._ev.secondary_timeseries.filter(secondary_filters).to_sdf().createOrReplaceTempView("filtered_secondary_timeseries")
+
+        self._ev.location_crosswalks.to_sdf().createOrReplaceTempView("location_crosswalks")
+
+        joined_df = self._ev.spark.sql("""
             SELECT
                 sf.reference_time
                 , sf.value_time as value_time
@@ -61,18 +91,20 @@ class JoinedTimeseriesTable(Table):
                 , sf.unit_name
                 , sf.variable_name
                 , sf.member
-            FROM secondary_timeseries sf
+            FROM filtered_secondary_timeseries sf
             JOIN location_crosswalks cf
                 on cf.secondary_location_id = sf.location_id
-            JOIN primary_timeseries pf
+            JOIN filtered_primary_timeseries pf
                 on cf.primary_location_id = pf.location_id
                 and sf.value_time = pf.value_time
                 and sf.unit_name = pf.unit_name
                 and sf.variable_name = pf.variable_name
-            """,
-            create_temp_views=["secondary_timeseries",
-                               "location_crosswalks",
-                               "primary_timeseries"])
+            """)
+
+        self._ev.spark.catalog.dropTempView("filtered_primary_timeseries")
+        self._ev.spark.catalog.dropTempView("filtered_secondary_timeseries")
+        self._ev.spark.catalog.dropTempView("location_crosswalks")
+
         return joined_df
 
     def _add_attr(self,
@@ -202,7 +234,15 @@ class JoinedTimeseriesTable(Table):
         add_attrs: bool = True,
         execute_scripts: bool = False,
         attr_list: List[str] = None,
-        write_mode: str = "create_or_replace"
+        write_mode: str = "create_or_replace",
+        primary_filters: Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]
+        ] = None,
+        secondary_filters: Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]
+        ] = None,
     ):
         """Create joined timeseries table.
 
@@ -219,8 +259,18 @@ class JoinedTimeseriesTable(Table):
         write_mode : str, optional
             Write mode for the joined timeseries table, by default
             "create_or_replace"
+        primary_filters : Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]], optional
+            Filters to apply to the primary timeseries before joining,
+            by default None
+        secondary_filters : Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]], optional
+            Filters to apply to the secondary timeseries before joining,
+            by default None
         """
-        joined_df = self._join()
+        joined_df = self._join(primary_filters, secondary_filters)
 
         if add_attrs:
             joined_df = self._add_attr(joined_df, attr_list)
