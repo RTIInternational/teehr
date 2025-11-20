@@ -58,7 +58,20 @@ class JoinedTimeseriesTable(Table):
                 List[Union[str, dict, FilterBaseModel]]
             ] = None,
         ) -> ps.DataFrame:
-        """Join primary and secondary timeseries."""
+        """Join primary and secondary timeseries.
+
+        Parameters
+        ----------
+        primary_filters : Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]], optional
+            Filters to apply to the primary timeseries before joining,
+            by default None
+        secondary_filters : Union[
+            str, dict, FilterBaseModel,
+            List[Union[str, dict, FilterBaseModel]]], optional
+            Filters to apply to the secondary timeseries before joining,
+            by default None"""
 
         self._ev.primary_timeseries.filter(primary_filters).to_sdf().createOrReplaceTempView("filtered_primary_timeseries")
 
