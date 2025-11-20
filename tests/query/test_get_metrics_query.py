@@ -553,7 +553,13 @@ def test_ensemble_metrics(tmpdir):
     crps.backend = "numba"
     crps.reference_configuration = "benchmark_forecast_hourly_normals"
 
-    include_metrics = [crps]
+    bs = ProbabilisticMetrics.BrierScore()
+    bs.threshold = 0.75
+    bs.summary_func = np.mean
+    bs.backend = "numba"
+    bs.reference_configuration = "benchmark_forecast_hourly_normals"
+
+    include_metrics = [crps, bs]
     metrics_df = ev.metrics.query(
         include_metrics=include_metrics,
         group_by=[
@@ -569,6 +575,15 @@ def test_ensemble_metrics(tmpdir):
         metrics_df.mean_crps_ensemble_skill_score.values[0], -32.115792
     )
     assert np.isnan(metrics_df.mean_crps_ensemble_skill_score.values[1])
+
+    assert np.isclose(metrics_df.mean_brier_score.values[0], 0.33333334)
+    assert np.isclose(metrics_df.mean_brier_score.values[1], 0.0)
+    assert np.isnan(
+        metrics_df.mean_brier_score_skill_score.values[0]
+    )
+    assert np.isnan(
+        metrics_df.mean_brier_score_skill_score.values[1]
+    )
 
 
 def test_metrics_transforms(tmpdir):

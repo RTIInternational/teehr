@@ -46,6 +46,41 @@ class CRPS(ProbabilisticBasemodel):
     attrs: Dict = Field(default=tma.CRPS_ENSEMBLE_ATTRS, frozen=True)
 
 
+class BrierScore(ProbabilisticBasemodel):
+    """Brier Score for ensemble probabilistic forecasts.
+
+    Parameters
+    ----------
+    threshold : float
+        The threshold to use for binary event definition.
+    backend : str
+        The backend to use, by default "numba". Can be ("numba" or "numpy").
+    summary_func : Callable
+        The function to apply to the results, by default np.mean.
+    output_field_name : str
+        The output field name, by default "mean_brier_score".
+    func : Callable
+        The function to apply to the data, by default
+        :func:`probabilistic_funcs.ensemble_brier_score`.
+    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+        The input field names, by default
+        ["primary_value", "secondary_value", "member"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
+
+    threshold: float = Field(default=0.75)
+    transform: TransformEnum = Field(default=None)
+    backend: str = Field(default="numba")
+    output_field_name: str = Field(default="mean_brier_score")
+    func: Callable = Field(probabilistic_funcs.ensemble_brier_score, frozen=True)
+    summary_func: Union[Callable, None] = Field(default=None)
+    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+        default=["primary_value", "secondary_value", "member"]
+    )
+    attrs: Dict = Field(default=tma.BS_ENSEMBLE_ATTRS, frozen=True)
+
+
 class ProbabilisticMetrics:
     """Define and customize probalistic metrics.
 
@@ -59,3 +94,4 @@ class ProbabilisticMetrics:
     """
 
     CRPS = CRPS
+    BrierScore = BrierScore
