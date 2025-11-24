@@ -257,6 +257,7 @@ class Fetch:
             sites=sites,
             start_date=start_date,
             end_date=end_date,
+            service=service,
             output_parquet_dir=Path(
                 self.usgs_cache_dir,
                 USGS_CONFIGURATION_NAME,

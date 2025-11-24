@@ -101,7 +101,8 @@ class Load:
         schema_func = tbl.schema_func
         uniqueness_fields = tbl.uniqueness_fields
         foreign_keys = tbl.foreign_keys
-        fields = tbl.fields()
+        schema = schema_func().to_structtype()
+        flds = [fld.name for fld in schema]
 
         if (isinstance(df, ps.DataFrame) and df.isEmpty()) or (
             isinstance(df, pd.DataFrame) and df.empty
@@ -112,7 +113,7 @@ class Load:
             )
             return
         field_mapping = self._extract._merge_field_mapping(
-            table_fields=fields,
+            table_fields=flds,
             field_mapping=field_mapping,
             constant_field_values=constant_field_values
         )
@@ -124,18 +125,20 @@ class Load:
             # This is a bit of a workaround due to spark failing when converting
             # a pd.DataFrame with all null columns. We can pass in a schema, but
             # first we validate with pandera to ensure all columns are present.
+            # Here we pass in flds to get the correct column order.
             df = schema_func("pandas").validate(df)
             df = df.to_wkb()
             df = self._ev.spark.createDataFrame(
-                df, schema=schema_func().to_structtype()
+                df[flds], schema=schema
             )
         elif isinstance(df, pd.DataFrame):
             # This is a bit of a workaround due to spark failing when converting
             # a pd.DataFrame with all null columns. We can pass in a schema, but
             # first we validate with pandera to ensure all columns are present.
+            # Here we pass in flds to get the correct column order.
             df = schema_func("pandas").validate(df)
             df = self._ev.spark.createDataFrame(
-                df, schema=schema_func().to_structtype()
+                df[flds], schema=schema
             )
         elif not isinstance(df, ps.DataFrame):
             raise TypeError(
