@@ -1,5 +1,6 @@
 """Classes representing available performance metrics."""
 from typing import List, Dict, Callable, Union
+from pyspark.sql import types as T
 
 from pydantic import Field
 import teehr.models.metrics.metric_attributes as tma
@@ -738,6 +739,212 @@ class RootMeanStandardDeviationRatio(DeterministicBasemodel):
     attrs: Dict = Field(default=tma.RSR_ATTRS, frozen=True)
 
 
+class ConfusionMatrix(DeterministicBasemodel):
+    """Confusion Matrix.
+
+    Parameters
+    ----------
+    bootstrap : BootstrapBasemodel
+        The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
+    unpack_results : bool
+        Whether to unpack the confusion matrix results into separate fields,
+        by default False.
+    return_type : T.DataType
+        The return type of the metric, by default
+        :class:`pyspark.sql.types.MapType` of `StringType` to `IntegerType`.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    threshold_field_name : str
+        The field name for the location-specific threshold values.
+        Required for Confusion Matrix, by default None.
+    output_field_name : str
+        The output field name, by default "confusion_matrix".
+    func : Callable
+        The function to apply to the data, by default
+        :func:`deterministic_funcs.confusion_matrix`.
+    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+        The input field names, by default
+        ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
+
+    bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
+    unpack_results: bool = Field(default=False)
+    return_type: T.DataType = Field(
+        default=T.MapType(T.StringType(), T.IntegerType()), frozen=True
+    )
+    transform: TransformEnum = Field(default=None)
+    threshold_field_name: str = Field(default=None)
+    output_field_name: str = Field(default="confusion_matrix")
+    func: Callable = Field(metric_funcs.confusion_matrix, frozen=True)
+    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+        default=["primary_value", "secondary_value"]
+    )
+    attrs: Dict = Field(default=tma.CM_ATTRS, frozen=True)
+
+
+class FalseAlarmRatio(DeterministicBasemodel):
+    """False Alarm Ratio.
+
+    Parameters
+    ----------
+    bootstrap : BootstrapBasemodel
+        The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    threshold_field_name : str
+        The field name for the location-specific threshold values.
+        Required for False Alarm Ratio, by default None.
+    output_field_name : str
+        The output field name, by default "false_alarm_ratio".
+    func : Callable
+        The function to apply to the data, by default
+        :func:`deterministic_funcs.false_alarm_ratio`.
+    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+        The input field names, by default
+        ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
+
+    bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
+    transform: TransformEnum = Field(default=None)
+    threshold_field_name: str = Field(default=None)
+    output_field_name: str = Field(default="false_alarm_ratio")
+    func: Callable = Field(metric_funcs.false_alarm_ratio, frozen=True)
+    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+        default=["primary_value", "secondary_value"]
+    )
+    attrs: Dict = Field(default=tma.FAR_ATTRS, frozen=True)
+
+
+class ProbabilityOfDetection(DeterministicBasemodel):
+    """Probability of Detection.
+
+    Parameters
+    ----------
+    bootstrap : BootstrapBasemodel
+        The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    threshold_field_name : str
+        The field name for the location-specific threshold values.
+        Required for Probability of Detection, by default None.
+    output_field_name : str
+        The output field name, by default "probability_of_detection".
+    func : Callable
+        The function to apply to the data, by default
+        :func:`deterministic_funcs.probability_of_detection`.
+    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+        The input field names, by default
+        ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
+
+    bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
+    transform: TransformEnum = Field(default=None)
+    threshold_field_name: str = Field(default=None)
+    output_field_name: str = Field(default="probability_of_detection")
+    func: Callable = Field(metric_funcs.probability_of_detection, frozen=True)
+    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+        default=["primary_value", "secondary_value"]
+    )
+    attrs: Dict = Field(default=tma.POD_ATTRS, frozen=True)
+
+
+class ProbabilityOfFalseDetection(DeterministicBasemodel):
+    """Probability of False Detection.
+
+    Parameters
+    ----------
+    bootstrap : BootstrapBasemodel
+        The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    threshold_field_name : str
+        The field name for the location-specific threshold values.
+        Required for Probability of False Detection, by default None.
+    output_field_name : str
+        The output field name, by default "probability_of_false_detection".
+    func : Callable
+        The function to apply to the data, by default
+        :func:`deterministic_funcs.probability_of_false_detection`.
+    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+        The input field names, by default
+        ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
+
+    bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
+    transform: TransformEnum = Field(default=None)
+    threshold_field_name: str = Field(default=None)
+    output_field_name: str = Field(default="probability_of_false_detection")
+    func: Callable = Field(metric_funcs.probability_of_false_detection,
+                           frozen=True)
+    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+        default=["primary_value", "secondary_value"]
+    )
+    attrs: Dict = Field(default=tma.POFD_ATTRS, frozen=True)
+
+
+class CriticalSuccessIndex(DeterministicBasemodel):
+    """Critical Success Index.
+
+    Parameters
+    ----------
+    bootstrap : BootstrapBasemodel
+        The bootstrap model, by default None.
+    add_epsilon: bool
+        Whether to add epsilon to avoid issues with certain transforms or
+        division by zero, by default False.
+    transform : TransformEnum
+        The transformation to apply to the data, by default None.
+    threshold_field_name : str
+        The field name for the location-specific threshold values.
+        Required for Critical Success Index, by default None.
+    output_field_name : str
+        The output field name, by default "critical_success_index".
+    func : Callable
+        The function to apply to the data, by default
+        :func:`deterministic_funcs.critical_success_index`.
+    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]
+        The input field names, by default
+        ["primary_value", "secondary_value"].
+    attrs : Dict
+        The static attributes for the metric.
+    """
+
+    bootstrap: BootstrapBasemodel = Field(default=None)
+    add_epsilon: bool = Field(default=False)
+    transform: TransformEnum = Field(default=None)
+    threshold_field_name: str = Field(default=None)
+    output_field_name: str = Field(default="critical_success_index")
+    func: Callable = Field(metric_funcs.critical_success_index, frozen=True)
+    input_field_names: Union[str, StrEnum, List[Union[str, StrEnum]]] = Field(
+        default=["primary_value", "secondary_value"]
+    )
+    attrs: Dict = Field(default=tma.CSI_ATTRS, frozen=True)
+
+
 class DeterministicMetrics:
     """Define and customize determinisitic metrics.
 
@@ -765,6 +972,11 @@ class DeterministicMetrics:
     - Rsquared
     - SpearmanCorrelation
     - RootMeanStandardDeviationRatio
+    - ConfusionMatrix
+    - FalseAlarmRatio
+    - ProbabilityOfDetection
+    - ProbabilityOfFalseDetection
+    - CriticalSuccessIndex
     """
 
     AnnualPeakRelativeBias = AnnualPeakRelativeBias
@@ -786,3 +998,8 @@ class DeterministicMetrics:
     Rsquared = Rsquared
     SpearmanCorrelation = SpearmanCorrelation
     RootMeanStandardDeviationRatio = RootMeanStandardDeviationRatio
+    ConfusionMatrix = ConfusionMatrix
+    FalseAlarmRatio = FalseAlarmRatio
+    ProbabilityOfDetection = ProbabilityOfDetection
+    ProbabilityOfFalseDetection = ProbabilityOfFalseDetection
+    CriticalSuccessIndex = CriticalSuccessIndex

@@ -8,6 +8,7 @@ ME_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
+    "requires_threshold_field": False,
 }
 
 RBIAS_ATTRS = {
@@ -16,6 +17,7 @@ RBIAS_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
+    "requires_threshold_field": False,
 }
 
 MULTBIAS_ATTRS = {
@@ -24,6 +26,7 @@ MULTBIAS_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 1.0,
+    "requires_threshold_field": False,
 }
 
 MSE_ATTRS = {
@@ -32,6 +35,7 @@ MSE_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
+    "requires_threshold_field": False,
 }
 
 RMSE_ATTRS = {
@@ -40,6 +44,7 @@ RMSE_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
+    "requires_threshold_field": False,
 }
 
 MAE_ATTRS = {
@@ -48,6 +53,7 @@ MAE_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
+    "requires_threshold_field": False,
 }
 
 RMAE_ATTRS = {
@@ -56,6 +62,7 @@ RMAE_ATTRS = {
     "category": mc.Deterministic,
     "value_range": None,
     "optimal_value": 0.0,
+    "requires_threshold_field": False,
 }
 
 PEARSON_ATTRS = {
@@ -64,159 +71,7 @@ PEARSON_ATTRS = {
     "category": mc.Deterministic,
     "value_range": [-1.0, 1.0],
     "optimal_value": 1.0,
-}
-
-R2_ATTRS = {
-    "short_name": "r2",
-    "display_name": "Coefficient of Determination",
-    "category": mc.Deterministic,
-    "value_range": [0.0, 1.0],
-    "optimal_value": 1.0,
-}
-
-NSE_ATTRS = {
-    "short_name": "NSE",
-    "display_name": "Nash-Sutcliffe Efficiency",
-    "category": mc.Deterministic,
-    "value_range": [None, 1.0],
-    "optimal_value": 1.0,
-}
-
-NNSE_ATTRS = {
-    "short_name": "NNSE",
-    "display_name": "Normalized Nash-Sutcliffe Efficiency",
-    "category": mc.Deterministic,
-    "value_range": [0.0, 1.0],
-    "optimal_value": 1.0,
-}
-
-KGE_ATTRS = {
-    "short_name": "KGE",
-    "display_name": "Kling-Gupta Efficiency - original",
-    "category": mc.Deterministic,
-    "value_range": [0.0, 1.0],
-    "optimal_value": 1.0,
-}
-
-KGE1_ATTRS = {
-    "short_name": "KGE_mod1",
-    "display_name": "Kling-Gupta Efficiency - modified 1 (2012)",
-    "category": mc.Deterministic,
-    "value_range": [0.0, 1.0],
-    "optimal_value": 1.0,
-}
-
-KGE2_ATTRS = {
-    "short_name": "KGE_mod2",
-    "display_name": "Kling-Gupta Efficiency - modified 2 (2021)",
-    "category": mc.Deterministic,
-    "value_range": [0.0, 1.0],
-    "optimal_value": 1.0,
-}
-
-COUNT_ATTRS = {
-    "short_name": "count",
-    "display_name": "Count",
-    "category": mc.Signature,
-    "value_range": None,
-    "optimal_value": None,
-}
-
-MINIMUM_ATTRS = {
-    "short_name": "minimum",
-    "display_name": "Minimum",
-    "category": mc.Signature,
-    "value_range": None,
-    "optimal_value": None,
-}
-
-MAXIMUM_ATTRS = {
-    "short_name": "maximum",
-    "display_name": "Maximum",
-    "category": mc.Signature,
-    "value_range": None,
-    "optimal_value": None,
-}
-
-AVERAGE_ATTRS = {
-    "short_name": "average",
-    "display_name": "Average",
-    "category": mc.Signature,
-    "value_range": None,
-    "optimal_value": None,
-}
-
-SUM_ATTRS = {
-    "short_name": "sum",
-    "display_name": "Sum",
-    "category": mc.Signature,
-    "value_range": None,
-    "optimal_value": None,
-}
-
-VARIANCE_ATTRS = {
-    "short_name": "variance",
-    "display_name": "Variance",
-    "category": mc.Signature,
-    "value_range": None,
-    "optimal_value": None,
-}
-
-MAX_VALUE_DELTA_ATTRS = {
-    "short_name": "max_value_delta",
-    "display_name": "Max Value Delta",
-    "category": mc.Deterministic,
-    "value_range": None,
-    "optimal_value": None,
-}
-
-MAX_VAL_TIME_ATTRS = {
-    "short_name": "max_val_time",
-    "display_name": "Max Value Time",
-    "category": mc.Signature,
-    "value_range": None,
-    "optimal_value": None,
-}
-
-MAX_VALUE_TIMEDELTA_ATTRS = {
-    "short_name": "max_value_time_delta",
-    "display_name": "Max Value Time Delta",
-    "category": mc.Deterministic,
-    "value_range": None,
-    "optimal_value": None,
-    "units": "seconds"
-}
-
-ANNUAL_PEAK_RBIAS_ATTRS = {
-    "short_name": "annual_peak_relative_bias",
-    "display_name": "Annual Peak Relative Bias",
-    "category": mc.Deterministic,
-    "value_range": None,
-    "optimal_value": None,
-}
-
-SPEARMAN_R_ATTRS = {
-    "short_name": "spearman_correlation",
-    "display_name": "Spearman Rank Correlation Coefficient",
-    "category": mc.Deterministic,
-    "value_range": [-1.0, 1.0],
-    "optimal_value": 1.0,
-}
-
-RSR_ATTRS = {
-    "short_name": "root_mean_standard_deviation_ratio",
-    "display_name": "Root Mean Standard Deviation Ratio",
-    "category": mc.Deterministic,
-    "value_range": [0.0, None],
-    "optimal_value": 0.0,
-}
-
-CRPS_ENSEMBLE_ATTRS = {
-    "short_name": "crps_ensemble",
-    "display_name": "Continuous Ranked Probability Score - Ensemble",
-    "category": mc.Probabilistic,
-    "value_range": [None, None],
-    "optimal_value": 0.0,
+    "requires_threshold_field": False,
 }
 
 VR_ATTRS = {
@@ -225,6 +80,179 @@ VR_ATTRS = {
     "category": mc.Deterministic,
     "value_range": [0.0, None],
     "optimal_value": 1.0,
+    "requires_threshold_field": False,
+}
+
+R2_ATTRS = {
+    "short_name": "r2",
+    "display_name": "Coefficient of Determination",
+    "category": mc.Deterministic,
+    "value_range": [0.0, 1.0],
+    "optimal_value": 1.0,
+    "requires_threshold_field": False,
+}
+
+NSE_ATTRS = {
+    "short_name": "NSE",
+    "display_name": "Nash-Sutcliffe Efficiency",
+    "category": mc.Deterministic,
+    "value_range": [None, 1.0],
+    "optimal_value": 1.0,
+    "requires_threshold_field": False,
+}
+
+NNSE_ATTRS = {
+    "short_name": "NNSE",
+    "display_name": "Normalized Nash-Sutcliffe Efficiency",
+    "category": mc.Deterministic,
+    "value_range": [0.0, 1.0],
+    "optimal_value": 1.0,
+    "requires_threshold_field": False,
+}
+
+KGE_ATTRS = {
+    "short_name": "KGE",
+    "display_name": "Kling-Gupta Efficiency - original",
+    "category": mc.Deterministic,
+    "value_range": [0.0, 1.0],
+    "optimal_value": 1.0,
+    "requires_threshold_field": False,
+}
+
+KGE1_ATTRS = {
+    "short_name": "KGE_mod1",
+    "display_name": "Kling-Gupta Efficiency - modified 1 (2012)",
+    "category": mc.Deterministic,
+    "value_range": [0.0, 1.0],
+    "optimal_value": 1.0,
+    "requires_threshold_field": False,
+}
+
+KGE2_ATTRS = {
+    "short_name": "KGE_mod2",
+    "display_name": "Kling-Gupta Efficiency - modified 2 (2021)",
+    "category": mc.Deterministic,
+    "value_range": [0.0, 1.0],
+    "optimal_value": 1.0,
+    "requires_threshold_field": False,
+}
+
+COUNT_ATTRS = {
+    "short_name": "count",
+    "display_name": "Count",
+    "category": mc.Signature,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": False,
+}
+
+MINIMUM_ATTRS = {
+    "short_name": "minimum",
+    "display_name": "Minimum",
+    "category": mc.Signature,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": False,
+}
+
+MAXIMUM_ATTRS = {
+    "short_name": "maximum",
+    "display_name": "Maximum",
+    "category": mc.Signature,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": False,
+}
+
+AVERAGE_ATTRS = {
+    "short_name": "average",
+    "display_name": "Average",
+    "category": mc.Signature,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": False,
+}
+
+SUM_ATTRS = {
+    "short_name": "sum",
+    "display_name": "Sum",
+    "category": mc.Signature,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": False,
+}
+
+VARIANCE_ATTRS = {
+    "short_name": "variance",
+    "display_name": "Variance",
+    "category": mc.Signature,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": False,
+}
+
+MAX_VALUE_DELTA_ATTRS = {
+    "short_name": "max_value_delta",
+    "display_name": "Max Value Delta",
+    "category": mc.Deterministic,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": False,
+}
+
+MAX_VAL_TIME_ATTRS = {
+    "short_name": "max_val_time",
+    "display_name": "Max Value Time",
+    "category": mc.Signature,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": False,
+}
+
+MAX_VALUE_TIMEDELTA_ATTRS = {
+    "short_name": "max_value_time_delta",
+    "display_name": "Max Value Time Delta",
+    "category": mc.Deterministic,
+    "value_range": None,
+    "optimal_value": None,
+    "units": "seconds",
+    "requires_threshold_field": False,
+}
+
+ANNUAL_PEAK_RBIAS_ATTRS = {
+    "short_name": "annual_peak_relative_bias",
+    "display_name": "Annual Peak Relative Bias",
+    "category": mc.Deterministic,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": False,
+}
+
+SPEARMAN_R_ATTRS = {
+    "short_name": "spearman_correlation",
+    "display_name": "Spearman Rank Correlation Coefficient",
+    "category": mc.Deterministic,
+    "value_range": [-1.0, 1.0],
+    "optimal_value": 1.0,
+    "requires_threshold_field": False,
+}
+
+RSR_ATTRS = {
+    "short_name": "root_mean_standard_deviation_ratio",
+    "display_name": "Root Mean Standard Deviation Ratio",
+    "category": mc.Deterministic,
+    "value_range": [0.0, None],
+    "optimal_value": 0.0,
+    "requires_threshold_field": False,
+}
+
+CRPS_ENSEMBLE_ATTRS = {
+    "short_name": "crps_ensemble",
+    "display_name": "Continuous Ranked Probability Score - Ensemble",
+    "category": mc.Probabilistic,
+    "value_range": [None, None],
+    "optimal_value": 0.0,
+    "requires_threshold_field": False,
 }
 
 FDC_SLOPE_ATTRS = {
@@ -233,4 +261,50 @@ FDC_SLOPE_ATTRS = {
     "category": mc.Signature,
     "value_range": [None, None],
     "optimal_value": None,
+    "requires_threshold_field": False,
+}
+
+CM_ATTRS = {
+    "short_name": "confusion_matrix",
+    "display_name": "Confusion Matrix",
+    "category": mc.Deterministic,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": True,
+}
+
+FAR_ATTRS = {
+    "short_name": "false_alarm_ratio",
+    "display_name": "False Alarm Ratio",
+    "category": mc.Deterministic,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": True,
+}
+
+POD_ATTRS = {
+    "short_name": "probability_of_detection",
+    "display_name": "Probability of Detection",
+    "category": mc.Deterministic,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": True,
+}
+
+POFD_ATTRS = {
+    "short_name": "probability_of_false_detection",
+    "display_name": "Probability of False Detection",
+    "category": mc.Deterministic,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": True,
+}
+
+CSI_ATTRS = {
+    "short_name": "critical_success_index",
+    "display_name": "Critical Success Index",
+    "category": mc.Deterministic,
+    "value_range": None,
+    "optimal_value": None,
+    "requires_threshold_field": True,
 }

@@ -12,7 +12,7 @@ from teehr.models.filters import JoinedTimeseriesFilter
 from teehr.evaluation.evaluation import Evaluation
 from teehr import SignatureTimeseriesGenerators as sts
 from teehr import BenchmarkForecastGenerators as bm
-# import pytest
+from teehr import TimeseriesAwareCalculatedFields as tcf
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -42,22 +42,23 @@ def test_executing_deterministic_metrics(tmpdir):
     # Define the evaluation object.
     ev = setup_v0_3_study(tmpdir)
 
-    # Test all the metrics.
-    include_all_metrics = [
-        func() for func in DeterministicMetrics.__dict__.values() if callable(func)  # noqa
+    # Test all the non-conditional metrics.
+    include_nonconditional_metrics = [
+        func() for func in DeterministicMetrics.__dict__.values()
+        if callable(func) and not func().attrs.get('requires_threshold_field', False)  # noqa
     ]
 
     # Get the currently available fields to use in the query.
     flds = ev.joined_timeseries.field_enum()
 
     metrics_df = ev.metrics.query(
-        include_metrics=include_all_metrics,
+        include_metrics=include_nonconditional_metrics,
         group_by=[flds.primary_location_id],
         order_by=[flds.primary_location_id],
     ).to_pandas()
 
     metrics_df2 = ev.metrics(table_name="joined_timeseries").query(
-        include_metrics=include_all_metrics,
+        include_metrics=include_nonconditional_metrics,
         group_by=[flds.primary_location_id],
         order_by=[flds.primary_location_id],
     ).to_pandas()
@@ -65,7 +66,29 @@ def test_executing_deterministic_metrics(tmpdir):
     assert metrics_df.equals(metrics_df2)
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
-    assert metrics_df.columns.size == 20
+    assert metrics_df.columns.size == 21
+
+    # Test all the conditional metrics.
+    include_conditional_metrics = [
+        func(threshold_field_name="quantile_value")
+        for func in DeterministicMetrics.__dict__.values()
+        if callable(func) and func().attrs.get('requires_threshold_field', True)  # noqa
+    ]
+
+    metrics_df = ev.metrics.add_calculated_fields([
+        tcf.AbovePercentileEventDetection(
+            skip_event_id=True,
+            add_quantile_field=True,
+        )
+    ]).query(
+        include_metrics=include_conditional_metrics,
+        group_by=[flds.primary_location_id],
+        order_by=[flds.primary_location_id],
+    ).to_pandas()
+
+    assert isinstance(metrics_df, pd.DataFrame)
+    assert metrics_df.index.size == 3
+    assert metrics_df.columns.size == 6
     ev.spark.stop()
 
 
