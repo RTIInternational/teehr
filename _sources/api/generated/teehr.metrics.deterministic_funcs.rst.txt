@@ -1,0 +1,55 @@
+﻿deterministic\_funcs
+====================
+
+.. automodule:: teehr.metrics.deterministic_funcs
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+   
+      annual_peak_relative_bias
+      confusion_matrix
+      critical_success_index
+      false_alarm_ratio
+      kling_gupta_efficiency
+      kling_gupta_efficiency_mod1
+      kling_gupta_efficiency_mod2
+      max_value_delta
+      max_value_timedelta
+      mean_absolute_error
+      mean_absolute_relative_error
+      mean_error
+      mean_squared_error
+      multiplicative_bias
+      nash_sutcliffe_efficiency
+      nash_sutcliffe_efficiency_normalized
+      pearson_correlation
+      probability_of_detection
+      probability_of_false_detection
+      r_squared
+      relative_bias
+      root_mean_squared_error
+      root_mean_standard_deviation_ratio
+      spearman_correlation
+      variability_ratio
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

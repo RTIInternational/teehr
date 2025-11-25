@@ -1,0 +1,6 @@
+teehr.metrics.signature\_funcs.maximum
+======================================
+
+.. currentmodule:: teehr.metrics.signature_funcs
+
+.. autofunction:: maximum

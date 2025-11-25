@@ -1,0 +1,38 @@
+﻿SecondaryTimeseriesTable
+========================
+
+.. currentmodule:: teehr.evaluation.tables.secondary_timeseries_table
+
+.. autoclass:: SecondaryTimeseriesTable
+   :members:
+   :show-inheritance:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~SecondaryTimeseriesTable.distinct_values
+      ~SecondaryTimeseriesTable.field_enum
+      ~SecondaryTimeseriesTable.fields
+      ~SecondaryTimeseriesTable.filter
+      ~SecondaryTimeseriesTable.load_csv
+      ~SecondaryTimeseriesTable.load_dataframe
+      ~SecondaryTimeseriesTable.load_fews_xml
+      ~SecondaryTimeseriesTable.load_netcdf
+      ~SecondaryTimeseriesTable.load_parquet
+      ~SecondaryTimeseriesTable.order_by
+      ~SecondaryTimeseriesTable.query
+      ~SecondaryTimeseriesTable.to_geopandas
+      ~SecondaryTimeseriesTable.to_pandas
+      ~SecondaryTimeseriesTable.to_sdf
+      ~SecondaryTimeseriesTable.validate
+   
+   
+
+   
+   
+   
