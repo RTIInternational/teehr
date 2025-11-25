@@ -348,5 +348,6 @@ def nwm_to_parquet(
             overwrite_output,
             nwm_version,
             variable_mapper,
-            timeseries_type
+            timeseries_type,
+            drop_overlapping_assimilation_values
         )

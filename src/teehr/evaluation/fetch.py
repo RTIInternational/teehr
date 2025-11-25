@@ -911,8 +911,7 @@ class Fetch:
             ),
             timeseries_type=timeseries_type,
             write_mode=write_mode,
-            drop_duplicates=drop_duplicates,
-            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values  # noqa
+            drop_duplicates=drop_duplicates
         )
 
     def nwm_operational_grids(
@@ -1215,6 +1214,5 @@ class Fetch:
             in_path=Path(self.nwm_cache_dir),
             timeseries_type=timeseries_type,
             write_mode=write_mode,
-            drop_duplicates=drop_duplicates,
-            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values  # noqa
+            drop_duplicates=drop_duplicates
         )

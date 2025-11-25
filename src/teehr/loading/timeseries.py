@@ -247,8 +247,7 @@ def validate_and_insert_timeseries(
     timeseries_type: str,
     pattern: str = "**/*.parquet",
     write_mode: TableWriteEnum = "append",
-    drop_duplicates: bool = True,
-    drop_overlapping_assimilation_values: bool = False
+    drop_duplicates: bool = True
 ):
     """Validate and insert primary timeseries data.
 
@@ -272,12 +271,6 @@ def validate_and_insert_timeseries(
     drop_duplicates : bool, optional (default: True)
         Whether to drop duplicates in the dataframe before writing
         to the table.
-    drop_overlapping_assimilation_values: Optional[bool] = True
-        Whether to drop overlapping assimilation values. Default is True.
-        If True, values that overlap in value_time are dropped, keeping those with
-        the most recent reference_time. In this case, all reference_time values
-        are set to None. If False, overlapping values are kept and reference_time
-        is retained.
     """ # noqa
     in_path = Path(in_path)
     logger.info(f"Validating and inserting timeseries data from {in_path}")
@@ -291,9 +284,6 @@ def validate_and_insert_timeseries(
 
     # Read the converted files to Spark DataFrame
     df = table._read_files(in_path, pattern)
-
-    if drop_overlapping_assimilation_values:
-        df = df.withColumn("reference_time", lit(None))
 
     # Validate using the _validate() method
     validated_df = table._validate(

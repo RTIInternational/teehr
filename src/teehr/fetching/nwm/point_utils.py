@@ -102,7 +102,8 @@ def process_chunk_of_files(
     overwrite_output: bool,
     nwm_version: str,
     variable_mapper: Dict[str, Dict[str, str]],
-    timeseries_type: TimeseriesTypeEnum
+    timeseries_type: TimeseriesTypeEnum,
+    drop_overlapping_assimilation_values: bool
 ):
     """Assemble a table for a chunk of NWM files."""
     location_ids = np.array(location_ids).astype(int)
@@ -156,6 +157,12 @@ def process_chunk_of_files(
         end = f"{end_json[1]}T{end_json[3][1:3]}F{end_json[6][1:]}"
         filename = f"{start}_{end}.parquet"
 
+    if drop_overlapping_assimilation_values and "assim" in configuration:
+        # Set reference_time to NaT for assimilation values
+        df_output = output_table.to_pandas()
+        df_output.loc[:, REFERENCE_TIME] = pd.NaT
+        output_table = pa.Table.from_pandas(df_output, schema=schema)
+
     write_timeseries_parquet_file(
         Path(output_parquet_dir, filename),
         overwrite_output,
@@ -176,7 +183,8 @@ def fetch_and_format_nwm_points(
     overwrite_output: bool,
     nwm_version: str,
     variable_mapper: Dict[str, Dict[str, str]],
-    timeseries_type: TimeseriesTypeEnum
+    timeseries_type: TimeseriesTypeEnum,
+    drop_overlapping_assimilation_values: bool
 ):
     """Fetch NWM point data and save as parquet files.
 
@@ -211,6 +219,12 @@ def fetch_and_format_nwm_points(
         they already exist.  True = overwrite; False = fail.
     nwm_version : str
         Specified NWM version.
+    variable_mapper : Dict[str, Dict[str, str]]
+        A mapping dictionary for variable names and units.
+    timeseries_type : TimeseriesTypeEnum
+        The type of timeseries being processed.
+    drop_overlapping_assimilation_values : bool
+        Whether to drop assimilation values that overlap in value_time.
     """
     output_parquet_dir = Path(output_parquet_dir)
     if not output_parquet_dir.exists():
@@ -241,5 +255,6 @@ def fetch_and_format_nwm_points(
             overwrite_output,
             nwm_version,
             variable_mapper,
-            timeseries_type
+            timeseries_type,
+            drop_overlapping_assimilation_values
         )
