@@ -183,7 +183,8 @@ def fetch_and_format_nwm_grids(
     overwrite_output: bool,
     location_id_prefix: Union[str, None],
     variable_mapper: Dict[str, Dict[str, str]],
-    timeseries_type: TimeseriesTypeEnum
+    timeseries_type: TimeseriesTypeEnum,
+    drop_overlapping_assimilation_values: bool
 ):
     """Compute weighted average, grouping by reference time.
 
@@ -243,6 +244,11 @@ def fetch_and_format_nwm_grids(
             Path(output_parquet_dir), f"{ref_time_str}.parquet"
         )
         z_hour_df.sort_values([LOCATION_ID, VALUE_TIME], inplace=True)
+
+        if drop_overlapping_assimilation_values and "assim" in nwm_configuration_name:
+            # Set reference_time to NaT for assimilation values
+            z_hour_df.loc[:, REFERENCE_TIME] = pd.NaT
+
         write_timeseries_parquet_file(
             filepath=parquet_filepath,
             overwrite_output=overwrite_output,

@@ -40,10 +40,10 @@ class AbovePercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel
         Default: "primary_value"
     - output_event_field_name:
         The name of the column to store the event detection.
-        Default: "event"
+        Default: "event_above"
     - output_event_id_field_name:
         The name of the column to store the event ID.
-        Default: "event_id"
+        Default: "event_above_id"
     - output_quantile_field_name:
         The name of the column to store the quantile value.
         Default: "quantile_value"
@@ -278,10 +278,10 @@ class BelowPercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel
         Default: "primary_value"
     - output_event_field_name:
         The name of the column to store the event detection.
-        Default: "event"
+        Default: "event_below"
     - output_event_id_field_name:
         The name of the column to store the event ID.
-        Default: "event_id"
+        Default: "event_below_id"
     - output_quantile_field_name:
         The name of the column to store the quantile value.
         Default: "quantile_value"

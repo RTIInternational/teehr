@@ -382,5 +382,6 @@ def nwm_grids_to_parquet(
             overwrite_output=overwrite_output,
             location_id_prefix=location_id_prefix,
             variable_mapper=variable_mapper,
-            timeseries_type=timeseries_type
+            timeseries_type=timeseries_type,
+            drop_overlapping_assimilation_values=drop_overlapping_assimilation_values
         )

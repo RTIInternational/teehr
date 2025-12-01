@@ -26,6 +26,15 @@ def apply_aggregation_metrics(
     func_list = []
     for model in include_metrics:
 
+        if (model.attrs["requires_threshold_field"]) and \
+           (model.threshold_field_name not in model.input_field_names):
+            if model.threshold_field_name is not None:
+                model.input_field_names.append(model.threshold_field_name)
+            else:
+                raise ValueError(
+                    f"{model} requires a valid threshold_field_name argument."
+                )
+
         input_field_names = parse_fields_to_list(model.input_field_names)
         validate_fields_exist(gp._df.columns, input_field_names)
 
