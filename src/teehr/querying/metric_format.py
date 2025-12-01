@@ -36,12 +36,6 @@ def apply_aggregation_metrics(
                 f"Applying metric: {alias} with {model.bootstrap.name}"
                 " bootstrapping"
             )
-            if model.bootstrap.unpack_results and not model.unpack_results:
-                model.unpack_results = True
-                logger.debug(
-                    f"Setting unpack_results to True on metric {alias} "
-                    "to enable unpacking of bootstrap results."
-                )
             func_pd = pandas_udf(
                 model.bootstrap.func(model),
                 model.bootstrap.return_type
