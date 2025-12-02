@@ -261,6 +261,7 @@ BS_ENSEMBLE_ATTRS = {
     "category": mc.Probabilistic,
     "value_range": [0.0, 1.0],
     "optimal_value": 0.0,
+    "requires_threshold_field": False,
 }
 
 FDC_SLOPE_ATTRS = {
