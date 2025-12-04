@@ -139,21 +139,44 @@ def test_fetch_and_load_nwm_operational_points(tmpdir):
     ev.location_crosswalks.load_parquet(
         in_path=CROSSWALK_FILEPATH
     )
+    # TESTING
+    from datetime import timedelta
+
+    end_dt = datetime.now()
+    start_dt = end_dt - timedelta(days=1)
+    nwm_configuration = "medium_range_mem1"
+    nwm_version = "nwm30"
+    output_type = "channel_rt_1"
+    variable_name = "streamflow"
 
     ev.fetch.nwm_operational_points(
-        nwm_configuration="analysis_assim",
-        output_type="channel_rt",
-        variable_name="streamflow",
-        start_date=datetime(2024, 2, 22),
-        end_date=datetime(2025, 2, 22),
-        ingest_days=1,
-        nwm_version="nwm30",
-        prioritize_analysis_value_time=True,
-        t_minus_hours=[0],
-        process_by_z_hour=False,
-        starting_z_hour=3,
-        ending_z_hour=20,
+        start_date=start_dt,
+        end_date=end_dt,
+        nwm_configuration=nwm_configuration,
+        nwm_version=nwm_version,
+        output_type=output_type,
+        variable_name=variable_name,
+        starting_z_hour=6,
+        ending_z_hour=6
     )
+    pass
+
+    # END TESTING
+
+    # ev.fetch.nwm_operational_points(
+    #     nwm_configuration="analysis_assim",
+    #     output_type="channel_rt",
+    #     variable_name="streamflow",
+    #     start_date=datetime(2024, 2, 22),
+    #     end_date=datetime(2025, 2, 22),
+    #     ingest_days=1,
+    #     nwm_version="nwm30",
+    #     prioritize_analysis_value_time=True,
+    #     t_minus_hours=[0],
+    #     process_by_z_hour=False,
+    #     starting_z_hour=3,
+    #     ending_z_hour=20,
+    # )
     ts_df = ev.secondary_timeseries.to_pandas()
 
     filepath = Path(
@@ -240,28 +263,28 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_fetch_and_load_nwm_retro_points(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_fetch_and_load_nwm_retro_grids(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
+        # test_fetch_and_load_nwm_retro_points(
+        #     tempfile.mkdtemp(
+        #         prefix="1-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_fetch_and_load_nwm_retro_grids(
+        #     tempfile.mkdtemp(
+        #         prefix="2-",
+        #         dir=tempdir
+        #     )
+        # )
         test_fetch_and_load_nwm_operational_points(
             tempfile.mkdtemp(
                 prefix="3-",
                 dir=tempdir
             )
         )
-        # Warning: This one is slow.
-        test_fetch_and_load_nwm_operational_grids(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
+        # # Warning: This one is slow.
+        # test_fetch_and_load_nwm_operational_grids(
+        #     tempfile.mkdtemp(
+        #         prefix="4-",
+        #         dir=tempdir
+        #     )
+        # )
