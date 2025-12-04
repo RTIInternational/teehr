@@ -53,8 +53,8 @@ def create_spark_session(
     aws_session_token: str = None,
     aws_region: str = const.AWS_REGION,
     # Simple extensibility parameters
-    extra_packages: List[str] = None,
-    extra_configs: Dict[str, str] = None,
+    add_packages: List[str] = None,
+    update_configs: Dict[str, str] = None,
     debug_config: bool = False
 ) -> SparkSession:
     """Create and return a Spark session for evaluation.
@@ -108,12 +108,14 @@ def create_spark_session(
         AWS session token for temporary credentials. Default is None.
     aws_region : str
         AWS region name. Default is "us-east-2".
-    extra_packages : List[str]
-        Additional Spark packages to include. Default is None.
-        >>> extra_packages=["com.example:my-package:1.0.0"]
-    extra_configs : Dict[str, str]
-        Additional Spark configurations to set. Default is None.
-        >>> extra_configs={"spark.sql.shuffle.partitions": "100"}
+    add_packages : List[str]
+        Provided Spark packages will be added if they do not already exist.
+        Default is None.
+        >>> add_packages=["com.example:my-package:1.0.0"]
+    update_configs : Dict[str, str]
+        Provided Spark configurations will be added if they do not already
+        exist, or overwritten if they do exist. Default is None.
+        >>> update_configs={"spark.sql.shuffle.partitions": "100"}
     debug_config : bool
         Whether to log the final Spark configuration for debugging.
         Default is False.
@@ -129,8 +131,6 @@ def create_spark_session(
     conf = _create_spark_base_session(
         conf=SparkConf(),
         aws_region=aws_region,
-        extra_packages=extra_packages,
-        extra_configs=extra_configs,
         driver_memory=driver_memory,
         driver_maxresultsize=driver_max_result_size
     )
@@ -187,6 +187,13 @@ def create_spark_session(
         remote_catalog_uri=remote_catalog_uri
     )
 
+    # Update configs and packages if provided
+    _update_configs_and_packages(
+        conf=conf,
+        update_configs=update_configs,
+        add_packages=add_packages
+    )
+
     logger.info("⚙️ All settings applied. Creating Spark session...")
     spark = SparkSession.builder.appName(app_name).config(conf=conf).getOrCreate()
     sedona_spark = SedonaContext.create(spark)
@@ -199,132 +206,43 @@ def create_spark_session(
     return sedona_spark
 
 
-def _set_catalog_metadata(
-    conf: SparkConf,
-    local_namespace_name: str,
-    local_catalog_name: str,
-    local_catalog_type: str,
-    remote_catalog_name: str,
-    remote_catalog_type: str,
-    remote_catalog_uri: str,
-    remote_warehouse_dir: str,
-    remote_namespace_name: str
-):
-    """Set catalog metadata in Spark configuration."""
-    metadata_configs = {
-        "local_catalog_name": local_catalog_name,
-        "local_namespace_name": local_namespace_name,
-        "local_catalog_type": local_catalog_type,
-        "remote_warehouse_dir": remote_warehouse_dir,
-        "remote_catalog_name": remote_catalog_name,
-        "remote_namespace_name": remote_namespace_name,
-        "remote_catalog_type": remote_catalog_type,
-        "remote_catalog_uri": remote_catalog_uri
-    }
-    for key, value in metadata_configs.items():
-        conf.set(key, value)
-        logger.debug(f"Metadata config: {key}: {value}")
-
-
-def _set_aws_credentials_in_spark(
-    conf: SparkConf,
-    remote_catalog_name: str,
-    aws_access_key_id: str,
-    aws_secret_access_key: str,
-    aws_session_token: str,
-    aws_region: str,
-):
-    """Set AWS credentials in Spark configuration with multiple options."""
-    logger.info("Setting Hadoop's default AWS credentials provider and AWS region")
-    conf.set(
-        "spark.hadoop.fs.s3a.aws.credentials.provider",
-        "com.amazonaws.auth.DefaultAWSCredentialsProviderChain"
-    )
-    conf.set("spark.hadoop.fs.s3a.endpoint.region", aws_region)
-
-    # Priority 1: Explicit credentials provided by user
-    if aws_access_key_id and aws_secret_access_key:
-        logger.info("🔑 Using user-provided AWS credentials")
-        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", aws_access_key_id)
-        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", aws_secret_access_key)
-        conf.set("spark.hadoop.fs.s3a.access.key", aws_access_key_id)
-        conf.set("spark.hadoop.fs.s3a.secret.key", aws_secret_access_key)
-        return
-
-    # Priority 2: Explicit token
-    if aws_session_token:
-        logger.info("🔑 Using user-provided AWS session token")
-        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", aws_session_token)
-        conf.set("spark.hadoop.fs.s3a.session.token", aws_session_token)
-        return
-
-    # Priority 3: Check boto token
-    session = botocore.session.Session()
-    credentials = session.get_credentials()
-    if credentials and credentials.token:
-        logger.info("🔑 Using AWS session token from boto3")
-        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", credentials.token)
-        conf.set("spark.hadoop.fs.s3a.session.token", credentials.token)
-        return
-
-    # Priority 4: Check boto credentials
-    if credentials and credentials.access_key and credentials.secret_key:
-        logger.info("🔑 Using AWS credentials from boto3")
-        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", credentials.access_key)
-        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", credentials.secret_key)
-        conf.set("spark.hadoop.fs.s3a.access.key", credentials.access_key)
-        conf.set("spark.hadoop.fs.s3a.secret.key", credentials.secret_key)
-        return
-
-    # Priority 5: Fall back to anonymous or default provider
-    logger.info("🔑 Using anonymous AWS credentials for S3 access")
-    conf.set(
-        "spark.hadoop.fs.s3a.aws.credentials.provider",
-        "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider"
-    )
-    return
-
-
 def _create_spark_base_session(
     conf: SparkConf,
     aws_region: str,
-    extra_packages: List[str] = None,
-    extra_configs: Dict[str, str] = None,
     driver_memory: float = None,
     driver_maxresultsize: float = None
 ):
     """Create a base Spark builder."""
     conf.setMaster("local[*]")
 
-    # Append any extra packages to base list
-    base_packages = _get_spark_defaults()["packages"].copy()
-    if extra_packages:
-        base_packages.extend(extra_packages)
+    # Set base packages
+    base_packages = [
+        f"org.apache.sedona:sedona-spark-shaded-{PYSPARK_VERSION}_{SCALA_VERSION}:{SEDONA_VERSION}",
+        f"org.apache.iceberg:iceberg-spark-runtime-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}",
+        "org.datasyslab:geotools-wrapper:1.8.0-33.1",
+        f"org.apache.iceberg:iceberg-spark-extensions-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}",
+        "org.apache.hadoop:hadoop-aws:3.4.1",  # Note. Need 3.4.1 for compatibility
+        "com.amazonaws:aws-java-sdk-bundle:1.12.791"
+    ]
+    conf.set("spark.jars.packages", ",".join(base_packages))
 
-    # Set base configs
-    base_configs = _get_spark_defaults()["configs"].copy()
-    for key, value in base_configs.items():
-        conf.set(key, value)
+    # Set configurations
+    conf.set("spark.driver.extraJavaOptions", f"-Daws.region={aws_region}")
+    conf.set("spark.executor.extraJavaOptions", f"-Daws.region={aws_region}")
+    conf.set("spark.sql.session.timeZone", "UTC")
+    conf.set("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
+    conf.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+    conf.set("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
 
-    # Set any extra configs
-    if extra_configs:
-        for key, value in extra_configs.items():
-            conf.set(key, value)
-
-    # Handle default local memory settings
+    # Memory settings
     memory_info = psutil.virtual_memory()
     driver_memory_int = int(0.75 * memory_info.available / (1024**3))
     if driver_memory is None:
         driver_memory = f"{driver_memory_int}g"
     if driver_maxresultsize is None:
         driver_maxresultsize = f"{int(0.5 * driver_memory_int)}g"
-
-    conf.set("spark.jars.packages", ",".join(base_packages))
     conf.set("spark.driver.memory", f"{driver_memory}")
     conf.set("spark.driver.maxResultSize", f"{driver_maxresultsize}")
-
-    conf.set("spark.driver.extraJavaOptions", f"-Daws.region={aws_region}")
-    conf.set("spark.executor.extraJavaOptions", f"-Daws.region={aws_region}")
 
     return conf
 
@@ -431,45 +349,90 @@ def _set_spark_cluster_configuration(
     return
 
 
-def log_session_config(spark: SparkSession):
-    """Log the final Spark configuration for debugging."""
-    logger.info("Final Spark configuration:")
-    df = pd.DataFrame(list(spark.conf.getAll.items()), columns=["Key", "Value"])
-    gps = df.groupby(by="Key")
-    for key, group in gps:
-        value = ",".join(group["Value"].tolist())
-        values = value.split(",")
-        if key.startswith("spark."):
-            if len(values) > 1:
-                logger.info(f" {key}: ")
-                for val in values:
-                    logger.info(f"    {val}")
-            else:
-                logger.info(f" {key}: {value}")
+def _set_aws_credentials_in_spark(
+    conf: SparkConf,
+    remote_catalog_name: str,
+    aws_access_key_id: str,
+    aws_secret_access_key: str,
+    aws_session_token: str,
+    aws_region: str,
+):
+    """Set AWS credentials in Spark configuration with multiple options."""
+    logger.info("Setting Hadoop's default AWS credentials provider and AWS region")
+    conf.set(
+        "spark.hadoop.fs.s3a.aws.credentials.provider",
+        "com.amazonaws.auth.DefaultAWSCredentialsProviderChain"
+    )
+    conf.set("spark.hadoop.fs.s3a.endpoint.region", aws_region)
+
+    # Priority 1: Explicit credentials provided by user
+    if aws_access_key_id and aws_secret_access_key:
+        logger.info("🔑 Using user-provided AWS credentials")
+        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", aws_access_key_id)
+        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", aws_secret_access_key)
+        conf.set("spark.hadoop.fs.s3a.access.key", aws_access_key_id)
+        conf.set("spark.hadoop.fs.s3a.secret.key", aws_secret_access_key)
+        return
+
+    # Priority 2: Explicit token
+    if aws_session_token:
+        logger.info("🔑 Using user-provided AWS session token")
+        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", aws_session_token)
+        conf.set("spark.hadoop.fs.s3a.session.token", aws_session_token)
+        return
+
+    # Priority 3: Check boto token
+    session = botocore.session.Session()
+    credentials = session.get_credentials()
+    if credentials and credentials.token:
+        logger.info("🔑 Using AWS session token from boto3")
+        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", credentials.token)
+        conf.set("spark.hadoop.fs.s3a.session.token", credentials.token)
+        return
+
+    # Priority 4: Check boto credentials
+    if credentials and credentials.access_key and credentials.secret_key:
+        logger.info("🔑 Using AWS credentials from boto3")
+        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", credentials.access_key)
+        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", credentials.secret_key)
+        conf.set("spark.hadoop.fs.s3a.access.key", credentials.access_key)
+        conf.set("spark.hadoop.fs.s3a.secret.key", credentials.secret_key)
+        return
+
+    # Priority 5: Fall back to anonymous or default provider
+    logger.info("🔑 Using anonymous AWS credentials for S3 access")
+    conf.set(
+        "spark.hadoop.fs.s3a.aws.credentials.provider",
+        "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider"
+    )
+    return
 
 
-def _get_spark_defaults() -> Dict[str, Any]:
-    """Get default Spark configurations based on preset.
-
-    These are common to local and cluster sessions.
-    """
-    base_packages = [
-        f"org.apache.sedona:sedona-spark-shaded-{PYSPARK_VERSION}_{SCALA_VERSION}:{SEDONA_VERSION}",
-        f"org.apache.iceberg:iceberg-spark-runtime-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}",
-        "org.datasyslab:geotools-wrapper:1.8.0-33.1",
-        f"org.apache.iceberg:iceberg-spark-extensions-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}",
-        "org.apache.hadoop:hadoop-aws:3.4.1",  # Note. Need 3.4.1 for compatibility
-        "com.amazonaws:aws-java-sdk-bundle:1.12.791"
-    ]
-    base_configs = {
-        "spark.sql.session.timeZone": "UTC",
-        "spark.sql.extensions": "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions",
-        "spark.serializer": "org.apache.spark.serializer.KryoSerializer",
-        "spark.hadoop.fs.s3a.impl": "org.apache.hadoop.fs.s3a.S3AFileSystem",
-        # Need this to read e4 evaluation data via hadoop:
-        "spark.hadoop.fs.s3a.aws.credentials.provider": "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider"
+def _set_catalog_metadata(
+    conf: SparkConf,
+    local_namespace_name: str,
+    local_catalog_name: str,
+    local_catalog_type: str,
+    remote_catalog_name: str,
+    remote_catalog_type: str,
+    remote_catalog_uri: str,
+    remote_warehouse_dir: str,
+    remote_namespace_name: str
+):
+    """Set catalog metadata in Spark configuration."""
+    metadata_configs = {
+        "local_catalog_name": local_catalog_name,
+        "local_namespace_name": local_namespace_name,
+        "local_catalog_type": local_catalog_type,
+        "remote_warehouse_dir": remote_warehouse_dir,
+        "remote_catalog_name": remote_catalog_name,
+        "remote_namespace_name": remote_namespace_name,
+        "remote_catalog_type": remote_catalog_type,
+        "remote_catalog_uri": remote_catalog_uri
     }
-    return {"packages": base_packages, "configs": base_configs}
+    for key, value in metadata_configs.items():
+        conf.set(key, value)
+        logger.debug(f"Metadata config: {key}: {value}")
 
 
 def _configure_iceberg_catalogs(
@@ -496,6 +459,44 @@ def _configure_iceberg_catalogs(
     if os.environ.get("REMOTE_CATALOG_S3_PATH_STYLE_ACCESS", "false").lower() == "true":
         conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.endpoint", os.environ.get("REMOTE_CATALOG_S3_ENDPOINT"))
         conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.path-style-access", os.environ.get("REMOTE_CATALOG_S3_PATH_STYLE_ACCESS").lower())
+
+
+def _update_configs_and_packages(
+    conf: SparkConf,
+    update_configs: Dict[str, str],
+    add_packages: List[str]
+) -> Dict[str, str]:
+    """Update Spark configurations and packages."""
+    # Add specified packages
+    if add_packages is not None:
+        current_packages = conf.get("spark.jars.packages").split(",")
+        for package in add_packages:
+            if package not in current_packages:
+                current_packages.append(package)
+        conf.set("spark.jars.packages", ",".join(current_packages))
+
+    # Update or add specified configs
+    if update_configs is not None:
+        for key, value in update_configs.items():
+            conf.set(key, value)
+    return
+
+
+def log_session_config(spark: SparkSession):
+    """Log the final Spark configuration for debugging."""
+    logger.info("Final Spark configuration:")
+    df = pd.DataFrame(list(spark.conf.getAll.items()), columns=["Key", "Value"])
+    gps = df.groupby(by="Key")
+    for key, group in gps:
+        value = ",".join(group["Value"].tolist())
+        values = value.split(",")
+        if key.startswith("spark."):
+            if len(values) > 1:
+                logger.info(f" {key}: ")
+                for val in values:
+                    logger.info(f"    {val}")
+            else:
+                logger.info(f" {key}: {value}")
 
 
 def remove_or_update_configs(
