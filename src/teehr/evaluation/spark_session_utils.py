@@ -54,7 +54,7 @@ def create_spark_session(
     aws_region: str = const.AWS_REGION,
     # Simple extensibility parameters
     add_packages: List[str] = None,
-    extra_configs: Dict[str, str] = None,
+    update_configs: Dict[str, str] = None,
     debug_config: bool = False
 ) -> SparkSession:
     """Create and return a Spark session for evaluation.
@@ -190,7 +190,7 @@ def create_spark_session(
     # Update configs and packages if provided
     _update_configs_and_packages(
         conf=conf,
-        update_configs=extra_configs,
+        update_configs=update_configs,
         add_packages=add_packages
     )
 

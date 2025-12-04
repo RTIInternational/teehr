@@ -10,7 +10,7 @@ def test_create_spark_session():
     spark = create_spark_session(
         app_name="Test Spark Session",
         add_packages=None,  # the default
-        extra_configs={
+        update_configs={
             "spark.hadoop.fs.s3a.aws.credentials.provider":
                 "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider",
             "spark.sql.shuffle.partitions": "4",
