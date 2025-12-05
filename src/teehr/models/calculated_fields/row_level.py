@@ -1,8 +1,7 @@
 """Classes representing UDFs."""
 import calendar
-from typing import List, Union
-from pydantic import BaseModel as PydanticBaseModel
-from pydantic import Field, ConfigDict
+from typing import Union
+from pydantic import Field
 import pandas as pd
 import pyspark.sql.types as T
 from pyspark.sql.functions import pandas_udf
@@ -202,7 +201,8 @@ class Seasons(CalculatedFieldABC, CalculatedFieldBaseModel):
         def func(value_time: pd.Series) -> pd.Series:
             return value_time.dt.month.apply(
                 lambda x: next(
-                    (season for season, months in self.season_months.items() if x in months),
+                    (season for season,
+                     months in self.season_months.items() if x in months),
                     None
                 )
             )
@@ -215,7 +215,7 @@ class Seasons(CalculatedFieldABC, CalculatedFieldBaseModel):
 
 
 class ForecastLeadTime(CalculatedFieldABC, CalculatedFieldBaseModel):
-    """Adds the forecast lead time in seconds from a timestamp column.
+    """Adds the forecast lead time from a timestamp column.
 
     Properties
     ----------
@@ -254,6 +254,266 @@ class ForecastLeadTime(CalculatedFieldABC, CalculatedFieldBaseModel):
             self.output_field_name,
             func(self.value_time_field_name, self.reference_time_field_name)
         )
+        return sdf
+
+
+class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
+    """Adds ID for grouped forecast lead time bins.
+
+    Properties
+    ----------
+    - value_time_field_name:
+        The name of the column containing the timestamp.
+        Default: "value_time"
+    - reference_time_field_name:
+        The name of the column containing the forecast time.
+        Default: "reference_time"
+    - lead_time_field_name:
+        The name of the column containing the forecast lead time.
+        Default: "forecast_lead_time"
+    - output_field_name:
+        The name of the column to store the lead time bin ID.
+        Default: "forecast_lead_time_bin"
+    - bin_size:
+        Either a single pd.Timedelta for uniform bin sizes, or a dict mapping
+        threshold pd.Timedelta values to pd.Timedelta bin sizes. Keys
+        represent the upper bound of each threshold range. Keys can also be
+        string or pd.Timestamp values, which will be converted to pd.Timedelta
+        relative to the minimum value_time in the DataFrame.
+        Default: 5 days
+
+        Example dict 1: {
+            pd.Timedelta(days=1): pd.Timedelta(hours=6),
+            pd.Timedelta(days=2): pd.Timedelta(hours=12),
+            pd.Timedelta(days=3): pd.Timedelta(days=1)
+        }
+        Example dict 2: {
+            "2024-11-20 12:00:00": pd.Timedelta(hours=6),
+            "2024-11-21 12:00:00": pd.Timedelta(hours=12),
+            "2024-11-22 12:00:00": pd.Timedelta(days=1)
+        }
+        Example dict 3: {
+            pd.Timestamp("2024-11-20 12:00:00"): pd.Timedelta(hours=6),
+            pd.Timestamp("2024-11-21 12:00:00"): pd.Timedelta(hours=12),
+            pd.Timestamp("2024-11-22 12:00:00"): pd.Timedelta(days=1)
+        }
+    """
+
+    value_time_field_name: str = Field(
+        default="value_time"
+    )
+    reference_time_field_name: str = Field(
+        default="reference_time"
+    )
+    lead_time_field_name: str = Field(
+        default="forecast_lead_time"
+    )
+    output_field_name: str = Field(
+        default="forecast_lead_time_bin"
+    )
+    bin_size: Union[pd.Timedelta, dict] = Field(
+        default=pd.Timedelta(days=5)
+    )
+
+    @staticmethod
+    def validate_bin_size_dict(
+        self,
+        sdf: ps.DataFrame
+    ) -> Union[pd.Timedelta, dict]:
+        """Validate and normalize bin_size dict.
+
+        Validates that bin_size dict keys are of correct, uniform type and
+        converts them to pd.Timedelta if needed. Validates that bin_size dict
+        values are of type pd.Timedelta. Validates that dict is not empty.
+
+        If bin_size is already a pd.Timedelta or dict with pd.Timedelta keys,
+        returns it unchanged. Otherwise, converts string/datetime keys to
+        pd.Timedelta by calculating the difference from the minimum value_time.
+        """
+        # If not a dict or already has Timedelta keys, return as-is
+        if not isinstance(self.bin_size, dict) and isinstance(
+            self.bin_size, pd.Timedelta
+        ):
+            return self.bin_size
+
+        # raise error if dict is empty
+        if not self.bin_size:
+            raise ValueError("bin_size dict cannot be empty")
+
+        # Ensure all keys are of the same type
+        first_key = next(iter(self.bin_size.keys()))
+        for key in self.bin_size.keys():
+            if not isinstance(key, type(first_key)):
+                raise TypeError(
+                    "All bin_size dict keys must be of the same type"
+                )
+
+        # Ensure all values are pd.Timedelta
+        for value in self.bin_size.values():
+            if not isinstance(value, pd.Timedelta):
+                raise TypeError(
+                    "All bin_size dict values must be of type pd.Timedelta"
+                )
+
+        # If already Timedelta keys, return as-is
+        if isinstance(first_key, pd.Timedelta):
+            return self.bin_size
+
+        # Convert string or datetime keys to Timedelta
+        if isinstance(first_key, (str, pd.Timestamp)):
+            # Get minimum value_time from the dataframe
+            min_value_time_row = sdf.select(
+                self.value_time_field_name
+            ).orderBy(self.value_time_field_name).first()
+
+            # Extract value_time and convert to datetime
+            min_value_time = pd.to_datetime(
+                min_value_time_row[self.value_time_field_name]
+            )
+
+            # Convert dict keys from string/datetime to Timedelta
+            converted_dict = {}
+            for key, value in self.bin_size.items():
+                # Convert key to datetime if it's a string
+                if isinstance(key, str):
+                    try:
+                        key_datetime = pd.to_datetime(key)
+                    except Exception as e:
+                        raise ValueError(
+                            f"Error converting key '{key}' to datetime: {e}"
+                            )
+                else:
+                    key_datetime = key
+
+                # Calculate Timedelta from min_value_time
+                timedelta_key = key_datetime - min_value_time
+                converted_dict[timedelta_key] = value
+
+            return converted_dict
+
+        else:
+            # raise error for unsupported key types
+            raise TypeError(
+                "bin_size dict keys must be pd.Timedelta, str, or pd.Timestamp"
+            )
+
+    @staticmethod
+    def add_forecast_lead_time(self, sdf: ps.DataFrame) -> ps.DataFrame:
+        """Calculate forecast lead time if not already present."""
+        if self.lead_time_field_name not in sdf.columns:
+            flt_cf = ForecastLeadTime(
+                value_time_field_name=self.value_time_field_name,
+                reference_time_field_name=self.reference_time_field_name,
+                output_field_name=self.lead_time_field_name
+            )
+            sdf = flt_cf.apply_to(sdf)
+        return sdf
+
+    @staticmethod
+    def add_forecast_lead_time_bin(
+        self,
+        sdf: ps.DataFrame
+    ) -> ps.DataFrame:
+        """Add forecast lead time bin column."""
+
+        @pandas_udf(returnType=T.StringType())
+        def func(lead_time: pd.Series, value_time: pd.Series) -> pd.Series:
+            if isinstance(self.bin_size, dict):
+                # Sort thresholds for consistent processing
+                sorted_thresholds = sorted(self.bin_size.items(),
+                                           key=lambda x: x[0].total_seconds())
+
+                bin_ids = pd.Series("", index=lead_time.index)
+                prev_thresh_sec = 0
+
+                for i, (threshold, bin_size) in enumerate(sorted_thresholds):
+                    threshold_seconds = threshold.total_seconds()
+                    bin_size_seconds = bin_size.total_seconds()
+
+                    is_last = (i == len(sorted_thresholds) - 1)
+
+                    # Mask for values in this threshold range
+                    if is_last:
+                        mask = lead_time.dt.total_seconds() >= prev_thresh_sec
+                    else:
+                        mask = (
+                            lead_time.dt.total_seconds() >= prev_thresh_sec
+                        ) & (
+                            lead_time.dt.total_seconds() < threshold_seconds
+                        )
+
+                    if mask.any():
+                        # Calculate which bin each value belongs to
+                        bins_in_range = (
+                            (lead_time[mask].dt.total_seconds() -
+                             prev_thresh_sec)
+                            // bin_size_seconds
+                        ).astype(int)
+
+                        # create bin ID from actual timestamps
+                        for bin_num in bins_in_range.unique():
+                            bin_mask = mask & (bins_in_range == bin_num)
+
+                            if bin_mask.any():
+                                # Get the unique value_time values for this bin
+                                bin_value_times = value_time[bin_mask].unique()
+
+                                # Convert to datetime and find min/max
+                                bin_value_times_dt = pd.to_datetime(
+                                    bin_value_times
+                                    )
+                                start_timestamp = bin_value_times_dt.min()
+                                end_timestamp = start_timestamp + bin_size
+
+                                # Format as ISO 8601 timestamp range
+                                bin_id = f"{start_timestamp} - {end_timestamp}"
+                                bin_ids[bin_mask] = bin_id
+
+                    prev_thresh_sec = threshold_seconds
+
+                return bin_ids
+
+            else:
+                # Uniform bin size logic
+                bin_size_seconds = self.bin_size.total_seconds()
+
+                # Calculate which bin each value belongs to
+                bin_numbers = (
+                    lead_time.dt.total_seconds() // bin_size_seconds
+                ).astype(int)
+
+                bin_ids = pd.Series("", index=lead_time.index)
+
+                # For each unique bin, create bin ID from actual timestamps
+                for bin_num in bin_numbers.unique():
+                    bin_mask = bin_numbers == bin_num
+
+                    if bin_mask.any():
+                        # Get the unique value_time values for this bin
+                        bin_value_times = value_time[bin_mask].unique()
+
+                        # Convert to datetime if needed and find min/max
+                        bin_value_times_dt = pd.to_datetime(bin_value_times)
+                        start_timestamp = bin_value_times_dt.min()
+                        end_timestamp = start_timestamp + self.bin_size
+
+                        # Format as ISO 8601 timestamp range
+                        bin_id = f"{start_timestamp} - {end_timestamp}"
+                        bin_ids[bin_mask] = bin_id
+
+                return bin_ids
+
+        sdf = sdf.withColumn(
+            self.output_field_name,
+            func(self.lead_time_field_name, self.value_time_field_name)
+        )
+        return sdf
+
+    def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
+        """Apply the calculated field to the Spark DataFrame."""
+        self.bin_size = self.validate_bin_size_dict(self, sdf)
+        sdf = self.add_forecast_lead_time(self, sdf)
+        sdf = self.add_forecast_lead_time_bin(self, sdf)
         return sdf
 
 
@@ -408,6 +668,7 @@ class HourOfYear(CalculatedFieldABC, CalculatedFieldBaseModel):
         The name of the column to store the month.
         Default: "hour_of_year"
     """
+
     input_field_name: str = Field(
         default="value_time"
     )
@@ -461,6 +722,7 @@ class RowLevelCalculatedFields:
     - NormalizedFlow
     - Seasons
     - ForecastLeadTime
+    - ForecastLeadTimeBins
     - ThresholdValueExceeded
     - DayOfYear
     - HourOfYear
@@ -472,6 +734,7 @@ class RowLevelCalculatedFields:
     NormalizedFlow = NormalizedFlow
     Seasons = Seasons
     ForecastLeadTime = ForecastLeadTime
+    ForecastLeadTimeBins = ForecastLeadTimeBins
     ThresholdValueExceeded = ThresholdValueExceeded
     ThresholdValueNotExceeded = ThresholdValueNotExceeded
     DayOfYear = DayOfYear
