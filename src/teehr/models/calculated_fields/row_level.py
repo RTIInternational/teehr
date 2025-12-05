@@ -287,11 +287,13 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
             pd.Timedelta(days=2): pd.Timedelta(hours=12),
             pd.Timedelta(days=3): pd.Timedelta(days=1)
         }
+
         Example dict 2: {
             "2024-11-20 12:00:00": pd.Timedelta(hours=6),
             "2024-11-21 12:00:00": pd.Timedelta(hours=12),
             "2024-11-22 12:00:00": pd.Timedelta(days=1)
         }
+
         Example dict 3: {
             pd.Timestamp("2024-11-20 12:00:00"): pd.Timedelta(hours=6),
             pd.Timestamp("2024-11-21 12:00:00"): pd.Timedelta(hours=12),
@@ -315,8 +317,7 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
         default=pd.Timedelta(days=5)
     )
 
-    @staticmethod
-    def validate_bin_size_dict(
+    def _validate_bin_size_dict(
         self,
         sdf: ps.DataFrame
     ) -> Union[pd.Timedelta, dict]:
@@ -397,8 +398,7 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
                 "bin_size dict keys must be pd.Timedelta, str, or pd.Timestamp"
             )
 
-    @staticmethod
-    def add_forecast_lead_time(self, sdf: ps.DataFrame) -> ps.DataFrame:
+    def _add_forecast_lead_time(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Calculate forecast lead time if not already present."""
         if self.lead_time_field_name not in sdf.columns:
             flt_cf = ForecastLeadTime(
@@ -409,8 +409,7 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
             sdf = flt_cf.apply_to(sdf)
         return sdf
 
-    @staticmethod
-    def add_forecast_lead_time_bin(
+    def _add_forecast_lead_time_bin(
         self,
         sdf: ps.DataFrame
     ) -> ps.DataFrame:
@@ -511,9 +510,9 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        self.bin_size = self.validate_bin_size_dict(self, sdf)
-        sdf = self.add_forecast_lead_time(self, sdf)
-        sdf = self.add_forecast_lead_time_bin(self, sdf)
+        self.bin_size = self._validate_bin_size_dict(self, sdf)
+        sdf = self._add_forecast_lead_time(self, sdf)
+        sdf = self._add_forecast_lead_time_bin(self, sdf)
         return sdf
 
 
