@@ -1,5 +1,5 @@
 """Enums and Basemodels for metric classes."""
-from typing import Union, Callable
+from typing import Union, Callable, List
 
 from teehr.models.str_enum import StrEnum
 from teehr.querying.utils import unpack_sdf_dict_columns
@@ -38,8 +38,19 @@ class ProbabilisticBasemodel(MetricsBasemodel):
         return values
 
 
-class BootstrapBasemodel(MetricsBasemodel):
+class BootstrapBasemodel(PydanticBaseModel):
     """Bootstrap Basemodel configuration."""
+
+    return_type: Union[str, T.ArrayType, T.MapType] = Field(default=None)
+    reps: int = 1000
+    seed: Union[int, None] = None
+    quantiles: Union[List[float], None] = None
+
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        validate_assignment=True,
+        extra='forbid'  # raise an error if extra fields are passed
+    )
 
     @model_validator(mode="before")
     def update_return_type(cls, values):
