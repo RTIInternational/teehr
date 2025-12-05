@@ -55,6 +55,9 @@ def test_add_row_udfs(tmpdir):
     sdf = rcf.ForecastLeadTime().apply_to(sdf)
     _ = sdf.toPandas()
 
+    sdf = rcf.ForecastLeadTimeBins().apply_to(sdf)
+    _ = sdf.toPandas()
+
     sdf = rcf.ThresholdValueExceeded(
             threshold_field_name="year_2_discharge"
         ).apply_to(sdf)
@@ -276,7 +279,7 @@ def test_add_timeseries_udfs(tmpdir):
         skip_event_id=True
     )
     sdf = ped.apply_to(sdf)
-    num_event_timesteps = sdf.filter(sdf.event_above == True).count()
+    num_event_timesteps = sdf.filter(sdf.event_above).count()
     assert num_event_timesteps == 14823
 
     # test percentile event detection (return quantile value)
@@ -340,7 +343,9 @@ def test_location_event_detection(tmpdir):
 
     ped = tcf.AbovePercentileEventDetection()
     sdf = ev.metrics.add_calculated_fields(ped).query(
-        group_by=["configuration_name", "primary_location_id", "event_above_id"],
+        group_by=["configuration_name",
+                  "primary_location_id",
+                  "event_above_id"],
         include_metrics=[
             teehr.Signatures.Maximum(
                 input_field_names=["primary_value"],

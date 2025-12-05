@@ -66,6 +66,7 @@ class AbovePercentileEventDetection(CalculatedFieldABC, CalculatedFieldBaseModel
                 'unit_name'
             ]
     """
+
     quantile: float = Field(
         default=0.85
     )
