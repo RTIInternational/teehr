@@ -1,0 +1,1368 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>teehr.evaluation.tables.base_table &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/teehr.css?v=b36b674b" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../../_static/documentation_options.js?v=8e576371"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/teehr/evaluation/tables/base_table';</script>
+    <link rel="icon" href="../../../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.5.2" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation - Home"/>
+    <img src="../../../../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark pst-js-only" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">teehr.evaluation.tables.base_table</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for teehr.evaluation.tables.base_table</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Base class for tables.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.models.str_enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">StrEnum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.querying.filter_format</span><span class="w"> </span><span class="kn">import</span> <span class="n">validate_and_apply_filters</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ps</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.querying.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">order_df</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.utils.s3path</span><span class="w"> </span><span class="kn">import</span> <span class="n">S3Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.utils.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_path_or_s3path</span><span class="p">,</span> <span class="n">path_to_spark</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.models.filters</span><span class="w"> </span><span class="kn">import</span> <span class="n">FilterBaseModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.models.table_enums</span><span class="w"> </span><span class="kn">import</span> <span class="n">TableWriteEnum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.loading.utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">merge_field_mappings</span><span class="p">,</span>
+    <span class="n">validate_constant_values_dict</span><span class="p">,</span>
+    <span class="n">add_or_replace_sdf_column_prefix</span>
+<span class="p">)</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql.functions</span><span class="w"> </span><span class="kn">import</span> <span class="n">lit</span><span class="p">,</span> <span class="n">col</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">reduce</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="BaseTable">
+<a class="viewcode-back" href="../../../../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BaseTable</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base table class.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ev</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize class.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ev</span> <span class="o">=</span> <span class="n">ev</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dir</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schema_func</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">format</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">partition_by</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spark</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">spark</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">:</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter_model</span><span class="p">:</span> <span class="n">FilterBaseModel</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">strict_validation</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_filter_field_types</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">foreign_keys</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_raise_missing_table_error</span><span class="p">(</span><span class="n">table_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Raise an error if the table does not exist.&quot;&quot;&quot;</span>
+        <span class="n">err_msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;The &#39;</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&#39; table does not exist in the dataset.&quot;</span>
+            <span class="s2">&quot; Please load it first.&quot;</span>
+        <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_enforce_foreign_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sdf</span><span class="p">:</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Enforce foreign keys relationships on the timeseries tables.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">foreign_keys</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Enforcing foreign key constraints for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">for</span> <span class="n">fk</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">foreign_keys</span><span class="p">:</span>
+            <span class="n">sdf</span><span class="o">.</span><span class="n">createOrReplaceTempView</span><span class="p">(</span><span class="s2">&quot;temp_table&quot;</span><span class="p">)</span>
+            <span class="n">sql</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                SELECT t.* from temp_table t</span>
+<span class="s2">                LEFT ANTI JOIN </span><span class="si">{</span><span class="n">fk</span><span class="p">[</span><span class="s1">&#39;domain_table&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> d</span>
+<span class="s2">                ON t.</span><span class="si">{</span><span class="n">fk</span><span class="p">[</span><span class="s1">&#39;column&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> = d.</span><span class="si">{</span><span class="n">fk</span><span class="p">[</span><span class="s1">&#39;domain_column&#39;</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">            &quot;&quot;&quot;</span>
+            <span class="n">result_sdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span>
+                <span class="n">query</span><span class="o">=</span><span class="n">sql</span><span class="p">,</span> <span class="n">create_temp_views</span><span class="o">=</span><span class="p">[</span><span class="n">fk</span><span class="p">[</span><span class="s2">&quot;domain_table&quot;</span><span class="p">]]</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">catalog</span><span class="o">.</span><span class="n">dropTempView</span><span class="p">(</span><span class="s2">&quot;temp_table&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">catalog</span><span class="o">.</span><span class="n">dropTempView</span><span class="p">(</span><span class="n">fk</span><span class="p">[</span><span class="s2">&quot;domain_table&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">result_sdf</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Foreign key constraint violation: &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;A </span><span class="si">{</span><span class="n">fk</span><span class="p">[</span><span class="s1">&#39;column&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> entry in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> is not found in &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;the </span><span class="si">{</span><span class="n">fk</span><span class="p">[</span><span class="s1">&#39;domain_column&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> column in </span><span class="si">{</span><span class="n">fk</span><span class="p">[</span><span class="s1">&#39;domain_table&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read_files</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">,</span> <span class="n">S3Path</span><span class="p">],</span>
+        <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">show_missing_table_warning</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">options</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read data from table directory as a spark dataframe.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path : Union[str, Path, S3Path]</span>
+<span class="sd">            The path to the directory containing the files.</span>
+<span class="sd">        pattern : str, optional</span>
+<span class="sd">            The pattern to match files.</span>
+<span class="sd">        show_missing_table_warning : bool, optional</span>
+<span class="sd">            If True, show the warning an empty table was returned.</span>
+<span class="sd">            The default is True.</span>
+<span class="sd">        **options</span>
+<span class="sd">            Additional options to pass to the spark read method.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        df : ps.DataFrame</span>
+<span class="sd">            The spark dataframe.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading files from </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">options</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">options</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;header&quot;</span><span class="p">:</span> <span class="s2">&quot;true&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;ignoreMissingFiles&quot;</span><span class="p">:</span> <span class="s2">&quot;true&quot;</span>
+            <span class="p">}</span>
+
+        <span class="n">path</span> <span class="o">=</span> <span class="n">to_path_or_s3path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="n">path</span> <span class="o">=</span> <span class="n">path_to_spark</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">pattern</span><span class="p">)</span>
+        <span class="c1"># First, read the file with the schema and check if it&#39;s empty.</span>
+        <span class="c1"># If it&#39;s not empty and it&#39;s the joined timeseries table,</span>
+        <span class="c1"># read it again without the schema to ensure all fields are included.</span>
+        <span class="c1"># Otherwise, continue.</span>
+        <span class="n">schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_func</span><span class="p">()</span><span class="o">.</span><span class="n">to_structtype</span><span class="p">()</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">)</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="o">**</span><span class="n">options</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">df</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">show_missing_table_warning</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;An empty dataframe was returned for &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">df</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load the table from the directory to self.df.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Additional options to pass to the spark read method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading files from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dir</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_files</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dir</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_load_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if the table is loaded.</span>
+
+<span class="sd">        If the table is not loaded, try to load it.  If the table is still</span>
+<span class="sd">        not loaded, raise an error.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_load_table</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_raise_missing_table_error</span><span class="p">(</span><span class="n">table_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_upsert_without_duplicates</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">df</span><span class="p">,</span>
+        <span class="n">num_partitions</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update existing data and append new data without duplicates.&quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Upserting to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> without duplicates.&quot;</span>
+        <span class="p">)</span>
+        <span class="n">partition_by</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition_by</span>
+        <span class="k">if</span> <span class="n">partition_by</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">partition_by</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">existing_sdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_files</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dir</span><span class="p">,</span>
+            <span class="n">use_table_schema</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">show_missing_table_warning</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Limit the dataframe to the partitions that are being updated.</span>
+        <span class="k">for</span> <span class="n">partition</span> <span class="ow">in</span> <span class="n">partition_by</span><span class="p">:</span>
+            <span class="n">partition_values</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">partition</span><span class="p">)</span><span class="o">.</span><span class="n">distinct</span><span class="p">()</span><span class="o">.</span> \
+                <span class="n">rdd</span><span class="o">.</span><span class="n">flatMap</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">partition_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># all null partition values</span>
+                <span class="n">existing_sdf</span> <span class="o">=</span> <span class="n">existing_sdf</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                    <span class="n">col</span><span class="p">(</span><span class="n">partition</span><span class="p">)</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">partition_values</span><span class="p">)</span>
+                <span class="p">)</span>
+        <span class="c1"># Remove rows from existing_sdf that are to be updated.</span>
+        <span class="c1"># Concat and re-write.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">existing_sdf</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">():</span>
+            <span class="c1"># Create the join condition clause using eqNullSafe to treat</span>
+            <span class="c1"># nulls as equal.</span>
+            <span class="n">join_condition</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">&amp;</span> <span class="n">y</span><span class="p">,</span> <span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">eqNullSafe</span><span class="p">(</span><span class="n">existing_sdf</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">unique_column_set</span><span class="p">]</span>  <span class="c1"># noqa: E501</span>
+            <span class="p">)</span>
+            <span class="n">existing_sdf</span> <span class="o">=</span> <span class="n">existing_sdf</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">df</span><span class="p">,</span>
+                <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left_anti&quot;</span><span class="p">,</span>
+                <span class="n">on</span><span class="o">=</span><span class="n">join_condition</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">existing_sdf</span><span class="o">.</span><span class="n">unionByName</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+            <span class="c1"># Get columns in correct order</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">([</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">schema_func</span><span class="p">()</span><span class="o">.</span><span class="n">columns</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">num_partitions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">repartition</span><span class="p">(</span><span class="n">num_partitions</span><span class="p">)</span>
+        <span class="p">(</span>
+            <span class="n">df</span><span class="o">.</span>
+            <span class="n">write</span><span class="o">.</span>
+            <span class="n">partitionBy</span><span class="p">(</span><span class="n">partition_by</span><span class="p">)</span><span class="o">.</span>
+            <span class="nb">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">)</span><span class="o">.</span>
+            <span class="n">mode</span><span class="p">(</span><span class="s2">&quot;overwrite&quot;</span><span class="p">)</span><span class="o">.</span>
+            <span class="n">options</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span>
+            <span class="n">save</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dir</span><span class="p">))</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_append_without_duplicates</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">df</span><span class="p">,</span>
+        <span class="n">num_partitions</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Append new data without duplicates.&quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Appending to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> without duplicates.&quot;</span>
+        <span class="p">)</span>
+        <span class="n">partition_by</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition_by</span>
+        <span class="k">if</span> <span class="n">partition_by</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">partition_by</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">existing_sdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_files</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dir</span><span class="p">,</span>
+            <span class="n">use_table_schema</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">show_missing_table_warning</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+        <span class="c1"># Anti-join: Joins rows from left df that do not have a match</span>
+        <span class="c1"># in right df.  This is used to drop duplicates. df gets written</span>
+        <span class="c1"># in append mode.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">existing_sdf</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">():</span>
+            <span class="c1"># Create the join condition clause using eqNullSafe to treat</span>
+            <span class="c1"># nulls as equal.</span>
+            <span class="n">join_condition</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span> <span class="o">&amp;</span> <span class="n">y</span><span class="p">,</span> <span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">eqNullSafe</span><span class="p">(</span><span class="n">existing_sdf</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">unique_column_set</span><span class="p">]</span>  <span class="c1"># noqa: E501</span>
+            <span class="p">)</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">existing_sdf</span><span class="p">,</span>
+                <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left_anti&quot;</span><span class="p">,</span>
+                <span class="n">on</span><span class="o">=</span><span class="n">join_condition</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">num_partitions</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">repartition</span><span class="p">(</span><span class="n">num_partitions</span><span class="p">)</span>
+
+        <span class="c1"># Only continue if there is new data to write.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">df</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">():</span>
+            <span class="p">(</span>
+                <span class="n">df</span><span class="o">.</span>
+                <span class="n">write</span><span class="o">.</span>
+                <span class="n">partitionBy</span><span class="p">(</span><span class="n">partition_by</span><span class="p">)</span><span class="o">.</span>
+                <span class="nb">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">)</span><span class="o">.</span>
+                <span class="n">mode</span><span class="p">(</span><span class="s2">&quot;append&quot;</span><span class="p">)</span><span class="o">.</span>
+                <span class="n">options</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span>
+                <span class="n">save</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dir</span><span class="p">))</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;No new data to append to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">. &quot;</span>
+                <span class="s2">&quot;Nothing will be written.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_dynamic_overwrite</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">df</span><span class="p">:</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Overwrite partitions contained in the dataframe.&quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Overwriting table partitions in </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+        <span class="n">partition_by</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">partition_by</span>
+        <span class="k">if</span> <span class="n">partition_by</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">partition_by</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="p">(</span>
+            <span class="n">df</span><span class="o">.</span>
+            <span class="n">write</span><span class="o">.</span>
+            <span class="n">partitionBy</span><span class="p">(</span><span class="n">partition_by</span><span class="p">)</span><span class="o">.</span>
+            <span class="nb">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">)</span><span class="o">.</span>
+            <span class="n">mode</span><span class="p">(</span><span class="s2">&quot;overwrite&quot;</span><span class="p">)</span><span class="o">.</span>
+            <span class="n">options</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span>
+            <span class="n">save</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dir</span><span class="p">))</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_write_spark_df</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">df</span><span class="p">:</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">write_mode</span><span class="p">:</span> <span class="n">TableWriteEnum</span> <span class="o">=</span> <span class="s2">&quot;append&quot;</span><span class="p">,</span>
+        <span class="n">num_partitions</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write spark dataframe to directory.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        df : ps.DataFrame</span>
+<span class="sd">            The spark dataframe to write.</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Additional options to pass to the spark write method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ev</span><span class="o">.</span><span class="n">is_s3</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Writing to S3 is not supported.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Writing to S3 is not supported.&quot;</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Writing files to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dir</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;header&quot;</span><span class="p">:</span> <span class="s2">&quot;true&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">write_mode</span> <span class="o">==</span> <span class="s2">&quot;overwrite&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dynamic_overwrite</span><span class="p">(</span>
+                <span class="n">df</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">write_mode</span> <span class="o">==</span> <span class="s2">&quot;append&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_append_without_duplicates</span><span class="p">(</span>
+                <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+                <span class="n">num_partitions</span><span class="o">=</span><span class="n">num_partitions</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">write_mode</span> <span class="o">==</span> <span class="s2">&quot;upsert&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_upsert_without_duplicates</span><span class="p">(</span>
+                <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+                <span class="n">num_partitions</span><span class="o">=</span><span class="n">num_partitions</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid write mode: </span><span class="si">{</span><span class="n">write_mode</span><span class="si">}</span><span class="s2">. &quot;</span>
+                <span class="s2">&quot;Valid values are &#39;append&#39;, &#39;overwrite&#39; and &#39;upsert&#39;.&quot;</span>
+            <span class="p">)</span>
+        <span class="c1"># self._load_table(show_missing_table_warning=False)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;pyspark&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the primary timeseries schema.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        type : str, optional</span>
+<span class="sd">            The type of schema to return.  Valid values are &quot;pyspark&quot; and</span>
+<span class="sd">            &quot;pandas&quot;.  The default is &quot;pyspark&quot;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">type</span> <span class="o">==</span> <span class="s2">&quot;pandas&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_func</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;pandas&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_func</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">df</span><span class="p">:</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">add_missing_columns</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">drop_duplicates</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate a DataFrame against the table schema.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        df : ps.DataFrame</span>
+<span class="sd">            The DataFrame to validate.</span>
+<span class="sd">        strict : bool, optional</span>
+<span class="sd">            If True, any extra columns will be dropped before validation.</span>
+<span class="sd">            If False, will be validated as-is.</span>
+<span class="sd">            The default is True.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        validated_df : ps.DataFrame</span>
+<span class="sd">            The validated DataFrame.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_schema</span><span class="p">()</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validating DataFrame with </span><span class="si">{</span><span class="n">schema</span><span class="o">.</span><span class="n">columns</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+        <span class="n">schema_cols</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+
+        <span class="c1"># Add missing columns</span>
+        <span class="k">if</span> <span class="n">add_missing_columns</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">schema_cols</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">col_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="n">col_name</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">strict</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="o">*</span><span class="n">schema_cols</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">drop_duplicates</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">dropDuplicates</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">unique_column_set</span><span class="p">)</span>
+
+        <span class="n">validated_df</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">validated_df</span><span class="o">.</span><span class="n">pandera</span><span class="o">.</span><span class="n">errors</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validation failed: </span><span class="si">{</span><span class="n">validated_df</span><span class="o">.</span><span class="n">pandera</span><span class="o">.</span><span class="n">errors</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validation failed: </span><span class="si">{</span><span class="n">validated_df</span><span class="o">.</span><span class="n">pandera</span><span class="o">.</span><span class="n">errors</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_enforce_foreign_keys</span><span class="p">(</span><span class="n">validated_df</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">validated_df</span>
+
+<div class="viewcode-block" id="BaseTable.validate">
+<a class="viewcode-back" href="../../../../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.validate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate the dataset table against the schema.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_load_table</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BaseTable.query">
+<a class="viewcode-back" href="../../../../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.query">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">query</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">filters</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">FilterBaseModel</span><span class="p">,</span>
+            <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">FilterBaseModel</span><span class="p">]]</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">order_by</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run a query against the table with filters and order_by.</span>
+
+<span class="sd">        In general a user will either use the query methods or the filter and</span>
+<span class="sd">        order_by methods.  The query method is a convenience method that will</span>
+<span class="sd">        apply filters and order_by in a single call.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filters : Union[</span>
+<span class="sd">                str, dict, FilterBaseModel,</span>
+<span class="sd">                List[Union[str, dict, FilterBaseModel]]</span>
+<span class="sd">            ]</span>
+<span class="sd">            The filters to apply to the query.  The filters can be an SQL string,</span>
+<span class="sd">            dictionary, FilterBaseModel or a list of any of these. The filters</span>
+<span class="sd">            will be applied in the order they are provided.</span>
+
+<span class="sd">        order_by : Union[str, List[str], StrEnum, List[StrEnum]]</span>
+<span class="sd">            The fields to order the query by.  The fields can be a string,</span>
+<span class="sd">            StrEnum or a list of any of these.  The fields will be ordered in</span>
+<span class="sd">            the order they are provided.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : BaseTable or subclass of BaseTable</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Filters as dictionaries:</span>
+
+<span class="sd">        &gt;&gt;&gt; ts_df = ev.primary_timeseries.query(</span>
+<span class="sd">        &gt;&gt;&gt;     filters=[</span>
+<span class="sd">        &gt;&gt;&gt;         {</span>
+<span class="sd">        &gt;&gt;&gt;             &quot;column&quot;: &quot;value_time&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;             &quot;operator&quot;: &quot;&gt;&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;             &quot;value&quot;: &quot;2022-01-01&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;         },</span>
+<span class="sd">        &gt;&gt;&gt;         {</span>
+<span class="sd">        &gt;&gt;&gt;             &quot;column&quot;: &quot;value_time&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;             &quot;operator&quot;: &quot;&lt;&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;             &quot;value&quot;: &quot;2022-01-02&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;         },</span>
+<span class="sd">        &gt;&gt;&gt;         {</span>
+<span class="sd">        &gt;&gt;&gt;             &quot;column&quot;: &quot;location_id&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;             &quot;operator&quot;: &quot;=&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;             &quot;value&quot;: &quot;gage-C&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;         },</span>
+<span class="sd">        &gt;&gt;&gt;     ],</span>
+<span class="sd">        &gt;&gt;&gt;     order_by=[&quot;location_id&quot;, &quot;value_time&quot;]</span>
+<span class="sd">        &gt;&gt;&gt; ).to_pandas()</span>
+
+<span class="sd">        Filters as SQL strings:</span>
+
+<span class="sd">        &gt;&gt;&gt; ts_df = ev.primary_timeseries.query(</span>
+<span class="sd">        &gt;&gt;&gt;     filters=[</span>
+<span class="sd">        &gt;&gt;&gt;         &quot;value_time &gt; &#39;2022-01-01&#39;&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;         &quot;value_time &lt; &#39;2022-01-02&#39;&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;         &quot;location_id = &#39;gage-C&#39;&quot;</span>
+<span class="sd">        &gt;&gt;&gt;     ],</span>
+<span class="sd">        &gt;&gt;&gt;     order_by=[&quot;location_id&quot;, &quot;value_time&quot;]</span>
+<span class="sd">        &gt;&gt;&gt; ).to_pandas()</span>
+
+<span class="sd">        Filters as FilterBaseModels:</span>
+
+<span class="sd">        &gt;&gt;&gt; from teehr.models.filters import TimeseriesFilter</span>
+<span class="sd">        &gt;&gt;&gt; from teehr.models.filters import FilterOperators</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; fields = ev.primary_timeseries.field_enum()</span>
+<span class="sd">        &gt;&gt;&gt; ts_df = ev.primary_timeseries.query(</span>
+<span class="sd">        &gt;&gt;&gt;     filters=[</span>
+<span class="sd">        &gt;&gt;&gt;         TimeseriesFilter(</span>
+<span class="sd">        &gt;&gt;&gt;             column=fields.value_time,</span>
+<span class="sd">        &gt;&gt;&gt;             operator=FilterOperators.gt,</span>
+<span class="sd">        &gt;&gt;&gt;             value=&quot;2022-01-01&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;         ),</span>
+<span class="sd">        &gt;&gt;&gt;         TimeseriesFilter(</span>
+<span class="sd">        &gt;&gt;&gt;             column=fields.value_time,</span>
+<span class="sd">        &gt;&gt;&gt;             operator=FilterOperators.lt,</span>
+<span class="sd">        &gt;&gt;&gt;             value=&quot;2022-01-02&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;         ),</span>
+<span class="sd">        &gt;&gt;&gt;         TimeseriesFilter(</span>
+<span class="sd">        &gt;&gt;&gt;             column=fields.location_id,</span>
+<span class="sd">        &gt;&gt;&gt;             operator=FilterOperators.eq,</span>
+<span class="sd">        &gt;&gt;&gt;             value=&quot;gage-C&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;         ),</span>
+<span class="sd">        &gt;&gt;&gt; ]).to_pandas()</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Performing the query.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_load_table</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">filters</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">validate_and_apply_filters</span><span class="p">(</span>
+                <span class="n">sdf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">,</span>
+                <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">,</span>
+                <span class="n">filter_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_model</span><span class="p">,</span>
+                <span class="n">fields_enum</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">field_enum</span><span class="p">(),</span>
+                <span class="n">dataframe_schema</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_schema</span><span class="p">(</span><span class="s2">&quot;pandas&quot;</span><span class="p">),</span>
+                <span class="n">validate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">validate_filter_field_types</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">order_by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">order_df</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">,</span> <span class="n">order_by</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="BaseTable.filter">
+<a class="viewcode-back" href="../../../../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.filter">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">filter</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">filters</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+            <span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">FilterBaseModel</span><span class="p">,</span>
+            <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">FilterBaseModel</span><span class="p">]]</span>
+        <span class="p">]</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply a filter.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filters : Union[</span>
+<span class="sd">                str, dict, FilterBaseModel,</span>
+<span class="sd">                List[Union[str, dict, FilterBaseModel]]</span>
+<span class="sd">            ]</span>
+<span class="sd">            The filters to apply to the query.  The filters can be an SQL string,</span>
+<span class="sd">            dictionary, FilterBaseModel or a list of any of these.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : BaseTable or subclass of BaseTable</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Note: The filter method is universal for all table types. When</span>
+<span class="sd">        repurposing this example, ensure filter arguments (e.g., column names,</span>
+<span class="sd">        values) are valid for the specific table type.</span>
+
+<span class="sd">        Filters as dictionary:</span>
+
+<span class="sd">        &gt;&gt;&gt; ts_df = ev.primary_timeseries.filter(</span>
+<span class="sd">        &gt;&gt;&gt;     filters=[</span>
+<span class="sd">        &gt;&gt;&gt;         {</span>
+<span class="sd">        &gt;&gt;&gt;             &quot;column&quot;: &quot;value_time&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;             &quot;operator&quot;: &quot;&gt;&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;             &quot;value&quot;: &quot;2022-01-01&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;         },</span>
+<span class="sd">        &gt;&gt;&gt;         {</span>
+<span class="sd">        &gt;&gt;&gt;             &quot;column&quot;: &quot;value_time&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;             &quot;operator&quot;: &quot;&lt;&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;             &quot;value&quot;: &quot;2022-01-02&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;         },</span>
+<span class="sd">        &gt;&gt;&gt;         {</span>
+<span class="sd">        &gt;&gt;&gt;             &quot;column&quot;: &quot;location_id&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;             &quot;operator&quot;: &quot;=&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;             &quot;value&quot;: &quot;gage-C&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;         },</span>
+<span class="sd">        &gt;&gt;&gt;     ]</span>
+<span class="sd">        &gt;&gt;&gt; ).to_pandas()</span>
+
+<span class="sd">        Filters as string:</span>
+
+<span class="sd">        &gt;&gt;&gt; ts_df = ev.primary_timeseries.filter(</span>
+<span class="sd">        &gt;&gt;&gt;     filters=[</span>
+<span class="sd">        &gt;&gt;&gt;         &quot;value_time &gt; &#39;2022-01-01&#39;&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;         &quot;value_time &lt; &#39;2022-01-02&#39;&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;         &quot;location_id = &#39;gage-C&#39;&quot;</span>
+<span class="sd">        &gt;&gt;&gt;     ]</span>
+<span class="sd">        &gt;&gt;&gt; ).to_pandas()</span>
+
+<span class="sd">        Filters as FilterBaseModel:</span>
+
+<span class="sd">        &gt;&gt;&gt; from teehr.models.filters import TimeseriesFilter</span>
+<span class="sd">        &gt;&gt;&gt; from teehr.models.filters import FilterOperators</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; fields = ev.primary_timeseries.field_enum()</span>
+<span class="sd">        &gt;&gt;&gt; ts_df = ev.primary_timeseries.filter(</span>
+<span class="sd">        &gt;&gt;&gt;     filters=[</span>
+<span class="sd">        &gt;&gt;&gt;         TimeseriesFilter(</span>
+<span class="sd">        &gt;&gt;&gt;             column=fields.value_time,</span>
+<span class="sd">        &gt;&gt;&gt;             operator=FilterOperators.gt,</span>
+<span class="sd">        &gt;&gt;&gt;             value=&quot;2022-01-01&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;         ),</span>
+<span class="sd">        &gt;&gt;&gt;         TimeseriesFilter(</span>
+<span class="sd">        &gt;&gt;&gt;             column=fields.value_time,</span>
+<span class="sd">        &gt;&gt;&gt;             operator=FilterOperators.lt,</span>
+<span class="sd">        &gt;&gt;&gt;             value=&quot;2022-01-02&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;         ),</span>
+<span class="sd">        &gt;&gt;&gt;         TimeseriesFilter(</span>
+<span class="sd">        &gt;&gt;&gt;             column=fields.location_id,</span>
+<span class="sd">        &gt;&gt;&gt;             operator=FilterOperators.eq,</span>
+<span class="sd">        &gt;&gt;&gt;             value=&quot;gage-C&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;         ),</span>
+<span class="sd">        &gt;&gt;&gt; ]).to_pandas()</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting filter </span><span class="si">{</span><span class="nb">filter</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_load_table</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">validate_and_apply_filters</span><span class="p">(</span>
+            <span class="n">sdf</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">,</span>
+            <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">,</span>
+            <span class="n">filter_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">filter_model</span><span class="p">,</span>
+            <span class="n">fields_enum</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">field_enum</span><span class="p">(),</span>
+            <span class="n">dataframe_schema</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_schema</span><span class="p">(</span><span class="s2">&quot;pandas&quot;</span><span class="p">),</span>
+            <span class="n">validate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">validate_filter_field_types</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="BaseTable.order_by">
+<a class="viewcode-back" href="../../../../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.order_by">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">order_by</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">fields</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply an order_by.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fields : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">            The fields to order the query by.  The fields can be a string,</span>
+<span class="sd">            StrEnum or a list of any of these.  The fields will be ordered in</span>
+<span class="sd">            the order they are provided.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        self : BaseTable or subclass of BaseTable</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        Order by string:</span>
+
+<span class="sd">        &gt;&gt;&gt; ts_df = ev.primary_timeseries.order_by(&quot;value_time&quot;).to_df()</span>
+
+<span class="sd">        Order by StrEnum:</span>
+
+<span class="sd">        &gt;&gt;&gt; from teehr.querying.field_enums import TimeseriesFields</span>
+<span class="sd">        &gt;&gt;&gt; ts_df = ev.primary_timeseries.order_by(</span>
+<span class="sd">        &gt;&gt;&gt;     TimeseriesFields.value_time</span>
+<span class="sd">        &gt;&gt;&gt; ).to_pandas()</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting order_by </span><span class="si">{</span><span class="n">fields</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_load_table</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="n">order_df</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="p">,</span> <span class="n">fields</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="BaseTable.fields">
+<a class="viewcode-back" href="../../../../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.fields">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fields</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return table columns as a list.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_load_table</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span></div>
+
+
+<div class="viewcode-block" id="BaseTable.distinct_values">
+<a class="viewcode-back" href="../../../../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.distinct_values">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">distinct_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                        <span class="n">column</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                        <span class="n">location_prefixes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return distinct values for a column.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        column : str</span>
+<span class="sd">            The column to get distinct values for.</span>
+<span class="sd">        location_prefixes : bool</span>
+<span class="sd">            Whether to return location prefixes. If True, only the unique</span>
+<span class="sd">            prefixes of the locations will be returned. Only compatible with</span>
+<span class="sd">            primary_timeseries, secondary_timeseries, joined_timeseries,</span>
+<span class="sd">            locations, location_attributes, and location_crosswalk tables and</span>
+<span class="sd">            their respective location columns.</span>
+<span class="sd">            Default: False</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        List[str]</span>
+<span class="sd">            The distinct values for the column.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_load_table</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid column: &#39;</span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s2">&#39; for table: &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">location_prefixes</span><span class="p">:</span>
+            <span class="c1"># ensure valid table</span>
+            <span class="n">valid_tables</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;primary_timeseries&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;secondary_timeseries&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;joined_timeseries&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;locations&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;location_attributes&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;location_crosswalks&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_tables</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    Invalid table: &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; with argument</span>
+<span class="s2">                    location_prefixes==True. Valid tables are: </span><span class="si">{</span><span class="n">valid_tables</span><span class="si">}</span>
+<span class="s2">                    &quot;&quot;&quot;</span>
+                    <span class="p">)</span>
+            <span class="c1"># ensure valid columns for selected table</span>
+            <span class="n">valid_columns</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;primary_timeseries&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;location_id&#39;</span><span class="p">],</span>
+                             <span class="s1">&#39;secondary_timeseries&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;location_id&#39;</span><span class="p">],</span>
+                             <span class="s1">&#39;joined_timeseries&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;primary_location_id&#39;</span><span class="p">,</span>
+                                                   <span class="s1">&#39;secondary_location_id&#39;</span><span class="p">],</span>
+                             <span class="s1">&#39;locations&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>
+                             <span class="s1">&#39;location_attributes&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;location_id&#39;</span><span class="p">],</span>
+                             <span class="s1">&#39;location_crosswalks&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;primary_location_id&#39;</span><span class="p">,</span>
+                                                     <span class="s1">&#39;secondary_location_id&#39;</span><span class="p">]</span>
+                             <span class="p">}</span>
+            <span class="k">if</span> <span class="n">column</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_columns</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">                    Invalid column: &#39;</span><span class="si">{</span><span class="n">column</span><span class="si">}</span><span class="s2">&#39; for table: &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39; with</span>
+<span class="s2">                    argument location_prefixes==True. Valid columns are:</span>
+<span class="s2">                    </span><span class="si">{</span><span class="n">valid_columns</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="si">}</span>
+<span class="s2">                    &quot;&quot;&quot;</span>
+                <span class="p">)</span>
+            <span class="c1"># get unique location prefixes</span>
+            <span class="n">unique_locations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">column</span><span class="p">)</span><span class="o">.</span><span class="n">distinct</span><span class="p">()</span><span class="o">.</span><span class="n">rdd</span><span class="o">.</span><span class="n">flatMap</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+            <span class="n">prefixes</span> <span class="o">=</span> <span class="p">[</span><span class="n">location</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">location</span>
+                        <span class="ow">in</span> <span class="n">unique_locations</span>
+                        <span class="p">]</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">prefixes</span><span class="p">))</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">column</span><span class="p">)</span><span class="o">.</span><span class="n">distinct</span><span class="p">()</span><span class="o">.</span><span class="n">rdd</span><span class="o">.</span><span class="n">flatMap</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="BaseTable.field_enum">
+<a class="viewcode-back" href="../../../../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.field_enum">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">field_enum</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StrEnum</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the fields enum.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;field_enum method must be implemented.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BaseTable.to_pandas">
+<a class="viewcode-back" href="../../../../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.to_pandas">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_pandas</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return Pandas DataFrame.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_load_table</span><span class="p">()</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;table_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;fields&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">df</span></div>
+
+
+<div class="viewcode-block" id="BaseTable.to_geopandas">
+<a class="viewcode-back" href="../../../../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.to_geopandas">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_geopandas</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return GeoPandas DataFrame.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;to_geopandas method must be implemented.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BaseTable.to_sdf">
+<a class="viewcode-back" href="../../../../api/generated/teehr.evaluation.tables.base_table.BaseTable.html#teehr.evaluation.tables.base_table.BaseTable.to_sdf">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_sdf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return PySpark DataFrame.</span>
+
+<span class="sd">        The PySpark DataFrame can be further processed using PySpark. Note,</span>
+<span class="sd">        PySpark DataFrames are lazy and will not be executed until an action</span>
+<span class="sd">        is called.  For example, calling `show()`, `collect()` or toPandas().</span>
+<span class="sd">        This can be useful for further processing or analysis, for example,</span>
+
+<span class="sd">        &gt;&gt;&gt; ts_sdf = ev.primary_timeseries.query(</span>
+<span class="sd">        &gt;&gt;&gt;     filters=[</span>
+<span class="sd">        &gt;&gt;&gt;         &quot;value_time &gt; &#39;2022-01-01&#39;&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;         &quot;value_time &lt; &#39;2022-01-02&#39;&quot;,</span>
+<span class="sd">        &gt;&gt;&gt;         &quot;location_id = &#39;gage-C&#39;&quot;</span>
+<span class="sd">        &gt;&gt;&gt;     ]</span>
+<span class="sd">        &gt;&gt;&gt; ).to_sdf()</span>
+<span class="sd">        &gt;&gt;&gt; ts_df = (</span>
+<span class="sd">        &gt;&gt;&gt;     ts_sdf.select(&quot;value_time&quot;, &quot;location_id&quot;, &quot;value&quot;)</span>
+<span class="sd">        &gt;&gt;&gt;    .orderBy(&quot;value&quot;).toPandas()</span>
+<span class="sd">        &gt;&gt;&gt; )</span>
+<span class="sd">        &gt;&gt;&gt; ts_df.head()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_load_table</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">df</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_load_dataframe</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">df</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">],</span>
+        <span class="n">field_mapping</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+        <span class="n">constant_field_values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+        <span class="n">location_id_prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">write_mode</span><span class="p">:</span> <span class="n">TableWriteEnum</span><span class="p">,</span>
+        <span class="n">persist_dataframe</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">drop_duplicates</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a timeseries from an in-memory dataframe.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">and</span> <span class="n">df</span><span class="o">.</span><span class="n">isEmpty</span><span class="p">())</span> <span class="ow">or</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">and</span> <span class="n">df</span><span class="o">.</span><span class="n">empty</span>
+        <span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;The input dataframe is empty. &quot;</span>
+                <span class="s2">&quot;No data will be loaded into the table.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+        <span class="n">default_field_mapping</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema_func</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;pandas&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">default_field_mapping</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="n">default_field_mapping</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span>
+        <span class="k">if</span> <span class="n">field_mapping</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Merging user field_mapping with default field mapping.&quot;</span><span class="p">)</span>
+            <span class="n">field_mapping</span> <span class="o">=</span> <span class="n">merge_field_mappings</span><span class="p">(</span>
+                <span class="n">default_field_mapping</span><span class="p">,</span>
+                <span class="n">field_mapping</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Using default field mapping.&quot;</span><span class="p">)</span>
+            <span class="n">field_mapping</span> <span class="o">=</span> <span class="n">default_field_mapping</span>
+        <span class="c1"># verify constant_field_values keys are in field_mapping values</span>
+        <span class="k">if</span> <span class="n">constant_field_values</span><span class="p">:</span>
+            <span class="n">validate_constant_values_dict</span><span class="p">(</span>
+                <span class="n">constant_field_values</span><span class="p">,</span>
+                <span class="n">field_mapping</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Convert the input DataFrame to Spark DataFrame</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">createDataFrame</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;Input dataframe must be a Pandas DataFrame or a PySpark DataFrame.&quot;</span>
+            <span class="p">)</span>
+        <span class="c1"># Apply field mapping and constant field values</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumnsRenamed</span><span class="p">(</span><span class="n">field_mapping</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">constant_field_values</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">field</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">constant_field_values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">persist_dataframe</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">persist</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">location_id_prefix</span><span class="p">:</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">add_or_replace_sdf_column_prefix</span><span class="p">(</span>
+                <span class="n">sdf</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+                <span class="n">column_name</span><span class="o">=</span><span class="s2">&quot;location_id&quot;</span><span class="p">,</span>
+                <span class="n">prefix</span><span class="o">=</span><span class="n">location_id_prefix</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">validated_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate</span><span class="p">(</span>
+            <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+            <span class="n">drop_duplicates</span><span class="o">=</span><span class="n">drop_duplicates</span><span class="p">,</span>
+            <span class="n">add_missing_columns</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_write_spark_df</span><span class="p">(</span>
+            <span class="n">validated_df</span><span class="p">,</span>
+            <span class="n">write_mode</span><span class="o">=</span><span class="n">write_mode</span>
+        <span class="p">)</span>
+
+        <span class="n">df</span><span class="o">.</span><span class="n">unpersist</span><span class="p">()</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><!-- This will display the version of the docs -->
+TEEHR version 0.5.2</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

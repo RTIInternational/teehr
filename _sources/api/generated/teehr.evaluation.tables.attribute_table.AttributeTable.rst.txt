@@ -1,0 +1,34 @@
+﻿AttributeTable
+==============
+
+.. currentmodule:: teehr.evaluation.tables.attribute_table
+
+.. autoclass:: AttributeTable
+   :members:
+   :show-inheritance:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~AttributeTable.add
+      ~AttributeTable.distinct_values
+      ~AttributeTable.field_enum
+      ~AttributeTable.fields
+      ~AttributeTable.filter
+      ~AttributeTable.order_by
+      ~AttributeTable.query
+      ~AttributeTable.to_geopandas
+      ~AttributeTable.to_pandas
+      ~AttributeTable.to_sdf
+      ~AttributeTable.validate
+   
+   
+
+   
+   
+   
