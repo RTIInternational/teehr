@@ -317,10 +317,9 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
         default=pd.Timedelta(days=5)
     )
 
+    @ staticmethod
     def _validate_bin_size_dict(
-        self,
-        sdf: ps.DataFrame
-    ) -> Union[pd.Timedelta, dict]:
+            self, sdf: ps.DataFrame) -> Union[pd.Timedelta, dict]:
         """Validate and normalize bin_size dict.
 
         Validates that bin_size dict keys are of correct, uniform type and
@@ -398,6 +397,7 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
                 "bin_size dict keys must be pd.Timedelta, str, or pd.Timestamp"
             )
 
+    @staticmethod
     def _add_forecast_lead_time(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Calculate forecast lead time if not already present."""
         if self.lead_time_field_name not in sdf.columns:
@@ -409,6 +409,7 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
             sdf = flt_cf.apply_to(sdf)
         return sdf
 
+    @staticmethod
     def _add_forecast_lead_time_bin(
         self,
         sdf: ps.DataFrame
