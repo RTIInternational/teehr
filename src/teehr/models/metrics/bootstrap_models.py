@@ -56,9 +56,6 @@ class Gumboot(BootstrapBasemodel):
 
     """
 
-    reps: int = 1000
-    seed: Union[int, None] = None
-    quantiles: Union[List[float], None] = None
     boot_year_file: Union[str, Path, None] = None
     water_year_month: int = 10
     name: str = Field(default="Gumboot")
@@ -92,11 +89,8 @@ class CircularBlock(BootstrapBasemodel):
         The wrapper to generate the bootstrapping function.
     """
 
-    seed: Union[int, None] = None
     random_state: Union[RandomState, None] = None
-    reps: int = 1000
     block_size: int = 365
-    quantiles: Union[List[float], None] = None
     name: str = Field(default="CircularBlock")
     include_value_time: bool = Field(False, frozen=True)
     func: Callable = Field(
@@ -131,11 +125,8 @@ class Stationary(BootstrapBasemodel):
         The wrapper to generate the bootstrapping function.
     """
 
-    seed: Union[int, None] = None
     random_state: Union[RandomState, None] = None
-    reps: int = 1000
     block_size: int = 365
-    quantiles: Union[List[float], None] = None
     name: str = Field(default="Stationary")
     include_value_time: bool = Field(False, frozen=True)
     func: Callable = Field(
