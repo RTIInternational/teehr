@@ -478,8 +478,8 @@ def test_ensemble_metrics(tmpdir):
     bs.backend = "numba"
     bs.reference_configuration = "benchmark_forecast_daily_normals"
 
-    # CRPS
-    include_metrics = [crps]
+    # assemble metrics df
+    include_metrics = [crps, bs]
     metrics_df = ev.metrics.query(
         include_metrics=include_metrics,
         group_by=[
@@ -489,6 +489,7 @@ def test_ensemble_metrics(tmpdir):
         order_by=["primary_location_id", "configuration_name"],
     ).to_pandas()
 
+    # check CRPS values
     assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 22.050798)
     assert np.isclose(metrics_df.mean_crps_ensemble.values[1], 22.383705)
     assert np.isclose(
@@ -496,17 +497,7 @@ def test_ensemble_metrics(tmpdir):
     )
     assert np.isnan(metrics_df.mean_crps_ensemble_skill_score.values[2])
 
-    # Brier Score
-    include_metrics = [bs]
-    metrics_df = ev.metrics.query(
-        include_metrics=include_metrics,
-        group_by=[
-            "primary_location_id",
-            "configuration_name"
-        ],
-        order_by=["primary_location_id", "configuration_name"],
-    ).to_pandas()
-
+    # check Brier Score values
     assert np.isclose(metrics_df.mean_brier_score.values[0], 0.18979715)
     assert np.isclose(metrics_df.mean_brier_score.values[1], 0.19405437)
     assert np.isclose(
