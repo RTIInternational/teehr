@@ -255,6 +255,15 @@ CRPS_ENSEMBLE_ATTRS = {
     "requires_threshold_field": False,
 }
 
+BS_ENSEMBLE_ATTRS = {
+    "short_name": "brier_score_ensemble",
+    "display_name": "Brier Score - Ensemble",
+    "category": mc.Probabilistic,
+    "value_range": [0.0, 1.0],
+    "optimal_value": 0.0,
+    "requires_threshold_field": False,
+}
+
 FDC_SLOPE_ATTRS = {
     "short_name": "fdc_slope",
     "display_name": "Flow Duration Curve Slope",

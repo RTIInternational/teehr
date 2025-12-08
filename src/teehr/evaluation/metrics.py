@@ -239,10 +239,33 @@ class Metrics:
         """
         for model in include_metrics:
             if model.reference_configuration is not None:
+                """
                 self.df = self._calculate_metric_skill_score(
                     model.output_field_name,
                     model.reference_configuration,
                     group_by
+                )
+                """
+                # 1) get the original cols ahead of skill score join
+                original_cols = self.df.columns
+                # 2) calculate skill score sdf
+                sdf = self._calculate_metric_skill_score(
+                    model.output_field_name,
+                    model.reference_configuration,
+                    group_by
+                )
+                # 3) remove original metric column from skill score sdf
+                sdf = sdf.drop(model.output_field_name)
+                # 3) get join columns
+                join_cols = parse_fields_to_list(group_by)
+                # 4) join returned table back to self.df, trim
+                self.df = self.df.join(
+                    sdf,
+                    on=join_cols,
+                    how="left"
+                ).select(
+                    *original_cols,
+                    F.col(f"{model.output_field_name}_skill_score")
                 )
 
             if model.unpack_results:
@@ -292,11 +315,20 @@ class Metrics:
             temp_col = f"{config}_{metric_field}_skill"
             pivot_sdf = pivot_sdf.withColumn(
                 temp_col,
-                1 - F.col(config) / F.col(reference_configuration)
+                1 - F.try_divide(F.col(config), F.col(reference_configuration))
             ).withColumn(
                 "configuration_name",
                 F.lit(config)
             )
+            # warn user if try_divide results in nulls (division by zero)
+            null_count = pivot_sdf.filter(F.col(temp_col).isNull()).count()
+            if null_count > 0:
+                logger.warning(
+                    f"Division by zero encountered when calculating skill "
+                    f"score for configuration '{config}' relative to "
+                    f"reference configuration '{reference_configuration}'. "
+                    f"{null_count} null values were produced."
+                )
             # Join skill score values from the pivot table.
             join_cols = group_by_strings + ["configuration_name"]
             sdf = sdf.join(
