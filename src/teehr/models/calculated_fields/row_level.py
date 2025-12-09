@@ -275,30 +275,107 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
         The name of the column to store the lead time bin ID.
         Default: "forecast_lead_time_bin"
     - bin_size:
-        Either a single pd.Timedelta for uniform bin sizes, or a dict mapping
-        threshold pd.Timedelta values to pd.Timedelta bin sizes. Keys
-        represent the upper bound of each threshold range. Keys can also be
-        string or pd.Timestamp values, which will be converted to pd.Timedelta
-        relative to the minimum value_time in the DataFrame.
-        Default: 5 days
+        Defines how forecast lead times are binned. Three input formats are
+        supported:
 
-        Example dict 1: {
-            pd.Timedelta(days=1): pd.Timedelta(hours=6),
-            pd.Timedelta(days=2): pd.Timedelta(hours=12),
-            pd.Timedelta(days=3): pd.Timedelta(days=1)
-        }
+        1. **Single pd.Timedelta** (uniform binning):
+           Creates equal-width bins of the specified duration.
 
-        Example dict 2: {
-            "2024-11-20 12:00:00": pd.Timedelta(hours=6),
-            "2024-11-21 12:00:00": pd.Timedelta(hours=12),
-            "2024-11-22 12:00:00": pd.Timedelta(days=1)
-        }
+           Example:
+               pd.Timedelta(hours=6)
 
-        Example dict 3: {
-            pd.Timestamp("2024-11-20 12:00:00"): pd.Timedelta(hours=6),
-            pd.Timestamp("2024-11-21 12:00:00"): pd.Timedelta(hours=12),
-            pd.Timestamp("2024-11-22 12:00:00"): pd.Timedelta(days=1)
-        }
+           Output bin IDs:
+               "PT0H_PT6H", "PT6H_PT12H", "PT12H_PT18H", ...
+
+        2. **List of dicts** (variable binning with auto-generated IDs):
+           Creates bins with custom ranges. Bin IDs are auto-generated as
+           ISO 8601 duration ranges.
+
+           Example:
+               [
+                   {'start_inclusive': pd.Timedelta(hours=0),
+                   'end_exclusive': pd.Timedelta(hours=6)},
+                   {'start_inclusive': pd.Timedelta(hours=6),
+                   'end_exclusive': pd.Timedelta(hours=12)},
+                   {'start_inclusive': pd.Timedelta(hours=12),
+                   'end_exclusive': pd.Timedelta(days=1)},
+                   {'start_inclusive': pd.Timedelta(days=1),
+                   'end_exclusive': pd.Timedelta(days=2)},
+               ]
+
+           Output bin IDs:
+               "PT0H_PT6H", "PT6H_PT12H", "PT12H_P1D", "P1D_P2D"
+
+        3. **Dict of dicts** (variable binning with custom IDs):
+           Creates bins with custom ranges and user-defined bin identifiers.
+
+           Example:
+               {
+                   'short_range': {'start_inclusive': pd.Timedelta(hours=0),
+                                   'end_exclusive': pd.Timedelta(hours=6)},
+                   'medium_range': {'start_inclusive': pd.Timedelta(hours=6),
+                                    'end_exclusive': pd.Timedelta(days=1)},
+                   'long_range': {'start_inclusive': pd.Timedelta(days=1),
+                                  'end_exclusive': pd.Timedelta(days=3)},
+               }
+
+           Output bin IDs:
+               "short_range", "medium_range", "long_range"
+
+        Default: pd.Timedelta(days=5)
+
+    Notes
+    -----
+    - Bin ranges are [start_inclusive, end_exclusive), except for the final
+      bin which is inclusive of all remaining lead times.
+    - If the maximum lead time in the data exceeds the last user-defined bin,
+      an overflow bin is automatically created:
+      - For auto-generated IDs: Uses ISO 8601 duration format
+      - For custom IDs: Appends "overflow" as the bin ID
+    - Bin IDs use ISO 8601 duration format (e.g., "PT6H" for 6 hours, "P1DT12H"
+      for 1 day and 12 hours) for auto-generated bins.
+    - Custom bin IDs can use any string format.
+
+    Examples
+    --------
+    Uniform 6-hour bins:
+
+    .. code-block:: python
+
+        fcst_bins = ForecastLeadTimeBins(bin_size=pd.Timedelta(hours=6))
+        # Creates bins: PT0H_PT6H, PT6H_PT12H, PT12H_PT18H, ...
+
+    Variable bins with auto-generated IDs:
+
+    .. code-block:: python
+
+        fcst_bins = ForecastLeadTimeBins(
+            bin_size=[
+                {'start_inclusive': pd.Timedelta(hours=0),
+                'end_exclusive': pd.Timedelta(hours=6)},
+                {'start_inclusive': pd.Timedelta(hours=6),
+                'end_exclusive': pd.Timedelta(days=1)},
+                {'start_inclusive': pd.Timedelta(days=1),
+                'end_exclusive': pd.Timedelta(days=3)},
+            ]
+        )
+        # Creates bins: PT0H_PT6H, PT6H_P1D, P1D_P3D
+
+    Variable bins with custom IDs:
+
+    .. code-block:: python
+
+        fcst_bins = ForecastLeadTimeBins(
+            bin_size={
+                'nowcast': {'start_inclusive': pd.Timedelta(hours=0),
+                            'end_exclusive': pd.Timedelta(hours=6)},
+                'short_term': {'start_inclusive': pd.Timedelta(hours=6),
+                               'end_exclusive': pd.Timedelta(days=1)},
+                'medium_term': {'start_inclusive': pd.Timedelta(days=1),
+                                'end_exclusive': pd.Timedelta(days=5)},
+            }
+        )
+        # Creates bins: nowcast, short_term, medium_term
     """
 
     value_time_field_name: str = Field(
@@ -313,89 +390,109 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
     output_field_name: str = Field(
         default="forecast_lead_time_bin"
     )
-    bin_size: Union[pd.Timedelta, dict] = Field(
+    bin_size: Union[pd.Timedelta, list, dict] = Field(
         default=pd.Timedelta(days=5)
     )
 
-    @ staticmethod
-    def _validate_bin_size_dict(
-            self, sdf: ps.DataFrame) -> Union[pd.Timedelta, dict]:
-        """Validate and normalize bin_size dict.
+    @staticmethod
+    def _validate_bin_size_dict(self) -> Union[pd.Timedelta, list, dict]:
+        """Validate and normalize bin_size input.
 
-        Validates that bin_size dict keys are of correct, uniform type and
-        converts them to pd.Timedelta if needed. Validates that bin_size dict
-        values are of type pd.Timedelta. Validates that dict is not empty.
+        Validates and converts bin_size to a standardized format:
+        - Single pd.Timedelta: returns as-is
+        - List of dicts: validates structure and converts to internal format
+        - Dict of dicts: validates structure and keeps custom bin IDs
 
-        If bin_size is already a pd.Timedelta or dict with pd.Timedelta keys,
-        returns it unchanged. Otherwise, converts string/datetime keys to
-        pd.Timedelta by calculating the difference from the minimum value_time.
+        Returns a normalized structure for internal processing.
         """
-        # If not a dict or already has Timedelta keys, return as-is
-        if not isinstance(self.bin_size, dict) and isinstance(
-            self.bin_size, pd.Timedelta
-        ):
+        # Single Timedelta - return as-is
+        if isinstance(self.bin_size, pd.Timedelta):
             return self.bin_size
 
-        # raise error if dict is empty
-        if not self.bin_size:
-            raise ValueError("bin_size dict cannot be empty")
+        # List of dicts format
+        if isinstance(self.bin_size, list):
+            if not self.bin_size:
+                raise ValueError("bin_size list cannot be empty")
 
-        # Ensure all keys are of the same type
-        first_key = next(iter(self.bin_size.keys()))
-        for key in self.bin_size.keys():
-            if not isinstance(key, type(first_key)):
-                raise TypeError(
-                    "All bin_size dict keys must be of the same type"
-                )
+            # Validate each dict has required keys
+            for i, bin_dict in enumerate(self.bin_size):
+                if not isinstance(bin_dict, dict):
+                    raise TypeError(
+                        f"Item {i} in bin_size list must be a dict"
+                        )
 
-        # Ensure all values are pd.Timedelta
-        for value in self.bin_size.values():
-            if not isinstance(value, pd.Timedelta):
-                raise TypeError(
-                    "All bin_size dict values must be of type pd.Timedelta"
-                )
+                required_keys = {'start_inclusive', 'end_exclusive'}
+                if not required_keys.issubset(bin_dict.keys()):
+                    raise ValueError(
+                        f"Item {i} missing required keys: {required_keys}"
+                    )
 
-        # If already Timedelta keys, return as-is
-        if isinstance(first_key, pd.Timedelta):
-            return self.bin_size
+                # Validate that values are Timedelta
+                if not isinstance(bin_dict['start_inclusive'], pd.Timedelta):
+                    raise TypeError(
+                        f"Item {i} 'start_inclusive' must be pd.Timedelta"
+                    )
+                if not isinstance(bin_dict['end_exclusive'], pd.Timedelta):
+                    raise TypeError(
+                        f"Item {i} 'end_exclusive' must be pd.Timedelta"
+                    )
 
-        # Convert string or datetime keys to Timedelta
-        if isinstance(first_key, (str, pd.Timestamp)):
-            # Get minimum value_time from the dataframe
-            min_value_time_row = sdf.select(
-                self.value_time_field_name
-            ).orderBy(self.value_time_field_name).first()
+            # Convert to internal format: list of tuples (start, end, bin_id)
+            # For list format, bin_id is None
+            normalized = []
+            for bin_dict in self.bin_size:
+                start = bin_dict['start_inclusive']
+                end = bin_dict['end_exclusive']
+                normalized.append((start, end, None))
 
-            # Extract value_time and convert to datetime
-            min_value_time = pd.to_datetime(
-                min_value_time_row[self.value_time_field_name]
-            )
+            return normalized
 
-            # Convert dict keys from string/datetime to Timedelta
-            converted_dict = {}
+        # Dict of dicts format
+        if isinstance(self.bin_size, dict):
+            if not self.bin_size:
+                raise ValueError("bin_size dict cannot be empty")
+
+            # Validate structure
             for key, value in self.bin_size.items():
-                # Convert key to datetime if it's a string
-                if isinstance(key, str):
-                    try:
-                        key_datetime = pd.to_datetime(key)
-                    except Exception as e:
-                        raise ValueError(
-                            f"Error converting key '{key}' to datetime: {e}"
-                            )
-                else:
-                    key_datetime = key
+                if not isinstance(key, str):
+                    raise TypeError(
+                        f"Dict keys must be strings (custom bin IDs), got \
+                          {type(key)}"
+                    )
 
-                # Calculate Timedelta from min_value_time
-                timedelta_key = key_datetime - min_value_time
-                converted_dict[timedelta_key] = value
+                if not isinstance(value, dict):
+                    raise TypeError(
+                        "Dict values must be dicts with bin specification"
+                    )
 
-            return converted_dict
+                required_keys = {'start_inclusive', 'end_exclusive'}
+                if not required_keys.issubset(value.keys()):
+                    raise ValueError(
+                        f"Bin '{key}' missing required keys. Must have: \
+                          {required_keys}"
+                    )
 
-        else:
-            # raise error for unsupported key types
-            raise TypeError(
-                "bin_size dict keys must be pd.Timedelta, str, or pd.Timestamp"
-            )
+                if not isinstance(value['start_inclusive'], pd.Timedelta):
+                    raise TypeError(
+                        f"Bin '{key}' 'start_inclusive' must be pd.Timedelta"
+                    )
+                if not isinstance(value['end_exclusive'], pd.Timedelta):
+                    raise TypeError(
+                        f"Bin '{key}' 'end_exclusive' must be pd.Timedelta"
+                    )
+
+            # Convert to internal format: list of tuples
+            normalized = []
+            for custom_id, bin_dict in self.bin_size.items():
+                start = bin_dict['start_inclusive']
+                end = bin_dict['end_exclusive']
+                normalized.append((start, end, custom_id))
+
+            return normalized
+
+        raise TypeError(
+            "bin_size must be pd.Timedelta, list of dicts, or dict of dicts"
+        )
 
     @staticmethod
     def _add_forecast_lead_time(self, sdf: ps.DataFrame) -> ps.DataFrame:
@@ -416,102 +513,128 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
     ) -> ps.DataFrame:
         """Add forecast lead time bin column."""
 
+        def _timedelta_to_iso_duration(td: pd.Timedelta) -> str:
+            """Convert pd.Timedelta to ISO 8601 duration string."""
+            iso_str = td.isoformat()
+            # Remove trailing 0M0S, 0S, etc. for cleaner output
+            iso_str = iso_str.replace(
+                '0M0S', '').replace(
+                '0S', '').replace(
+                '0M', '')
+            # Handle edge case where we removed everything after 'T'
+            if iso_str.endswith('T'):
+                iso_str = iso_str[:-1] + 'T0S'
+            return iso_str
+
         @pandas_udf(returnType=T.StringType())
-        def func(lead_time: pd.Series, value_time: pd.Series) -> pd.Series:
-            if isinstance(self.bin_size, dict):
-                # Sort thresholds for consistent processing
-                sorted_thresholds = sorted(self.bin_size.items(),
-                                           key=lambda x: x[0].total_seconds())
-
-                bin_ids = pd.Series("", index=lead_time.index)
-                prev_thresh_sec = 0
-
-                for i, (threshold, bin_size) in enumerate(sorted_thresholds):
-                    threshold_seconds = threshold.total_seconds()
-                    bin_size_seconds = bin_size.total_seconds()
-
-                    is_last = (i == len(sorted_thresholds) - 1)
-
-                    # Mask for values in this threshold range
-                    if is_last:
-                        mask = lead_time.dt.total_seconds() >= prev_thresh_sec
-                    else:
-                        mask = (
-                            lead_time.dt.total_seconds() >= prev_thresh_sec
-                        ) & (
-                            lead_time.dt.total_seconds() < threshold_seconds
-                        )
-
-                    if mask.any():
-                        # Calculate which bin each value belongs to
-                        bins_in_range = (
-                            (lead_time[mask].dt.total_seconds() -
-                             prev_thresh_sec)
-                            // bin_size_seconds
-                        ).astype(int)
-
-                        # create bin ID from actual timestamps
-                        for bin_num in bins_in_range.unique():
-                            bin_mask = mask & (bins_in_range == bin_num)
-
-                            if bin_mask.any():
-                                # Get the unique value_time values for this bin
-                                bin_value_times = value_time[bin_mask].unique()
-
-                                # Convert to datetime and find min/max
-                                bin_value_times_dt = pd.to_datetime(
-                                    bin_value_times
-                                    )
-                                start_timestamp = bin_value_times_dt.min()
-                                end_timestamp = start_timestamp + bin_size
-
-                                # Format as ISO 8601 timestamp range
-                                bin_id = f"{start_timestamp} - {end_timestamp}"
-                                bin_ids[bin_mask] = bin_id
-
-                    prev_thresh_sec = threshold_seconds
-
-                return bin_ids
-
-            else:
-                # Uniform bin size logic
+        def func(lead_time: pd.Series) -> pd.Series:
+            # Single Timedelta - uniform binning
+            if isinstance(self.bin_size, pd.Timedelta):
                 bin_size_seconds = self.bin_size.total_seconds()
 
-                # Calculate which bin each value belongs to
                 bin_numbers = (
                     lead_time.dt.total_seconds() // bin_size_seconds
                 ).astype(int)
 
                 bin_ids = pd.Series("", index=lead_time.index)
 
-                # For each unique bin, create bin ID from actual timestamps
                 for bin_num in bin_numbers.unique():
                     bin_mask = bin_numbers == bin_num
 
                     if bin_mask.any():
-                        # Get the unique value_time values for this bin
-                        bin_value_times = value_time[bin_mask].unique()
+                        start_td = pd.Timedelta(
+                            seconds=bin_num * bin_size_seconds
+                            )
+                        end_td = pd.Timedelta(
+                            seconds=(bin_num + 1) * bin_size_seconds
+                            )
 
-                        # Convert to datetime if needed and find min/max
-                        bin_value_times_dt = pd.to_datetime(bin_value_times)
-                        start_timestamp = bin_value_times_dt.min()
-                        end_timestamp = start_timestamp + self.bin_size
+                        # Convert to ISO duration format
+                        start_iso = _timedelta_to_iso_duration(start_td)
+                        end_iso = _timedelta_to_iso_duration(end_td)
+                        bin_id = f"{start_iso}_{end_iso}"
 
-                        # Format as ISO 8601 timestamp range
-                        bin_id = f"{start_timestamp} - {end_timestamp}"
                         bin_ids[bin_mask] = bin_id
+
+                return bin_ids
+
+            # List/Dict format - dynamic binning with explicit ranges
+            # self.bin_size is now a list of tuples: (start, end, bin_id)
+            # bin_id is None for auto-generated, or a string for custom
+            else:
+                bin_ids = pd.Series("", index=lead_time.index)
+                lead_time_seconds = lead_time.dt.total_seconds()
+
+                # Check if we need to add an overflow bin
+                max_lead_time = lead_time.max()
+                last_bin_end = self.bin_size[-1][1]
+
+                # Create working copy of bin_size
+                bins_to_use = []
+
+                # Convert all bins, generating ISO format for None bin_ids
+                for start_td, end_td, bin_id in self.bin_size:
+                    if bin_id is None:
+                        # Auto-generated: create ISO duration format
+                        start_iso = _timedelta_to_iso_duration(start_td)
+                        end_iso = _timedelta_to_iso_duration(end_td)
+                        final_bin_id = f"{start_iso}_{end_iso}"
+                    else:
+                        # Custom ID: use as-is
+                        final_bin_id = bin_id
+
+                    bins_to_use.append((start_td, end_td, final_bin_id))
+
+                # If max lead time exceeds last bin, create overflow bin
+                if max_lead_time >= last_bin_end:
+                    overflow_start = last_bin_end
+                    overflow_end = max_lead_time
+
+                    # Determine overflow bin_id
+                    if self.bin_size[-1][2] is None:
+                        # Auto-generated format: use ISO duration strings
+                        start_iso = _timedelta_to_iso_duration(overflow_start)
+                        end_iso = _timedelta_to_iso_duration(overflow_end)
+                        overflow_bin_id = f"{start_iso}_{end_iso}"
+                    else:
+                        # Custom ID format: append suffix
+                        overflow_bin_id = "overflow"
+
+                    bins_to_use.append(
+                        (overflow_start, overflow_end, overflow_bin_id)
+                        )
+
+                for i, (start_td, end_td, bin_id) in enumerate(bins_to_use):
+                    start_seconds = start_td.total_seconds()
+                    end_seconds = end_td.total_seconds()
+
+                    # Check if this is the last bin (including overflow bin)
+                    is_last_bin = (i == len(bins_to_use) - 1)
+
+                    if is_last_bin:
+                        # Last bin is inclusive of end_exclusive
+                        mask = lead_time_seconds >= start_seconds
+                    else:
+                        # All other bins are [start, end)
+                        mask = (
+                            (lead_time_seconds >= start_seconds) &
+                            (lead_time_seconds < end_seconds)
+                        )
+
+                    if mask.any():
+                        bin_ids[mask] = bin_id
 
                 return bin_ids
 
         sdf = sdf.withColumn(
             self.output_field_name,
-            func(self.lead_time_field_name, self.value_time_field_name)
+            func(self.lead_time_field_name)
         )
         return sdf
 
     def apply_to(self, sdf: ps.DataFrame) -> ps.DataFrame:
         """Apply the calculated field to the Spark DataFrame."""
-        self.bin_size = self._validate_bin_size_dict(self, sdf)
+        self.bin_size = self._validate_bin_size_dict(self)
         sdf = self._add_forecast_lead_time(self, sdf)
         sdf = self._add_forecast_lead_time_bin(self, sdf)
         return sdf
