@@ -14,6 +14,7 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from data.setup_v0_3_study import setup_v0_3_study  # noqa
+from data.setup_v0_4_ensemble_study import setup_v0_4_ensemble_study  # noqa
 
 
 def test_add_row_udfs_null_reference(tmpdir):
@@ -126,6 +127,159 @@ def test_add_row_udfs(tmpdir):
         assert row["day_of_year"] in [1, 2]
 
     ev.spark.stop()
+
+
+def test_forecast_lead_time_bins(tmpdir):
+    """Test ForecastLeadTimeBins UDF."""
+    ev = setup_v0_4_ensemble_study(tmpdir)
+
+    # test with single bin size
+    fcst_bins_static = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
+        bin_size=pd.Timedelta(hours=6)
+    )
+    sdf = ev.joined_timeseries.add_calculated_fields([
+        fcst_bins_static,
+    ]).to_sdf()
+    sorted_sdf = sdf.orderBy(
+        "primary_location_id",
+        "configuration_name",
+        "member",
+        "reference_time",
+        "value_time"
+        )
+    assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 9
+
+    # try with dynamic bin sizes that DO encompass full lead time range
+    bin = [
+        {'start_inclusive': pd.Timedelta(hours=0),
+         'end_exclusive': pd.Timedelta(hours=6)},
+        {'start_inclusive': pd.Timedelta(hours=6),
+         'end_exclusive': pd.Timedelta(hours=12)},
+        {'start_inclusive': pd.Timedelta(hours=12),
+         'end_exclusive': pd.Timedelta(hours=18)},
+        {'start_inclusive': pd.Timedelta(hours=18),
+         'end_exclusive': pd.Timedelta(days=1)},
+        {'start_inclusive': pd.Timedelta(days=1),
+         'end_exclusive': pd.Timedelta(days=1, hours=12)},
+        {'start_inclusive': pd.Timedelta(days=1, hours=12),
+         'end_exclusive': pd.Timedelta(days=2)},
+        {'start_inclusive': pd.Timedelta(days=2),
+         'end_exclusive': pd.Timedelta(days=3)},
+    ]
+    fcst_bins_dynamic = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
+        bin_size=bin,
+    )
+    sdf = ev.joined_timeseries.add_calculated_fields([
+        fcst_bins_dynamic,
+    ]).to_sdf()
+    sorted_sdf = sdf.orderBy(
+        "primary_location_id",
+        "configuration_name",
+        "member",
+        "reference_time",
+        "value_time"
+        )
+    assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 7
+
+    # try with dynamic bin sizes that DO NOT encompass full lead time range
+    bin = [
+        {'start_inclusive': pd.Timedelta(hours=0),
+         'end_exclusive': pd.Timedelta(hours=6)},
+        {'start_inclusive': pd.Timedelta(hours=6),
+         'end_exclusive': pd.Timedelta(hours=12)},
+        {'start_inclusive': pd.Timedelta(hours=12),
+         'end_exclusive': pd.Timedelta(hours=18)},
+        {'start_inclusive': pd.Timedelta(hours=18),
+         'end_exclusive': pd.Timedelta(days=1)},
+        {'start_inclusive': pd.Timedelta(days=1),
+         'end_exclusive': pd.Timedelta(days=1, hours=12)},
+    ]
+    fcst_bins_dynamic = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
+        bin_size=bin,
+    )
+    sdf = ev.joined_timeseries.add_calculated_fields([
+        fcst_bins_dynamic,
+    ]).to_sdf()
+    sorted_sdf = sdf.orderBy(
+        "primary_location_id",
+        "configuration_name",
+        "member",
+        "reference_time",
+        "value_time"
+        )
+    assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 6
+    assert 'P1DT12H_P2DT0H' in [row['forecast_lead_time_bin'] for row in
+                                sorted_sdf.select(
+                                     'forecast_lead_time_bin'
+                                     ).distinct().collect()]
+
+    # try with dynamic bin sizes w/ string dict keys that DO encompass full
+    # lead time range
+    bin = {
+        'bin_1': {'start_inclusive': pd.Timedelta(hours=0),
+                  'end_exclusive': pd.Timedelta(hours=6)},
+        'bin_2': {'start_inclusive': pd.Timedelta(hours=6),
+                  'end_exclusive': pd.Timedelta(hours=12)},
+        'bin_3': {'start_inclusive': pd.Timedelta(hours=12),
+                  'end_exclusive': pd.Timedelta(hours=18)},
+        'bin_4': {'start_inclusive': pd.Timedelta(hours=18),
+                  'end_exclusive': pd.Timedelta(days=1)},
+        'bin_5': {'start_inclusive': pd.Timedelta(days=1),
+                  'end_exclusive': pd.Timedelta(days=1, hours=12)},
+        'bin_6': {'start_inclusive': pd.Timedelta(days=1, hours=12),
+                  'end_exclusive': pd.Timedelta(days=2)},
+        'bin_7': {'start_inclusive': pd.Timedelta(days=2),
+                  'end_exclusive': pd.Timedelta(days=3)},
+    }
+    fcst_bins_dynamic = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
+        bin_size=bin
+    )
+    sdf = ev.joined_timeseries.add_calculated_fields([
+        fcst_bins_dynamic,
+    ]).to_sdf()
+    sorted_sdf = sdf.orderBy(
+        "primary_location_id",
+        "configuration_name",
+        "member",
+        "reference_time",
+        "value_time"
+        )
+    assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 7
+
+    # try with dynamic bin sizes w/ string dict keys that DO NOT encompass
+    # full lead time range
+    bin = {
+        'bin_1': {'start_inclusive': pd.Timedelta(hours=0),
+                  'end_exclusive': pd.Timedelta(hours=6)},
+        'bin_2': {'start_inclusive': pd.Timedelta(hours=6),
+                  'end_exclusive': pd.Timedelta(hours=12)},
+        'bin_3': {'start_inclusive': pd.Timedelta(hours=12),
+                  'end_exclusive': pd.Timedelta(hours=18)},
+        'bin_4': {'start_inclusive': pd.Timedelta(hours=18),
+                  'end_exclusive': pd.Timedelta(days=1)},
+        'bin_5': {'start_inclusive': pd.Timedelta(days=1),
+                  'end_exclusive': pd.Timedelta(days=1, hours=12)},
+        'bin_6': {'start_inclusive': pd.Timedelta(days=1, hours=12),
+                  'end_exclusive': pd.Timedelta(days=2)},
+    }
+    fcst_bins_dynamic = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
+        bin_size=bin
+    )
+    sdf = ev.joined_timeseries.add_calculated_fields([
+        fcst_bins_dynamic,
+    ]).to_sdf()
+    sorted_sdf = sdf.orderBy(
+        "primary_location_id",
+        "configuration_name",
+        "member",
+        "reference_time",
+        "value_time"
+        )
+    assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 7
+    assert 'overflow' in [row['forecast_lead_time_bin'] for row in
+                          sorted_sdf.select(
+                              'forecast_lead_time_bin'
+                              ).distinct().collect()]
 
 
 def test_add_timeseries_udfs(tmpdir):
