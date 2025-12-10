@@ -539,6 +539,12 @@ if __name__ == "__main__":
                 dir=tempdir
             )
         )
+        test_forecast_lead_time_bins(
+            tempfile.mkdtemp(
+                prefix="1b-",
+                dir=tempdir
+            )
+        )
         test_add_timeseries_udfs(
             tempfile.mkdtemp(
                 prefix="2-",

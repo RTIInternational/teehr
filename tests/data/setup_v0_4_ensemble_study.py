@@ -5,7 +5,7 @@ from teehr.evaluation.evaluation import Evaluation
 from teehr import SignatureTimeseriesGenerators as sts
 from teehr import BenchmarkForecastGenerators as bm
 
-TEST_STUDY_DATA_DIR_v0_4 = Path(Path.home(), "repos", "teehr", "tests", "data", "test_study")
+TEST_STUDY_DATA_DIR_v0_4 = Path(Path.cwd(), "tests", "data", "test_study")
 
 
 def setup_v0_4_ensemble_study(tmpdir):
