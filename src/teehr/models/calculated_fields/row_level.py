@@ -3,6 +3,7 @@ import calendar
 from typing import Union
 from pydantic import Field
 import pandas as pd
+from datetime import timedelta
 import pyspark.sql.types as T
 from pyspark.sql.functions import pandas_udf
 import pyspark.sql as ps
@@ -275,32 +276,37 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
         The name of the column to store the lead time bin ID.
         Default: "forecast_lead_time_bin"
     - bin_size:
-        Defines how forecast lead times are binned. Three input formats are
-        supported:
+        Defines how forecast lead times are binned. Accepts pd.Timedelta,
+        datetime.timedelta, or timedelta strings (e.g., '6 hours', '1 day').
+        Three input formats are supported:
 
-        1. **Single pd.Timedelta** (uniform binning):
+        1. **Single timedelta** (uniform binning):
            Creates equal-width bins of the specified duration.
 
-           Example:
+           Examples:
                pd.Timedelta(hours=6)
+               timedelta(hours=6)
+               '6 hours'
+               '6h'
 
            Output bin IDs:
                "PT0H_PT6H", "PT6H_PT12H", "PT12H_PT18H", ...
 
         2. **List of dicts** (variable binning with auto-generated IDs):
            Creates bins with custom ranges. Bin IDs are auto-generated as
-           ISO 8601 duration ranges.
+           ISO 8601 duration ranges. Values can be pd.Timedelta,
+           datetime.timedelta, or timedelta strings.
 
-           Example:
+           Examples:
                [
                    {'start_inclusive': pd.Timedelta(hours=0),
                    'end_exclusive': pd.Timedelta(hours=6)},
-                   {'start_inclusive': pd.Timedelta(hours=6),
-                   'end_exclusive': pd.Timedelta(hours=12)},
-                   {'start_inclusive': pd.Timedelta(hours=12),
-                   'end_exclusive': pd.Timedelta(days=1)},
-                   {'start_inclusive': pd.Timedelta(days=1),
-                   'end_exclusive': pd.Timedelta(days=2)},
+                   {'start_inclusive': '6 hours',
+                   'end_exclusive': '12 hours'},
+                   {'start_inclusive': timedelta(hours=12),
+                   'end_exclusive': '1 day'},
+                   {'start_inclusive': '1 day',
+                   'end_exclusive': '2 days'},
                ]
 
            Output bin IDs:
@@ -308,15 +314,17 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
 
         3. **Dict of dicts** (variable binning with custom IDs):
            Creates bins with custom ranges and user-defined bin identifiers.
+           Values can be pd.Timedelta, datetime.timedelta, or timedelta
+           strings.
 
-           Example:
+           Examples:
                {
-                   'short_range': {'start_inclusive': pd.Timedelta(hours=0),
-                                   'end_exclusive': pd.Timedelta(hours=6)},
+                   'short_range': {'start_inclusive': '0 hours',
+                                   'end_exclusive': '6 hours'},
                    'medium_range': {'start_inclusive': pd.Timedelta(hours=6),
-                                    'end_exclusive': pd.Timedelta(days=1)},
-                   'long_range': {'start_inclusive': pd.Timedelta(days=1),
-                                  'end_exclusive': pd.Timedelta(days=3)},
+                                    'end_exclusive': timedelta(days=1)},
+                   'long_range': {'start_inclusive': '1 day',
+                                  'end_exclusive': '3 days'},
                }
 
            Output bin IDs:
@@ -326,6 +334,12 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     Notes
     -----
+    - Timedelta values can be specified as:
+      - pd.Timedelta objects (e.g., pd.Timedelta(hours=6))
+      - datetime.timedelta objects (e.g., timedelta(hours=6))
+      - Strings (e.g., '6 hours', '1 day', '1d 12h', 'PT6H')
+    - All timedelta inputs are internally converted to pd.Timedelta for
+      processing.
     - Bin ranges are [start_inclusive, end_exclusive), except for the final
       bin which is inclusive of all remaining lead times.
     - If the maximum lead time in the data exceeds the last user-defined bin,
@@ -338,41 +352,50 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
 
     Examples
     --------
-    Uniform 6-hour bins:
+    Uniform 6-hour bins using different input types:
 
     .. code-block:: python
 
+        # Using pd.Timedelta
         fcst_bins = ForecastLeadTimeBins(bin_size=pd.Timedelta(hours=6))
-        # Creates bins: PT0H_PT6H, PT6H_PT12H, PT12H_PT18H, ...
 
-    Variable bins with auto-generated IDs:
+        # Using datetime.timedelta
+        from datetime import timedelta
+        fcst_bins = ForecastLeadTimeBins(bin_size=timedelta(hours=6))
+
+        # Using string
+        fcst_bins = ForecastLeadTimeBins(bin_size='6 hours')
+
+        # All create bins: PT0H_PT6H, PT6H_PT12H, PT12H_PT18H, ...
+
+    Variable bins with auto-generated IDs using mixed types:
 
     .. code-block:: python
 
         fcst_bins = ForecastLeadTimeBins(
             bin_size=[
-                {'start_inclusive': pd.Timedelta(hours=0),
-                'end_exclusive': pd.Timedelta(hours=6)},
+                {'start_inclusive': '0 hours',
+                'end_exclusive': '6 hours'},
                 {'start_inclusive': pd.Timedelta(hours=6),
-                'end_exclusive': pd.Timedelta(days=1)},
-                {'start_inclusive': pd.Timedelta(days=1),
-                'end_exclusive': pd.Timedelta(days=3)},
+                'end_exclusive': '1 day'},
+                {'start_inclusive': timedelta(days=1),
+                'end_exclusive': '3 days'},
             ]
         )
         # Creates bins: PT0H_PT6H, PT6H_P1D, P1D_P3D
 
-    Variable bins with custom IDs:
+    Variable bins with custom IDs using strings:
 
     .. code-block:: python
 
         fcst_bins = ForecastLeadTimeBins(
             bin_size={
-                'nowcast': {'start_inclusive': pd.Timedelta(hours=0),
-                            'end_exclusive': pd.Timedelta(hours=6)},
-                'short_term': {'start_inclusive': pd.Timedelta(hours=6),
-                               'end_exclusive': pd.Timedelta(days=1)},
-                'medium_term': {'start_inclusive': pd.Timedelta(days=1),
-                                'end_exclusive': pd.Timedelta(days=5)},
+                'nowcast': {'start_inclusive': '0 hours',
+                'end_exclusive': '6 hours'},
+                'short_term': {'start_inclusive': '6 hours',
+                'end_exclusive': '1 day'},
+                'medium_term': {'start_inclusive': '1 day',
+                'end_exclusive': '5 days'},
             }
         )
         # Creates bins: nowcast, short_term, medium_term
@@ -390,7 +413,7 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
     output_field_name: str = Field(
         default="forecast_lead_time_bin"
     )
-    bin_size: Union[pd.Timedelta, list, dict] = Field(
+    bin_size: Union[pd.Timedelta, timedelta, str, list, dict] = Field(
         default=pd.Timedelta(days=5)
     )
 
@@ -405,9 +428,37 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
 
         Returns a normalized structure for internal processing.
         """
-        # Single Timedelta - return as-is
-        if isinstance(self.bin_size, pd.Timedelta):
-            return self.bin_size
+        def _to_pd_timedelta(value, field_name, context):
+            """Convert datetime.timedelta or string to pd.Timedelta."""
+            if isinstance(value, pd.Timedelta):
+                return value
+            elif isinstance(value, timedelta):
+                return pd.Timedelta(value)
+            elif isinstance(value, str):
+                try:
+                    temp = pd.Timedelta(value)
+                    if temp < pd.Timedelta(seconds=1) and \
+                       temp != pd.Timedelta(0):
+                        raise ValueError(
+                            "Timedelta must be at least 1 second"
+                        )
+                    return temp
+                except ValueError as e:
+                    raise ValueError(
+                        f"{context} '{field_name}' has invalid timedelta"
+                        f" string: '{value}'. "
+                        f"Error: {e}"
+                    )
+            else:
+                raise TypeError(
+                    f"{context} '{field_name}' must be pd.Timedelta,"
+                    " datetime.timedelta, or a valid timedelta string,"
+                    f" got {type(value)}"
+                )
+
+        # Single Timedelta - convert if needed
+        if isinstance(self.bin_size, (pd.Timedelta, timedelta, str)):
+            return _to_pd_timedelta(self.bin_size, 'bin_size', 'bin_size')
 
         # List of dicts format
         if isinstance(self.bin_size, list):
@@ -424,25 +475,36 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
                 required_keys = {'start_inclusive', 'end_exclusive'}
                 if not required_keys.issubset(bin_dict.keys()):
                     raise ValueError(
-                        f"Item {i} missing required keys: {required_keys}"
+                        f"Item {i} missing required keys. "
+                        f"Must have: {required_keys}"
                     )
 
-                # Validate that values are Timedelta
-                if not isinstance(bin_dict['start_inclusive'], pd.Timedelta):
-                    raise TypeError(
-                        f"Item {i} 'start_inclusive' must be pd.Timedelta"
-                    )
-                if not isinstance(bin_dict['end_exclusive'], pd.Timedelta):
-                    raise TypeError(
-                        f"Item {i} 'end_exclusive' must be pd.Timedelta"
-                    )
+                # Validate and convert values to pd.Timedelta
+                start = _to_pd_timedelta(
+                    bin_dict['start_inclusive'],
+                    'start_inclusive',
+                    f"Item {i}"
+                )
+                end = _to_pd_timedelta(
+                    bin_dict['end_exclusive'],
+                    'end_exclusive',
+                    f"Item {i}"
+                )
 
             # Convert to internal format: list of tuples (start, end, bin_id)
-            # For list format, bin_id is None
+            # For list format, bin_id is None (will be auto-generated as ISO)
             normalized = []
             for bin_dict in self.bin_size:
-                start = bin_dict['start_inclusive']
-                end = bin_dict['end_exclusive']
+                start = _to_pd_timedelta(
+                    bin_dict['start_inclusive'],
+                    'start_inclusive',
+                    'bin_dict'
+                )
+                end = _to_pd_timedelta(
+                    bin_dict['end_exclusive'],
+                    'end_exclusive',
+                    'bin_dict'
+                )
                 normalized.append((start, end, None))
 
             return normalized
@@ -456,8 +518,8 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
             for key, value in self.bin_size.items():
                 if not isinstance(key, str):
                     raise TypeError(
-                        f"Dict keys must be strings (custom bin IDs), got \
-                          {type(key)}"
+                        f"Dict keys must be strings (custom bin IDs), got "
+                        f"{type(key)}"
                     )
 
                 if not isinstance(value, dict):
@@ -468,30 +530,42 @@ class ForecastLeadTimeBins(CalculatedFieldABC, CalculatedFieldBaseModel):
                 required_keys = {'start_inclusive', 'end_exclusive'}
                 if not required_keys.issubset(value.keys()):
                     raise ValueError(
-                        f"Bin '{key}' missing required keys. Must have: \
-                          {required_keys}"
+                        f"Bin '{key}' missing required keys. Must have: "
+                        f"{required_keys}"
                     )
 
-                if not isinstance(value['start_inclusive'], pd.Timedelta):
-                    raise TypeError(
-                        f"Bin '{key}' 'start_inclusive' must be pd.Timedelta"
-                    )
-                if not isinstance(value['end_exclusive'], pd.Timedelta):
-                    raise TypeError(
-                        f"Bin '{key}' 'end_exclusive' must be pd.Timedelta"
-                    )
+                # Validate and convert to pd.Timedelta
+                _to_pd_timedelta(
+                    value['start_inclusive'],
+                    'start_inclusive',
+                    f"Bin '{key}'"
+                )
+                _to_pd_timedelta(
+                    value['end_exclusive'],
+                    'end_exclusive',
+                    f"Bin '{key}'"
+                )
 
             # Convert to internal format: list of tuples
             normalized = []
             for custom_id, bin_dict in self.bin_size.items():
-                start = bin_dict['start_inclusive']
-                end = bin_dict['end_exclusive']
+                start = _to_pd_timedelta(
+                    bin_dict['start_inclusive'],
+                    'start_inclusive',
+                    f"Bin '{custom_id}'"
+                )
+                end = _to_pd_timedelta(
+                    bin_dict['end_exclusive'],
+                    'end_exclusive',
+                    f"Bin '{custom_id}'"
+                )
                 normalized.append((start, end, custom_id))
 
             return normalized
 
         raise TypeError(
-            "bin_size must be pd.Timedelta, list of dicts, or dict of dicts"
+            "bin_size must be pd.Timedelta, datetime.timedelta, "
+            "a valid timedelta string, list of dicts, or dict of dicts"
         )
 
     @staticmethod

@@ -9,6 +9,7 @@ import pyspark.sql.functions as F
 import numpy as np
 import baseflow
 import pandas as pd
+from datetime import timedelta
 
 import sys
 from pathlib import Path
@@ -280,6 +281,39 @@ def test_forecast_lead_time_bins(tmpdir):
                           sorted_sdf.select(
                               'forecast_lead_time_bin'
                               ).distinct().collect()]
+
+    # try mixed type dynamic bin sizes w/ string dict keys that DO encompass
+    # the full lead time range
+    bin = {
+        'bin_1': {'start_inclusive': '0 hours',
+                  'end_exclusive': '6 hours'},
+        'bin_2': {'start_inclusive': pd.Timedelta('6 hours'),
+                  'end_exclusive': pd.Timedelta(hours=12)},
+        'bin_3': {'start_inclusive': timedelta(hours=12),
+                  'end_exclusive': timedelta(hours=18)},
+        'bin_4': {'start_inclusive': '18 hours',
+                  'end_exclusive': pd.Timedelta('1 days')},
+        'bin_5': {'start_inclusive': '1 days',
+                  'end_exclusive': timedelta(days=1, hours=12)},
+        'bin_6': {'start_inclusive': pd.Timedelta(days=1, hours=12),
+                  'end_exclusive': '2 days'},
+        'bin_7': {'start_inclusive': timedelta(days=2),
+                  'end_exclusive': '3 days'},
+    }
+    fcst_bins_dynamic = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
+        bin_size=bin
+    )
+    sdf = ev.joined_timeseries.add_calculated_fields([
+        fcst_bins_dynamic,
+    ]).to_sdf()
+    sorted_sdf = sdf.orderBy(
+        "primary_location_id",
+        "configuration_name",
+        "member",
+        "reference_time",
+        "value_time"
+        )
+    assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 7
 
 
 def test_add_timeseries_udfs(tmpdir):
