@@ -49,6 +49,14 @@ def subset_the_table(
     """Subset the dataset based on location and start/end time."""
     if table.name == "locations" and primary_location_ids is not None:
         sdf_in = sdf_in.filter(sdf_in.id.isin(primary_location_ids))
+        # warn user if any primary_location_ids were excluded
+        available_ids = set(sdf_in.select("id").rdd.flatMap(lambda x: x).collect())
+        missing_ids = set(primary_location_ids) - available_ids
+        if len(missing_ids) > 0:
+            logger.warning(
+                f"The following primary_location_ids were not found in the \
+                  locations table and will be excluded: {missing_ids}"
+            )
     elif table.name == "location_attributes" and primary_location_ids is not None:
         sdf_in = sdf_in.filter(sdf_in.location_id.isin(primary_location_ids))
     elif table.name == "location_crosswalks" and primary_location_ids is not None:
