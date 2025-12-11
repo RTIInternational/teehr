@@ -1,6 +1,5 @@
 from pathlib import Path
 from teehr import Configuration
-from teehr.models.filters import TableFilter
 from teehr.evaluation.evaluation import Evaluation
 from teehr import SignatureTimeseriesGenerators as sts
 from teehr import BenchmarkForecastGenerators as bm
@@ -26,7 +25,10 @@ def setup_v0_4_ensemble_study(tmpdir):
         "usgs_hefs_06711565.parquet"
     )
 
-    ev = Evaluation(dir_path=tmpdir)
+    ev = Evaluation(
+        dir_path=tmpdir,
+        check_evaluation_version=False
+    )
     ev.enable_logging()
     ev.clone_template()
 
@@ -65,16 +67,13 @@ def setup_v0_4_ensemble_study(tmpdir):
     )
 
     # Calculate annual hourly normals from USGS observations.
-    input_ts = TableFilter()
-    input_ts.table_name = "primary_timeseries"
-
     ts_normals = sts.Normals()
     ts_normals.temporal_resolution = "hour_of_year"  # the default
     ts_normals.summary_statistic = "mean"           # the default
 
     ev.generate.signature_timeseries(
         method=ts_normals,
-        input_table_filter=input_ts,
+        input_table_name="primary_timeseries",
         start_datetime="2024-11-19 12:00:00",
         end_datetime="2024-11-21 13:00:00",
         timestep="1 hour",
@@ -94,24 +93,19 @@ def setup_v0_4_ensemble_study(tmpdir):
     ref_fcst = bm.ReferenceForecast()
     ref_fcst.aggregate_reference_timeseries = True
 
-    reference_ts = TableFilter()
-    reference_ts.table_name = "primary_timeseries"
-    reference_ts.filters = [
-        "variable_name = 'streamflow_hour_of_year_mean'",
-        "unit_name = 'ft^3/s'"
-    ]
-
-    template_ts = TableFilter()
-    template_ts.table_name = "secondary_timeseries"
-    template_ts.filters = [
-        "variable_name = 'streamflow_hourly_inst'",
-        "unit_name = 'ft^3/s'",
-        "member = '1993'"
-    ]
     ev.generate.benchmark_forecast(
         method=ref_fcst,
-        reference_table_filter=reference_ts,
-        template_table_filter=template_ts,
+        reference_table_name="primary_timeseries",
+        reference_table_filters=[
+            "variable_name = 'streamflow_hour_of_year_mean'",
+            "unit_name = 'ft^3/s'"
+        ],
+        template_table_name="secondary_timeseries",
+        template_table_filters=[
+            "variable_name = 'streamflow_hourly_inst'",
+            "unit_name = 'ft^3/s'",
+            "member = '1993'"
+        ],
         output_configuration_name="benchmark_forecast_hourly_normals"
     ).write(destination_table="secondary_timeseries")
 
