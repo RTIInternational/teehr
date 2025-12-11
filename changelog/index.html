@@ -1,0 +1,1827 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Release Notes &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/teehr.css?v=b36b674b" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=8e576371"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'changelog/index';</script>
+    <link rel="icon" href="../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="API reference" href="../api/index.html" />
+    <link rel="prev" title="Developer Guide" href="../development/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.5.2" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation - Home"/>
+    <img src="../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark pst-js-only" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Release Notes</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="release-notes">
+<h1>Release Notes<a class="headerlink" href="#release-notes" title="Link to this heading">#</a></h1>
+<section id="id1">
+<h2>0.5.2 - 2025-11-11<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
+<section id="changed">
+<h3>Changed<a class="headerlink" href="#changed" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Updates version number in pyproject.toml and init files</p></li>
+<li><p>No changes in functionality from <code class="docutils literal notranslate"><span class="pre">0.5.1dev10</span></code></p></li>
+</ul>
+</section>
+</section>
+<section id="dev10-2025-11-10">
+<h2>0.5.1dev10 - 2025-11-10<a class="headerlink" href="#dev10-2025-11-10" title="Link to this heading">#</a></h2>
+<section id="id2">
+<h3>Changed<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Rename SignatureMetrics to Signatures</p></li>
+<li><p>Updates Spearman correlation to handle repeating values</p></li>
+</ul>
+</section>
+<section id="added">
+<h3>Added<a class="headerlink" href="#added" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Flow Duration Curve Slope</p></li>
+<li><p>VariabilityRatio</p></li>
+<li><p>Epsilon to handle division by zero</p></li>
+<li><p>BelowPercentileEventDetection metric</p></li>
+<li><p>Bootstrapping for signatures</p></li>
+</ul>
+</section>
+</section>
+<section id="id3">
+<h2>0.5.0 - 2025-08-27<a class="headerlink" href="#id3" title="Link to this heading">#</a></h2>
+<section id="id4">
+<h3>Changed<a class="headerlink" href="#id4" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Many updates and new features are introduced in this release, including but not limited to:
+- Baseflow separation methods
+- Better handling of warnings
+- Ability to generate benchmark timeseries and forecasts
+- Upgrading to pyspark 4.0
+- Documentation updates</p></li>
+<li><p>For a full list see: <a class="github reference external" href="https://github.com/RTIInternational/teehr/milestone/4?closed=1">RTIInternational/teehr</a></p></li>
+</ul>
+</section>
+</section>
+<section id="id5">
+<h2>0.4.13 - 2025-06-09<a class="headerlink" href="#id5" title="Link to this heading">#</a></h2>
+<section id="id6">
+<h3>Changed<a class="headerlink" href="#id6" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Updates logic around reading empty tables to allow for cloning empty timeseries tables from s3. Overrides the read method in the <cite>joined_timeseries</cite> table class.</p></li>
+<li><p>Removes the <cite>pa.Check.isin()</cite> pandera validation checks and replaces with the manual “foreign key” enforcement method, <cite>_enforce_foreign_keys()</cite> to speed up validation.</p></li>
+<li><p>Removes redundant dataframe validation during the write methods.</p></li>
+<li><p>Sets <cite>.set(“spark.sql.parquet.enableVectorizedReader”, “false”)</cite> in pyspark config to fix type error when reading null parquet fields.</p></li>
+<li><p>Fixes the path conversion error when visualizing locations in the accessor.</p></li>
+<li><p>Sorts timeseries before plotting to fix the visualization error in the accessor.</p></li>
+<li><p>Removes <cite>add_configuration_name</cite> from user guide doc (#450)</p></li>
+<li><p>Adds <cite>tomli</cite> to pyproject.toml to <cite>dev</cite> group to support python 3.12 when building sphinx docs.</p></li>
+<li><p>Drops <cite>location_id</cite> after joining attributes to the <cite>joined_timeseries</cite> table.</p></li>
+<li><p>Fixes joining geometry to the secondary timeseries table.</p></li>
+<li><p>Sets <cite>timeseries_type</cite> to <cite>secondary</cite> when fetching operational NWM gridded data, unless the configuration_name contains “forcing_analysis_assim” in which case <cite>timeseries_type</cite> is set to <cite>primary</cite>.</p></li>
+</ul>
+</section>
+</section>
+<section id="id7">
+<h2>0.4.12 - 2025-05-22<a class="headerlink" href="#id7" title="Link to this heading">#</a></h2>
+<section id="id8">
+<h3>Changed<a class="headerlink" href="#id8" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Adds <cite>git</cite> and <cite>vim</cite> to docker image for TEEHR-HUB</p></li>
+<li><p>Moves <cite>scoringrules</cite> and <cite>arch</cite> imports into the function to speed up import time</p></li>
+<li><p>Removes the repartitioning by <cite>self.partition_by</cite> of the dataframe in the <cite>BaseTable</cite> class when writing to parquet</p></li>
+</ul>
+</section>
+</section>
+<section id="id9">
+<h2>0.4.11 - 2025-05-19<a class="headerlink" href="#id9" title="Link to this heading">#</a></h2>
+<section id="id10">
+<h3>Changed<a class="headerlink" href="#id10" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Fixes bug in _write_spark_df() method in the BaseTable class that caused writing larger dataframes to fail.</p></li>
+<li><p>Parallelizes <cite>convert_single_timeseries()</cite> when a directory is passed to the <cite>in_path</cite> argument.</p></li>
+<li><p>Fixes doc string in <cite>generate_weights_file()</cite></p></li>
+<li><p>Switched to the built-in dropDuplicates() method in the <cite>BaseTable</cite> class to drop duplicates instead of using a custom implementation.</p></li>
+<li><p>Added option to specify the number of partitions when writing dataframes in the BaseTable class.</p></li>
+<li><p>Added the option to skip the dropDuplicates() method when writing dataframes in the BaseTable class.</p></li>
+</ul>
+</section>
+</section>
+<section id="id11">
+<h2>0.4.10 - 2025-04-14<a class="headerlink" href="#id11" title="Link to this heading">#</a></h2>
+<section id="id12">
+<h3>Added<a class="headerlink" href="#id12" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Adds append and upsert functionality without duplicates to loading methods on tables:</dt><dd><ul>
+<li><p>locations</p></li>
+<li><p>location crosswalk</p></li>
+<li><p>location attributes</p></li>
+<li><p>primary and secondary timeseries</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Adds upsert argument to fetching methods (append is default).</p></li>
+<li><p>Clears fetching cache before each call.</p></li>
+<li><p>Adds ability to add or update the location id prefix during loading in above tables</p></li>
+<li><p>Adds <cite>reference_time</cite> as a default partition for secondary and joined timeseries</p></li>
+<li><p>Adds script to re-write timeseries tables partitioned on <cite>reference_time</cite></p></li>
+<li><p>Adds function to drop potential duplicates before writing tables (<cite>_drop_duplicates()</cite>)</p></li>
+<li><dl class="simple">
+<dt>Combines the script to calculate pixel weights per polygon (<cite>generate_weights.py</cite>) with the NWM gridded Evaluation fetching methods (retro and operational).</dt><dd><ul>
+<li><p>This allows users to optionally generate the weights from within the fetching methods or to use a pre-created weights file.</p></li>
+<li><p>When run from the Evaluation, the weights file is saved to the evaluation cache and corresponds to ids in the <cite>locations</cite> table.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Adds User Guide notebook for NWM gridded fetching</p></li>
+<li><p>Adds transform functions to metric calculations</p></li>
+<li><p>Adds <cite>geoviews</cite> dependency to poetry evaluation</p></li>
+<li><p>Adds aws cli and <cite>datashader</cite> to the TEEHR-HUB docker image</p></li>
+<li><p>Removes <cite>duckdb</cite> for teehr env</p></li>
+</ul>
+</section>
+</section>
+<section id="id13">
+<h2>0.4.9 - 2025-03-26<a class="headerlink" href="#id13" title="Link to this heading">#</a></h2>
+<section id="id14">
+<h3>Added<a class="headerlink" href="#id14" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Adds pandera schema for the weights file and validates weights dataframe on read and write, coercing values into schema data types</p></li>
+<li><p>Adds <code class="docutils literal notranslate"><span class="pre">starting_z_hour</span></code> and <code class="docutils literal notranslate"><span class="pre">ending_z_hour</span></code> arguments to operational NWM fetching methods (point, gridded)</p></li>
+<li><p>Adds function to drop NaN values (from value field) when fetching NWM and USGS data</p></li>
+<li><p>Adds a check so that if schema validation fails, the current file is skipped and fetching continues</p></li>
+<li><p>Adds versions 1.2 and 2.0 to operational NWM fetching (version 2.2 (nwm22) is allowed to be used with a note that it is no different from 2.1)</p></li>
+<li><p>Adds a test notebook for testing on remote teehr-hub kernel</p></li>
+<li><p>Adds wrapper functions for deterministic and signature metrics</p></li>
+</ul>
+</section>
+<section id="id15">
+<h3>Changed<a class="headerlink" href="#id15" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Fixes doc strings for fetch.nwm_retrospective_grids()</p></li>
+<li><p>Removes <code class="docutils literal notranslate"><span class="pre">add_configuration_name</span></code> in fetching and automatically adds if it doesn’t exist</p></li>
+<li><p>Updates dask version</p></li>
+<li><p>Fixes a bug in parsing the z_hour and day from the remote json paths when an ensemble configuration is selected</p></li>
+<li><p>Removes the imports in <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> that were for documentation purposes</p></li>
+<li><p>Removes hydrotools as a dependency</p></li>
+<li><p>Updates API documentation, adding evaluation.metrics.Metrics methods</p></li>
+<li><p>Changes base docker image to <code class="docutils literal notranslate"><span class="pre">base-notebook:2025.01.24</span></code></p></li>
+</ul>
+</section>
+</section>
+<section id="id16">
+<h2>0.4.8 - 2025-02-17<a class="headerlink" href="#id16" title="Link to this heading">#</a></h2>
+<section id="id17">
+<h3>Added<a class="headerlink" href="#id17" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Adds box zoom to location plots.</p></li>
+<li><p>Adds User Guide page for fetching NWM point data.</p></li>
+<li><p>Adds new row level calculated fields, DayOfYear, ThresholdValueExceeded, ForecastLeadTime.</p></li>
+</ul>
+</section>
+<section id="id18">
+<h3>Changed<a class="headerlink" href="#id18" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Changes NWM fetching methods from <code class="docutils literal notranslate"><span class="pre">nwm_forecast_&lt;xxxx&gt;</span></code> to <code class="docutils literal notranslate"><span class="pre">nwm_operational_&lt;xxxx&gt;</span></code>.</p></li>
+<li><p>Set <code class="docutils literal notranslate"><span class="pre">use_table_schema</span></code> to False when cloning the <code class="docutils literal notranslate"><span class="pre">joined_timeseries</span></code> table from s3,
+so that extra fields will not be dropped. Note, this will raise an error if the table is
+empty or does not exist.</p></li>
+<li><p>Made auto-adding of configuration_name in NWM and USGS fetching optional.</p></li>
+<li><p>Removed 2 evaluations from s3 (HEFS, NWM fetching), using TEEHR data module instead.</p></li>
+</ul>
+</section>
+</section>
+<section id="id19">
+<h2>0.4.7 - 2025-01-08<a class="headerlink" href="#id19" title="Link to this heading">#</a></h2>
+<section id="id20">
+<h3>Added<a class="headerlink" href="#id20" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Adds RowLevelCalculatedFields and TimeseriesAwareCalculatedFields which are hopefully descriptive enough names.</p></li>
+<li><p>Adds a User Guide page to describe what they are and how to use them.</p></li>
+<li><p>Adds hvplot dependency to poetry</p></li>
+<li><p>Adds add_calculated_fields() methods to joined_timeseries and metrics “tables”</p></li>
+<li><p>Adds the Continuous Rank Probability Score CRPS ensemble metric using the scoringrules package</p></li>
+<li><p>Adds a script to create an example ensemble evaluation using data in the test directory</p></li>
+<li><p>Adds an example notebook to demo CRPS metric query</p></li>
+<li><p>Adds user guide notebook page for ensembles, reading a test ensemble evaluation from S3</p></li>
+<li><p>Adds ability to unpack metric dictionary results into separate columns (ie, bootstrap quantiles)</p></li>
+</ul>
+</section>
+<section id="id21">
+<h3>Changed<a class="headerlink" href="#id21" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Splits metric models and functions into three categories: Deterministic, Probabilistic, Signature. This is a breaking change requiring import of specific metric classes (Deterministic, Probabilistic, Signature) rather than just <code class="docutils literal notranslate"><span class="pre">Metrics</span></code>.</p>
+<ul>
+<li><p>Functions are moved to separate modules</p></li>
+<li><p>Models are moved to separate classes</p></li>
+<li><p>Basemodels and metric enums are moved to a separate basemodel module</p></li>
+</ul>
+</li>
+<li><p>Updates API docs, removes unused files and the autoapi directory.</p></li>
+</ul>
+</section>
+</section>
+<section id="id22">
+<h2>0.4.6 - 2024-12-17<a class="headerlink" href="#id22" title="Link to this heading">#</a></h2>
+<section id="id23">
+<h3>Added<a class="headerlink" href="#id23" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Adds <cite>add_missing_columns</cite> to the <cite>_validate</cite> method in the <cite>BaseTable</cite> class
+to allow for adding missing columns to the schema.</p></li>
+<li><p>When upgrading from 0.4.4 or earlier, you may need to run the following to add
+the missing columns to the secondary_timeseries if you have existing datasets:</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sdf</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">secondary_timeseries</span><span class="o">.</span><span class="n">to_sdf</span><span class="p">()</span>
+<span class="n">validated_sdf</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">secondary_timeseries</span><span class="o">.</span><span class="n">_validate</span><span class="p">(</span><span class="n">sdf</span><span class="p">,</span> <span class="n">add_missing_columns</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">secondary_timeseries</span><span class="o">.</span><span class="n">_write_spark_df</span><span class="p">(</span><span class="n">validated_sdf</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="id24">
+<h3>Changed<a class="headerlink" href="#id24" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>None</p></li>
+</ul>
+</section>
+</section>
+<section id="id25">
+<h2>0.4.5 - 2024-12-09<a class="headerlink" href="#id25" title="Link to this heading">#</a></h2>
+<section id="id26">
+<h3>Added<a class="headerlink" href="#id26" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Fixes issues with sphinx docs and run the <cite>install_spark_jars.py</cite> script in the build container.</p></li>
+<li><p>Adds location plotting to accessor.</p></li>
+<li><p>Adds loading from FEWS XML files.</p></li>
+<li><p>Adds <cite>member</cite> to secondary timeseries schema for ensembles.</p></li>
+</ul>
+</section>
+<section id="id27">
+<h3>Changed<a class="headerlink" href="#id27" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Fixes issues with sphinx docs and run the <cite>install_spark_jars.py</cite> script in the build container.</p></li>
+</ul>
+</section>
+</section>
+<section id="id28">
+<h2>0.4.4 - 2024-12-02<a class="headerlink" href="#id28" title="Link to this heading">#</a></h2>
+<section id="id29">
+<h3>Added<a class="headerlink" href="#id29" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Added ability to read an Evaluation dataset directly from an S3 bucket.</p></li>
+<li><p>When path to an Evaluation dataset is an S3 bucket, the Evaluation is read-only.</p></li>
+</ul>
+</section>
+<section id="id30">
+<h3>Changed<a class="headerlink" href="#id30" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Pretty significant refactor of the Table classes to make them more flexible and easier to use.</p></li>
+<li><p>Added more robust Pandera validation to the Table classes.</p></li>
+<li><p>Updated docs to reflect changes and added <cite>read_from_s3</cite> example.</p></li>
+</ul>
+</section>
+</section>
+<section id="id31">
+<h2>0.4.3 - 2024-10-19<a class="headerlink" href="#id31" title="Link to this heading">#</a></h2>
+<section id="id32">
+<h3>Added<a class="headerlink" href="#id32" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>None</p></li>
+</ul>
+</section>
+<section id="id33">
+<h3>Changed<a class="headerlink" href="#id33" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Changed paths to the S3 bucket evaluations to reference “e*…” instead of “p*…” naming convention.</p></li>
+</ul>
+</section>
+</section>
+<section id="id34">
+<h2>0.4.2 - 2024-10-18<a class="headerlink" href="#id34" title="Link to this heading">#</a></h2>
+<section id="id35">
+<h3>Added<a class="headerlink" href="#id35" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>A test-build-publish workflow to push to PyPI</p></li>
+</ul>
+</section>
+<section id="id36">
+<h3>Changed<a class="headerlink" href="#id36" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>None</p></li>
+</ul>
+</section>
+</section>
+<section id="id37">
+<h2>0.4.1 - 2024-10-15<a class="headerlink" href="#id37" title="Link to this heading">#</a></h2>
+<section id="id38">
+<h3>Added<a class="headerlink" href="#id38" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Updated docs to include pages for <cite>grouping</cite>, <cite>filtering</cite> and <cite>Joining</cite> in the User Guide.</p></li>
+</ul>
+</section>
+<section id="id39">
+<h3>Changed<a class="headerlink" href="#id39" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Fixed some broken data download links in the User Guide.</p></li>
+<li><p>Fixed the post-install script to install the AWS Spark Jars.</p></li>
+<li><p>Fixed the API doc build.</p></li>
+</ul>
+</section>
+</section>
+<section id="id40">
+<h2>0.4.0 - 2024-10-13<a class="headerlink" href="#id40" title="Link to this heading">#</a></h2>
+<section id="id41">
+<h3>Added<a class="headerlink" href="#id41" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>This is a major (although still less that version 1) release that includes a number of new features and changes.</p></li>
+<li><p>Some of the more significant changes:
+- Added a new Evaluation class that is the primary interface for working with TEEHR data.
+- Switched from DuckDB to PySpark to enable horizonal scaling for the computational workloads.
+- Formalized the structure of the TEEHR dataset.
+- Added data validation of values referenced from domain and location tables to the timeseries tables.
+- Updated docs to include new features and changes.</p></li>
+</ul>
+</section>
+<section id="id42">
+<h3>Changed<a class="headerlink" href="#id42" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Many changes have been made between v0.3.28 and v0.4.0.</p></li>
+</ul>
+</section>
+</section>
+<section id="id43">
+<h2>0.3.28 - 2024-07-10<a class="headerlink" href="#id43" title="Link to this heading">#</a></h2>
+<section id="id44">
+<h3>Added<a class="headerlink" href="#id44" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>pandas DataFrame accessor classes for metrics and timeseries queries, including some simple methods
+for plotting and summarizing data.</p></li>
+<li><p>Added Bokeh as a dependency for visualization.</p></li>
+</ul>
+</section>
+<section id="id45">
+<h3>Changed<a class="headerlink" href="#id45" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>None</p></li>
+</ul>
+</section>
+</section>
+<section id="id46">
+<h2>0.3.27 - 2024-07-08<a class="headerlink" href="#id46" title="Link to this heading">#</a></h2>
+<section id="id47">
+<h3>Added<a class="headerlink" href="#id47" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Documentation updates primarly to Getting Started and User Guide sections.</p></li>
+</ul>
+</section>
+<section id="id48">
+<h3>Changed<a class="headerlink" href="#id48" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>None</p></li>
+</ul>
+</section>
+</section>
+<section id="id49">
+<h2>0.3.26 - 2024-06-27<a class="headerlink" href="#id49" title="Link to this heading">#</a></h2>
+<section id="id50">
+<h3>Added<a class="headerlink" href="#id50" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Dark theme logo for sphinx documentation.</p></li>
+<li><p>Added the <cite>pickleshare</cite> package to dev dependency group to fix <cite>ipython</cite> directive in sphinx documentation.</p></li>
+</ul>
+</section>
+<section id="id51">
+<h3>Changed<a class="headerlink" href="#id51" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Pinned <cite>sphinx-autodoc</cite> to v3.0.0 and <cite>numpy</cite> to v1.26.4 in <cite>documentation-publish.yml</cite> to fix the API documentation build.</p></li>
+<li><p>Removed unused documentation dependencies from dev group.</p></li>
+</ul>
+</section>
+</section>
+<section id="id52">
+<h2>0.3.25 - 2024-06-06<a class="headerlink" href="#id52" title="Link to this heading">#</a></h2>
+<section id="id53">
+<h3>Added<a class="headerlink" href="#id53" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Added PySpark to TEEHR-HUB (including openjdk-17-jdk and jar files)</p></li>
+</ul>
+</section>
+<section id="id54">
+<h3>Changed<a class="headerlink" href="#id54" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>None</p></li>
+</ul>
+</section>
+</section>
+<section id="id55">
+<h2>0.3.24 - 2024-05-29<a class="headerlink" href="#id55" title="Link to this heading">#</a></h2>
+<section id="id56">
+<h3>Added<a class="headerlink" href="#id56" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Added metrics documentation to the Sphinx documentation.</p></li>
+</ul>
+</section>
+<section id="id57">
+<h3>Changed<a class="headerlink" href="#id57" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>None</p></li>
+</ul>
+</section>
+</section>
+<section id="id58">
+<h2>0.3.23 - 2024-05-28<a class="headerlink" href="#id58" title="Link to this heading">#</a></h2>
+<section id="id59">
+<h3>Added<a class="headerlink" href="#id59" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>None</p></li>
+</ul>
+</section>
+<section id="id60">
+<h3>Changed<a class="headerlink" href="#id60" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Docstring updates in duckdb_database.py.</p></li>
+<li><p>Changelog update for 0.3.22.</p></li>
+<li><p>Updates <code class="docutils literal notranslate"><span class="pre">insert_attributes()</span></code> in <code class="docutils literal notranslate"><span class="pre">duckdb_database.py</span></code> to better handle None/Null attribute units.</p></li>
+<li><p>Test updates in <code class="docutils literal notranslate"><span class="pre">convert.py</span></code>.</p></li>
+</ul>
+</section>
+</section>
+<section id="id61">
+<h2>0.3.22 - 2024-05-22<a class="headerlink" href="#id61" title="Link to this heading">#</a></h2>
+<section id="id62">
+<h3>Added<a class="headerlink" href="#id62" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>None</p></li>
+</ul>
+</section>
+<section id="id63">
+<h3>Changed<a class="headerlink" href="#id63" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Cleaned up the <cite>DuckDB*</cite> classes.  Don’t think any public interfaces changed.</p></li>
+<li><p>Import of <cite>DuckDBDatabase</cite>, <cite>DuckDBDatabaseAPI</cite>, and <cite>DuckDBJoinedParquet</cite>
+now use <cite>from teehr.classes import DuckDBDatabase, DuckDBDatabaseAPI, DuckDBJoinedParquet</cite></p></li>
+<li><p>the <cite>calculate_field`</cite> method was renamed to <cite>insert_calculated_field`</cite></p></li>
+</ul>
+</section>
+</section>
+<section id="id64">
+<h2>0.3.21 - 2024-05-21<a class="headerlink" href="#id64" title="Link to this heading">#</a></h2>
+<section id="id65">
+<h3>Added<a class="headerlink" href="#id65" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Added the <code class="docutils literal notranslate"><span class="pre">DuckDBJoinedParquet</span></code> class for metric queries on pre-joined parquet files.</p></li>
+<li><p>Added the <code class="docutils literal notranslate"><span class="pre">DuckDBBase</span></code> class for common methods between the <code class="docutils literal notranslate"><span class="pre">DuckDBDatabase</span></code>, <code class="docutils literal notranslate"><span class="pre">DuckDBAPI</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">DuckDBJoinedParquet</span></code> classes.</p></li>
+</ul>
+</section>
+<section id="id66">
+<h3>Changed<a class="headerlink" href="#id66" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Renamed the <code class="docutils literal notranslate"><span class="pre">database</span></code> directory to <code class="docutils literal notranslate"><span class="pre">classes</span></code>.</p></li>
+<li><p>Renamed the <code class="docutils literal notranslate"><span class="pre">teehr_dataset.py</span></code> to <code class="docutils literal notranslate"><span class="pre">teehr_duckdb.py</span></code>.</p></li>
+<li><p>Renamed the <code class="docutils literal notranslate"><span class="pre">TEEHRDatasetDB</span></code> and <code class="docutils literal notranslate"><span class="pre">TEEHRDatasetAPI</span></code> classes to
+<code class="docutils literal notranslate"><span class="pre">DuckDBDatabase</span></code> and <code class="docutils literal notranslate"><span class="pre">DuckDBAPI</span></code> respectively.</p></li>
+<li><p>Removed <cite>lead_time</cite> and <cite>absolute_value</cite> from joined table</p></li>
+</ul>
+</section>
+</section>
+<section id="id67">
+<h2>0.3.20 - 2024-05-18<a class="headerlink" href="#id67" title="Link to this heading">#</a></h2>
+<section id="id68">
+<h3>Added<a class="headerlink" href="#id68" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>None</p></li>
+</ul>
+</section>
+<section id="id69">
+<h3>Changed<a class="headerlink" href="#id69" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Update queries to accept a list of paths for example, <cite>primary_filepath</cite> and <cite>secondary_filepath</cite>
+Includes <cite>get_metrics()</cite>, <cite>get_joined_timeseries()</cite>, <cite>get_timeseries()</cite>, and <cite>get_timeseries_chars()</cite></p></li>
+</ul>
+</section>
+</section>
+<section id="id70">
+<h2>0.3.19 - 2024-05-18<a class="headerlink" href="#id70" title="Link to this heading">#</a></h2>
+<section id="id71">
+<h3>Added<a class="headerlink" href="#id71" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>None</p></li>
+</ul>
+</section>
+<section id="id72">
+<h3>Changed<a class="headerlink" href="#id72" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Update SQL queries to allow <cite>reference_time</cite> to be NULL.</p></li>
+<li><p>Updated tests for NULL <cite>reference_time</cite></p></li>
+</ul>
+</section>
+</section>
+<section id="id73">
+<h2>0.3.18 - 2024-05-10<a class="headerlink" href="#id73" title="Link to this heading">#</a></h2>
+<section id="id74">
+<h3>Added<a class="headerlink" href="#id74" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Added documentation regarding best practices for specifying the <code class="docutils literal notranslate"><span class="pre">chunk_by</span></code> parameter when fetching NWM
+retrospective and USGS data.</p></li>
+</ul>
+</section>
+<section id="id75">
+<h3>Changed<a class="headerlink" href="#id75" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Fixed a bug in the NWM retrospective grid loading weighted average calculation.</p></li>
+<li><p>Changed the method of fetching NWM gridded data to read only a subset of the grid (given by the row/col
+bounds from the weights file) into memory rather than the entire grid.</p></li>
+<li><p>Removed ‘day’ and ‘location_id’ <code class="docutils literal notranslate"><span class="pre">chunk_by</span></code> options to reduce redundant data transfer costs.</p></li>
+</ul>
+</section>
+</section>
+<section id="id76">
+<h2>0.3.17 - 2024-04-22<a class="headerlink" href="#id76" title="Link to this heading">#</a></h2>
+<section id="id77">
+<h3>Added<a class="headerlink" href="#id77" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>None</p></li>
+</ul>
+</section>
+<section id="id78">
+<h3>Changed<a class="headerlink" href="#id78" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Dropped “Z” from the file name in the NWM loading functions, adding a note in the docstrings that all times are in UTC.</p></li>
+<li><p>Changed data type of <code class="docutils literal notranslate"><span class="pre">zonal_weights_filepath</span></code> to <code class="docutils literal notranslate"><span class="pre">Union[str,</span> <span class="pre">Path]</span></code> in <code class="docutils literal notranslate"><span class="pre">nwm_grids.py</span></code>.</p></li>
+<li><p>Fixed <code class="docutils literal notranslate"><span class="pre">SettingWithCopyWarning</span></code> in NWM grid loading.</p></li>
+<li><p>Fixed the <code class="docutils literal notranslate"><span class="pre">end_date</span></code> in NWM retrospective loading to include the entirety of the last day and not fail when
+last available day is specfified.</p></li>
+<li><p>Removed “elevation”, “gage_id”, “order” from NWM v3.0 retrospective point loading.</p></li>
+</ul>
+</section>
+</section>
+<section id="id79">
+<h2>0.3.16 - 2024-04-11<a class="headerlink" href="#id79" title="Link to this heading">#</a></h2>
+<section id="id80">
+<h3>Added<a class="headerlink" href="#id80" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Adds a few new metrics to the queries:
+* annual_peak_relative_bias
+* spearman_correlation
+* kling_gupta_efficiency_mod1
+* kling_gupta_efficiency_mod2</p></li>
+</ul>
+</section>
+<section id="id81">
+<h3>Changed<a class="headerlink" href="#id81" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>None</p></li>
+</ul>
+</section>
+</section>
+<section id="id82">
+<h2>0.3.15 - 2024-04-08<a class="headerlink" href="#id82" title="Link to this heading">#</a></h2>
+<section id="id83">
+<h3>Added<a class="headerlink" href="#id83" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">location_id_prefix</span></code> as an optional argument to <code class="docutils literal notranslate"><span class="pre">generate_weights_file()</span></code> to allow for
+the prefixing of the location ID with a string.</p></li>
+</ul>
+</section>
+<section id="id84">
+<h3>Changed<a class="headerlink" href="#id84" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Updated the NWM operational and retrospective grid loading functions so that the location ID
+as defined in the zonal weights file is used as the location ID in the output parquet files.</p></li>
+</ul>
+</section>
+</section>
+<section id="id85">
+<h2>0.3.14 - 2024-03-29<a class="headerlink" href="#id85" title="Link to this heading">#</a></h2>
+<section id="id86">
+<h3>Added<a class="headerlink" href="#id86" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>relative_bias</p></li>
+<li><p>multiplicative_bias</p></li>
+<li><p>mean_squared_error</p></li>
+<li><p>mean_absolute_relative_error</p></li>
+<li><p>pearson_correlation</p></li>
+<li><p>r_squared</p></li>
+<li><p>nash_sutcliffe_efficiency_normalized</p></li>
+</ul>
+</section>
+<section id="id87">
+<h3>Changed<a class="headerlink" href="#id87" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>mean_error (rename current bias to mean_error)</p></li>
+<li><p>mean_absolute_error (rename current mean_error to mean_absolute_error)</p></li>
+</ul>
+</section>
+</section>
+<section id="id88">
+<h2>0.3.13 - 2024-03-22<a class="headerlink" href="#id88" title="Link to this heading">#</a></h2>
+<section id="id89">
+<h3>Added<a class="headerlink" href="#id89" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>None</p></li>
+</ul>
+</section>
+<section id="id90">
+<h3>Changed<a class="headerlink" href="#id90" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Updated from Enum to StrEnum and added a fix for backwards incompatibility described
+here: <a class="reference external" href="https://tomwojcik.com/posts/2023-01-02/python-311-str-enum-breaking-change">https://tomwojcik.com/posts/2023-01-02/python-311-str-enum-breaking-change</a>.  This
+is required to support both python 3.10 and python 3.11.</p></li>
+<li><p>Updated TEEHR-HUB to Python 3.11 and <cite>pangeo/pangeo-notebook:2024.03.13</cite></p></li>
+<li><p>Made all packages that use YYYY.MM.DD versioning <cite>&gt;=</cite> instead of <cite>^</cite> in <cite>pyproject.toml</cite></p></li>
+</ul>
+</section>
+</section>
+<section id="id91">
+<h2>0.3.12 - 2024-03-22<a class="headerlink" href="#id91" title="Link to this heading">#</a></h2>
+<section id="id92">
+<h3>Added<a class="headerlink" href="#id92" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>None</p></li>
+</ul>
+</section>
+<section id="id93">
+<h3>Changed<a class="headerlink" href="#id93" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Changed the chunking method for USGS and NWM retrospective data loading to iterate over pandas <code class="docutils literal notranslate"><span class="pre">period_range</span></code>
+rather than using <code class="docutils literal notranslate"><span class="pre">groupby</span></code> or <code class="docutils literal notranslate"><span class="pre">date_range</span></code> to fix a bug when fetching data over multiple years.</p></li>
+</ul>
+</section>
+</section>
+<section id="id94">
+<h2>0.3.11 - 2024-03-19<a class="headerlink" href="#id94" title="Link to this heading">#</a></h2>
+<section id="id95">
+<h3>Added<a class="headerlink" href="#id95" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>None</p></li>
+</ul>
+</section>
+<section id="id96">
+<h3>Changed<a class="headerlink" href="#id96" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Downgraded required Dask version to <cite>dask = “^2023.8.1”</cite> to match <cite>pangeo/pangeo-notebook:2023.09.11</cite></p></li>
+</ul>
+</section>
+</section>
+<section id="id97">
+<h2>0.3.10 - 2024-03-07<a class="headerlink" href="#id97" title="Link to this heading">#</a></h2>
+<section id="id98">
+<h3>Added<a class="headerlink" href="#id98" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Added <cite>test_zonal_mean_results.py</cite></p></li>
+</ul>
+</section>
+<section id="id99">
+<h3>Changed<a class="headerlink" href="#id99" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Fixed the calculation of the zonal mean of pixel values in <cite>compute_zonal_mean()</cite> so it caculates
+the weighted average (divides by the sum of weight values).</p></li>
+<li><p>Updated grid loading tests and data to reflect the fixed method.</p></li>
+</ul>
+</section>
+</section>
+<section id="id100">
+<h2>0.3.9 - 2024-02-15<a class="headerlink" href="#id100" title="Link to this heading">#</a></h2>
+<section id="id101">
+<h3>Added<a class="headerlink" href="#id101" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Adds sphinx documentation framework and initial docs.</p></li>
+<li><p>The <cite>documentation-publish.yml</cite> workflow is set to build the docs and push to github pages
+on every tag.</p></li>
+<li><p>The <cite>pre-commit-config.yml</cite> github hook runs on each commit and checks docstring formatting,
+trailing whitespaces, and the presence of large files.</p></li>
+<li><p>Added documenation-related python dependencies to <cite>[tool.poetry.group.dev.dependencies]</cite></p></li>
+</ul>
+</section>
+<section id="id102">
+<h3>Changed<a class="headerlink" href="#id102" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Example notebooks have been moved to <cite>docs/sphinx/user_guide/notebooks</cite>.</p></li>
+<li><p>The CHANGELOG.md is now the <cite>index.rst</cite> file in <cite>docs/sphinx/changelog</cite>.</p></li>
+<li><p>The CONTRIBUTE.md and release_process.md files now part of the <cite>index.rst</cite>
+file in <cite>docs/sphinx/development</cite>.</p></li>
+<li><p>The data_models.md and queries.md are now the <cite>data_models.rst</cite> and <cite>queries.rst</cite>
+files in <cite>docs/sphinx/getting_started</cite>.</p></li>
+</ul>
+</section>
+</section>
+<section id="id103">
+<h2>0.3.8 - 2024-02-14<a class="headerlink" href="#id103" title="Link to this heading">#</a></h2>
+<section id="id104">
+<h3>Added<a class="headerlink" href="#id104" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Adds logging with a <cite>NullHandler()</cite> that can be implemented by the parent app using teehr.</p></li>
+</ul>
+</section>
+</section>
+<section id="id105">
+<h2>0.3.7 - 2024-02-09<a class="headerlink" href="#id105" title="Link to this heading">#</a></h2>
+<section id="id106">
+<h3>Changed<a class="headerlink" href="#id106" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Upgraded pandas to ^2.2.0</p></li>
+<li><p>Changed unit=”H” in pandas.time_delta to unit=”h”</p></li>
+<li><p>Updated assert statements in <cite>test_weight_generation.py</cite></p></li>
+</ul>
+</section>
+</section>
+<section id="id107">
+<h2>0.3.6 - 2024-02-07<a class="headerlink" href="#id107" title="Link to this heading">#</a></h2>
+<section id="id108">
+<h3>Added<a class="headerlink" href="#id108" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Adds an exception to catch an error when a corrupted file is encountered while building
+the Kerchunk reference file using <cite>SingleHdf5ToZarr</cite>.</p></li>
+<li><p>The behavior determining whether to raise an exception is controlled by the
+<cite>ignore_missing_file</cite> flag.</p></li>
+</ul>
+</section>
+</section>
+<section id="id109">
+<h2>0.3.5 - 2023-12-18<a class="headerlink" href="#id109" title="Link to this heading">#</a></h2>
+<section id="id110">
+<h3>Added<a class="headerlink" href="#id110" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Adds additional chunking methods for USGS and NWM retrospective loading to allow
+week, month and year chunking.</p></li>
+<li><p>Adds mean areal summaries for NWM retrospective gridded forcing variables</p></li>
+<li><p>Adds NWM v3.0 to retrospective loading</p></li>
+</ul>
+</section>
+<section id="id111">
+<h3>Changed<a class="headerlink" href="#id111" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Fixes USGS loading to include last date of range</p></li>
+<li><p>Removes extra fields from v2.1 retro output</p></li>
+</ul>
+</section>
+</section>
+<section id="id112">
+<h2>0.3.4 - 2023-12-18<a class="headerlink" href="#id112" title="Link to this heading">#</a></h2>
+<section id="id113">
+<h3>Added<a class="headerlink" href="#id113" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Adds the <cite>read_only</cite> argument to the <cite>query</cite> method in the TEEHRDatasetDB class with default values
+specified in the query methods.</p></li>
+</ul>
+</section>
+<section id="id114">
+<h3>Changed<a class="headerlink" href="#id114" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Establishes a read-only database connection as a class variable to the TEEHRDatasetAPI class so it can
+be re-used for each class instance.</p></li>
+</ul>
+</section>
+</section>
+<section id="id115">
+<h2>0.3.3 - 2023-12-13<a class="headerlink" href="#id115" title="Link to this heading">#</a></h2>
+<section id="id116">
+<h3>Added<a class="headerlink" href="#id116" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Adds <cite>get_joined_timeseries</cite> method to TEEHR Dataset classes.</p></li>
+</ul>
+</section>
+<section id="id117">
+<h3>Changed<a class="headerlink" href="#id117" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Updated validation fields in the <cite>TimeSeriesQuery</cite> pydantic model to accept only selected fields
+rather than existing database fields.</p></li>
+<li><p>Updated function argument typing in <cite>queries/utils.py</cite> to be more explicit</p></li>
+</ul>
+</section>
+</section>
+<section id="id118">
+<h2>0.3.2 - 2023-12-12<a class="headerlink" href="#id118" title="Link to this heading">#</a></h2>
+<section id="id119">
+<h3>Added<a class="headerlink" href="#id119" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>None</p></li>
+</ul>
+</section>
+<section id="id120">
+<h3>Changed<a class="headerlink" href="#id120" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Fixed the <cite>bias</cite> metric so that it is <cite>sum(secondary_value - primary_value)/count(*)</cite> instead of
+<cite>sum(primary_value - secondary_value)/count(*)</cite> which resulted in the wrong sign.</p></li>
+<li><p>Changed <cite>primary_max_value_time</cite>, <cite>secondary_max_value_time</cite> and <cite>max_value_timedelta</cite>
+queries to use built-in functions instead of CTEs.  This improves speed significantly.</p></li>
+<li><p>Fixed bug in queries when filtering by <cite>configuration</cite>, <cite>measurement_unit</cite> and <cite>variable.</cite></p></li>
+<li><p>Refactored <cite>join_attributes</cite> in <cite>TEEHRDatasetDB</cite> to better handle attributes with no units.</p></li>
+<li><p>Refactored <cite>create_join_and_save_timeseries_query queries</cite> so that the de-duplication
+CTE is after the intial join CTE for improved performance.</p></li>
+<li><p>Changes default list of <cite>order_by</cite> variables in <cite>insert_joined_timeseries</cite> to improve
+query performance</p></li>
+</ul>
+</section>
+</section>
+<section id="id121">
+<h2>0.3.1 - 2023-12-08<a class="headerlink" href="#id121" title="Link to this heading">#</a></h2>
+<section id="id122">
+<h3>Added<a class="headerlink" href="#id122" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Adds a boolean flag to parquet-based metric query control whether or not to de-duplicate.</p></li>
+<li><p>Adds a test primary timeseries file including duplicate values for testing.</p></li>
+</ul>
+</section>
+<section id="id123">
+<h3>Changed<a class="headerlink" href="#id123" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Refactored parquet-based <cite>get_metrics</cite> and <cite>get_joined_timeseries</cite> queries to that so that the de-duplication
+CTE is after the intial join CTE for improved performance.</p></li>
+</ul>
+</section>
+</section>
+<section id="id124">
+<h2>0.3.0 - 2023-12-08<a class="headerlink" href="#id124" title="Link to this heading">#</a></h2>
+<section id="id125">
+<h3>Added<a class="headerlink" href="#id125" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Adds a dataclass and database that allows preprocessing of joined timeseries and attributes as well as the addition of user defined functions.</p></li>
+<li><p>Adds an initial web service API that serves out <cite>timeseries</cite> and <cite>metrics</cite> along with some other supporting data.</p></li>
+<li><p>Adds an initial interactive web application using the web service API.</p></li>
+</ul>
+</section>
+<section id="id126">
+<h3>Changed<a class="headerlink" href="#id126" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Switches to poetry to manage Python venv</p></li>
+<li><p>Upgrades to Pydantic 2+</p></li>
+<li><p>Upgrades to Pangeo image <cite>pangeo/pangeo-notebook:2023.09.11</cite></p></li>
+</ul>
+</section>
+</section>
+<section id="id127">
+<h2>0.2.9 - 2023-12-08<a class="headerlink" href="#id127" title="Link to this heading">#</a></h2>
+<section id="id128">
+<h3>Added<a class="headerlink" href="#id128" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Three options related to kerchunk jsons
+* <cite>local</cite> - (default) previous behavior, manually creates the jsons based on GCS netcdf files using Kerchunk’s <cite>SingleHdf5ToZarr</cite>. Any locally existing files will be used before creating new jsons from the remote store.
+* <cite>remote</cite> - use pre-created jsons, skipping any that do not exist within the specified time frame.  Jsons are read directly from s3 using fsspec
+* <cite>auto</cite> - use pre-created jsons, creating any that do not exist within the specified time frame</p></li>
+<li><p>Adds <cite>nwm_version</cite> (nwm22 or nwm30) and <cite>data_source</cite> (GCS, NOMADS, DSTOR - currently on GCS implemented) as loading arguments</p></li>
+</ul>
+</section>
+<section id="id129">
+<h3>Changed<a class="headerlink" href="#id129" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Combines loading modules into one directory <cite>loading/nwm</cite></p></li>
+<li><p>Updates to loading example notebooks</p></li>
+<li><p>Updates to loading tests</p></li>
+</ul>
+</section>
+</section>
+<section id="id130">
+<h2>0.2.8 - 2023-11-14<a class="headerlink" href="#id130" title="Link to this heading">#</a></h2>
+<section id="id131">
+<h3>Added<a class="headerlink" href="#id131" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>NWM v3.0 data loading and configuration models</p></li>
+<li><p>Added check for duplicate rows in <cite>get_metrics</cite> and <cite>get_joined_timeseries</cite> queries (#69)</p></li>
+<li><p>Added control for overwrite file behavior in loading (#77)</p></li>
+<li><p>Significant refactor of the loading libraries</p></li>
+<li><p>Added ability to select which retrospective version to download (v2.0 or v2.1) (#80)</p></li>
+</ul>
+</section>
+<section id="id132">
+<h3>Changed<a class="headerlink" href="#id132" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Fixed NWM pydantic configurations models for v2.2</p></li>
+<li><p>Refactored <cite>models/loading</cite> directory</p></li>
+</ul>
+</section>
+</section>
+<section id="id133">
+<h2>0.2.7 - 2023-09-14<a class="headerlink" href="#id133" title="Link to this heading">#</a></h2>
+<section id="id134">
+<h3>Added<a class="headerlink" href="#id134" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>More testing to NWM point and grid loading functions</p></li>
+</ul>
+</section>
+</section>
+<section id="id135">
+<h2>0.2.6 - 2023-09-14<a class="headerlink" href="#id135" title="Link to this heading">#</a></h2>
+<section id="id136">
+<h3>Changed<a class="headerlink" href="#id136" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Fixed some sloppy bugs in <cite>nwm_grid_data.py</cite></p></li>
+</ul>
+</section>
+<section id="id137">
+<h3>Added<a class="headerlink" href="#id137" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><cite>ValueError</cite> handling when encountering a corrupt zarr json file</p></li>
+</ul>
+</section>
+</section>
+<section id="id138">
+<h2>0.2.5 - 2023-09-11<a class="headerlink" href="#id138" title="Link to this heading">#</a></h2>
+<section id="id139">
+<h3>Changed<a class="headerlink" href="#id139" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>None</p></li>
+</ul>
+</section>
+<section id="id140">
+<h3>Added<a class="headerlink" href="#id140" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Added ability to use holoviz export to TEEHR-HUB:</dt><dd><ul>
+<li><p>Installed firefox (and a bunch of dependencies) to the Docker container (using apt)</p></li>
+<li><p>Installed selenium and the geckodriver using conda</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+</section>
+<section id="id141">
+<h2>0.2.4 - 2023-08-30<a class="headerlink" href="#id141" title="Link to this heading">#</a></h2>
+<section id="id142">
+<h3>Changed<a class="headerlink" href="#id142" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Behavior of loading when encountering missing files</p></li>
+<li><p>Renamed field <cite>zone</cite> to <cite>location_id</cite> in <cite>nwm_grid_data.py</cite> and <cite>generate_weights.py</cite></p></li>
+</ul>
+</section>
+<section id="id143">
+<h3>Added<a class="headerlink" href="#id143" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>The boolean flag <cite>ignore_missing_files</cite> to point and grid loading to determine whether to fail or continue on missing NWM files</p></li>
+<li><p>Added a check to skip locally existing zarr json files when loading NWM data</p></li>
+</ul>
+</section>
+</section>
+<section id="id144">
+<h2>0.2.3 - 2023-08-23<a class="headerlink" href="#id144" title="Link to this heading">#</a></h2>
+<section id="id145">
+<h3>Changed<a class="headerlink" href="#id145" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Removed pyarrow from time calculations in <cite>nwm_point_data.py</cite> loading due to windows bug</p></li>
+<li><p>Updated output file name in <cite>nwm_point_data.py</cite> to include forecast hour if <cite>process_by_z_hour=False</cite></p></li>
+</ul>
+</section>
+</section>
+<section id="id146">
+<h2>0.2.2 - 2023-08-23<a class="headerlink" href="#id146" title="Link to this heading">#</a></h2>
+<section id="id147">
+<h3>Added<a class="headerlink" href="#id147" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>nodejs to the jupyterhub build so the extensions will load (not 100% sure this was needed)</p></li>
+</ul>
+</section>
+<section id="id148">
+<h3>Changed<a class="headerlink" href="#id148" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Updated TEEHR to v0.2.2, including TEEHR-HUB</p></li>
+<li><p>Updated the TEEHR-HUB baseimage to <cite>pangeo/pangeo-notebook:2023.07.05</cite></p></li>
+</ul>
+</section>
+</section>
+<section id="id149">
+<h2>0.2.1 - 2023-08-21<a class="headerlink" href="#id149" title="Link to this heading">#</a></h2>
+<section id="id150">
+<h3>Added<a class="headerlink" href="#id150" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Nothing</p></li>
+</ul>
+</section>
+<section id="id151">
+<h3>Changed<a class="headerlink" href="#id151" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Updated TEEHR version in TEEHR-HUB to v0.2.1</p></li>
+<li><p>Converts nwm feature id’s to numpy array in loading</p></li>
+</ul>
+</section>
+</section>
+<section id="id152">
+<h2>0.2.0 - 2023-08-17<a class="headerlink" href="#id152" title="Link to this heading">#</a></h2>
+<section id="id153">
+<h3>Added<a class="headerlink" href="#id153" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>This changelog</p></li>
+</ul>
+</section>
+<section id="id154">
+<h3>Changed<a class="headerlink" href="#id154" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Loading directory refactor changed import paths to loading modules</p></li>
+<li><p>Changed directory of <cite>generate_weights.py</cite> utility</p></li>
+<li><p>Replaced NWM config parameter dictionary with pydantic models</p></li>
+<li><p>NWM reference time  used by TEEHR is now taken directly from the file name rather than the “reference time” embedded in the file</p></li>
+<li><p>Use of the term <cite>run</cite> updated to <cite>configuration</cite> for NWM</p></li>
+</ul>
+</section>
+</section>
+<section id="id155">
+<h2>0.1.3 - 2023-06-17<a class="headerlink" href="#id155" title="Link to this heading">#</a></h2>
+<section id="id156">
+<h3>Added<a class="headerlink" href="#id156" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Initial release</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../development/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Developer Guide</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../api/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">API reference</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">0.5.2 - 2025-11-11</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#changed">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dev10-2025-11-10">0.5.1dev10 - 2025-11-10</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Changed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#added">Added</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">0.5.0 - 2025-08-27</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">0.4.13 - 2025-06-09</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">0.4.12 - 2025-05-22</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">0.4.11 - 2025-05-19</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">0.4.10 - 2025-04-14</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">Added</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">0.4.9 - 2025-03-26</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">0.4.8 - 2025-02-17</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">0.4.7 - 2025-01-08</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id20">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id21">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id22">0.4.6 - 2024-12-17</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id23">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id24">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id25">0.4.5 - 2024-12-09</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id26">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id27">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id28">0.4.4 - 2024-12-02</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id29">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id30">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id31">0.4.3 - 2024-10-19</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id32">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id33">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id34">0.4.2 - 2024-10-18</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id35">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id36">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id37">0.4.1 - 2024-10-15</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id38">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id39">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id40">0.4.0 - 2024-10-13</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id41">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id42">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id43">0.3.28 - 2024-07-10</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id44">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id45">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id46">0.3.27 - 2024-07-08</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id47">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id48">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id49">0.3.26 - 2024-06-27</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id50">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id51">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id52">0.3.25 - 2024-06-06</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id53">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id54">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id55">0.3.24 - 2024-05-29</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id56">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id57">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id58">0.3.23 - 2024-05-28</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id59">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id60">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id61">0.3.22 - 2024-05-22</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id62">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id63">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id64">0.3.21 - 2024-05-21</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id65">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id66">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id67">0.3.20 - 2024-05-18</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id68">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id69">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id70">0.3.19 - 2024-05-18</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id71">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id72">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id73">0.3.18 - 2024-05-10</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id74">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id75">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id76">0.3.17 - 2024-04-22</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id77">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id78">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id79">0.3.16 - 2024-04-11</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id80">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id81">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id82">0.3.15 - 2024-04-08</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id83">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id84">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id85">0.3.14 - 2024-03-29</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id86">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id87">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id88">0.3.13 - 2024-03-22</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id89">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id90">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id91">0.3.12 - 2024-03-22</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id92">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id93">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id94">0.3.11 - 2024-03-19</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id95">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id96">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id97">0.3.10 - 2024-03-07</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id98">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id99">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id100">0.3.9 - 2024-02-15</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id101">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id102">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id103">0.3.8 - 2024-02-14</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id104">Added</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id105">0.3.7 - 2024-02-09</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id106">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id107">0.3.6 - 2024-02-07</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id108">Added</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id109">0.3.5 - 2023-12-18</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id110">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id111">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id112">0.3.4 - 2023-12-18</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id113">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id114">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id115">0.3.3 - 2023-12-13</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id116">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id117">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id118">0.3.2 - 2023-12-12</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id119">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id120">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id121">0.3.1 - 2023-12-08</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id122">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id123">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id124">0.3.0 - 2023-12-08</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id125">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id126">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id127">0.2.9 - 2023-12-08</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id128">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id129">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id130">0.2.8 - 2023-11-14</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id131">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id132">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id133">0.2.7 - 2023-09-14</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id134">Added</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id135">0.2.6 - 2023-09-14</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id136">Changed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id137">Added</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id138">0.2.5 - 2023-09-11</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id139">Changed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id140">Added</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id141">0.2.4 - 2023-08-30</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id142">Changed</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id143">Added</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id144">0.2.3 - 2023-08-23</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id145">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id146">0.2.2 - 2023-08-23</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id147">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id148">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id149">0.2.1 - 2023-08-21</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id150">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id151">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id152">0.2.0 - 2023-08-17</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id153">Added</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id154">Changed</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id155">0.1.3 - 2023-06-17</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id156">Added</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/changelog/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><!-- This will display the version of the docs -->
+TEEHR version 0.5.2</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

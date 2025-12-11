@@ -1,0 +1,40 @@
+﻿JoinedTimeseriesTable
+=====================
+
+.. currentmodule:: teehr.evaluation.tables.joined_timeseries_table
+
+.. autoclass:: JoinedTimeseriesTable
+   :members:
+   :show-inheritance:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~JoinedTimeseriesTable.add_calculated_fields
+      ~JoinedTimeseriesTable.create
+      ~JoinedTimeseriesTable.distinct_values
+      ~JoinedTimeseriesTable.field_enum
+      ~JoinedTimeseriesTable.fields
+      ~JoinedTimeseriesTable.filter
+      ~JoinedTimeseriesTable.load_csv
+      ~JoinedTimeseriesTable.load_fews_xml
+      ~JoinedTimeseriesTable.load_netcdf
+      ~JoinedTimeseriesTable.load_parquet
+      ~JoinedTimeseriesTable.order_by
+      ~JoinedTimeseriesTable.query
+      ~JoinedTimeseriesTable.to_geopandas
+      ~JoinedTimeseriesTable.to_pandas
+      ~JoinedTimeseriesTable.to_sdf
+      ~JoinedTimeseriesTable.validate
+      ~JoinedTimeseriesTable.write
+   
+   
+
+   
+   
+   

@@ -1,0 +1,404 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Clone an Example from S3"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Overview\n",
+    "In this lesson we will clone a small example TEEHR Evaluation from S3 and run through some simple example metrics calculations, demonstrating filter, grouping and chaining of query methods."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Create a new Evaluation\n",
+    "First we will import TEEHR along with some other required libraries for this example.  Then we create a new instance of the Evaluation that points to a directory where the evaluation data will be stored."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import teehr\n",
+    "from pathlib import Path\n",
+    "import shutil\n",
+    "\n",
+    "# Tell Bokeh to output plots in the notebook\n",
+    "from bokeh.io import output_notebook\n",
+    "output_notebook()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": [
+     "hide-output"
+    ]
+   },
+   "outputs": [],
+   "source": [
+    "# Define the directory where the Evaluation will be created\n",
+    "test_eval_dir = Path(Path().home(), \"temp\", \"05_clone_from_s3\")\n",
+    "shutil.rmtree(test_eval_dir, ignore_errors=True)\n",
+    "\n",
+    "# Create an Evaluation object and create the directory\n",
+    "ev = teehr.Evaluation(dir_path=test_eval_dir, create_dir=True)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Clone Evaluation Data from S3\n",
+    "As mentioned above, for this exercise we will be cloning a complete Evaluation dataset from the TEEHR S3 bucket.  First we will list the available Evaluations and then we will clone the `e0_2_location_example` evaluation which is  a small example Evaluation that only contains 2 gages."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# List the evaluations in the S3 bucket\n",
+    "ev.list_s3_evaluations()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": [
+     "hide-output"
+    ]
+   },
+   "outputs": [],
+   "source": [
+    "# Clone the e0_2_location_example evaluation from the S3 bucket\n",
+    "ev.clone_from_s3(\"e0_2_location_example\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Now that we have cloned all the data for this evaluation from the TEEHR S3 bucket, lets query the `locations` table as a GeoPandas GeoDataFrame and then plot the gages on a map using the TEEHR plotting."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "locations_gdf = ev.locations.to_geopandas()\n",
+    "locations_gdf.teehr.locations_map()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Lets also query the `primary_timeseries` and plot the timeseries data using the `df.teehr.timeseries_plot()` method."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "pt_df = ev. primary_timeseries.to_pandas()\n",
+    "pt_df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "pt_df.teehr.timeseries_plot()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "And the `location_crosswalks` table."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "lc_df = ev.location_crosswalks.to_pandas()\n",
+    "lc_df.head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "And the `secondary_timeseries` table."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "st_df = ev.secondary_timeseries.to_pandas()\n",
+    "st_df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "st_df.teehr.timeseries_plot()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "And lastly, the `joined_timeseries` table."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "jt_df = ev.joined_timeseries.to_pandas()\n",
+    "jt_df.head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Metrics\n",
+    "Now that we have confirmed that we have all the data tables and the `joined_timeseries` table, we can move on to analyzing the data.  The user is encouraged to check out the documentation pages relating to filtering and grouping in the context of generating metrics.  The short explanation is that `filters` can be used to select what values are used when calculating metrics, while the `group_by` determines how the values are grouped into populations before calculating metrics.\n",
+    "\n",
+    "The most basic way to evaluate simulation performance is to `group_by` `configuration_name` and `primary_location_id`, and generate some basic metrics.  In this case it will be Nash-Sutcliffe Efficiency, Kling-Gupta Efficiency and Relative Bias, calculated at each location for each configuration.  As we saw there are 2 locations and 1 configuration, so the total number of rows that are output is just 2.  If there were more `locations` or more `configurations`, there would be more rows in the output for this query.  TEEHR contains many more metrics that can be calculated by simply including them in the list of `include_metrics`, and there are also many other ways to look at performance besides the basic metrics."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ev.metrics.query(\n",
+    "    group_by=[\"configuration_name\", \"primary_location_id\"],\n",
+    "    include_metrics=[\n",
+    "        teehr.DeterministicMetrics.NashSutcliffeEfficiency(),\n",
+    "        teehr.DeterministicMetrics.KlingGuptaEfficiency(),\n",
+    "        teehr.DeterministicMetrics.RelativeBias()\n",
+    "    ]\n",
+    ").to_pandas()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Now to demonstrate how filters work, if we add a filter to only select values where the `primary_location_id` is `usgs-14138800`.  Accordingly, it will only include rows from the `join_timeseries` table where `primary_location_id` is `usgs-14138800` in the metrics calculations, and since we are grouping by `primary_location_id`, that means we can expect one row in the output.  And that is what we see below."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "(\n",
+    "    ev.metrics\n",
+    "    .query(\n",
+    "        group_by=[\"configuration_name\", \"primary_location_id\"],\n",
+    "        filters=[\n",
+    "            {\n",
+    "                \"column\": \"primary_location_id\",\n",
+    "                \"operator\": \"=\",\n",
+    "                \"value\": \"usgs-14138800\"\n",
+    "            }],\n",
+    "        include_metrics=[\n",
+    "            teehr.DeterministicMetrics.NashSutcliffeEfficiency(),\n",
+    "            teehr.DeterministicMetrics.KlingGuptaEfficiency(),\n",
+    "            teehr.DeterministicMetrics.RelativeBias()\n",
+    "        ]\n",
+    "    )\n",
+    "    .to_pandas()\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "As another example, because the `joined_timeseries` table contains a `year` column which was added as a user defined field, we can also group by `year`.  In this case we will get the metrics calculated for each `configuration_name`, `primary_location_id`, and `year`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "(\n",
+    "    ev.metrics\n",
+    "    .query(\n",
+    "        group_by=[\"configuration_name\", \"primary_location_id\", \"year\"],\n",
+    "        filters=[\n",
+    "            {\n",
+    "                \"column\": \"primary_location_id\",\n",
+    "                \"operator\": \"=\",\n",
+    "                \"value\": \"usgs-14138800\"\n",
+    "            }],\n",
+    "        include_metrics=[\n",
+    "            teehr.DeterministicMetrics.NashSutcliffeEfficiency(),\n",
+    "            teehr.DeterministicMetrics.KlingGuptaEfficiency(),\n",
+    "            teehr.DeterministicMetrics.RelativeBias()\n",
+    "        ]\n",
+    "    )\n",
+    "    .to_pandas()\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "There are many ways that TEEHR can be used to \"slice and dice\" the data in the TEEHR dataset.  One last example here before wrapping up this lesson.  Lets say we wanted the \"annual peak relative bias\", so that is the relative bias of the annual peak values.  Well, TEEHR can do this too by chaining the query methods together and overriding the `input_field_names` and the `output_field_name` as shown below.  We will do this step by step to understand it. First run the following query where the second `query` is commented out then in the next cell run it with the second `query` uncommented.  As you can see first we calculate the peak primary value (`max_primary_value`) and peak secondary value (`max_secondary_value`) for each year, then we calculate the relative bias across the yearly peaks (`annual_max_relative_bias`)."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "(\n",
+    "    ev.metrics\n",
+    "    .query(\n",
+    "        group_by=[\"configuration_name\", \"primary_location_id\", \"year\"],\n",
+    "        filters=[\n",
+    "            {\n",
+    "                \"column\": \"primary_location_id\",\n",
+    "                \"operator\": \"=\",\n",
+    "                \"value\": \"usgs-14138800\"\n",
+    "            }],\n",
+    "        include_metrics=[\n",
+    "            teehr.Signatures.Maximum(\n",
+    "                input_field_names=[\"primary_value\"],\n",
+    "                output_field_name=\"max_primary_value\"\n",
+    "            ),\n",
+    "            teehr.Signatures.Maximum(\n",
+    "                input_field_names=[\"secondary_value\"],\n",
+    "                output_field_name=\"max_secondary_value\"\n",
+    "            )\n",
+    "        ]\n",
+    "    )\n",
+    "    # .query(\n",
+    "    #     group_by=[\"configuration_name\", \"primary_location_id\"],\n",
+    "    #     include_metrics=[\n",
+    "    #         teehr.DeterministicMetrics.RelativeBias(\n",
+    "    #             input_field_names=[\"max_primary_value\", \"max_secondary_value\"],\n",
+    "    #             output_field_name=\"monthly_max_relative_bias\"\n",
+    "    #         )\n",
+    "    #     ]\n",
+    "    # )\n",
+    "    .to_pandas()\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "(\n",
+    "    ev.metrics\n",
+    "    .query(\n",
+    "        group_by=[\"configuration_name\", \"primary_location_id\", \"year\"],\n",
+    "        filters=[\n",
+    "            {\n",
+    "                \"column\": \"primary_location_id\",\n",
+    "                \"operator\": \"=\",\n",
+    "                \"value\": \"usgs-14138800\"\n",
+    "            }],\n",
+    "        include_metrics=[\n",
+    "            teehr.Signatures.Maximum(\n",
+    "                input_field_names=[\"primary_value\"],\n",
+    "                output_field_name=\"max_primary_value\"\n",
+    "            ),\n",
+    "            teehr.Signatures.Maximum(\n",
+    "                input_field_names=[\"secondary_value\"],\n",
+    "                output_field_name=\"max_secondary_value\"\n",
+    "            )\n",
+    "        ]\n",
+    "    )\n",
+    "    .query(\n",
+    "        group_by=[\"configuration_name\", \"primary_location_id\"],\n",
+    "        include_metrics=[\n",
+    "            teehr.DeterministicMetrics.RelativeBias(\n",
+    "                input_field_names=[\"max_primary_value\", \"max_secondary_value\"],\n",
+    "                output_field_name=\"annual_max_relative_bias\"\n",
+    "            )\n",
+    "        ]\n",
+    "    )\n",
+    "    .to_pandas()\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ev.spark.stop()"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": ".venv",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.12"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

@@ -1,0 +1,1429 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>teehr.models.calculated_fields.row_level &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/teehr.css?v=b36b674b" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../../_static/documentation_options.js?v=8e576371"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/teehr/models/calculated_fields/row_level';</script>
+    <link rel="icon" href="../../../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.5.2" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation - Home"/>
+    <img src="../../../../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark pst-js-only" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">teehr.models.calculated_fields.row_level</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for teehr.models.calculated_fields.row_level</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Classes representing UDFs.&quot;&quot;&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">calendar</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyspark.sql.types</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">T</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql.functions</span><span class="w"> </span><span class="kn">import</span> <span class="n">pandas_udf</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ps</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.models.calculated_fields.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">CalculatedFieldABC</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.models.calculated_fields.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">CalculatedFieldBaseModel</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Month</span><span class="p">(</span><span class="n">CalculatedFieldABC</span><span class="p">,</span> <span class="n">CalculatedFieldBaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds the month from a timestamp column.</span>
+
+<span class="sd">    Properties</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    - input_field_name:</span>
+<span class="sd">        The name of the column containing the timestamp.</span>
+<span class="sd">        Default: &quot;value_time&quot;</span>
+<span class="sd">    - output_field_name:</span>
+<span class="sd">        The name of the column to store the month.</span>
+<span class="sd">        Default: &quot;month&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;value_time&quot;</span>
+    <span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;month&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sdf</span><span class="p">:</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the calculated field to the Spark DataFrame.&quot;&quot;&quot;</span>
+        <span class="nd">@pandas_udf</span><span class="p">(</span><span class="n">returnType</span><span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">IntegerType</span><span class="p">())</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">col</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">col</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">month</span>
+
+        <span class="n">sdf</span> <span class="o">=</span> <span class="n">sdf</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_field_name</span><span class="p">,</span>
+            <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_field_name</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">sdf</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Year</span><span class="p">(</span><span class="n">CalculatedFieldABC</span><span class="p">,</span> <span class="n">CalculatedFieldBaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds the year from a timestamp column.</span>
+
+<span class="sd">    Properties</span>
+<span class="sd">    ----------</span>
+<span class="sd">    - input_field_name:</span>
+<span class="sd">        The name of the column containing the timestamp.</span>
+<span class="sd">        Default: &quot;value_time&quot;</span>
+<span class="sd">    - output_field_name:</span>
+<span class="sd">        The name of the column to store the year.</span>
+<span class="sd">        Default: &quot;year&quot;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;value_time&quot;</span>
+    <span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;year&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sdf</span><span class="p">:</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the calculated field to the Spark DataFrame.&quot;&quot;&quot;</span>
+        <span class="nd">@pandas_udf</span><span class="p">(</span><span class="n">returnType</span><span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">IntegerType</span><span class="p">())</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">col</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">col</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">year</span>
+
+        <span class="n">sdf</span> <span class="o">=</span> <span class="n">sdf</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_field_name</span><span class="p">,</span>
+            <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_field_name</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">sdf</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">WaterYear</span><span class="p">(</span><span class="n">CalculatedFieldABC</span><span class="p">,</span> <span class="n">CalculatedFieldBaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds the water year from a timestamp column.</span>
+
+<span class="sd">    Properties</span>
+<span class="sd">    ----------</span>
+<span class="sd">    - input_field_name:</span>
+<span class="sd">        The name of the column containing the timestamp.</span>
+<span class="sd">        Default: &quot;value_time&quot;</span>
+<span class="sd">    - output_field_name:</span>
+<span class="sd">        The name of the column to store the water year.</span>
+<span class="sd">        Default: &quot;water_year&quot;</span>
+
+<span class="sd">    Water year is defined as the year of the date plus one if the month is</span>
+<span class="sd">    October or later.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;value_time&quot;</span>
+    <span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;water_year&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sdf</span><span class="p">:</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the calculated field to the Spark DataFrame.&quot;&quot;&quot;</span>
+        <span class="nd">@pandas_udf</span><span class="p">(</span><span class="n">returnType</span><span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">IntegerType</span><span class="p">())</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">col</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">col</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">year</span> <span class="o">+</span> <span class="p">(</span><span class="n">col</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">month</span> <span class="o">&gt;=</span> <span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="n">sdf</span> <span class="o">=</span> <span class="n">sdf</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_field_name</span><span class="p">,</span>
+            <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_field_name</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">sdf</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">NormalizedFlow</span><span class="p">(</span><span class="n">CalculatedFieldABC</span><span class="p">,</span> <span class="n">CalculatedFieldBaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Normalize flow values by drainage area.</span>
+
+<span class="sd">    Properties</span>
+<span class="sd">    ----------</span>
+<span class="sd">    - primary_value_field_name:</span>
+<span class="sd">        The name of the column containing the flow values.</span>
+<span class="sd">        Default: &quot;primary_value&quot;</span>
+<span class="sd">    - drainage_area_field_name:</span>
+<span class="sd">        The name of the column containing the drainage area.</span>
+<span class="sd">        Default: &quot;drainage_area&quot;</span>
+<span class="sd">    - output_field_name:</span>
+<span class="sd">        The name of the column to store the normalized flow values.</span>
+<span class="sd">        Default: &quot;normalized_flow&quot;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">primary_value_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;primary_value&quot;</span>
+    <span class="p">)</span>
+    <span class="n">drainage_area_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;drainage_area&quot;</span>
+    <span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;normalized_flow&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sdf</span><span class="p">:</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the calculated field to the Spark DataFrame.&quot;&quot;&quot;</span>
+        <span class="nd">@pandas_udf</span><span class="p">(</span><span class="n">returnType</span><span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">FloatType</span><span class="p">())</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">area</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="o">/</span> <span class="n">area</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="n">sdf</span> <span class="o">=</span> <span class="n">sdf</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_field_name</span><span class="p">,</span>
+            <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">primary_value_field_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">drainage_area_field_name</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">sdf</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Seasons</span><span class="p">(</span><span class="n">CalculatedFieldABC</span><span class="p">,</span> <span class="n">CalculatedFieldBaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds the season from a timestamp column.</span>
+
+<span class="sd">    Properties</span>
+<span class="sd">    ----------</span>
+<span class="sd">    - value_time_field_name:</span>
+<span class="sd">        The name of the column containing the timestamp.</span>
+<span class="sd">        Default: &quot;value_time&quot;</span>
+<span class="sd">    - season_months:</span>
+<span class="sd">        A dictionary mapping season names to the months that define them.</span>
+
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            Default: {</span>
+<span class="sd">                &quot;winter&quot;: [12, 1, 2],</span>
+<span class="sd">                &quot;spring&quot;: [3, 4, 5],</span>
+<span class="sd">                &quot;summer&quot;: [6, 7, 8],</span>
+<span class="sd">                &quot;fall&quot;: [9, 10, 11]</span>
+<span class="sd">            }</span>
+
+<span class="sd">    - output_field_name:</span>
+<span class="sd">        The name of the column to store the season.</span>
+<span class="sd">        Default: &quot;season&quot;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">value_time_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;value_time&quot;</span>
+    <span class="p">)</span>
+    <span class="n">season_months</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">{</span>
+            <span class="s2">&quot;winter&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">12</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
+            <span class="s2">&quot;spring&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+            <span class="s2">&quot;summer&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
+            <span class="s2">&quot;fall&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">]</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;season&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sdf</span><span class="p">:</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the calculated field to the Spark DataFrame.&quot;&quot;&quot;</span>
+        <span class="nd">@pandas_udf</span><span class="p">(</span><span class="n">returnType</span><span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">StringType</span><span class="p">())</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">value_time</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">value_time</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">month</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span>
+                <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">next</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">season</span> <span class="k">for</span> <span class="n">season</span><span class="p">,</span>
+                     <span class="n">months</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">season_months</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">months</span><span class="p">),</span>
+                    <span class="kc">None</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">sdf</span> <span class="o">=</span> <span class="n">sdf</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_field_name</span><span class="p">,</span>
+            <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value_time_field_name</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">sdf</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ForecastLeadTime</span><span class="p">(</span><span class="n">CalculatedFieldABC</span><span class="p">,</span> <span class="n">CalculatedFieldBaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds the forecast lead time from a timestamp column.</span>
+
+<span class="sd">    Properties</span>
+<span class="sd">    ----------</span>
+<span class="sd">    - value_time_field_name:</span>
+<span class="sd">        The name of the column containing the timestamp.</span>
+<span class="sd">        Default: &quot;value_time&quot;</span>
+<span class="sd">    - reference_time_field_name:</span>
+<span class="sd">        The name of the column containing the forecast time.</span>
+<span class="sd">        Default: &quot;reference_time&quot;</span>
+<span class="sd">    - output_field_name:</span>
+<span class="sd">        The name of the column to store the forecast lead time.</span>
+<span class="sd">        Default: &quot;forecast_lead_time&quot;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">value_time_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;value_time&quot;</span>
+    <span class="p">)</span>
+    <span class="n">reference_time_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;reference_time&quot;</span>
+    <span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;forecast_lead_time&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sdf</span><span class="p">:</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the calculated field to the Spark DataFrame.&quot;&quot;&quot;</span>
+        <span class="nd">@pandas_udf</span><span class="p">(</span><span class="n">returnType</span><span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">DayTimeIntervalType</span><span class="p">())</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">value_time</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span>
+                 <span class="n">reference_time</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span>
+                 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+            <span class="n">difference</span> <span class="o">=</span> <span class="n">value_time</span> <span class="o">-</span> <span class="n">reference_time</span>
+            <span class="k">return</span> <span class="n">difference</span>
+
+        <span class="n">sdf</span> <span class="o">=</span> <span class="n">sdf</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_field_name</span><span class="p">,</span>
+            <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value_time_field_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference_time_field_name</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">sdf</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ForecastLeadTimeBins</span><span class="p">(</span><span class="n">CalculatedFieldABC</span><span class="p">,</span> <span class="n">CalculatedFieldBaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds ID for grouped forecast lead time bins.</span>
+
+<span class="sd">    Properties</span>
+<span class="sd">    ----------</span>
+<span class="sd">    - value_time_field_name:</span>
+<span class="sd">        The name of the column containing the timestamp.</span>
+<span class="sd">        Default: &quot;value_time&quot;</span>
+<span class="sd">    - reference_time_field_name:</span>
+<span class="sd">        The name of the column containing the forecast time.</span>
+<span class="sd">        Default: &quot;reference_time&quot;</span>
+<span class="sd">    - lead_time_field_name:</span>
+<span class="sd">        The name of the column containing the forecast lead time.</span>
+<span class="sd">        Default: &quot;forecast_lead_time&quot;</span>
+<span class="sd">    - output_field_name:</span>
+<span class="sd">        The name of the column to store the lead time bin ID.</span>
+<span class="sd">        Default: &quot;forecast_lead_time_bin&quot;</span>
+<span class="sd">    - bin_size:</span>
+<span class="sd">        Defines how forecast lead times are binned. Accepts pd.Timedelta,</span>
+<span class="sd">        datetime.timedelta, or timedelta strings (e.g., &#39;6 hours&#39;, &#39;1 day&#39;).</span>
+<span class="sd">        Three input formats are supported:</span>
+
+<span class="sd">        1. **Single timedelta** (uniform binning):</span>
+<span class="sd">           Creates equal-width bins of the specified duration.</span>
+
+<span class="sd">           Examples:</span>
+<span class="sd">               pd.Timedelta(hours=6)</span>
+<span class="sd">               timedelta(hours=6)</span>
+<span class="sd">               &#39;6 hours&#39;</span>
+<span class="sd">               &#39;6h&#39;</span>
+
+<span class="sd">           Output bin IDs:</span>
+<span class="sd">               &quot;PT0H_PT6H&quot;, &quot;PT6H_PT12H&quot;, &quot;PT12H_PT18H&quot;, ...</span>
+
+<span class="sd">        2. **List of dicts** (variable binning with auto-generated IDs):</span>
+<span class="sd">           Creates bins with custom ranges. Bin IDs are auto-generated as</span>
+<span class="sd">           ISO 8601 duration ranges. Values can be pd.Timedelta,</span>
+<span class="sd">           datetime.timedelta, or timedelta strings.</span>
+
+<span class="sd">           Examples:</span>
+<span class="sd">               [</span>
+<span class="sd">                   {&#39;start_inclusive&#39;: pd.Timedelta(hours=0),</span>
+<span class="sd">                   &#39;end_exclusive&#39;: pd.Timedelta(hours=6)},</span>
+<span class="sd">                   {&#39;start_inclusive&#39;: &#39;6 hours&#39;,</span>
+<span class="sd">                   &#39;end_exclusive&#39;: &#39;12 hours&#39;},</span>
+<span class="sd">                   {&#39;start_inclusive&#39;: timedelta(hours=12),</span>
+<span class="sd">                   &#39;end_exclusive&#39;: &#39;1 day&#39;},</span>
+<span class="sd">                   {&#39;start_inclusive&#39;: &#39;1 day&#39;,</span>
+<span class="sd">                   &#39;end_exclusive&#39;: &#39;2 days&#39;},</span>
+<span class="sd">               ]</span>
+
+<span class="sd">           Output bin IDs:</span>
+<span class="sd">               &quot;PT0H_PT6H&quot;, &quot;PT6H_PT12H&quot;, &quot;PT12H_P1D&quot;, &quot;P1D_P2D&quot;</span>
+
+<span class="sd">        3. **Dict of dicts** (variable binning with custom IDs):</span>
+<span class="sd">           Creates bins with custom ranges and user-defined bin identifiers.</span>
+<span class="sd">           Values can be pd.Timedelta, datetime.timedelta, or timedelta</span>
+<span class="sd">           strings.</span>
+
+<span class="sd">           Examples:</span>
+<span class="sd">               {</span>
+<span class="sd">                   &#39;short_range&#39;: {&#39;start_inclusive&#39;: &#39;0 hours&#39;,</span>
+<span class="sd">                                   &#39;end_exclusive&#39;: &#39;6 hours&#39;},</span>
+<span class="sd">                   &#39;medium_range&#39;: {&#39;start_inclusive&#39;: pd.Timedelta(hours=6),</span>
+<span class="sd">                                    &#39;end_exclusive&#39;: timedelta(days=1)},</span>
+<span class="sd">                   &#39;long_range&#39;: {&#39;start_inclusive&#39;: &#39;1 day&#39;,</span>
+<span class="sd">                                  &#39;end_exclusive&#39;: &#39;3 days&#39;},</span>
+<span class="sd">               }</span>
+
+<span class="sd">           Output bin IDs:</span>
+<span class="sd">               &quot;short_range&quot;, &quot;medium_range&quot;, &quot;long_range&quot;</span>
+
+<span class="sd">        Default: pd.Timedelta(days=5)</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - Timedelta values can be specified as:</span>
+<span class="sd">      - pd.Timedelta objects (e.g., pd.Timedelta(hours=6))</span>
+<span class="sd">      - datetime.timedelta objects (e.g., timedelta(hours=6))</span>
+<span class="sd">      - Strings (e.g., &#39;6 hours&#39;, &#39;1 day&#39;, &#39;1d 12h&#39;, &#39;PT6H&#39;)</span>
+<span class="sd">    - All timedelta inputs are internally converted to pd.Timedelta for</span>
+<span class="sd">      processing.</span>
+<span class="sd">    - Bin ranges are [start_inclusive, end_exclusive), except for the final</span>
+<span class="sd">      bin which is inclusive of all remaining lead times.</span>
+<span class="sd">    - If the maximum lead time in the data exceeds the last user-defined bin,</span>
+<span class="sd">      an overflow bin is automatically created:</span>
+<span class="sd">      - For auto-generated IDs: Uses ISO 8601 duration format</span>
+<span class="sd">      - For custom IDs: Appends &quot;overflow&quot; as the bin ID</span>
+<span class="sd">    - Bin IDs use ISO 8601 duration format (e.g., &quot;PT6H&quot; for 6 hours, &quot;P1DT12H&quot;</span>
+<span class="sd">      for 1 day and 12 hours) for auto-generated bins.</span>
+<span class="sd">    - Custom bin IDs can use any string format.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Uniform 6-hour bins using different input types:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        # Using pd.Timedelta</span>
+<span class="sd">        fcst_bins = ForecastLeadTimeBins(bin_size=pd.Timedelta(hours=6))</span>
+
+<span class="sd">        # Using datetime.timedelta</span>
+<span class="sd">        from datetime import timedelta</span>
+<span class="sd">        fcst_bins = ForecastLeadTimeBins(bin_size=timedelta(hours=6))</span>
+
+<span class="sd">        # Using string</span>
+<span class="sd">        fcst_bins = ForecastLeadTimeBins(bin_size=&#39;6 hours&#39;)</span>
+
+<span class="sd">        # All create bins: PT0H_PT6H, PT6H_PT12H, PT12H_PT18H, ...</span>
+
+<span class="sd">    Variable bins with auto-generated IDs using mixed types:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        fcst_bins = ForecastLeadTimeBins(</span>
+<span class="sd">            bin_size=[</span>
+<span class="sd">                {&#39;start_inclusive&#39;: &#39;0 hours&#39;,</span>
+<span class="sd">                &#39;end_exclusive&#39;: &#39;6 hours&#39;},</span>
+<span class="sd">                {&#39;start_inclusive&#39;: pd.Timedelta(hours=6),</span>
+<span class="sd">                &#39;end_exclusive&#39;: &#39;1 day&#39;},</span>
+<span class="sd">                {&#39;start_inclusive&#39;: timedelta(days=1),</span>
+<span class="sd">                &#39;end_exclusive&#39;: &#39;3 days&#39;},</span>
+<span class="sd">            ]</span>
+<span class="sd">        )</span>
+<span class="sd">        # Creates bins: PT0H_PT6H, PT6H_P1D, P1D_P3D</span>
+
+<span class="sd">    Variable bins with custom IDs using strings:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        fcst_bins = ForecastLeadTimeBins(</span>
+<span class="sd">            bin_size={</span>
+<span class="sd">                &#39;nowcast&#39;: {&#39;start_inclusive&#39;: &#39;0 hours&#39;,</span>
+<span class="sd">                &#39;end_exclusive&#39;: &#39;6 hours&#39;},</span>
+<span class="sd">                &#39;short_term&#39;: {&#39;start_inclusive&#39;: &#39;6 hours&#39;,</span>
+<span class="sd">                &#39;end_exclusive&#39;: &#39;1 day&#39;},</span>
+<span class="sd">                &#39;medium_term&#39;: {&#39;start_inclusive&#39;: &#39;1 day&#39;,</span>
+<span class="sd">                &#39;end_exclusive&#39;: &#39;5 days&#39;},</span>
+<span class="sd">            }</span>
+<span class="sd">        )</span>
+<span class="sd">        # Creates bins: nowcast, short_term, medium_term</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">value_time_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;value_time&quot;</span>
+    <span class="p">)</span>
+    <span class="n">reference_time_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;reference_time&quot;</span>
+    <span class="p">)</span>
+    <span class="n">lead_time_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;forecast_lead_time&quot;</span>
+    <span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;forecast_lead_time_bin&quot;</span>
+    <span class="p">)</span>
+    <span class="n">bin_size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_validate_bin_size_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate and normalize bin_size input.</span>
+
+<span class="sd">        Validates and converts bin_size to a standardized format:</span>
+<span class="sd">        - Single pd.Timedelta: returns as-is</span>
+<span class="sd">        - List of dicts: validates structure and converts to internal format</span>
+<span class="sd">        - Dict of dicts: validates structure and keeps custom bin IDs</span>
+
+<span class="sd">        Returns a normalized structure for internal processing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_to_pd_timedelta</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Convert datetime.timedelta or string to pd.Timedelta.&quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">value</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">temp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">temp</span> <span class="o">&lt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="ow">and</span> \
+                       <span class="n">temp</span> <span class="o">!=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="mi">0</span><span class="p">):</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                            <span class="s2">&quot;Timedelta must be at least 1 second&quot;</span>
+                        <span class="p">)</span>
+                    <span class="k">return</span> <span class="n">temp</span>
+                <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2"> &#39;</span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">&#39; has invalid timedelta&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot; string: &#39;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&#39;. &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">context</span><span class="si">}</span><span class="s2"> &#39;</span><span class="si">{</span><span class="n">field_name</span><span class="si">}</span><span class="s2">&#39; must be pd.Timedelta,&quot;</span>
+                    <span class="s2">&quot; datetime.timedelta, or a valid timedelta string,&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot; got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Single Timedelta - convert if needed</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bin_size</span><span class="p">,</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">,</span> <span class="nb">str</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">_to_pd_timedelta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bin_size</span><span class="p">,</span> <span class="s1">&#39;bin_size&#39;</span><span class="p">,</span> <span class="s1">&#39;bin_size&#39;</span><span class="p">)</span>
+
+        <span class="c1"># List of dicts format</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bin_size</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_size</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;bin_size list cannot be empty&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Validate each dict has required keys</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">bin_dict</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bin_size</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bin_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Item </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> in bin_size list must be a dict&quot;</span>
+                        <span class="p">)</span>
+
+                <span class="n">required_keys</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;start_inclusive&#39;</span><span class="p">,</span> <span class="s1">&#39;end_exclusive&#39;</span><span class="p">}</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">required_keys</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">bin_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Item </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> missing required keys. &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;Must have: </span><span class="si">{</span><span class="n">required_keys</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+                <span class="c1"># Validate and convert values to pd.Timedelta</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="n">_to_pd_timedelta</span><span class="p">(</span>
+                    <span class="n">bin_dict</span><span class="p">[</span><span class="s1">&#39;start_inclusive&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;start_inclusive&#39;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;Item </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="n">end</span> <span class="o">=</span> <span class="n">_to_pd_timedelta</span><span class="p">(</span>
+                    <span class="n">bin_dict</span><span class="p">[</span><span class="s1">&#39;end_exclusive&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;end_exclusive&#39;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;Item </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Convert to internal format: list of tuples (start, end, bin_id)</span>
+            <span class="c1"># For list format, bin_id is None (will be auto-generated as ISO)</span>
+            <span class="n">normalized</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">bin_dict</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_size</span><span class="p">:</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="n">_to_pd_timedelta</span><span class="p">(</span>
+                    <span class="n">bin_dict</span><span class="p">[</span><span class="s1">&#39;start_inclusive&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;start_inclusive&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;bin_dict&#39;</span>
+                <span class="p">)</span>
+                <span class="n">end</span> <span class="o">=</span> <span class="n">_to_pd_timedelta</span><span class="p">(</span>
+                    <span class="n">bin_dict</span><span class="p">[</span><span class="s1">&#39;end_exclusive&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;end_exclusive&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;bin_dict&#39;</span>
+                <span class="p">)</span>
+                <span class="n">normalized</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+
+            <span class="k">return</span> <span class="n">normalized</span>
+
+        <span class="c1"># Dict of dicts format</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bin_size</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_size</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;bin_size dict cannot be empty&quot;</span><span class="p">)</span>
+
+            <span class="c1"># Validate structure</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_size</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Dict keys must be strings (custom bin IDs), got &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                        <span class="s2">&quot;Dict values must be dicts with bin specification&quot;</span>
+                    <span class="p">)</span>
+
+                <span class="n">required_keys</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;start_inclusive&#39;</span><span class="p">,</span> <span class="s1">&#39;end_exclusive&#39;</span><span class="p">}</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">required_keys</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Bin &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39; missing required keys. Must have: &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">required_keys</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+
+                <span class="c1"># Validate and convert to pd.Timedelta</span>
+                <span class="n">_to_pd_timedelta</span><span class="p">(</span>
+                    <span class="n">value</span><span class="p">[</span><span class="s1">&#39;start_inclusive&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;start_inclusive&#39;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;Bin &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                <span class="p">)</span>
+                <span class="n">_to_pd_timedelta</span><span class="p">(</span>
+                    <span class="n">value</span><span class="p">[</span><span class="s1">&#39;end_exclusive&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;end_exclusive&#39;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;Bin &#39;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Convert to internal format: list of tuples</span>
+            <span class="n">normalized</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">custom_id</span><span class="p">,</span> <span class="n">bin_dict</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_size</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">start</span> <span class="o">=</span> <span class="n">_to_pd_timedelta</span><span class="p">(</span>
+                    <span class="n">bin_dict</span><span class="p">[</span><span class="s1">&#39;start_inclusive&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;start_inclusive&#39;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;Bin &#39;</span><span class="si">{</span><span class="n">custom_id</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                <span class="p">)</span>
+                <span class="n">end</span> <span class="o">=</span> <span class="n">_to_pd_timedelta</span><span class="p">(</span>
+                    <span class="n">bin_dict</span><span class="p">[</span><span class="s1">&#39;end_exclusive&#39;</span><span class="p">],</span>
+                    <span class="s1">&#39;end_exclusive&#39;</span><span class="p">,</span>
+                    <span class="sa">f</span><span class="s2">&quot;Bin &#39;</span><span class="si">{</span><span class="n">custom_id</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+                <span class="p">)</span>
+                <span class="n">normalized</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">custom_id</span><span class="p">))</span>
+
+            <span class="k">return</span> <span class="n">normalized</span>
+
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;bin_size must be pd.Timedelta, datetime.timedelta, &quot;</span>
+            <span class="s2">&quot;a valid timedelta string, list of dicts, or dict of dicts&quot;</span>
+        <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_forecast_lead_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sdf</span><span class="p">:</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate forecast lead time if not already present.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lead_time_field_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sdf</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">flt_cf</span> <span class="o">=</span> <span class="n">ForecastLeadTime</span><span class="p">(</span>
+                <span class="n">value_time_field_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">value_time_field_name</span><span class="p">,</span>
+                <span class="n">reference_time_field_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reference_time_field_name</span><span class="p">,</span>
+                <span class="n">output_field_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lead_time_field_name</span>
+            <span class="p">)</span>
+            <span class="n">sdf</span> <span class="o">=</span> <span class="n">flt_cf</span><span class="o">.</span><span class="n">apply_to</span><span class="p">(</span><span class="n">sdf</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sdf</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_forecast_lead_time_bin</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">sdf</span><span class="p">:</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add forecast lead time bin column.&quot;&quot;&quot;</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">_timedelta_to_iso_duration</span><span class="p">(</span><span class="n">td</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Convert pd.Timedelta to ISO 8601 duration string.&quot;&quot;&quot;</span>
+            <span class="n">iso_str</span> <span class="o">=</span> <span class="n">td</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+            <span class="c1"># Remove trailing 0M0S, 0S, etc. for cleaner output</span>
+            <span class="n">iso_str</span> <span class="o">=</span> <span class="n">iso_str</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+                <span class="s1">&#39;0M0S&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+                <span class="s1">&#39;0S&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+                <span class="s1">&#39;0M&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+            <span class="c1"># Handle edge case where we removed everything after &#39;T&#39;</span>
+            <span class="k">if</span> <span class="n">iso_str</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;T&#39;</span><span class="p">):</span>
+                <span class="n">iso_str</span> <span class="o">=</span> <span class="n">iso_str</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;T0S&#39;</span>
+            <span class="k">return</span> <span class="n">iso_str</span>
+
+        <span class="nd">@pandas_udf</span><span class="p">(</span><span class="n">returnType</span><span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">StringType</span><span class="p">())</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">lead_time</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+            <span class="c1"># Single Timedelta - uniform binning</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bin_size</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">):</span>
+                <span class="n">bin_size_seconds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_size</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
+
+                <span class="n">bin_numbers</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">lead_time</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">//</span> <span class="n">bin_size_seconds</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+                <span class="n">bin_ids</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">lead_time</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">bin_num</span> <span class="ow">in</span> <span class="n">bin_numbers</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+                    <span class="n">bin_mask</span> <span class="o">=</span> <span class="n">bin_numbers</span> <span class="o">==</span> <span class="n">bin_num</span>
+
+                    <span class="k">if</span> <span class="n">bin_mask</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                        <span class="n">start_td</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span>
+                            <span class="n">seconds</span><span class="o">=</span><span class="n">bin_num</span> <span class="o">*</span> <span class="n">bin_size_seconds</span>
+                            <span class="p">)</span>
+                        <span class="n">end_td</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span>
+                            <span class="n">seconds</span><span class="o">=</span><span class="p">(</span><span class="n">bin_num</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">bin_size_seconds</span>
+                            <span class="p">)</span>
+
+                        <span class="c1"># Convert to ISO duration format</span>
+                        <span class="n">start_iso</span> <span class="o">=</span> <span class="n">_timedelta_to_iso_duration</span><span class="p">(</span><span class="n">start_td</span><span class="p">)</span>
+                        <span class="n">end_iso</span> <span class="o">=</span> <span class="n">_timedelta_to_iso_duration</span><span class="p">(</span><span class="n">end_td</span><span class="p">)</span>
+                        <span class="n">bin_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">start_iso</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">end_iso</span><span class="si">}</span><span class="s2">&quot;</span>
+
+                        <span class="n">bin_ids</span><span class="p">[</span><span class="n">bin_mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">bin_id</span>
+
+                <span class="k">return</span> <span class="n">bin_ids</span>
+
+            <span class="c1"># List/Dict format - dynamic binning with explicit ranges</span>
+            <span class="c1"># self.bin_size is now a list of tuples: (start, end, bin_id)</span>
+            <span class="c1"># bin_id is None for auto-generated, or a string for custom</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">bin_ids</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">lead_time</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+                <span class="n">lead_time_seconds</span> <span class="o">=</span> <span class="n">lead_time</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
+
+                <span class="c1"># Check if we need to add an overflow bin</span>
+                <span class="n">max_lead_time</span> <span class="o">=</span> <span class="n">lead_time</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+                <span class="n">last_bin_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_size</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+                <span class="c1"># Create working copy of bin_size</span>
+                <span class="n">bins_to_use</span> <span class="o">=</span> <span class="p">[]</span>
+
+                <span class="c1"># Convert all bins, generating ISO format for None bin_ids</span>
+                <span class="k">for</span> <span class="n">start_td</span><span class="p">,</span> <span class="n">end_td</span><span class="p">,</span> <span class="n">bin_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_size</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">bin_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="c1"># Auto-generated: create ISO duration format</span>
+                        <span class="n">start_iso</span> <span class="o">=</span> <span class="n">_timedelta_to_iso_duration</span><span class="p">(</span><span class="n">start_td</span><span class="p">)</span>
+                        <span class="n">end_iso</span> <span class="o">=</span> <span class="n">_timedelta_to_iso_duration</span><span class="p">(</span><span class="n">end_td</span><span class="p">)</span>
+                        <span class="n">final_bin_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">start_iso</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">end_iso</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># Custom ID: use as-is</span>
+                        <span class="n">final_bin_id</span> <span class="o">=</span> <span class="n">bin_id</span>
+
+                    <span class="n">bins_to_use</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">start_td</span><span class="p">,</span> <span class="n">end_td</span><span class="p">,</span> <span class="n">final_bin_id</span><span class="p">))</span>
+
+                <span class="c1"># If max lead time exceeds last bin, create overflow bin</span>
+                <span class="k">if</span> <span class="n">max_lead_time</span> <span class="o">&gt;=</span> <span class="n">last_bin_end</span><span class="p">:</span>
+                    <span class="n">overflow_start</span> <span class="o">=</span> <span class="n">last_bin_end</span>
+                    <span class="n">overflow_end</span> <span class="o">=</span> <span class="n">max_lead_time</span>
+
+                    <span class="c1"># Determine overflow bin_id</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bin_size</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="c1"># Auto-generated format: use ISO duration strings</span>
+                        <span class="n">start_iso</span> <span class="o">=</span> <span class="n">_timedelta_to_iso_duration</span><span class="p">(</span><span class="n">overflow_start</span><span class="p">)</span>
+                        <span class="n">end_iso</span> <span class="o">=</span> <span class="n">_timedelta_to_iso_duration</span><span class="p">(</span><span class="n">overflow_end</span><span class="p">)</span>
+                        <span class="n">overflow_bin_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">start_iso</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">end_iso</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># Custom ID format: append suffix</span>
+                        <span class="n">overflow_bin_id</span> <span class="o">=</span> <span class="s2">&quot;overflow&quot;</span>
+
+                    <span class="n">bins_to_use</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="p">(</span><span class="n">overflow_start</span><span class="p">,</span> <span class="n">overflow_end</span><span class="p">,</span> <span class="n">overflow_bin_id</span><span class="p">)</span>
+                        <span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">start_td</span><span class="p">,</span> <span class="n">end_td</span><span class="p">,</span> <span class="n">bin_id</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bins_to_use</span><span class="p">):</span>
+                    <span class="n">start_seconds</span> <span class="o">=</span> <span class="n">start_td</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
+                    <span class="n">end_seconds</span> <span class="o">=</span> <span class="n">end_td</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
+
+                    <span class="c1"># Check if this is the last bin (including overflow bin)</span>
+                    <span class="n">is_last_bin</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">bins_to_use</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">is_last_bin</span><span class="p">:</span>
+                        <span class="c1"># Last bin is inclusive of end_exclusive</span>
+                        <span class="n">mask</span> <span class="o">=</span> <span class="n">lead_time_seconds</span> <span class="o">&gt;=</span> <span class="n">start_seconds</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># All other bins are [start, end)</span>
+                        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="p">(</span><span class="n">lead_time_seconds</span> <span class="o">&gt;=</span> <span class="n">start_seconds</span><span class="p">)</span> <span class="o">&amp;</span>
+                            <span class="p">(</span><span class="n">lead_time_seconds</span> <span class="o">&lt;</span> <span class="n">end_seconds</span><span class="p">)</span>
+                        <span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                        <span class="n">bin_ids</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">bin_id</span>
+
+                <span class="k">return</span> <span class="n">bin_ids</span>
+
+        <span class="n">sdf</span> <span class="o">=</span> <span class="n">sdf</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_field_name</span><span class="p">,</span>
+            <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lead_time_field_name</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">sdf</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sdf</span><span class="p">:</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the calculated field to the Spark DataFrame.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bin_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_bin_size_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">sdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_forecast_lead_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sdf</span><span class="p">)</span>
+        <span class="n">sdf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_forecast_lead_time_bin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sdf</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sdf</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ThresholdValueExceeded</span><span class="p">(</span><span class="n">CalculatedFieldABC</span><span class="p">,</span> <span class="n">CalculatedFieldBaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds boolean column indicating if the input value exceeds a threshold.</span>
+
+<span class="sd">    Properties</span>
+<span class="sd">    ----------</span>
+<span class="sd">    - input_field_name:</span>
+<span class="sd">        The name of the column containing the primary value.</span>
+<span class="sd">        Default: &quot;primary_value&quot;</span>
+<span class="sd">    - threshold_field_name:</span>
+<span class="sd">        The name of the column containing the threshold value.</span>
+<span class="sd">        Default: &quot;secondary_value&quot;</span>
+<span class="sd">    - output_field_name:</span>
+<span class="sd">        The name of the column to store the boolean value.</span>
+<span class="sd">        Default: &quot;threshold_value_exceeded&quot;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;primary_value&quot;</span>
+    <span class="p">)</span>
+    <span class="n">threshold_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;secondary_value&quot;</span>
+    <span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;threshold_value_exceeded&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sdf</span><span class="p">:</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the calculated field to the Spark DataFrame.&quot;&quot;&quot;</span>
+        <span class="nd">@pandas_udf</span><span class="p">(</span><span class="n">returnType</span><span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">BooleanType</span><span class="p">())</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">input_value</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span>
+                 <span class="n">threshold_value</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span>
+                 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">input_value</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">threshold_value</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">mask</span>
+
+        <span class="n">sdf</span> <span class="o">=</span> <span class="n">sdf</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_field_name</span><span class="p">,</span>
+            <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_field_name</span><span class="p">,</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">threshold_field_name</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">sdf</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ThresholdValueNotExceeded</span><span class="p">(</span><span class="n">CalculatedFieldABC</span><span class="p">,</span> <span class="n">CalculatedFieldBaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds boolean column indicating if the input value is less than or equal to a threshold.</span>
+
+<span class="sd">    Properties</span>
+<span class="sd">    ----------</span>
+<span class="sd">    - input_field_name:</span>
+<span class="sd">        The name of the column containing the primary value.</span>
+<span class="sd">        Default: &quot;primary_value&quot;</span>
+<span class="sd">    - threshold_field_name:</span>
+<span class="sd">        The name of the column containing the threshold value.</span>
+<span class="sd">        Default: &quot;secondary_value&quot;</span>
+<span class="sd">    - output_field_name:</span>
+<span class="sd">        The name of the column to store the boolean value.</span>
+<span class="sd">        Default: &quot;threshold_value_not_exceeded&quot;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span> <span class="c1"># noqa</span>
+
+    <span class="n">input_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;primary_value&quot;</span>
+    <span class="p">)</span>
+    <span class="n">threshold_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;secondary_value&quot;</span>
+    <span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;threshold_value_not_exceeded&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sdf</span><span class="p">:</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the calculated field to the Spark DataFrame.&quot;&quot;&quot;</span>
+        <span class="nd">@pandas_udf</span><span class="p">(</span><span class="n">returnType</span><span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">BooleanType</span><span class="p">())</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">input_value</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span>
+                 <span class="n">threshold_value</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span>
+                 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">input_value</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">threshold_value</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">mask</span>
+
+        <span class="n">sdf</span> <span class="o">=</span> <span class="n">sdf</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_field_name</span><span class="p">,</span>
+            <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_field_name</span><span class="p">,</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">threshold_field_name</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">sdf</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">DayOfYear</span><span class="p">(</span><span class="n">CalculatedFieldABC</span><span class="p">,</span> <span class="n">CalculatedFieldBaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds the day of the year from a timestamp column.</span>
+
+<span class="sd">    Properties</span>
+<span class="sd">    ----------</span>
+<span class="sd">    - input_field_name:</span>
+<span class="sd">        The name of the column containing the timestamp.</span>
+<span class="sd">        Default: &quot;value_time&quot;</span>
+<span class="sd">    - output_field_name:</span>
+<span class="sd">        The name of the column to store the day of the year.</span>
+<span class="sd">        Default: &quot;day_of_year&quot;</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - February 29th in leap years is set to None.</span>
+<span class="sd">    - All days after February 29th are adjusted to correspond to the same day</span>
+<span class="sd">      of the year as in a non-leap year.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;value_time&quot;</span>
+    <span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;day_of_year&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sdf</span><span class="p">:</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the calculated field to the Spark DataFrame.&quot;&quot;&quot;</span>
+        <span class="nd">@pandas_udf</span><span class="p">(</span><span class="n">returnType</span><span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">IntegerType</span><span class="p">())</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">col</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">adjust_day_of_year</span><span class="p">(</span><span class="n">date</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">calendar</span><span class="o">.</span><span class="n">isleap</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">year</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">date</span><span class="o">.</span><span class="n">month</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">date</span><span class="o">.</span><span class="n">day</span> <span class="o">==</span> <span class="mi">29</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="mi">59</span>  <span class="c1"># Assign to Feb.28 during leap years</span>
+                    <span class="k">elif</span> <span class="n">date</span><span class="o">.</span><span class="n">month</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">date</span><span class="o">.</span><span class="n">dayofyear</span> <span class="o">-</span> <span class="mi">1</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="n">date</span><span class="o">.</span><span class="n">dayofyear</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">date</span><span class="o">.</span><span class="n">dayofyear</span>
+
+            <span class="k">return</span> <span class="n">col</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">adjust_day_of_year</span><span class="p">)</span>
+
+        <span class="n">sdf</span> <span class="o">=</span> <span class="n">sdf</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_field_name</span><span class="p">,</span>
+            <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_field_name</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">sdf</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">HourOfYear</span><span class="p">(</span><span class="n">CalculatedFieldABC</span><span class="p">,</span> <span class="n">CalculatedFieldBaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds the hour from a timestamp column.</span>
+
+<span class="sd">    Properties</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    - input_field_name:</span>
+<span class="sd">        The name of the column containing the timestamp.</span>
+<span class="sd">        Default: &quot;value_time&quot;</span>
+<span class="sd">    - output_field_name:</span>
+<span class="sd">        The name of the column to store the month.</span>
+<span class="sd">        Default: &quot;hour_of_year&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;value_time&quot;</span>
+    <span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;hour_of_year&quot;</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sdf</span><span class="p">:</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ps</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the calculated field to the Spark DataFrame.&quot;&quot;&quot;</span>
+        <span class="nd">@pandas_udf</span><span class="p">(</span><span class="n">returnType</span><span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">IntegerType</span><span class="p">())</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">col</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">adjust_hour_of_year</span><span class="p">(</span><span class="n">date</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">calendar</span><span class="o">.</span><span class="n">isleap</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">year</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">date</span><span class="o">.</span><span class="n">month</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">date</span><span class="o">.</span><span class="n">day</span> <span class="o">==</span> <span class="mi">29</span><span class="p">:</span>
+                        <span class="c1"># Assign to Feb.28 during leap years</span>
+                        <span class="k">return</span> <span class="mi">58</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">+</span> <span class="n">date</span><span class="o">.</span><span class="n">hour</span>
+                    <span class="k">elif</span> <span class="n">date</span><span class="o">.</span><span class="n">month</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">dayofyear</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">+</span> <span class="n">date</span><span class="o">.</span><span class="n">hour</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">return</span> <span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">dayofyear</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">+</span> <span class="n">date</span><span class="o">.</span><span class="n">hour</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">dayofyear</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">24</span> <span class="o">+</span> <span class="n">date</span><span class="o">.</span><span class="n">hour</span>
+
+            <span class="k">return</span> <span class="n">col</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">adjust_hour_of_year</span><span class="p">)</span>
+
+        <span class="n">sdf</span> <span class="o">=</span> <span class="n">sdf</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_field_name</span><span class="p">,</span>
+            <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_field_name</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">sdf</span>
+
+
+<div class="viewcode-block" id="RowLevelCalculatedFields">
+<a class="viewcode-back" href="../../../../api/generated/teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.html#teehr.models.calculated_fields.row_level.RowLevelCalculatedFields">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RowLevelCalculatedFields</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Row level Calculated Fields.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Row level CFs are applied to each row in the table based on data that is</span>
+<span class="sd">    in one or more existing fields.  These are applied per row and are not</span>
+<span class="sd">    aware of the data in any other row (e.g., are not aware of any other</span>
+<span class="sd">    timeseries values in a &quot;timeseries&quot;).  This can be used for adding fields</span>
+<span class="sd">    such as a field based on the data/time (e.g., month, year, season, etc.)</span>
+<span class="sd">    or based on the value field (e.g., normalized flow, log flow, etc.) and</span>
+<span class="sd">    many other uses.</span>
+
+<span class="sd">    Available Calculated Fields:</span>
+
+<span class="sd">    - Month</span>
+<span class="sd">    - Year</span>
+<span class="sd">    - WaterYear</span>
+<span class="sd">    - NormalizedFlow</span>
+<span class="sd">    - Seasons</span>
+<span class="sd">    - ForecastLeadTime</span>
+<span class="sd">    - ForecastLeadTimeBins</span>
+<span class="sd">    - ThresholdValueExceeded</span>
+<span class="sd">    - DayOfYear</span>
+<span class="sd">    - HourOfYear</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">Month</span> <span class="o">=</span> <span class="n">Month</span>
+    <span class="n">Year</span> <span class="o">=</span> <span class="n">Year</span>
+    <span class="n">WaterYear</span> <span class="o">=</span> <span class="n">WaterYear</span>
+    <span class="n">NormalizedFlow</span> <span class="o">=</span> <span class="n">NormalizedFlow</span>
+    <span class="n">Seasons</span> <span class="o">=</span> <span class="n">Seasons</span>
+    <span class="n">ForecastLeadTime</span> <span class="o">=</span> <span class="n">ForecastLeadTime</span>
+    <span class="n">ForecastLeadTimeBins</span> <span class="o">=</span> <span class="n">ForecastLeadTimeBins</span>
+    <span class="n">ThresholdValueExceeded</span> <span class="o">=</span> <span class="n">ThresholdValueExceeded</span>
+    <span class="n">ThresholdValueNotExceeded</span> <span class="o">=</span> <span class="n">ThresholdValueNotExceeded</span>
+    <span class="n">DayOfYear</span> <span class="o">=</span> <span class="n">DayOfYear</span>
+    <span class="n">HourOfYear</span> <span class="o">=</span> <span class="n">HourOfYear</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><!-- This will display the version of the docs -->
+TEEHR version 0.5.2</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

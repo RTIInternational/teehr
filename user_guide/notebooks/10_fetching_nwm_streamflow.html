@@ -1,0 +1,1364 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Fetching USGS and NWM Streamflow Data &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/teehr.css?v=b36b674b" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=8e576371"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/notebooks/10_fetching_nwm_streamflow';</script>
+    <link rel="icon" href="../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Fetching and Summarizing NWM Gridded Data" href="11_fetching_nwm_gridded_data.html" />
+    <link rel="prev" title="Evaluating Ensemble Streamflow Forecasts" href="09_ensemble_metrics.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.5.2" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation - Home"/>
+    <img src="../../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark pst-js-only" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="01_introduction_schema.html">Introduction to the Schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_loading_local_data.html">Loading Local Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_introduction_class.html">Introduction to the Evaluation Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_setup_simple_example.html">Setting-up a Simple Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_clone_from_s3.html">Clone an Evaluation from S3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_read_from_s3.html">Read an Evaluation from S3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/joining_timeseries.html">Joining Timeseries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06_grouping_and_filtering.html">Grouping and Filtering</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="08_adding_calculated_fields.html">Adding calculated fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="09_ensemble_metrics.html">Ensemble Forecast Evaluation</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Fetching USGS and NWM Streamflow Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_fetching_nwm_gridded_data.html">Fetching NWM Gridded Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metrics/metrics.html">Available Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../legacy_content/legacy_content.html">Legacy Content</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">User Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Fetching USGS and NWM Streamflow Data</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="fetching-usgs-and-nwm-streamflow-data">
+<h1>Fetching USGS and NWM Streamflow Data<a class="headerlink" href="#fetching-usgs-and-nwm-streamflow-data" title="Link to this heading">#</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>In this guide we’ll demonstrate fetching National Water Model (NWM) streamflow forecasts from Google Cloud Storage (GCS). This example makes use of a pre-generated Evaluation dataset stored in TEEHR’s examples data module. It contains a single USGS gage location and the corresponding NWM location ID.</p>
+<p><strong>Note</strong>: For demonstration purposes several cells below are shown in markdown form. If you want to download this notebook and run them yourself, you will need to convert them to code cells.</p>
+<p>For a refresher on loading location and location crosswalk data into a new Evaluation refer back to the <a class="reference internal" href="02_loading_local_data.html"><span class="std std-doc">Loading Local Data</span></a> and <a class="reference internal" href="04_setup_simple_example.html"><span class="std std-doc">Setting-up a Simple Example</span></a> user guide pages.</p>
+<section id="set-up-the-example-evaluation">
+<h3>Set up the example Evaluation<a class="headerlink" href="#set-up-the-example-evaluation" title="Link to this heading">#</a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">teehr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.examples.setup_nwm_streamflow_example</span><span class="w"> </span><span class="kn">import</span> <span class="n">setup_nwm_example</span>
+
+<span class="c1"># Tell Bokeh to output plots in the notebook</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">output_notebook</span>
+<span class="n">output_notebook</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html">    <style>
+        .bk-notebook-logo {
+            display: block;
+            width: 20px;
+            height: 20px;
+            background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNui8sowAAAOkSURBVDiNjZRtaJVlGMd/1/08zzln5zjP1LWcU9N0NkN8m2CYjpgQYQXqSs0I84OLIC0hkEKoPtiH3gmKoiJDU7QpLgoLjLIQCpEsNJ1vqUOdO7ppbuec5+V+rj4ctwzd8IIbbi6u+8f1539dt3A78eXC7QizUF7gyV1fD1Yqg4JWz84yffhm0qkFqBogB9rM8tZdtwVsPUhWhGcFJngGeWrPzHm5oaMmkfEg1usvLFyc8jLRqDOMru7AyC8saQr7GG7f5fvDeH7Ej8CM66nIF+8yngt6HWaKh7k49Soy9nXurCi1o3qUbS3zWfrYeQDTB/Qj6kX6Ybhw4B+bOYoLKCC9H3Nu/leUTZ1JdRWkkn2ldcCamzrcf47KKXdAJllSlxAOkRgyHsGC/zRday5Qld9DyoM4/q/rUoy/CXh3jzOu3bHUVZeU+DEn8FInkPBFlu3+nW3Nw0mk6vCDiWg8CeJaxEwuHS3+z5RgY+YBR6V1Z1nxSOfoaPa4LASWxxdNp+VWTk7+4vzaou8v8PN+xo+KY2xsw6une2frhw05CTYOmQvsEhjhWjn0bmXPjpE1+kplmmkP3suftwTubK9Vq22qKmrBhpY4jvd5afdRA3wGjFAgcnTK2s4hY0/GPNIb0nErGMCRxWOOX64Z8RAC4oCXdklmEvcL8o0BfkNK4lUg9HTl+oPlQxdNo3Mg4Nv175e/1LDGzZen30MEjRUtmXSfiTVu1kK8W4txyV6BMKlbgk3lMwYCiusNy9fVfvvwMxv8Ynl6vxoByANLTWplvuj/nF9m2+PDtt1eiHPBr1oIfhCChQMBw6Aw0UulqTKZdfVvfG7VcfIqLG9bcldL/+pdWTLxLUy8Qq38heUIjh4XlzZxzQm19lLFlr8vdQ97rjZVOLf8nclzckbcD4wxXMidpX30sFd37Fv/GtwwhzhxGVAprjbg0gCAEeIgwCZyTV2Z1REEW8O4py0wsjeloKoMr6iCY6dP92H6Vw/oTyICIthibxjm/DfN9lVz8IqtqKYLUXfoKVMVQVVJOElGjrnnUt9T9wbgp8AyYKaGlqingHZU/uG2NTZSVqwHQTWkx9hxjkpWDaCg6Ckj5qebgBVbT3V3NNXMSiWSDdGV3hrtzla7J+duwPOToIg42ChPQOQjspnSlp1V+Gjdged7+8UN5CRAV7a5EdFNwCjEaBR27b3W890TE7g24NAP/mMDXRWrGoFPQI9ls/MWO2dWFAar/xcOIImbbpA3zgAAAABJRU5ErkJggg==);
+        }
+    </style>
+    <div>
+        <a href="https://bokeh.org" target="_blank" class="bk-notebook-logo"></a>
+        <span id="cb3f621b-4246-44ec-8117-4ff4838e7ff2">Loading BokehJS ...</span>
+    </div>
+</div><script type="application/javascript">'use strict';
+(function(root) {
+  function now() {
+    return new Date();
+  }
+
+  const force = true;
+
+  if (typeof root._bokeh_onload_callbacks === "undefined" || force === true) {
+    root._bokeh_onload_callbacks = [];
+    root._bokeh_is_loading = undefined;
+  }
+
+const JS_MIME_TYPE = 'application/javascript';
+  const HTML_MIME_TYPE = 'text/html';
+  const EXEC_MIME_TYPE = 'application/vnd.bokehjs_exec.v0+json';
+  const CLASS_NAME = 'output_bokeh rendered_html';
+
+  /**
+   * Render data to the DOM node
+   */
+  function render(props, node) {
+    const script = document.createElement("script");
+    node.appendChild(script);
+  }
+
+  /**
+   * Handle when an output is cleared or removed
+   */
+  function handleClearOutput(event, handle) {
+    function drop(id) {
+      const view = Bokeh.index.get_by_id(id)
+      if (view != null) {
+        view.model.document.clear()
+        Bokeh.index.delete(view)
+      }
+    }
+
+    const cell = handle.cell;
+
+    const id = cell.output_area._bokeh_element_id;
+    const server_id = cell.output_area._bokeh_server_id;
+
+    // Clean up Bokeh references
+    if (id != null) {
+      drop(id)
+    }
+
+    if (server_id !== undefined) {
+      // Clean up Bokeh references
+      const cmd_clean = "from bokeh.io.state import curstate; print(curstate().uuid_to_server['" + server_id + "'].get_sessions()[0].document.roots[0]._id)";
+      cell.notebook.kernel.execute(cmd_clean, {
+        iopub: {
+          output: function(msg) {
+            const id = msg.content.text.trim()
+            drop(id)
+          }
+        }
+      });
+      // Destroy server and session
+      const cmd_destroy = "import bokeh.io.notebook as ion; ion.destroy_server('" + server_id + "')";
+      cell.notebook.kernel.execute(cmd_destroy);
+    }
+  }
+
+  /**
+   * Handle when a new output is added
+   */
+  function handleAddOutput(event, handle) {
+    const output_area = handle.output_area;
+    const output = handle.output;
+
+    // limit handleAddOutput to display_data with EXEC_MIME_TYPE content only
+    if ((output.output_type != "display_data") || (!Object.prototype.hasOwnProperty.call(output.data, EXEC_MIME_TYPE))) {
+      return
+    }
+
+    const toinsert = output_area.element.find("." + CLASS_NAME.split(' ')[0]);
+
+    if (output.metadata[EXEC_MIME_TYPE]["id"] !== undefined) {
+      toinsert[toinsert.length - 1].firstChild.textContent = output.data[JS_MIME_TYPE];
+      // store reference to embed id on output_area
+      output_area._bokeh_element_id = output.metadata[EXEC_MIME_TYPE]["id"];
+    }
+    if (output.metadata[EXEC_MIME_TYPE]["server_id"] !== undefined) {
+      const bk_div = document.createElement("div");
+      bk_div.innerHTML = output.data[HTML_MIME_TYPE];
+      const script_attrs = bk_div.children[0].attributes;
+      for (let i = 0; i < script_attrs.length; i++) {
+        toinsert[toinsert.length - 1].firstChild.setAttribute(script_attrs[i].name, script_attrs[i].value);
+        toinsert[toinsert.length - 1].firstChild.textContent = bk_div.children[0].textContent
+      }
+      // store reference to server id on output_area
+      output_area._bokeh_server_id = output.metadata[EXEC_MIME_TYPE]["server_id"];
+    }
+  }
+
+  function register_renderer(events, OutputArea) {
+
+    function append_mime(data, metadata, element) {
+      // create a DOM node to render to
+      const toinsert = this.create_output_subarea(
+        metadata,
+        CLASS_NAME,
+        EXEC_MIME_TYPE
+      );
+      this.keyboard_manager.register_events(toinsert);
+      // Render to node
+      const props = {data: data, metadata: metadata[EXEC_MIME_TYPE]};
+      render(props, toinsert[toinsert.length - 1]);
+      element.append(toinsert);
+      return toinsert
+    }
+
+    /* Handle when an output is cleared or removed */
+    events.on('clear_output.CodeCell', handleClearOutput);
+    events.on('delete.Cell', handleClearOutput);
+
+    /* Handle when a new output is added */
+    events.on('output_added.OutputArea', handleAddOutput);
+
+    /**
+     * Register the mime type and append_mime function with output_area
+     */
+    OutputArea.prototype.register_mime_type(EXEC_MIME_TYPE, append_mime, {
+      /* Is output safe? */
+      safe: true,
+      /* Index of renderer in `output_area.display_order` */
+      index: 0
+    });
+  }
+
+  // register the mime type if in Jupyter Notebook environment and previously unregistered
+  if (root.Jupyter !== undefined) {
+    const events = require('base/js/events');
+    const OutputArea = require('notebook/js/outputarea').OutputArea;
+
+    if (OutputArea.prototype.mime_types().indexOf(EXEC_MIME_TYPE) == -1) {
+      register_renderer(events, OutputArea);
+    }
+  }
+  if (typeof (root._bokeh_timeout) === "undefined" || force === true) {
+    root._bokeh_timeout = Date.now() + 5000;
+    root._bokeh_failed_load = false;
+  }
+
+  const NB_LOAD_WARNING = {'data': {'text/html':
+     "<div style='background-color: #fdd'>\n"+
+     "<p>\n"+
+     "BokehJS does not appear to have successfully loaded. If loading BokehJS from CDN, this \n"+
+     "may be due to a slow or bad network connection. Possible fixes:\n"+
+     "</p>\n"+
+     "<ul>\n"+
+     "<li>re-rerun `output_notebook()` to attempt to load from CDN again, or</li>\n"+
+     "<li>use INLINE resources instead, as so:</li>\n"+
+     "</ul>\n"+
+     "<code>\n"+
+     "from bokeh.resources import INLINE\n"+
+     "output_notebook(resources=INLINE)\n"+
+     "</code>\n"+
+     "</div>"}};
+
+  function display_loaded(error = null) {
+    const el = document.getElementById("cb3f621b-4246-44ec-8117-4ff4838e7ff2");
+    if (el != null) {
+      const html = (() => {
+        if (typeof root.Bokeh === "undefined") {
+          if (error == null) {
+            return "BokehJS is loading ...";
+          } else {
+            return "BokehJS failed to load.";
+          }
+        } else {
+          const prefix = `BokehJS ${root.Bokeh.version}`;
+          if (error == null) {
+            return `${prefix} successfully loaded.`;
+          } else {
+            return `${prefix} <b>encountered errors</b> while loading and may not function as expected.`;
+          }
+        }
+      })();
+      el.innerHTML = html;
+
+      if (error != null) {
+        const wrapper = document.createElement("div");
+        wrapper.style.overflow = "auto";
+        wrapper.style.height = "5em";
+        wrapper.style.resize = "vertical";
+        const content = document.createElement("div");
+        content.style.fontFamily = "monospace";
+        content.style.whiteSpace = "pre-wrap";
+        content.style.backgroundColor = "rgb(255, 221, 221)";
+        content.textContent = error.stack ?? error.toString();
+        wrapper.append(content);
+        el.append(wrapper);
+      }
+    } else if (Date.now() < root._bokeh_timeout) {
+      setTimeout(() => display_loaded(error), 100);
+    }
+  }
+
+  function run_callbacks() {
+    try {
+      root._bokeh_onload_callbacks.forEach(function(callback) {
+        if (callback != null)
+          callback();
+      });
+    } finally {
+      delete root._bokeh_onload_callbacks
+    }
+    console.debug("Bokeh: all callbacks have finished");
+  }
+
+  function load_libs(css_urls, js_urls, callback) {
+    if (css_urls == null) css_urls = [];
+    if (js_urls == null) js_urls = [];
+
+    root._bokeh_onload_callbacks.push(callback);
+    if (root._bokeh_is_loading > 0) {
+      console.debug("Bokeh: BokehJS is being loaded, scheduling callback at", now());
+      return null;
+    }
+    if (js_urls == null || js_urls.length === 0) {
+      run_callbacks();
+      return null;
+    }
+    console.debug("Bokeh: BokehJS not loaded, scheduling load and callback at", now());
+    root._bokeh_is_loading = css_urls.length + js_urls.length;
+
+    function on_load() {
+      root._bokeh_is_loading--;
+      if (root._bokeh_is_loading === 0) {
+        console.debug("Bokeh: all BokehJS libraries/stylesheets loaded");
+        run_callbacks()
+      }
+    }
+
+    function on_error(url) {
+      console.error("failed to load " + url);
+    }
+
+    for (let i = 0; i < css_urls.length; i++) {
+      const url = css_urls[i];
+      const element = document.createElement("link");
+      element.onload = on_load;
+      element.onerror = on_error.bind(null, url);
+      element.rel = "stylesheet";
+      element.type = "text/css";
+      element.href = url;
+      console.debug("Bokeh: injecting link tag for BokehJS stylesheet: ", url);
+      document.body.appendChild(element);
+    }
+
+    for (let i = 0; i < js_urls.length; i++) {
+      const url = js_urls[i];
+      const element = document.createElement('script');
+      element.onload = on_load;
+      element.onerror = on_error.bind(null, url);
+      element.async = false;
+      element.src = url;
+      console.debug("Bokeh: injecting script tag for BokehJS library: ", url);
+      document.head.appendChild(element);
+    }
+  };
+
+  function inject_raw_css(css) {
+    const element = document.createElement("style");
+    element.appendChild(document.createTextNode(css));
+    document.body.appendChild(element);
+  }
+
+  const js_urls = ["https://cdn.bokeh.org/bokeh/release/bokeh-3.7.3.min.js", "https://cdn.bokeh.org/bokeh/release/bokeh-gl-3.7.3.min.js", "https://cdn.bokeh.org/bokeh/release/bokeh-widgets-3.7.3.min.js", "https://cdn.bokeh.org/bokeh/release/bokeh-tables-3.7.3.min.js", "https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-3.7.3.min.js"];
+  const css_urls = [];
+
+  const inline_js = [    function(Bokeh) {
+      Bokeh.set_log_level("info");
+    },
+function(Bokeh) {
+    }
+  ];
+
+  function run_inline_js() {
+    if (root.Bokeh !== undefined || force === true) {
+      try {
+            for (let i = 0; i < inline_js.length; i++) {
+      inline_js[i].call(root, root.Bokeh);
+    }
+
+      } catch (error) {display_loaded(error);throw error;
+      }if (force === true) {
+        display_loaded();
+      }} else if (Date.now() < root._bokeh_timeout) {
+      setTimeout(run_inline_js, 100);
+    } else if (!root._bokeh_failed_load) {
+      console.log("Bokeh: BokehJS failed to load within specified timeout.");
+      root._bokeh_failed_load = true;
+    } else if (force !== true) {
+      const cell = $(document.getElementById("cb3f621b-4246-44ec-8117-4ff4838e7ff2")).parents('.cell').data().cell;
+      cell.output_area.append_execute_result(NB_LOAD_WARNING)
+    }
+  }
+
+  if (root._bokeh_is_loading === 0) {
+    console.debug("Bokeh: BokehJS loaded, going straight to plotting");
+    run_inline_js();
+  } else {
+    load_libs(css_urls, js_urls, function() {
+      console.debug("Bokeh: BokehJS plotting callback run at", now());
+      run_inline_js();
+    });
+  }
+}(window));</script></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define the directory where the Evaluation will be created.</span>
+<span class="n">test_eval_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">Path</span><span class="p">()</span><span class="o">.</span><span class="n">home</span><span class="p">(),</span> <span class="s2">&quot;temp&quot;</span><span class="p">,</span> <span class="s2">&quot;10_fetch_nwm_data&quot;</span><span class="p">)</span>
+<span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">test_eval_dir</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Setup the example evaluation using data from the TEEHR repository.</span>
+<span class="n">setup_nwm_example</span><span class="p">(</span><span class="n">tmpdir</span><span class="o">=</span><span class="n">test_eval_dir</span><span class="p">)</span>
+
+<span class="c1"># Initialize the evaluation.</span>
+<span class="n">ev</span> <span class="o">=</span> <span class="n">teehr</span><span class="o">.</span><span class="n">Evaluation</span><span class="p">(</span><span class="n">dir_path</span><span class="o">=</span><span class="n">test_eval_dir</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+</div>
+</div>
+<p>This example Evaluation only contains a single location, the USGS gage on the New River at Radford, VA.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">locations_gdf</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">to_geopandas</span><span class="p">()</span>
+<span class="n">locations_gdf</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>name</th>
+      <th>geometry</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>usgs-03171000</td>
+      <td>NEW RIVER AT RADFORD, VA</td>
+      <td>POINT (-80.56922 37.14179)</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>The ID of the National Water Model reach corresponding to the USGS gage is in the <code class="docutils literal notranslate"><span class="pre">location</span> <span class="pre">crosswalks</span></code> table.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">location_crosswalks_df</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">location_crosswalks</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+<span class="n">location_crosswalks_df</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>primary_location_id</th>
+      <th>secondary_location_id</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>usgs-03171000</td>
+      <td>nwm30-6884666</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</section>
+<section id="location-id-prefixes">
+<h3>Location ID Prefixes<a class="headerlink" href="#location-id-prefixes" title="Link to this heading">#</a></h3>
+<p>Note that the fetching methods automatically append location ID prefixes to the USGS and NWM location IDs. These must existing the location and location crosswalk tables first. See the <code class="docutils literal notranslate"><span class="pre">Loading</span> <span class="pre">Local</span> <span class="pre">Data</span></code> user guide for more info on specifying the location ID prefix when loading data.</p>
+</section>
+<section id="fetching-usgs-streamgage-data">
+<h3>Fetching USGS streamgage data<a class="headerlink" href="#fetching-usgs-streamgage-data" title="Link to this heading">#</a></h3>
+<p>Since the example Evalution already contains the location and location crosswalk IDs for USGS and NWM locations, we can make use of TEEHR’s built-in tools to fetch USGS and NWM streamflow data.</p>
+<p>First we’ll fetch USGS data from the National Water Information System (NWIS). TEEHR makes use of the USGS <a class="reference external" href="https://github.com/DOI-USGS/dataretrieval-python">dataretrieval</a> python tool under the hood.</p>
+<p>Note that the USGS and NWM streamflow timeseries data have been pre-loading into this example Evaluation. However you can still download this notebook and execute the methods yourself.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ev.fetch.usgs_streamflow()</span></code> is a method that fetches the USGS data for the primary locations in the evaluation. It requires users to define the start and end times of data to fetch and has several optional arguments. For more details on the method see:</p>
+<p>We’ll fetch streamflow data at this gage during the 2024 Hurricane Helene event.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Convert this to a code cell to run locally</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">fetch</span><span class="o">.</span><span class="n">usgs_streamflow</span><span class="p">(</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">26</span><span class="p">),</span>
+    <span class="n">end_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>TEEHR automatically loads the data into the Evaluation. USGS data is loaded a <code class="docutils literal notranslate"><span class="pre">primary</span></code> timeseries by default.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+<span class="n">df</span><span class="o">.</span><span class="n">teehr</span><span class="o">.</span><span class="n">timeseries_plot</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html">
+  <div id="a951f8c8-4c5d-4bfa-9429-edb9bf267228" data-root-id="p1003" style="display: contents;"></div>
+</div><script type="application/javascript">(function(root) {
+  function embed_document(root) {
+  const docs_json = {"7b3ac7e3-786c-42fb-a1f3-88d4bcc20aa1":{"version":"3.7.3","title":"Bokeh Application","roots":[{"type":"object","name":"Figure","id":"p1003","attributes":{"height":800,"sizing_mode":"stretch_width","x_range":{"type":"object","name":"DataRange1d","id":"p1004"},"y_range":{"type":"object","name":"DataRange1d","id":"p1005"},"x_scale":{"type":"object","name":"LinearScale","id":"p1013"},"y_scale":{"type":"object","name":"LinearScale","id":"p1014"},"title":{"type":"object","name":"Title","id":"p1006","attributes":{"text":"Click legend entry to toggle display of timeseries","text_font_size":"12pt"}},"renderers":[{"type":"object","name":"GlyphRenderer","id":"p1055","attributes":{"data_source":{"type":"object","name":"ColumnDataSource","id":"p1049","attributes":{"selected":{"type":"object","name":"Selection","id":"p1050","attributes":{"indices":[],"line_indices":[]}},"selection_policy":{"type":"object","name":"UnionRenderers","id":"p1051"},"data":{"type":"map","entries":[["x",{"type":"ndarray","array":{"type":"bytes","data":"AAAACroieUIAAOh4vSJ5QgAA0OfAInlCAAC4VsQieUIAAKDFxyJ5QgAAiDTLInlCAABwo84ieUIAAFgS0iJ5QgAAQIHVInlCAAAo8NgieUIAABBf3CJ5QgAA+M3fInlCAADgPOMieUIAAMir5iJ5QgAAsBrqInlCAACYie0ieUIAAID48CJ5QgAAaGf0InlCAABQ1vcieUIAADhF+yJ5QgAAILT+InlCAAAIIwIjeUIAAPCRBSN5QgAA2AAJI3lCAADAbwwjeUIAAKjeDyN5QgAAkE0TI3lCAAB4vBYjeUIAAGArGiN5QgAASJodI3lCAAAwCSEjeUIAABh4JCN5QgAAAOcnI3lCAADoVSsjeUIAANDELiN5QgAAuDMyI3lCAACgojUjeUIAAIgROSN5QgAAcIA8I3lCAABY7z8jeUIAAEBeQyN5QgAAKM1GI3lCAAAQPEojeUIAAPiqTSN5QgAA4BlRI3lCAADIiFQjeUIAALD3VyN5QgAAmGZbI3lCAACA1V4jeUIAAGhEYiN5QgAAULNlI3lCAAA4ImkjeUIAACCRbCN5QgAACABwI3lCAADwbnMjeUIAANjddiN5QgAAwEx6I3lCAACou30jeUIAAJAqgSN5QgAAeJmEI3lCAABgCIgjeUIAAEh3iyN5QgAAMOaOI3lCAAAYVZIjeUIAAADElSN5QgAA6DKZI3lCAADQoZwjeUIAALgQoCN5QgAAoH+jI3lCAACI7qYjeUIAAHBdqiN5QgAAWMytI3lCAABAO7EjeUIAACiqtCN5QgAAEBm4I3lCAAD4h7sjeUIAAOD2viN5QgAAyGXCI3lCAACw1MUjeUIAAJhDySN5QgAAgLLMI3lCAABoIdAjeUIAAFCQ0yN5QgAAOP/WI3lCAAAgbtojeUIAAAjd3SN5QgAA8EvhI3lCAADYuuQjeUIAAMAp6CN5QgAAqJjrI3lCAACQB+8jeUIAAHh28iN5QgAAYOX1I3lCAABIVPkjeUIAADDD/CN5QgAAGDIAJHlCAAAAoQMkeUIAAOgPByR5QgAA0H4KJHlCAAC47Q0keUIAAKBcESR5QgAAiMsUJHlCAABwOhgkeUIAAFipGyR5QgAAQBgfJHlCAAAohyIkeUIAABD2JSR5QgAA+GQpJHlCAADg0ywkeUIAAMhCMCR5QgAAsLEzJHlCAACYIDckeUIAAICPOiR5QgAAaP49JHlCAABQbUEkeUIAADjcRCR5QgAAIEtIJHlCAAAIukskeUIAAPAoTyR5QgAA2JdSJHlCAADABlYkeUI="},"shape":[121],"dtype":"float64","order":"little"}],["y",{"type":"ndarray","array":{"type":"bytes","data":"BQCPQ3F6iUODNodD+KCIQwUAj0PBfpdDkyidQ339n0N9/Z9Dff2fQ2bSokNPp6VDT6elQ0+npUPbPKRDff2fQ339n0PbPKRD2zykQ9s8pEPbPKRDT6elQyh3ykOJSd5DdbHwQ7QfEUSweTlE5PVSRCE+Y0SwZnFE2XyARH7Qi0QkJJdELB2iROebqkSogK5EAVq3RHTxzEQU39xEowfrRLBm8URnf/5EdCQDRXJxBUXN/QtFnfQTRfbNHEXnmypFX5k7Rdz8R0WOr1lFqwB2Ra7Zg0UHs4xFtB+RRdiplEXpbpZFYIyVRcbkkkW0H5FFftCLRdJjh0UUMoFFqwB2RflNZEVHm1JFlehARRiFNEV4lyRFemoQRT6P/0Q7/O9ERcjmRAIa20RMAc5EeVfIRPMnxURfmbtEV6CwRCwdokRe2ZdEP7WPRDe8hERr5XlEdbFwRHIeYURvi1FEneFLRJpOPERcBixEFfIkRKCHI0TxZyFEH74bRCmKEkQyVglE1BYFRI9v/UNFyOZDiUneQxTf3EOgdNtDKwraQysK2kMrCtpDtp/YQ7af2EM/osdD3s+zQzl8qEPEEadDxBGnQ8QRp0M5fKhDOXyoQzl8qEM5fKhDxBGnQ8QRp0PEEadDxBGnQw=="},"shape":[121],"dtype":"float32","order":"little"}]]}}},"view":{"type":"object","name":"CDSView","id":"p1056","attributes":{"filter":{"type":"object","name":"AllIndices","id":"p1057"}}},"glyph":{"type":"object","name":"Line","id":"p1052","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#0072B2"}},"nonselection_glyph":{"type":"object","name":"Line","id":"p1053","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#0072B2","line_alpha":0.1}},"muted_glyph":{"type":"object","name":"Line","id":"p1054","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#0072B2","line_alpha":0.2}}}}],"toolbar":{"type":"object","name":"Toolbar","id":"p1012","attributes":{"tools":[{"type":"object","name":"WheelZoomTool","id":"p1039","attributes":{"dimensions":"width","renderers":"auto"}},{"type":"object","name":"BoxZoomTool","id":"p1040","attributes":{"dimensions":"both","overlay":{"type":"object","name":"BoxAnnotation","id":"p1041","attributes":{"syncable":false,"line_color":"black","line_alpha":1.0,"line_width":2,"line_dash":[4,4],"fill_color":"lightgrey","fill_alpha":0.5,"level":"overlay","visible":false,"left":{"type":"number","value":"nan"},"right":{"type":"number","value":"nan"},"top":{"type":"number","value":"nan"},"bottom":{"type":"number","value":"nan"},"left_units":"canvas","right_units":"canvas","top_units":"canvas","bottom_units":"canvas","handles":{"type":"object","name":"BoxInteractionHandles","id":"p1047","attributes":{"all":{"type":"object","name":"AreaVisuals","id":"p1046","attributes":{"fill_color":"white","hover_fill_color":"lightgray"}}}}}}}},{"type":"object","name":"ResetTool","id":"p1048"}],"autohide":true}},"left":[{"type":"object","name":"LinearAxis","id":"p1034","attributes":{"ticker":{"type":"object","name":"BasicTicker","id":"p1035","attributes":{"mantissas":[1,2,5]}},"formatter":{"type":"object","name":"BasicTickFormatter","id":"p1036"},"axis_label":"streamflow_hourly_inst [m^3/s]","axis_label_text_font_style":"bold","major_label_policy":{"type":"object","name":"AllLabels","id":"p1037"}}}],"below":[{"type":"object","name":"DatetimeAxis","id":"p1015","attributes":{"ticker":{"type":"object","name":"DatetimeTicker","id":"p1016","attributes":{"num_minor_ticks":5,"tickers":[{"type":"object","name":"AdaptiveTicker","id":"p1017","attributes":{"num_minor_ticks":0,"mantissas":[1,2,5],"max_interval":500.0}},{"type":"object","name":"AdaptiveTicker","id":"p1018","attributes":{"num_minor_ticks":0,"base":60,"mantissas":[1,2,5,10,15,20,30],"min_interval":1000.0,"max_interval":1800000.0}},{"type":"object","name":"AdaptiveTicker","id":"p1019","attributes":{"num_minor_ticks":0,"base":24,"mantissas":[1,2,4,6,8,12],"min_interval":3600000.0,"max_interval":43200000.0}},{"type":"object","name":"DaysTicker","id":"p1020","attributes":{"days":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]}},{"type":"object","name":"DaysTicker","id":"p1021","attributes":{"days":[1,4,7,10,13,16,19,22,25,28]}},{"type":"object","name":"DaysTicker","id":"p1022","attributes":{"days":[1,8,15,22]}},{"type":"object","name":"DaysTicker","id":"p1023","attributes":{"days":[1,15]}},{"type":"object","name":"MonthsTicker","id":"p1024","attributes":{"months":[0,1,2,3,4,5,6,7,8,9,10,11]}},{"type":"object","name":"MonthsTicker","id":"p1025","attributes":{"months":[0,2,4,6,8,10]}},{"type":"object","name":"MonthsTicker","id":"p1026","attributes":{"months":[0,4,8]}},{"type":"object","name":"MonthsTicker","id":"p1027","attributes":{"months":[0,6]}},{"type":"object","name":"YearsTicker","id":"p1028"}]}},"formatter":{"type":"object","name":"DatetimeTickFormatter","id":"p1031","attributes":{"seconds":"%T","minsec":"%T","minutes":"%H:%M","hours":"%H:%M","days":"%b %d","months":"%b %Y","strip_leading_zeros":["microseconds","milliseconds","seconds"],"boundary_scaling":false,"context":{"type":"object","name":"DatetimeTickFormatter","id":"p1030","attributes":{"microseconds":"%T","milliseconds":"%T","seconds":"%b %d, %Y","minsec":"%b %d, %Y","minutes":"%b %d, %Y","hourmin":"%b %d, %Y","hours":"%b %d, %Y","days":"%Y","months":"","years":"","boundary_scaling":false,"hide_repeats":true,"context":{"type":"object","name":"DatetimeTickFormatter","id":"p1029","attributes":{"microseconds":"%b %d, %Y","milliseconds":"%b %d, %Y","seconds":"","minsec":"","minutes":"","hourmin":"","hours":"","days":"","months":"","years":"","boundary_scaling":false,"hide_repeats":true}},"context_which":"all"}},"context_which":"all"}},"axis_label":"Datetime","axis_label_text_font_style":"bold","major_label_orientation":0.7853981633974483,"major_label_policy":{"type":"object","name":"AllLabels","id":"p1032"}}}],"center":[{"type":"object","name":"Grid","id":"p1033","attributes":{"axis":{"id":"p1015"}}},{"type":"object","name":"Grid","id":"p1038","attributes":{"dimension":1,"axis":{"id":"p1034"}}},{"type":"object","name":"Legend","id":"p1058","attributes":{"border_line_color":"black","border_line_alpha":1.0,"background_fill_color":"white","background_fill_alpha":1.0,"click_policy":"hide","items":[{"type":"object","name":"LegendItem","id":"p1059","attributes":{"label":{"type":"value","value":"usgs_observations - usgs-03171000"},"renderers":[{"id":"p1055"}]}}]}}]}}]}};
+  const render_items = [{"docid":"7b3ac7e3-786c-42fb-a1f3-88d4bcc20aa1","roots":{"p1003":"a951f8c8-4c5d-4bfa-9429-edb9bf267228"},"root_ids":["p1003"]}];
+  void root.Bokeh.embed.embed_items_notebook(docs_json, render_items);
+  }
+  if (root.Bokeh !== undefined) {
+    embed_document(root);
+  } else {
+    let attempts = 0;
+    const timer = setInterval(function(root) {
+      if (root.Bokeh !== undefined) {
+        clearInterval(timer);
+        embed_document(root);
+      } else {
+        attempts++;
+        if (attempts > 100) {
+          clearInterval(timer);
+          console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing");
+        }
+      }
+    }, 10, root)
+  }
+})(window);</script></div>
+</div>
+<section id="appending-upserting-and-overwriting-data">
+<h4>Appending, Upserting, and Overwriting data<a class="headerlink" href="#appending-upserting-and-overwriting-data" title="Link to this heading">#</a></h4>
+<p>Note that the fetching methods allow you to add new data to an existing table (<code class="docutils literal notranslate"><span class="pre">append</span></code>, the default) or replace existing data with new values while adding additional data (<code class="docutils literal notranslate"><span class="pre">upsert</span></code>). These are available through the <code class="docutils literal notranslate"><span class="pre">write_mode</span></code> argument. Additionally, when <code class="docutils literal notranslate"><span class="pre">write_mode=&quot;overwrite&quot;</span></code>, any existing partitions receiving new data will be overwritten.</p>
+<p>ex:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">fetch</span><span class="o">.</span><span class="n">usgs_streamflow</span><span class="p">(</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">end_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+    <span class="n">write_mode</span><span class="o">=</span><span class="s2">&quot;append&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="fetching-nwm-streamflow-data">
+<h3>Fetching NWM streamflow data<a class="headerlink" href="#fetching-nwm-streamflow-data" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">ev.fetch.nwm_operational_points()</span></code> is a method that fetches near real-time NWM point data (e.g., streamflow) from Google Cloud Storage. This method fetches data for the secondary location IDs listed in the <code class="docutils literal notranslate"><span class="pre">location_crosswalks</span></code> table, and automatically loads the time series into the <code class="docutils literal notranslate"><span class="pre">secondary_timeseries</span></code> Evaluation table.</p>
+<p>There are several required arguments to define when using the method, including the NWM configuration, NWM variable name, start date, number of ingest days, and others. Several optional arguments are also available.</p>
+<p>We’ll now fetch streamflow forecasts for the NWM location corresponding to the USGS gage.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The tools for fetching NWM data in TEEHR can take advantage of <code class="docutils literal notranslate"><span class="pre">Dask</span></code>. Start a Dask cluster for improved performance when fetching NWM data if you have <a class="reference external" href="https://distributed.dask.org/en/latest/install.html">Dask.Distributed installed</a>!</p>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Convert this to a code cell to run locally</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dask.distributed</span><span class="w"> </span><span class="kn">import</span> <span class="n">Client</span>
+<span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Convert this to a code cell to run locally</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">fetch</span><span class="o">.</span><span class="n">nwm_operational_points</span><span class="p">(</span>
+    <span class="n">nwm_configuration</span><span class="o">=</span><span class="s2">&quot;medium_range_mem1&quot;</span><span class="p">,</span>
+    <span class="n">output_type</span><span class="o">=</span><span class="s2">&quot;channel_rt_1&quot;</span><span class="p">,</span>
+    <span class="n">variable_name</span><span class="o">=</span><span class="s2">&quot;streamflow&quot;</span><span class="p">,</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">26</span><span class="p">),</span>
+    <span class="n">end_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">26</span><span class="p">),</span>
+    <span class="n">nwm_version</span><span class="o">=</span><span class="s2">&quot;nwm30&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Here we are fetching NWM version 3.0 Medium Range streamflow forecast, ensemble member 1, for the same time period as the USGS data.</p>
+<p>A list of available NWM configurations for point data is shown below. Appropriate values for the <code class="docutils literal notranslate"><span class="pre">output_type</span></code> and <code class="docutils literal notranslate"><span class="pre">variable_name</span></code> arguments depend on the specified <code class="docutils literal notranslate"><span class="pre">nwm_configuration</span></code> value.</p>
+<p>More information on NWM configurations can be found here: <a class="reference external" href="https://water.noaa.gov/about/nwm">https://water.noaa.gov/about/nwm</a></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">teehr.models.fetching.nwm30_point</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConfigurationsEnum</span>
+<span class="nb">list</span><span class="p">(</span><span class="n">ConfigurationsEnum</span><span class="o">.</span><span class="n">__members__</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;analysis_assim&#39;,
+ &#39;analysis_assim_no_da&#39;,
+ &#39;analysis_assim_extend&#39;,
+ &#39;analysis_assim_extend_no_da&#39;,
+ &#39;analysis_assim_long&#39;,
+ &#39;analysis_assim_long_no_da&#39;,
+ &#39;analysis_assim_hawaii&#39;,
+ &#39;analysis_assim_hawaii_no_da&#39;,
+ &#39;analysis_assim_puertorico&#39;,
+ &#39;analysis_assim_puertorico_no_da&#39;,
+ &#39;analysis_assim_alaska&#39;,
+ &#39;analysis_assim_alaska_no_da&#39;,
+ &#39;analysis_assim_extend_alaska&#39;,
+ &#39;analysis_assim_extend_alaska_no_da&#39;,
+ &#39;short_range&#39;,
+ &#39;short_range_hawaii&#39;,
+ &#39;short_range_puertorico&#39;,
+ &#39;short_range_hawaii_no_da&#39;,
+ &#39;short_range_puertorico_no_da&#39;,
+ &#39;short_range_alaska&#39;,
+ &#39;medium_range_mem1&#39;,
+ &#39;medium_range_mem2&#39;,
+ &#39;medium_range_mem3&#39;,
+ &#39;medium_range_mem4&#39;,
+ &#39;medium_range_mem5&#39;,
+ &#39;medium_range_mem6&#39;,
+ &#39;medium_range_mem7&#39;,
+ &#39;medium_range_no_da&#39;,
+ &#39;medium_range_alaska_mem1&#39;,
+ &#39;medium_range_alaska_mem2&#39;,
+ &#39;medium_range_alaska_mem3&#39;,
+ &#39;medium_range_alaska_mem4&#39;,
+ &#39;medium_range_alaska_mem5&#39;,
+ &#39;medium_range_alaska_mem6&#39;,
+ &#39;medium_range_alaska_no_da&#39;,
+ &#39;medium_range_blend&#39;,
+ &#39;medium_range_blend_alaska&#39;,
+ &#39;long_range_mem1&#39;,
+ &#39;long_range_mem2&#39;,
+ &#39;long_range_mem3&#39;,
+ &#39;long_range_mem4&#39;]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">secondary_timeseries</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+<span class="n">df</span><span class="o">.</span><span class="n">teehr</span><span class="o">.</span><span class="n">timeseries_plot</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html">
+  <div id="f7ad6a07-bf27-47a2-81a8-7fe36d583054" data-root-id="p1062" style="display: contents;"></div>
+</div><script type="application/javascript">(function(root) {
+  function embed_document(root) {
+  const docs_json = {"49c9d198-f53e-40d5-9feb-4a491871cd35":{"version":"3.7.3","title":"Bokeh Application","roots":[{"type":"object","name":"Figure","id":"p1062","attributes":{"height":800,"sizing_mode":"stretch_width","x_range":{"type":"object","name":"DataRange1d","id":"p1063"},"y_range":{"type":"object","name":"DataRange1d","id":"p1064"},"x_scale":{"type":"object","name":"LinearScale","id":"p1072"},"y_scale":{"type":"object","name":"LinearScale","id":"p1073"},"title":{"type":"object","name":"Title","id":"p1065","attributes":{"text":"Click legend entry to toggle display of timeseries","text_font_size":"12pt"}},"renderers":[{"type":"object","name":"GlyphRenderer","id":"p1114","attributes":{"data_source":{"type":"object","name":"ColumnDataSource","id":"p1108","attributes":{"selected":{"type":"object","name":"Selection","id":"p1109","attributes":{"indices":[],"line_indices":[]}},"selection_policy":{"type":"object","name":"UnionRenderers","id":"p1110"},"data":{"type":"map","entries":[["x",{"type":"ndarray","array":{"type":"bytes","data":"AADIq+YieUIAALAa6iJ5QgAAmIntInlCAACA+PAieUIAAGhn9CJ5QgAAUNb3InlCAAA4RfsieUIAACC0/iJ5QgAACCMCI3lCAADwkQUjeUIAANgACSN5QgAAwG8MI3lCAACo3g8jeUIAAJBNEyN5QgAAeLwWI3lCAABgKxojeUIAAEiaHSN5QgAAMAkhI3lCAAAYeCQjeUIAAADnJyN5QgAA6FUrI3lCAADQxC4jeUIAALgzMiN5QgAAoKI1I3lCAACIETkjeUIAAHCAPCN5QgAAWO8/I3lCAABAXkMjeUIAACjNRiN5QgAAEDxKI3lCAAD4qk0jeUIAAOAZUSN5QgAAyIhUI3lCAACw91cjeUIAAJhmWyN5QgAAgNVeI3lCAABoRGIjeUIAAFCzZSN5QgAAOCJpI3lCAAAgkWwjeUIAAAgAcCN5QgAA8G5zI3lCAADY3XYjeUIAAMBMeiN5QgAAqLt9I3lCAACQKoEjeUIAAHiZhCN5QgAAYAiII3lCAABId4sjeUIAADDmjiN5QgAAGFWSI3lCAAAAxJUjeUIAAOgymSN5QgAA0KGcI3lCAAC4EKAjeUIAAKB/oyN5QgAAiO6mI3lCAABwXaojeUIAAFjMrSN5QgAAQDuxI3lCAAAoqrQjeUIAABAZuCN5QgAA+Ie7I3lCAADg9r4jeUIAAMhlwiN5QgAAsNTFI3lCAACYQ8kjeUIAAICyzCN5QgAAaCHQI3lCAABQkNMjeUIAADj/1iN5QgAAIG7aI3lCAAAI3d0jeUIAAPBL4SN5QgAA2LrkI3lCAADAKegjeUIAAKiY6yN5QgAAkAfvI3lCAAB4dvIjeUIAAGDl9SN5QgAASFT5I3lCAAAww/wjeUIAABgyACR5QgAAAKEDJHlCAADoDwckeUIAANB+CiR5QgAAuO0NJHlCAACgXBEkeUIAAIjLFCR5QgAAcDoYJHlCAABYqRskeUIAAEAYHyR5QgAAKIciJHlCAAAQ9iUkeUIAAPhkKSR5QgAA4NMsJHlCAADIQjAkeUIAALCxMyR5QgAAmCA3JHlCAACAjzokeUIAAGj+PSR5QgAAUG1BJHlCAAA43EQkeUIAACBLSCR5QgAACLpLJHlCAADwKE8keUIAANiXUiR5QgAAwAZWJHlCAACodVkkeUIAAJDkXCR5QgAAeFNgJHlCAABgwmMkeUIAAEgxZyR5QgAAMKBqJHlCAAAYD24keUIAAAB+cSR5QgAA6Ox0JHlCAADQW3gkeUIAALjKeyR5QgAAoDl/JHlCAACIqIIkeUIAAHAXhiR5QgAAWIaJJHlCAABA9YwkeUIAAChkkCR5QgAAENOTJHlCAAD4QZckeUIAAOCwmiR5QgAAyB+eJHlCAACwjqEkeUIAAJj9pCR5QgAAgGyoJHlCAABo26skeUIAAFBKryR5QgAAOLmyJHlCAAAgKLYkeUIAAAiXuSR5QgAA8AW9JHlCAADYdMAkeUIAAMDjwyR5QgAAqFLHJHlCAACQwcokeUIAAHgwziR5QgAAYJ/RJHlCAABIDtUkeUIAADB92CR5QgAAGOzbJHlCAAAAW98keUIAAOjJ4iR5QgAA0DjmJHlCAAC4p+kkeUIAAKAW7SR5QgAAiIXwJHlCAABw9PMkeUIAAFhj9yR5QgAAQNL6JHlCAAAoQf4keUIAABCwASV5QgAA+B4FJXlCAADgjQgleUIAAMj8CyV5QgAAsGsPJXlCAACY2hIleUIAAIBJFiV5QgAAaLgZJXlCAABQJx0leUIAADiWICV5QgAAIAUkJXlCAAAIdCcleUIAAPDiKiV5QgAA2FEuJXlCAADAwDEleUIAAKgvNSV5QgAAkJ44JXlCAAB4DTwleUIAAGB8PyV5QgAASOtCJXlCAAAwWkYleUIAABjJSSV5QgAAADhNJXlCAADoplAleUIAANAVVCV5QgAAuIRXJXlCAACg81oleUIAAIhiXiV5QgAAcNFhJXlCAABYQGUleUIAAECvaCV5QgAAKB5sJXlCAAAQjW8leUIAAPj7ciV5QgAA4Gp2JXlCAADI2XkleUIAALBIfSV5QgAAmLeAJXlCAACAJoQleUIAAGiVhyV5QgAAUASLJXlCAAA4c44leUIAACDikSV5QgAACFGVJXlCAADwv5gleUIAANgunCV5QgAAwJ2fJXlCAACoDKMleUIAAJB7piV5QgAAeOqpJXlCAABgWa0leUIAAEjIsCV5QgAAMDe0JXlCAAAYprcleUIAAAAVuyV5QgAA6IO+JXlCAADQ8sEleUIAALhhxSV5QgAAoNDIJXlCAACIP8wleUIAAHCuzyV5QgAAWB3TJXlCAABAjNYleUIAACj72SV5QgAAEGrdJXlCAAD42OAleUIAAOBH5CV5QgAAyLbnJXlCAACwJesleUIAAJiU7iV5QgAAgAPyJXlCAABocvUleUIAAFDh+CV5QgAAOFD8JXlCAAAgv/8leUIAAAguAyZ5QgAA8JwGJnlCAADYCwomeUIAAMB6DSZ5QgAAqOkQJnlCAACQWBQmeUIAAHjHFyZ5QgAAYDYbJnlC"},"shape":[240],"dtype":"float64","order":"little"}],["y",{"type":"ndarray","array":{"type":"bytes","data":"R4GgQzNTmUNw3Y9DH2WEQ48Cb0OuB1RDZqY5Qz2KIUOuhwxDuJ71QlwP2UIAgMJCUjixQtejpEKk8JpCHwWUQpmZj0IUroxCCleKQlI4iULheohCZmaIQs3MiELXo4lCuB6MQs3MjUJcD5FChWuaQtejoEL2qKNC16OlQpmZp0Jcj6pCzcyuQnsUtEK4HrpCFK7AQilcx0K4ns1CzMzSQj2K1kLMzNhCrsfZQsL12ULC9dlCwnXaQsJ13EI9iuFChevrQpkZ/UJmJgpDClcYQwCAJ0NHYTZDuB5FQ3sUVUMKF2hDe9R/Q6SwjkNSmKBDwnW1Q6TQzEN79OVD1wMARPYYDURm1hlEZvYlRMJVMUSFCzxEZoZGROuxUUTXw15Ee5RuRK6HgERHmYpEj8qURBR+nkT2UKdEXA+vRNertUSFM7tEHq2/RHssw0TXy8VEpKDHRFy/yESPOslEHiXJRB6NyETrgcdEzRTGROtRxEQpRMJErve/RBR2vURcx7pER/G3RHD9tETr8bFE19OuRACoq0ThcqhERzmlRBT+oUSZwZ5EAIibRDNTmESPIpVEmfmRRHvcjkSFy4tEZsaIRLjOhUTN5IJE9giARK53ekSF+3REcJ1vRHBdakSFO2VEUjhgRNdTW0Rcj1ZECudRRIVbTUQU7khEzZxERD1qQETrUTxEwlU4RDNzNETNrDBEKfwsRMJlKUQ96iVE14MiRB41H0S4/htEKdwYREfRFUQ92hJECvcPRAonDUThagpER8EHRJkpBUTXowJEuC4ARDOT+0M96vZDAGDyQ3v07UMepelDM3PlQ3Bd4UNHYd1DAIDZQ1K41UP1CNJDpHDOQ6TwykNmhsdDMzPEQ3v0wEP1yL1DM7O6Q1yvt0MAwLRDR+GxQ3sUr0OZWaxDpLCpQ8IVp0PNjKRD6xGiQ66nn0OFS51DcP2aQ3C9mEOFi5ZDZmaUQ1xPkkPXQ5BDH0WOQzNTjEPNbIpD65GIQ0fBhkNw/YRDj0KDQzOTgUOZ2X9DR6F8Q+F6eUP1aHZDZmZzQ8J1cEN7lG1DrsdqQ64HaEOZWWVD4bpiQ/UoYENmpl1DpDBbQz3KWEOkcFZD1yNUQ9fjUUOksE9DrodNQ4VrS0OZWUlDe1RHQ5lZRUP1aENDj4JBQ2amP0N71D1DzQw8Q1xPOkOZmThDFO42Qz1KNUOksDNDuB4yQ3uUMEN7FC9DmZktQ2YmLEPhuipDClcpQ1L4J0NHoSZD61ElQx4FJEMAwCJDj4IhQ65HIEN7FB9D"},"shape":[240],"dtype":"float32","order":"little"}]]}}},"view":{"type":"object","name":"CDSView","id":"p1115","attributes":{"filter":{"type":"object","name":"AllIndices","id":"p1116"}}},"glyph":{"type":"object","name":"Line","id":"p1111","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#0072B2"}},"nonselection_glyph":{"type":"object","name":"Line","id":"p1112","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#0072B2","line_alpha":0.1}},"muted_glyph":{"type":"object","name":"Line","id":"p1113","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#0072B2","line_alpha":0.2}}}},{"type":"object","name":"GlyphRenderer","id":"p1125","attributes":{"data_source":{"type":"object","name":"ColumnDataSource","id":"p1119","attributes":{"selected":{"type":"object","name":"Selection","id":"p1120","attributes":{"indices":[],"line_indices":[]}},"selection_policy":{"type":"object","name":"UnionRenderers","id":"p1121"},"data":{"type":"map","entries":[["x",{"type":"ndarray","array":{"type":"bytes","data":"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"},"shape":[240],"dtype":"float64","order":"little"}],["y",{"type":"ndarray","array":{"type":"bytes","data":"pFCJQ3v0gUNcj3FDPUpcQ1I4RUMKFy5D4ToYQwrXBEPXo+hCZmbNQo/Ct0LCdadC69GaQoXrkELC9YhC1yODQqNwfUKF63ZCMzNyQpmZbkJ7FGxCcD1qQo/CaEIUrmdCR+FmQilcZkL1KGZCexRmQnsUZkIpXGZCPQpnQo/CZkI9CmZCmZllQtejZUIpXGZCZmZoQtejcUIpXHNCcD1yQh6FcEIK125Co3BuQq5Hb0JwPXFCAAB0QqNwd0KuR3tC9Sh/QgpXgUIzs4JCXI+DQqTwg0Ip3INCpHCDQuvRgkKZGYJCZmaBQmbmgEIzs4BCHwWBQh8FgkIAAIRCj0KHQrgejEIK15JCzUybQnsUpUIzs69Cj0K6Qmbmw0IeBcxCKVzSQszM1kKFa9lC16PaQlyP2kLXo9lCZmbYQq7H10KZmdlCZubgQkdh8kKZWQlDuB4mQ8xMVEOFC4tD9Yi0Q6QQ40PhOglECscfRK5XNEQ9qkZEwsVWRI/SZERw/XBEo3B7RFIogkRS4IVEpPCIRKRoi0RwVY1EKcSORFLAj0QKV5BEj5KQROF6kERwFZBEmWmPRLiGjkQ9co1E9jCMRKTIikQKP4lEpJiHRD3ahUQACIREZiaCRBQ2gER7dHxE4Wp4RApXdESFO3BEKRxsRIX7Z0Qp3GNEuL5fRD2qW0TMnFdEmZlTRI+iT0RSuEtEKdxHRBQORES4TkBER6E8REcBOUQzczVEZvYxROGKLkSkMCtEmeknRI+yJEQpjCFErnceRMJ1G0QzgxhEpKAVRADQEkRcDxBEuF4NRHC9CkQpLAhEPaoFRAo3A0RH0QBECvf8Qx5l+EPM7PNDM5PvQ+tR60NmJudDChfjQ3Ad30O4PttDe3TXQ4/C00OuJ9BDj6LMQzMzyUPC1cVDXI/CQ5lZv0OZObxDzSy5Q+sxtkOuR7NDXG+wQ66nrUPr8apDPUqoQzOzpUOFK6NDM7OgQ/ZInkPN7JtDcJ2ZQ3Bdl0P2KJVDRwGTQ2bmkEMK145De9SMQyncikNc74hDFA6HQwo3hUM9aoNDZqaBQyncf0NwfXxDFC55QzPzdUOux3JDFK5vQ9ejbEOFq2lDj8JmQ/XoY0O4HmFDR2FeQ8K1W0N7FFlDj4JWQ3D9U0MehVFDChdPQ1K4TEO4XkpDChdIQ5nZRUPXo0NDcH1BQylcP0OuRz1DAEA7Q49COUOuRzdDKVw1Q1J4M0O4njFDzcwvQ48CLkMAQCxDHoUqQ3vUKEP2KCdDHoUlQ/boI0N7VCJD"},"shape":[240],"dtype":"float32","order":"little"}]]}}},"view":{"type":"object","name":"CDSView","id":"p1126","attributes":{"filter":{"type":"object","name":"AllIndices","id":"p1127"}}},"glyph":{"type":"object","name":"Line","id":"p1122","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#E69F00"}},"nonselection_glyph":{"type":"object","name":"Line","id":"p1123","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#E69F00","line_alpha":0.1}},"muted_glyph":{"type":"object","name":"Line","id":"p1124","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#E69F00","line_alpha":0.2}}}},{"type":"object","name":"GlyphRenderer","id":"p1135","attributes":{"data_source":{"type":"object","name":"ColumnDataSource","id":"p1129","attributes":{"selected":{"type":"object","name":"Selection","id":"p1130","attributes":{"indices":[],"line_indices":[]}},"selection_policy":{"type":"object","name":"UnionRenderers","id":"p1131"},"data":{"type":"map","entries":[["x",{"type":"ndarray","array":{"type":"bytes","data":"AABYEtIieUIAAECB1SJ5QgAAKPDYInlCAAAQX9wieUIAAPjN3yJ5QgAA4DzjInlCAADIq+YieUIAALAa6iJ5QgAAmIntInlCAACA+PAieUIAAGhn9CJ5QgAAUNb3InlCAAA4RfsieUIAACC0/iJ5QgAACCMCI3lCAADwkQUjeUIAANgACSN5QgAAwG8MI3lCAACo3g8jeUIAAJBNEyN5QgAAeLwWI3lCAABgKxojeUIAAEiaHSN5QgAAMAkhI3lCAAAYeCQjeUIAAADnJyN5QgAA6FUrI3lCAADQxC4jeUIAALgzMiN5QgAAoKI1I3lCAACIETkjeUIAAHCAPCN5QgAAWO8/I3lCAABAXkMjeUIAACjNRiN5QgAAEDxKI3lCAAD4qk0jeUIAAOAZUSN5QgAAyIhUI3lCAACw91cjeUIAAJhmWyN5QgAAgNVeI3lCAABoRGIjeUIAAFCzZSN5QgAAOCJpI3lCAAAgkWwjeUIAAAgAcCN5QgAA8G5zI3lCAADY3XYjeUIAAMBMeiN5QgAAqLt9I3lCAACQKoEjeUIAAHiZhCN5QgAAYAiII3lCAABId4sjeUIAADDmjiN5QgAAGFWSI3lCAAAAxJUjeUIAAOgymSN5QgAA0KGcI3lCAAC4EKAjeUIAAKB/oyN5QgAAiO6mI3lCAABwXaojeUIAAFjMrSN5QgAAQDuxI3lCAAAoqrQjeUIAABAZuCN5QgAA+Ie7I3lCAADg9r4jeUIAAMhlwiN5QgAAsNTFI3lCAACYQ8kjeUIAAICyzCN5QgAAaCHQI3lCAABQkNMjeUIAADj/1iN5QgAAIG7aI3lCAAAI3d0jeUIAAPBL4SN5QgAA2LrkI3lCAADAKegjeUIAAKiY6yN5QgAAkAfvI3lCAAB4dvIjeUIAAGDl9SN5QgAASFT5I3lCAAAww/wjeUIAABgyACR5QgAAAKEDJHlCAADoDwckeUIAANB+CiR5QgAAuO0NJHlCAACgXBEkeUIAAIjLFCR5QgAAcDoYJHlCAABYqRskeUIAAEAYHyR5QgAAKIciJHlCAAAQ9iUkeUIAAPhkKSR5QgAA4NMsJHlCAADIQjAkeUIAALCxMyR5QgAAmCA3JHlCAACAjzokeUIAAGj+PSR5QgAAUG1BJHlCAAA43EQkeUIAACBLSCR5QgAACLpLJHlCAADwKE8keUIAANiXUiR5QgAAwAZWJHlCAACodVkkeUIAAJDkXCR5QgAAeFNgJHlCAABgwmMkeUIAAEgxZyR5QgAAMKBqJHlCAAAYD24keUIAAAB+cSR5QgAA6Ox0JHlCAADQW3gkeUIAALjKeyR5QgAAoDl/JHlCAACIqIIkeUIAAHAXhiR5QgAAWIaJJHlCAABA9YwkeUIAAChkkCR5QgAAENOTJHlCAAD4QZckeUIAAOCwmiR5QgAAyB+eJHlCAACwjqEkeUIAAJj9pCR5QgAAgGyoJHlCAABo26skeUIAAFBKryR5QgAAOLmyJHlCAAAgKLYkeUIAAAiXuSR5QgAA8AW9JHlCAADYdMAkeUIAAMDjwyR5QgAAqFLHJHlCAACQwcokeUIAAHgwziR5QgAAYJ/RJHlCAABIDtUkeUIAADB92CR5QgAAGOzbJHlCAAAAW98keUIAAOjJ4iR5QgAA0DjmJHlCAAC4p+kkeUIAAKAW7SR5QgAAiIXwJHlCAABw9PMkeUIAAFhj9yR5QgAAQNL6JHlCAAAoQf4keUIAABCwASV5QgAA+B4FJXlCAADgjQgleUIAAMj8CyV5QgAAsGsPJXlCAACY2hIleUIAAIBJFiV5QgAAaLgZJXlCAABQJx0leUIAADiWICV5QgAAIAUkJXlCAAAIdCcleUIAAPDiKiV5QgAA2FEuJXlCAADAwDEleUIAAKgvNSV5QgAAkJ44JXlCAAB4DTwleUIAAGB8PyV5QgAASOtCJXlCAAAwWkYleUIAABjJSSV5QgAAADhNJXlCAADoplAleUIAANAVVCV5QgAAuIRXJXlCAACg81oleUIAAIhiXiV5QgAAcNFhJXlCAABYQGUleUIAAECvaCV5QgAAKB5sJXlCAAAQjW8leUIAAPj7ciV5QgAA4Gp2JXlCAADI2XkleUIAALBIfSV5QgAAmLeAJXlCAACAJoQleUIAAGiVhyV5QgAAUASLJXlCAAA4c44leUIAACDikSV5QgAACFGVJXlCAADwv5gleUIAANgunCV5QgAAwJ2fJXlCAACoDKMleUIAAJB7piV5QgAAeOqpJXlCAABgWa0leUIAAEjIsCV5QgAAMDe0JXlCAAAYprcleUIAAAAVuyV5QgAA6IO+JXlCAADQ8sEleUIAALhhxSV5QgAAoNDIJXlCAACIP8wleUIAAHCuzyV5QgAAWB3TJXlCAABAjNYleUIAACj72SV5QgAAEGrdJXlCAAD42OAleUIAAOBH5CV5QgAAyLbnJXlCAACwJesleUIAAJiU7iV5QgAAgAPyJXlCAABocvUleUIAAFDh+CV5QgAAOFD8JXlCAAAgv/8leUIAAAguAyZ5QgAA8JwGJnlC"},"shape":[240],"dtype":"float64","order":"little"}],["y",{"type":"ndarray","array":{"type":"bytes","data":"PWqYQ0fBkUMp/IhDe5R8QxRuZEPNTEtDXI8yQ5mZG0PCNQdDhWvsQszM0ELr0bpC69GpQhQunUI9ipNCMzOMQgrXhkLC9YJCzUyAQtejfUKuR3tCo3B6QhSuekJSuHpCCtd7QuF6e0LMzHpCHoV6QjMze0LXo31CcD2BQq5Hh0KPQotCcL2MQgrXjUJH4Y5C61GQQsJ1kkIULpVC61GYQuvRm0KkcJ9CKdyiQnC9pUJm5qdCMzOpQnC9qUIUrqlCrkepQuvRqEJ7lKhCKdyoQuH6qUKFa6xCzcywQq7Ht0I9isFCUrjNQutR20IAAOlC4Xr1Qo/C/0IzswNDhSsGQx+FB0M9SghDM7MJQ9djDUP26BVDuN4lQxTuP0MeBWdD9kiPQxRutUOuZ+dDHyUSRD0KNEQKl1ZE9Wh3RLiOikT2mJdEM9OiRJlZrETXU7RE4eq6ROtBwERSeMRE16vHRPX4yURHectEPULMRPVozET1AMxEexzLRDPLyUTXG8hEjxrGRCnUw0Q9UsFEuJ6+RJnBu0ThwrhER6m1ROF6skR7PK9E4fKrRPagqERwTaVEPfqhROGqnkS4XptE6xmYRCnclERHqZFE64GORLhmi0T2WIhEmVmFRPZogkQUDn9E4Wp5RHvkc0QpfG5E1zNpRMwMZETXA19EUhhaRMxMVUQAoFBE6xFMRKSgR0ThSkNE1xM/RFL4OkSu9zZERxEzRMJFL0TXkytE4fonRD16JETrESFEAMAdRB6FGkQAYBdEpFAURMJVEUS4bg5EKZwLRM3cCERcLwZEe5QDROEKAUQeJf1DwlX4Q66n80NSGO9DrqfqQ3tU5kNwHeJD1wPeQx4F2kNHIdZDwlXSQ9ejzkM9CstD9YjHQ3AdxEP1yMBDPYq9QwBgukM9SrdDrke0Q1JYsUMpfK5D67GrQ5n5qEPrUaZDmbmjQzMzoUPhup5DM1OcQ5n5mUNcr5dD63GVQ49Ck0MAIJFDPQqPQ0cBjUMfBYtDexSJQxQuh0N7VIVDH4WDQwDAgUNmBoBDhat8QylceUNHIXZDUvhyQ0fhb0Mp3GxD9ehpQx4FZ0MzM2RDpHBhQ3C9XkOZGVxDHoVZQ3D9VkMehVRDChdSQ1K4T0NmZk1DuB5LQ2bmSEPCtUZDe5REQ+F6QkMUbkBDhWs+QzNzPEMehTpDR6E4Qx7FNkMz8zRDUjgzQ4+CMUNczy9DhSsuQ1yPLENS+CpDe1QpQ+G6J0OFKyZDuJ4kQykcI0PXoyFDMzMgQ67HHkPXYx1D"},"shape":[240],"dtype":"float32","order":"little"}]]}}},"view":{"type":"object","name":"CDSView","id":"p1136","attributes":{"filter":{"type":"object","name":"AllIndices","id":"p1137"}}},"glyph":{"type":"object","name":"Line","id":"p1132","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#F0E442"}},"nonselection_glyph":{"type":"object","name":"Line","id":"p1133","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#F0E442","line_alpha":0.1}},"muted_glyph":{"type":"object","name":"Line","id":"p1134","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#F0E442","line_alpha":0.2}}}},{"type":"object","name":"GlyphRenderer","id":"p1145","attributes":{"data_source":{"type":"object","name":"ColumnDataSource","id":"p1139","attributes":{"selected":{"type":"object","name":"Selection","id":"p1140","attributes":{"indices":[],"line_indices":[]}},"selection_policy":{"type":"object","name":"UnionRenderers","id":"p1141"},"data":{"type":"map","entries":[["x",{"type":"ndarray","array":{"type":"bytes","data":"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"},"shape":[240],"dtype":"float64","order":"little"}],["y",{"type":"ndarray","array":{"type":"bytes","data":"whWaQxRukUNcr4ZDhat0Q4VrWkMpXEBDhSsoQ5kZE0MAQAFDcD3lQh6FzkJ7lL1CAACxQjMzqULXI6NChWufQo/CnUJm5p1CUjigQgrXo0IUrqlCmZmtQsL1sUKk8LVCUji6QjOzvkKZmcNCR+HIQsJ1zkKPQtRCFC7aQpkZ4ELr0eVCcD3rQsxM8EJcD/VC9aj5QutR/kLCtQFDH8UEQ9ejCEM9yg1DuB4VQ7ieH0OksC5DjwJEQ1xPYUOP4oNDXM+bQ3v0t0Ncb9dD61H5Qx91DkSk4CBEwrUzRJmpRkQKZ1lECrdrRHvUfUSkcIhEFH6TRMINoUTXI7FEuK7CRGYm1ERwTeREe2zyRKNY/kS4BgRFXM8HRaSkCkXhqgxFmfkNRYWnDkUzyw5FmXEORVKsDUWuhwxFXBMLRRReCUUKcwdFuFoFRUcdA0U9wgBFAKD8RPWY90SjePJEUkjtRAoP6ERm1uJE67HdRPWQ2ET1WNNE9TjORCk0yURwRcRECm+/RDOzukS4DrZEcIWxRJkRrUT2uKhEFH6kRApfoETXW5xE4XKYRBSmlEQp9JBEzVyNRADgiUR7fIZE6zGDRFIAgERwzXlEPcpzRHv0bUSFS2hEcM1iRD16XURcT1hEzExTRKRwTkQ9uklEridFRJm5QEThajxEzTw4REcxNERHQTBEAHAsROG6KETXIyVEe6QhRKRAHkQe9RpE68EXRK6nFEQzoxFE17MOROHaC0RmFglEwmUGRPbIA0S4PgFEhYv9Qym8+EMzE/RDZobvQykc60Pr0eZDj6LiQ+uR3kMAoNpDZsbWQ2YG00NHYc9DUtjLQ0dhyEMeBcVDR8HBQ6SQvkMKd7tDXG+4Q3B9tUNHobJDCtevQ7gerUNSeKpDj+KnQ7hepUOF66JD9oigQwo3nkMz85tDAMCZQ+Gal0PXg5VDKXyTQ0eBkUMzk49DM7ONQ7jei0NSGIpDuF6IQxSuhkP2CIVDFG6DQ3DdgUMKV4BDM7N9Qz3KekMz83dDhSt1Q8J1ckPMzG9DMzNtQ/WoakMULmhDj8JlQ9djY0MKF2FD69FeQ5mZXEMUblpDzExYQ+E6VkOkMFRDMzNSQwBAUEMKV05DwnVMQ0ehSkMK10hDexRHQ5lZRUP1qENDAABCQ7heQEMexT5DpDA9Q2amO0NHITpD16M4Q4UrN0PhujVDXE80Q4XrMkM9ijFDpDAwQyncLkM9ii1DAEAsQ1L4KkPCtSlDUngoQ3A9J0OuByZDe9QkQ2amI0PheiJD"},"shape":[240],"dtype":"float32","order":"little"}]]}}},"view":{"type":"object","name":"CDSView","id":"p1146","attributes":{"filter":{"type":"object","name":"AllIndices","id":"p1147"}}},"glyph":{"type":"object","name":"Line","id":"p1142","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#009E73"}},"nonselection_glyph":{"type":"object","name":"Line","id":"p1143","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#009E73","line_alpha":0.1}},"muted_glyph":{"type":"object","name":"Line","id":"p1144","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#009E73","line_alpha":0.2}}}}],"toolbar":{"type":"object","name":"Toolbar","id":"p1071","attributes":{"tools":[{"type":"object","name":"WheelZoomTool","id":"p1098","attributes":{"dimensions":"width","renderers":"auto"}},{"type":"object","name":"BoxZoomTool","id":"p1099","attributes":{"dimensions":"both","overlay":{"type":"object","name":"BoxAnnotation","id":"p1100","attributes":{"syncable":false,"line_color":"black","line_alpha":1.0,"line_width":2,"line_dash":[4,4],"fill_color":"lightgrey","fill_alpha":0.5,"level":"overlay","visible":false,"left":{"type":"number","value":"nan"},"right":{"type":"number","value":"nan"},"top":{"type":"number","value":"nan"},"bottom":{"type":"number","value":"nan"},"left_units":"canvas","right_units":"canvas","top_units":"canvas","bottom_units":"canvas","handles":{"type":"object","name":"BoxInteractionHandles","id":"p1106","attributes":{"all":{"type":"object","name":"AreaVisuals","id":"p1105","attributes":{"fill_color":"white","hover_fill_color":"lightgray"}}}}}}}},{"type":"object","name":"ResetTool","id":"p1107"}],"autohide":true}},"left":[{"type":"object","name":"LinearAxis","id":"p1093","attributes":{"ticker":{"type":"object","name":"BasicTicker","id":"p1094","attributes":{"mantissas":[1,2,5]}},"formatter":{"type":"object","name":"BasicTickFormatter","id":"p1095"},"axis_label":"streamflow_hourly_inst [m^3/s]","axis_label_text_font_style":"bold","major_label_policy":{"type":"object","name":"AllLabels","id":"p1096"}}}],"below":[{"type":"object","name":"DatetimeAxis","id":"p1074","attributes":{"ticker":{"type":"object","name":"DatetimeTicker","id":"p1075","attributes":{"num_minor_ticks":5,"tickers":[{"type":"object","name":"AdaptiveTicker","id":"p1076","attributes":{"num_minor_ticks":0,"mantissas":[1,2,5],"max_interval":500.0}},{"type":"object","name":"AdaptiveTicker","id":"p1077","attributes":{"num_minor_ticks":0,"base":60,"mantissas":[1,2,5,10,15,20,30],"min_interval":1000.0,"max_interval":1800000.0}},{"type":"object","name":"AdaptiveTicker","id":"p1078","attributes":{"num_minor_ticks":0,"base":24,"mantissas":[1,2,4,6,8,12],"min_interval":3600000.0,"max_interval":43200000.0}},{"type":"object","name":"DaysTicker","id":"p1079","attributes":{"days":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]}},{"type":"object","name":"DaysTicker","id":"p1080","attributes":{"days":[1,4,7,10,13,16,19,22,25,28]}},{"type":"object","name":"DaysTicker","id":"p1081","attributes":{"days":[1,8,15,22]}},{"type":"object","name":"DaysTicker","id":"p1082","attributes":{"days":[1,15]}},{"type":"object","name":"MonthsTicker","id":"p1083","attributes":{"months":[0,1,2,3,4,5,6,7,8,9,10,11]}},{"type":"object","name":"MonthsTicker","id":"p1084","attributes":{"months":[0,2,4,6,8,10]}},{"type":"object","name":"MonthsTicker","id":"p1085","attributes":{"months":[0,4,8]}},{"type":"object","name":"MonthsTicker","id":"p1086","attributes":{"months":[0,6]}},{"type":"object","name":"YearsTicker","id":"p1087"}]}},"formatter":{"type":"object","name":"DatetimeTickFormatter","id":"p1090","attributes":{"seconds":"%T","minsec":"%T","minutes":"%H:%M","hours":"%H:%M","days":"%b %d","months":"%b %Y","strip_leading_zeros":["microseconds","milliseconds","seconds"],"boundary_scaling":false,"context":{"type":"object","name":"DatetimeTickFormatter","id":"p1089","attributes":{"microseconds":"%T","milliseconds":"%T","seconds":"%b %d, %Y","minsec":"%b %d, %Y","minutes":"%b %d, %Y","hourmin":"%b %d, %Y","hours":"%b %d, %Y","days":"%Y","months":"","years":"","boundary_scaling":false,"hide_repeats":true,"context":{"type":"object","name":"DatetimeTickFormatter","id":"p1088","attributes":{"microseconds":"%b %d, %Y","milliseconds":"%b %d, %Y","seconds":"","minsec":"","minutes":"","hourmin":"","hours":"","days":"","months":"","years":"","boundary_scaling":false,"hide_repeats":true}},"context_which":"all"}},"context_which":"all"}},"axis_label":"Datetime","axis_label_text_font_style":"bold","major_label_orientation":0.7853981633974483,"major_label_policy":{"type":"object","name":"AllLabels","id":"p1091"}}}],"center":[{"type":"object","name":"Grid","id":"p1092","attributes":{"axis":{"id":"p1074"}}},{"type":"object","name":"Grid","id":"p1097","attributes":{"dimension":1,"axis":{"id":"p1093"}}},{"type":"object","name":"Legend","id":"p1117","attributes":{"border_line_color":"black","border_line_alpha":1.0,"background_fill_color":"white","background_fill_alpha":1.0,"click_policy":"hide","items":[{"type":"object","name":"LegendItem","id":"p1118","attributes":{"label":{"type":"value","value":"nwm30_medium_range - nwm30-6884666 - 2024-09-26 12:00:00 -                                   1"},"renderers":[{"id":"p1114"}]}},{"type":"object","name":"LegendItem","id":"p1128","attributes":{"label":{"type":"value","value":"nwm30_medium_range - nwm30-6884666 - 2024-09-26 00:00:00 -                                   1"},"renderers":[{"id":"p1125"}]}},{"type":"object","name":"LegendItem","id":"p1138","attributes":{"label":{"type":"value","value":"nwm30_medium_range - nwm30-6884666 - 2024-09-26 06:00:00 -                                   1"},"renderers":[{"id":"p1135"}]}},{"type":"object","name":"LegendItem","id":"p1148","attributes":{"label":{"type":"value","value":"nwm30_medium_range - nwm30-6884666 - 2024-09-26 18:00:00 -                                   1"},"renderers":[{"id":"p1145"}]}}]}}]}}]}};
+  const render_items = [{"docid":"49c9d198-f53e-40d5-9feb-4a491871cd35","roots":{"p1062":"f7ad6a07-bf27-47a2-81a8-7fe36d583054"},"root_ids":["p1062"]}];
+  void root.Bokeh.embed.embed_items_notebook(docs_json, render_items);
+  }
+  if (root.Bokeh !== undefined) {
+    embed_document(root);
+  } else {
+    let attempts = 0;
+    const timer = setInterval(function(root) {
+      if (root.Bokeh !== undefined) {
+        clearInterval(timer);
+        embed_document(root);
+      } else {
+        attempts++;
+        if (attempts > 100) {
+          clearInterval(timer);
+          console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing");
+        }
+      }
+    }, 10, root)
+  }
+})(window);</script></div>
+</div>
+<p>Now you can create the <code class="docutils literal notranslate"><span class="pre">joined_timeseries</span></code> table and calculate metrics comparing the NWM forecasts to the USGS observations.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries</span><span class="o">.</span><span class="n">create</span><span class="p">()</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+<span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>reference_time</th>
+      <th>value_time</th>
+      <th>primary_location_id</th>
+      <th>secondary_location_id</th>
+      <th>primary_value</th>
+      <th>secondary_value</th>
+      <th>unit_name</th>
+      <th>member</th>
+      <th>configuration_name</th>
+      <th>variable_name</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2024-09-26 00:00:00</td>
+      <td>2024-09-29 14:00:00</td>
+      <td>usgs-03171000</td>
+      <td>nwm30-6884666</td>
+      <td>838.178650</td>
+      <td>212.299988</td>
+      <td>m^3/s</td>
+      <td>1</td>
+      <td>nwm30_medium_range</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2024-09-26 06:00:00</td>
+      <td>2024-09-26 12:00:00</td>
+      <td>usgs-03171000</td>
+      <td>nwm30-6884666</td>
+      <td>331.307098</td>
+      <td>203.300003</td>
+      <td>m^3/s</td>
+      <td>1</td>
+      <td>nwm30_medium_range</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2024-09-26 00:00:00</td>
+      <td>2024-09-28 05:00:00</td>
+      <td>usgs-03171000</td>
+      <td>nwm30-6884666</td>
+      <td>4502.378418</td>
+      <td>65.970001</td>
+      <td>m^3/s</td>
+      <td>1</td>
+      <td>nwm30_medium_range</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2024-09-26 06:00:00</td>
+      <td>2024-09-26 23:00:00</td>
+      <td>usgs-03171000</td>
+      <td>nwm30-6884666</td>
+      <td>444.574493</td>
+      <td>67.419998</td>
+      <td>m^3/s</td>
+      <td>1</td>
+      <td>nwm30_medium_range</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2024-09-26 18:00:00</td>
+      <td>2024-09-27 15:00:00</td>
+      <td>usgs-03171000</td>
+      <td>nwm30-6884666</td>
+      <td>1880.238647</td>
+      <td>84.839996</td>
+      <td>m^3/s</td>
+      <td>1</td>
+      <td>nwm30_medium_range</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="additional-nwm-fetching-methods-in-teehr">
+<h3>Additional NWM fetching methods in TEEHR<a class="headerlink" href="#additional-nwm-fetching-methods-in-teehr" title="Link to this heading">#</a></h3>
+<section id="nwm-retrospective-point-data">
+<h4>NWM Retrospective Point Data<a class="headerlink" href="#nwm-retrospective-point-data" title="Link to this heading">#</a></h4>
+<p>NWM retrospective point data for versions 2.0, 2.1, and 3.0:</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../../api/generated/teehr.evaluation.fetch.Fetch.nwm_retrospective_points.html#module-teehr.evaluation.fetch.Fetch.nwm_retrospective_points" title="teehr.evaluation.fetch.Fetch.nwm_retrospective_points"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fetch.nwm_retrospective_points</span></code></a></p></td>
+<td><p>Fetch NWM retrospective point data and load into the TEEHR dataset.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="nwm-retrospective-and-forecast-gridded-data">
+<h4>NWM Retrospective and Forecast Gridded Data<a class="headerlink" href="#nwm-retrospective-and-forecast-gridded-data" title="Link to this heading">#</a></h4>
+<p>NWM gridded data can also be fetched in TEEHR. Gridded data is summarized to zones (polygons) as the zonal mean.</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="../../api/generated/teehr.evaluation.fetch.Fetch.nwm_operational_grids.html#module-teehr.evaluation.fetch.Fetch.nwm_operational_grids" title="teehr.evaluation.fetch.Fetch.nwm_operational_grids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fetch.nwm_operational_grids</span></code></a></p></td>
+<td><p>Fetch NWM operational gridded data, calculate zonal statistics (currently only mean is available) of selected variable for given zones, and load into the TEEHR dataset.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../../api/generated/teehr.evaluation.fetch.Fetch.nwm_retrospective_grids.html#module-teehr.evaluation.fetch.Fetch.nwm_retrospective_grids" title="teehr.evaluation.fetch.Fetch.nwm_retrospective_grids"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Fetch.nwm_retrospective_grids</span></code></a></p></td>
+<td><p>Fetch NWM retrospective gridded data, calculate zonal statistics (currently only mean is available) of selected variable for given zones, and load into the TEEHR dataset.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="09_ensemble_metrics.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Evaluating Ensemble Streamflow Forecasts</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="11_fetching_nwm_gridded_data.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Fetching and Summarizing NWM Gridded Data</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#set-up-the-example-evaluation">Set up the example Evaluation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#location-id-prefixes">Location ID Prefixes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fetching-usgs-streamgage-data">Fetching USGS streamgage data</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#appending-upserting-and-overwriting-data">Appending, Upserting, and Overwriting data</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fetching-nwm-streamflow-data">Fetching NWM streamflow data</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-nwm-fetching-methods-in-teehr">Additional NWM fetching methods in TEEHR</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#nwm-retrospective-point-data">NWM Retrospective Point Data</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#nwm-retrospective-and-forecast-gridded-data">NWM Retrospective and Forecast Gridded Data</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/user_guide/notebooks/10_fetching_nwm_streamflow.ipynb.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><!-- This will display the version of the docs -->
+TEEHR version 0.5.2</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

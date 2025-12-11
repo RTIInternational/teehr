@@ -1,0 +1,2464 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Loading Local Data &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/teehr.css?v=b36b674b" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=8e576371"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/notebooks/02_loading_local_data';</script>
+    <link rel="icon" href="../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Introduction to the Evaluation Class" href="03_introduction_class.html" />
+    <link rel="prev" title="Introduction to the Schema" href="01_introduction_schema.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.5.2" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation - Home"/>
+    <img src="../../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark pst-js-only" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="01_introduction_schema.html">Introduction to the Schema</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Loading Local Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_introduction_class.html">Introduction to the Evaluation Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_setup_simple_example.html">Setting-up a Simple Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_clone_from_s3.html">Clone an Evaluation from S3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_read_from_s3.html">Read an Evaluation from S3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/joining_timeseries.html">Joining Timeseries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06_grouping_and_filtering.html">Grouping and Filtering</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="08_adding_calculated_fields.html">Adding calculated fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="09_ensemble_metrics.html">Ensemble Forecast Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="10_fetching_nwm_streamflow.html">Fetching USGS and NWM Streamflow Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_fetching_nwm_gridded_data.html">Fetching NWM Gridded Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metrics/metrics.html">Available Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../legacy_content/legacy_content.html">Legacy Content</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">User Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Loading Local Data</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="loading-local-data">
+<h1>Loading Local Data<a class="headerlink" href="#loading-local-data" title="Link to this heading">#</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>In the <code class="docutils literal notranslate"><span class="pre">Introduction</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">Schema</span></code> lesson we explored what data makes up an Evaluation dataset and how it is stored on disk.  In this lesson we are going to explore how your data can be added to a new or existing Evaluation dataset.</p>
+<p>Similar to previous lesson, we will start by importing the required packages and creating a Evaluation class instance that references a directory where the data will be stored, and then clone the Evaluation template as a starting point.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">teehr.example_data.v0_3_test_study</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">test_study_data</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">geopandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gpd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="c1"># Tell Bokeh to output plots in the notebook</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">bokeh.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">output_notebook</span>
+<span class="n">output_notebook</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html">    <style>
+        .bk-notebook-logo {
+            display: block;
+            width: 20px;
+            height: 20px;
+            background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNui8sowAAAOkSURBVDiNjZRtaJVlGMd/1/08zzln5zjP1LWcU9N0NkN8m2CYjpgQYQXqSs0I84OLIC0hkEKoPtiH3gmKoiJDU7QpLgoLjLIQCpEsNJ1vqUOdO7ppbuec5+V+rj4ctwzd8IIbbi6u+8f1539dt3A78eXC7QizUF7gyV1fD1Yqg4JWz84yffhm0qkFqBogB9rM8tZdtwVsPUhWhGcFJngGeWrPzHm5oaMmkfEg1usvLFyc8jLRqDOMru7AyC8saQr7GG7f5fvDeH7Ej8CM66nIF+8yngt6HWaKh7k49Soy9nXurCi1o3qUbS3zWfrYeQDTB/Qj6kX6Ybhw4B+bOYoLKCC9H3Nu/leUTZ1JdRWkkn2ldcCamzrcf47KKXdAJllSlxAOkRgyHsGC/zRday5Qld9DyoM4/q/rUoy/CXh3jzOu3bHUVZeU+DEn8FInkPBFlu3+nW3Nw0mk6vCDiWg8CeJaxEwuHS3+z5RgY+YBR6V1Z1nxSOfoaPa4LASWxxdNp+VWTk7+4vzaou8v8PN+xo+KY2xsw6une2frhw05CTYOmQvsEhjhWjn0bmXPjpE1+kplmmkP3suftwTubK9Vq22qKmrBhpY4jvd5afdRA3wGjFAgcnTK2s4hY0/GPNIb0nErGMCRxWOOX64Z8RAC4oCXdklmEvcL8o0BfkNK4lUg9HTl+oPlQxdNo3Mg4Nv175e/1LDGzZen30MEjRUtmXSfiTVu1kK8W4txyV6BMKlbgk3lMwYCiusNy9fVfvvwMxv8Ynl6vxoByANLTWplvuj/nF9m2+PDtt1eiHPBr1oIfhCChQMBw6Aw0UulqTKZdfVvfG7VcfIqLG9bcldL/+pdWTLxLUy8Qq38heUIjh4XlzZxzQm19lLFlr8vdQ97rjZVOLf8nclzckbcD4wxXMidpX30sFd37Fv/GtwwhzhxGVAprjbg0gCAEeIgwCZyTV2Z1REEW8O4py0wsjeloKoMr6iCY6dP92H6Vw/oTyICIthibxjm/DfN9lVz8IqtqKYLUXfoKVMVQVVJOElGjrnnUt9T9wbgp8AyYKaGlqingHZU/uG2NTZSVqwHQTWkx9hxjkpWDaCg6Ckj5qebgBVbT3V3NNXMSiWSDdGV3hrtzla7J+duwPOToIg42ChPQOQjspnSlp1V+Gjdged7+8UN5CRAV7a5EdFNwCjEaBR27b3W890TE7g24NAP/mMDXRWrGoFPQI9ls/MWO2dWFAar/xcOIImbbpA3zgAAAABJRU5ErkJggg==);
+        }
+    </style>
+    <div>
+        <a href="https://bokeh.org" target="_blank" class="bk-notebook-logo"></a>
+        <span id="e82d9319-43cd-46ec-ad3c-22905ba9b587">Loading BokehJS ...</span>
+    </div>
+</div><script type="application/javascript">'use strict';
+(function(root) {
+  function now() {
+    return new Date();
+  }
+
+  const force = true;
+
+  if (typeof root._bokeh_onload_callbacks === "undefined" || force === true) {
+    root._bokeh_onload_callbacks = [];
+    root._bokeh_is_loading = undefined;
+  }
+
+const JS_MIME_TYPE = 'application/javascript';
+  const HTML_MIME_TYPE = 'text/html';
+  const EXEC_MIME_TYPE = 'application/vnd.bokehjs_exec.v0+json';
+  const CLASS_NAME = 'output_bokeh rendered_html';
+
+  /**
+   * Render data to the DOM node
+   */
+  function render(props, node) {
+    const script = document.createElement("script");
+    node.appendChild(script);
+  }
+
+  /**
+   * Handle when an output is cleared or removed
+   */
+  function handleClearOutput(event, handle) {
+    function drop(id) {
+      const view = Bokeh.index.get_by_id(id)
+      if (view != null) {
+        view.model.document.clear()
+        Bokeh.index.delete(view)
+      }
+    }
+
+    const cell = handle.cell;
+
+    const id = cell.output_area._bokeh_element_id;
+    const server_id = cell.output_area._bokeh_server_id;
+
+    // Clean up Bokeh references
+    if (id != null) {
+      drop(id)
+    }
+
+    if (server_id !== undefined) {
+      // Clean up Bokeh references
+      const cmd_clean = "from bokeh.io.state import curstate; print(curstate().uuid_to_server['" + server_id + "'].get_sessions()[0].document.roots[0]._id)";
+      cell.notebook.kernel.execute(cmd_clean, {
+        iopub: {
+          output: function(msg) {
+            const id = msg.content.text.trim()
+            drop(id)
+          }
+        }
+      });
+      // Destroy server and session
+      const cmd_destroy = "import bokeh.io.notebook as ion; ion.destroy_server('" + server_id + "')";
+      cell.notebook.kernel.execute(cmd_destroy);
+    }
+  }
+
+  /**
+   * Handle when a new output is added
+   */
+  function handleAddOutput(event, handle) {
+    const output_area = handle.output_area;
+    const output = handle.output;
+
+    // limit handleAddOutput to display_data with EXEC_MIME_TYPE content only
+    if ((output.output_type != "display_data") || (!Object.prototype.hasOwnProperty.call(output.data, EXEC_MIME_TYPE))) {
+      return
+    }
+
+    const toinsert = output_area.element.find("." + CLASS_NAME.split(' ')[0]);
+
+    if (output.metadata[EXEC_MIME_TYPE]["id"] !== undefined) {
+      toinsert[toinsert.length - 1].firstChild.textContent = output.data[JS_MIME_TYPE];
+      // store reference to embed id on output_area
+      output_area._bokeh_element_id = output.metadata[EXEC_MIME_TYPE]["id"];
+    }
+    if (output.metadata[EXEC_MIME_TYPE]["server_id"] !== undefined) {
+      const bk_div = document.createElement("div");
+      bk_div.innerHTML = output.data[HTML_MIME_TYPE];
+      const script_attrs = bk_div.children[0].attributes;
+      for (let i = 0; i < script_attrs.length; i++) {
+        toinsert[toinsert.length - 1].firstChild.setAttribute(script_attrs[i].name, script_attrs[i].value);
+        toinsert[toinsert.length - 1].firstChild.textContent = bk_div.children[0].textContent
+      }
+      // store reference to server id on output_area
+      output_area._bokeh_server_id = output.metadata[EXEC_MIME_TYPE]["server_id"];
+    }
+  }
+
+  function register_renderer(events, OutputArea) {
+
+    function append_mime(data, metadata, element) {
+      // create a DOM node to render to
+      const toinsert = this.create_output_subarea(
+        metadata,
+        CLASS_NAME,
+        EXEC_MIME_TYPE
+      );
+      this.keyboard_manager.register_events(toinsert);
+      // Render to node
+      const props = {data: data, metadata: metadata[EXEC_MIME_TYPE]};
+      render(props, toinsert[toinsert.length - 1]);
+      element.append(toinsert);
+      return toinsert
+    }
+
+    /* Handle when an output is cleared or removed */
+    events.on('clear_output.CodeCell', handleClearOutput);
+    events.on('delete.Cell', handleClearOutput);
+
+    /* Handle when a new output is added */
+    events.on('output_added.OutputArea', handleAddOutput);
+
+    /**
+     * Register the mime type and append_mime function with output_area
+     */
+    OutputArea.prototype.register_mime_type(EXEC_MIME_TYPE, append_mime, {
+      /* Is output safe? */
+      safe: true,
+      /* Index of renderer in `output_area.display_order` */
+      index: 0
+    });
+  }
+
+  // register the mime type if in Jupyter Notebook environment and previously unregistered
+  if (root.Jupyter !== undefined) {
+    const events = require('base/js/events');
+    const OutputArea = require('notebook/js/outputarea').OutputArea;
+
+    if (OutputArea.prototype.mime_types().indexOf(EXEC_MIME_TYPE) == -1) {
+      register_renderer(events, OutputArea);
+    }
+  }
+  if (typeof (root._bokeh_timeout) === "undefined" || force === true) {
+    root._bokeh_timeout = Date.now() + 5000;
+    root._bokeh_failed_load = false;
+  }
+
+  const NB_LOAD_WARNING = {'data': {'text/html':
+     "<div style='background-color: #fdd'>\n"+
+     "<p>\n"+
+     "BokehJS does not appear to have successfully loaded. If loading BokehJS from CDN, this \n"+
+     "may be due to a slow or bad network connection. Possible fixes:\n"+
+     "</p>\n"+
+     "<ul>\n"+
+     "<li>re-rerun `output_notebook()` to attempt to load from CDN again, or</li>\n"+
+     "<li>use INLINE resources instead, as so:</li>\n"+
+     "</ul>\n"+
+     "<code>\n"+
+     "from bokeh.resources import INLINE\n"+
+     "output_notebook(resources=INLINE)\n"+
+     "</code>\n"+
+     "</div>"}};
+
+  function display_loaded(error = null) {
+    const el = document.getElementById("e82d9319-43cd-46ec-ad3c-22905ba9b587");
+    if (el != null) {
+      const html = (() => {
+        if (typeof root.Bokeh === "undefined") {
+          if (error == null) {
+            return "BokehJS is loading ...";
+          } else {
+            return "BokehJS failed to load.";
+          }
+        } else {
+          const prefix = `BokehJS ${root.Bokeh.version}`;
+          if (error == null) {
+            return `${prefix} successfully loaded.`;
+          } else {
+            return `${prefix} <b>encountered errors</b> while loading and may not function as expected.`;
+          }
+        }
+      })();
+      el.innerHTML = html;
+
+      if (error != null) {
+        const wrapper = document.createElement("div");
+        wrapper.style.overflow = "auto";
+        wrapper.style.height = "5em";
+        wrapper.style.resize = "vertical";
+        const content = document.createElement("div");
+        content.style.fontFamily = "monospace";
+        content.style.whiteSpace = "pre-wrap";
+        content.style.backgroundColor = "rgb(255, 221, 221)";
+        content.textContent = error.stack ?? error.toString();
+        wrapper.append(content);
+        el.append(wrapper);
+      }
+    } else if (Date.now() < root._bokeh_timeout) {
+      setTimeout(() => display_loaded(error), 100);
+    }
+  }
+
+  function run_callbacks() {
+    try {
+      root._bokeh_onload_callbacks.forEach(function(callback) {
+        if (callback != null)
+          callback();
+      });
+    } finally {
+      delete root._bokeh_onload_callbacks
+    }
+    console.debug("Bokeh: all callbacks have finished");
+  }
+
+  function load_libs(css_urls, js_urls, callback) {
+    if (css_urls == null) css_urls = [];
+    if (js_urls == null) js_urls = [];
+
+    root._bokeh_onload_callbacks.push(callback);
+    if (root._bokeh_is_loading > 0) {
+      console.debug("Bokeh: BokehJS is being loaded, scheduling callback at", now());
+      return null;
+    }
+    if (js_urls == null || js_urls.length === 0) {
+      run_callbacks();
+      return null;
+    }
+    console.debug("Bokeh: BokehJS not loaded, scheduling load and callback at", now());
+    root._bokeh_is_loading = css_urls.length + js_urls.length;
+
+    function on_load() {
+      root._bokeh_is_loading--;
+      if (root._bokeh_is_loading === 0) {
+        console.debug("Bokeh: all BokehJS libraries/stylesheets loaded");
+        run_callbacks()
+      }
+    }
+
+    function on_error(url) {
+      console.error("failed to load " + url);
+    }
+
+    for (let i = 0; i < css_urls.length; i++) {
+      const url = css_urls[i];
+      const element = document.createElement("link");
+      element.onload = on_load;
+      element.onerror = on_error.bind(null, url);
+      element.rel = "stylesheet";
+      element.type = "text/css";
+      element.href = url;
+      console.debug("Bokeh: injecting link tag for BokehJS stylesheet: ", url);
+      document.body.appendChild(element);
+    }
+
+    for (let i = 0; i < js_urls.length; i++) {
+      const url = js_urls[i];
+      const element = document.createElement('script');
+      element.onload = on_load;
+      element.onerror = on_error.bind(null, url);
+      element.async = false;
+      element.src = url;
+      console.debug("Bokeh: injecting script tag for BokehJS library: ", url);
+      document.head.appendChild(element);
+    }
+  };
+
+  function inject_raw_css(css) {
+    const element = document.createElement("style");
+    element.appendChild(document.createTextNode(css));
+    document.body.appendChild(element);
+  }
+
+  const js_urls = ["https://cdn.bokeh.org/bokeh/release/bokeh-3.7.3.min.js", "https://cdn.bokeh.org/bokeh/release/bokeh-gl-3.7.3.min.js", "https://cdn.bokeh.org/bokeh/release/bokeh-widgets-3.7.3.min.js", "https://cdn.bokeh.org/bokeh/release/bokeh-tables-3.7.3.min.js", "https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-3.7.3.min.js"];
+  const css_urls = [];
+
+  const inline_js = [    function(Bokeh) {
+      Bokeh.set_log_level("info");
+    },
+function(Bokeh) {
+    }
+  ];
+
+  function run_inline_js() {
+    if (root.Bokeh !== undefined || force === true) {
+      try {
+            for (let i = 0; i < inline_js.length; i++) {
+      inline_js[i].call(root, root.Bokeh);
+    }
+
+      } catch (error) {display_loaded(error);throw error;
+      }if (force === true) {
+        display_loaded();
+      }} else if (Date.now() < root._bokeh_timeout) {
+      setTimeout(run_inline_js, 100);
+    } else if (!root._bokeh_failed_load) {
+      console.log("Bokeh: BokehJS failed to load within specified timeout.");
+      root._bokeh_failed_load = true;
+    } else if (force !== true) {
+      const cell = $(document.getElementById("e82d9319-43cd-46ec-ad3c-22905ba9b587")).parents('.cell').data().cell;
+      cell.output_area.append_execute_result(NB_LOAD_WARNING)
+    }
+  }
+
+  if (root._bokeh_is_loading === 0) {
+    console.debug("Bokeh: BokehJS loaded, going straight to plotting");
+    run_inline_js();
+  } else {
+    load_libs(css_urls, js_urls, function() {
+      console.debug("Bokeh: BokehJS plotting callback run at", now());
+      run_inline_js();
+    });
+  }
+}(window));</script></div>
+</div>
+<div class="cell tag_hide-output docutils container">
+<div class="cell_input above-output-prompt docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define the directory where the Evaluation will be created</span>
+<span class="n">test_eval_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">Path</span><span class="p">()</span><span class="o">.</span><span class="n">home</span><span class="p">(),</span> <span class="s2">&quot;temp&quot;</span><span class="p">,</span> <span class="s2">&quot;02_loading_data&quot;</span><span class="p">)</span>
+<span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">test_eval_dir</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Create an Evaluation object and create the directory</span>
+<span class="n">ev</span> <span class="o">=</span> <span class="n">teehr</span><span class="o">.</span><span class="n">Evaluation</span><span class="p">(</span><span class="n">dir_path</span><span class="o">=</span><span class="n">test_eval_dir</span><span class="p">,</span> <span class="n">create_dir</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Clone the template</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">clone_template</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<details class="hide below-input">
+<summary aria-label="Toggle hidden content">
+<span class="collapsed">Show code cell output</span>
+<span class="expanded">Hide code cell output</span>
+</summary>
+<div class="cell_output docutils container">
+</div>
+</details>
+</div>
+<p>For this example, we will use the data from the example dataset which is stored in the <code class="docutils literal notranslate"><span class="pre">tests/data</span></code> folder of the teehr repository. We will copy the data to the Evaluation directory, examine the contents and then load into the TEEHR Evaluation dataset.  Note these data are for demonstration purposes only.  We have given the data made-up location IDs and fake timeseries values for demonstration purposes. We will work with real data in future exercises.</p>
+<section id="locations">
+<h3>Locations<a class="headerlink" href="#locations" title="Link to this heading">#</a></h3>
+<p>First lets download some location data.  We will download the <code class="docutils literal notranslate"><span class="pre">gages.geojson</span></code> file which is a GeoJSON file that contains 3 fictional gages.</p>
+<p>In TEEHR, locations are the sites corresponding to the observed/truth timeseries data, which is called the “primary_timeseries”.</p>
+<div class="cell tag_hide-output docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">location_data_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">test_eval_dir</span><span class="p">,</span> <span class="s2">&quot;gages.geojson&quot;</span><span class="p">)</span>
+<span class="n">test_study_data</span><span class="o">.</span><span class="n">fetch_file</span><span class="p">(</span><span class="s2">&quot;gages.geojson&quot;</span><span class="p">,</span> <span class="n">location_data_path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now lets open the <code class="docutils literal notranslate"><span class="pre">gages.geojson</span></code> file with GeoPandas and take a look at the contents.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">location_data_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">test_eval_dir</span><span class="p">,</span> <span class="s2">&quot;gages.geojson&quot;</span><span class="p">)</span>
+<span class="n">gdf</span> <span class="o">=</span> <span class="n">gpd</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">location_data_path</span><span class="p">)</span>
+<span class="n">gdf</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>name</th>
+      <th>geometry</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>gage-A</td>
+      <td>Site A</td>
+      <td>POINT (-80.71918 35.17611)</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>gage-B</td>
+      <td>Site B</td>
+      <td>POINT (-80.71308 35.15839)</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>gage-C</td>
+      <td>Bite C</td>
+      <td>POINT (-80.73677 35.18693)</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>You can see that the file contains 3 gages that are each represented by a point.  Next we will load the location data into the TEEHR dataset using methods on the <code class="docutils literal notranslate"><span class="pre">locations</span></code> table sub-class. Note that this file has the <code class="docutils literal notranslate"><span class="pre">id</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code> and <code class="docutils literal notranslate"><span class="pre">geometry</span></code> fields required by TEEHR.  If it didn’t, like all the table sub-class loading methods, the <code class="docutils literal notranslate"><span class="pre">load_spatial</span></code> method can take a <code class="docutils literal notranslate"><span class="pre">field_mapping</span></code> dictionary that can be used to specify which fields should be mapped to which required field name.  We will look more closely at <code class="docutils literal notranslate"><span class="pre">field_mapping</span></code> when loading some other datasets.</p>
+<section id="location-id-prefixes">
+<h4>Location ID Prefixes<a class="headerlink" href="#location-id-prefixes" title="Link to this heading">#</a></h4>
+<p>Note that the location IDs are required to be unique, so TEEHR uses a location ID prefix convention to help ensure uniqueness.</p>
+<p>The location ID prefix is just a string in front of the ID separated by a hyphen, and represents the model configuration. For example, a USGS gage ID could get the prefix “usgs” and look something like “usgs- 03061000”.</p>
+<p>TEEHR provides the ability to specify (or replace) the location ID prefix when loading data.</p>
+<p>Let’s load our test locations, replacing the “gage” prefix in the source dataset with “usgs”:</p>
+<div class="cell tag_hide-output docutils container">
+<div class="cell_input above-output-prompt docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">load_spatial</span><span class="p">(</span><span class="n">location_data_path</span><span class="p">,</span> <span class="n">location_id_prefix</span><span class="o">=</span><span class="s2">&quot;usgs&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<details class="hide below-input">
+<summary aria-label="Toggle hidden content">
+<span class="collapsed">Show code cell output</span>
+<span class="expanded">Hide code cell output</span>
+</summary>
+<div class="cell_output docutils container">
+</div>
+</details>
+</div>
+<p>Now that the location data has been loaded into the TEEHR dataset, it can be queried with the <code class="docutils literal notranslate"><span class="pre">ev.locations</span></code> class methods, but more importantly, now we can load timeseries that references the <code class="docutils literal notranslate"><span class="pre">id</span></code> in the locations data.  The <code class="docutils literal notranslate"><span class="pre">id</span></code> in the <code class="docutils literal notranslate"><span class="pre">locations</span></code> table is the primary location ID and is referenced in the <code class="docutils literal notranslate"><span class="pre">primary_timeseries</span></code> table as <code class="docutils literal notranslate"><span class="pre">location_id</span></code>.</p>
+<p>First lets query the location data to verify it has been loaded, then look at a map to verify it is in the correct locations, then we will move on loading some timeseries data.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">locations_gdf</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">to_geopandas</span><span class="p">()</span>
+<span class="n">locations_gdf</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>name</th>
+      <th>geometry</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>usgs-A</td>
+      <td>Site A</td>
+      <td>POINT (-80.71918 35.17611)</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>usgs-B</td>
+      <td>Site B</td>
+      <td>POINT (-80.71308 35.15839)</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>usgs-C</td>
+      <td>Bite C</td>
+      <td>POINT (-80.73677 35.18693)</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>This table of locations came from the TEEHR dataset and matches what we saw in the source file, so we know it was loaded successfully.  Now lets look at a plot using the built-in <code class="docutils literal notranslate"><span class="pre">teehr.locations_map()</span></code> method.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">locations_gdf</span><span class="o">.</span><span class="n">teehr</span><span class="o">.</span><span class="n">locations_map</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html">
+  <div id="cd460159-35c3-4d5d-9781-d03929e44212" data-root-id="p1003" style="display: contents;"></div>
+</div><script type="application/javascript">(function(root) {
+  function embed_document(root) {
+  const docs_json = {"12836341-425c-428d-8d61-1e5643f214cf":{"version":"3.7.3","title":"Bokeh Application","roots":[{"type":"object","name":"Figure","id":"p1003","attributes":{"x_range":{"type":"object","name":"Range1d","id":"p1012","attributes":{"start":-8987840.09860591,"end":-8984675.775288416}},"y_range":{"type":"object","name":"Range1d","id":"p1013","attributes":{"start":4185037.991377286,"end":4189702.281994972}},"x_scale":{"type":"object","name":"LinearScale","id":"p1014"},"y_scale":{"type":"object","name":"LinearScale","id":"p1015"},"title":{"type":"object","name":"Title","id":"p1010"},"renderers":[{"type":"object","name":"TileRenderer","id":"p1039","attributes":{"tile_source":{"type":"object","name":"WMTSTileSource","id":"p1038","attributes":{"url":"https://tile.openstreetmap.org/{z}/{x}/{y}.png","max_zoom":19,"attribution":"&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"}}}},{"type":"object","name":"GlyphRenderer","id":"p1050","attributes":{"data_source":{"type":"object","name":"ColumnDataSource","id":"p1041","attributes":{"selected":{"type":"object","name":"Selection","id":"p1042","attributes":{"indices":[],"line_indices":[]}},"selection_policy":{"type":"object","name":"UnionRenderers","id":"p1043"},"data":{"type":"map","entries":[["id",[]],["name",[]],["xs",[]],["ys",[]]]}}},"view":{"type":"object","name":"CDSView","id":"p1051","attributes":{"filter":{"type":"object","name":"AllIndices","id":"p1052"}}},"glyph":{"type":"object","name":"Patches","id":"p1047","attributes":{"xs":{"type":"field","field":"xs"},"ys":{"type":"field","field":"ys"},"fill_color":{"type":"value","value":"lightgray"},"fill_alpha":{"type":"value","value":0.5}}},"nonselection_glyph":{"type":"object","name":"Patches","id":"p1048","attributes":{"xs":{"type":"field","field":"xs"},"ys":{"type":"field","field":"ys"},"line_alpha":{"type":"value","value":0.1},"fill_color":{"type":"value","value":"lightgray"},"fill_alpha":{"type":"value","value":0.1},"hatch_alpha":{"type":"value","value":0.1}}},"muted_glyph":{"type":"object","name":"Patches","id":"p1049","attributes":{"xs":{"type":"field","field":"xs"},"ys":{"type":"field","field":"ys"},"line_alpha":{"type":"value","value":0.2},"fill_color":{"type":"value","value":"lightgray"},"fill_alpha":{"type":"value","value":0.2},"hatch_alpha":{"type":"value","value":0.2}}}}},{"type":"object","name":"GlyphRenderer","id":"p1062","attributes":{"data_source":{"type":"object","name":"ColumnDataSource","id":"p1053","attributes":{"selected":{"type":"object","name":"Selection","id":"p1054","attributes":{"indices":[],"line_indices":[]}},"selection_policy":{"type":"object","name":"UnionRenderers","id":"p1055"},"data":{"type":"map","entries":[["id",["usgs-A","usgs-B","usgs-C"]],["name",["Site A","Site B","Bite C"]],["x",[-8985618.49552815,-8984939.468898207,-8987576.40499612]],["y",[4187840.092339602,4185426.6822620933,4189313.5911101648]]]}}},"view":{"type":"object","name":"CDSView","id":"p1063","attributes":{"filter":{"type":"object","name":"AllIndices","id":"p1064"}}},"glyph":{"type":"object","name":"Scatter","id":"p1059","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"size":{"type":"value","value":10},"line_color":{"type":"value","value":"blue"},"fill_color":{"type":"value","value":"blue"},"hatch_color":{"type":"value","value":"blue"}}},"nonselection_glyph":{"type":"object","name":"Scatter","id":"p1060","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"size":{"type":"value","value":10},"line_color":{"type":"value","value":"blue"},"line_alpha":{"type":"value","value":0.1},"fill_color":{"type":"value","value":"blue"},"fill_alpha":{"type":"value","value":0.1},"hatch_color":{"type":"value","value":"blue"},"hatch_alpha":{"type":"value","value":0.1}}},"muted_glyph":{"type":"object","name":"Scatter","id":"p1061","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"size":{"type":"value","value":10},"line_color":{"type":"value","value":"blue"},"line_alpha":{"type":"value","value":0.2},"fill_color":{"type":"value","value":"blue"},"fill_alpha":{"type":"value","value":0.2},"hatch_color":{"type":"value","value":"blue"},"hatch_alpha":{"type":"value","value":0.2}}}}}],"toolbar":{"type":"object","name":"Toolbar","id":"p1011","attributes":{"tools":[{"type":"object","name":"PanTool","id":"p1026"},{"type":"object","name":"WheelZoomTool","id":"p1027","attributes":{"renderers":"auto"}},{"type":"object","name":"BoxZoomTool","id":"p1028","attributes":{"dimensions":"both","overlay":{"type":"object","name":"BoxAnnotation","id":"p1029","attributes":{"syncable":false,"line_color":"black","line_alpha":1.0,"line_width":2,"line_dash":[4,4],"fill_color":"lightgrey","fill_alpha":0.5,"level":"overlay","visible":false,"left":{"type":"number","value":"nan"},"right":{"type":"number","value":"nan"},"top":{"type":"number","value":"nan"},"bottom":{"type":"number","value":"nan"},"left_units":"canvas","right_units":"canvas","top_units":"canvas","bottom_units":"canvas","handles":{"type":"object","name":"BoxInteractionHandles","id":"p1035","attributes":{"all":{"type":"object","name":"AreaVisuals","id":"p1034","attributes":{"fill_color":"white","hover_fill_color":"lightgray"}}}}}}}},{"type":"object","name":"ResetTool","id":"p1036"},{"type":"object","name":"HoverTool","id":"p1037","attributes":{"renderers":"auto","tooltips":[["id","@id"],["name","@name"]]}}]}},"left":[{"type":"object","name":"MercatorAxis","id":"p1021","attributes":{"ticker":{"type":"object","name":"MercatorTicker","id":"p1022","attributes":{"mantissas":[1,2,5],"dimension":"lat"}},"formatter":{"type":"object","name":"MercatorTickFormatter","id":"p1023","attributes":{"dimension":"lat"}},"major_label_policy":{"type":"object","name":"AllLabels","id":"p1024"}}}],"below":[{"type":"object","name":"MercatorAxis","id":"p1016","attributes":{"ticker":{"type":"object","name":"MercatorTicker","id":"p1017","attributes":{"mantissas":[1,2,5],"dimension":"lon"}},"formatter":{"type":"object","name":"MercatorTickFormatter","id":"p1018","attributes":{"dimension":"lon"}},"major_label_policy":{"type":"object","name":"AllLabels","id":"p1019"}}}],"center":[{"type":"object","name":"Grid","id":"p1020","attributes":{"axis":{"id":"p1016"}}},{"type":"object","name":"Grid","id":"p1025","attributes":{"dimension":1,"axis":{"id":"p1021"}}}]}}]}};
+  const render_items = [{"docid":"12836341-425c-428d-8d61-1e5643f214cf","roots":{"p1003":"cd460159-35c3-4d5d-9781-d03929e44212"},"root_ids":["p1003"]}];
+  void root.Bokeh.embed.embed_items_notebook(docs_json, render_items);
+  }
+  if (root.Bokeh !== undefined) {
+    embed_document(root);
+  } else {
+    let attempts = 0;
+    const timer = setInterval(function(root) {
+      if (root.Bokeh !== undefined) {
+        clearInterval(timer);
+        embed_document(root);
+      } else {
+        attempts++;
+        if (attempts > 100) {
+          clearInterval(timer);
+          console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing");
+        }
+      }
+    }, 10, root)
+  }
+})(window);</script></div>
+</div>
+</section>
+</section>
+<section id="primary-timeseries">
+<h3>Primary Timeseries<a class="headerlink" href="#primary-timeseries" title="Link to this heading">#</a></h3>
+<p>Ok, now that we have loaded the location data, we can load some timeseries to the <code class="docutils literal notranslate"><span class="pre">primary_timeseries</span></code> table where the <code class="docutils literal notranslate"><span class="pre">location_id</span></code> field in the <code class="docutils literal notranslate"><span class="pre">primary_timeseries</span></code> table references the <code class="docutils literal notranslate"><span class="pre">id</span></code> field in the <code class="docutils literal notranslate"><span class="pre">locations</span></code> table.  The primary timeseries represents the timeseries that simulations will be compared to (i.e., the truth).</p>
+<p>First, let’s download a test timeseries from the TEEHR repository as a <code class="docutils literal notranslate"><span class="pre">*.csv</span></code> file, open and examine the contents with Pandas, and load into the TEEHR dataset.</p>
+<div class="cell tag_hide-output docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">primary_timeseries_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">test_eval_dir</span><span class="p">,</span> <span class="s2">&quot;test_short_obs.csv&quot;</span><span class="p">)</span>
+<span class="n">test_study_data</span><span class="o">.</span><span class="n">fetch_file</span><span class="p">(</span><span class="s2">&quot;test_short_obs.csv&quot;</span><span class="p">,</span> <span class="n">primary_timeseries_path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">primary_timeseries_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">primary_timeseries_path</span><span class="p">)</span>
+<span class="n">primary_timeseries_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>reference_time</th>
+      <th>value_time</th>
+      <th>value</th>
+      <th>variable_name</th>
+      <th>measurement_unit</th>
+      <th>configuration</th>
+      <th>location_id</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>NaN</td>
+      <td>2022-01-01T00:00:00</td>
+      <td>0.1</td>
+      <td>streamflow</td>
+      <td>m^3/s</td>
+      <td>test_obs</td>
+      <td>gage-A</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>NaN</td>
+      <td>2022-01-01T01:00:00</td>
+      <td>1.1</td>
+      <td>streamflow</td>
+      <td>m^3/s</td>
+      <td>test_obs</td>
+      <td>gage-A</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>NaN</td>
+      <td>2022-01-01T02:00:00</td>
+      <td>0.1</td>
+      <td>streamflow</td>
+      <td>m^3/s</td>
+      <td>test_obs</td>
+      <td>gage-A</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>NaN</td>
+      <td>2022-01-01T03:00:00</td>
+      <td>0.2</td>
+      <td>streamflow</td>
+      <td>m^3/s</td>
+      <td>test_obs</td>
+      <td>gage-A</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>NaN</td>
+      <td>2022-01-01T04:00:00</td>
+      <td>0.3</td>
+      <td>streamflow</td>
+      <td>m^3/s</td>
+      <td>test_obs</td>
+      <td>gage-A</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>There a few things we need to look at and consider before loading the data into the TEEHR dataset.  First, the field names.  You can see above that while the schema of this dataset is close to the TEEHR schema, it is not exactly correct, specifically <code class="docutils literal notranslate"><span class="pre">configuration</span></code> should be <code class="docutils literal notranslate"><span class="pre">configuration_name</span></code> and <code class="docutils literal notranslate"><span class="pre">measurement_unit</span></code> should be <code class="docutils literal notranslate"><span class="pre">unit_name</span></code>.</p>
+<p>To address this we can use the <code class="docutils literal notranslate"><span class="pre">field_mapping</span></code> argument to map the existing field names to the required field names.</p>
+<p>The next thing that needs to be dealt with are the values in the fields that reference values in another table, for example a domain table or the location table.  Lets start with <code class="docutils literal notranslate"><span class="pre">unit_name</span></code>.  The <code class="docutils literal notranslate"><span class="pre">unit_name</span></code> values need to reference a value from the <code class="docutils literal notranslate"><span class="pre">name</span></code> field in the <code class="docutils literal notranslate"><span class="pre">units</span></code> table.  Next lets look at what values are in the <code class="docutils literal notranslate"><span class="pre">units</span></code> table.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Query the units table</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>name</th>
+      <th>long_name</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>m^3/s</td>
+      <td>Cubic Meters Per Second</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ft^3/s</td>
+      <td>Cubic Feet Per Second</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>km^2</td>
+      <td>Square Kilometers</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>mm/s</td>
+      <td>Millimeters Per Second</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>Here we can see that <code class="docutils literal notranslate"><span class="pre">m^3/s</span></code> is in the <code class="docutils literal notranslate"><span class="pre">units</span></code> table, so we are all set with values in the <code class="docutils literal notranslate"><span class="pre">measurement_units</span></code> field.  Next lets check the <code class="docutils literal notranslate"><span class="pre">variables</span></code> table.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>name</th>
+      <th>long_name</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>streamflow_hourly_inst</td>
+      <td>Hourly Instantaneous Streamflow</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>streamflow_daily_mean</td>
+      <td>Daily Mean Streamflow</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>rainfall_hourly_rate</td>
+      <td>Hourly Rainfall Rate</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>Here we see that <code class="docutils literal notranslate"><span class="pre">streamflow</span></code> is not in the <code class="docutils literal notranslate"><span class="pre">name</span></code> field of the <code class="docutils literal notranslate"><span class="pre">variables</span></code> table.  There are two ways to remedy this:</p>
+<ol class="arabic simple">
+<li><p>we could add the value <code class="docutils literal notranslate"><span class="pre">streamflow</span></code> to the <code class="docutils literal notranslate"><span class="pre">variables</span></code> table, or</p></li>
+<li><p>we can use the <code class="docutils literal notranslate"><span class="pre">constant_field_values</span></code> argument to set the <code class="docutils literal notranslate"><span class="pre">variable_name</span></code> to an allowed values.</p></li>
+</ol>
+<p>In this case we will go with the latter and set the <code class="docutils literal notranslate"><span class="pre">variable_name</span></code> to <code class="docutils literal notranslate"><span class="pre">streamflow_hourly_inst</span></code>.  Next we need to address the <code class="docutils literal notranslate"><span class="pre">configuration_name</span></code> field.  First lets see what values are in the <code class="docutils literal notranslate"><span class="pre">configurations</span></code> table.  By default the <code class="docutils literal notranslate"><span class="pre">configurations</span></code> table is empty so we need to add an entry for each timeseries data set.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">configurations</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>name</th>
+      <th>type</th>
+      <th>description</th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>Here we add the <code class="docutils literal notranslate"><span class="pre">configuration_name</span></code> to the configuration domain table. This represents the configuration name for the <code class="docutils literal notranslate"><span class="pre">primary_timeseries</span></code> data when loaded into the evaluation, which in this case will be <code class="docutils literal notranslate"><span class="pre">usgs_observations</span></code> instead of <code class="docutils literal notranslate"><span class="pre">test_obs</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">configurations</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">teehr</span><span class="o">.</span><span class="n">Configuration</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;usgs_observations&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;primary&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Test Observed Configuration&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now we can load the data into the TEEHR evaluation. We use the <code class="docutils literal notranslate"><span class="pre">field_mapping</span></code> argument to map the field names in our .csv file to the TEEHR schema names, and we use the <code class="docutils literal notranslate"><span class="pre">constant_field_values</span></code> argument to set the values to a constant.</p>
+<p>Since the IDs in the locations table were given the prefix “usgs”, we’ll need to do the same here.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the timeseries data and map over the fields and set constants</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">load_csv</span><span class="p">(</span>
+    <span class="n">in_path</span><span class="o">=</span><span class="n">primary_timeseries_path</span><span class="p">,</span>
+    <span class="n">field_mapping</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;reference_time&quot;</span><span class="p">:</span> <span class="s2">&quot;reference_time&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;value_time&quot;</span><span class="p">:</span> <span class="s2">&quot;value_time&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;configuration&quot;</span><span class="p">:</span> <span class="s2">&quot;configuration_name&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;measurement_unit&quot;</span><span class="p">:</span> <span class="s2">&quot;unit_name&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;variable_name&quot;</span><span class="p">:</span> <span class="s2">&quot;variable_name&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;location_id&quot;</span><span class="p">:</span> <span class="s2">&quot;location_id&quot;</span>
+    <span class="p">},</span>
+    <span class="n">constant_field_values</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;unit_name&quot;</span><span class="p">:</span> <span class="s2">&quot;m^3/s&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;variable_name&quot;</span><span class="p">:</span> <span class="s2">&quot;streamflow_hourly_inst&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;configuration_name&quot;</span><span class="p">:</span> <span class="s2">&quot;usgs_observations&quot;</span>
+    <span class="p">},</span>
+    <span class="n">location_id_prefix</span><span class="o">=</span><span class="s2">&quot;usgs&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now we can query for a single timeseries and make sure the data was loaded.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">primary_timeseries_df</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;location_id&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;usgs-A&quot;</span>
+    <span class="p">}</span>
+<span class="p">)</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+<span class="n">primary_timeseries_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>reference_time</th>
+      <th>value_time</th>
+      <th>value</th>
+      <th>unit_name</th>
+      <th>location_id</th>
+      <th>configuration_name</th>
+      <th>variable_name</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>NaT</td>
+      <td>2022-01-01 14:00:00</td>
+      <td>4.0</td>
+      <td>m^3/s</td>
+      <td>usgs-A</td>
+      <td>usgs_observations</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>NaT</td>
+      <td>2022-01-01 01:00:00</td>
+      <td>1.1</td>
+      <td>m^3/s</td>
+      <td>usgs-A</td>
+      <td>usgs_observations</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>NaT</td>
+      <td>2022-01-01 00:00:00</td>
+      <td>0.1</td>
+      <td>m^3/s</td>
+      <td>usgs-A</td>
+      <td>usgs_observations</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>NaT</td>
+      <td>2022-01-01 21:00:00</td>
+      <td>0.1</td>
+      <td>m^3/s</td>
+      <td>usgs-A</td>
+      <td>usgs_observations</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>NaT</td>
+      <td>2022-01-01 12:00:00</td>
+      <td>2.0</td>
+      <td>m^3/s</td>
+      <td>usgs-A</td>
+      <td>usgs_observations</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>And create a plot using the <code class="docutils literal notranslate"><span class="pre">df.teehr.timeseries_plot()</span></code> method.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">primary_timeseries_df</span><span class="o">.</span><span class="n">teehr</span><span class="o">.</span><span class="n">timeseries_plot</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html">
+  <div id="dbcec18f-ad7b-4c01-94d0-4c2401f2f003" data-root-id="p1065" style="display: contents;"></div>
+</div><script type="application/javascript">(function(root) {
+  function embed_document(root) {
+  const docs_json = {"dc4d3aca-5d2a-4b74-8e6f-2fbc1106d9b0":{"version":"3.7.3","title":"Bokeh Application","roots":[{"type":"object","name":"Figure","id":"p1065","attributes":{"height":800,"sizing_mode":"stretch_width","x_range":{"type":"object","name":"DataRange1d","id":"p1066"},"y_range":{"type":"object","name":"DataRange1d","id":"p1067"},"x_scale":{"type":"object","name":"LinearScale","id":"p1075"},"y_scale":{"type":"object","name":"LinearScale","id":"p1076"},"title":{"type":"object","name":"Title","id":"p1068","attributes":{"text":"Click legend entry to toggle display of timeseries","text_font_size":"12pt"}},"renderers":[{"type":"object","name":"GlyphRenderer","id":"p1117","attributes":{"data_source":{"type":"object","name":"ColumnDataSource","id":"p1111","attributes":{"selected":{"type":"object","name":"Selection","id":"p1112","attributes":{"indices":[],"line_indices":[]}},"selection_policy":{"type":"object","name":"UnionRenderers","id":"p1113"},"data":{"type":"map","entries":[["x",{"type":"ndarray","array":{"type":"bytes","data":"AADA+S7hd0IAAKhoMuF3QgAAkNc14XdCAAB4Rjnhd0IAAGC1POF3QgAASCRA4XdCAAAwk0Phd0IAABgCR+F3QgAAAHFK4XdCAADo303hd0IAANBOUeF3QgAAuL1U4XdCAACgLFjhd0IAAIibW+F3QgAAcApf4XdCAABYeWLhd0IAAEDoZeF3QgAAKFdp4XdCAAAQxmzhd0IAAPg0cOF3QgAA4KNz4XdCAADIEnfhd0IAALCBeuF3QgAAmPB94XdCAACAX4Hhd0IAAGjOhOF3Qg=="},"shape":[26],"dtype":"float64","order":"little"}],["y",{"type":"ndarray","array":{"type":"bytes","data":"zczMPc3MjD/NzMw9zcxMPpqZmT7NzMw+AAAAP5qZGT8zMzM/zcxMP2ZmZj8AAIA/AAAAQAAAQEAAAIBAAACgQAAAgEAAAEBAAAAAQAAAgD/NzMw9zczMPc3MzD3NzMw9zczMPc3MzD0="},"shape":[26],"dtype":"float32","order":"little"}]]}}},"view":{"type":"object","name":"CDSView","id":"p1118","attributes":{"filter":{"type":"object","name":"AllIndices","id":"p1119"}}},"glyph":{"type":"object","name":"Line","id":"p1114","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#0072B2"}},"nonselection_glyph":{"type":"object","name":"Line","id":"p1115","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#0072B2","line_alpha":0.1}},"muted_glyph":{"type":"object","name":"Line","id":"p1116","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#0072B2","line_alpha":0.2}}}}],"toolbar":{"type":"object","name":"Toolbar","id":"p1074","attributes":{"tools":[{"type":"object","name":"WheelZoomTool","id":"p1101","attributes":{"dimensions":"width","renderers":"auto"}},{"type":"object","name":"BoxZoomTool","id":"p1102","attributes":{"dimensions":"both","overlay":{"type":"object","name":"BoxAnnotation","id":"p1103","attributes":{"syncable":false,"line_color":"black","line_alpha":1.0,"line_width":2,"line_dash":[4,4],"fill_color":"lightgrey","fill_alpha":0.5,"level":"overlay","visible":false,"left":{"type":"number","value":"nan"},"right":{"type":"number","value":"nan"},"top":{"type":"number","value":"nan"},"bottom":{"type":"number","value":"nan"},"left_units":"canvas","right_units":"canvas","top_units":"canvas","bottom_units":"canvas","handles":{"type":"object","name":"BoxInteractionHandles","id":"p1109","attributes":{"all":{"type":"object","name":"AreaVisuals","id":"p1108","attributes":{"fill_color":"white","hover_fill_color":"lightgray"}}}}}}}},{"type":"object","name":"ResetTool","id":"p1110"}],"autohide":true}},"left":[{"type":"object","name":"LinearAxis","id":"p1096","attributes":{"ticker":{"type":"object","name":"BasicTicker","id":"p1097","attributes":{"mantissas":[1,2,5]}},"formatter":{"type":"object","name":"BasicTickFormatter","id":"p1098"},"axis_label":"streamflow_hourly_inst [m^3/s]","axis_label_text_font_style":"bold","major_label_policy":{"type":"object","name":"AllLabels","id":"p1099"}}}],"below":[{"type":"object","name":"DatetimeAxis","id":"p1077","attributes":{"ticker":{"type":"object","name":"DatetimeTicker","id":"p1078","attributes":{"num_minor_ticks":5,"tickers":[{"type":"object","name":"AdaptiveTicker","id":"p1079","attributes":{"num_minor_ticks":0,"mantissas":[1,2,5],"max_interval":500.0}},{"type":"object","name":"AdaptiveTicker","id":"p1080","attributes":{"num_minor_ticks":0,"base":60,"mantissas":[1,2,5,10,15,20,30],"min_interval":1000.0,"max_interval":1800000.0}},{"type":"object","name":"AdaptiveTicker","id":"p1081","attributes":{"num_minor_ticks":0,"base":24,"mantissas":[1,2,4,6,8,12],"min_interval":3600000.0,"max_interval":43200000.0}},{"type":"object","name":"DaysTicker","id":"p1082","attributes":{"days":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]}},{"type":"object","name":"DaysTicker","id":"p1083","attributes":{"days":[1,4,7,10,13,16,19,22,25,28]}},{"type":"object","name":"DaysTicker","id":"p1084","attributes":{"days":[1,8,15,22]}},{"type":"object","name":"DaysTicker","id":"p1085","attributes":{"days":[1,15]}},{"type":"object","name":"MonthsTicker","id":"p1086","attributes":{"months":[0,1,2,3,4,5,6,7,8,9,10,11]}},{"type":"object","name":"MonthsTicker","id":"p1087","attributes":{"months":[0,2,4,6,8,10]}},{"type":"object","name":"MonthsTicker","id":"p1088","attributes":{"months":[0,4,8]}},{"type":"object","name":"MonthsTicker","id":"p1089","attributes":{"months":[0,6]}},{"type":"object","name":"YearsTicker","id":"p1090"}]}},"formatter":{"type":"object","name":"DatetimeTickFormatter","id":"p1093","attributes":{"seconds":"%T","minsec":"%T","minutes":"%H:%M","hours":"%H:%M","days":"%b %d","months":"%b %Y","strip_leading_zeros":["microseconds","milliseconds","seconds"],"boundary_scaling":false,"context":{"type":"object","name":"DatetimeTickFormatter","id":"p1092","attributes":{"microseconds":"%T","milliseconds":"%T","seconds":"%b %d, %Y","minsec":"%b %d, %Y","minutes":"%b %d, %Y","hourmin":"%b %d, %Y","hours":"%b %d, %Y","days":"%Y","months":"","years":"","boundary_scaling":false,"hide_repeats":true,"context":{"type":"object","name":"DatetimeTickFormatter","id":"p1091","attributes":{"microseconds":"%b %d, %Y","milliseconds":"%b %d, %Y","seconds":"","minsec":"","minutes":"","hourmin":"","hours":"","days":"","months":"","years":"","boundary_scaling":false,"hide_repeats":true}},"context_which":"all"}},"context_which":"all"}},"axis_label":"Datetime","axis_label_text_font_style":"bold","major_label_orientation":0.7853981633974483,"major_label_policy":{"type":"object","name":"AllLabels","id":"p1094"}}}],"center":[{"type":"object","name":"Grid","id":"p1095","attributes":{"axis":{"id":"p1077"}}},{"type":"object","name":"Grid","id":"p1100","attributes":{"dimension":1,"axis":{"id":"p1096"}}},{"type":"object","name":"Legend","id":"p1120","attributes":{"border_line_color":"black","border_line_alpha":1.0,"background_fill_color":"white","background_fill_alpha":1.0,"click_policy":"hide","items":[{"type":"object","name":"LegendItem","id":"p1121","attributes":{"label":{"type":"value","value":"usgs_observations - usgs-A"},"renderers":[{"id":"p1117"}]}}]}}]}}]}};
+  const render_items = [{"docid":"dc4d3aca-5d2a-4b74-8e6f-2fbc1106d9b0","roots":{"p1065":"dbcec18f-ad7b-4c01-94d0-4c2401f2f003"},"root_ids":["p1065"]}];
+  void root.Bokeh.embed.embed_items_notebook(docs_json, render_items);
+  }
+  if (root.Bokeh !== undefined) {
+    embed_document(root);
+  } else {
+    let attempts = 0;
+    const timer = setInterval(function(root) {
+      if (root.Bokeh !== undefined) {
+        clearInterval(timer);
+        embed_document(root);
+      } else {
+        attempts++;
+        if (attempts > 100) {
+          clearInterval(timer);
+          console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing");
+        }
+      }
+    }, 10, root)
+  }
+})(window);</script></div>
+</div>
+</section>
+<section id="secondary-timeseries">
+<h3>Secondary Timeseries<a class="headerlink" href="#secondary-timeseries" title="Link to this heading">#</a></h3>
+<p>Next we will load some simulated data that we want to compare to the observed timeseries (<code class="docutils literal notranslate"><span class="pre">primary_timeseries</span></code>).  The <code class="docutils literal notranslate"><span class="pre">secondary_timeseries</span></code> table is where the “simulated” timeseries data are stored.  First we will download some test secondary timeseries from the TEEHR repository.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">secondary_timeseries_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">test_eval_dir</span><span class="p">,</span> <span class="s2">&quot;test_short_fcast.parquet&quot;</span><span class="p">)</span>
+<span class="n">test_study_data</span><span class="o">.</span><span class="n">fetch_file</span><span class="p">(</span><span class="s2">&quot;test_short_fcast.parquet&quot;</span><span class="p">,</span> <span class="n">secondary_timeseries_path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Similar to what we did with the primary timeseries, we will open the timeseries with Panadas to see what the data looks like, then we will load it into the TEEHR dataset.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">secondary_timeseries_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">secondary_timeseries_path</span><span class="p">)</span>
+<span class="n">secondary_timeseries_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>reference_time</th>
+      <th>value_time</th>
+      <th>value</th>
+      <th>variable_name</th>
+      <th>measurement_unit</th>
+      <th>configuration</th>
+      <th>location_id</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2022-01-01</td>
+      <td>2022-01-01 00:00:00</td>
+      <td>0.0</td>
+      <td>streamflow</td>
+      <td>m^3/s</td>
+      <td>test_short</td>
+      <td>fcst-1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2022-01-01</td>
+      <td>2022-01-01 01:00:00</td>
+      <td>0.1</td>
+      <td>streamflow</td>
+      <td>m^3/s</td>
+      <td>test_short</td>
+      <td>fcst-1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2022-01-01</td>
+      <td>2022-01-01 02:00:00</td>
+      <td>0.2</td>
+      <td>streamflow</td>
+      <td>m^3/s</td>
+      <td>test_short</td>
+      <td>fcst-1</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2022-01-01</td>
+      <td>2022-01-01 03:00:00</td>
+      <td>0.3</td>
+      <td>streamflow</td>
+      <td>m^3/s</td>
+      <td>test_short</td>
+      <td>fcst-1</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2022-01-01</td>
+      <td>2022-01-01 04:00:00</td>
+      <td>0.4</td>
+      <td>streamflow</td>
+      <td>m^3/s</td>
+      <td>test_short</td>
+      <td>fcst-1</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>When loading <code class="docutils literal notranslate"><span class="pre">secondary_timeseries</span></code>, the same considerations regarding field names and field values apply as those for <code class="docutils literal notranslate"><span class="pre">primary_timeseries</span></code>.  Similar to loading the <code class="docutils literal notranslate"><span class="pre">primary_timeseries</span></code>, we will add the configuration name that represents the secondary timeseries to the <code class="docutils literal notranslate"><span class="pre">configurations</span></code> domain table.</p>
+<p>In this case we’ll use <code class="docutils literal notranslate"><span class="pre">test_short</span></code> as the secondary timeseries configuration name.</p>
+<div class="cell tag_hide-output docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">configurations</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="n">teehr</span><span class="o">.</span><span class="n">Configuration</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;test_short&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;secondary&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Test Forecast Configuration&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="location-crosswalks">
+<h3>Location Crosswalks<a class="headerlink" href="#location-crosswalks" title="Link to this heading">#</a></h3>
+<p>There is one other consideration before we can load the <code class="docutils literal notranslate"><span class="pre">secondary_timeseries</span></code>.  There is no expectation in the TEEHR schema that the <code class="docutils literal notranslate"><span class="pre">location_id</span></code> used of the <code class="docutils literal notranslate"><span class="pre">primary_timeseries</span></code> matches the <code class="docutils literal notranslate"><span class="pre">location_id</span></code> in the <code class="docutils literal notranslate"><span class="pre">secondary_timeseries</span></code>.  Therefore, it is necessary to load location crosswalk data to the <code class="docutils literal notranslate"><span class="pre">location_crosswalks</span></code> table so that TEEHR knows which <code class="docutils literal notranslate"><span class="pre">primary_location_id</span></code> matches which <code class="docutils literal notranslate"><span class="pre">secondary_location_id</span></code>. For example, in our test dataset, the observation data at <code class="docutils literal notranslate"><span class="pre">location_id</span></code> “gage-A” relates to forecasts with a <code class="docutils literal notranslate"><span class="pre">location_id</span></code> “fcst-1”.</p>
+<p>We already have a file with this information, so like we did with the other test datasets, we will download the data from the TEEHR repository, open it with Pandas to examine the contents and load into the TEEHR dataset.</p>
+<div class="cell tag_hide-output docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">crosswalk_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">test_eval_dir</span><span class="p">,</span> <span class="s2">&quot;crosswalk.csv&quot;</span><span class="p">)</span>
+<span class="n">test_study_data</span><span class="o">.</span><span class="n">fetch_file</span><span class="p">(</span><span class="s2">&quot;crosswalk.csv&quot;</span><span class="p">,</span> <span class="n">crosswalk_path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">crosswalk_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">crosswalk_path</span><span class="p">)</span>
+<span class="n">crosswalk_df</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>primary_location_id</th>
+      <th>secondary_location_id</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>gage-A</td>
+      <td>fcst-1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>gage-B</td>
+      <td>fcst-2</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>gage-C</td>
+      <td>fcst-3</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>In this case we can see that the crosswalk table already has the field names we need (<code class="docutils literal notranslate"><span class="pre">primary_location_id</span></code> and <code class="docutils literal notranslate"><span class="pre">secondary_location_id</span></code>) so we don’t need to use the <code class="docutils literal notranslate"><span class="pre">field_mapping</span></code> argument to pass the loading function a field mapping, and we can load it as-is.</p>
+<p>Here we’ll specify the location ID prefix for the primary IDs. If needed we could also update or provide a prefix for the secondary ID using the <code class="docutils literal notranslate"><span class="pre">secondary_location_id_prefix</span></code> argument.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the crosswalk data to the crosswalks table</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">location_crosswalks</span><span class="o">.</span><span class="n">load_csv</span><span class="p">(</span><span class="n">crosswalk_path</span><span class="p">,</span> <span class="n">primary_location_id_prefix</span><span class="o">=</span><span class="s2">&quot;usgs&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now that we have loaded the <code class="docutils literal notranslate"><span class="pre">location_crosswalks</span></code> data, we can load the <code class="docutils literal notranslate"><span class="pre">secondary_timeseries</span></code>.  Note, unlike when we loaded the <code class="docutils literal notranslate"><span class="pre">primary_timeseries</span></code>, in this case we did not have to set a constant field value for <code class="docutils literal notranslate"><span class="pre">configuration_name</span></code> because we added the configuration to the <code class="docutils literal notranslate"><span class="pre">configurations</span></code> table.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the secondary timeseries data and map over the fields and set constants</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">secondary_timeseries</span><span class="o">.</span><span class="n">load_parquet</span><span class="p">(</span>
+    <span class="n">in_path</span><span class="o">=</span><span class="n">secondary_timeseries_path</span><span class="p">,</span>
+    <span class="n">field_mapping</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;reference_time&quot;</span><span class="p">:</span> <span class="s2">&quot;reference_time&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;value_time&quot;</span><span class="p">:</span> <span class="s2">&quot;value_time&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;configuration&quot;</span><span class="p">:</span> <span class="s2">&quot;configuration_name&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;measurement_unit&quot;</span><span class="p">:</span> <span class="s2">&quot;unit_name&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;variable_name&quot;</span><span class="p">:</span> <span class="s2">&quot;variable_name&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;location_id&quot;</span><span class="p">:</span> <span class="s2">&quot;location_id&quot;</span>
+    <span class="p">},</span>
+    <span class="n">constant_field_values</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;unit_name&quot;</span><span class="p">:</span> <span class="s2">&quot;m^3/s&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;variable_name&quot;</span><span class="p">:</span> <span class="s2">&quot;streamflow_hourly_inst&quot;</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>And to verify that it loaded, we can run a query to see the data.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Query the secondary timeseries data for a single forecast.</span>
+<span class="n">secondary_timeseries_df</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">ev</span><span class="o">.</span><span class="n">secondary_timeseries</span>
+    <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;reference_time&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;2022-01-01&quot;</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+<span class="p">)</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+<span class="n">secondary_timeseries_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>reference_time</th>
+      <th>value_time</th>
+      <th>value</th>
+      <th>unit_name</th>
+      <th>location_id</th>
+      <th>member</th>
+      <th>configuration_name</th>
+      <th>variable_name</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2022-01-01</td>
+      <td>2022-01-01 04:00:00</td>
+      <td>10.580000</td>
+      <td>m^3/s</td>
+      <td>fcst-2</td>
+      <td>None</td>
+      <td>test_short</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2022-01-01</td>
+      <td>2022-01-01 01:00:00</td>
+      <td>101.849998</td>
+      <td>m^3/s</td>
+      <td>fcst-3</td>
+      <td>None</td>
+      <td>test_short</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2022-01-01</td>
+      <td>2022-01-01 06:00:00</td>
+      <td>0.600000</td>
+      <td>m^3/s</td>
+      <td>fcst-1</td>
+      <td>None</td>
+      <td>test_short</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2022-01-01</td>
+      <td>2022-01-01 17:00:00</td>
+      <td>11.730000</td>
+      <td>m^3/s</td>
+      <td>fcst-2</td>
+      <td>None</td>
+      <td>test_short</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2022-01-01</td>
+      <td>2022-01-01 21:00:00</td>
+      <td>40.860001</td>
+      <td>m^3/s</td>
+      <td>fcst-3</td>
+      <td>None</td>
+      <td>test_short</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">secondary_timeseries_df</span><span class="o">.</span><span class="n">teehr</span><span class="o">.</span><span class="n">timeseries_plot</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html">
+  <div id="b4f2eb53-947e-4e0a-adc4-5e158f95d505" data-root-id="p1124" style="display: contents;"></div>
+</div><script type="application/javascript">(function(root) {
+  function embed_document(root) {
+  const docs_json = {"0fe2e230-5a37-4f90-90ba-912d78683444":{"version":"3.7.3","title":"Bokeh Application","roots":[{"type":"object","name":"Figure","id":"p1124","attributes":{"height":800,"sizing_mode":"stretch_width","x_range":{"type":"object","name":"DataRange1d","id":"p1125"},"y_range":{"type":"object","name":"DataRange1d","id":"p1126"},"x_scale":{"type":"object","name":"LinearScale","id":"p1134"},"y_scale":{"type":"object","name":"LinearScale","id":"p1135"},"title":{"type":"object","name":"Title","id":"p1127","attributes":{"text":"Click legend entry to toggle display of timeseries","text_font_size":"12pt"}},"renderers":[{"type":"object","name":"GlyphRenderer","id":"p1176","attributes":{"data_source":{"type":"object","name":"ColumnDataSource","id":"p1170","attributes":{"selected":{"type":"object","name":"Selection","id":"p1171","attributes":{"indices":[],"line_indices":[]}},"selection_policy":{"type":"object","name":"UnionRenderers","id":"p1172"},"data":{"type":"map","entries":[["x",{"type":"ndarray","array":{"type":"bytes","data":"AADA+S7hd0IAAKhoMuF3QgAAkNc14XdCAAB4Rjnhd0IAAGC1POF3QgAASCRA4XdCAAAwk0Phd0IAABgCR+F3QgAAAHFK4XdCAADo303hd0IAANBOUeF3QgAAuL1U4XdCAACgLFjhd0IAAIibW+F3QgAAcApf4XdCAABYeWLhd0IAAEDoZeF3QgAAKFdp4XdCAAAQxmzhd0IAAPg0cOF3QgAA4KNz4XdCAADIEnfhd0IAALCBeuF3QgAAmPB94XdC"},"shape":[24],"dtype":"float64","order":"little"}],["y",{"type":"ndarray","array":{"type":"bytes","data":"UrgmQQrXK0HD9SxBexQqQa5HKUGkcDVBj8I1QT0KM0FxPTJBSOEuQc3MTEGPwlVBpHBhQTMze0EK119BMzNXQdejSEEUrjtB16MsQZqZLUGPwi1BmpktQcP1IEFI4SZB"},"shape":[24],"dtype":"float32","order":"little"}]]}}},"view":{"type":"object","name":"CDSView","id":"p1177","attributes":{"filter":{"type":"object","name":"AllIndices","id":"p1178"}}},"glyph":{"type":"object","name":"Line","id":"p1173","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#0072B2"}},"nonselection_glyph":{"type":"object","name":"Line","id":"p1174","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#0072B2","line_alpha":0.1}},"muted_glyph":{"type":"object","name":"Line","id":"p1175","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#0072B2","line_alpha":0.2}}}},{"type":"object","name":"GlyphRenderer","id":"p1187","attributes":{"data_source":{"type":"object","name":"ColumnDataSource","id":"p1181","attributes":{"selected":{"type":"object","name":"Selection","id":"p1182","attributes":{"indices":[],"line_indices":[]}},"selection_policy":{"type":"object","name":"UnionRenderers","id":"p1183"},"data":{"type":"map","entries":[["x",{"type":"ndarray","array":{"type":"bytes","data":"AADA+S7hd0IAAKhoMuF3QgAAkNc14XdCAAB4Rjnhd0IAAGC1POF3QgAASCRA4XdCAAAwk0Phd0IAABgCR+F3QgAAAHFK4XdCAADo303hd0IAANBOUeF3QgAAuL1U4XdCAACgLFjhd0IAAIibW+F3QgAAcApf4XdCAABYeWLhd0IAAEDoZeF3QgAAKFdp4XdCAAAQxmzhd0IAAPg0cOF3QgAA4KNz4XdCAADIEnfhd0IAALCBeuF3QgAAmPB94XdC"},"shape":[24],"dtype":"float64","order":"little"}],["y",{"type":"ndarray","array":{"type":"bytes","data":"w3XRQjOzy0IKV8xCH4X4QgrXEEPD9SFD4fo0Q5rZNkMKFy5DFG4gQ+yRFkPDtQ9DcX0DQwrX+ULXo+VCw/XNQnG9t0Izs6VCpHCQQq5HdkLhek5CpHAjQpqZCUK4HqlB"},"shape":[24],"dtype":"float32","order":"little"}]]}}},"view":{"type":"object","name":"CDSView","id":"p1188","attributes":{"filter":{"type":"object","name":"AllIndices","id":"p1189"}}},"glyph":{"type":"object","name":"Line","id":"p1184","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#E69F00"}},"nonselection_glyph":{"type":"object","name":"Line","id":"p1185","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#E69F00","line_alpha":0.1}},"muted_glyph":{"type":"object","name":"Line","id":"p1186","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#E69F00","line_alpha":0.2}}}},{"type":"object","name":"GlyphRenderer","id":"p1197","attributes":{"data_source":{"type":"object","name":"ColumnDataSource","id":"p1191","attributes":{"selected":{"type":"object","name":"Selection","id":"p1192","attributes":{"indices":[],"line_indices":[]}},"selection_policy":{"type":"object","name":"UnionRenderers","id":"p1193"},"data":{"type":"map","entries":[["x",{"type":"ndarray","array":{"type":"bytes","data":"AADA+S7hd0IAAKhoMuF3QgAAkNc14XdCAAB4Rjnhd0IAAGC1POF3QgAASCRA4XdCAAAwk0Phd0IAABgCR+F3QgAAAHFK4XdCAADo303hd0IAANBOUeF3QgAAuL1U4XdCAACgLFjhd0IAAIibW+F3QgAAcApf4XdCAABYeWLhd0IAAEDoZeF3QgAAKFdp4XdCAAAQxmzhd0IAAPg0cOF3QgAA4KNz4XdCAADIEnfhd0IAALCBeuF3QgAAmPB94XdC"},"shape":[24],"dtype":"float64","order":"little"}],["y",{"type":"ndarray","array":{"type":"bytes","data":"AAAAAM3MzD3NzEw+mpmZPs3MzD4AAAA/mpkZPzMzMz/NzEw/zcxMP2Zm5j8zMzNAMzNzQJqZmUAzM3NAMzMzQGZm5j/NzEw/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"},"shape":[24],"dtype":"float32","order":"little"}]]}}},"view":{"type":"object","name":"CDSView","id":"p1198","attributes":{"filter":{"type":"object","name":"AllIndices","id":"p1199"}}},"glyph":{"type":"object","name":"Line","id":"p1194","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#F0E442"}},"nonselection_glyph":{"type":"object","name":"Line","id":"p1195","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#F0E442","line_alpha":0.1}},"muted_glyph":{"type":"object","name":"Line","id":"p1196","attributes":{"x":{"type":"field","field":"x"},"y":{"type":"field","field":"y"},"line_color":"#F0E442","line_alpha":0.2}}}}],"toolbar":{"type":"object","name":"Toolbar","id":"p1133","attributes":{"tools":[{"type":"object","name":"WheelZoomTool","id":"p1160","attributes":{"dimensions":"width","renderers":"auto"}},{"type":"object","name":"BoxZoomTool","id":"p1161","attributes":{"dimensions":"both","overlay":{"type":"object","name":"BoxAnnotation","id":"p1162","attributes":{"syncable":false,"line_color":"black","line_alpha":1.0,"line_width":2,"line_dash":[4,4],"fill_color":"lightgrey","fill_alpha":0.5,"level":"overlay","visible":false,"left":{"type":"number","value":"nan"},"right":{"type":"number","value":"nan"},"top":{"type":"number","value":"nan"},"bottom":{"type":"number","value":"nan"},"left_units":"canvas","right_units":"canvas","top_units":"canvas","bottom_units":"canvas","handles":{"type":"object","name":"BoxInteractionHandles","id":"p1168","attributes":{"all":{"type":"object","name":"AreaVisuals","id":"p1167","attributes":{"fill_color":"white","hover_fill_color":"lightgray"}}}}}}}},{"type":"object","name":"ResetTool","id":"p1169"}],"autohide":true}},"left":[{"type":"object","name":"LinearAxis","id":"p1155","attributes":{"ticker":{"type":"object","name":"BasicTicker","id":"p1156","attributes":{"mantissas":[1,2,5]}},"formatter":{"type":"object","name":"BasicTickFormatter","id":"p1157"},"axis_label":"streamflow_hourly_inst [m^3/s]","axis_label_text_font_style":"bold","major_label_policy":{"type":"object","name":"AllLabels","id":"p1158"}}}],"below":[{"type":"object","name":"DatetimeAxis","id":"p1136","attributes":{"ticker":{"type":"object","name":"DatetimeTicker","id":"p1137","attributes":{"num_minor_ticks":5,"tickers":[{"type":"object","name":"AdaptiveTicker","id":"p1138","attributes":{"num_minor_ticks":0,"mantissas":[1,2,5],"max_interval":500.0}},{"type":"object","name":"AdaptiveTicker","id":"p1139","attributes":{"num_minor_ticks":0,"base":60,"mantissas":[1,2,5,10,15,20,30],"min_interval":1000.0,"max_interval":1800000.0}},{"type":"object","name":"AdaptiveTicker","id":"p1140","attributes":{"num_minor_ticks":0,"base":24,"mantissas":[1,2,4,6,8,12],"min_interval":3600000.0,"max_interval":43200000.0}},{"type":"object","name":"DaysTicker","id":"p1141","attributes":{"days":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]}},{"type":"object","name":"DaysTicker","id":"p1142","attributes":{"days":[1,4,7,10,13,16,19,22,25,28]}},{"type":"object","name":"DaysTicker","id":"p1143","attributes":{"days":[1,8,15,22]}},{"type":"object","name":"DaysTicker","id":"p1144","attributes":{"days":[1,15]}},{"type":"object","name":"MonthsTicker","id":"p1145","attributes":{"months":[0,1,2,3,4,5,6,7,8,9,10,11]}},{"type":"object","name":"MonthsTicker","id":"p1146","attributes":{"months":[0,2,4,6,8,10]}},{"type":"object","name":"MonthsTicker","id":"p1147","attributes":{"months":[0,4,8]}},{"type":"object","name":"MonthsTicker","id":"p1148","attributes":{"months":[0,6]}},{"type":"object","name":"YearsTicker","id":"p1149"}]}},"formatter":{"type":"object","name":"DatetimeTickFormatter","id":"p1152","attributes":{"seconds":"%T","minsec":"%T","minutes":"%H:%M","hours":"%H:%M","days":"%b %d","months":"%b %Y","strip_leading_zeros":["microseconds","milliseconds","seconds"],"boundary_scaling":false,"context":{"type":"object","name":"DatetimeTickFormatter","id":"p1151","attributes":{"microseconds":"%T","milliseconds":"%T","seconds":"%b %d, %Y","minsec":"%b %d, %Y","minutes":"%b %d, %Y","hourmin":"%b %d, %Y","hours":"%b %d, %Y","days":"%Y","months":"","years":"","boundary_scaling":false,"hide_repeats":true,"context":{"type":"object","name":"DatetimeTickFormatter","id":"p1150","attributes":{"microseconds":"%b %d, %Y","milliseconds":"%b %d, %Y","seconds":"","minsec":"","minutes":"","hourmin":"","hours":"","days":"","months":"","years":"","boundary_scaling":false,"hide_repeats":true}},"context_which":"all"}},"context_which":"all"}},"axis_label":"Datetime","axis_label_text_font_style":"bold","major_label_orientation":0.7853981633974483,"major_label_policy":{"type":"object","name":"AllLabels","id":"p1153"}}}],"center":[{"type":"object","name":"Grid","id":"p1154","attributes":{"axis":{"id":"p1136"}}},{"type":"object","name":"Grid","id":"p1159","attributes":{"dimension":1,"axis":{"id":"p1155"}}},{"type":"object","name":"Legend","id":"p1179","attributes":{"border_line_color":"black","border_line_alpha":1.0,"background_fill_color":"white","background_fill_alpha":1.0,"click_policy":"hide","items":[{"type":"object","name":"LegendItem","id":"p1180","attributes":{"label":{"type":"value","value":"test_short - fcst-2 - 2022-01-01 00:00:00"},"renderers":[{"id":"p1176"}]}},{"type":"object","name":"LegendItem","id":"p1190","attributes":{"label":{"type":"value","value":"test_short - fcst-3 - 2022-01-01 00:00:00"},"renderers":[{"id":"p1187"}]}},{"type":"object","name":"LegendItem","id":"p1200","attributes":{"label":{"type":"value","value":"test_short - fcst-1 - 2022-01-01 00:00:00"},"renderers":[{"id":"p1197"}]}}]}}]}}]}};
+  const render_items = [{"docid":"0fe2e230-5a37-4f90-90ba-912d78683444","roots":{"p1124":"b4f2eb53-947e-4e0a-adc4-5e158f95d505"},"root_ids":["p1124"]}];
+  void root.Bokeh.embed.embed_items_notebook(docs_json, render_items);
+  }
+  if (root.Bokeh !== undefined) {
+    embed_document(root);
+  } else {
+    let attempts = 0;
+    const timer = setInterval(function(root) {
+      if (root.Bokeh !== undefined) {
+        clearInterval(timer);
+        embed_document(root);
+      } else {
+        attempts++;
+        if (attempts > 100) {
+          clearInterval(timer);
+          console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing");
+        }
+      }
+    }, 10, root)
+  }
+})(window);</script></div>
+</div>
+<section id="appending-upserting-and-overwriting-data">
+<h4>Appending, Upserting, and Overwriting data<a class="headerlink" href="#appending-upserting-and-overwriting-data" title="Link to this heading">#</a></h4>
+<p>Note that the loading methods allow you to add new data to an existing table (<code class="docutils literal notranslate"><span class="pre">append</span></code>, the default) or replace existing data with new values while adding additional data (<code class="docutils literal notranslate"><span class="pre">upsert</span></code>). These are available through the <code class="docutils literal notranslate"><span class="pre">write_mode</span></code> argument. Additionally, when <code class="docutils literal notranslate"><span class="pre">write_mode=&quot;overwrite&quot;</span></code>, any existing partitions receiving new data will be overwritten.</p>
+<p>ex.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">load_parquet</span><span class="p">(</span>
+    <span class="n">in_path</span><span class="o">=</span><span class="s2">&quot;&lt;path-to-additional-data.parquet&gt;&quot;</span><span class="p">,</span>
+    <span class="n">field_mapping</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;reference_time&quot;</span><span class="p">:</span> <span class="s2">&quot;reference_time&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;value_time&quot;</span><span class="p">:</span> <span class="s2">&quot;value_time&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;configuration&quot;</span><span class="p">:</span> <span class="s2">&quot;configuration_name&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;measurement_unit&quot;</span><span class="p">:</span> <span class="s2">&quot;unit_name&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;variable_name&quot;</span><span class="p">:</span> <span class="s2">&quot;variable_name&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;location_id&quot;</span><span class="p">:</span> <span class="s2">&quot;location_id&quot;</span>
+    <span class="p">},</span>
+    <span class="n">constant_field_values</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;unit_name&quot;</span><span class="p">:</span> <span class="s2">&quot;m^3/s&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;variable_name&quot;</span><span class="p">:</span> <span class="s2">&quot;streamflow_hourly_inst&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;configuration_name&quot;</span><span class="p">:</span> <span class="s2">&quot;usgs_observations&quot;</span>
+    <span class="p">},</span>
+    <span class="n">write_mode</span><span class="o">=</span><span class="s2">&quot;append&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="adding-location-attributes">
+<h3>Adding Location Attributes<a class="headerlink" href="#adding-location-attributes" title="Link to this heading">#</a></h3>
+<p>At this point we have added data to the following TEEHR data tables:</p>
+<ul class="simple">
+<li><p>locations</p></li>
+<li><p>configurations</p></li>
+<li><p>location_crosswalks</p></li>
+<li><p>primary_timeseries</p></li>
+<li><p>secondary_timeseries</p></li>
+</ul>
+<p>This is the bare minimum needed to conduct an evaluation, but we are going to add one more type of data, <code class="docutils literal notranslate"><span class="pre">location_attributes</span></code>.  Location attributes are data that provide some type of extra information for the primary locations.  These are data are analogous to the columns in a geospatial data file “attribute table” but are stored in a separate table to keep the schema consistent across evaluations (i.e., we don’t add new columns for each new attribute)</p>
+<div class="cell tag_hide-output docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">attr_2yr_discharge_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">test_eval_dir</span><span class="p">,</span> <span class="s2">&quot;test_attr_2yr_discharge.csv&quot;</span><span class="p">)</span>
+<span class="n">test_study_data</span><span class="o">.</span><span class="n">fetch_file</span><span class="p">(</span><span class="s2">&quot;test_attr_2yr_discharge.csv&quot;</span><span class="p">,</span> <span class="n">attr_2yr_discharge_path</span><span class="p">)</span>
+
+<span class="n">attr_drainage_area_km2_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">test_eval_dir</span><span class="p">,</span> <span class="s2">&quot;test_attr_drainage_area_km2.csv&quot;</span><span class="p">)</span>
+<span class="n">test_study_data</span><span class="o">.</span><span class="n">fetch_file</span><span class="p">(</span><span class="s2">&quot;test_attr_drainage_area_km2.csv&quot;</span><span class="p">,</span> <span class="n">attr_drainage_area_km2_path</span><span class="p">)</span>
+
+<span class="n">attr_ecoregion_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">test_eval_dir</span><span class="p">,</span> <span class="s2">&quot;test_attr_ecoregion.csv&quot;</span><span class="p">)</span>
+<span class="n">test_study_data</span><span class="o">.</span><span class="n">fetch_file</span><span class="p">(</span><span class="s2">&quot;test_attr_ecoregion.csv&quot;</span><span class="p">,</span> <span class="n">attr_ecoregion_path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Like before, lets take a look at the raw data we downloaded from the repository.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Read and display the 3 attribute table contents</span>
+<span class="n">attr_2yr_discharge_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">test_eval_dir</span><span class="p">,</span> <span class="s2">&quot;test_attr_2yr_discharge.csv&quot;</span><span class="p">))</span>
+<span class="n">display</span><span class="p">(</span><span class="n">attr_2yr_discharge_df</span><span class="p">)</span>
+
+<span class="n">attr_drainage_area_km2_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">test_eval_dir</span><span class="p">,</span> <span class="s2">&quot;test_attr_drainage_area_km2.csv&quot;</span><span class="p">))</span>
+<span class="n">display</span><span class="p">(</span><span class="n">attr_drainage_area_km2_df</span><span class="p">)</span>
+
+<span class="n">attr_ecoregion_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">test_eval_dir</span><span class="p">,</span> <span class="s2">&quot;test_attr_ecoregion.csv&quot;</span><span class="p">))</span>
+<span class="n">display</span><span class="p">(</span><span class="n">attr_ecoregion_df</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>location_id</th>
+      <th>attribute_name</th>
+      <th>attribute_value</th>
+      <th>attribute_unit</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>gage-A</td>
+      <td>year_2_discharge</td>
+      <td>500</td>
+      <td>ft^3/s</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>gage-B</td>
+      <td>year_2_discharge</td>
+      <td>200</td>
+      <td>ft^3/s</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>gage-C</td>
+      <td>year_2_discharge</td>
+      <td>300</td>
+      <td>ft^3/s</td>
+    </tr>
+  </tbody>
+</table>
+</div></div><div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>location_id</th>
+      <th>attribute_name</th>
+      <th>attribute_value</th>
+      <th>attribute_unit</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>gage-A</td>
+      <td>drainage_area</td>
+      <td>50</td>
+      <td>sq_km</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>gage-B</td>
+      <td>drainage_area</td>
+      <td>20</td>
+      <td>sq_km</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>gage-C</td>
+      <td>drainage_area</td>
+      <td>30</td>
+      <td>sq_km</td>
+    </tr>
+  </tbody>
+</table>
+</div></div><div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>location_id</th>
+      <th>attribute_name</th>
+      <th>attribute_value</th>
+      <th>attribute_unit</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>gage-A</td>
+      <td>ecoregion</td>
+      <td>coastal_plain</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>gage-B</td>
+      <td>ecoregion</td>
+      <td>piedmont</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>gage-C</td>
+      <td>ecoregion</td>
+      <td>blue_ridge</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>We can see we have data for three different attributes here, <code class="docutils literal notranslate"><span class="pre">year_2_discharge</span></code>,<code class="docutils literal notranslate"><span class="pre">drainage_area</span></code>, <code class="docutils literal notranslate"><span class="pre">ecoregion</span></code>.  Before we can load this data we need to add the attribute names to the <code class="docutils literal notranslate"><span class="pre">attributes</span></code> table and then we can add the location attribute values to the <code class="docutils literal notranslate"><span class="pre">location_attributes</span></code> table.  Like we did for adding configurations, we can use the <code class="docutils literal notranslate"><span class="pre">.add()</span></code> method on the table sub-class to add new values.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Add some attributes</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="n">teehr</span><span class="o">.</span><span class="n">Attribute</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;drainage_area&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;continuous&quot;</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Drainage area in square kilometers&quot;</span>
+        <span class="p">),</span>
+        <span class="n">teehr</span><span class="o">.</span><span class="n">Attribute</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ecoregion&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;categorical&quot;</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Ecoregion&quot;</span>
+        <span class="p">),</span>
+        <span class="n">teehr</span><span class="o">.</span><span class="n">Attribute</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;year_2_discharge&quot;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;continuous&quot;</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;2-yr discharge in cubic meters per second&quot;</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Now that the attributes have been added to the <code class="docutils literal notranslate"><span class="pre">attributes</span></code> table, we can load the <code class="docutils literal notranslate"><span class="pre">location_attributes</span></code> data.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">location_attributes</span><span class="o">.</span><span class="n">load_csv</span><span class="p">(</span>
+    <span class="n">in_path</span><span class="o">=</span><span class="n">test_eval_dir</span><span class="p">,</span>
+    <span class="n">field_mapping</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;attribute_value&quot;</span><span class="p">:</span> <span class="s2">&quot;value&quot;</span><span class="p">},</span>
+    <span class="n">pattern</span><span class="o">=</span><span class="s2">&quot;test_attr_*.csv&quot;</span><span class="p">,</span>
+    <span class="n">location_id_prefix</span><span class="o">=</span><span class="s2">&quot;usgs&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+</div>
+</div>
+<p>And query to make sure it was added.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">location_attributes</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>location_id</th>
+      <th>attribute_name</th>
+      <th>value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>usgs-C</td>
+      <td>year_2_discharge</td>
+      <td>300</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>usgs-C</td>
+      <td>ecoregion</td>
+      <td>blue_ridge</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>usgs-A</td>
+      <td>ecoregion</td>
+      <td>coastal_plain</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>usgs-A</td>
+      <td>year_2_discharge</td>
+      <td>500</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>usgs-B</td>
+      <td>year_2_discharge</td>
+      <td>200</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>usgs-B</td>
+      <td>ecoregion</td>
+      <td>piedmont</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>usgs-C</td>
+      <td>drainage_area</td>
+      <td>30</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>usgs-B</td>
+      <td>drainage_area</td>
+      <td>20</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>usgs-A</td>
+      <td>drainage_area</td>
+      <td>50</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>Now we have data in all the tables required to conduct an evaluation.  There is one more step to do before we can start “slicing and dicing” the data and looking at evaluation metrics - we need to generate the <code class="docutils literal notranslate"><span class="pre">joined_timeseries</span></code> data table.  The <code class="docutils literal notranslate"><span class="pre">joined_timeseries</span></code> table is essentially a materialized view that joins the <code class="docutils literal notranslate"><span class="pre">primary_timeseries</span></code> and <code class="docutils literal notranslate"><span class="pre">secondary_timeseries</span></code> based on <code class="docutils literal notranslate"><span class="pre">location_id</span></code>, <code class="docutils literal notranslate"><span class="pre">value_time</span></code>, <code class="docutils literal notranslate"><span class="pre">variable_name</span></code> and <code class="docutils literal notranslate"><span class="pre">unit_name</span></code>, adds the <code class="docutils literal notranslate"><span class="pre">location_attributes</span></code>, and adds any user defined fields.</p>
+<p>Here we are going to execute the <code class="docutils literal notranslate"><span class="pre">create()</span></code> method on the <code class="docutils literal notranslate"><span class="pre">joined_timeseries</span></code> table class to generate the <code class="docutils literal notranslate"><span class="pre">joined_timeseries</span></code> “materialized view” from the data we just loaded into the domain, location and timeseries tables.  The user defined fields to be added are defined as part of the evaluation in the <code class="docutils literal notranslate"><span class="pre">[evaluation_dir]/scripts/user_defined_fields.py</span></code> Python script.  Note, it is possible to skip adding any user defined fields by setting <code class="docutils literal notranslate"><span class="pre">execute_scripts=False</span></code> when calling the <code class="docutils literal notranslate"><span class="pre">create()</span></code> method.  Creating user defined fields can be a powerful tool to allow per-location, per-timestep fields to be added to the materialized <code class="docutils literal notranslate"><span class="pre">joined_timeseries</span></code> table.  This will be covered in more detail in future lessons.  For now, lets just set <code class="docutils literal notranslate"><span class="pre">execute_scripts=True</span></code> and execute the <code class="docutils literal notranslate"><span class="pre">user_defined_fields.py</span></code> script.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">execute_scripts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+</div>
+</div>
+<p>Now, lets query the <code class="docutils literal notranslate"><span class="pre">joined_timeseries</span></code> table that we just created to see what it contains.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>reference_time</th>
+      <th>value_time</th>
+      <th>primary_location_id</th>
+      <th>secondary_location_id</th>
+      <th>primary_value</th>
+      <th>secondary_value</th>
+      <th>unit_name</th>
+      <th>member</th>
+      <th>ecoregion</th>
+      <th>year_2_discharge</th>
+      <th>drainage_area</th>
+      <th>month</th>
+      <th>year</th>
+      <th>water_year</th>
+      <th>season</th>
+      <th>configuration_name</th>
+      <th>variable_name</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2022-01-01 01:00:00</td>
+      <td>2022-01-01 05:00:00</td>
+      <td>usgs-A</td>
+      <td>fcst-1</td>
+      <td>0.4</td>
+      <td>0.500000</td>
+      <td>m^3/s</td>
+      <td>None</td>
+      <td>coastal_plain</td>
+      <td>500</td>
+      <td>50</td>
+      <td>1</td>
+      <td>2022</td>
+      <td>2022</td>
+      <td>winter</td>
+      <td>test_short</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2022-01-01 01:00:00</td>
+      <td>2022-01-01 20:00:00</td>
+      <td>usgs-C</td>
+      <td>fcst-3</td>
+      <td>50.0</td>
+      <td>54.419998</td>
+      <td>m^3/s</td>
+      <td>None</td>
+      <td>blue_ridge</td>
+      <td>300</td>
+      <td>30</td>
+      <td>1</td>
+      <td>2022</td>
+      <td>2022</td>
+      <td>winter</td>
+      <td>test_short</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2022-01-01 02:00:00</td>
+      <td>2022-01-01 02:00:00</td>
+      <td>usgs-C</td>
+      <td>fcst-3</td>
+      <td>100.0</td>
+      <td>103.199997</td>
+      <td>m^3/s</td>
+      <td>None</td>
+      <td>blue_ridge</td>
+      <td>300</td>
+      <td>30</td>
+      <td>1</td>
+      <td>2022</td>
+      <td>2022</td>
+      <td>winter</td>
+      <td>test_short</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2022-01-01 02:00:00</td>
+      <td>2022-01-01 18:00:00</td>
+      <td>usgs-A</td>
+      <td>fcst-1</td>
+      <td>2.0</td>
+      <td>2.000000</td>
+      <td>m^3/s</td>
+      <td>None</td>
+      <td>coastal_plain</td>
+      <td>500</td>
+      <td>50</td>
+      <td>1</td>
+      <td>2022</td>
+      <td>2022</td>
+      <td>winter</td>
+      <td>test_short</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2022-01-01 02:00:00</td>
+      <td>2022-01-01 15:00:00</td>
+      <td>usgs-C</td>
+      <td>fcst-3</td>
+      <td>100.0</td>
+      <td>102.800003</td>
+      <td>m^3/s</td>
+      <td>None</td>
+      <td>blue_ridge</td>
+      <td>300</td>
+      <td>30</td>
+      <td>1</td>
+      <td>2022</td>
+      <td>2022</td>
+      <td>winter</td>
+      <td>test_short</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>In this case, the <code class="docutils literal notranslate"><span class="pre">joined_timeseries</span></code> table has 16 fields.  These fields are the result of joining the <code class="docutils literal notranslate"><span class="pre">primary_timeseries</span></code> to the <code class="docutils literal notranslate"><span class="pre">secondary_timeseries</span></code>, joining the <code class="docutils literal notranslate"><span class="pre">location_attributes</span></code> to that, and adding user defined fields.  The bullet points below show which fields fall into which category:</p>
+</section>
+<section id="timeseries">
+<h3>Timeseries<a class="headerlink" href="#timeseries" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>location_id</p></li>
+<li><p>primary_location_id</p></li>
+<li><p>secondary_location_id</p></li>
+<li><p>configuration_name</p></li>
+<li><p>variable_name</p></li>
+<li><p>unit_name</p></li>
+<li><p>reference_time</p></li>
+<li><p>value_time</p></li>
+<li><p>primary_value</p></li>
+<li><p>secondary_value</p></li>
+</ul>
+</section>
+<section id="location-attributes">
+<h3>Location Attributes<a class="headerlink" href="#location-attributes" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>year_2_discharge’</p></li>
+<li><p>ecoregion</p></li>
+<li><p>drainage_area</p></li>
+</ul>
+</section>
+<section id="user-defined-fields">
+<h3>User Defined Fields<a class="headerlink" href="#user-defined-fields" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>month</p></li>
+<li><p>year</p></li>
+<li><p>water_year</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>This concludes the <code class="docutils literal notranslate"><span class="pre">Loading</span> <span class="pre">Local</span> <span class="pre">Data</span></code> lesson.  In the next lesson we will clone an entire evaluation from the TEEHR AWS S3 bucket and start to explore the querying and metrics capabilities.</p>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="01_introduction_schema.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Introduction to the Schema</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="03_introduction_class.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Introduction to the Evaluation Class</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#locations">Locations</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#location-id-prefixes">Location ID Prefixes</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#primary-timeseries">Primary Timeseries</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#secondary-timeseries">Secondary Timeseries</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#location-crosswalks">Location Crosswalks</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#appending-upserting-and-overwriting-data">Appending, Upserting, and Overwriting data</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-location-attributes">Adding Location Attributes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#timeseries">Timeseries</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#location-attributes">Location Attributes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#user-defined-fields">User Defined Fields</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/user_guide/notebooks/02_loading_local_data.ipynb.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><!-- This will display the version of the docs -->
+TEEHR version 0.5.2</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

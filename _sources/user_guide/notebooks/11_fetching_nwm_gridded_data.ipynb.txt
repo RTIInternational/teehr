@@ -1,0 +1,497 @@
+{
+    "cells": [
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "# Fetching and Summarizing NWM Gridded Data"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "## Overview\n",
+                "In this guide we'll demonstrate fetching National Water Model (NWM) operational and retrospective gridded data from cloud storage. This example makes use of a pre-generated Evaluation dataset stored in TEEHR's examples data module.\n",
+                "\n",
+                "**Note**: For demonstration purposes several cells below are shown in markdown form. If you want to download this notebook and run them yourself, you will need to convert them to code cells.\n",
+                "\n",
+                "For a refresher on loading location and location crosswalk data into a new Evaluation refer back to the [Loading Local Data](https://rtiinternational.github.io/teehr/user_guide/notebooks/02_loading_local_data.html) and [Setting-up a Simple Example](https://rtiinternational.github.io/teehr/user_guide/notebooks/04_setup_simple_example.html) user guide pages."
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "### Set up the example Evaluation"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "from datetime import datetime\n",
+                "from pathlib import Path\n",
+                "import shutil\n",
+                "import hvplot.pandas  # noqa\n",
+                "import pandas as pd\n",
+                "\n",
+                "from teehr.examples.setup_nwm_grid_example import setup_nwm_example\n",
+                "import teehr\n",
+                "from teehr.evaluation.utils import print_tree\n",
+                "\n",
+                "# Tell Bokeh to output plots in the notebook\n",
+                "from bokeh.io import output_notebook\n",
+                "output_notebook()"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "We'll start with the Evaluation from the previous User Guide, which contains observed (USGS) and simulation (NWM) streamflow for a gage at Radford, VA during hurricane Helene."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {
+                "tags": [
+                    "hide-output"
+                ]
+            },
+            "outputs": [],
+            "source": [
+                "# Define the directory where the Evaluation will be created.\n",
+                "test_eval_dir = Path(Path().home(), \"temp\", \"11_fetch_gridded_nwm_data\")\n",
+                "\n",
+                "# Setup the example evaluation using data from the TEEHR repository.\n",
+                "shutil.rmtree(test_eval_dir, ignore_errors=True)\n",
+                "setup_nwm_example(tmpdir=test_eval_dir)\n",
+                "\n",
+                "# Initialize the evaluation.\n",
+                "ev = teehr.Evaluation(dir_path=test_eval_dir)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "ev.locations.to_geopandas()"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "We can add polygons to summarize rainfall to, to see the impact of the forcing data on the NWM streamflow prediction"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "location_data_path = Path(test_eval_dir, \"three_huc10s_radford.parquet\")\n",
+                "\n",
+                "ev.locations.load_spatial(\n",
+                "    location_data_path,\n",
+                "    field_mapping={\n",
+                "        \"huc10\": \"id\"\n",
+                "    },\n",
+                "    location_id_prefix=\"wbd\",\n",
+                "    write_mode=\"append\"  # this is the default\n",
+                ")"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "Now we have the USGS gage point, and three WBD HUC10 polygons in the locations table."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "gdf = ev.locations.to_geopandas()\n",
+                "gdf"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "gdf[gdf.id != \"usgs-03171000\"].hvplot(geo=True, tiles=\"OSM\", alpha=0.5) * \\\n",
+                "    gdf[gdf.id == \"usgs-03171000\"].hvplot(geo=True, color=\"black\", size=50)"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "Now we'll fetch NWM gridded analysis and assimilation rainfall data and calculate mean areal precipitation (MAP) for each of the HUC10 watersheds. We'll consider this \"observed\" primary timeseries. \n",
+                "\n",
+                "The location ID prefix is used to filter the locations table for WBD polygons during fetching. The calculated MAP timeseries will be appended (the default) to the `primary_timeseries` table along with the streamflow data (the primary timeseries table will contain both streamflow and rainfall)."
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "```python\n",
+                "# To run this cell locally first convert it to a python cell\n",
+                "ev.fetch.nwm_operational_grids(\n",
+                "    nwm_configuration=\"forcing_analysis_assim\",\n",
+                "    output_type=\"forcing\",\n",
+                "    variable_name=\"RAINRATE\",\n",
+                "    start_date=datetime(2024, 9, 26),\n",
+                "    end_date=datetime(2024, 9, 26),\n",
+                "    nwm_version=\"nwm30\",\n",
+                "    prioritize_analysis_value_time=True,\n",
+                "    t_minus_hours=[0],\n",
+                "    calculate_zonal_weights=True,\n",
+                "    location_id_prefix=\"wbd\",\n",
+                "    timeseries_type=\"primary\"  # To be considered \"observations\". This is the default.\n",
+                ")\n",
+                "```"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "primary_df = ev.primary_timeseries.to_pandas()\n",
+                "primary_df.head()"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "Let's take a look at the `cache` directory. After fetching the NWM analysis forcing, we have a directory for the weights file."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "print_tree(Path(ev.cache_dir, \"fetching\", \"weights\"))"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "The weights file contains the fractional coverage for each pixel (row/col pair) that intersects with each polygon location (WBD HUC10 watershed)."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "cached_weights_filepath = Path(\n",
+                "        ev.cache_dir,\n",
+                "        \"fetching\",\n",
+                "        \"weights\",\n",
+                "        \"nwm30_forcing_analysis_assim\",\n",
+                "        \"nwm30_forcing_analysis_assim_pixel_weights.parquet\"\n",
+                ")\n",
+                "pd.read_parquet(cached_weights_filepath)"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "Now we can fetch the NWM forecast rainfall and calculate MAP, to compare it to the \"observed\" rainfall. First we need to create and import the `location_crosswalks` table, which maps the secondary locations (\"model\") to the primary (\"observations\")."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "ev.locations.to_pandas()[\"id\"].unique()"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "xwalk_df = pd.DataFrame(\n",
+                "    {\n",
+                "        \"primary_location_id\": [\n",
+                "            \"wbd-0505000115\",\n",
+                "            \"wbd-0505000117\",\n",
+                "            \"wbd-0505000118\"\n",
+                "        ],\n",
+                "        \"secondary_location_id\": [\n",
+                "            \"forecast-0505000115\",\n",
+                "            \"forecast-0505000117\",\n",
+                "            \"forecast-0505000118\"\n",
+                "        ]\n",
+                "    }\n",
+                ")\n",
+                "temp_xwalk_path = Path(ev.cache_dir, \"forcing_xwalk.parquet\")\n",
+                "xwalk_df.to_parquet(temp_xwalk_path)"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "Now we can load it into the Evaluation, appending to the existing table."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "ev.location_crosswalks.load_parquet(temp_xwalk_path)\n",
+                "ev.location_crosswalks.to_pandas()"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "Now we can fetch the NWM forecast rainfall, which we'll consider the \"secondary\" timeseries. Let's grab a single short range rainfall forecast"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "```python\n",
+                "# To run this cell locally first convert it to a python cell\n",
+                "ev.fetch.nwm_operational_grids(\n",
+                "    nwm_configuration=\"forcing_short_range\",\n",
+                "    output_type=\"forcing\",\n",
+                "    variable_name=\"RAINRATE\",\n",
+                "    start_date=datetime(2024, 9, 26),\n",
+                "    end_date=datetime(2024, 9, 26),\n",
+                "    nwm_version=\"nwm30\",\n",
+                "    location_id_prefix=\"forecast\",\n",
+                "    calculate_zonal_weights=False,  # re-use the weights file in the cache\n",
+                "    zonal_weights_filepath=cached_weights_filepath,\n",
+                "    starting_z_hour=1,\n",
+                "    ending_z_hour=1,\n",
+                "    timeseries_type=\"secondary\"  # now considered forecast\n",
+                ")\n",
+                "```"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "And our `secondary_timeseries` table consists of NWM medium range streamflow forecasts (member 1), plus NWM short range rainfall forecast summarized to the three WBD HUC10 watersheds as mean areal precipitation (MAP)."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "secondary_df = ev.secondary_timeseries.to_pandas()\n",
+                "secondary_df.head()"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "And our `primary_timeseries` table consists of USGS streamflow data at the Radford gage, plus NWM analysis rainfall summarized to the three WBD HUC10 watersheds as mean areal precipitation (MAP)."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "primary_df = ev.primary_timeseries.to_pandas()\n",
+                "primary_df.head()"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "Now we can create the `joined_timeseries` table allowing for efficient metric calculation and further exploration."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "ev.joined_timeseries.create()\n",
+                "\n",
+                "joined_df = ev.joined_timeseries.to_pandas()\n",
+                "joined_df.head()"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "joined_df.configuration_name.unique()"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "# We'll use this helper function for plotting timeseries.\n",
+                "def plot_timeseries(\n",
+                "    configuration_name: str,\n",
+                "    secondary_by: list[str],\n",
+                "    title: str\n",
+                "):\n",
+                "    sim_plot = joined_df[joined_df[\"configuration_name\"] == configuration_name].\\\n",
+                "        hvplot(\n",
+                "            x=\"value_time\",\n",
+                "            y=\"secondary_value\",\n",
+                "            by=secondary_by,\n",
+                "            legend=False,\n",
+                "            )\n",
+                "    obs_plot = joined_df[joined_df[\"configuration_name\"] == configuration_name].\\\n",
+                "        hvplot(\n",
+                "            x=\"value_time\",\n",
+                "            y=\"primary_value\",\n",
+                "            by=[\"primary_location_id\", \"configuration_name\"],\n",
+                "            legend=False,\n",
+                "            color=\"black\"\n",
+                "            )\n",
+                "    return (sim_plot * obs_plot).options(\n",
+                "                width=700,\n",
+                "                height=400,\n",
+                "                show_grid=True,\n",
+                "                title=title\n",
+                "            )"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "We can plot the primary (USGS) vs. secondary (NWM) streamflow and notice that this particular NWM forecast underestimated the flow."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "plot_timeseries(\n",
+                "    configuration_name=\"nwm30_medium_range\",\n",
+                "    secondary_by=[\"reference_time\"],\n",
+                "    title=\"Observed streamflow (black) and forecast streamflow at the Radford gage\"\n",
+                ")"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "In plotting the primary vs. secondary rainfall (MAP) in each watershed, we can see the this NWM forecast underestimated the observed rainfall. This is likely one reason why the NWM streamflow forecasts also underestimated the flow."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "plot_timeseries(\n",
+                "    configuration_name=\"nwm30_forcing_short_range\",\n",
+                "    secondary_by=[\"primary_location_id\"],\n",
+                "    title=\"Observed MAP (black) and forecast MAP at the three HUC10s\"\n",
+                ")"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "Now we can also calculate performance metrics for the streamflow and rainfall for this event."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "bias = teehr.DeterministicMetrics.RelativeBias()\n",
+                "kge = teehr.DeterministicMetrics.KlingGuptaEfficiency()\n",
+                "\n",
+                "ev.metrics.query(\n",
+                "    include_metrics=[bias, kge],\n",
+                "    group_by=[\"primary_location_id\", \"configuration_name\"],\n",
+                "    order_by=[\"primary_location_id\", \"configuration_name\"],\n",
+                ").to_pandas()"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "ev.spark.stop()"
+            ]
+        }
+    ],
+    "metadata": {
+        "kernelspec": {
+            "display_name": ".venv",
+            "language": "python",
+            "name": "python3"
+        },
+        "language_info": {
+            "codemirror_mode": {
+                "name": "ipython",
+                "version": 3
+            },
+            "file_extension": ".py",
+            "mimetype": "text/x-python",
+            "name": "python",
+            "nbconvert_exporter": "python",
+            "pygments_lexer": "ipython3",
+            "version": "3.10.12"
+        }
+    },
+    "nbformat": 4,
+    "nbformat_minor": 2
+}

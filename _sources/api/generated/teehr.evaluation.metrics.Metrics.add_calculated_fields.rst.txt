@@ -1,0 +1,23 @@
+﻿add\_calculated\_fields
+=======================
+
+.. automodule:: teehr.evaluation.metrics.Metrics.add_calculated_fields
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

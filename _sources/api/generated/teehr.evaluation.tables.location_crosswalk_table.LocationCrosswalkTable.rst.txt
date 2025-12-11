@@ -1,0 +1,36 @@
+﻿LocationCrosswalkTable
+======================
+
+.. currentmodule:: teehr.evaluation.tables.location_crosswalk_table
+
+.. autoclass:: LocationCrosswalkTable
+   :members:
+   :show-inheritance:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~LocationCrosswalkTable.distinct_values
+      ~LocationCrosswalkTable.field_enum
+      ~LocationCrosswalkTable.fields
+      ~LocationCrosswalkTable.filter
+      ~LocationCrosswalkTable.load_csv
+      ~LocationCrosswalkTable.load_dataframe
+      ~LocationCrosswalkTable.load_parquet
+      ~LocationCrosswalkTable.order_by
+      ~LocationCrosswalkTable.query
+      ~LocationCrosswalkTable.to_geopandas
+      ~LocationCrosswalkTable.to_pandas
+      ~LocationCrosswalkTable.to_sdf
+      ~LocationCrosswalkTable.validate
+   
+   
+
+   
+   
+   

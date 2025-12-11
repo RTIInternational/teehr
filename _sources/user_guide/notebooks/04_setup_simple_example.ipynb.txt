@@ -1,0 +1,488 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Setting-up a Simple Example"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Overview\n",
+    "In this lesson we will set up a more realistic, but still very small, example using real gage locations.  In this case we will use a few data files that we have on hand in the repository for the `locations` and `location_crosswalks` and fetch the USGS gage data and the NWM v3.0 streamflow simulation data from NWIS and AWS, respectively."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Create a new Evaluation\n",
+    "First we will import TEEHR along with some other required libraries for this example.  Then we create a new instance of the Evaluation that points to a directory where the evaluation data will be stored and clone the basic evaluation template."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "    <style>\n",
+       "        .bk-notebook-logo {\n",
+       "            display: block;\n",
+       "            width: 20px;\n",
+       "            height: 20px;\n",
+       "            background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNui8sowAAAOkSURBVDiNjZRtaJVlGMd/1/08zzln5zjP1LWcU9N0NkN8m2CYjpgQYQXqSs0I84OLIC0hkEKoPtiH3gmKoiJDU7QpLgoLjLIQCpEsNJ1vqUOdO7ppbuec5+V+rj4ctwzd8IIbbi6u+8f1539dt3A78eXC7QizUF7gyV1fD1Yqg4JWz84yffhm0qkFqBogB9rM8tZdtwVsPUhWhGcFJngGeWrPzHm5oaMmkfEg1usvLFyc8jLRqDOMru7AyC8saQr7GG7f5fvDeH7Ej8CM66nIF+8yngt6HWaKh7k49Soy9nXurCi1o3qUbS3zWfrYeQDTB/Qj6kX6Ybhw4B+bOYoLKCC9H3Nu/leUTZ1JdRWkkn2ldcCamzrcf47KKXdAJllSlxAOkRgyHsGC/zRday5Qld9DyoM4/q/rUoy/CXh3jzOu3bHUVZeU+DEn8FInkPBFlu3+nW3Nw0mk6vCDiWg8CeJaxEwuHS3+z5RgY+YBR6V1Z1nxSOfoaPa4LASWxxdNp+VWTk7+4vzaou8v8PN+xo+KY2xsw6une2frhw05CTYOmQvsEhjhWjn0bmXPjpE1+kplmmkP3suftwTubK9Vq22qKmrBhpY4jvd5afdRA3wGjFAgcnTK2s4hY0/GPNIb0nErGMCRxWOOX64Z8RAC4oCXdklmEvcL8o0BfkNK4lUg9HTl+oPlQxdNo3Mg4Nv175e/1LDGzZen30MEjRUtmXSfiTVu1kK8W4txyV6BMKlbgk3lMwYCiusNy9fVfvvwMxv8Ynl6vxoByANLTWplvuj/nF9m2+PDtt1eiHPBr1oIfhCChQMBw6Aw0UulqTKZdfVvfG7VcfIqLG9bcldL/+pdWTLxLUy8Qq38heUIjh4XlzZxzQm19lLFlr8vdQ97rjZVOLf8nclzckbcD4wxXMidpX30sFd37Fv/GtwwhzhxGVAprjbg0gCAEeIgwCZyTV2Z1REEW8O4py0wsjeloKoMr6iCY6dP92H6Vw/oTyICIthibxjm/DfN9lVz8IqtqKYLUXfoKVMVQVVJOElGjrnnUt9T9wbgp8AyYKaGlqingHZU/uG2NTZSVqwHQTWkx9hxjkpWDaCg6Ckj5qebgBVbT3V3NNXMSiWSDdGV3hrtzla7J+duwPOToIg42ChPQOQjspnSlp1V+Gjdged7+8UN5CRAV7a5EdFNwCjEaBR27b3W890TE7g24NAP/mMDXRWrGoFPQI9ls/MWO2dWFAar/xcOIImbbpA3zgAAAABJRU5ErkJggg==);\n",
+       "        }\n",
+       "    </style>\n",
+       "    <div>\n",
+       "        <a href=\"https://bokeh.org\" target=\"_blank\" class=\"bk-notebook-logo\"></a>\n",
+       "        <span id=\"f8ac35bd-9a2d-487c-939e-0455331a7bfe\">Loading BokehJS ...</span>\n",
+       "    </div>\n"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/javascript": "'use strict';\n(function(root) {\n  function now() {\n    return new Date();\n  }\n\n  const force = true;\n\n  if (typeof root._bokeh_onload_callbacks === \"undefined\" || force === true) {\n    root._bokeh_onload_callbacks = [];\n    root._bokeh_is_loading = undefined;\n  }\n\nconst JS_MIME_TYPE = 'application/javascript';\n  const HTML_MIME_TYPE = 'text/html';\n  const EXEC_MIME_TYPE = 'application/vnd.bokehjs_exec.v0+json';\n  const CLASS_NAME = 'output_bokeh rendered_html';\n\n  /**\n   * Render data to the DOM node\n   */\n  function render(props, node) {\n    const script = document.createElement(\"script\");\n    node.appendChild(script);\n  }\n\n  /**\n   * Handle when an output is cleared or removed\n   */\n  function handleClearOutput(event, handle) {\n    function drop(id) {\n      const view = Bokeh.index.get_by_id(id)\n      if (view != null) {\n        view.model.document.clear()\n        Bokeh.index.delete(view)\n      }\n    }\n\n    const cell = handle.cell;\n\n    const id = cell.output_area._bokeh_element_id;\n    const server_id = cell.output_area._bokeh_server_id;\n\n    // Clean up Bokeh references\n    if (id != null) {\n      drop(id)\n    }\n\n    if (server_id !== undefined) {\n      // Clean up Bokeh references\n      const cmd_clean = \"from bokeh.io.state import curstate; print(curstate().uuid_to_server['\" + server_id + \"'].get_sessions()[0].document.roots[0]._id)\";\n      cell.notebook.kernel.execute(cmd_clean, {\n        iopub: {\n          output: function(msg) {\n            const id = msg.content.text.trim()\n            drop(id)\n          }\n        }\n      });\n      // Destroy server and session\n      const cmd_destroy = \"import bokeh.io.notebook as ion; ion.destroy_server('\" + server_id + \"')\";\n      cell.notebook.kernel.execute(cmd_destroy);\n    }\n  }\n\n  /**\n   * Handle when a new output is added\n   */\n  function handleAddOutput(event, handle) {\n    const output_area = handle.output_area;\n    const output = handle.output;\n\n    // limit handleAddOutput to display_data with EXEC_MIME_TYPE content only\n    if ((output.output_type != \"display_data\") || (!Object.prototype.hasOwnProperty.call(output.data, EXEC_MIME_TYPE))) {\n      return\n    }\n\n    const toinsert = output_area.element.find(\".\" + CLASS_NAME.split(' ')[0]);\n\n    if (output.metadata[EXEC_MIME_TYPE][\"id\"] !== undefined) {\n      toinsert[toinsert.length - 1].firstChild.textContent = output.data[JS_MIME_TYPE];\n      // store reference to embed id on output_area\n      output_area._bokeh_element_id = output.metadata[EXEC_MIME_TYPE][\"id\"];\n    }\n    if (output.metadata[EXEC_MIME_TYPE][\"server_id\"] !== undefined) {\n      const bk_div = document.createElement(\"div\");\n      bk_div.innerHTML = output.data[HTML_MIME_TYPE];\n      const script_attrs = bk_div.children[0].attributes;\n      for (let i = 0; i < script_attrs.length; i++) {\n        toinsert[toinsert.length - 1].firstChild.setAttribute(script_attrs[i].name, script_attrs[i].value);\n        toinsert[toinsert.length - 1].firstChild.textContent = bk_div.children[0].textContent\n      }\n      // store reference to server id on output_area\n      output_area._bokeh_server_id = output.metadata[EXEC_MIME_TYPE][\"server_id\"];\n    }\n  }\n\n  function register_renderer(events, OutputArea) {\n\n    function append_mime(data, metadata, element) {\n      // create a DOM node to render to\n      const toinsert = this.create_output_subarea(\n        metadata,\n        CLASS_NAME,\n        EXEC_MIME_TYPE\n      );\n      this.keyboard_manager.register_events(toinsert);\n      // Render to node\n      const props = {data: data, metadata: metadata[EXEC_MIME_TYPE]};\n      render(props, toinsert[toinsert.length - 1]);\n      element.append(toinsert);\n      return toinsert\n    }\n\n    /* Handle when an output is cleared or removed */\n    events.on('clear_output.CodeCell', handleClearOutput);\n    events.on('delete.Cell', handleClearOutput);\n\n    /* Handle when a new output is added */\n    events.on('output_added.OutputArea', handleAddOutput);\n\n    /**\n     * Register the mime type and append_mime function with output_area\n     */\n    OutputArea.prototype.register_mime_type(EXEC_MIME_TYPE, append_mime, {\n      /* Is output safe? */\n      safe: true,\n      /* Index of renderer in `output_area.display_order` */\n      index: 0\n    });\n  }\n\n  // register the mime type if in Jupyter Notebook environment and previously unregistered\n  if (root.Jupyter !== undefined) {\n    const events = require('base/js/events');\n    const OutputArea = require('notebook/js/outputarea').OutputArea;\n\n    if (OutputArea.prototype.mime_types().indexOf(EXEC_MIME_TYPE) == -1) {\n      register_renderer(events, OutputArea);\n    }\n  }\n  if (typeof (root._bokeh_timeout) === \"undefined\" || force === true) {\n    root._bokeh_timeout = Date.now() + 5000;\n    root._bokeh_failed_load = false;\n  }\n\n  const NB_LOAD_WARNING = {'data': {'text/html':\n     \"<div style='background-color: #fdd'>\\n\"+\n     \"<p>\\n\"+\n     \"BokehJS does not appear to have successfully loaded. If loading BokehJS from CDN, this \\n\"+\n     \"may be due to a slow or bad network connection. Possible fixes:\\n\"+\n     \"</p>\\n\"+\n     \"<ul>\\n\"+\n     \"<li>re-rerun `output_notebook()` to attempt to load from CDN again, or</li>\\n\"+\n     \"<li>use INLINE resources instead, as so:</li>\\n\"+\n     \"</ul>\\n\"+\n     \"<code>\\n\"+\n     \"from bokeh.resources import INLINE\\n\"+\n     \"output_notebook(resources=INLINE)\\n\"+\n     \"</code>\\n\"+\n     \"</div>\"}};\n\n  function display_loaded(error = null) {\n    const el = document.getElementById(\"f8ac35bd-9a2d-487c-939e-0455331a7bfe\");\n    if (el != null) {\n      const html = (() => {\n        if (typeof root.Bokeh === \"undefined\") {\n          if (error == null) {\n            return \"BokehJS is loading ...\";\n          } else {\n            return \"BokehJS failed to load.\";\n          }\n        } else {\n          const prefix = `BokehJS ${root.Bokeh.version}`;\n          if (error == null) {\n            return `${prefix} successfully loaded.`;\n          } else {\n            return `${prefix} <b>encountered errors</b> while loading and may not function as expected.`;\n          }\n        }\n      })();\n      el.innerHTML = html;\n\n      if (error != null) {\n        const wrapper = document.createElement(\"div\");\n        wrapper.style.overflow = \"auto\";\n        wrapper.style.height = \"5em\";\n        wrapper.style.resize = \"vertical\";\n        const content = document.createElement(\"div\");\n        content.style.fontFamily = \"monospace\";\n        content.style.whiteSpace = \"pre-wrap\";\n        content.style.backgroundColor = \"rgb(255, 221, 221)\";\n        content.textContent = error.stack ?? error.toString();\n        wrapper.append(content);\n        el.append(wrapper);\n      }\n    } else if (Date.now() < root._bokeh_timeout) {\n      setTimeout(() => display_loaded(error), 100);\n    }\n  }\n\n  function run_callbacks() {\n    try {\n      root._bokeh_onload_callbacks.forEach(function(callback) {\n        if (callback != null)\n          callback();\n      });\n    } finally {\n      delete root._bokeh_onload_callbacks\n    }\n    console.debug(\"Bokeh: all callbacks have finished\");\n  }\n\n  function load_libs(css_urls, js_urls, callback) {\n    if (css_urls == null) css_urls = [];\n    if (js_urls == null) js_urls = [];\n\n    root._bokeh_onload_callbacks.push(callback);\n    if (root._bokeh_is_loading > 0) {\n      console.debug(\"Bokeh: BokehJS is being loaded, scheduling callback at\", now());\n      return null;\n    }\n    if (js_urls == null || js_urls.length === 0) {\n      run_callbacks();\n      return null;\n    }\n    console.debug(\"Bokeh: BokehJS not loaded, scheduling load and callback at\", now());\n    root._bokeh_is_loading = css_urls.length + js_urls.length;\n\n    function on_load() {\n      root._bokeh_is_loading--;\n      if (root._bokeh_is_loading === 0) {\n        console.debug(\"Bokeh: all BokehJS libraries/stylesheets loaded\");\n        run_callbacks()\n      }\n    }\n\n    function on_error(url) {\n      console.error(\"failed to load \" + url);\n    }\n\n    for (let i = 0; i < css_urls.length; i++) {\n      const url = css_urls[i];\n      const element = document.createElement(\"link\");\n      element.onload = on_load;\n      element.onerror = on_error.bind(null, url);\n      element.rel = \"stylesheet\";\n      element.type = \"text/css\";\n      element.href = url;\n      console.debug(\"Bokeh: injecting link tag for BokehJS stylesheet: \", url);\n      document.body.appendChild(element);\n    }\n\n    for (let i = 0; i < js_urls.length; i++) {\n      const url = js_urls[i];\n      const element = document.createElement('script');\n      element.onload = on_load;\n      element.onerror = on_error.bind(null, url);\n      element.async = false;\n      element.src = url;\n      console.debug(\"Bokeh: injecting script tag for BokehJS library: \", url);\n      document.head.appendChild(element);\n    }\n  };\n\n  function inject_raw_css(css) {\n    const element = document.createElement(\"style\");\n    element.appendChild(document.createTextNode(css));\n    document.body.appendChild(element);\n  }\n\n  const js_urls = [\"https://cdn.bokeh.org/bokeh/release/bokeh-3.6.1.min.js\", \"https://cdn.bokeh.org/bokeh/release/bokeh-gl-3.6.1.min.js\", \"https://cdn.bokeh.org/bokeh/release/bokeh-widgets-3.6.1.min.js\", \"https://cdn.bokeh.org/bokeh/release/bokeh-tables-3.6.1.min.js\", \"https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-3.6.1.min.js\"];\n  const css_urls = [];\n\n  const inline_js = [    function(Bokeh) {\n      Bokeh.set_log_level(\"info\");\n    },\nfunction(Bokeh) {\n    }\n  ];\n\n  function run_inline_js() {\n    if (root.Bokeh !== undefined || force === true) {\n      try {\n            for (let i = 0; i < inline_js.length; i++) {\n      inline_js[i].call(root, root.Bokeh);\n    }\n\n      } catch (error) {display_loaded(error);throw error;\n      }if (force === true) {\n        display_loaded();\n      }} else if (Date.now() < root._bokeh_timeout) {\n      setTimeout(run_inline_js, 100);\n    } else if (!root._bokeh_failed_load) {\n      console.log(\"Bokeh: BokehJS failed to load within specified timeout.\");\n      root._bokeh_failed_load = true;\n    } else if (force !== true) {\n      const cell = $(document.getElementById(\"f8ac35bd-9a2d-487c-939e-0455331a7bfe\")).parents('.cell').data().cell;\n      cell.output_area.append_execute_result(NB_LOAD_WARNING)\n    }\n  }\n\n  if (root._bokeh_is_loading === 0) {\n    console.debug(\"Bokeh: BokehJS loaded, going straight to plotting\");\n    run_inline_js();\n  } else {\n    load_libs(css_urls, js_urls, function() {\n      console.debug(\"Bokeh: BokehJS plotting callback run at\", now());\n      run_inline_js();\n    });\n  }\n}(window));",
+      "application/vnd.bokehjs_load.v0+json": ""
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "import teehr\n",
+    "import teehr.example_data.two_locations as two_locations_data\n",
+    "import pandas as pd\n",
+    "import geopandas as gpd\n",
+    "from pathlib import Path\n",
+    "import shutil\n",
+    "\n",
+    "# Tell Bokeh to output plots in the notebook\n",
+    "from bokeh.io import output_notebook\n",
+    "output_notebook()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {
+    "tags": [
+     "hide-output"
+    ]
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "24/12/09 13:09:01 WARN Utils: Your hostname, ubuntu3 resolves to a loopback address: 127.0.1.1; using 10.0.2.15 instead (on interface enp0s3)\n",
+      "24/12/09 13:09:01 WARN Utils: Set SPARK_LOCAL_IP if you need to bind to another address\n",
+      "Setting default log level to \"WARN\".\n",
+      "To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).\n",
+      "24/12/09 13:09:01 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable\n",
+      "24/12/09 13:09:02 WARN Utils: Service 'SparkUI' could not bind on port 4040. Attempting port 4041.\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Define the directory where the Evaluation will be created\n",
+    "test_eval_dir = Path(Path().home(), \"temp\", \"04_setup_real_example\")\n",
+    "shutil.rmtree(test_eval_dir, ignore_errors=True)\n",
+    "\n",
+    "# Create an Evaluation object and create the directory\n",
+    "ev = teehr.Evaluation(dir_path=test_eval_dir, create_dir=True)\n",
+    "\n",
+    "# Clone the template\n",
+    "ev.clone_template()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Now that we have the template cloned, Lets fetch `locations` and `location_crosswalks` files from the repository.  When setting up a brand new evaluation you may need to develop this information yourself, however, as we will show in some subsequent examples, the TEEHR team has several baseline datasets that can be used as a starting point.  For this example, we will download some small files from the repository to use."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {
+    "tags": [
+     "hide-output"
+    ]
+   },
+   "outputs": [],
+   "source": [
+    "location_data_path = Path(test_eval_dir, \"two_locations.parquet\")\n",
+    "two_locations_data.fetch_file(\"two_locations.parquet\", location_data_path)\n",
+    "\n",
+    "crosswalk_data_path = Path(test_eval_dir, \"two_crosswalks.parquet\")\n",
+    "two_locations_data.fetch_file(\"two_crosswalks.parquet\", crosswalk_data_path)\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Location Data\n",
+    "As we have done in previous examples, lets open the spatial data file and examine the contents before loading it into the TEEHR dataset."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>id</th>\n",
+       "      <th>name</th>\n",
+       "      <th>geometry</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>usgs-14316700</td>\n",
+       "      <td>STEAMBOAT CREEK NEAR GLIDE, OR</td>\n",
+       "      <td>POINT (-122.72894 43.34984)</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>usgs-14138800</td>\n",
+       "      <td>BLAZED ALDER CREEK NEAR RHODODENDRON, OR</td>\n",
+       "      <td>POINT (-121.89147 45.45262)</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "              id                                      name  \\\n",
+       "0  usgs-14316700            STEAMBOAT CREEK NEAR GLIDE, OR   \n",
+       "1  usgs-14138800  BLAZED ALDER CREEK NEAR RHODODENDRON, OR   \n",
+       "\n",
+       "                      geometry  \n",
+       "0  POINT (-122.72894 43.34984)  \n",
+       "1  POINT (-121.89147 45.45262)  "
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "gdf = gpd.read_parquet(location_data_path)\n",
+    "gdf"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "As you can see, the file contains 2 USGS gages located in Oregon.  Lets load them into the TEEHR dataset using the `load_spatial()` method. Note that the `id` column contains two hyphen separated values.  To the left of the hyphen we have a a set of characters the indicate the \"source\" while to the right we have the identifier for that source. While not strictly necessary, this is standard used within TEEHR.  This is also necessary when using the fetching functionality to fetch data from remote sources, as demonstrated below."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {
+    "tags": [
+     "hide-ouput"
+    ]
+   },
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "                                                                                \r"
+     ]
+    }
+   ],
+   "source": [
+    "ev.locations.load_spatial(location_data_path)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "And, as we have done in previous examples, lets query the `locations` table as a GeoPandas GeoDataFrame and then plot the gages on a map using the TEEHR plotting"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "\n",
+       "  <div id=\"eaa5cecc-efb5-4c4e-9b39-6dd4844b1ec3\" data-root-id=\"p1001\" style=\"display: contents;\"></div>\n"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "application/javascript": "(function(root) {\n  function embed_document(root) {\n  const docs_json = {\"a7aebae1-3992-458c-8924-0b9ae1c01c21\":{\"version\":\"3.6.1\",\"title\":\"Bokeh Application\",\"roots\":[{\"type\":\"object\",\"name\":\"Figure\",\"id\":\"p1001\",\"attributes\":{\"x_range\":{\"type\":\"object\",\"name\":\"Range1d\",\"id\":\"p1010\",\"attributes\":{\"start\":-13671445.981281966,\"end\":-13559573.486427888}},\"y_range\":{\"type\":\"object\",\"name\":\"Range1d\",\"id\":\"p1011\",\"attributes\":{\"start\":5332605.196185592,\"end\":5725829.340075623}},\"x_scale\":{\"type\":\"object\",\"name\":\"LinearScale\",\"id\":\"p1012\"},\"y_scale\":{\"type\":\"object\",\"name\":\"LinearScale\",\"id\":\"p1013\"},\"title\":{\"type\":\"object\",\"name\":\"Title\",\"id\":\"p1008\"},\"renderers\":[{\"type\":\"object\",\"name\":\"TileRenderer\",\"id\":\"p1029\",\"attributes\":{\"tile_source\":{\"type\":\"object\",\"name\":\"WMTSTileSource\",\"id\":\"p1028\",\"attributes\":{\"url\":\"https://tile.openstreetmap.org/{z}/{x}/{y}.png\",\"max_zoom\":19,\"attribution\":\"&copy; <a href=\\\"https://www.openstreetmap.org/copyright\\\">OpenStreetMap</a> contributors\"}}}},{\"type\":\"object\",\"name\":\"GlyphRenderer\",\"id\":\"p1040\",\"attributes\":{\"data_source\":{\"type\":\"object\",\"name\":\"ColumnDataSource\",\"id\":\"p1031\",\"attributes\":{\"selected\":{\"type\":\"object\",\"name\":\"Selection\",\"id\":\"p1032\",\"attributes\":{\"indices\":[],\"line_indices\":[]}},\"selection_policy\":{\"type\":\"object\",\"name\":\"UnionRenderers\",\"id\":\"p1033\"},\"data\":{\"type\":\"map\",\"entries\":[[\"id\",[\"usgs-14316700\",\"usgs-14138800\"]],[\"name\",[\"STEAMBOAT CREEK NEAR GLIDE, OR\",\"BLAZED ALDER CREEK NEAR RHODODENDRON, OR\"]],[\"x\",[-13662123.27337746,-13568896.194332395]],[\"y\",[5365373.8748430945,5693060.66141812]]]}}},\"view\":{\"type\":\"object\",\"name\":\"CDSView\",\"id\":\"p1041\",\"attributes\":{\"filter\":{\"type\":\"object\",\"name\":\"AllIndices\",\"id\":\"p1042\"}}},\"glyph\":{\"type\":\"object\",\"name\":\"Scatter\",\"id\":\"p1037\",\"attributes\":{\"x\":{\"type\":\"field\",\"field\":\"x\"},\"y\":{\"type\":\"field\",\"field\":\"y\"},\"size\":{\"type\":\"value\",\"value\":10},\"line_color\":{\"type\":\"value\",\"value\":\"blue\"},\"fill_color\":{\"type\":\"value\",\"value\":\"blue\"},\"hatch_color\":{\"type\":\"value\",\"value\":\"blue\"}}},\"nonselection_glyph\":{\"type\":\"object\",\"name\":\"Scatter\",\"id\":\"p1038\",\"attributes\":{\"x\":{\"type\":\"field\",\"field\":\"x\"},\"y\":{\"type\":\"field\",\"field\":\"y\"},\"size\":{\"type\":\"value\",\"value\":10},\"line_color\":{\"type\":\"value\",\"value\":\"blue\"},\"line_alpha\":{\"type\":\"value\",\"value\":0.1},\"fill_color\":{\"type\":\"value\",\"value\":\"blue\"},\"fill_alpha\":{\"type\":\"value\",\"value\":0.1},\"hatch_color\":{\"type\":\"value\",\"value\":\"blue\"},\"hatch_alpha\":{\"type\":\"value\",\"value\":0.1}}},\"muted_glyph\":{\"type\":\"object\",\"name\":\"Scatter\",\"id\":\"p1039\",\"attributes\":{\"x\":{\"type\":\"field\",\"field\":\"x\"},\"y\":{\"type\":\"field\",\"field\":\"y\"},\"size\":{\"type\":\"value\",\"value\":10},\"line_color\":{\"type\":\"value\",\"value\":\"blue\"},\"line_alpha\":{\"type\":\"value\",\"value\":0.2},\"fill_color\":{\"type\":\"value\",\"value\":\"blue\"},\"fill_alpha\":{\"type\":\"value\",\"value\":0.2},\"hatch_color\":{\"type\":\"value\",\"value\":\"blue\"},\"hatch_alpha\":{\"type\":\"value\",\"value\":0.2}}}}}],\"toolbar\":{\"type\":\"object\",\"name\":\"Toolbar\",\"id\":\"p1009\",\"attributes\":{\"tools\":[{\"type\":\"object\",\"name\":\"PanTool\",\"id\":\"p1024\"},{\"type\":\"object\",\"name\":\"WheelZoomTool\",\"id\":\"p1025\",\"attributes\":{\"renderers\":\"auto\"}},{\"type\":\"object\",\"name\":\"ResetTool\",\"id\":\"p1026\"},{\"type\":\"object\",\"name\":\"HoverTool\",\"id\":\"p1027\",\"attributes\":{\"renderers\":\"auto\",\"tooltips\":[[\"id\",\"@id\"],[\"name\",\"@name\"]]}}]}},\"left\":[{\"type\":\"object\",\"name\":\"MercatorAxis\",\"id\":\"p1019\",\"attributes\":{\"ticker\":{\"type\":\"object\",\"name\":\"MercatorTicker\",\"id\":\"p1020\",\"attributes\":{\"mantissas\":[1,2,5],\"dimension\":\"lat\"}},\"formatter\":{\"type\":\"object\",\"name\":\"MercatorTickFormatter\",\"id\":\"p1021\",\"attributes\":{\"dimension\":\"lat\"}},\"major_label_policy\":{\"type\":\"object\",\"name\":\"AllLabels\",\"id\":\"p1022\"}}}],\"below\":[{\"type\":\"object\",\"name\":\"MercatorAxis\",\"id\":\"p1014\",\"attributes\":{\"ticker\":{\"type\":\"object\",\"name\":\"MercatorTicker\",\"id\":\"p1015\",\"attributes\":{\"mantissas\":[1,2,5],\"dimension\":\"lon\"}},\"formatter\":{\"type\":\"object\",\"name\":\"MercatorTickFormatter\",\"id\":\"p1016\",\"attributes\":{\"dimension\":\"lon\"}},\"major_label_policy\":{\"type\":\"object\",\"name\":\"AllLabels\",\"id\":\"p1017\"}}}],\"center\":[{\"type\":\"object\",\"name\":\"Grid\",\"id\":\"p1018\",\"attributes\":{\"axis\":{\"id\":\"p1014\"}}},{\"type\":\"object\",\"name\":\"Grid\",\"id\":\"p1023\",\"attributes\":{\"dimension\":1,\"axis\":{\"id\":\"p1019\"}}}]}}]}};\n  const render_items = [{\"docid\":\"a7aebae1-3992-458c-8924-0b9ae1c01c21\",\"roots\":{\"p1001\":\"eaa5cecc-efb5-4c4e-9b39-6dd4844b1ec3\"},\"root_ids\":[\"p1001\"]}];\n  void root.Bokeh.embed.embed_items_notebook(docs_json, render_items);\n  }\n  if (root.Bokeh !== undefined) {\n    embed_document(root);\n  } else {\n    let attempts = 0;\n    const timer = setInterval(function(root) {\n      if (root.Bokeh !== undefined) {\n        clearInterval(timer);\n        embed_document(root);\n      } else {\n        attempts++;\n        if (attempts > 100) {\n          clearInterval(timer);\n          console.log(\"Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing\");\n        }\n      }\n    }, 10, root)\n  }\n})(window);",
+      "application/vnd.bokehjs_exec.v0+json": ""
+     },
+     "metadata": {
+      "application/vnd.bokehjs_exec.v0+json": {
+       "id": "p1001"
+      }
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "locations_gdf = ev.locations.to_geopandas()\n",
+    "locations_gdf.teehr.locations_map()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### USGS Primary Timeseries\n",
+    "In previous examples we loaded the primary timeseries from files that we already had.  In the following cells we will utilize the `ev.fetching.usgs_streamflow()` method to fetch streamflow data from NWIS.  This data is automatically formatted and stored in the TEEHR dataset."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ev.fetch.usgs_streamflow(\n",
+    "    start_date=\"2020-01-01\",\n",
+    "    end_date=\"2020-12-31\"\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Ok, now that we have fetched the USGS gage data and stored it in the TEEHR dataset as `primary_timeseries`, we will query the `primary_timeseries` and plot the timeseries data using the teehr.timeseries_plot()` method."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "pt_df = ev. primary_timeseries.to_pandas()\n",
+    "pt_df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "pt_df.teehr.timeseries_plot()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Location Crosswalk\n",
+    "As we saw above the IDs used for the location data in the `locations` table reference the USGS gages (e.g., usgs-14138800). Before we load any secondary timeseries into the TEEHR dataset, we first need to load location crosswalk data into the `location_crosswalks` table to relate the `primary_location_id` values to the `secondary_location_id` values.  In this case because we are going to be fetching NWM v3.0 data, we need to insert crosswalk that the relates the USGS gage IDs to the NWM IDs.  We downloaded this data from the repository.  As with other datasets, first we will examine the data and the load it into the TEEHR dataset."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "location_crosswalk_path = Path(test_eval_dir, \"two_crosswalks.parquet\")\n",
+    "crosswalk_df = pd.read_parquet(location_crosswalk_path)\n",
+    "crosswalk_df"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ev.location_crosswalks.load_parquet(\n",
+    "    location_crosswalk_path\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ev.location_crosswalks.to_pandas()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### NWM v3.0 Secondary Timeseries\n",
+    "Now that we have the USGS to NWM v3.0 crosswalk data loaded into the TEEHR dataset, we can fetch the NWM retrospective data into the TEEHR dataset as `secondary_timeseries`"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ev.fetch.nwm_retrospective_points(\n",
+    "    nwm_version=\"nwm30\",\n",
+    "    variable_name=\"streamflow\",\n",
+    "    start_date=\"2020-01-01\",\n",
+    "    end_date=\"2020-12-31\",\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "As we did with the `primary_timeseries`, once the data is in the TEEHR dataset, we can query the timeseries data and visualize it as a table and then as a plot."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "st_df = ev.secondary_timeseries.to_pandas()\n",
+    "st_df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "st_df.teehr.timeseries_plot()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Joined Timeseries\n",
+    "Like we did in previous examples, once we have the TEEHR dataset tables populated, we can create the `joined_timeseries` view and populate the `joined_timeseries` table.  By default the method joins the `primary_timeseries` to the `secondary_timeseries` and also joins the `location_attributes` but the user can control wether the `user_defined_functions.py` script is executed.  In this case, we do."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ev.joined_timeseries.create(execute_scripts=True)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Now that we have created the `joined_timeseries` table, lets take a look at what it contains."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "jt_df = ev.joined_timeseries.to_pandas()\n",
+    "jt_df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "ev.spark.stop()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "That concludes `04 Setting-up a Real Example`.  In this example we loaded some location data that we had (downloaded from the repository), inspected it and loaded it into the TEEHR dataset, and then fetched USGS and NWM v3.0 data from NWIS and AWS, respectively.  Finally we created the `joined_timeseries` table that serves at the main data table for generating metrics and conducting an evaluation.\n",
+    "\n",
+    "In the next lesson, we will clone a Evaluation dataset from S3 and run some metrics on it."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": ".venv",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.12"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

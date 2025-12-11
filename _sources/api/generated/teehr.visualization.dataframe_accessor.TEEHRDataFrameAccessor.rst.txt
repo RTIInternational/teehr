@@ -1,0 +1,27 @@
+﻿TEEHRDataFrameAccessor
+======================
+
+.. currentmodule:: teehr.visualization.dataframe_accessor
+
+.. autoclass:: TEEHRDataFrameAccessor
+   :members:
+   :show-inheritance:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~TEEHRDataFrameAccessor.location_attributes_map
+      ~TEEHRDataFrameAccessor.location_crosswalks_map
+      ~TEEHRDataFrameAccessor.locations_map
+      ~TEEHRDataFrameAccessor.timeseries_plot
+   
+   
+
+   
+   
+   

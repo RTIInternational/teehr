@@ -1,0 +1,38 @@
+﻿PrimaryTimeseriesTable
+======================
+
+.. currentmodule:: teehr.evaluation.tables.primary_timeseries_table
+
+.. autoclass:: PrimaryTimeseriesTable
+   :members:
+   :show-inheritance:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~PrimaryTimeseriesTable.distinct_values
+      ~PrimaryTimeseriesTable.field_enum
+      ~PrimaryTimeseriesTable.fields
+      ~PrimaryTimeseriesTable.filter
+      ~PrimaryTimeseriesTable.load_csv
+      ~PrimaryTimeseriesTable.load_dataframe
+      ~PrimaryTimeseriesTable.load_fews_xml
+      ~PrimaryTimeseriesTable.load_netcdf
+      ~PrimaryTimeseriesTable.load_parquet
+      ~PrimaryTimeseriesTable.order_by
+      ~PrimaryTimeseriesTable.query
+      ~PrimaryTimeseriesTable.to_geopandas
+      ~PrimaryTimeseriesTable.to_pandas
+      ~PrimaryTimeseriesTable.to_sdf
+      ~PrimaryTimeseriesTable.validate
+   
+   
+
+   
+   
+   

@@ -1,0 +1,6 @@
+teehr.metrics.deterministic\_funcs.variability\_ratio
+=====================================================
+
+.. currentmodule:: teehr.metrics.deterministic_funcs
+
+.. autofunction:: variability_ratio

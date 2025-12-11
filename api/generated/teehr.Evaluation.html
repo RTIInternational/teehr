@@ -1,0 +1,953 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Evaluation &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/teehr.css?v=b36b674b" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=8e576371"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/generated/teehr.Evaluation';</script>
+    <link rel="icon" href="../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="BaseTable" href="teehr.evaluation.tables.base_table.BaseTable.html" />
+    <link rel="prev" title="API reference" href="../index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.5.2" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation - Home"/>
+    <img src="../../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark pst-js-only" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Evaluation</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.tables.base_table.BaseTable.html">BaseTable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.tables.unit_table.UnitTable.html">UnitTable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.tables.variable_table.VariableTable.html">VariableTable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.tables.attribute_table.AttributeTable.html">AttributeTable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.tables.configuration_table.ConfigurationTable.html">ConfigurationTable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.tables.location_table.LocationTable.html">LocationTable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.tables.location_attribute_table.LocationAttributeTable.html">LocationAttributeTable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable.html">LocationCrosswalkTable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable.html">PrimaryTimeseriesTable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable.html">SecondaryTimeseriesTable</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.tables.joined_timeseries_table.JoinedTimeseriesTable.html">JoinedTimeseriesTable</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.metrics.Metrics.query.html">query</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.metrics.Metrics.add_calculated_fields.html">add_calculated_fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.metrics.Metrics.to_pandas.html">to_pandas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.metrics.Metrics.to_geopandas.html">to_geopandas</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.metrics.Metrics.to_sdf.html">to_sdf</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.fetch.Fetch.usgs_streamflow.html">usgs_streamflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.fetch.Fetch.nwm_retrospective_points.html">nwm_retrospective_points</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.fetch.Fetch.nwm_operational_points.html">nwm_operational_points</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.fetch.Fetch.nwm_retrospective_grids.html">nwm_retrospective_grids</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.evaluation.fetch.Fetch.nwm_operational_grids.html">nwm_operational_grids</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="teehr.metrics.deterministic_funcs.html">deterministic_funcs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.annual_peak_relative_bias.html">teehr.metrics.deterministic_funcs.annual_peak_relative_bias</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.confusion_matrix.html">teehr.metrics.deterministic_funcs.confusion_matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.critical_success_index.html">teehr.metrics.deterministic_funcs.critical_success_index</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.false_alarm_ratio.html">teehr.metrics.deterministic_funcs.false_alarm_ratio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.kling_gupta_efficiency.html">teehr.metrics.deterministic_funcs.kling_gupta_efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.kling_gupta_efficiency_mod1.html">teehr.metrics.deterministic_funcs.kling_gupta_efficiency_mod1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.kling_gupta_efficiency_mod2.html">teehr.metrics.deterministic_funcs.kling_gupta_efficiency_mod2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.max_value_delta.html">teehr.metrics.deterministic_funcs.max_value_delta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.max_value_timedelta.html">teehr.metrics.deterministic_funcs.max_value_timedelta</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.mean_absolute_error.html">teehr.metrics.deterministic_funcs.mean_absolute_error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.mean_absolute_relative_error.html">teehr.metrics.deterministic_funcs.mean_absolute_relative_error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.mean_error.html">teehr.metrics.deterministic_funcs.mean_error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.mean_squared_error.html">teehr.metrics.deterministic_funcs.mean_squared_error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.multiplicative_bias.html">teehr.metrics.deterministic_funcs.multiplicative_bias</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.nash_sutcliffe_efficiency.html">teehr.metrics.deterministic_funcs.nash_sutcliffe_efficiency</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.nash_sutcliffe_efficiency_normalized.html">teehr.metrics.deterministic_funcs.nash_sutcliffe_efficiency_normalized</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.pearson_correlation.html">teehr.metrics.deterministic_funcs.pearson_correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.probability_of_detection.html">teehr.metrics.deterministic_funcs.probability_of_detection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.probability_of_false_detection.html">teehr.metrics.deterministic_funcs.probability_of_false_detection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.r_squared.html">teehr.metrics.deterministic_funcs.r_squared</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.relative_bias.html">teehr.metrics.deterministic_funcs.relative_bias</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.root_mean_squared_error.html">teehr.metrics.deterministic_funcs.root_mean_squared_error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.root_mean_standard_deviation_ratio.html">teehr.metrics.deterministic_funcs.root_mean_standard_deviation_ratio</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.spearman_correlation.html">teehr.metrics.deterministic_funcs.spearman_correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.deterministic_funcs.variability_ratio.html">teehr.metrics.deterministic_funcs.variability_ratio</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="teehr.metrics.signature_funcs.html">signature_funcs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.signature_funcs.average.html">teehr.metrics.signature_funcs.average</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.signature_funcs.count.html">teehr.metrics.signature_funcs.count</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.signature_funcs.flow_duration_curve_slope.html">teehr.metrics.signature_funcs.flow_duration_curve_slope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.signature_funcs.max_value_time.html">teehr.metrics.signature_funcs.max_value_time</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.signature_funcs.maximum.html">teehr.metrics.signature_funcs.maximum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.signature_funcs.minimum.html">teehr.metrics.signature_funcs.minimum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.signature_funcs.sum.html">teehr.metrics.signature_funcs.sum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.signature_funcs.variance.html">teehr.metrics.signature_funcs.variance</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="teehr.metrics.probabilistic_funcs.html">probabilistic_funcs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.probabilistic_funcs.ensemble_brier_score.html">teehr.metrics.probabilistic_funcs.ensemble_brier_score</a></li>
+<li class="toctree-l2"><a class="reference internal" href="teehr.metrics.probabilistic_funcs.ensemble_crps.html">teehr.metrics.probabilistic_funcs.ensemble_crps</a></li>
+</ul>
+</details></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="teehr.DeterministicMetrics.html">DeterministicMetrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.Signatures.html">Signatures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.ProbabilisticMetrics.html">ProbabilisticMetrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.Bootstrappers.html">Bootstrappers</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="teehr.models.calculated_fields.row_level.RowLevelCalculatedFields.html">RowLevelCalculatedFields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="teehr.models.calculated_fields.timeseries_aware.TimeseriesAwareCalculatedFields.html">TimeseriesAwareCalculatedFields</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="teehr.visualization.dataframe_accessor.TEEHRDataFrameAccessor.html">TEEHRDataFrameAccessor</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">API reference</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Evaluation</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="evaluation">
+<h1>Evaluation<a class="headerlink" href="#evaluation" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="teehr.Evaluation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Evaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">S3Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spark</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SparkSession</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/teehr/evaluation/evaluation.html#Evaluation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.Evaluation" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The Evaluation class.</p>
+<p>This is the main class for the TEEHR evaluation.</p>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.Evaluation.check_evaluation_version" title="teehr.Evaluation.check_evaluation_version"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_evaluation_version</span></code></a></p></td>
+<td><p>Check the version of the TEEHR Evaluation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.Evaluation.clean_cache" title="teehr.Evaluation.clean_cache"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clean_cache</span></code></a></p></td>
+<td><p>Clean temporary files.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.Evaluation.clone_from_s3" title="teehr.Evaluation.clone_from_s3"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clone_from_s3</span></code></a></p></td>
+<td><p>Fetch the study data from S3.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.Evaluation.clone_template" title="teehr.Evaluation.clone_template"><code class="xref py py-obj docutils literal notranslate"><span class="pre">clone_template</span></code></a></p></td>
+<td><p>Create a study from the standard template.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.Evaluation.enable_logging" title="teehr.Evaluation.enable_logging"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enable_logging</span></code></a></p></td>
+<td><p>Enable logging.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.Evaluation.filter" title="teehr.Evaluation.filter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">filter</span></code></a></p></td>
+<td><p>Apply filters to a table returning a sdf.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.Evaluation.list_s3_evaluations" title="teehr.Evaluation.list_s3_evaluations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">list_s3_evaluations</span></code></a></p></td>
+<td><p>List the evaluations available on S3.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.Evaluation.sql" title="teehr.Evaluation.sql"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sql</span></code></a></p></td>
+<td><p>Run a SQL query on the Spark session against the TEEHR tables.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Attributes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.Evaluation.attributes" title="teehr.Evaluation.attributes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">attributes</span></code></a></p></td>
+<td><p>Access the attributes table.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.Evaluation.configurations" title="teehr.Evaluation.configurations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">configurations</span></code></a></p></td>
+<td><p>Access the configurations table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.Evaluation.fetch" title="teehr.Evaluation.fetch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fetch</span></code></a></p></td>
+<td><p>The fetch component class for accessing external data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.Evaluation.generate" title="teehr.Evaluation.generate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">generate</span></code></a></p></td>
+<td><p>The generate component class for generating synthetic data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.Evaluation.joined_timeseries" title="teehr.Evaluation.joined_timeseries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">joined_timeseries</span></code></a></p></td>
+<td><p>Access the joined timeseries table.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.Evaluation.location_attributes" title="teehr.Evaluation.location_attributes"><code class="xref py py-obj docutils literal notranslate"><span class="pre">location_attributes</span></code></a></p></td>
+<td><p>Access the location attributes table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.Evaluation.location_crosswalks" title="teehr.Evaluation.location_crosswalks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">location_crosswalks</span></code></a></p></td>
+<td><p>Access the location crosswalks table.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.Evaluation.locations" title="teehr.Evaluation.locations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">locations</span></code></a></p></td>
+<td><p>Access the locations table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.Evaluation.metrics" title="teehr.Evaluation.metrics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">metrics</span></code></a></p></td>
+<td><p>The metrics component class for calculating performance metrics.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.Evaluation.primary_timeseries" title="teehr.Evaluation.primary_timeseries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">primary_timeseries</span></code></a></p></td>
+<td><p>Access the primary timeseries table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.Evaluation.secondary_timeseries" title="teehr.Evaluation.secondary_timeseries"><code class="xref py py-obj docutils literal notranslate"><span class="pre">secondary_timeseries</span></code></a></p></td>
+<td><p>Access the secondary timeseries table.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#teehr.Evaluation.units" title="teehr.Evaluation.units"><code class="xref py py-obj docutils literal notranslate"><span class="pre">units</span></code></a></p></td>
+<td><p>Access the units table.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#teehr.Evaluation.variables" title="teehr.Evaluation.variables"><code class="xref py py-obj docutils literal notranslate"><span class="pre">variables</span></code></a></p></td>
+<td><p>Access the variables table.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py property">
+<dt class="sig sig-object py" id="teehr.Evaluation.attributes">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">attributes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="teehr.evaluation.tables.attribute_table.AttributeTable.html#teehr.evaluation.tables.attribute_table.AttributeTable" title="teehr.evaluation.tables.attribute_table.AttributeTable"><span class="pre">AttributeTable</span></a></em><a class="headerlink" href="#teehr.Evaluation.attributes" title="Link to this definition">#</a></dt>
+<dd><p>Access the attributes table.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.Evaluation.check_evaluation_version">
+<span class="sig-name descname"><span class="pre">check_evaluation_version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/teehr/evaluation/evaluation.html#Evaluation.check_evaluation_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.Evaluation.check_evaluation_version" title="Link to this definition">#</a></dt>
+<dd><p>Check the version of the TEEHR Evaluation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.Evaluation.clean_cache">
+<span class="sig-name descname"><span class="pre">clean_cache</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/teehr/evaluation/evaluation.html#Evaluation.clean_cache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.Evaluation.clean_cache" title="Link to this definition">#</a></dt>
+<dd><p>Clean temporary files.</p>
+<p>Includes removing temporary files.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.Evaluation.clone_from_s3">
+<span class="sig-name descname"><span class="pre">clone_from_s3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluation_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">primary_location_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/teehr/evaluation/evaluation.html#Evaluation.clone_from_s3"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.Evaluation.clone_from_s3" title="Link to this definition">#</a></dt>
+<dd><p>Fetch the study data from S3.</p>
+<p>Copies the study from s3 to the local directory, with the option
+to subset the dataset by primary location ID, start and end dates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>evaluation_name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The name of the evaluation to clone from S3.
+Use the list_s3_evaluations method to get the available
+evaluations.</p></li>
+<li><p><strong>primary_location_ids</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List[str]</span></code>, <em>optional</em>) – The list of primary location ids to subset the data.
+The default is None.</p></li>
+<li><p><strong>start_date</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Union[str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime]</span></code>, <em>optional</em>) – The start date to subset the data.
+The default is None.</p></li>
+<li><p><strong>end_date</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Union[str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime]</span></code>, <em>optional</em>) – The end date to subset the data.
+The default is None.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<dl class="simple">
+<dt>Includes the following tables:</dt><dd><ul class="simple">
+<li><p>units</p></li>
+<li><p>variables</p></li>
+<li><p>attributes</p></li>
+<li><p>configurations</p></li>
+<li><p>locations</p></li>
+<li><p>location_attributes</p></li>
+<li><p>location_crosswalks</p></li>
+<li><p>primary_timeseries</p></li>
+<li><p>secondary_timeseries</p></li>
+<li><p>joined_timeseries</p></li>
+</ul>
+</dd>
+</dl>
+<p>Also includes the user_defined_fields.py script.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.Evaluation.clone_template">
+<span class="sig-name descname"><span class="pre">clone_template</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/teehr/evaluation/evaluation.html#Evaluation.clone_template"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.Evaluation.clone_template" title="Link to this definition">#</a></dt>
+<dd><p>Create a study from the standard template.</p>
+<p>This method mainly copies the template directory to the specified
+evaluation directory.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="teehr.Evaluation.configurations">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">configurations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="teehr.evaluation.tables.configuration_table.ConfigurationTable.html#teehr.evaluation.tables.configuration_table.ConfigurationTable" title="teehr.evaluation.tables.configuration_table.ConfigurationTable"><span class="pre">ConfigurationTable</span></a></em><a class="headerlink" href="#teehr.Evaluation.configurations" title="Link to this definition">#</a></dt>
+<dd><p>Access the configurations table.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.Evaluation.enable_logging">
+<span class="sig-name descname"><span class="pre">enable_logging</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/teehr/evaluation/evaluation.html#Evaluation.enable_logging"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.Evaluation.enable_logging" title="Link to this definition">#</a></dt>
+<dd><p>Enable logging.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="teehr.Evaluation.fetch">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fetch</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Fetch</span></em><a class="headerlink" href="#teehr.Evaluation.fetch" title="Link to this definition">#</a></dt>
+<dd><p>The fetch component class for accessing external data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.Evaluation.filter">
+<span class="sig-name descname"><span class="pre">filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TableNamesEnum</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">FilterBaseModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">FilterBaseModel</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">table_filter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TableFilter</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="../../_modules/teehr/evaluation/evaluation.html#Evaluation.filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.Evaluation.filter" title="Link to this definition">#</a></dt>
+<dd><p>Apply filters to a table returning a sdf.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>table_name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">TableNamesEnum</span></code>) – The name of the table to filter. Defaults to None.</p></li>
+<li><p><strong>filters</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Union[str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">FilterBaseModel</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List[Union[str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">FilterBaseModel]]]</span></code>) – The filters to apply to the table. Defaults to None.</p></li>
+<li><p><strong>table_filter</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">TableFilter</span></code>) – A TableFilter object containing the table name and filters.
+Defaults to None.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="teehr.Evaluation.generate">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">generate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">GeneratedTimeseries</span></em><a class="headerlink" href="#teehr.Evaluation.generate" title="Link to this definition">#</a></dt>
+<dd><p>The generate component class for generating synthetic data.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="teehr.Evaluation.joined_timeseries">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">joined_timeseries</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="teehr.evaluation.tables.joined_timeseries_table.JoinedTimeseriesTable.html#teehr.evaluation.tables.joined_timeseries_table.JoinedTimeseriesTable" title="teehr.evaluation.tables.joined_timeseries_table.JoinedTimeseriesTable"><span class="pre">JoinedTimeseriesTable</span></a></em><a class="headerlink" href="#teehr.Evaluation.joined_timeseries" title="Link to this definition">#</a></dt>
+<dd><p>Access the joined timeseries table.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.Evaluation.list_s3_evaluations">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">list_s3_evaluations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">format</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'pandas'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'list'</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'pandas'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">DataFrame</span></span></span><a class="reference internal" href="../../_modules/teehr/evaluation/evaluation.html#Evaluation.list_s3_evaluations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.Evaluation.list_s3_evaluations" title="Link to this definition">#</a></dt>
+<dd><p>List the evaluations available on S3.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>format</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>) – The format of the output. Either “pandas” or “list”.
+The default is “pandas”.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="teehr.Evaluation.location_attributes">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">location_attributes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="teehr.evaluation.tables.location_attribute_table.LocationAttributeTable.html#teehr.evaluation.tables.location_attribute_table.LocationAttributeTable" title="teehr.evaluation.tables.location_attribute_table.LocationAttributeTable"><span class="pre">LocationAttributeTable</span></a></em><a class="headerlink" href="#teehr.Evaluation.location_attributes" title="Link to this definition">#</a></dt>
+<dd><p>Access the location attributes table.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="teehr.Evaluation.location_crosswalks">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">location_crosswalks</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable.html#teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable" title="teehr.evaluation.tables.location_crosswalk_table.LocationCrosswalkTable"><span class="pre">LocationCrosswalkTable</span></a></em><a class="headerlink" href="#teehr.Evaluation.location_crosswalks" title="Link to this definition">#</a></dt>
+<dd><p>Access the location crosswalks table.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="teehr.Evaluation.locations">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">locations</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="teehr.evaluation.tables.location_table.LocationTable.html#teehr.evaluation.tables.location_table.LocationTable" title="teehr.evaluation.tables.location_table.LocationTable"><span class="pre">LocationTable</span></a></em><a class="headerlink" href="#teehr.Evaluation.locations" title="Link to this definition">#</a></dt>
+<dd><p>Access the locations table.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="teehr.Evaluation.metrics">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">metrics</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Metrics</span></em><a class="headerlink" href="#teehr.Evaluation.metrics" title="Link to this definition">#</a></dt>
+<dd><p>The metrics component class for calculating performance metrics.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="teehr.Evaluation.primary_timeseries">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">primary_timeseries</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable.html#teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable" title="teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable"><span class="pre">PrimaryTimeseriesTable</span></a></em><a class="headerlink" href="#teehr.Evaluation.primary_timeseries" title="Link to this definition">#</a></dt>
+<dd><p>Access the primary timeseries table.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="teehr.Evaluation.secondary_timeseries">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">secondary_timeseries</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable.html#teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable" title="teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable"><span class="pre">SecondaryTimeseriesTable</span></a></em><a class="headerlink" href="#teehr.Evaluation.secondary_timeseries" title="Link to this definition">#</a></dt>
+<dd><p>Access the secondary timeseries table.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="teehr.Evaluation.sql">
+<span class="sig-name descname"><span class="pre">sql</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create_temp_views</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/teehr/evaluation/evaluation.html#Evaluation.sql"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#teehr.Evaluation.sql" title="Link to this definition">#</a></dt>
+<dd><p>Run a SQL query on the Spark session against the TEEHR tables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>query</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – The SQL query to run.</p></li>
+<li><p><strong>create_temp_views</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">List[str]</span></code>, <em>optional</em>) – A list of tables to create temporary views for.
+The default is None which creates all.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">pyspark.sql.DataFrame</span></code> – The result of the SQL query.
+This is lazily evaluated so you need to call an action (e.g., sdf.show()) to get the result.</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">By</span> <span class="pre">default</span> <span class="pre">this</span> <span class="pre">method</span> <span class="pre">has</span> <span class="pre">access</span></code> to <code class="xref py py-class docutils literal notranslate"><span class="pre">the</span> <span class="pre">following</span> <span class="pre">tables</span> <span class="pre">preloaded</span> <span class="pre">as</span> <span class="pre">temporary</span> <span class="pre">views</span></code> –</p>
+<ul>
+<li><p>units</p></li>
+<li><p>variables</p></li>
+<li><p>attributes</p></li>
+<li><p>configurations</p></li>
+<li><p>locations</p></li>
+<li><p>location_attributes</p></li>
+<li><p>location_crosswalks</p></li>
+<li><p>primary_timeseries</p></li>
+<li><p>secondary_timeseries</p></li>
+<li><p>joined_timeseries</p></li>
+</ul>
+</li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="teehr.Evaluation.units">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">units</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="teehr.evaluation.tables.unit_table.UnitTable.html#teehr.evaluation.tables.unit_table.UnitTable" title="teehr.evaluation.tables.unit_table.UnitTable"><span class="pre">UnitTable</span></a></em><a class="headerlink" href="#teehr.Evaluation.units" title="Link to this definition">#</a></dt>
+<dd><p>Access the units table.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="teehr.Evaluation.variables">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">variables</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="teehr.evaluation.tables.variable_table.VariableTable.html#teehr.evaluation.tables.variable_table.VariableTable" title="teehr.evaluation.tables.variable_table.VariableTable"><span class="pre">VariableTable</span></a></em><a class="headerlink" href="#teehr.Evaluation.variables" title="Link to this definition">#</a></dt>
+<dd><p>Access the variables table.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">API reference</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="teehr.evaluation.tables.base_table.BaseTable.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">BaseTable</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation"><code class="docutils literal notranslate"><span class="pre">Evaluation</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.attributes"><code class="docutils literal notranslate"><span class="pre">Evaluation.attributes</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.check_evaluation_version"><code class="docutils literal notranslate"><span class="pre">Evaluation.check_evaluation_version()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.clean_cache"><code class="docutils literal notranslate"><span class="pre">Evaluation.clean_cache()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.clone_from_s3"><code class="docutils literal notranslate"><span class="pre">Evaluation.clone_from_s3()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.clone_template"><code class="docutils literal notranslate"><span class="pre">Evaluation.clone_template()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.configurations"><code class="docutils literal notranslate"><span class="pre">Evaluation.configurations</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.enable_logging"><code class="docutils literal notranslate"><span class="pre">Evaluation.enable_logging()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.fetch"><code class="docutils literal notranslate"><span class="pre">Evaluation.fetch</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.filter"><code class="docutils literal notranslate"><span class="pre">Evaluation.filter()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.generate"><code class="docutils literal notranslate"><span class="pre">Evaluation.generate</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.joined_timeseries"><code class="docutils literal notranslate"><span class="pre">Evaluation.joined_timeseries</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.list_s3_evaluations"><code class="docutils literal notranslate"><span class="pre">Evaluation.list_s3_evaluations()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.location_attributes"><code class="docutils literal notranslate"><span class="pre">Evaluation.location_attributes</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.location_crosswalks"><code class="docutils literal notranslate"><span class="pre">Evaluation.location_crosswalks</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.locations"><code class="docutils literal notranslate"><span class="pre">Evaluation.locations</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.metrics"><code class="docutils literal notranslate"><span class="pre">Evaluation.metrics</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.primary_timeseries"><code class="docutils literal notranslate"><span class="pre">Evaluation.primary_timeseries</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.secondary_timeseries"><code class="docutils literal notranslate"><span class="pre">Evaluation.secondary_timeseries</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.sql"><code class="docutils literal notranslate"><span class="pre">Evaluation.sql()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.units"><code class="docutils literal notranslate"><span class="pre">Evaluation.units</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#teehr.Evaluation.variables"><code class="docutils literal notranslate"><span class="pre">Evaluation.variables</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/api/generated/teehr.Evaluation.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><!-- This will display the version of the docs -->
+TEEHR version 0.5.2</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

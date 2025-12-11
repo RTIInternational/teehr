@@ -1,0 +1,1497 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>teehr.models.metrics.deterministic_models &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/css/teehr.css?v=b36b674b" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../../../_static/documentation_options.js?v=8e576371"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/teehr/models/metrics/deterministic_models';</script>
+    <link rel="icon" href="../../../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.5.2" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation - Home"/>
+    <img src="../../../../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark pst-js-only" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">teehr.models.metrics.deterministic_models</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for teehr.models.metrics.deterministic_models</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Classes representing available performance metrics.&quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyspark.sql</span><span class="w"> </span><span class="kn">import</span> <span class="n">types</span> <span class="k">as</span> <span class="n">T</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">teehr.models.metrics.metric_attributes</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tma</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.models.metrics.basemodels</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">TransformEnum</span><span class="p">,</span>
+    <span class="n">DeterministicBasemodel</span><span class="p">,</span>
+    <span class="n">BootstrapBasemodel</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">deterministic_funcs</span> <span class="k">as</span> <span class="n">metric_funcs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.models.str_enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">StrEnum</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MeanError</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mean Error.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default</span>
+<span class="sd">        &quot;mean_error&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.mean_error.`</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;mean_error&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">mean_error</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">ME_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">RelativeBias</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Relative Bias.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default</span>
+<span class="sd">        &quot;relative_bias&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.relative_bias`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;relative_bias&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">relative_bias</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">RBIAS_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MultiplicativeBias</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Multiplicative Bias.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default</span>
+<span class="sd">        &quot;multiplicative_bias&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.multiplicative_bias.`</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;multiplicative_bias&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">multiplicative_bias</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">MULTBIAS_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MeanSquareError</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mean Square Error.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default</span>
+<span class="sd">        &quot;mean_squared_error&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.mean_squared_error`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;mean_square_error&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">mean_squared_error</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">MSE_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">RootMeanSquareError</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Root Mean Squared Error.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default</span>
+<span class="sd">        &quot;root_mean_square_error&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.root_mean_square_error`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;root_mean_square_error&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">root_mean_squared_error</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">RMSE_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MeanAbsoluteError</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mean Absolute Error.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default</span>
+<span class="sd">        &quot;mean_absolute_error&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.mean_absolute_error`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;mean_absolute_error&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">mean_absolute_error</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">MAE_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MeanAbsoluteRelativeError</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Relative Mean Absolute Error.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default</span>
+<span class="sd">        &quot;mean_absolute_relative_error&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.mean_absolute_relative_error`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;mean_absolute_relative_error&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">mean_absolute_relative_error</span><span class="p">,</span>
+                           <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">RMAE_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PearsonCorrelation</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pearson Correlation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default</span>
+<span class="sd">        &quot;pearson_correlation&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.pearson_correlation`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;pearson_correlation&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">pearson_correlation</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">PEARSON_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">VariabilityRatio</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Variability Ratio.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default &quot;variability_ratio&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.variability_ratio`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;variability_ratio&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">variability_ratio</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">VR_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Rsquared</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Coefficient of Determination.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default</span>
+<span class="sd">        &quot;r_squared&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.r_squared`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;r_squared&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">r_squared</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">R2_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">NashSutcliffeEfficiency</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Nash-Sutcliffe Efficiency.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default</span>
+<span class="sd">        &quot;nash_sutcliffe_efficiency&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.nash_sutcliffe_efficiency`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;nash_sutcliffe_efficiency&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">nash_sutcliffe_efficiency</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">NSE_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">NormalizedNashSutcliffeEfficiency</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Normalized Nash-Sutcliffe Efficiency.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default</span>
+<span class="sd">        &quot;nash_sutcliffe_efficiency_normalized&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.nash_sutcliffe_efficiency_normalized`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;nash_sutcliffe_efficiency_normalized&quot;</span>
+    <span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">nash_sutcliffe_efficiency_normalized</span><span class="p">,</span>
+                           <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">NNSE_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">KlingGuptaEfficiency</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Kling-Gupta Efficiency.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default &quot;kling_gupta_efficiency&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.kling_gupta_efficiency`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    sr : float</span>
+<span class="sd">        The scaling factor for the correlation component, by default 1.0.</span>
+<span class="sd">    sa : float</span>
+<span class="sd">        The scaling factor for the variability component, by default 1.0.</span>
+<span class="sd">    sb : float</span>
+<span class="sd">        The scaling factor for the bias component, by default 1.0.</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;kling_gupta_efficiency&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">kling_gupta_efficiency</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">sr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">sa</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">sb</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">KGE_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">KlingGuptaEfficiencyMod1</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Kling-Gupta Efficiency - modified 1 (2012).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default &quot;kling_gupta_efficiency_mod1&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`kling_gupta_efficiency_mod1`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    sr : float</span>
+<span class="sd">        The scaling factor for the correlation component, by default 1.0.</span>
+<span class="sd">    sa : float</span>
+<span class="sd">        The scaling factor for the variability component, by default 1.0.</span>
+<span class="sd">    sb : float</span>
+<span class="sd">        The scaling factor for the bias component, by default 1.0.</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;kling_gupta_efficiency_mod1&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">kling_gupta_efficiency_mod1</span><span class="p">,</span>
+                           <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">sr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">sa</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">sb</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">KGE1_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">KlingGuptaEfficiencyMod2</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Kling-Gupta Efficiency - modified 2 (2021).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default &quot;kling_gupta_efficiency_mod2&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`kling_gupta_efficiency_mod2`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    sr : float</span>
+<span class="sd">        The scaling factor for the correlation component, by default 1.0.</span>
+<span class="sd">    sa : float</span>
+<span class="sd">        The scaling factor for the variability component, by default 1.0.</span>
+<span class="sd">    sb : float</span>
+<span class="sd">        The scaling factor for the bias component, by default 1.0.</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;kling_gupta_efficiency_mod2&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">kling_gupta_efficiency_mod2</span><span class="p">,</span>
+                           <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">sr</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">sa</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">sb</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">KGE2_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">SpearmanCorrelation</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Spearman Rank Correlation Coefficient.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default &quot;spearman_correlation&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.spearman_correlation`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;spearman_correlation&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">spearman_correlation</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">SPEARMAN_R_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MaxValueDelta</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Max Value Delta.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default &quot;max_value_delta&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.max_value_delta`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;max_value_delta&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">max_value_delta</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">MAX_VALUE_DELTA_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MaxValueTimeDelta</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Max Value Time Delta.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default &quot;max_value_timedelta&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.max_value_timedelta`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default</span>
+<span class="sd">        [&quot;primary_value&quot;, &quot;secondary_value&quot;, &quot;value_time&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;max_value_time_delta&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">max_value_timedelta</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;value_time&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">MAX_VALUE_TIMEDELTA_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">AnnualPeakRelativeBias</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Annual Peak Relative Bias.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default &quot;annual_peak_relative_bias&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.annual_peak_relative_bias`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default</span>
+<span class="sd">        [&quot;primary_value&quot;, &quot;secondary_value&quot;, &quot;value_time&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;annual_peak_flow_bias&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">annual_peak_relative_bias</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;value_time&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">ANNUAL_PEAK_RBIAS_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">RootMeanStandardDeviationRatio</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Root Mean Standard Deviation Ratio.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default &quot;root_mean_standard_deviation_ratio&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.root_mean_standard_deviation_ratio`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default</span>
+<span class="sd">        [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;root_mean_standard_deviation_ratio&quot;</span><span class="p">)</span>  <span class="c1"># noqa: E501</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">root_mean_standard_deviation_ratio</span><span class="p">,</span>
+                           <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">RSR_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ConfusionMatrix</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Confusion Matrix.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    unpack_results : bool</span>
+<span class="sd">        Whether to unpack the confusion matrix results into separate fields,</span>
+<span class="sd">        by default False.</span>
+<span class="sd">    return_type : T.DataType</span>
+<span class="sd">        The return type of the metric, by default</span>
+<span class="sd">        :class:`pyspark.sql.types.MapType` of `StringType` to `IntegerType`.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    threshold_field_name : str</span>
+<span class="sd">        The field name for the location-specific threshold values.</span>
+<span class="sd">        Required for Confusion Matrix, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default &quot;confusion_matrix&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.confusion_matrix`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default</span>
+<span class="sd">        [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">unpack_results</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">return_type</span><span class="p">:</span> <span class="n">T</span><span class="o">.</span><span class="n">DataType</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">T</span><span class="o">.</span><span class="n">MapType</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">StringType</span><span class="p">(),</span> <span class="n">T</span><span class="o">.</span><span class="n">IntegerType</span><span class="p">()),</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">threshold_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;confusion_matrix&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">confusion_matrix</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">CM_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">FalseAlarmRatio</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;False Alarm Ratio.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    threshold_field_name : str</span>
+<span class="sd">        The field name for the location-specific threshold values.</span>
+<span class="sd">        Required for False Alarm Ratio, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default &quot;false_alarm_ratio&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.false_alarm_ratio`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default</span>
+<span class="sd">        [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">threshold_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;false_alarm_ratio&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">false_alarm_ratio</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">FAR_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ProbabilityOfDetection</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Probability of Detection.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    threshold_field_name : str</span>
+<span class="sd">        The field name for the location-specific threshold values.</span>
+<span class="sd">        Required for Probability of Detection, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default &quot;probability_of_detection&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.probability_of_detection`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default</span>
+<span class="sd">        [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">threshold_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;probability_of_detection&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">probability_of_detection</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">POD_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ProbabilityOfFalseDetection</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Probability of False Detection.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    threshold_field_name : str</span>
+<span class="sd">        The field name for the location-specific threshold values.</span>
+<span class="sd">        Required for Probability of False Detection, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default &quot;probability_of_false_detection&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.probability_of_false_detection`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default</span>
+<span class="sd">        [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">threshold_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;probability_of_false_detection&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">probability_of_false_detection</span><span class="p">,</span>
+                           <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">POFD_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">CriticalSuccessIndex</span><span class="p">(</span><span class="n">DeterministicBasemodel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Critical Success Index.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bootstrap : BootstrapBasemodel</span>
+<span class="sd">        The bootstrap model, by default None.</span>
+<span class="sd">    add_epsilon: bool</span>
+<span class="sd">        Whether to add epsilon to avoid issues with certain transforms or</span>
+<span class="sd">        division by zero, by default False.</span>
+<span class="sd">    transform : TransformEnum</span>
+<span class="sd">        The transformation to apply to the data, by default None.</span>
+<span class="sd">    threshold_field_name : str</span>
+<span class="sd">        The field name for the location-specific threshold values.</span>
+<span class="sd">        Required for Critical Success Index, by default None.</span>
+<span class="sd">    output_field_name : str</span>
+<span class="sd">        The output field name, by default &quot;critical_success_index&quot;.</span>
+<span class="sd">    func : Callable</span>
+<span class="sd">        The function to apply to the data, by default</span>
+<span class="sd">        :func:`deterministic_funcs.critical_success_index`.</span>
+<span class="sd">    input_field_names : Union[str, StrEnum, List[Union[str, StrEnum]]]</span>
+<span class="sd">        The input field names, by default</span>
+<span class="sd">        [&quot;primary_value&quot;, &quot;secondary_value&quot;].</span>
+<span class="sd">    attrs : Dict</span>
+<span class="sd">        The static attributes for the metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bootstrap</span><span class="p">:</span> <span class="n">BootstrapBasemodel</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">add_epsilon</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">transform</span><span class="p">:</span> <span class="n">TransformEnum</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">threshold_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">output_field_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;critical_success_index&quot;</span><span class="p">)</span>
+    <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">metric_funcs</span><span class="o">.</span><span class="n">critical_success_index</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_field_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StrEnum</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;primary_value&quot;</span><span class="p">,</span> <span class="s2">&quot;secondary_value&quot;</span><span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">attrs</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">tma</span><span class="o">.</span><span class="n">CSI_ATTRS</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="DeterministicMetrics">
+<a class="viewcode-back" href="../../../../api/generated/teehr.DeterministicMetrics.html#teehr.DeterministicMetrics">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DeterministicMetrics</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Define and customize determinisitic metrics.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Deterministic metrics compare two timeseries, typically primary</span>
+<span class="sd">    (&quot;observed&quot;) vs. secondary (&quot;modeled&quot;) values. Available metrics include:</span>
+
+<span class="sd">    - AnnualPeakRelativeBias</span>
+<span class="sd">    - KlingGuptaEfficiency</span>
+<span class="sd">    - KlingGuptaEfficiencyMod1</span>
+<span class="sd">    - KlingGuptaEfficiencyMod2</span>
+<span class="sd">    - MaxValueDelta</span>
+<span class="sd">    - MaxValueTimeDelta</span>
+<span class="sd">    - MeanError</span>
+<span class="sd">    - MeanAbsoluteError</span>
+<span class="sd">    - MeanAbsoluteRelativeError</span>
+<span class="sd">    - MeanSquareError</span>
+<span class="sd">    - MultiplicativeBias</span>
+<span class="sd">    - PearsonCorrelation</span>
+<span class="sd">    - NashSutcliffeEfficiency</span>
+<span class="sd">    - NormalizedNashSutcliffeEfficiency</span>
+<span class="sd">    - RelativeBias</span>
+<span class="sd">    - RootMeanSquareError</span>
+<span class="sd">    - Rsquared</span>
+<span class="sd">    - SpearmanCorrelation</span>
+<span class="sd">    - RootMeanStandardDeviationRatio</span>
+<span class="sd">    - ConfusionMatrix</span>
+<span class="sd">    - FalseAlarmRatio</span>
+<span class="sd">    - ProbabilityOfDetection</span>
+<span class="sd">    - ProbabilityOfFalseDetection</span>
+<span class="sd">    - CriticalSuccessIndex</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">AnnualPeakRelativeBias</span> <span class="o">=</span> <span class="n">AnnualPeakRelativeBias</span>
+    <span class="n">KlingGuptaEfficiency</span> <span class="o">=</span> <span class="n">KlingGuptaEfficiency</span>
+    <span class="n">KlingGuptaEfficiencyMod1</span> <span class="o">=</span> <span class="n">KlingGuptaEfficiencyMod1</span>
+    <span class="n">KlingGuptaEfficiencyMod2</span> <span class="o">=</span> <span class="n">KlingGuptaEfficiencyMod2</span>
+    <span class="n">MaxValueDelta</span> <span class="o">=</span> <span class="n">MaxValueDelta</span>
+    <span class="n">MaxValueTimeDelta</span> <span class="o">=</span> <span class="n">MaxValueTimeDelta</span>
+    <span class="n">MeanError</span> <span class="o">=</span> <span class="n">MeanError</span>
+    <span class="n">MeanAbsoluteError</span> <span class="o">=</span> <span class="n">MeanAbsoluteError</span>
+    <span class="n">MeanAbsoluteRelativeError</span> <span class="o">=</span> <span class="n">MeanAbsoluteRelativeError</span>
+    <span class="n">MeanSquareError</span> <span class="o">=</span> <span class="n">MeanSquareError</span>
+    <span class="n">MultiplicativeBias</span> <span class="o">=</span> <span class="n">MultiplicativeBias</span>
+    <span class="n">PearsonCorrelation</span> <span class="o">=</span> <span class="n">PearsonCorrelation</span>
+    <span class="n">VariabilityRatio</span> <span class="o">=</span> <span class="n">VariabilityRatio</span>
+    <span class="n">NashSutcliffeEfficiency</span> <span class="o">=</span> <span class="n">NashSutcliffeEfficiency</span>
+    <span class="n">NormalizedNashSutcliffeEfficiency</span> <span class="o">=</span> <span class="n">NormalizedNashSutcliffeEfficiency</span>
+    <span class="n">RelativeBias</span> <span class="o">=</span> <span class="n">RelativeBias</span>
+    <span class="n">RootMeanSquareError</span> <span class="o">=</span> <span class="n">RootMeanSquareError</span>
+    <span class="n">Rsquared</span> <span class="o">=</span> <span class="n">Rsquared</span>
+    <span class="n">SpearmanCorrelation</span> <span class="o">=</span> <span class="n">SpearmanCorrelation</span>
+    <span class="n">RootMeanStandardDeviationRatio</span> <span class="o">=</span> <span class="n">RootMeanStandardDeviationRatio</span>
+    <span class="n">ConfusionMatrix</span> <span class="o">=</span> <span class="n">ConfusionMatrix</span>
+    <span class="n">FalseAlarmRatio</span> <span class="o">=</span> <span class="n">FalseAlarmRatio</span>
+    <span class="n">ProbabilityOfDetection</span> <span class="o">=</span> <span class="n">ProbabilityOfDetection</span>
+    <span class="n">ProbabilityOfFalseDetection</span> <span class="o">=</span> <span class="n">ProbabilityOfFalseDetection</span>
+    <span class="n">CriticalSuccessIndex</span> <span class="o">=</span> <span class="n">CriticalSuccessIndex</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><!-- This will display the version of the docs -->
+TEEHR version 0.5.2</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,23 @@
+﻿query
+=====
+
+.. automodule:: teehr.evaluation.metrics.Metrics.query
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+

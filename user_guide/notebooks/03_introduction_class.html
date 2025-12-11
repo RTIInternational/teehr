@@ -1,0 +1,1541 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Introduction to the Evaluation Class &#8212; TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/css/teehr.css?v=b36b674b" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=8e576371"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/notebooks/03_introduction_class';</script>
+    <link rel="icon" href="../../_static/favicon.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Setting-up a Simple Example" href="04_setup_simple_example.html" />
+    <link rel="prev" title="Loading Local Data" href="02_loading_local_data.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.5.2" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/teehr.png" class="logo__image only-light" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation - Home"/>
+    <img src="../../_static/TEEHR_Icon_DarkMode.png" class="logo__image only-dark pst-js-only" alt="TEEHR: Tools for Exploratory Evaluation in Hydrologic Research 0.5.2 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../development/index.html">
+    Developer Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../changelog/index.html">
+    Release Notes
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../api/index.html">
+    API reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/RTIInternational/teehr" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="01_introduction_schema.html">Introduction to the Schema</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_loading_local_data.html">Loading Local Data</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Introduction to the Evaluation Class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_setup_simple_example.html">Setting-up a Simple Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_clone_from_s3.html">Clone an Evaluation from S3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_read_from_s3.html">Read an Evaluation from S3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/joining_timeseries.html">Joining Timeseries</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06_grouping_and_filtering.html">Grouping and Filtering</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="08_adding_calculated_fields.html">Adding calculated fields</a></li>
+<li class="toctree-l1"><a class="reference internal" href="09_ensemble_metrics.html">Ensemble Forecast Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="10_fetching_nwm_streamflow.html">Fetching USGS and NWM Streamflow Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_fetching_nwm_gridded_data.html">Fetching NWM Gridded Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metrics/metrics.html">Available Metrics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../legacy_content/legacy_content.html">Legacy Content</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">User Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Introduction to the Evaluation Class</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="introduction-to-the-evaluation-class">
+<h1>Introduction to the Evaluation Class<a class="headerlink" href="#introduction-to-the-evaluation-class" title="Link to this heading">#</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>In the previous lesson we loaded some test data from the user’s local drive (although we first downloaded it from the repository). In this example we will continue to explore the Evaluation schema through the Evaluation class interface.</p>
+<p>Note: this lesson builds off of the dataset that we created in the last lesson <code class="docutils literal notranslate"><span class="pre">Loading</span> <span class="pre">Local</span> <span class="pre">Data</span></code>.  If you have not run through the Loading Local Data lesson, then go back and first work though that notebook to generate the required dataset for this lesson.</p>
+<section id="create-a-new-evaluation">
+<h3>Create a new Evaluation<a class="headerlink" href="#create-a-new-evaluation" title="Link to this heading">#</a></h3>
+<p>First we will import the the TEEHR Evaluation class and create a new instance that points to a directory where the data loaded in lesson <code class="docutils literal notranslate"><span class="pre">02_loading_data</span></code> is stored.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">teehr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr.evaluation.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">print_tree</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+
+<span class="c1"># Define the directory where the Evaluation will be created</span>
+<span class="n">test_eval_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">Path</span><span class="p">()</span><span class="o">.</span><span class="n">home</span><span class="p">(),</span> <span class="s2">&quot;temp&quot;</span><span class="p">,</span> <span class="s2">&quot;02_loading_data&quot;</span><span class="p">)</span>
+
+<span class="c1"># Create an Evaluation object and create the directory</span>
+<span class="n">ev</span> <span class="o">=</span> <span class="n">teehr</span><span class="o">.</span><span class="n">Evaluation</span><span class="p">(</span><span class="n">dir_path</span><span class="o">=</span><span class="n">test_eval_dir</span><span class="p">,</span> <span class="n">create_dir</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+</div>
+</div>
+<p>Now that we have created a new evaluation that points to the dataset we created in <code class="docutils literal notranslate"><span class="pre">02_loading</span> <span class="pre">_data</span></code>, lets take a look at the data, specifically the <code class="docutils literal notranslate"><span class="pre">dataset</span></code> directory.  You can see that the three different data groups are stored in slightly different ways.</p>
+<ul class="simple">
+<li><p>The domain tables (units, variables, configurations, attributes) are stored as *.csv files.  While in this case the files happen to have the same name as the table, there is no requirement that they do.</p></li>
+<li><p>The location tables (locations, location_attributes, location_crosswalks) are stored as parquet files without hive partitioning.  The file names are managed by Spark.</p></li>
+<li><p>The timeseries tables (primary_timeseries, secondary_timeseries, joined_timeseries) are stored as parquet files with hive partitioning. The file names are managed by Spark.</p></li>
+</ul>
+<p>Note, if you don’t have tree installed and don’t want to install it, you can uncomment the comment lines to use a Python function roughly does the same thing.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">print_tree</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">dataset_dir</span><span class="p">,</span> <span class="n">exclude_patterns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;.*&quot;</span><span class="p">,</span> <span class="s2">&quot;_*&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>├── attributes
+│   ├── attributes.csv
+│   └── part-00000-21001440-f469-457d-b235-84f198143d02-c000.csv
+├── variables
+│   └── variables.csv
+├── location_attributes
+│   ├── part-00002-c73e7be5-95e5-4ff1-8aad-2204fbd7841d-c000.snappy.parquet
+│   ├── part-00001-c73e7be5-95e5-4ff1-8aad-2204fbd7841d-c000.snappy.parquet
+│   └── part-00000-c73e7be5-95e5-4ff1-8aad-2204fbd7841d-c000.snappy.parquet
+├── locations
+│   └── part-00000-1a1a150e-843f-4355-930b-b8713d61af17-c000.snappy.parquet
+├── joined_timeseries
+│   └── configuration_name=test_short
+│       └── variable_name=streamflow_hourly_inst
+│           └── part-00000-27d4e6ba-2556-4e20-b5d6-49b7f71a2b22.c000.snappy.parquet
+├── location_crosswalks
+│   └── part-00000-715f6c11-9b54-4fee-8ee5-cf2eaa76eafd-c000.snappy.parquet
+├── configurations
+│   ├── part-00000-9d6b4cee-6d49-46eb-a0ac-af2567678408-c000.csv
+│   ├── part-00000-1bff1b5b-ab54-433e-a84e-f117264e91d8-c000.csv
+│   └── configurations.csv
+├── secondary_timeseries
+│   └── configuration_name=test_short
+│       └── variable_name=streamflow_hourly_inst
+│           └── part-00000-a9cd9a55-1632-4059-a666-16525b35934f.c000.snappy.parquet
+├── units
+│   └── units.csv
+└── primary_timeseries
+    └── configuration_name=usgs_observations
+        └── variable_name=streamflow_hourly_inst
+            └── part-00000-e12e6d4a-d1b4-4072-81ab-e25472d0280a.c000.snappy.parquet
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="table-classes">
+<h3>Table Classes<a class="headerlink" href="#table-classes" title="Link to this heading">#</a></h3>
+<p>The TEEHR Evaluation class contains different sub-classes that are used to organize class methods into logical groups.  One of these types of sub-classes is the “table” sub-classes which contain methods for interacting with the data tables. Each of the tables in the Evaluation dataset has a respective sub-class with the table name.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">units</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">attributes</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">variables</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">configurations</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">locations</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">location_attributes</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">location_crosswalks</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">secondary_timeseries</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">joined_timeseries</span>
+</pre></div>
+</div>
+<p>Each of the table sub-classes then has methods to add and/or load new data as well as methods to query the table to get data out.  These are documented in the API documentation. For now, because all the tables are relatively small, we will just use the <code class="docutils literal notranslate"><span class="pre">to_pandas()</span></code> method and then the <code class="docutils literal notranslate"><span class="pre">head()</span></code> method on the Pandas DataFrame to see an example of the data that is returned.  In an actual evaluation setting, with lots of data in the TEEHR dataset, you would likely want to include a <code class="docutils literal notranslate"><span class="pre">filter()</span></code> method to reduce the amount of data you are querying and putting into memory.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">units</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>name</th>
+      <th>long_name</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>m^3/s</td>
+      <td>Cubic Meters Per Second</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ft^3/s</td>
+      <td>Cubic Feet Per Second</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>km^2</td>
+      <td>Square Kilometers</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>mm/s</td>
+      <td>Millimeters Per Second</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>name</th>
+      <th>type</th>
+      <th>description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>drainage_area</td>
+      <td>continuous</td>
+      <td>Drainage area in square kilometers</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>ecoregion</td>
+      <td>categorical</td>
+      <td>Ecoregion</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>year_2_discharge</td>
+      <td>continuous</td>
+      <td>2-yr discharge in cubic meters per second</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>name</th>
+      <th>long_name</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>streamflow_hourly_inst</td>
+      <td>Hourly Instantaneous Streamflow</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>streamflow_daily_mean</td>
+      <td>Daily Mean Streamflow</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>rainfall_hourly_rate</td>
+      <td>Hourly Rainfall Rate</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">configurations</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>name</th>
+      <th>type</th>
+      <th>description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>usgs_observations</td>
+      <td>primary</td>
+      <td>Test Observed Configuration</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>test_short</td>
+      <td>secondary</td>
+      <td>Test Forecast Configuration</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>name</th>
+      <th>geometry</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>usgs-A</td>
+      <td>Site A</td>
+      <td>b'\x01\x01\x00\x00\x00\xc8f\xa9\x1d\x07.T\xc0\...</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>usgs-B</td>
+      <td>Site B</td>
+      <td>b'\x01\x01\x00\x00\x00\x00\x06?-\xa3-T\xc0\xbb...</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>usgs-C</td>
+      <td>Bite C</td>
+      <td>b"\x01\x01\x00\x00\x00\xb0Y\xebG'/T\xc0K\xa5\n...</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">location_attributes</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>location_id</th>
+      <th>attribute_name</th>
+      <th>value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>usgs-C</td>
+      <td>year_2_discharge</td>
+      <td>300</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>usgs-C</td>
+      <td>ecoregion</td>
+      <td>blue_ridge</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>usgs-A</td>
+      <td>ecoregion</td>
+      <td>coastal_plain</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>usgs-A</td>
+      <td>year_2_discharge</td>
+      <td>500</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>usgs-B</td>
+      <td>year_2_discharge</td>
+      <td>200</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>reference_time</th>
+      <th>value_time</th>
+      <th>value</th>
+      <th>unit_name</th>
+      <th>location_id</th>
+      <th>configuration_name</th>
+      <th>variable_name</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>NaT</td>
+      <td>2022-01-01 13:00:00</td>
+      <td>13.0</td>
+      <td>m^3/s</td>
+      <td>usgs-B</td>
+      <td>usgs_observations</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>NaT</td>
+      <td>2022-01-01 16:00:00</td>
+      <td>90.0</td>
+      <td>m^3/s</td>
+      <td>usgs-C</td>
+      <td>usgs_observations</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>NaT</td>
+      <td>2022-01-01 09:00:00</td>
+      <td>10.8</td>
+      <td>m^3/s</td>
+      <td>usgs-B</td>
+      <td>usgs_observations</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>NaT</td>
+      <td>2022-01-01 05:00:00</td>
+      <td>10.4</td>
+      <td>m^3/s</td>
+      <td>usgs-B</td>
+      <td>usgs_observations</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>NaT</td>
+      <td>2022-01-01 11:00:00</td>
+      <td>140.0</td>
+      <td>m^3/s</td>
+      <td>usgs-C</td>
+      <td>usgs_observations</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">location_crosswalks</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>primary_location_id</th>
+      <th>secondary_location_id</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>usgs-A</td>
+      <td>fcst-1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>usgs-B</td>
+      <td>fcst-2</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>usgs-C</td>
+      <td>fcst-3</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">secondary_timeseries</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>reference_time</th>
+      <th>value_time</th>
+      <th>value</th>
+      <th>unit_name</th>
+      <th>location_id</th>
+      <th>member</th>
+      <th>configuration_name</th>
+      <th>variable_name</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2022-01-01 01:00:00</td>
+      <td>2022-01-01 05:00:00</td>
+      <td>0.500000</td>
+      <td>m^3/s</td>
+      <td>fcst-1</td>
+      <td>None</td>
+      <td>test_short</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2022-01-01 01:00:00</td>
+      <td>2022-01-01 20:00:00</td>
+      <td>54.419998</td>
+      <td>m^3/s</td>
+      <td>fcst-3</td>
+      <td>None</td>
+      <td>test_short</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2022-01-01 02:00:00</td>
+      <td>2022-01-01 02:00:00</td>
+      <td>103.199997</td>
+      <td>m^3/s</td>
+      <td>fcst-3</td>
+      <td>None</td>
+      <td>test_short</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2022-01-01 02:00:00</td>
+      <td>2022-01-01 18:00:00</td>
+      <td>2.000000</td>
+      <td>m^3/s</td>
+      <td>fcst-1</td>
+      <td>None</td>
+      <td>test_short</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2022-01-01 02:00:00</td>
+      <td>2022-01-01 15:00:00</td>
+      <td>102.800003</td>
+      <td>m^3/s</td>
+      <td>fcst-3</td>
+      <td>None</td>
+      <td>test_short</td>
+      <td>streamflow_hourly_inst</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</section>
+<section id="querying">
+<h3>Querying<a class="headerlink" href="#querying" title="Link to this heading">#</a></h3>
+<p>Above, we just used the <code class="docutils literal notranslate"><span class="pre">to_pandas()</span></code> method on each table in the dataset to see an example of the data that is in each table. The underlying query engine for TEEHR is PySpark.  As a result, each of the table sub-classes can return data as either a Spark DataFrame (using the <code class="docutils literal notranslate"><span class="pre">to_sdf()</span></code> method) or as a Pandas DataFrame (using the <code class="docutils literal notranslate"><span class="pre">to_pandas()</span></code> method).  The location data tables have an additional method that returns a GeoPandas DataFrame (using the <code class="docutils literal notranslate"><span class="pre">to_geopandas()</span></code> method) where the geometry bytes column has been converted to a proper WKT geometry column.</p>
+<p>Note: PySpark itself is “lazy loaded” meaning that it does not actually run the query until the data is needed for display, plotting, etc.  Therefore, if you just use the <code class="docutils literal notranslate"><span class="pre">to_sdf()</span></code> method, you do not get the data but rather a lazy Spark DataFrame that can be used with subsequent Spark operations that will all be evaluated when the results are requested.  Here we show how to get the Spark DataFrame and show the data but there are many other ways that the lazy Spark DataFrame can be used in subsequent operations that are beyond the scope of this document.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Query the locations and return as a lazy Spark DataFrame.</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">to_sdf</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>DataFrame[id: string, name: string, geometry: binary]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Query the locations and return as a Spark DataFrame but tell Spark to show the data.</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">to_sdf</span><span class="p">()</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>+------+------+--------------------+
+|    id|  name|            geometry|
++------+------+--------------------+
+|usgs-A|Site A|[01 01 00 00 00 C...|
+|usgs-B|Site B|[01 01 00 00 00 0...|
+|usgs-C|Bite C|[01 01 00 00 00 B...|
++------+------+--------------------+
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Query the locations and return as a Pandas DataFrame.</span>
+<span class="c1"># Note that the geometry column is shown as a byte string.</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>name</th>
+      <th>geometry</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>usgs-A</td>
+      <td>Site A</td>
+      <td>b'\x01\x01\x00\x00\x00\xc8f\xa9\x1d\x07.T\xc0\...</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>usgs-B</td>
+      <td>Site B</td>
+      <td>b'\x01\x01\x00\x00\x00\x00\x06?-\xa3-T\xc0\xbb...</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>usgs-C</td>
+      <td>Bite C</td>
+      <td>b"\x01\x01\x00\x00\x00\xb0Y\xebG'/T\xc0K\xa5\n...</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Query the locations and return as a GeoPandas DataFrame.</span>
+<span class="c1"># Note that the geometry column is now a proper WKT geometry column.</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">to_geopandas</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>name</th>
+      <th>geometry</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>usgs-A</td>
+      <td>Site A</td>
+      <td>POINT (-80.71918 35.17611)</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>usgs-B</td>
+      <td>Site B</td>
+      <td>POINT (-80.71308 35.15839)</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>usgs-C</td>
+      <td>Bite C</td>
+      <td>POINT (-80.73677 35.18693)</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>One very quick example of how the Spark DataFrame’s lazy loading can be beneficial, would be to get the number of rows in a query result.  If you did <code class="docutils literal notranslate"><span class="pre">len(ev.primary_timeseries.to_pandas())</span></code>, first the entire data frame would have to be loaded in memory as a Pandas DataFrame and then the length calculated.  On the otherhand, if you were to <code class="docutils literal notranslate"><span class="pre">ev.primary_timeseries.to_sdf().count()</span></code> the Spark engine would calculate the number of rows without loading the entire dataset into memory first.  For larger datsets this could be very important.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">display</span><span class="p">(</span>
+    <span class="nb">len</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">())</span>
+<span class="p">)</span>
+<span class="n">display</span><span class="p">(</span>
+    <span class="n">ev</span><span class="o">.</span><span class="n">primary_timeseries</span><span class="o">.</span><span class="n">to_sdf</span><span class="p">()</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>78
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>78
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="filtering-and-ordering">
+<h3>Filtering and Ordering<a class="headerlink" href="#filtering-and-ordering" title="Link to this heading">#</a></h3>
+<p>As noted above, because the tables are a lazy loaded Spark DataFrames, we can filter and order the data before returning it as a Pandas or GeoPandas DataFrame. The filter methods take either a raw SQL string, a filter dictionary or a FilterObject, Operator and field enumeration. Using an FilterObject, Operator and field enumeration is probably not a common pattern for most users, but it is used internally to validate filter arguments and is available to users if they would like to use it.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Filter using a raw SQL string</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="s2">&quot;id = &#39;usgs-A&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_geopandas</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>name</th>
+      <th>geometry</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>usgs-A</td>
+      <td>Site A</td>
+      <td>POINT (-80.71918 35.17611)</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Filter using a dictionary</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">filter</span><span class="p">({</span>
+    <span class="s2">&quot;column&quot;</span><span class="p">:</span> <span class="s2">&quot;id&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;operator&quot;</span><span class="p">:</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;usgs-A&quot;</span>
+<span class="p">})</span><span class="o">.</span><span class="n">to_geopandas</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>name</th>
+      <th>geometry</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>usgs-A</td>
+      <td>Site A</td>
+      <td>POINT (-80.71918 35.17611)</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Import the LocationFilter and Operators classes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">teehr</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocationFilter</span><span class="p">,</span> <span class="n">Operators</span>
+
+<span class="c1"># Get the field enumeration</span>
+<span class="n">fields</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">field_enum</span><span class="p">()</span>
+
+<span class="c1"># Filter using the LocationFilter class</span>
+<span class="n">lf</span> <span class="o">=</span> <span class="n">LocationFilter</span><span class="p">(</span>
+    <span class="n">column</span><span class="o">=</span><span class="n">fields</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+    <span class="n">operator</span><span class="o">=</span><span class="n">Operators</span><span class="o">.</span><span class="n">eq</span><span class="p">,</span>
+    <span class="n">value</span><span class="o">=</span><span class="s2">&quot;usgs-A&quot;</span>
+<span class="p">)</span>
+<span class="n">ev</span><span class="o">.</span><span class="n">locations</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">lf</span><span class="p">)</span><span class="o">.</span><span class="n">to_geopandas</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>id</th>
+      <th>name</th>
+      <th>geometry</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>usgs-A</td>
+      <td>Site A</td>
+      <td>POINT (-80.71918 35.17611)</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ev</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>This same approach can be used to query the other tables in the evaluation dataset.  There are also other methods that we did not explore and users are encouraged to checkout the TEEHR API documentation as well as the PySpark documentation for a more in-depth understanding of what happens in the background.</p>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="02_loading_local_data.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Loading Local Data</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="04_setup_simple_example.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Setting-up a Simple Example</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#create-a-new-evaluation">Create a new Evaluation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#table-classes">Table Classes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#querying">Querying</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#filtering-and-ordering">Filtering and Ordering</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/user_guide/notebooks/03_introduction_class.ipynb.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025 RTI International.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item"><!-- This will display the version of the docs -->
+TEEHR version 0.5.2</div>
+      
+    </div>
+  
+  
+    <div class="footer-items__center">
+      
+        <div class="footer-item"><div class="footer-message">
+    <a href="https://ciroh.ua.edu/">
+        <div class="image">
+            <img src="https://ciroh.ua.edu/wp-content/uploads/2022/08/CIROHLogo_200x200.png">
+        </div>
+    </a>
+    <div class="text">
+        Funding for this project was provided by the National Oceanic
+        & Atmospheric Administration (NOAA), awarded to the Cooperative
+        Institute for Research to Operations in Hydrology (CIROH) through
+        the NOAA Cooperative Agreement with The University of Alabama (NA22NWS4320003).
+    </div>
+</div>
+
+<style>
+.footer-message {
+    display: grid;
+    grid-template-columns: 90px 600px;
+   }
+
+img {
+    width: 95px;
+    height:95px;
+  }
+
+.text {
+font-size: 15px;
+text-align: right;
+}
+
+</style></div>
+      
+    </div>
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
