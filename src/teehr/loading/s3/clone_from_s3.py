@@ -50,16 +50,21 @@ def subset_the_table(
     if table.name == "locations" and primary_location_ids is not None:
         sdf_in = sdf_in.filter(sdf_in.id.isin(primary_location_ids))
         # warn user if any primary_location_ids were excluded
-        available_ids = set(sdf_in.select("id").rdd.flatMap(lambda x: x).collect())
+        available_ids = set(
+            sdf_in.select("id").rdd.flatMap(
+                lambda x: x).collect()
+                )
         missing_ids = set(primary_location_ids) - available_ids
         if len(missing_ids) > 0:
             logger.warning(
-                f"The following primary_location_ids were not found in the \
-                  locations table and will be excluded: {missing_ids}"
+                "The following primary_location_ids were not found in the "
+                f"locations table and will be excluded: {missing_ids}"
             )
-    elif table.name == "location_attributes" and primary_location_ids is not None:
+    elif table.name == "location_attributes" and \
+            primary_location_ids is not None:
         sdf_in = sdf_in.filter(sdf_in.location_id.isin(primary_location_ids))
-    elif table.name == "location_crosswalks" and primary_location_ids is not None:
+    elif table.name == "location_crosswalks" and \
+            primary_location_ids is not None:
         sdf_in = sdf_in.filter(
             sdf_in.primary_location_id.isin(primary_location_ids)
         )
@@ -68,11 +73,23 @@ def subset_the_table(
             sdf_in = sdf_in.filter(
                 sdf_in.location_id.isin(primary_location_ids)
             )
+            # warn user if no timeseries data exists for a gage
+            available_ids = set(
+                sdf_in.select("location_id").rdd.flatMap(
+                    lambda x: x).collect()
+                    )
+            missing_ids = set(primary_location_ids) - available_ids
+            if len(missing_ids) > 0:
+                logger.warning(
+                    f"The following primary_location_ids have no data in the "
+                    f"primary_timeseries table: {missing_ids}"
+                )
     elif table.name == "secondary_timeseries":
         if primary_location_ids is not None:
             secondary_ids = (
                 ev.location_crosswalks.to_sdf()
-                .select("secondary_location_id").rdd.flatMap(lambda x: x).collect()
+                .select("secondary_location_id").rdd.flatMap(
+                    lambda x: x).collect()
             )
             sdf_in = sdf_in.filter(sdf_in.location_id.isin(secondary_ids))
     elif table.name == "joined_timeseries":
@@ -127,7 +144,6 @@ def clone_from_s3(
 
     Note: future version will allow subsetting the tables to clone.
     """
-
     # Make the Evaluation directories
     logger.info(f"Creating directories for evaluation: {evaluation_name}")
     Path(ev.cache_dir).mkdir()
@@ -182,7 +198,10 @@ def clone_from_s3(
         logger.debug(f"Making directory {table.dir}")
         Path(table.dir).mkdir()
 
-        logger.debug(f"Cloning {table.name} from {s3_dataset_path}/{table.name}/ to {table.dir}")
+        logger.debug(
+            f"Cloning {table.name} from {s3_dataset_path}/{table.name}/ to "
+            f"{table.dir}"
+            )
 
         sdf_in = table._read_files(
             path=f"{s3_dataset_path}/{table.name}/",
@@ -208,7 +227,8 @@ def clone_from_s3(
     dest = f"{ev.scripts_dir}/user_defined_fields.py"
     logger.debug(f"Copying from {source}/ to {dest}")
 
-    # ToDo: there is a permission issue that prevents copying the entire directory.
+    # ToDo: there is a permission issue that prevents copying the entire
+    # directory.
     # This works for now.
     with fsspec.open(source, 'r', anon=True) as file:
         with open(dest, 'w') as f:
