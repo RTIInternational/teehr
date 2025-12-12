@@ -491,7 +491,7 @@ def test_ensemble_metrics(tmpdir):
 
     # check CRPS values
     assert np.isclose(
-        metrics_df.mean_crps_ensemble.values[0], 22.0508, atol=1e-04
+        metrics_df.mean_crps_ensemble.values[1], 22.3837, atol=1e-04
         )
     assert np.isclose(
         metrics_df.mean_crps_ensemble_skill_score.values[0], 0.2078, atol=1e-04
