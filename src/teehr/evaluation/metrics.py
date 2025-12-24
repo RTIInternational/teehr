@@ -38,7 +38,7 @@ class Metrics:
 
     def __call__(
         self,
-        table_name: str,
+        table_name: str = "joined_timeseries",
         namespace_name: Union[str, None] = None,
         catalog_name: Union[str, None] = None,
     ) -> "Metrics":
