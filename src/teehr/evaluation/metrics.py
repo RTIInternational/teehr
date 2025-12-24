@@ -65,6 +65,8 @@ class Metrics:
         >>> ev = teehr.Evaluation()
         >>> metrics = ev.metrics(table_name="primary_timeseries")
         """
+        logger.info(f"Initializing Metrics for table: {table_name}.{namespace_name or ''}{'.' if namespace_name else ''}{catalog_name or ''}")
+
         self.table_name = table_name
         self.table = self._ev.table(
             table_name=table_name,

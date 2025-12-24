@@ -53,6 +53,7 @@ class Table:
         catalog_name: Union[str, None] = None
     ) -> "Table":
         """Initialize the Table class."""
+        logger.info(f"Initializing Table for table: {table_name}.{namespace_name or ''}{'.' if namespace_name else ''}{catalog_name or ''}")
         self.table_name = table_name
         self.sdf = None
         tbl_props = TBLPROPERTIES.get(table_name)
