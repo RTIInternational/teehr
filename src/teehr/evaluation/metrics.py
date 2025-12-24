@@ -36,37 +36,59 @@ class Metrics:
         self.locations = ev.locations
         self._write = ev.write
 
+    # def __call__(
+    #     self,
+    #     table_name: str = "joined_timeseries",
+    #     namespace_name: Union[str, None] = None,
+    #     catalog_name: Union[str, None] = None,
+    # ) -> "Metrics":
+    #     """Initialize the Metrics class.
+
+    #     Parameters
+    #     ----------
+    #     table_name : str, optional
+    #         The name of the table to use for metrics calculations,
+    #         by default "joined_timeseries"
+    #     namespace_name : Union[str, None], optional
+    #         The namespace of the table, by default None in which case the
+    #         namespace_name of the active catalog is used.
+    #     catalog_name : Union[str, None], optional
+    #         The catalog of the table, by default None in which case the
+    #         catalog_name of the active catalog is used.
+
+    #     Example
+    #     -------
+    #     By default, the Metrics class operates on the "joined_timeseries" table.
+    #     This can be changed by specifying a different table name.
+
+    #     >>> import teehr
+    #     >>> ev = teehr.Evaluation()
+    #     >>> metrics = ev.metrics(table_name="primary_timeseries")
+    #     """
+    #     logger.info(f"Initializing Metrics for table: {table_name}.{namespace_name or ''}{'.' if namespace_name else ''}{catalog_name or ''}")
+
+    #     self.table_name = table_name
+    #     self.table = self._ev.table(
+    #         table_name=table_name,
+    #         namespace_name=namespace_name,
+    #         catalog_name=catalog_name,
+    #     )
+    #     self.sdf = self.table.to_sdf()
+
+    #     return self
+
     def __call__(
         self,
         table_name: str = "joined_timeseries",
         namespace_name: Union[str, None] = None,
         catalog_name: Union[str, None] = None,
     ) -> "Metrics":
-        """Initialize the Metrics class.
+        return Metrics(
+            self._ev
+        )._configure(table_name, namespace_name, catalog_name)
 
-        Parameters
-        ----------
-        table_name : str, optional
-            The name of the table to use for metrics calculations,
-            by default "joined_timeseries"
-        namespace_name : Union[str, None], optional
-            The namespace of the table, by default None in which case the
-            namespace_name of the active catalog is used.
-        catalog_name : Union[str, None], optional
-            The catalog of the table, by default None in which case the
-            catalog_name of the active catalog is used.
-
-        Example
-        -------
-        By default, the Metrics class operates on the "joined_timeseries" table.
-        This can be changed by specifying a different table name.
-
-        >>> import teehr
-        >>> ev = teehr.Evaluation()
-        >>> metrics = ev.metrics(table_name="primary_timeseries")
-        """
+    def _configure(self, table_name, namespace_name, catalog_name):
         logger.info(f"Initializing Metrics for table: {table_name}.{namespace_name or ''}{'.' if namespace_name else ''}{catalog_name or ''}")
-
         self.table_name = table_name
         self.table = self._ev.table(
             table_name=table_name,
@@ -74,7 +96,6 @@ class Metrics:
             catalog_name=catalog_name,
         )
         self.sdf = self.table.to_sdf()
-
         return self
 
     def query(
