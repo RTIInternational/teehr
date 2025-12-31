@@ -192,42 +192,6 @@ def test_ensemble_metrics(tmpdir):
     # Define the evaluation object.
     ev = setup_v0_5_ensemble_study(tmpdir)
 
-    # Add reference forecast based on climatology.
-    ev.configurations.add(
-        [
-            Configuration(
-                name="benchmark_forecast_hourly_normals",
-                type="secondary",
-                description="Reference forecast based on USGS climatology summarized by hour of year"  # noqa
-            )
-        ]
-    )
-    ref_fcst = bm.ReferenceForecast()
-    ref_fcst.aggregate_reference_timeseries = True
-
-    reference_table_name = "primary_timeseries"
-    reference_filters = [
-        "variable_name = 'streamflow_hour_of_year_mean'",
-        "unit_name = 'ft^3/s'"
-    ]
-
-    template_table_name = "secondary_timeseries"
-    template_filters = [
-        "variable_name = 'streamflow_hourly_inst'",
-        "unit_name = 'ft^3/s'",
-        "member = '1993'"
-    ]
-    ev.generate.benchmark_forecast(
-        method=ref_fcst,
-        reference_table_name=reference_table_name,
-        reference_table_filters=reference_filters,
-        template_table_name=template_table_name,
-        template_table_filters=template_filters,
-        output_configuration_name="benchmark_forecast_hourly_normals"
-    ).write(destination_table="secondary_timeseries")
-
-    ev.joined_timeseries.create(execute_scripts=False)
-
     # Now, metrics.
     crps = ProbabilisticMetrics.CRPS()
     crps.summary_func = np.mean
@@ -475,30 +439,30 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
-        test_executing_deterministic_metrics(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_executing_signatures(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_metrics_filter_and_geometry(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        test_metric_chaining(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
+        # test_executing_deterministic_metrics(
+        #     tempfile.mkdtemp(
+        #         prefix="1-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_executing_signatures(
+        #     tempfile.mkdtemp(
+        #         prefix="2-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_metrics_filter_and_geometry(
+        #     tempfile.mkdtemp(
+        #         prefix="3-",
+        #         dir=tempdir
+        #     )
+        # )
+        # test_metric_chaining(
+        #     tempfile.mkdtemp(
+        #         prefix="4-",
+        #         dir=tempdir
+        #     )
+        # )
         # High memory usage?
         test_ensemble_metrics(
             tempfile.mkdtemp(

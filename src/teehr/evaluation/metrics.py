@@ -201,7 +201,7 @@ class Metrics:
         )
 
         self.sdf = post_process_metric_results(
-            sdf=self.sdf,
+            metrics_sdf=self.sdf,
             include_metrics=include_metrics,
             group_by=group_by
         )

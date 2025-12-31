@@ -17,7 +17,7 @@ def setup_v0_5_ensemble_study(tmpdir):
     variables_path = TEST_STUDY_DATA_DIR_V0_5 / "variables.parquet"
 
     # initialize evaluation
-    ev = teehr.Evaluation(dir_path=tmpdir)
+    ev = teehr.Evaluation(dir_path=tmpdir, check_evaluation_version=False)
     ev.enable_logging()
     ev.clone_template()
 
@@ -32,7 +32,7 @@ def setup_v0_5_ensemble_study(tmpdir):
         geometry='geometry',
         crs="EPSG:4269"
         )
-    ev.locations.load_dataframe(df=gdf, write_mode="overwrite")
+    ev.locations.load_dataframe(df=gdf, write_mode="create_or_replace")
 
     # load crosswalk
     ev.location_crosswalks.load_parquet(

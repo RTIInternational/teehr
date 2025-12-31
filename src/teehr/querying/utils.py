@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 def post_process_metric_results(
-    sdf: ps.DataFrame,
+    metrics_sdf: ps.DataFrame,
     include_metrics: List[PydanticBaseModel],
     group_by: Union[
         str, JoinedTimeseriesFields,
@@ -44,24 +44,47 @@ def post_process_metric_results(
     """
     for model in include_metrics:
         if model.reference_configuration is not None:
-            sdf = calculate_metric_skill_score(
-                sdf,
+            """
+            self.df = self._calculate_metric_skill_score(
                 model.output_field_name,
                 model.reference_configuration,
                 group_by
             )
+            """
+            # 1) get the original cols ahead of skill score join
+            original_cols = metrics_sdf.columns
+            # 2) calculate skill score sdf
+            sdf = calculate_metric_skill_score(
+                metrics_sdf,
+                model.output_field_name,
+                model.reference_configuration,
+                group_by
+            )
+            # 3) remove original metric column from skill score sdf
+            sdf = sdf.drop(model.output_field_name)
+            # 3) get join columns
+            join_cols = parse_fields_to_list(group_by)
+            # 4) join returned table back to self.df, trim
+            metrics_sdf = metrics_sdf.join(
+                sdf,
+                on=join_cols,
+                how="left"
+            ).select(
+                *original_cols,
+                F.col(f"{model.output_field_name}_skill_score")
+            )
 
         if model.unpack_results:
-            sdf = model.unpack_function(
-                sdf,
+            metrics_sdf = model.unpack_function(
+                metrics_sdf,
                 model.output_field_name
             )
 
-    return sdf
+    return metrics_sdf
 
 
 def calculate_metric_skill_score(
-    sdf: ps.DataFrame,
+    metrics_sdf: ps.DataFrame,
     metric_field: str,
     reference_configuration: str,
     group_by: Union[
@@ -81,29 +104,38 @@ def calculate_metric_skill_score(
     group_by_strings.remove("configuration_name")
 
     pivot_sdf = (
-        sdf
+        metrics_sdf
         .groupBy(group_by_strings).
         pivot("configuration_name").
         agg(F.first(metric_field))
     )
     # Get all configuration names except the reference configuration
-    configurations = sdf.select("configuration_name").distinct().collect()
+    configurations = metrics_sdf.select("configuration_name").distinct().collect()
     configurations = [row.configuration_name for row in configurations]
     configurations.remove(reference_configuration)
 
     skill_score_col = f"{metric_field}_skill_score"
-    sdf = sdf.withColumn(skill_score_col, F.lit(None))
+    sdf = metrics_sdf.withColumn(skill_score_col, F.lit(None))
 
     for config in configurations:
         # Pivot and calculate the skill score.
         temp_col = f"{config}_{metric_field}_skill"
         pivot_sdf = pivot_sdf.withColumn(
             temp_col,
-            1 - F.col(config) / F.col(reference_configuration)
+            1 - F.try_divide(F.col(config), F.col(reference_configuration))
         ).withColumn(
             "configuration_name",
             F.lit(config)
         )
+        # warn user if try_divide results in nulls (division by zero)
+        null_count = pivot_sdf.filter(F.col(temp_col).isNull()).count()
+        if null_count > 0:
+            logger.warning(
+                f"Division by zero encountered when calculating skill "
+                f"score for configuration '{config}' relative to "
+                f"reference configuration '{reference_configuration}'. "
+                f"{null_count} null values were produced."
+            )
         # Join skill score values from the pivot table.
         join_cols = group_by_strings + ["configuration_name"]
         sdf = sdf.join(
