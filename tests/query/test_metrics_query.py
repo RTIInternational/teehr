@@ -51,7 +51,7 @@ def test_executing_deterministic_metrics(tmpdir):
     # Get the currently available fields to use in the query.
     flds = ev.joined_timeseries.field_enum()
 
-    metrics_df = ev.metrics.query(
+    metrics_df = ev.metrics().query(
         include_metrics=include_nonconditional_metrics,
         group_by=[flds.primary_location_id],
         order_by=[flds.primary_location_id],
@@ -75,7 +75,7 @@ def test_executing_deterministic_metrics(tmpdir):
         if callable(func) and func().attrs.get('requires_threshold_field', True)  # noqa
     ]
 
-    metrics_df = ev.metrics.add_calculated_fields([
+    metrics_df = ev.metrics().add_calculated_fields([
         tcf.AbovePercentileEventDetection(
             skip_event_id=True,
             add_quantile_field=True,
@@ -105,7 +105,7 @@ def test_executing_signatures(tmpdir):
     # Get the currently available fields to use in the query.
     flds = ev.joined_timeseries.field_enum()
 
-    metrics_df = ev.metrics.query(
+    metrics_df = ev.metrics().query(
         include_metrics=include_all_metrics,
         group_by=[flds.primary_location_id],
         order_by=[flds.primary_location_id],
@@ -142,7 +142,7 @@ def test_metrics_filter_and_geometry(tmpdir):
         )
     ]
 
-    metrics_df = ev.metrics.query(
+    metrics_df = ev.metrics().query(
         include_metrics=include_metrics,
         group_by=[flds.primary_location_id],
         order_by=[flds.primary_location_id],
@@ -161,7 +161,7 @@ def test_metric_chaining(tmpdir):
     ev = setup_v0_3_study(tmpdir)
 
     # Test chaining.
-    metrics_df = ev.metrics.query(
+    metrics_df = ev.metrics().query(
         order_by=["primary_location_id", "month"],
         group_by=["primary_location_id", "month"],
         include_metrics=[
@@ -302,7 +302,7 @@ def test_ensemble_metrics(tmpdir):
     crps.reference_configuration = "benchmark_forecast_hourly_normals"
 
     include_metrics = [crps]
-    metrics_df = ev.metrics.query(
+    metrics_df = ev.metrics().query(
         include_metrics=include_metrics,
         group_by=[
             "primary_location_id",
@@ -341,21 +341,21 @@ def test_metrics_transforms(tmpdir):
     mvtd_t.transform = 'log'
 
     # get metrics_df
-    metrics_df_tansformed_e = test_eval.metrics.query(
+    metrics_df_tansformed_e = test_eval.metrics().query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             kge_t_e,
             mvtd_t
         ]
     ).to_pandas()
-    metrics_df_transformed = test_eval.metrics.query(
+    metrics_df_transformed = test_eval.metrics().query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             kge_t,
             mvtd_t
         ]
     ).to_pandas()
-    metrics_df = test_eval.metrics.query(
+    metrics_df = test_eval.metrics().query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             kge,
@@ -396,7 +396,7 @@ def test_metrics_transforms(tmpdir):
     )
 
     # get metrics df control and assert divide by zero occurs
-    metrics_df_e_control = test_eval.metrics.query(
+    metrics_df_e_control = test_eval.metrics().query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             r2,
@@ -407,7 +407,7 @@ def test_metrics_transforms(tmpdir):
     assert np.isnan(metrics_df_e_control.pearson_correlation.values).all()
 
     # get metrics df test and ensure no divide by zero occurs
-    metrics_df_e_test = test_eval.metrics.query(
+    metrics_df_e_test = test_eval.metrics().query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             r2_e,
@@ -436,7 +436,7 @@ def test_metrics_transforms(tmpdir):
     )
 
     # get metrics df control and assert divide by zero occurs
-    metrics_df_e_control = test_eval.metrics.query(
+    metrics_df_e_control = test_eval.metrics().query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             r2,
@@ -447,7 +447,7 @@ def test_metrics_transforms(tmpdir):
     assert np.isnan(metrics_df_e_control.pearson_correlation.values).all()
 
     # get metrics df test and ensure no divide by zero occurs
-    metrics_df_e_test = test_eval.metrics.query(
+    metrics_df_e_test = test_eval.metrics().query(
         group_by=["primary_location_id", "configuration_name"],
         include_metrics=[
             r2_e,
