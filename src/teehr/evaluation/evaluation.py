@@ -195,7 +195,6 @@ class Evaluation(EvaluationBase):
         """The metrics component class for calculating performance metrics."""
         cls = Metrics(self)
         return cls()
-        # return Metrics(self)
 
     @property
     def units(self) -> UnitTable:
