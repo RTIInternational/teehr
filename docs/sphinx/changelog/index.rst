@@ -1,6 +1,23 @@
 Release Notes
 =============
 
+0.5.3 - 2026-01-07
+-----------------------
+
+Changed
+^^^^^^^
+- Fixes bug using ``drop_overlapping_assimilation_values`` in NWM operational fetching methods.
+- Fixes a bug in ``load_dataframe()``
+- Fixes a bug in unpacking metric results
+- Updates the Getting Started sphinx documentation
+
+Added
+^^^^^
+- Check for missing location IDs when cloning from s3
+- Row level calculated fields for forecast lead time bins
+- Brier Score and Brier Skill Score metrics
+
+
 0.5.2 - 2025-11-11
 ------------------
 
