@@ -6,6 +6,7 @@ Release Notes
 
 Changed
 ^^^^^^^
+- Pins PySpark to 4.0.1 in pyproject.toml
 - Fixes bug using ``drop_overlapping_assimilation_values`` in NWM operational fetching methods.
 - Fixes a bug in ``load_dataframe()``
 - Fixes a bug in unpacking metric results
