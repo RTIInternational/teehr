@@ -49,7 +49,8 @@ def test_nwm22_point_fetch_and_format(tmpdir):
         overwrite_output=True,
         nwm_version="nwm22",
         variable_mapper=TEST_NWM_VARIABLE_MAPPER,
-        timeseries_type="secondary"
+        timeseries_type="secondary",
+        drop_overlapping_assimilation_values=False
     )
 
     parquet_file = Path(tmpdir, "20230318T14.parquet")
@@ -90,7 +91,8 @@ def test_nwm30_point_fetch_and_format(tmpdir):
         ignore_missing_file=False,
         overwrite_output=True,
         variable_mapper=TEST_NWM_VARIABLE_MAPPER,
-        timeseries_type="secondary"
+        timeseries_type="secondary",
+        drop_overlapping_assimilation_values=False
     )
 
     parquet_file = Path(tmpdir, "20231101T00.parquet")
@@ -130,7 +132,8 @@ def test_nwm30_point_fetch_and_format_medium_range_member(tmpdir):
         ignore_missing_file=False,
         overwrite_output=True,
         variable_mapper=TEST_NWM_VARIABLE_MAPPER,
-        timeseries_type="secondary"
+        timeseries_type="secondary",
+        drop_overlapping_assimilation_values=False
     )
 
     parquet_file = Path(tmpdir, "20240222T00.parquet")
@@ -163,7 +166,8 @@ def test_nwm22_grid_fetch_and_format(tmpdir):
         overwrite_output=True,
         location_id_prefix=None,
         variable_mapper=None,
-        timeseries_type="primary"
+        timeseries_type="primary",
+        drop_overlapping_assimilation_values=False
     )
 
     parquet_file = Path(tmpdir, "20201218T00.parquet")
@@ -205,7 +209,8 @@ def test_nwm30_grid_fetch_and_format(tmpdir):
         overwrite_output=True,
         location_id_prefix=None,
         variable_mapper=TEST_NWM_VARIABLE_MAPPER,
-        timeseries_type="primary"
+        timeseries_type="primary",
+        drop_overlapping_assimilation_values=False
     )
 
     parquet_file = Path(tmpdir, "20231101T00.parquet")
