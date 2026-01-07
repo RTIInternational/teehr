@@ -73,17 +73,6 @@ def subset_the_table(
             sdf_in = sdf_in.filter(
                 sdf_in.location_id.isin(primary_location_ids)
             )
-            # warn user if no timeseries data exists for a gage
-            available_ids = set(
-                sdf_in.select("location_id").rdd.flatMap(
-                    lambda x: x).collect()
-                    )
-            missing_ids = set(primary_location_ids) - available_ids
-            if len(missing_ids) > 0:
-                logger.warning(
-                    f"The following primary_location_ids have no data in the "
-                    f"primary_timeseries table: {missing_ids}"
-                )
     elif table.name == "secondary_timeseries":
         if primary_location_ids is not None:
             secondary_ids = (
