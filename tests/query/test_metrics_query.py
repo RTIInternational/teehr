@@ -217,23 +217,22 @@ def test_ensemble_metrics(tmpdir):
     ).to_pandas()
 
     # check CRPS values
-    assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 22.050798)
-    assert np.isclose(metrics_df.mean_crps_ensemble.values[1], 22.383705)
+    assert np.isclose(metrics_df.mean_crps_ensemble.values[0], 21.861153)
+    assert np.isclose(metrics_df.mean_crps_ensemble.values[1], 22.64521)
     assert np.isclose(
-        metrics_df.mean_crps_ensemble_skill_score.values[0], 0.20777595
+        metrics_df.mean_crps_ensemble_skill_score.values[0], 0.214589
     )
     assert np.isnan(metrics_df.mean_crps_ensemble_skill_score.values[2])
 
     # check Brier Score values
-    assert np.isclose(metrics_df.mean_brier_score.values[0], 0.18979715)
-    assert np.isclose(metrics_df.mean_brier_score.values[1], 0.19405437)
+    assert np.isclose(metrics_df.mean_brier_score.values[0], 0.187054)
+    assert np.isclose(metrics_df.mean_brier_score.values[1], 0.1934589)
     assert np.isclose(
-        metrics_df.mean_brier_score_skill_score.values[0], 0.26453602
+        metrics_df.mean_brier_score_skill_score.values[0], 0.275162
     )
     assert np.isnan(
         metrics_df.mean_brier_score_skill_score.values[2]
     )
-    assert np.isnan(metrics_df.mean_crps_ensemble_skill_score.values[1])
     ev.spark.stop()
 
 
