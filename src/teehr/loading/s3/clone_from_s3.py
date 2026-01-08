@@ -77,17 +77,36 @@ def clone_from_s3(
     Note: future version will allow subsetting the tables to clone.
     """
     logger.info("Cloning evaluation from remote warehouse")
-    # TODO: Better way to filter and subset from the remote warehouse?
+    # TODO: Is there a better way to filter and subset from the remote warehouse?
+    # TODO: User could pass in a list of table names they want to clone?
     secondary_location_ids = None
     if primary_location_ids is not None:
-        primary_location_ids = f"('{', '.join(primary_location_ids)}')"
+        # primary_location_ids = f"('{', '.join(primary_location_ids)}')"
+        primary_location_ids = f"({', '.join(repr(id) for id in primary_location_ids)})"
+
+        # Check for any primary location ids that do not exist in the remote warehouse locations table
+        existing_primary_location_ids = ev.read.from_warehouse(
+            table_name="locations",
+            catalog_name=remote_catalog_name,
+            namespace_name=remote_namespace_name
+        ).to_sdf().filter("id in {}".format(primary_location_ids)).select("id").rdd.flatMap(lambda x: x).collect()
+        missing_primary_location_ids = (
+            set(primary_location_ids.strip("()").replace("'", "").split(", ")) -
+            set(existing_primary_location_ids)
+        )
+        if len(missing_primary_location_ids) > 0:
+            logger.warning(
+                "The following primary location ids do not exist"
+                f" in the remote warehouse locations table: {missing_primary_location_ids}"
+            )
+
+        # Get the corresponding secondary location ids
         secondary_location_ids = ev.read.from_warehouse(
             table_name="location_crosswalks",
             catalog_name=remote_catalog_name,
             namespace_name=remote_namespace_name
         ).to_sdf().filter("primary_location_id in {}".format(primary_location_ids)).select("secondary_location_id").rdd.flatMap(lambda x: x).collect()
-        secondary_location_ids = f"('{', '.join(secondary_location_ids)}')"
-        pass
+        secondary_location_ids = f"({', '.join(repr(id) for id in secondary_location_ids)})"
 
     tables = [
         {
@@ -139,15 +158,7 @@ def clone_from_s3(
                 f"value_time >= '{start_date}'" if start_date is not None else None,
                 f"value_time <= '{end_date}'" if end_date is not None else None
             ]
-        },
-        {
-            "table": ev.joined_timeseries,
-            "filters": [
-                f"primary_location_id in {primary_location_ids}" if primary_location_ids is not None else None,
-                f"value_time >= '{start_date}'" if start_date is not None else None,
-                f"value_time <= '{end_date}'" if end_date is not None else None
-            ]
-        },
+        }
     ]
 
     logger.info(f"Cloning evaluation from s3: {ev.remote_catalog.warehouse_dir}")
@@ -164,26 +175,17 @@ def clone_from_s3(
             catalog_name=remote_catalog_name,
             namespace_name=remote_namespace_name
         ).to_sdf()
+
         for filter in filters:
             if filter is not None:
                 logger.debug(f"Applying filter: {filter}")
                 sdf_in = sdf_in.filter(filter)
 
-        if table.table_name == "joined_timeseries":
-            ev.write.to_warehouse(
-                source_data=sdf_in,
-                catalog_name=local_catalog_name,
-                namespace_name=local_namespace_name,
-                table_name=table.table_name,
-                write_mode="create_or_replace",
-                uniqueness_fields=table.uniqueness_fields,
-            )
-        else:
-            ev.write.to_warehouse(
-                source_data=sdf_in,
-                catalog_name=local_catalog_name,
-                namespace_name=local_namespace_name,
-                table_name=table.table_name,
-                write_mode="upsert",
-                uniqueness_fields=table.uniqueness_fields,
-            )
+        ev.write.to_warehouse(
+            source_data=sdf_in,
+            catalog_name=local_catalog_name,
+            namespace_name=local_namespace_name,
+            table_name=table.table_name,
+            write_mode="upsert",
+            uniqueness_fields=table.uniqueness_fields,
+        )

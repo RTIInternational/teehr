@@ -360,6 +360,7 @@ class Evaluation(EvaluationBase):
         primary_location_ids: List[str] = None,
         start_date: Union[str, datetime] = None,
         end_date: Union[str, datetime] = None,
+        clone_template: bool = True,
         # spatial_filter: str = None
     ):
         """Read data from the remote warehouse, potentially subsetting.
@@ -381,6 +382,12 @@ class Evaluation(EvaluationBase):
         end_date : Union[str, datetime], optional
             The end date to subset the data.
             The default is None.
+        clone_template : bool, optional
+            Whether to clone the template to the local warehouse
+            before pulling data from remote. The default is True.
+            If a local warehouse already exists, an error will be raised, so
+            set this to False in that case. Data will be written to the existing
+            local warehouse using 'upsert' mode.
         """
         # You must configure the catalogs when initializing the Evaluation.
         if self.local_catalog.warehouse_dir is None:
@@ -390,10 +397,13 @@ class Evaluation(EvaluationBase):
         if remote_namespace_name is None:
             remote_namespace_name = self.remote_catalog.namespace_name
 
-        self.clone_template()
+        if clone_template is True:
+            logger.info("Cloning template to local warehouse.")
+            # This will raise an error if it already exists.
+            self.clone_template()
 
         # Now pull down the data from remote, applying any filtering, and
-        # writing to the local template.
+        # write to the local template.
         clone_from_s3(
             ev=self,
             local_catalog_name=self.local_catalog.catalog_name,
