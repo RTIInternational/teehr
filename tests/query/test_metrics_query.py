@@ -65,7 +65,7 @@ def test_executing_deterministic_metrics(tmpdir):
     assert metrics_df.equals(metrics_df2)
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
-    assert metrics_df.columns.size == 21
+    assert metrics_df.columns.size == 20
 
     # Test all the conditional metrics.
     include_conditional_metrics = [
@@ -151,6 +151,10 @@ def test_metrics_filter_and_geometry(tmpdir):
     assert isinstance(metrics_df, gpd.GeoDataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 6
+
+
+    tbl = ev.metrics(table_name="primary_timeseries")
+
     ev.spark.stop()
 
 
@@ -424,13 +428,19 @@ def test_table_based_metrics(tmpdir):
         include_metrics=[primary_avg],
         group_by=["location_id"],
         order_by=["location_id"],
-        # filters="season = 'winter'",
     ).to_pandas()
 
     assert isinstance(sigs_df, pd.DataFrame)
     assert sigs_df.index.size == 3
     assert "location_id" in sigs_df.columns
 
+    sigs_df2 = ev.metrics(table_name="primary_timeseries").query(
+        include_metrics=[primary_avg],
+        group_by=["location_id"],
+        order_by=["location_id"],
+    ).to_pandas()
+
+    assert sigs_df.sort_index().equals(sigs_df2.sort_index())
     ev.spark.stop()
 
 
