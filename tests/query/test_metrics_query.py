@@ -151,6 +151,10 @@ def test_metrics_filter_and_geometry(tmpdir):
     assert isinstance(metrics_df, gpd.GeoDataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 6
+
+
+    tbl = ev.metrics(table_name="primary_timeseries")
+
     ev.spark.stop()
 
 

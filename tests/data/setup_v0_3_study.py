@@ -18,6 +18,16 @@ SECONDARY_TIMESERIES_FILEPATH = Path(
     TEST_DATA_DIR, "timeseries", "test_short_fcast.parquet"
 )
 GEO_FILEPATH = Path(TEST_DATA_DIR, "geo")
+TEST_DATA_DIR = Path("tests", "data", "v0_3_test_study")
+GEOJSON_GAGES_FILEPATH = Path(TEST_DATA_DIR, "geo", "gages.geojson")
+PRIMARY_TIMESERIES_FILEPATH = Path(
+    TEST_DATA_DIR, "timeseries", "test_short_obs.parquet"
+)
+CROSSWALK_FILEPATH = Path(TEST_DATA_DIR, "geo", "crosswalk.csv")
+SECONDARY_TIMESERIES_FILEPATH = Path(
+    TEST_DATA_DIR, "timeseries", "test_short_fcast.parquet"
+)
+GEO_FILEPATH = Path(TEST_DATA_DIR, "geo")
 
 
 def setup_v0_3_study(tmpdir):
