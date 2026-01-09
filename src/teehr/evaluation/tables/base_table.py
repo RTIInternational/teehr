@@ -11,6 +11,7 @@ from teehr.querying.utils import (
     group_df,
     post_process_metric_results
 )
+from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
 from teehr.models.evaluation_base import EvaluationBase
 from teehr.models.filters import FilterBaseModel
 from teehr.models.table_properties import TBLPROPERTIES
@@ -31,6 +32,7 @@ class Table:
         """Initialize the Table class."""
         self._ev = ev
         self._read = ev.read
+        self._write = ev.write
         self.uniqueness_fields: List[str] = None
         self.foreign_keys: List[Dict[str, str]] = None
         self.schema_func = None
@@ -41,7 +43,6 @@ class Table:
         self.extraction_func = None
         # We could also make these available to generic tables,
         # but then they're available to table classes. Is that bad?
-        # self.write = ev.write
         # self.validate = ev.validate
         # self.extract = ev.extract
         # self.load = ev.load
@@ -612,3 +613,77 @@ class Table:
         """
         self._check_load_table()
         return self.sdf
+
+    def add_calculated_fields(self, cfs: Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]):
+        """Add in-memory calculated fields to the table before running metrics.
+
+        Parameters
+        ----------
+        cfs : Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]
+            The CFs to apply to the DataFrame.
+
+        Returns
+        -------
+        self
+            The Metrics object with the CFs applied to the DataFrame.
+
+        Examples
+        --------
+        Add the temporary calculated field "month" to use in the metrics query.
+
+        >>> import teehr
+        >>> from teehr import RowLevelCalculatedFields as rcf
+
+        >>> ev.metrics(table_name="joined_timeseries").add_calculated_fields([
+        >>>     rcf.Month()
+        >>> ]).query(
+        >>>     include_metrics=[fdc],
+        >>>     group_by=[flds.primary_location_id, "month"],
+        >>>     order_by=[flds.primary_location_id, "month"],
+        >>> ).to_pandas()
+        """
+        if not isinstance(cfs, List):
+            cfs = [cfs]
+
+        for cf in cfs:
+            self.sdf = cf.apply_to(self.sdf)
+
+        return self
+
+    def write(
+        self,
+        table_name: str,
+        write_mode: str = "create_or_replace"
+    ):
+        """Write the DataFrame to a warehouse table.
+
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to write to.
+        write_mode : str, optional
+            The write mode to use, by default "create_or_replace"
+            Options are: "create", "append", "overwrite", "create_or_replace"
+
+        Example
+        -------
+        >>> import teehr
+        >>> ev = teehr.Evaluation()
+        Calculate some metrics and write to the warehouse.
+        >>> metrics_df = ev.metrics.query(
+        >>>     include_metrics=[...],
+        >>>     group_by=["primary_location_id"]
+        >>> ).write_to_warehouse(
+        >>>     table_name="metrics",
+        >>>     write_mode="create_or_replace"
+        >>> )
+        """
+        logger.info(
+            f"Writing metrics results to the warehouse table: {table_name}."
+        )
+        self._write.to_warehouse(
+            source_data=self.sdf,
+            table_name=table_name,
+            write_mode=write_mode
+        )
+        return self
