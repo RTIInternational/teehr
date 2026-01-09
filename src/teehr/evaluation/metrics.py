@@ -13,7 +13,7 @@ class Metrics(Table):
     def __init__(self, ev) -> None:
         """Initialize the Metrics class."""
         super().__init__(ev=ev)
-        _ = super().__call__(
+        super().__call__(
             table_name="joined_timeseries",
         )
         self._check_load_table()
