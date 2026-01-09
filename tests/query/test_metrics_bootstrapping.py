@@ -63,12 +63,10 @@ def test_bootstrapping_signatures(tmpdir):
         order_by=[flds.primary_location_id],
     ).to_pandas()
 
-    assert isinstance(metrics_df, pd.DataFrame)
-    assert metrics_df.index.size == 3
-    assert metrics_df.columns.size == 9
-    assert len(metrics_df2) == 1
-    assert metrics_df2.location_id.values[0] == "gage-A"
-    assert np.isclose(metrics_df2["sum"].values[0], 31.3)
+    assert isinstance(sig_metrics_df, pd.DataFrame)
+    assert sig_metrics_df.index.size == 3
+    assert sig_metrics_df.columns.size == 4
+    assert np.isclose(sig_metrics_df["flow_duration_curve_slope_0.5"].sum(), -172.21364)
     ev.spark.stop()
 
 
@@ -256,13 +254,6 @@ def test_gumboot_bootstrapping(tmpdir):
         "flows_1030500.parquet"
     )
     sdf = ev.spark.read.parquet(joined_timeseries_filepath.as_posix())
-    # (
-    #     sdf.writeTo(
-    #         f"{ev.catalog_name}.{ev.namespace}.joined_timeseries"
-    #     )
-    #     .using("iceberg")
-    #     .createOrReplace()
-    # )
     ev.write.to_warehouse(
         source_data=sdf,
         table_name="joined_timeseries",
@@ -273,13 +264,6 @@ def test_gumboot_bootstrapping(tmpdir):
     sdf = ev.spark.read.parquet(
         Path(test_study_data_dir, "geo", "gages.parquet").as_posix()
     )
-    # (
-    #     sdf.writeTo(
-    #         f"{ev.catalog_name}.{ev.namespace}.locations"
-    #     )
-    #     .using("iceberg")
-    #     .createOrReplace()
-    # )
     ev.write.to_warehouse(
         source_data=sdf,
         table_name="locations",
@@ -468,6 +452,12 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:
+        test_bootstrapping_signatures(
+            tempfile.mkdtemp(
+                prefix="0-",
+                dir=tempdir
+            )
+        )
         test_unpacking_bootstrap_results(
             tempfile.mkdtemp(
                 prefix="1-",

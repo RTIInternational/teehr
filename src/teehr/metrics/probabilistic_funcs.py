@@ -104,3 +104,89 @@ def ensemble_crps(model: MetricsBasemodel) -> Callable:
             )
 
     return ensemble_crps_inner
+
+
+def _get_brier_score_inputs(pivoted_dict: dict,
+                            threshold: float) -> dict:
+    """Obtain inputs for scoringrules.brier_score from pivoted dict."""
+    # get quantile flow
+    p = pivoted_dict['primary']
+    q_threshold = np.quantile(p, threshold)
+
+    # get binary outcomes of observed exceeding threshold
+    binary_p = np.where(p >= q_threshold, 1, 0)
+
+    # get fraction of ensemble members exceeding threshold for each time step
+    s = pivoted_dict['secondary']
+    binary_s = np.where(s >= q_threshold, 1, 0)
+    if len(binary_s.shape) == 1:
+        # only one ensemble member
+        frac_exceeds_s = binary_s
+    else:
+        frac_exceeds_s = np.mean(binary_s, axis=1)
+
+    # assemble inputs dict
+    brier_score_inputs = {
+        'primary': binary_p,
+        'secondary': frac_exceeds_s
+    }
+
+    return brier_score_inputs
+
+
+def ensemble_brier_score(model: MetricsBasemodel) -> Callable:
+    """Create the Brier Score ensemble metric function."""
+    logger.debug("Building the Brier Score ensemble metric func.")
+
+    def ensemble_brier_score_inner(
+        p: pd.Series,
+        s: pd.Series,
+        members: pd.Series,
+    ) -> float:
+        """Create a wrapper around scoringrules brier_score.
+
+        Parameters
+        ----------
+        p : pd.Series
+            The primary values.
+        s : pd.Series
+            The secondary values.
+        members : pd.Series
+            The member IDs.
+        threshold : float
+            The threshold for the Brier Score calculation.
+
+        Returns
+        -------
+        float
+            The mean Brier Score for the ensemble, either as a single value
+            or array of values.
+        """
+        # lazy load scoringrules
+        import scoringrules as sr
+
+        # p, s, value_time = _transform(p, s, model, value_time)
+        # pivoted_dict = _pivot_by_value_time(p, s, value_time)
+        pivoted_dict = _pivot_by_member(p, s, members)
+
+        bs_inputs = _get_brier_score_inputs(
+            pivoted_dict,
+            model.threshold
+        )
+
+        if model.summary_func is not None:
+            return model.summary_func(
+                sr.brier_score(
+                    bs_inputs["primary"],
+                    bs_inputs["secondary"],
+                    backend=model.backend
+                )
+            )
+        else:
+            return sr.brier_score(
+                bs_inputs["primary"],
+                bs_inputs["secondary"],
+                backend=model.backend
+            )
+
+    return ensemble_brier_score_inner

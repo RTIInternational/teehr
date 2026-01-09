@@ -297,7 +297,7 @@ class Table:
                 include_metrics=include_metrics,
             )
             self.sdf = post_process_metric_results(
-                sdf=sdf,
+                metrics_sdf=sdf,
                 include_metrics=include_metrics,
                 group_by=group_by
             )

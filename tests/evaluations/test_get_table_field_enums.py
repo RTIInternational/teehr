@@ -25,7 +25,7 @@ def test_get_configuration_fields(tmpdir):
     fields = ev.configurations.field_enum()
     for field in fields:
         assert isinstance(field, ConfigurationFields)
-    # ev.spark.stop()
+    ev.spark.stop()
 
 
 def test_get_unit_fields(tmpdir):
@@ -35,7 +35,7 @@ def test_get_unit_fields(tmpdir):
     fields = ev.units.field_enum()
     for field in fields:
         assert isinstance(field, UnitFields)
-    # ev.spark.stop()
+    ev.spark.stop()
 
 
 def test_get_variable_fields(tmpdir):
@@ -45,7 +45,7 @@ def test_get_variable_fields(tmpdir):
     fields = ev.variables.field_enum()
     for field in fields:
         assert isinstance(field, VariableFields)
-    # ev.spark.stop()
+    ev.spark.stop()
 
 
 def test_get_attribute_fields(tmpdir):
@@ -55,7 +55,7 @@ def test_get_attribute_fields(tmpdir):
     fields = ev.attributes.field_enum()
     for field in fields:
         assert isinstance(field, AttributeFields)
-    # ev.spark.stop()
+    ev.spark.stop()
 
 
 def test_get_location_fields(tmpdir):
@@ -65,7 +65,7 @@ def test_get_location_fields(tmpdir):
     fields = ev.locations.field_enum()
     for field in fields:
         assert isinstance(field, LocationFields)
-    # ev.spark.stop()
+    ev.spark.stop()
 
 
 def test_get_location_attribute_fields(tmpdir):
@@ -75,7 +75,7 @@ def test_get_location_attribute_fields(tmpdir):
     fields = ev.location_attributes.field_enum()
     for field in fields:
         assert isinstance(field, LocationAttributeFields)
-    # ev.spark.stop()
+    ev.spark.stop()
 
 
 def test_get_location_crosswalk_fields(tmpdir):
@@ -85,7 +85,7 @@ def test_get_location_crosswalk_fields(tmpdir):
     fields = ev.location_crosswalks.field_enum()
     for field in fields:
         assert isinstance(field, LocationCrosswalkFields)
-    # ev.spark.stop()
+    ev.spark.stop()
 
 
 def test_get_timeseries_fields(tmpdir):
@@ -95,7 +95,7 @@ def test_get_timeseries_fields(tmpdir):
     fields = ev.primary_timeseries.field_enum()
     for field in fields:
         assert isinstance(field, TimeseriesFields)
-    # ev.spark.stop()
+    ev.spark.stop()
 
 
 def test_get_joined_timeseries_fields(tmpdir):
@@ -106,7 +106,7 @@ def test_get_joined_timeseries_fields(tmpdir):
     fields = ev.joined_timeseries.field_enum()
     for field in fields:
         assert isinstance(field, JoinedTimeseriesFields)
-    # ev.spark.stop()
+    ev.spark.stop()
 
 
 if __name__ == "__main__":

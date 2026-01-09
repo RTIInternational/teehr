@@ -24,6 +24,7 @@ def test_chain_filter_single_str(tmpdir):
     ev = setup_v0_3_study(tmpdir)
     df = ev.primary_timeseries.filter("location_id = 'gage-A'").to_pandas()
     assert len(df) == 26
+    ev.spark.stop()
 
 
 def test_chain_filter_single_str2(tmpdir):
@@ -31,6 +32,7 @@ def test_chain_filter_single_str2(tmpdir):
     ev = setup_v0_3_study(tmpdir)
     with pytest.raises(Exception):
         ev.primary_timeseries.filter("id = 'gage-A'").to_pandas()
+    ev.spark.stop()
 
 
 def test_chain_filter_single_dict(tmpdir):
@@ -42,6 +44,7 @@ def test_chain_filter_single_dict(tmpdir):
         "value": "gage-A"
     }).to_pandas()
     assert len(df) == 26
+    ev.spark.stop()
 
 
 def test_chain_filter_single_dict2(tmpdir):
@@ -53,6 +56,7 @@ def test_chain_filter_single_dict2(tmpdir):
             "operator": "=",
             "value": "gage-A"
         }).to_pandas()
+    ev.spark.stop()
 
 
 def test_chain_filter_single_model(tmpdir):
@@ -67,6 +71,7 @@ def test_chain_filter_single_model(tmpdir):
         )
     ).to_pandas()
     assert len(df) == 26
+    ev.spark.stop()
 
 
 def test_chain_filter_single_model2(tmpdir):
@@ -81,6 +86,7 @@ def test_chain_filter_single_model2(tmpdir):
                 value="gage-A"
             )
         ).to_pandas()
+    ev.spark.stop()
 
 
 def test_chain_filter_list_str(tmpdir):
@@ -91,6 +97,7 @@ def test_chain_filter_list_str(tmpdir):
         "value_time > '2022-01-01T12:00:00'"
     ]).to_pandas()
     assert len(df) == 13
+    ev.spark.stop()
 
 
 def test_chain_filter_list_dict(tmpdir):
@@ -109,6 +116,7 @@ def test_chain_filter_list_dict(tmpdir):
         }
     ]).to_pandas()
     assert len(df) == 13
+    ev.spark.stop()
 
 
 def test_chain_filter_list_model(tmpdir):
@@ -128,6 +136,7 @@ def test_chain_filter_list_model(tmpdir):
         )
     ]).to_pandas()
     assert len(df) == 13
+    ev.spark.stop()
 
 
 def test_query_single_str(tmpdir):
@@ -137,6 +146,7 @@ def test_query_single_str(tmpdir):
         filters="location_id = 'gage-A'"
     ).to_pandas()
     assert len(df) == 26
+    ev.spark.stop()
 
 
 def test_query_single_dict(tmpdir):
@@ -150,6 +160,7 @@ def test_query_single_dict(tmpdir):
         }
     ).to_pandas()
     assert len(df) == 26
+    ev.spark.stop()
 
 
 def test_query_single_model(tmpdir):
@@ -164,6 +175,7 @@ def test_query_single_model(tmpdir):
         )
     ).to_pandas()
     assert len(df) == 26
+    ev.spark.stop()
 
 
 def test_query_list_str(tmpdir):
@@ -176,6 +188,7 @@ def test_query_list_str(tmpdir):
         ]
     ).to_pandas()
     assert len(df) == 13
+    ev.spark.stop()
 
 
 def test_query_list_dict(tmpdir):
@@ -196,6 +209,7 @@ def test_query_list_dict(tmpdir):
         ]
     ).to_pandas()
     assert len(df) == 13
+    ev.spark.stop()
 
 
 def test_query_list_model(tmpdir):
@@ -217,6 +231,7 @@ def test_query_list_model(tmpdir):
         ]
     ).to_pandas()
     assert len(df) == 13
+    ev.spark.stop()
 
 
 def test_filter_by_lead_time(tmpdir):
@@ -260,6 +275,7 @@ def test_filter_by_lead_time(tmpdir):
         "forecast_lead_time < interval 3600 seconds"
     ).to_pandas()
     assert len(df) == 9
+    ev.spark.stop()
 
 
 if __name__ == "__main__":

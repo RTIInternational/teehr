@@ -6,6 +6,9 @@ from botocore.config import Config
 import tarfile
 from pathlib import Path
 import os
+import teehr
+from teehr.evaluation.spark_session_utils import create_spark_session
+import shutil
 
 session = botocore.session.Session()
 
@@ -23,7 +26,7 @@ def download_e0_2_example(temp_dir: Union[str, Path]):
     bucket_name = "ciroh-rti-public-data"  # Replace with actual bucket
     key = "teehr-data-warehouse/v0_4_evaluations/e0_2_location_example.tar.gz"  # Replace with actual key
     local_path = Path(temp_dir, "e0_2_location_example.tar.gz")
-
+    temp_extract_dir = Path(temp_dir, "e0_2_location_example")
 
 
     # Use get_object instead of download_file
@@ -43,6 +46,46 @@ def download_e0_2_example(temp_dir: Union[str, Path]):
     os.remove(local_path)
     print(f"✅ Removed archive {local_path}")
 
+    # Initialize Spark with new tmpdir location
+    spark = create_spark_session()
+    spark.conf.set(
+        f"spark.sql.catalog.local.warehouse",
+        (Path(temp_dir) / "local").as_posix()
+    )
+    # Create the database
+    spark.sql("CREATE DATABASE IF NOT EXISTS local.teehr")
 
-if __name__ == "__main__":
-    download_e0_2_example(temp_dir="/home/slamont/temp")
+    # Define tables to recreate
+    tables_to_recreate = [
+        "primary_timeseries",
+        "secondary_timeseries",
+        "joined_timeseries",
+        "locations",
+        "location_attributes",
+        "location_crosswalks",
+        "units",
+        "variables",
+        "attributes",
+        "configurations"
+    ]
+
+    # For each table, read the parquet data files and recreate the Iceberg table
+    for table_name in tables_to_recreate:
+        old_table_dir = temp_extract_dir / "local" / "teehr" / table_name / "data"
+        # Read all parquet files for this table
+        df = spark.read.parquet(str(old_table_dir))
+        # Create the Iceberg table
+        df.writeTo(f"local.teehr.{table_name}").using("iceberg").create()
+        print(f"Recreated table: {table_name} with {df.count()} rows")
+
+    # Clean up temp extraction directory
+    shutil.rmtree(temp_extract_dir)
+
+    ev = teehr.Evaluation(
+        Path(temp_dir),
+        create_dir=False,
+        spark=spark,
+        check_evaluation_version=False
+    )
+
+    return ev

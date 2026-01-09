@@ -321,17 +321,14 @@ def test_forecast_lead_time_bins(tmpdir):
         "value_time"
         )
     assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 7
+    ev.spark.stop()
 
 
 def test_add_timeseries_udfs(tmpdir):
     """Test adding a timeseries aware UDF."""
     # Test data needs at least 20 timesteps.
-    # Download an example from s3.
-    download_e0_2_example(temp_dir=tmpdir)
-    ev = teehr.Evaluation(
-        dir_path=Path(tmpdir, "e0_2_location_example"),
-        create_dir=False
-    )
+    ev = download_e0_2_example(temp_dir=tmpdir)
+
     sdf = ev.joined_timeseries.filter(
         "primary_location_id = 'usgs-14316700'"
     ).to_sdf()
