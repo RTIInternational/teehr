@@ -16,7 +16,7 @@ from teehr import TimeseriesAwareCalculatedFields as tcf
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from data.setup_v0_3_study import setup_v0_3_study  # noqa
+from data.setup_v0_3_study import setup_v0_3_study, setup_v0_3_study_fast  # noqa
 from data.setup_v0_5_ensemble_study import setup_v0_5_ensemble_study  # noqa
 
 
@@ -38,8 +38,10 @@ R_BENCHMARK_RESULTS = Path(
 
 def test_executing_deterministic_metrics(tmpdir):
     """Test get_metrics method."""
+
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir)
+    # ev = Evaluation(Path(tmpdir), create_dir=False, spark=spark, check_evaluation_version=False)
+    ev = setup_v0_3_study_fast(tmpdir)
 
     # Test all the non-conditional metrics.
     include_nonconditional_metrics = [
@@ -94,7 +96,7 @@ def test_executing_deterministic_metrics(tmpdir):
 def test_executing_signatures(tmpdir):
     """Test get_metrics method."""
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study_fast(tmpdir)
 
     # Test all the metrics.
     include_all_metrics = [
@@ -119,7 +121,7 @@ def test_executing_signatures(tmpdir):
 def test_metrics_filter_and_geometry(tmpdir):
     """Test get_metrics method with filter and geometry."""
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study_fast(tmpdir)
 
     # Define some metrics.
     kge = DeterministicMetrics.KlingGuptaEfficiency()
@@ -161,7 +163,7 @@ def test_metrics_filter_and_geometry(tmpdir):
 def test_metric_chaining(tmpdir):
     """Test get_metrics method with chaining."""
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study_fast(tmpdir)
 
     # Test chaining.
     metrics_df = ev.metrics.query(
@@ -243,7 +245,7 @@ def test_ensemble_metrics(tmpdir):
 def test_metrics_transforms(tmpdir):
     """Test applying metric transforms (non-bootstrap)."""
     # Define the evaluation object.
-    test_eval = setup_v0_3_study(tmpdir)
+    test_eval = setup_v0_3_study_fast(tmpdir)
 
     # define metric requiring p,s
     kge = DeterministicMetrics.KlingGuptaEfficiency()
@@ -384,7 +386,7 @@ def test_adding_calculated_fields(tmpdir):
     from teehr import RowLevelCalculatedFields as rcf
 
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study_fast(tmpdir)
     kge = DeterministicMetrics.KlingGuptaEfficiency()
     metrics_df_calc = (
         ev
@@ -406,7 +408,7 @@ def test_adding_calculated_fields(tmpdir):
 
 def test_table_based_metrics(tmpdir):
     """Test table-based metrics."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study_fast(tmpdir)
 
     kge = DeterministicMetrics.KlingGuptaEfficiency()
 
