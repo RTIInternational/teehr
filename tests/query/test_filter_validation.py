@@ -29,6 +29,7 @@ def test_filter_string_passes(tmpdir):
     dataframe_schema = ev.primary_timeseries._get_schema("pandas")
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == "foo"
+    ev.spark.stop()
 
 
 def test_filter_int_to_string_passes(tmpdir):
@@ -43,6 +44,7 @@ def test_filter_int_to_string_passes(tmpdir):
     dataframe_schema = ev.primary_timeseries._get_schema("pandas")
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == "10"
+    ev.spark.stop()
 
 
 def test_filter_float_passes(tmpdir):
@@ -57,6 +59,7 @@ def test_filter_float_passes(tmpdir):
     dataframe_schema = ev.primary_timeseries._get_schema("pandas")
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == 10.1
+    ev.spark.stop()
 
 
 def test_filter_int_to_float_passes(tmpdir):
@@ -71,6 +74,7 @@ def test_filter_int_to_float_passes(tmpdir):
     dataframe_schema = ev.primary_timeseries._get_schema("pandas")
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == 10.0
+    ev.spark.stop()
 
 
 def test_filter_str_to_float_fails(tmpdir):
@@ -85,6 +89,7 @@ def test_filter_str_to_float_fails(tmpdir):
         )
         dataframe_schema = ev.primary_timeseries._get_schema("pandas")
         filter = validate_filter(filter, dataframe_schema)
+    ev.spark.stop()
 
 
 def test_filter_datetime_passes(tmpdir):
@@ -99,6 +104,7 @@ def test_filter_datetime_passes(tmpdir):
     dataframe_schema = ev.primary_timeseries._get_schema("pandas")
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == datetime(2021, 1, 1)
+    ev.spark.stop()
 
 
 def test_filter_datetime_passes2(tmpdir):
@@ -113,6 +119,7 @@ def test_filter_datetime_passes2(tmpdir):
     dataframe_schema = ev.primary_timeseries._get_schema("pandas")
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == datetime(2021, 1, 1)
+    ev.spark.stop()
 
 
 def test_filter_datetime_passes3(tmpdir):
@@ -127,6 +134,7 @@ def test_filter_datetime_passes3(tmpdir):
     dataframe_schema = ev.primary_timeseries._get_schema("pandas")
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == datetime(2021, 1, 1)
+    ev.spark.stop()
 
 
 def test_filter_datetime_passes4(tmpdir):
@@ -141,6 +149,7 @@ def test_filter_datetime_passes4(tmpdir):
     dataframe_schema = ev.primary_timeseries._get_schema("pandas")
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == datetime(2021, 1, 1)
+    ev.spark.stop()
 
 
 def test_filter_datetime_passes5(tmpdir):
@@ -155,6 +164,7 @@ def test_filter_datetime_passes5(tmpdir):
     dataframe_schema = ev.primary_timeseries._get_schema("pandas")
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == datetime(2021, 1, 1)
+    ev.spark.stop()
 
 
 def test_filter_datetime_fails(tmpdir):
@@ -169,6 +179,7 @@ def test_filter_datetime_fails(tmpdir):
         )
         dataframe_schema = ev.primary_timeseries._get_schema("pandas")
         filter = validate_filter(filter, dataframe_schema)
+    ev.spark.stop()
 
 
 def test_filter_in_str_fails(tmpdir):
@@ -183,6 +194,7 @@ def test_filter_in_str_fails(tmpdir):
         )
         dataframe_schema = ev.primary_timeseries._get_schema("pandas")
         filter = validate_filter(filter, dataframe_schema)
+    ev.spark.stop()
 
 
 if __name__ == "__main__":

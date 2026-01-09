@@ -18,8 +18,8 @@ from data.setup_v0_3_study import setup_v0_3_study  # noqa
 
 def test_filter_eq_str(tmpdir):
     """Test the format_filter_to_str function with eq_str."""
-    eval = setup_v0_3_study(tmpdir)
-    fields = eval.primary_timeseries.field_enum()
+    ev = setup_v0_3_study(tmpdir)
+    fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.variable_name,
         operator=FilterOperators.eq,
@@ -27,12 +27,13 @@ def test_filter_eq_str(tmpdir):
     )
     filter_str = format_filter(filter)
     assert filter_str == "variable_name = 'foo'"
+    ev.spark.stop()
 
 
 def test_filter_in_str(tmpdir):
     """Test the format_filter_to_str function with in_str."""
-    eval = setup_v0_3_study(tmpdir)
-    fields = eval.primary_timeseries.field_enum()
+    ev = setup_v0_3_study(tmpdir)
+    fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.variable_name,
         operator=FilterOperators.isin,
@@ -40,12 +41,12 @@ def test_filter_in_str(tmpdir):
     )
     filter_str = format_filter(filter)
     assert filter_str == "variable_name in ('foo','bar')"
-
+    ev.spark.stop()
 
 def test_filter_in_str_series(tmpdir):
     """Test the format_filter_to_str function with in_str."""
-    eval = setup_v0_3_study(tmpdir)
-    fields = eval.primary_timeseries.field_enum()
+    ev = setup_v0_3_study(tmpdir)
+    fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.variable_name,
         operator=FilterOperators.isin,
@@ -53,12 +54,12 @@ def test_filter_in_str_series(tmpdir):
     )
     filter_str = format_filter(filter)
     assert filter_str == "variable_name in ('foo','bar')"
-
+    ev.spark.stop()
 
 def test_filter_gt_dt(tmpdir):
     """Test the format_filter_to_str function with gt_dt."""
-    eval = setup_v0_3_study(tmpdir)
-    fields = eval.primary_timeseries.field_enum()
+    ev = setup_v0_3_study(tmpdir)
+    fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.reference_time,
         operator=FilterOperators.gt,
@@ -66,12 +67,13 @@ def test_filter_gt_dt(tmpdir):
     )
     filter_str = format_filter(filter)
     assert filter_str == "reference_time > '2021-01-01 00:00:00'"
+    ev.spark.stop()
 
 
 def test_filter_lt_int(tmpdir):
     """Test the format_filter_to_str function lt_int."""
-    eval = setup_v0_3_study(tmpdir)
-    fields = eval.primary_timeseries.field_enum()
+    ev = setup_v0_3_study(tmpdir)
+    fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.value,
         operator=FilterOperators.lt,
@@ -79,6 +81,7 @@ def test_filter_lt_int(tmpdir):
     )
     filter_str = format_filter(filter)
     assert filter_str == "value < 50"
+    ev.spark.stop()
 
 
 if __name__ == "__main__":
