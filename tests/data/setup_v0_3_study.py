@@ -1,6 +1,8 @@
 """Fixtures for v0.3 study tests."""
 from pathlib import Path
 from teehr import Evaluation, Configuration, Attribute
+import shutil
+from teehr.evaluation.spark_session_utils import create_spark_session
 
 import logging
 
@@ -18,12 +20,9 @@ SECONDARY_TIMESERIES_FILEPATH = Path(
 GEO_FILEPATH = Path(TEST_DATA_DIR, "geo")
 
 
-def setup_v0_3_study_fast(tmpdir):
+def setup_v0_3_study(tmpdir):
     """Set up a v0.3 study post-haste."""
     # Extract pre-created warehouse and recreate Iceberg tables from data files
-    import shutil
-    from teehr.evaluation.spark_session_utils import create_spark_session
-
     test_data_dir = Path.cwd() / "tests" / "data" / "v0_3_test_study"
     tar_file = test_data_dir / "local_warehouse.tar.gz"
     # Unpack to a temporary location to access data files
@@ -75,7 +74,7 @@ def setup_v0_3_study_fast(tmpdir):
     return ev
 
 
-def setup_v0_3_study(tmpdir):
+def setup_v0_3_study_from_scratch(tmpdir):
     """Set up a v0.3 study."""
     ev = Evaluation(dir_path=tmpdir, create_dir=True)
 
