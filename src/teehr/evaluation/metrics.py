@@ -1,6 +1,5 @@
 """Module for generating metrics."""
-from typing import Union
-from teehr.evaluation.tables.base_table import Table
+from teehr.evaluation.tables.generic_table import Table
 
 import logging
 
@@ -13,7 +12,9 @@ class Metrics(Table):
     def __init__(self, ev) -> None:
         """Initialize the Metrics class."""
         super().__init__(ev=ev)
-        super().__call__(
+        tbl = super().__call__(
             table_name="joined_timeseries",
         )
+        self.__dict__.update(tbl.__dict__)
         self._check_load_table()
+
