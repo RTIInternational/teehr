@@ -74,5 +74,4 @@ class Table(BaseTable):
                 self.catalog_name = self._ev.active_catalog.catalog_name
             else:
                 self.catalog_name = catalog_name
-
             return self

@@ -642,6 +642,7 @@ class BaseTable:
         >>>     order_by=[flds.primary_location_id, "month"],
         >>> ).to_pandas()
         """
+        self._check_load_table()
         if not isinstance(cfs, List):
             cfs = [cfs]
 
@@ -681,6 +682,7 @@ class BaseTable:
         logger.info(
             f"Writing metrics results to the warehouse table: {table_name}."
         )
+        self._check_load_table()
         self._write.to_warehouse(
             source_data=self.sdf,
             table_name=table_name,
