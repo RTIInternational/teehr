@@ -1,4 +1,4 @@
-"""Base class to represent generic tables."""
+"""Base class for all tables."""
 from typing import List, Dict, Union
 import logging
 import geopandas as gpd
@@ -25,7 +25,7 @@ from teehr.querying.metric_format import apply_aggregation_metrics
 logger = logging.getLogger(__name__)
 
 
-class Table:
+class BaseTable:
     """Base class to represent generic tables."""
 
     def __init__(self, ev: EvaluationBase):
@@ -52,7 +52,7 @@ class Table:
         table_name: str,
         namespace_name: Union[str, None] = None,
         catalog_name: Union[str, None] = None
-    ) -> "Table":
+    ) -> "BaseTable":
         """Initialize the Table class."""
         logger.info(f"Initializing Table for table: {table_name}.{namespace_name or ''}{'.' if namespace_name else ''}{catalog_name or ''}")
         self.table_name = table_name

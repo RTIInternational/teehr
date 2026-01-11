@@ -1,5 +1,5 @@
 """Location Attribute Table class."""
-from teehr.evaluation.tables.base_table import Table
+from teehr.evaluation.tables.base_table import BaseTable
 from teehr.loading.location_attributes import (
     convert_single_location_attributes
 )
@@ -18,7 +18,7 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-class LocationAttributeTable(Table):
+class LocationAttributeTable(BaseTable):
     """Access methods to location attributes table."""
 
     def __init__(self, ev):
