@@ -46,14 +46,6 @@ class LocationAttributeTable(BaseTable):
             catalog_name=catalog_name
         )
 
-    def to_geopandas(self):
-        """Return GeoPandas DataFrame."""
-        self._check_load_table()
-        gdf = join_geometry(self.sdf, self._ev.locations.to_sdf())
-        gdf.attrs['table_type'] = self.table_name
-        gdf.attrs['fields'] = self.fields()
-        return gdf
-
     def load_parquet(
         self,
         in_path: Union[Path, str],

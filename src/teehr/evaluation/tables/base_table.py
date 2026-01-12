@@ -570,25 +570,13 @@ class BaseTable:
         create_temp_views=["secondary_timeseries", "location_crosswalks", "locations"])
         return df_to_gdf(joined_df.toPandas())
 
-    def to_geopandas(self) -> gpd.GeoDataFrame:
-        """Convert the DataFrame to a GeoPandas DataFrame."""
+    def to_geopandas(self):
+        """Return GeoPandas DataFrame."""
         self._check_load_table()
-        if "location_id" not in self.sdf.columns:
-            err_msg = "The location_id field was not found in the table."
-            logger.error(err_msg)
-            raise ValueError(err_msg)
-        locations_sdf = self._read.from_warehouse(
-            catalog_name=self.catalog_name,
-            namespace_name=self.table_namespace_name,
-            table_name="locations"
-        ).to_sdf()
-        if self.table_name == "secondary_timeseries":
-            return self._join_geometry_using_crosswalk()
-        return join_geometry(
-            self.sdf,
-            locations_sdf,
-            "location_id"
-        )
+        gdf = join_geometry(self.sdf, self._ev.locations.to_sdf())
+        gdf.attrs['table_type'] = self.table_name
+        gdf.attrs['fields'] = self.fields()
+        return gdf
 
     def to_sdf(self):
         """Return PySpark DataFrame.

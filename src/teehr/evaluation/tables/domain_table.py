@@ -226,3 +226,10 @@ class DomainTable(BaseTable):
             logger.debug(f"Ordering the metrics by: {order_by}.")
             self.sdf = order_df(self.sdf, order_by)
         return self
+
+    def to_geopandas(self):
+        """Return GeoPandas DataFrame."""
+        raise NotImplementedError(
+            "The to_geopandas() method is not implemented for Domain Tables"
+            " because they do not contain location information."
+        )

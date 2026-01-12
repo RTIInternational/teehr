@@ -42,10 +42,13 @@ class JoinedTimeseriesTable(BaseTable):
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
         self._check_load_table()
-        return join_geometry(
+        gdf = join_geometry(
             self.sdf, self._ev.locations.to_sdf(),
             "primary_location_id"
         )
+        gdf.attrs['table_type'] = self.table_name
+        gdf.attrs['fields'] = self.fields()
+        return gdf
 
     def _join(self,
             primary_filters: Union[
