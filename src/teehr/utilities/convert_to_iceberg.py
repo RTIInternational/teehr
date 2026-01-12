@@ -3,12 +3,12 @@ from typing import Union
 from pathlib import Path
 import logging
 import argparse
+import glob
 
 import teehr
 
 
 logger = logging.getLogger(__name__)
-
 
 def convert_evaluation(
     dir_path: Union[str, Path],
@@ -33,6 +33,12 @@ def convert_evaluation(
 
     # Now copy in the e4 data.
     dataset_dir = dir_path / "dataset"
+
+    # Let's check for and remove any weird :Zone.Identifier files that may have been
+    # created on Windows systems. They interfere with reading the data with pyspark.
+    zone_identifier_files = glob.glob(f"{dataset_dir.as_posix()}/**/*:Zone.Identifier", recursive=True)
+    for zif in zone_identifier_files:
+        Path.unlink(Path(zif))
 
     units_sdf = ev.spark.read.csv((dataset_dir / "units").as_posix(), header=True)
     ev.write.to_warehouse(table_name="units", source_data=units_sdf)
