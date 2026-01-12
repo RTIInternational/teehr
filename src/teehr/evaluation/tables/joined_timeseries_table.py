@@ -249,3 +249,43 @@ class JoinedTimeseriesTable(BaseTable):
         self._load_table()
 
         return self
+
+
+    def write(
+        self,
+        table_name: str = "joined_timeseries",
+        write_mode: str = "create_or_replace"
+    ):
+        """Write the DataFrame to a warehouse table.
+
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to write to.
+        write_mode : str, optional
+            The write mode to use, by default "create_or_replace"
+            Options are: "create", "append", "overwrite", "create_or_replace"
+
+        Example
+        -------
+        >>> import teehr
+        >>> ev = teehr.Evaluation()
+        Calculate some metrics and write to the warehouse.
+        >>> metrics_df = ev.metrics.query(
+        >>>     include_metrics=[...],
+        >>>     group_by=["primary_location_id"]
+        >>> ).write_to_warehouse(
+        >>>     table_name="metrics",
+        >>>     write_mode="create_or_replace"
+        >>> )
+        """
+        logger.info(
+            f"Writing metrics results to the warehouse table: {table_name}."
+        )
+        self._check_load_table()
+        self._write.to_warehouse(
+            source_data=self.sdf,
+            table_name=table_name,
+            write_mode=write_mode
+        )
+        return self
