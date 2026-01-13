@@ -35,6 +35,14 @@ def add_or_replace_sdf_column_prefix(
         The name of the column to add or replace the prefix.
     prefix : str
         The prefix to add or replace.
+    delimiter : str, optional (default: "-")
+        The delimiter used to separate prefix from ID. Used when
+        detecting and replacing existing prefixes.
+
+    Returns
+    -------
+    DataFrame
+        The DataFrame with updated column values including the prefix.
     """
     if len(
         sdf.select(column_name).first().asDict()[column_name].split("-")

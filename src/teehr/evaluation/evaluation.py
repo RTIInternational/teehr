@@ -476,8 +476,22 @@ class Evaluation(EvaluationBase):
 
         return self.spark.sql(query)
 
-    def check_evaluation_version(self, warehouse_dir: Union[str, Path] = None) -> str:
-        """Check the version of the TEEHR Evaluation."""
+    def check_evaluation_version(self, warehouse_dir: Union[str, Path] = None) -> None:
+        """Check the version of the TEEHR Evaluation.
+
+        Parameters
+        ----------
+        warehouse_dir : Union[str, Path], optional
+            Path to the warehouse directory containing the version file.
+            If None, uses the active catalog's warehouse directory.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the version file does not exist in the warehouse directory.
+        ValueError
+            If the version format in the file is invalid.
+        """
         if warehouse_dir is None:
             warehouse_dir = self.active_catalog.warehouse_dir
         fs = LocalFileSystem()
@@ -512,7 +526,6 @@ class Evaluation(EvaluationBase):
         logger.info(
             f"Found evaluation version {version} in {warehouse_dir}."
         )
-        return version
 
     def apply_schema_migration(
         self,

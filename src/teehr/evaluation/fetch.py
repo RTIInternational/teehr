@@ -48,7 +48,14 @@ class Fetch:
     """Component class for fetching data from external sources."""
 
     def __init__(self, ev) -> None:
-        """Initialize the Fetch class."""
+        """Initialize the Fetch class.
+
+        Parameters
+        ----------
+        ev : Evaluation
+            The parent Evaluation instance providing access to tables,
+            Spark session, and cache directories.
+        """
         # Now we have access to the Evaluation object.
         self._ev = ev
         self._load = ev.load
@@ -552,6 +559,9 @@ class Fetch:
             The name of the table to load the data into. Must be either
             "primary_timeseries" or "secondary_timeseries". This is redundant to,
             and takes precedence over timeseries_type, which is deprecated.
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table. Options are "append", "upsert",
+            or "create_or_replace".
         zonal_weights_filepath : Optional[Union[Path, str]]
             The path to the zonal weights file. If None and calculate_zonal_weights
             is False, the weights file must exist in the cache for the configuration.
