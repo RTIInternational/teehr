@@ -35,7 +35,7 @@ class LocationTable(BaseTable):
         table_name: str = "locations",
         namespace_name: Union[str, None] = None,
         catalog_name: Union[str, None] = None,
-    ) -> "Table":
+    ) -> "BaseTable":
         """Initialize the Table class for a specific table.
 
         Parameters
@@ -51,7 +51,7 @@ class LocationTable(BaseTable):
 
         Returns
         -------
-        "Table"
+        "BaseTable"
             The initialized Table instance ready for operations.
 
         Note

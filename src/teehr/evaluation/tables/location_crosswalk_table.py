@@ -38,7 +38,7 @@ class LocationCrosswalkTable(BaseTable):
         table_name: str = "location_crosswalks",
         namespace_name: Union[str, None] = None,
         catalog_name: Union[str, None] = None,
-    ) -> "Table":
+    ) -> "BaseTable":
         """Initialize the Table class for a specific table.
 
         Parameters
@@ -54,7 +54,7 @@ class LocationCrosswalkTable(BaseTable):
 
         Returns
         -------
-        "Table"
+        "BaseTable"
             The initialized Table instance ready for operations.
 
         Note

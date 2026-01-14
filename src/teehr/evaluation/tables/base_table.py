@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseTable:
-    """Base class to represent generic tables."""
+    """Base class inherited by all table classes."""
 
     def __init__(self, ev: EvaluationBase):
         """Initialize the Table class.
@@ -59,7 +59,7 @@ class BaseTable:
         table_name: str,
         namespace_name: Union[str, None] = None,
         catalog_name: Union[str, None] = None
-    ) -> "Table":
+    ) -> "BaseTable":
         """Initialize the Table class for a specific table.
 
         Parameters
@@ -75,7 +75,7 @@ class BaseTable:
 
         Returns
         -------
-        "Table"
+        "BaseTable"
             The initialized Table instance ready for operations.
         """
         logger.info(f"Initializing Table for table: {table_name}.{namespace_name or ''}{'.' if namespace_name else ''}{catalog_name or ''}")

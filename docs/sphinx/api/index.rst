@@ -42,6 +42,8 @@ The top-level class and tables for interacting with and managing a TEEHR Evaluat
 *  :class:`Primary Timeseries Table <teehr.evaluation.tables.primary_timeseries_table.PrimaryTimeseriesTable>`
 *  :class:`Secondary Timeseries Table <teehr.evaluation.tables.secondary_timeseries_table.SecondaryTimeseriesTable>`
 *  :class:`Joined Timeseries Table <teehr.evaluation.tables.joined_timeseries_table.JoinedTimeseriesTable>`
+*  :class:`Base Table <teehr.evaluation.tables.base_table.BaseTable>`
+*  :class:`Generic Table <teehr.evaluation.tables.generic_table.Table>`
 
 Data I/O
 --------
