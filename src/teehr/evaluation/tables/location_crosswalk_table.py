@@ -286,6 +286,12 @@ class LocationCrosswalkTable(Table):
         ----------
         df : Union[pd.DataFrame, ps.DataFrame]
             DataFrame to load into the table.
+        namespace_name : str, optional
+            The namespace name to write to. If None, uses the
+            active catalog's namespace.
+        catalog_name : str, optional
+            The catalog name to write to. If None, uses the
+            active catalog's catalog name.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}

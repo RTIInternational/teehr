@@ -28,6 +28,21 @@ def post_process_metric_results(
 ) -> ps.DataFrame:
     """Post-process the results of the metrics query.
 
+    Parameters
+    ----------
+    metrics_sdf : ps.DataFrame
+        DataFrame containing calculated metrics.
+    include_metrics : List[PydanticBaseModel]
+        List of metric models used in the query.
+    group_by : Union[str, JoinedTimeseriesFields, List[...]]
+        Fields used for grouping in the metrics calculation.
+
+    Returns
+    -------
+    ps.DataFrame
+        Processed DataFrame with skill scores and unpacked results as specified
+        by the metric models.
+
     Notes
     -----
     This method includes functionality to update the dataframe returned
@@ -93,6 +108,17 @@ def calculate_metric_skill_score(
     ]
 ) -> ps.DataFrame:
     """Calculate skill score based on a reference configuration.
+
+    Parameters
+    ----------
+    metrics_sdf : ps.DataFrame
+        DataFrame containing calculated metrics.
+    metric_field : str
+        The name of the metric field to calculate skill scores for.
+    reference_configuration : str
+        The name of the reference configuration.
+    group_by : Union[str, JoinedTimeseriesFields, List[...]]
+        Fields used for grouping in the metrics calculation.
 
     Calculate the skill score of metric values for each configuration
     relative to the reference configuration. The skill score is calculated
