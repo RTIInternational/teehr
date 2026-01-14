@@ -31,7 +31,7 @@ GEO_FILEPATH = Path(TEST_DATA_DIR, "geo")
 
 
 def setup_v0_3_study(tmpdir):
-    """Set up a v0.3 study post-haste."""
+    """This copies in a hadoop-based warehouse and re-writes the tables with jdbc."""
     # Extract pre-created warehouse and recreate Iceberg tables from data files
     test_data_dir = Path.cwd() / "tests" / "data" / "v0_3_test_study"
     tar_file = test_data_dir / "local_warehouse.tar.gz"

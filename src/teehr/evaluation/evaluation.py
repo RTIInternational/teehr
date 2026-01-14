@@ -630,6 +630,43 @@ class Evaluation(EvaluationBase):
         """Log the current Spark session configuration."""
         log_session_config(self.spark)
 
+    def register_warehouse(self):
+        """Register a local warehouse and rewrite the metadata files to current directory."""
+
+        db_uri = self.spark.conf.get("spark.sql.catalog.local.uri")
+        # Get the existing metadata paths from the local_catalog.db
+        # SQLite database.
+        iceberg_df = self.spark.read.format("jdbc") \
+            .option("url", db_uri) \
+            .option("driver", "org.sqlite.JDBC") \
+            .option("query", "SELECT * FROM iceberg_tables") \
+            .load().toPandas()
+
+        new_warehouse_path = Path(self.active_catalog.warehouse_dir).as_posix()
+
+        old_meta_location = Path(iceberg_df.iloc[0].metadata_location)
+        old_warehouse_path = old_meta_location.parents[3]
+
+        for row in iceberg_df.itertuples():
+            table_name = row.table_name
+            table_namespace = row.table_namespace
+            logger.info(f"Rewriting table {table_name} from {old_warehouse_path}")
+            # This creates staging directory with updated metadata files
+            updated_filename = self.spark.sql(f"""
+                CALL local.system.rewrite_table_path(
+                    table => '{table_namespace}.{table_name}',
+                    source_prefix => '{old_warehouse_path}',
+                    target_prefix => '{new_warehouse_path}'
+                )
+            """).select("latest_version").rdd.flatMap(lambda x: x).collect()
+
+            pass
+
+        # IS this all that's needed?
+
+        pass
+
+
     # def update_spark_config(
     #     self,
     #     remove_configs: List[str] = None,
