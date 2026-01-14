@@ -70,4 +70,5 @@ Tools for calculating metrics and generating synthetic timeseries.
 * :class:`Probabilistic Metrics Models <teehr.ProbabilisticMetrics>`
 * :class:`Signature Models <teehr.Signatures>`
 * :class:`Generated Timeseries <teehr.evaluation.generate.GeneratedTimeseries>`
+* :class:`Streamflow Normals <teehr.models.generate.timeseries_generator_models.Normals>`
 * :class:`Reference Forecast Model <teehr.models.generate.timeseries_generator_models.ReferenceForecast>`
