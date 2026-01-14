@@ -34,6 +34,9 @@ class GeneratedTimeSeriesBasemodel:
             The name of the destination table to write to.
         write_mode : str
             The write mode for the DataFrame (e.g., "append", "overwrite").
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicate rows during validation before writing
+            to the destination table.
         """
         if destination_table == "primary_timeseries":
             tbl = self._ev.primary_timeseries
@@ -85,7 +88,14 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
     """Component class for generating synthetic data."""
 
     def __init__(self, ev) -> None:
-        """Initialize the Generator class."""
+        """Initialize the GeneratedTimeseries class.
+
+        Parameters
+        ----------
+        ev : Evaluation
+            The parent Evaluation instance providing access to validation,
+            writing capabilities, and table references.
+        """
         self._ev = ev
         self.sdf = None
 

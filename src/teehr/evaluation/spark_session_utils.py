@@ -483,7 +483,18 @@ def _update_configs_and_packages(
 
 
 def log_session_config(spark: SparkSession):
-    """Log the final Spark configuration for debugging."""
+    """Log the current Spark session configuration for debugging.
+
+    Parameters
+    ----------
+    spark : SparkSession
+        The Spark session whose configuration should be logged.
+
+    Notes
+    -----
+    This function logs all Spark configuration properties to the
+    logger at INFO level for troubleshooting purposes.
+    """
     logger.info("Final Spark configuration:")
     df = pd.DataFrame(list(spark.conf.getAll.items()), columns=["Key", "Value"])
     gps = df.groupby(by="Key")
@@ -504,7 +515,27 @@ def remove_or_update_configs(
     remove_configs: List[str] = None,
     update_configs: Dict[str, str] = None
 ) -> Dict[str, str]:
-    """Add, remove, or update Spark configurations."""
+    """Add, remove, or update Spark configurations.
+
+    Parameters
+    ----------
+    spark : SparkSession
+        The Spark session whose configuration should be logged.
+    remove_configs : List[str]
+        List of configuration keys to remove from the Spark session.
+        Default is None.
+        >>> remove_configs=["spark.sql.shuffle.partitions"]
+    update_configs : Dict[str, str]
+        Provided Spark configurations will be added if they do not already
+        exist, or overwritten if they do exist. Default is None.
+        >>> update_configs={"spark.sql.shuffle.partitions": "100"}
+
+    Notes
+    -----
+    This function allows for dynamic modification of the Spark session's
+    configuration by removing specified keys and updating or adding new
+    key-value pairs.
+    """
     # Remove specified configs
     if remove_configs is not None:
         for key in remove_configs:

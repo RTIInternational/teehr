@@ -1,5 +1,4 @@
 """Test evaluation class."""
-from teehr import Configuration
 from teehr import DeterministicMetrics, ProbabilisticMetrics, Signatures
 from teehr import Operators as ops
 import tempfile
@@ -9,9 +8,6 @@ from pathlib import Path
 import numpy as np
 
 from teehr.models.filters import JoinedTimeseriesFilter
-from teehr.evaluation.evaluation import Evaluation
-from teehr import SignatureTimeseriesGenerators as sts
-from teehr import BenchmarkForecastGenerators as bm
 from teehr import TimeseriesAwareCalculatedFields as tcf
 
 import sys

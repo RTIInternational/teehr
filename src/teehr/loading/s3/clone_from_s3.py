@@ -1,16 +1,11 @@
 """A module for cloning and optionally subsetting evaluations from s3."""
-from pathlib import Path
 import yaml
 import fsspec
-import s3fs
 import pandas as pd
 import teehr.const as const
 from datetime import datetime
 from typing import Union, Literal, List
 import logging
-import pyspark
-
-from teehr.models.evaluation_base import LocalCatalog, RemoteCatalog
 
 logger = logging.getLogger(__name__)
 

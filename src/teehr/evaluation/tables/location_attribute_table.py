@@ -7,7 +7,6 @@ from teehr.loading.utils import (
     validate_input_is_csv,
     validate_input_is_parquet
 )
-from teehr.querying.utils import join_geometry
 from pathlib import Path
 from typing import Union
 import logging
@@ -22,7 +21,14 @@ class LocationAttributeTable(BaseTable):
     """Access methods to location attributes table."""
 
     def __init__(self, ev):
-        """Initialize class."""
+        """Initialize the Table class.
+
+        Parameters
+        ----------
+        ev : EvaluationBase
+            The parent Evaluation instance providing access to Spark session,
+            catalogs, and related table operations.
+        """
         super().__init__(ev)
         self._load = ev.load
 
@@ -31,8 +37,24 @@ class LocationAttributeTable(BaseTable):
         table_name: str = "location_attributes",
         namespace_name: Union[str, None] = None,
         catalog_name: Union[str, None] = None,
-    ):
-        """Get an instance of the location attributes table.
+    ) -> "BaseTable":
+        """Initialize the Table class for a specific table.
+
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to operate on. Defaults to 'location_attributes'.
+        namespace_name : Union[str, None], optional
+            The namespace containing the table. If None, uses the
+            active catalog's namespace.
+        catalog_name : Union[str, None], optional
+            The catalog containing the table. If None, uses the
+            active catalog name.
+
+        Returns
+        -------
+        "BaseTable"
+            The initialized Table instance ready for operations.
 
         Note
         ----

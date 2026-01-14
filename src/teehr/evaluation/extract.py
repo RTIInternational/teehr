@@ -21,7 +21,13 @@ class Extract:
     """Class for extracting data from raw files."""
 
     def __init__(self, ev) -> None:
-        """Initialize the Fetch class."""
+        """Initialize the Extract class.
+
+        Parameters
+        ----------
+        ev : Evaluation
+            The parent Evaluation instance.
+        """
         self.ev = ev
 
     @staticmethod

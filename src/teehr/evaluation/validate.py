@@ -77,8 +77,25 @@ class Validate:
 
         Returns
         -------
-        ps.DataFrame
+        ps.DataFrame | pd.DataFrame
             The validated Spark DataFrame.
+
+        Examples
+        --------
+        Validate a PySpark DataFrame against the primary timeseries schema:
+
+        >>> from teehr.models.pandera_dataframe_schemas import primary_timeseries_schema
+        >>> validated_sdf = ev.validate.data(
+        ...     df=raw_sdf,
+        ...     table_schema=primary_timeseries_schema()
+        ... )
+
+        For Pandas DataFrames:
+
+        >>> validated_pdf = ev.validate.data(
+        ...     df=raw_pdf,
+        ...     table_schema=primary_timeseries_schema(type="pandas")
+        ... )
         """
         logger.info("Validating DataFrame against schema.")
         if isinstance(table_schema, SparkDataFrameSchema):

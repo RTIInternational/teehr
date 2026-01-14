@@ -30,7 +30,7 @@ TBL_CLASS_LOOKUP = {
 
 
 class Table(BaseTable):
-    """Generic table class that can represent any table."""
+    """Generic table class that can represent any existing or user-defined table."""
 
     def __call__(
         self,

@@ -13,7 +13,6 @@ WARNING: Do not change the name of this file or the functions it contains.
 from pyspark.sql import DataFrame
 import logging
 from teehr import RowLevelCalculatedFields as rcf
-from teehr import TimeseriesAwareCalculatedFields as tcf
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +26,7 @@ def add_user_defined_fields(
 
     Parameters
     ----------
-    joined_timeseries : JoinedTimeseriesTable
+    joined_df : DataFrame
 
     Returns
     -------
@@ -42,14 +41,12 @@ def add_user_defined_fields(
     month = rcf.Month()
     year = rcf.Year()
     water_year = rcf.WaterYear()
-    # normalized_flow = rcf.NormalizedFlow()
     seasons = rcf.Seasons()
 
     cfs = [
         month,
         year,
         water_year,
-        # normalized_flow,
         seasons
     ]
 

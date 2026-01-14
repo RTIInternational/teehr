@@ -26,7 +26,8 @@ Tables
    :toctree: generated
    :nosignatures:
 
-   base_table.Table
+   base_table.BaseTable
+   generic_table.Table
    unit_table.UnitTable
    variable_table.VariableTable
    attribute_table.AttributeTable

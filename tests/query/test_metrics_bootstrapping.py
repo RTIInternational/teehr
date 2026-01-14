@@ -1,10 +1,8 @@
 """Test evaluation class."""
-from teehr import Configuration
-from teehr import DeterministicMetrics, ProbabilisticMetrics, Signatures
+from teehr import DeterministicMetrics, Signatures
 from teehr import Operators as ops
 import tempfile
 import pandas as pd
-import geopandas as gpd
 from pathlib import Path
 import numpy as np
 from arch.bootstrap import CircularBlockBootstrap, StationaryBootstrap
@@ -13,9 +11,6 @@ from teehr.models.filters import JoinedTimeseriesFilter
 from teehr.models.metrics.bootstrap_models import Bootstrappers
 from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 from teehr.evaluation.evaluation import Evaluation
-from teehr import SignatureTimeseriesGenerators as sts
-from teehr import BenchmarkForecastGenerators as bm
-# import pytest
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))

@@ -2,7 +2,7 @@
 from collections.abc import Iterable
 from typing import List, Union
 from pydantic import BaseModel as BaseModel
-from pydantic import ValidationInfo, field_validator, Field
+from pydantic import ValidationInfo, field_validator
 from datetime import datetime, timedelta
 import logging
 from teehr.models.str_enum import StrEnum
@@ -16,7 +16,6 @@ from teehr.models.table_enums import (
     LocationCrosswalkFields,
     TimeseriesFields,
     JoinedTimeseriesFields,
-    TableNamesEnum
 )
 from teehr.models.pydantic_table_models import (
     TableBaseModel
