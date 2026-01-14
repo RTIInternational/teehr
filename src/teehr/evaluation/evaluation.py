@@ -54,6 +54,7 @@ from teehr.models.evaluation_base import (
     RemoteCatalog
 )
 from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor # noqa
+import teehr
 from pydantic import BaseModel as PydanticBaseModel
 
 
@@ -306,7 +307,8 @@ class Evaluation(EvaluationBase):
         """Create a study from the standard template.
 
         This method mainly copies the template directory to the specified
-        evaluation directory.
+        evaluation directory. It also creates a version file with the latest
+        version of TEEHR.
 
         Parameters
         ----------
@@ -351,6 +353,10 @@ class Evaluation(EvaluationBase):
             target_catalog_name=catalog_name,
             target_namespace_name=namespace_name
         )
+        # Update the version file.
+        version_file = Path(local_warehouse_dir) / "version"
+        with open(version_file, "w") as f:
+            f.write(teehr.__version__)
 
     def clone_from_s3(
         self,
@@ -480,13 +486,20 @@ class Evaluation(EvaluationBase):
         if warehouse_dir is None:
             warehouse_dir = self.active_catalog.warehouse_dir
         fs = LocalFileSystem()
-        version_file = Path(warehouse_dir, "version")
 
+        if fs.exists(warehouse_dir):
+            # This is a v0.6+ evaluation, check for version file in warehouse dir:
+            version_dir = warehouse_dir
+        else:
+            # This is a pre-v0.6 evaluation, check for version file in eval dir:
+            version_dir = self.dir_path
+
+        version_file = Path(version_dir, "version")
         if not fs.exists(version_file):
-            logger.error(f"Version file not found in {warehouse_dir}.")
             err_msg = (
-                f"Please create a version file in {warehouse_dir},"
-                " or set 'check_evaluation_version'=False."
+                f"No version file was found in {version_dir}."
+                " Please first upgrade to v0.5 or create a text file named 'version'"
+                f" in {version_dir} with the version number (e.g., '0.5.0')."
             )
             logger.error(err_msg)
             raise Exception(err_msg)
@@ -495,23 +508,22 @@ class Evaluation(EvaluationBase):
                 version_txt = str(f.read().strip())
             match = re.findall(r'(\d+\.\d+\.\d+)', version_txt)  # Assumes semantic versioning
             if len(match) != 1:
-                err_msg = f"Invalid version format in {warehouse_dir}: {version_txt}"
+                err_msg = f"Invalid version format in {version_dir}: {version_txt}"
                 logger.error(err_msg)
                 raise ValueError(err_msg)
             else:
                 version = match[0]
-        # Raise an error requiring migration to v0.6 warehouse.
-        if version < "0.6.0":
-            err_msg = (
-                f"Evaluation version {version} in {warehouse_dir} is less than 0.6."
-                " Please run the migration to upgrade to the latest version."
-            )
-            logger.error(err_msg)
-            raise ValueError(err_msg)
-        logger.info(
-            f"Found evaluation version {version} in {warehouse_dir}."
-        )
-        return version
+            if version < "0.6.0":
+                err_msg = (
+                    f"Evaluation version {version} in {version_dir} is less than 0.6."
+                    " Please run the migration script to upgrade to this Evaluation to v0.6."
+                    " To run the conversion to v0.6, import the function using: 'from teehr.utilities.convert_to_iceberg import convert_evaluation'"
+                    f" and then call: 'convert_evaluation(\"{self.dir_path.as_posix()}\")'"
+                )
+                logger.error(err_msg)
+                raise ValueError(err_msg)
+            else:
+                logger.info(f"Evaluation version {version} in {version_dir} is valid.")
 
     def apply_schema_migration(
         self,
