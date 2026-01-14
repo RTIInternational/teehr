@@ -1,7 +1,5 @@
 """Test the clone_from_s3 module."""
 import tempfile
-import pandas as pd
-from pathlib import Path
 
 import pytest
 from teehr import Evaluation

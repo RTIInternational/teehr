@@ -7,7 +7,6 @@ from teehr.loading.utils import (
     validate_input_is_csv,
     validate_input_is_parquet
 )
-from teehr.querying.utils import join_geometry
 from pathlib import Path
 from typing import Union
 import logging

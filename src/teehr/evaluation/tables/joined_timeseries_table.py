@@ -6,7 +6,6 @@ from teehr.models.filters import FilterBaseModel
 from teehr.querying.utils import join_geometry
 import pyspark.sql as ps
 import logging
-from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
 from typing import List, Union
 
 logger = logging.getLogger(__name__)

@@ -1,7 +1,6 @@
 """Base class for all tables."""
 from typing import List, Dict, Union
 import logging
-import geopandas as gpd
 
 from teehr.models.str_enum import StrEnum
 from teehr.querying.utils import (
