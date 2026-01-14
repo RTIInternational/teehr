@@ -53,7 +53,7 @@ class Load:
         write_mode: TableWriteEnum = "append",
         drop_duplicates: bool = True
     ):
-        """Load a timeseries from an in-memory dataframe.
+        """Load data from an in-memory dataframe.
 
         Parameters
         ----------
@@ -203,7 +203,7 @@ class Load:
         max_workers: int = 1,
         **kwargs
     ):
-        """Load location attributes helper.
+        """Load data from a file on local storage.
 
         Parameters
         ----------
