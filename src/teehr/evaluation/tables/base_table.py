@@ -28,7 +28,14 @@ class Table:
     """Base class to represent generic tables."""
 
     def __init__(self, ev: EvaluationBase):
-        """Initialize the Table class."""
+        """Initialize the Table class.
+
+        Parameters
+        ----------
+        ev : EvaluationBase
+            The parent Evaluation instance providing access to Spark session,
+            catalogs, and related table operations.
+        """
         self._ev = ev
         self._read = ev.read
         self.uniqueness_fields: List[str] = None
@@ -52,7 +59,24 @@ class Table:
         namespace_name: Union[str, None] = None,
         catalog_name: Union[str, None] = None
     ) -> "Table":
-        """Initialize the Table class."""
+        """Initialize the Table class for a specific table.
+
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to operate on.
+        namespace_name : Union[str, None], optional
+            The namespace containing the table. If None, uses the
+            active catalog's namespace.
+        catalog_name : Union[str, None], optional
+            The catalog containing the table. If None, uses the
+            active catalog name.
+
+        Returns
+        -------
+        "Table"
+            The initialized Table instance ready for operations.
+        """
         logger.info(f"Initializing Table for table: {table_name}.{namespace_name or ''}{'.' if namespace_name else ''}{catalog_name or ''}")
         self.table_name = table_name
         self.sdf = None

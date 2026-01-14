@@ -10,7 +10,14 @@ class SecondaryTimeseriesTable(TimeseriesTable):
     """Access methods to secondary timeseries table."""
 
     def __init__(self, ev):
-        """Initialize class."""
+        """Initialize the Table class.
+
+        Parameters
+        ----------
+        ev : EvaluationBase
+            The parent Evaluation instance providing access to Spark session,
+            catalogs, and related table operations.
+        """
         super().__init__(ev)
 
     def __call__(
@@ -18,8 +25,24 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         table_name: str = "secondary_timeseries",
         namespace_name: Union[str, None] = None,
         catalog_name: Union[str, None] = None,
-    ):
-        """Get an instance of the secondary timeseries table.
+    ) -> "TimeseriesTable":
+        """Initialize the Table class for a specific table.
+
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to operate on. Defaults to 'secondary_timeseries'.
+        namespace_name : Union[str, None], optional
+            The namespace containing the table. If None, uses the
+            active catalog's namespace.
+        catalog_name : Union[str, None], optional
+            The catalog containing the table. If None, uses the
+            active catalog name.
+
+        Returns
+        -------
+        "TimeseriesTable"
+            The initialized Table instance ready for operations.
 
         Note
         ----
