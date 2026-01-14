@@ -36,7 +36,7 @@ from teehr.evaluation.write import Write
 from teehr.evaluation.extract import Extract
 from teehr.evaluation.validate import Validate
 from teehr.evaluation.workflows import Workflow
-from teehr.evaluation.tables.base_table import Table
+from teehr.evaluation.tables.generic_table import Table
 from teehr.evaluation.read import Read
 from teehr.evaluation.load import Load
 from teehr.evaluation.utils import copy_migrations_dir
@@ -193,8 +193,7 @@ class Evaluation(EvaluationBase):
     @property
     def metrics(self) -> Metrics:
         """The metrics component class for calculating performance metrics."""
-        cls = Metrics(self)
-        return cls()
+        return Metrics(self)
 
     @property
     def units(self) -> UnitTable:

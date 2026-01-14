@@ -6,7 +6,7 @@ import logging
 import pandas as pd
 import pyspark.sql as ps
 
-from teehr.evaluation.tables.base_table import Table
+from teehr.evaluation.tables.base_table import BaseTable
 from teehr.loading.utils import (
     validate_input_is_xml,
     validate_input_is_csv,
@@ -20,7 +20,7 @@ from teehr.loading.timeseries import convert_single_timeseries
 logger = logging.getLogger(__name__)
 
 
-class TimeseriesTable(Table):
+class TimeseriesTable(BaseTable):
     """Access methods to timeseries table."""
 
     def __init__(self, ev):
