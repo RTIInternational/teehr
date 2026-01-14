@@ -1,5 +1,5 @@
 """Location Attribute Table class."""
-from teehr.evaluation.tables.base_table import Table
+from teehr.evaluation.tables.base_table import BaseTable
 from teehr.loading.location_attributes import (
     convert_single_location_attributes
 )
@@ -18,7 +18,7 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-class LocationAttributeTable(Table):
+class LocationAttributeTable(BaseTable):
     """Access methods to location attributes table."""
 
     def __init__(self, ev):
@@ -68,14 +68,6 @@ class LocationAttributeTable(Table):
             namespace_name=namespace_name,
             catalog_name=catalog_name
         )
-
-    def to_geopandas(self):
-        """Return GeoPandas DataFrame."""
-        self._check_load_table()
-        gdf = join_geometry(self.sdf, self._ev.locations.to_sdf())
-        gdf.attrs['table_type'] = self.table_name
-        gdf.attrs['fields'] = self.fields()
-        return gdf
 
     def load_parquet(
         self,

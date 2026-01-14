@@ -8,14 +8,14 @@ import pyspark.sql as ps
 import geopandas as gpd
 
 from teehr.models.table_enums import TableWriteEnum
-from teehr.evaluation.tables.base_table import Table
+from teehr.evaluation.tables.base_table import BaseTable
 from teehr.loading.locations import convert_single_locations
 from teehr.querying.utils import df_to_gdf
 
 logger = logging.getLogger(__name__)
 
 
-class LocationTable(Table):
+class LocationTable(BaseTable):
     """Access methods to locations table."""
 
     def __init__(self, ev):
