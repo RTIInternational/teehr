@@ -40,10 +40,16 @@ def setup_v0_3_study(tmpdir):
     shutil.unpack_archive(tar_file, temp_extract_dir)
 
     # Initialize Spark with new tmpdir location
+    (Path(tmpdir) / "local").mkdir(parents=True, exist_ok=True)
+    # spark = create_spark_session(local_warehouse_dir=(Path(tmpdir) / "local").as_posix())
     spark = create_spark_session()
     spark.conf.set(
         f"spark.sql.catalog.local.warehouse",
         (Path(tmpdir) / "local").as_posix()
+    )
+    spark.conf.set(
+        f"spark.sql.catalog.local.uri",
+        f"jdbc:sqlite:{(Path(tmpdir) / 'local').as_posix()}/local_catalog.db"
     )
     # Create the database
     spark.sql("CREATE DATABASE IF NOT EXISTS local.teehr")

@@ -30,7 +30,7 @@ def create_spark_session(
     # App name and catalog settings
     app_name: str = "TEEHR Evaluation",
     local_catalog_name: str = const.LOCAL_CATALOG_NAME,
-    local_catalog_type: str = const.LOCAL_CATALOG_TYPE,
+    local_catalog_type: str = "jdbc",
     local_namespace_name: str = const.LOCAL_NAMESPACE_NAME,
     remote_warehouse_dir: str = const.REMOTE_WAREHOUSE_S3_PATH,
     remote_catalog_name: str = const.REMOTE_CATALOG_NAME,
@@ -222,7 +222,8 @@ def _create_spark_base_session(
         "org.datasyslab:geotools-wrapper:1.8.0-33.1",
         f"org.apache.iceberg:iceberg-spark-extensions-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}",
         "org.apache.hadoop:hadoop-aws:3.4.1",  # Note. Need 3.4.1 for compatibility
-        "com.amazonaws:aws-java-sdk-bundle:1.12.791"
+        "com.amazonaws:aws-java-sdk-bundle:1.12.791",
+        "org.xerial:sqlite-jdbc:3.42.0.0"
     ]
     conf.set("spark.jars.packages", ",".join(base_packages))
 
@@ -449,6 +450,15 @@ def _configure_iceberg_catalogs(
     # Local catalog configuration
     conf.set(f"spark.sql.catalog.{local_catalog_name}", "org.apache.iceberg.spark.SparkCatalog")
     conf.set(f"spark.sql.catalog.{local_catalog_name}.type", local_catalog_type)
+
+    # Test JDBC
+    conf.set(f"spark.sql.catalog.{local_catalog_name}.type", "jdbc")
+    conf.set(f"spark.sql.catalog.{local_catalog_name}.jdbc.driver", "org.sqlite.JDBC")
+    conf.set(f"spark.sql.catalog.{local_catalog_name}.jdbc.initialize", "true")
+    conf.set(f"spark.sql.catalog.{local_catalog_name}.jdbc.schema-version", "V1")
+    # conf.set("spark.sql.catalog.local.jdbc.user", "user")
+    # conf.set("spark.sql.catalog.local.jdbc.password", "password")
+
     # Remote catalog configuration
     conf.set(f"spark.sql.catalog.{remote_catalog_name}", "org.apache.iceberg.spark.SparkCatalog")
     conf.set(f"spark.sql.catalog.{remote_catalog_name}.type", remote_catalog_type)
