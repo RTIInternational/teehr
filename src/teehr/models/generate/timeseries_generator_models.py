@@ -72,7 +72,26 @@ class ReferenceForecast(BenchmarkGeneratorBaseModel, GeneratorABC):
         partition_by: List[str],
         output_configuration_name: str
     ) -> ps.DataFrame:
-        """Generate synthetic reference forecast timeseries."""
+        """Generate synthetic reference forecast timeseries.
+
+        Parameters
+        ----------
+        ev : Evaluation
+            The Evaluation object containing the evaluation context.
+        reference_sdf : ps.DataFrame
+            The DataFrame containing the reference timeseries data.
+        template_sdf : ps.DataFrame
+            The DataFrame containing the template forecast timeseries data.
+        partition_by : List[str]
+            The list of columns to partition by when aggregating the time step.
+        output_configuration_name : str
+            The configuration name to assign to the output timeseries.
+
+        Returns
+        -------
+        ps.DataFrame
+            The DataFrame containing the generated reference forecast timeseries.
+        """
         # Aggregate the reference timeseries to the
         # using a rolling average if aggregate_reference_timeseries is True.
         # TODO: Should this define a new variable_name?
@@ -163,8 +182,25 @@ class Normals(SignatureGeneratorBaseModel, GeneratorABC):
         output_dataframe: ps.DataFrame,
         fillna: bool,
         dropna: bool
-    ):
-        """Generate synthetic normals timeseries."""
+    ) -> ps.DataFrame:
+        """Generate synthetic normals timeseries.
+
+        Parameters
+        ----------
+        input_dataframe : ps.DataFrame
+            The input DataFrame containing the timeseries data.
+        output_dataframe : ps.DataFrame
+            The output DataFrame to join the normals data to.
+        fillna : bool
+            Whether to fill NaN values using forward and backward fill.
+        dropna : bool
+            Whether to drop rows with NaN values.
+
+        Returns
+        -------
+        ps.DataFrame
+            The DataFrame containing the generated normals timeseries.
+        """
         time_period = get_time_period_rlc(self.temporal_resolution)
 
         if self.summary_statistic == NormalsStatisticEnum.mean:

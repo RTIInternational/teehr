@@ -1,5 +1,5 @@
 """Classes for bootstrapping sampling methods."""
-from typing import Callable, List, Union
+from typing import Callable, Union
 from pathlib import Path
 
 from numpy.random import RandomState

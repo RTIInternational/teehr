@@ -97,6 +97,7 @@ def test_dropping_duplicates(tmpdir):
     assert df.drop_duplicates(
         subset=ev.primary_timeseries.uniqueness_fields
     ).index.size == 78
+    ev.spark.stop()
 
 
 def test_validate_and_insert_timeseries(tmpdir):
@@ -182,6 +183,7 @@ def test_validate_and_insert_timeseries(tmpdir):
     assert prim_df.value_time.min() == pd.Timestamp("2022-01-01 00:00:00")
     assert prim_df.value_time.max() == pd.Timestamp("2022-01-02 13:00:00")
     assert prim_df.index.size == 114
+    ev.spark.stop()
 
 
 def test_validate_and_insert_timeseries_set_const(tmpdir):
@@ -250,6 +252,7 @@ def test_validate_and_insert_timeseries_set_const(tmpdir):
     )
 
     assert True
+    ev.spark.stop()
 
 
 def test_validate_and_insert_summa_nc_timeseries(tmpdir):
@@ -306,6 +309,7 @@ def test_validate_and_insert_summa_nc_timeseries(tmpdir):
     ].sel(gru=170300010101).values
 
     assert (np.sort(teehr_values) == np.sort(nc_values)).all()
+    ev.spark.stop()
 
 
 def test_validate_and_insert_mizu_nc_timeseries(tmpdir):

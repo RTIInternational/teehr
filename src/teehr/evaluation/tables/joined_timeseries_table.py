@@ -1,22 +1,28 @@
 """Joined Timeseries Table."""
 import sys
 from pathlib import Path
-from teehr.evaluation.tables.base_table import Table
+from teehr.evaluation.tables.base_table import BaseTable
 from teehr.models.filters import FilterBaseModel
 from teehr.querying.utils import join_geometry
 import pyspark.sql as ps
 import logging
-from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
 from typing import List, Union
 
 logger = logging.getLogger(__name__)
 
 
-class JoinedTimeseriesTable(Table):
+class JoinedTimeseriesTable(BaseTable):
     """Access methods to joined timeseries table."""
 
     def __init__(self, ev):
-        """Initialize class."""
+        """Initialize the Table class.
+
+        Parameters
+        ----------
+        ev : EvaluationBase
+            The parent Evaluation instance providing access to Spark session,
+            catalogs, and related table operations.
+        """
         super().__init__(ev)
 
     def __call__(
@@ -24,8 +30,24 @@ class JoinedTimeseriesTable(Table):
         table_name: str = "joined_timeseries",
         namespace_name: Union[str, None] = None,
         catalog_name: Union[str, None] = None,
-    ):
-        """Get an instance of the joined timeseries table.
+    ) -> "BaseTable":
+        """Initialize the Table class for a specific table.
+
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to operate on. Defaults to 'joined_timeseries'.
+        namespace_name : Union[str, None], optional
+            The namespace containing the table. If None, uses the
+            active catalog's namespace.
+        catalog_name : Union[str, None], optional
+            The catalog containing the table. If None, uses the
+            active catalog name.
+
+        Returns
+        -------
+        "BaseTable"
+            The initialized Table instance ready for operations.
 
         Note
         ----
@@ -39,14 +61,16 @@ class JoinedTimeseriesTable(Table):
             catalog_name=catalog_name
         )
 
-    # TODO: Can't this be in the Table class?
     def to_geopandas(self):
         """Return GeoPandas DataFrame."""
         self._check_load_table()
-        return join_geometry(
+        gdf = join_geometry(
             self.sdf, self._ev.locations.to_sdf(),
             "primary_location_id"
         )
+        gdf.attrs['table_type'] = self.table_name
+        gdf.attrs['fields'] = self.fields()
+        return gdf
 
     def _join(self,
             primary_filters: Union[
@@ -170,50 +194,6 @@ class JoinedTimeseriesTable(Table):
 
         return joined_df
 
-    def add_calculated_fields(self,
-                              cfs: Union[CalculatedFieldBaseModel,
-                                         List[CalculatedFieldBaseModel]]):
-        """Add calculated fields to the joined timeseries table.
-
-        Note this does not persist the CFs to the table. It only applies them
-        to the DataFrame. To persist the CFs to the table, use the `write`
-        method.
-
-        Parameters
-        ----------
-        cfs : Union[CalculatedFieldBaseModel, List[CalculatedFieldBaseModel]]
-            The CFs to apply to the DataFrame.
-
-        Examples
-        --------
-        >>> import teehr
-        >>> from teehr import RowLevelCalculatedFields as rcf
-        >>> ev.join_timeseries.add_calculated_fields([
-        >>>     rcf.Month()
-        >>> ]).write()
-        """
-        self._check_load_table()
-
-        if not isinstance(cfs, List):
-            cfs = [cfs]
-
-        for cf in cfs:
-            self.sdf = cf.apply_to(self.sdf)
-
-        return self
-
-    def write(self, write_mode: str = "create_or_replace"):
-        """Write the joined timeseries table to the warehouse."""
-        # TODO: What should default write mode be?
-        self._ev.write.to_warehouse(
-            source_data=self.sdf,
-            table_name=self.table_name,
-            write_mode=write_mode,
-            uniqueness_fields=self.uniqueness_fields,
-        )
-        logger.info("Joined timeseries table written to the warehouse.")
-        self._load_table()
-
     def _run_script(self, joined_df: ps.DataFrame) -> ps.DataFrame:
         """Add UDFs to the joined timeseries dataframe."""
         try:
@@ -290,4 +270,44 @@ class JoinedTimeseriesTable(Table):
         logger.info("Joined timeseries table created.")
         self._load_table()
 
+        return self
+
+
+    def write(
+        self,
+        table_name: str = "joined_timeseries",
+        write_mode: str = "create_or_replace"
+    ):
+        """Write the DataFrame to a warehouse table.
+
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to write to.
+        write_mode : str, optional
+            The write mode to use, by default "create_or_replace"
+            Options are: "create", "append", "overwrite", "create_or_replace"
+
+        Example
+        -------
+        >>> import teehr
+        >>> ev = teehr.Evaluation()
+        Calculate some metrics and write to the warehouse.
+        >>> metrics_df = ev.metrics.query(
+        >>>     include_metrics=[...],
+        >>>     group_by=["primary_location_id"]
+        >>> ).write_to_warehouse(
+        >>>     table_name="metrics",
+        >>>     write_mode="create_or_replace"
+        >>> )
+        """
+        logger.info(
+            f"Writing metrics results to the warehouse table: {table_name}."
+        )
+        self._check_load_table()
+        self._write.to_warehouse(
+            source_data=self.sdf,
+            table_name=table_name,
+            write_mode=write_mode
+        )
         return self

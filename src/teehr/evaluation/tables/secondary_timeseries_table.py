@@ -10,7 +10,14 @@ class SecondaryTimeseriesTable(TimeseriesTable):
     """Access methods to secondary timeseries table."""
 
     def __init__(self, ev):
-        """Initialize class."""
+        """Initialize the Table class.
+
+        Parameters
+        ----------
+        ev : EvaluationBase
+            The parent Evaluation instance providing access to Spark session,
+            catalogs, and related table operations.
+        """
         super().__init__(ev)
 
     def __call__(
@@ -18,8 +25,24 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         table_name: str = "secondary_timeseries",
         namespace_name: Union[str, None] = None,
         catalog_name: Union[str, None] = None,
-    ):
-        """Get an instance of the secondary timeseries table.
+    ) -> "TimeseriesTable":
+        """Initialize the Table class for a specific table.
+
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to operate on. Defaults to 'secondary_timeseries'.
+        namespace_name : Union[str, None], optional
+            The namespace containing the table. If None, uses the
+            active catalog's namespace.
+        catalog_name : Union[str, None], optional
+            The catalog containing the table. If None, uses the
+            active catalog name.
+
+        Returns
+        -------
+        "TimeseriesTable"
+            The initialized Table instance ready for operations.
 
         Note
         ----
@@ -32,3 +55,11 @@ class SecondaryTimeseriesTable(TimeseriesTable):
             namespace_name=namespace_name,
             catalog_name=catalog_name
         )
+
+    def to_geopandas(self):
+        """Return GeoPandas DataFrame."""
+        self._check_load_table()
+        gdf = self._join_geometry_using_crosswalk()
+        gdf.attrs['table_type'] = self.table_name
+        gdf.attrs['fields'] = self.fields()
+        return gdf

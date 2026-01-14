@@ -70,7 +70,6 @@ from teehr.fetching.utils import (
     get_period_start_end_times,
     create_periods_based_on_chunksize
 )
-from teehr.fetching.const import CONUS_NWM_WKT
 from teehr.fetching.nwm.retrospective_points import (
     format_grouped_filename,
     validate_retrospective_start_end_date,

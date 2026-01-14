@@ -1,5 +1,4 @@
 """Tests for Iceberg."""
-from pathlib import Path
 import tempfile
 
 from teehr import Evaluation

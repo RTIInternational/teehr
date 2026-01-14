@@ -24,13 +24,30 @@ logger = logging.getLogger(__name__)
 
 @dask.delayed
 def vectorize(data_array: xr.DataArray) -> gpd.GeoDataFrame:
-    """
-    Convert 2D xarray.DataArray into a geopandas.GeoDataFrame.
+    """Convert 2D xarray.DataArray into a geopandas.GeoDataFrame.
+
+    Parameters
+    ----------
+    data_array : xr.DataArray
+        A 2D xarray DataArray containing grid data to be vectorized.
+        Must have valid CRS and transform information via rioxarray.
+
+    Returns
+    -------
+    gpd.GeoDataFrame
+        A GeoDataFrame where each row represents a grid cell with:
+        - Unique pixel value
+        - Polygon geometry
+        - x, y coordinates of cell center
 
     Notes
     -----
-    Heavily borrowed from GeoCube, see:
-    https://github.com/corteva/geocube/blob/master/geocube/vector.py#L12
+    Heavily borrowed from GeoCube implementation.
+    See: https://github.com/corteva/geocube/blob/master/geocube/vector.py#L12
+
+    The function assigns unique values to each pixel and vectorizes them
+    into polygon geometries. Nodata pixels are masked out based on the
+    rio.nodata attribute.
     """
     # nodata mask
     mask = None

@@ -3,22 +3,21 @@ from typing import Union
 from pathlib import Path
 import logging
 import argparse
+import glob
 
 import teehr
-from teehr.utils.s3path import S3Path
 
 
 logger = logging.getLogger(__name__)
 
-
 def convert_evaluation(
-    dir_path: Union[str, Path, S3Path],
+    dir_path: Union[str, Path],
 ):
     """Convert TEEHR Evaluation to v0.6 Iceberg.
 
     Parameters
     ----------
-    dir_path : Union[str, Path, S3Path]
+    dir_path : Union[str, Path]
         The directory path to the Evaluation to upgrade.
     """
     dir_path = Path(dir_path)
@@ -29,10 +28,17 @@ def convert_evaluation(
         create_dir=False,
     )
 
+    # This will create a version file with the latest version.
     ev.clone_template()
 
     # Now copy in the e4 data.
     dataset_dir = dir_path / "dataset"
+
+    # Let's check for and remove any weird :Zone.Identifier files that may have been
+    # created on Windows systems. They interfere with reading the data with pyspark.
+    zone_identifier_files = glob.glob(f"{dataset_dir.as_posix()}/**/*:Zone.Identifier", recursive=True)
+    for zif in zone_identifier_files:
+        Path.unlink(Path(zif))
 
     units_sdf = ev.spark.read.csv((dataset_dir / "units").as_posix(), header=True)
     ev.write.to_warehouse(table_name="units", source_data=units_sdf)
@@ -65,14 +71,12 @@ def convert_evaluation(
     ev.write.to_warehouse(table_name="location_crosswalks", source_data=location_crosswalk_sdf)
     logger.info(f"Local warehouse created in {dir_path}/local.")
 
-    # Update the version file.
-    version_file = Path(dir_path) / "version"
-    with open(version_file, "w") as f:
-        f.write(teehr.__version__)
+    # Remove the old version file if it exists.
+    if Path.exists(Path(dir_path) / "version"):
+        Path.unlink(Path(dir_path) / "version")
 
     logger.info(
-        f"Updated evaluation version file at {version_file} to"
-        f" {teehr.__version__}."
+        f"Updated evaluation version to {teehr.__version__}."
     )
 
     ev.spark.stop()

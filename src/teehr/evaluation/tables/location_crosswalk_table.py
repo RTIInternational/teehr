@@ -1,5 +1,5 @@
 """Location Crosswalk Table."""
-from teehr.evaluation.tables.base_table import Table
+from teehr.evaluation.tables.base_table import BaseTable
 from teehr.loading.utils import (
     validate_input_is_csv,
     validate_input_is_parquet
@@ -18,11 +18,18 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-class LocationCrosswalkTable(Table):
+class LocationCrosswalkTable(BaseTable):
     """Access methods to location crosswalks table."""
 
     def __init__(self, ev):
-        """Initialize class."""
+        """Initialize the Table class.
+
+        Parameters
+        ----------
+        ev : EvaluationBase
+            The parent Evaluation instance providing access to Spark session,
+            catalogs, and related table operations.
+        """
         super().__init__(ev)
         self._load = ev.load
 
@@ -31,8 +38,24 @@ class LocationCrosswalkTable(Table):
         table_name: str = "location_crosswalks",
         namespace_name: Union[str, None] = None,
         catalog_name: Union[str, None] = None,
-    ):
-        """Get an instance of the location crosswalks table.
+    ) -> "BaseTable":
+        """Initialize the Table class for a specific table.
+
+        Parameters
+        ----------
+        table_name : str
+            The name of the table to operate on. Defaults to 'location_crosswalks'.
+        namespace_name : Union[str, None], optional
+            The namespace containing the table. If None, uses the
+            active catalog's namespace.
+        catalog_name : Union[str, None], optional
+            The catalog containing the table. If None, uses the
+            active catalog name.
+
+        Returns
+        -------
+        "BaseTable"
+            The initialized Table instance ready for operations.
 
         Note
         ----
@@ -263,6 +286,12 @@ class LocationCrosswalkTable(Table):
         ----------
         df : Union[pd.DataFrame, ps.DataFrame]
             DataFrame to load into the table.
+        namespace_name : str, optional
+            The namespace name to write to. If None, uses the
+            active catalog's namespace.
+        catalog_name : str, optional
+            The catalog name to write to. If None, uses the
+            active catalog's catalog name.
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}

@@ -1,6 +1,49 @@
 Release Notes
 =============
 
+0.5.3 - 2026-01-07
+-----------------------
+
+Changed
+^^^^^^^
+- Pins PySpark to 4.0.1 in pyproject.toml
+- Fixes bug using ``drop_overlapping_assimilation_values`` in NWM operational fetching methods.
+- Fixes a bug in ``load_dataframe()``
+- Fixes a bug in unpacking metric results
+- Updates the Getting Started sphinx documentation
+
+Added
+^^^^^
+- Check for missing location IDs when cloning from s3
+- Row level calculated fields for forecast lead time bins
+- Brier Score and Brier Skill Score metrics
+
+
+0.5.2 - 2025-11-11
+------------------
+
+Changed
+^^^^^^^
+- Updates version number in pyproject.toml and init files
+- No changes in functionality from ``0.5.1dev10``
+
+
+0.5.1dev10 - 2025-11-10
+-----------------------
+
+Changed
+^^^^^^^
+- Rename SignatureMetrics to Signatures
+- Updates Spearman correlation to handle repeating values
+
+Added
+^^^^^
+- Flow Duration Curve Slope
+- VariabilityRatio
+- Epsilon to handle division by zero
+- BelowPercentileEventDetection metric
+- Bootstrapping for signatures
+
 0.5.0 - 2025-08-27
 -------------------
 

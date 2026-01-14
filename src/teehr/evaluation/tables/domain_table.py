@@ -1,5 +1,5 @@
 """Domain table class."""
-from teehr.evaluation.tables.base_table import Table
+from teehr.evaluation.tables.base_table import BaseTable
 from teehr.models.pydantic_table_models import TableBaseModel
 from teehr.querying.utils import order_df
 from teehr.models.filters import FilterBaseModel
@@ -11,11 +11,18 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class DomainTable(Table):
+class DomainTable(BaseTable):
     """Domain table class."""
 
     def __init__(self, ev):
-        """Initialize class."""
+        """Initialize the Table class.
+
+        Parameters
+        ----------
+        ev : EvaluationBase
+            The parent Evaluation instance providing access to Spark session,
+            catalogs, and related table operations.
+        """
         super().__init__(ev)
 
     def _add(
@@ -148,7 +155,7 @@ class DomainTable(Table):
 
         Returns
         -------
-        self : Table or subclass of Table
+        self : BaseTable or subclass of BaseTable
 
         Examples
         --------
@@ -226,3 +233,10 @@ class DomainTable(Table):
             logger.debug(f"Ordering the metrics by: {order_by}.")
             self.sdf = order_df(self.sdf, order_by)
         return self
+
+    def to_geopandas(self):
+        """Return GeoPandas DataFrame."""
+        raise NotImplementedError(
+            "The to_geopandas() method is not implemented for Domain Tables"
+            " because they do not contain location information."
+        )

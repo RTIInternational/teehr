@@ -1,5 +1,4 @@
 """Test evaluation class."""
-from teehr import Configuration
 from teehr import DeterministicMetrics, ProbabilisticMetrics, Signatures
 from teehr import Operators as ops
 import tempfile
@@ -9,9 +8,6 @@ from pathlib import Path
 import numpy as np
 
 from teehr.models.filters import JoinedTimeseriesFilter
-from teehr.evaluation.evaluation import Evaluation
-from teehr import SignatureTimeseriesGenerators as sts
-from teehr import BenchmarkForecastGenerators as bm
 from teehr import TimeseriesAwareCalculatedFields as tcf
 
 import sys
@@ -151,9 +147,6 @@ def test_metrics_filter_and_geometry(tmpdir):
     assert isinstance(metrics_df, gpd.GeoDataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 6
-
-
-    tbl = ev.metrics(table_name="primary_timeseries")
 
     ev.spark.stop()
 
