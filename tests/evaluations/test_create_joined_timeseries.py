@@ -10,6 +10,9 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from data.setup_v0_3_study import setup_v0_3_study  # noqa
 
+from teehr.evaluation.spark_session_utils import create_spark_session
+SPARK_SESSION = create_spark_session()
+
 
 TEST_DATA_DIR = Path("tests", "data", "v0_3_test_study")
 GEOJSON_GAGES_FILEPATH = Path(TEST_DATA_DIR, "geo", "gages.geojson")
@@ -23,10 +26,10 @@ SECONDARY_TIMESERIES_FILEPATH = Path(
 GEO_FILEPATH = Path(TEST_DATA_DIR, "geo")
 
 
-def test_create_joined_timeseries(tmpdir):
+def test_create_joined_timeseries(tmpdir, spark_session):
     """Test the validate_locations function."""
-    tmpdir = Path(tmpdir)
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
+    spark = spark_session.getActiveSession()
+    ev = Evaluation(dir_path=tmpdir, spark=spark, create_dir=True)
 
     # Clone the template
     ev.clone_template()
@@ -144,13 +147,13 @@ def test_create_joined_timeseries(tmpdir):
     ])
     assert len(columns) == len(expected_columns)
     assert sorted(columns) == sorted(expected_columns)
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
-def test_create_filtered_joined_timeseries(tmpdir):
+def test_create_filtered_joined_timeseries(tmpdir, spark_session):
     """Test the validate_locations function."""
-    tmpdir = Path(tmpdir)
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
+    spark = spark_session.getActiveSession()
+    ev = Evaluation(dir_path=tmpdir, spark=spark, create_dir=True)
 
     # Clone the template
     ev.clone_template()
@@ -265,13 +268,13 @@ def test_create_filtered_joined_timeseries(tmpdir):
     joined_df = ev.joined_timeseries.to_pandas()
     assert all(joined_df['secondary_location_id'].unique() == ['fcst-1'])
 
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
-def test_distinct_values(tmpdir):
+def test_distinct_values(tmpdir, spark_session):
     """Test base_table.distinct_values() using joined_timeseries."""
     tmpdir = Path(tmpdir)
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
 
     # test primary_timeseries with location_prefixes==False (valid)
     distinct_vals = ev.primary_timeseries.distinct_values(column='location_id')
@@ -359,7 +362,7 @@ def test_distinct_values(tmpdir):
     # test invalid column handling for location_prefixes==False
     with pytest.raises(ValueError):
         prefixes = ev.joined_timeseries.distinct_values(column='test')
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
 if __name__ == "__main__":
@@ -370,17 +373,20 @@ if __name__ == "__main__":
             tempfile.mkdtemp(
                 prefix="1-",
                 dir=tempdir
-            )
+            ),
+            SPARK_SESSION
         )
         test_create_filtered_joined_timeseries(
             tempfile.mkdtemp(
                 prefix="2-",
                 dir=tempdir
-            )
+            ),
+            SPARK_SESSION
         )
         test_distinct_values(
             tempfile.mkdtemp(
                 prefix="3-",
                 dir=tempdir
-            )
+            ),
+            SPARK_SESSION
         )

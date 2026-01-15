@@ -31,6 +31,66 @@ GEO_FILEPATH = Path(TEST_DATA_DIR, "geo")
 
 
 def setup_v0_3_study(tmpdir, spark_session):
+    """Set up a v0.3 study post-haste."""
+    # Extract pre-created warehouse and recreate Iceberg tables from data files
+    test_data_dir = Path.cwd() / "tests" / "data" / "v0_3_test_study"
+    tar_file = test_data_dir / "local_warehouse.tar.gz"
+    temp_extract_dir = Path(tmpdir) / "temp_extract"
+    shutil.unpack_archive(tar_file, temp_extract_dir)
+
+    # Initialize Spark with new tmpdir location
+    (Path(tmpdir) / "local").mkdir(parents=True, exist_ok=True)
+
+    spark = spark_session.newSession()  # Don't alter the fixture
+    # or spark_session.getActiveSession()?
+
+    # Initialize Spark with new tmpdir location and db uri
+    spark.conf.set(
+        f"spark.sql.catalog.local.warehouse",
+        (Path(tmpdir) / "local").as_posix()
+    )
+    spark.conf.set(
+        f"spark.sql.catalog.local.uri",
+        f"jdbc:sqlite:{(Path(tmpdir) / 'local').as_posix()}/local_catalog.db"
+    )
+    # Create the database
+    spark.sql("CREATE DATABASE IF NOT EXISTS local.teehr")
+
+    # Define tables to recreate
+    tables_to_recreate = [
+        "primary_timeseries",
+        "secondary_timeseries",
+        "joined_timeseries",
+        "locations",
+        "location_attributes",
+        "location_crosswalks",
+        "units",
+        "variables",
+        "attributes",
+        "configurations"
+    ]
+
+    # For each table, read the parquet data files and recreate the Iceberg table
+    for table_name in tables_to_recreate:
+        old_table_dir = temp_extract_dir / "local" / "teehr" / table_name / "data"
+        # Read all parquet files for this table
+        df = spark.read.parquet(str(old_table_dir))
+        # Create the Iceberg table
+        df.writeTo(f"local.teehr.{table_name}").using("iceberg").create()
+        print(f"Recreated table: {table_name} with {df.count()} rows")
+
+    # Clean up temp extraction directory
+    shutil.rmtree(temp_extract_dir)
+    ev = Evaluation(
+        Path(tmpdir),
+        create_dir=False,
+        spark=spark,
+        check_evaluation_version=False
+    )
+    return ev
+
+
+def setup_v0_3_study_rewrite_table_paths(tmpdir, spark_session):
     """This copies in a hadoop-based warehouse and re-writes the tables with jdbc."""
     # Extract pre-created warehouse and recreate Iceberg tables from data files
     test_data_dir = Path.cwd() / "tests" / "data" / "v0_3_test_study"

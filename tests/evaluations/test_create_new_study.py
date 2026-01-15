@@ -4,14 +4,17 @@ import tempfile
 from teehr.models.pydantic_table_models import (
     Attribute
 )
+from teehr.evaluation.spark_session_utils import create_spark_session
+SPARK_SESSION = create_spark_session()
 
 
-def test_clone_template(tmpdir):
+def test_clone_template(tmpdir, spark_session):
     """Test creating a new study."""
-    tmpdir = Path(tmpdir)
+
     from teehr import Evaluation
 
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
+    spark = spark_session.getActiveSession()
+    ev = Evaluation(dir_path=tmpdir, create_dir=True, spark=spark)
     ev.clone_template()
 
     tbls_df = ev.list_tables()
@@ -47,5 +50,6 @@ if __name__ == "__main__":
             tempfile.mkdtemp(
                 prefix="1-",
                 dir=tempdir
-            )
+            ),
+            SPARK_SESSION
         )

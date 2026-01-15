@@ -7,7 +7,7 @@ from teehr import BenchmarkForecastGenerators as bm
 TEST_STUDY_DATA_DIR_v0_4 = Path(Path.cwd(), "tests", "data", "test_study")
 
 
-def setup_v0_4_ensemble_study(tmpdir):
+def setup_v0_4_ensemble_study(tmpdir, spark_session):
     """Create a test evaluation with ensemble forecasts using teehr."""
     usgs_location = Path(
             TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_location.parquet"
@@ -24,10 +24,11 @@ def setup_v0_4_ensemble_study(tmpdir):
         "timeseries",
         "usgs_hefs_06711565.parquet"
     )
-
+    spark = spark_session.getActiveSession()
     ev = Evaluation(
         dir_path=tmpdir,
-        check_evaluation_version=False
+        check_evaluation_version=False,
+        spark=spark,
     )
     ev.enable_logging()
     ev.clone_template()

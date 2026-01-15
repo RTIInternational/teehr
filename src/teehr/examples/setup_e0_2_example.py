@@ -13,7 +13,7 @@ import shutil
 session = botocore.session.Session()
 
 
-def download_e0_2_example(temp_dir: Union[str, Path]):
+def download_e0_2_example(temp_dir: Union[str, Path], spark_session) -> teehr.Evaluation:
     """Download and extract the e0_2_location_example Evaluation dataset from S3."""
     if not Path(temp_dir).is_dir():
         os.makedirs(temp_dir, exist_ok=True)
@@ -47,10 +47,18 @@ def download_e0_2_example(temp_dir: Union[str, Path]):
     print(f"✅ Removed archive {local_path}")
 
     # Initialize Spark with new tmpdir location
-    spark = create_spark_session()
+    (Path(temp_dir) / "local").mkdir(parents=True, exist_ok=True)
+
+    # Initialize Spark with new tmpdir location
+    # spark = create_spark_session()
+    spark = spark_session.getActiveSession()  # Don't alter the fixture
     spark.conf.set(
         f"spark.sql.catalog.local.warehouse",
         (Path(temp_dir) / "local").as_posix()
+    )
+    spark.conf.set(
+        f"spark.sql.catalog.local.uri",
+        f"jdbc:sqlite:{(Path(temp_dir) / 'local').as_posix()}/local_catalog.db"
     )
     # Create the database
     spark.sql("CREATE DATABASE IF NOT EXISTS local.teehr")
