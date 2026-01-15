@@ -47,10 +47,17 @@ def download_e0_2_example(temp_dir: Union[str, Path]):
     print(f"✅ Removed archive {local_path}")
 
     # Initialize Spark with new tmpdir location
+    (Path(temp_dir) / "local").mkdir(parents=True, exist_ok=True)
+
+    # Initialize Spark with new tmpdir location
     spark = create_spark_session()
     spark.conf.set(
         f"spark.sql.catalog.local.warehouse",
         (Path(temp_dir) / "local").as_posix()
+    )
+    spark.conf.set(
+        f"spark.sql.catalog.local.uri",
+        f"jdbc:sqlite:{(Path(temp_dir) / 'local').as_posix()}/local_catalog.db"
     )
     # Create the database
     spark.sql("CREATE DATABASE IF NOT EXISTS local.teehr")
