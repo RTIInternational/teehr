@@ -30,7 +30,7 @@ SECONDARY_TIMESERIES_FILEPATH = Path(
 GEO_FILEPATH = Path(TEST_DATA_DIR, "geo")
 
 
-def setup_v0_3_study(tmpdir):
+def setup_v0_3_study(tmpdir, spark_session):
     """This copies in a hadoop-based warehouse and re-writes the tables with jdbc."""
     # Extract pre-created warehouse and recreate Iceberg tables from data files
     test_data_dir = Path.cwd() / "tests" / "data" / "v0_3_test_study"
@@ -41,6 +41,7 @@ def setup_v0_3_study(tmpdir):
 
     ev = teehr.Evaluation(
         dir_path=temp_extract_dir,
+        spark=spark_session
     )
     # Register the local warehouse.
     ev.rewrite_table_paths()
