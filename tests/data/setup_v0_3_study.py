@@ -2,7 +2,7 @@
 from pathlib import Path
 from teehr import Evaluation, Configuration, Attribute
 import shutil
-from teehr.evaluation.spark_session_utils import create_spark_session
+import teehr
 
 import logging
 
@@ -34,58 +34,16 @@ def setup_v0_3_study(tmpdir):
     """This copies in a hadoop-based warehouse and re-writes the tables with jdbc."""
     # Extract pre-created warehouse and recreate Iceberg tables from data files
     test_data_dir = Path.cwd() / "tests" / "data" / "v0_3_test_study"
-    tar_file = test_data_dir / "local_warehouse.tar.gz"
+    tar_file = test_data_dir / "local_warehouse_jdbc.tar.gz"
     # Unpack to a temporary location to access data files
-    temp_extract_dir = Path(tmpdir) / "temp_extract"
+    temp_extract_dir = Path(tmpdir) / "temp_warehouse"
     shutil.unpack_archive(tar_file, temp_extract_dir)
 
-    # Initialize Spark with new tmpdir location
-    (Path(tmpdir) / "local").mkdir(parents=True, exist_ok=True)
-    # spark = create_spark_session(local_warehouse_dir=(Path(tmpdir) / "local").as_posix())
-    spark = create_spark_session()
-    spark.conf.set(
-        f"spark.sql.catalog.local.warehouse",
-        (Path(tmpdir) / "local").as_posix()
+    ev = teehr.Evaluation(
+        dir_path=temp_extract_dir,
     )
-    spark.conf.set(
-        f"spark.sql.catalog.local.uri",
-        f"jdbc:sqlite:{(Path(tmpdir) / 'local').as_posix()}/local_catalog.db"
-    )
-    # Create the database
-    spark.sql("CREATE DATABASE IF NOT EXISTS local.teehr")
-
-    # Define tables to recreate
-    tables_to_recreate = [
-        "primary_timeseries",
-        "secondary_timeseries",
-        "joined_timeseries",
-        "locations",
-        "location_attributes",
-        "location_crosswalks",
-        "units",
-        "variables",
-        "attributes",
-        "configurations"
-    ]
-
-    # For each table, read the parquet data files and recreate the Iceberg table
-    for table_name in tables_to_recreate:
-        old_table_dir = temp_extract_dir / "local" / "teehr" / table_name / "data"
-        # Read all parquet files for this table
-        df = spark.read.parquet(str(old_table_dir))
-        # Create the Iceberg table
-        df.writeTo(f"local.teehr.{table_name}").using("iceberg").create()
-        print(f"Recreated table: {table_name} with {df.count()} rows")
-
-    # Clean up temp extraction directory
-    shutil.rmtree(temp_extract_dir)
-
-    ev = Evaluation(
-        Path(tmpdir),
-        create_dir=False,
-        spark=spark,
-        check_evaluation_version=False
-    )
+    # Register the local warehouse.
+    ev.rewrite_table_paths()
 
     return ev
 
