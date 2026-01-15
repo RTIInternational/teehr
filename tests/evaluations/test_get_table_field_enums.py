@@ -21,90 +21,81 @@ from teehr.evaluation.spark_session_utils import create_spark_session
 SPARK_SESSION = create_spark_session()
 
 
-def test_get_configuration_fields(tmpdir, spark_session):
+def test_get_configuration_fields(evaluation_v0_3):
     """Test the validate location_attributes function."""
-    tmpdir = Path(tmpdir)
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = evaluation_v0_3
     fields = ev.configurations.field_enum()
     for field in fields:
         assert isinstance(field, ConfigurationFields)
     # ev.spark.stop()
 
 
-def test_get_unit_fields(tmpdir, spark_session):
+def test_get_unit_fields(evaluation_v0_3):
     """Test the validate location_attributes function."""
-    tmpdir = Path(tmpdir)
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = evaluation_v0_3
     fields = ev.units.field_enum()
     for field in fields:
         assert isinstance(field, UnitFields)
     # ev.spark.stop()
 
 
-def test_get_variable_fields(tmpdir, spark_session):
+def test_get_variable_fields(evaluation_v0_3):
     """Test the validate location_attributes."""
-    tmpdir = Path(tmpdir)
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = evaluation_v0_3
     fields = ev.variables.field_enum()
     for field in fields:
         assert isinstance(field, VariableFields)
     # ev.spark.stop()
 
 
-def test_get_attribute_fields(tmpdir, spark_session):
+def test_get_attribute_fields(evaluation_v0_3):
     """Test the validate location_attributes."""
-    tmpdir = Path(tmpdir)
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = evaluation_v0_3
     fields = ev.attributes.field_enum()
     for field in fields:
         assert isinstance(field, AttributeFields)
     # ev.spark.stop()
 
 
-def test_get_location_fields(tmpdir, spark_session):
+def test_get_location_fields(evaluation_v0_3):
     """Test the validate location_attributes."""
-    tmpdir = Path(tmpdir)
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = evaluation_v0_3
     fields = ev.locations.field_enum()
     for field in fields:
         assert isinstance(field, LocationFields)
     # ev.spark.stop()
 
 
-def test_get_location_attribute_fields(tmpdir, spark_session):
+def test_get_location_attribute_fields(evaluation_v0_3):
     """Test the validate location_attributes."""
-    tmpdir = Path(tmpdir)
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = evaluation_v0_3
     fields = ev.location_attributes.field_enum()
     for field in fields:
         assert isinstance(field, LocationAttributeFields)
     # ev.spark.stop()
 
 
-def test_get_location_crosswalk_fields(tmpdir, spark_session):
+def test_get_location_crosswalk_fields(evaluation_v0_3):
     """Test the validate location_attributes."""
-    tmpdir = Path(tmpdir)
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = evaluation_v0_3
     fields = ev.location_crosswalks.field_enum()
     for field in fields:
         assert isinstance(field, LocationCrosswalkFields)
     # ev.spark.stop()
 
 
-def test_get_timeseries_fields(tmpdir, spark_session):
+def test_get_timeseries_fields(evaluation_v0_3):
     """Test the validate location_attributes."""
-    tmpdir = Path(tmpdir)
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = evaluation_v0_3
     fields = ev.primary_timeseries.field_enum()
     for field in fields:
         assert isinstance(field, TimeseriesFields)
     # ev.spark.stop()
 
 
-def test_get_joined_timeseries_fields(tmpdir, spark_session):
+def test_get_joined_timeseries_fields(evaluation_v0_3):
     """Test the validate location_attributes."""
-    tmpdir = Path(tmpdir)
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = evaluation_v0_3
     ev.joined_timeseries.create()
     fields = ev.joined_timeseries.field_enum()
     for field in fields:

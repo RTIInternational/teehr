@@ -77,7 +77,7 @@ def setup_v0_3_study(tmpdir, spark_session):
         df = spark.read.parquet(str(old_table_dir))
         # Create the Iceberg table
         df.writeTo(f"local.teehr.{table_name}").using("iceberg").create()
-        print(f"Recreated table: {table_name} with {df.count()} rows")
+        # Removed expensive .count() call for better performance
 
     # Clean up temp extraction directory
     shutil.rmtree(temp_extract_dir)

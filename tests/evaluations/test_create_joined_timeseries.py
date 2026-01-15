@@ -271,10 +271,9 @@ def test_create_filtered_joined_timeseries(tmpdir, spark_session):
     # ev.spark.stop()
 
 
-def test_distinct_values(tmpdir, spark_session):
+def test_distinct_values(evaluation_v0_3):
     """Test base_table.distinct_values() using joined_timeseries."""
-    tmpdir = Path(tmpdir)
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = evaluation_v0_3
 
     # test primary_timeseries with location_prefixes==False (valid)
     distinct_vals = ev.primary_timeseries.distinct_values(column='location_id')

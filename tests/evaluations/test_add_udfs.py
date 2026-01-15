@@ -18,14 +18,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from data.setup_v0_3_study import setup_v0_3_study  # noqa
 from data.setup_v0_4_ensemble_study import setup_v0_4_ensemble_study  # noqa
-from teehr.evaluation.spark_session_utils import create_spark_session
-
-SPARK_SESSION = create_spark_session(app_name="test_add_udfs")
 
 
-def test_add_row_udfs_null_reference(tmpdir, spark_session):
+def test_add_row_udfs_null_reference(evaluation_v0_3):
     """Test adding row level UDFs with null reference time."""
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = evaluation_v0_3
     ev.joined_timeseries.add_calculated_fields([
         rcf.Month(),
         rcf.Year(),
@@ -42,9 +39,9 @@ def test_add_row_udfs_null_reference(tmpdir, spark_session):
     # ev.spark.stop()
 
 
-def test_add_row_udfs(tmpdir, spark_session):
+def test_add_row_udfs(evaluation_v0_3):
     """Test adding row level UDFs."""
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = evaluation_v0_3
     sdf = ev.joined_timeseries.to_sdf()
 
     sdf = rcf.Month().apply_to(sdf)
@@ -542,9 +539,9 @@ def test_add_timeseries_udfs(tmpdir, spark_session):
     # ev.spark.stop()
 
 
-def test_add_udfs_write(tmpdir, spark_session):
+def test_add_udfs_write(evaluation_v0_3):
     """Test adding UDFs and write DataFrame back to table."""
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = evaluation_v0_3
 
     ped = tcf.AbovePercentileEventDetection()
     ev.joined_timeseries.add_calculated_fields(ped).write()
@@ -561,9 +558,9 @@ def test_add_udfs_write(tmpdir, spark_session):
     # ev.spark.stop()
 
 
-def test_location_event_detection(tmpdir, spark_session):
+def test_location_event_detection(evaluation_v0_3):
     """Test event detection and metrics per event."""
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = evaluation_v0_3
 
     ped = tcf.AbovePercentileEventDetection()
     sdf = ev.metrics.add_calculated_fields(ped).query(
@@ -594,6 +591,8 @@ def test_location_event_detection(tmpdir, spark_session):
 
 
 if __name__ == "__main__":
+    SPARK_SESSION = teehr.evaluation.spark_session_utils.create_spark_session()
+
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:

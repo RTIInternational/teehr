@@ -49,9 +49,8 @@ def download_e0_2_example(temp_dir: Union[str, Path], spark_session) -> teehr.Ev
     # Initialize Spark with new tmpdir location
     (Path(temp_dir) / "local").mkdir(parents=True, exist_ok=True)
 
-    # Initialize Spark with new tmpdir location
-    # spark = create_spark_session()
-    spark = spark_session.getActiveSession()  # Don't alter the fixture
+    # Create a new session for test isolation
+    spark = spark_session.newSession()
     spark.conf.set(
         f"spark.sql.catalog.local.warehouse",
         (Path(temp_dir) / "local").as_posix()
@@ -84,7 +83,7 @@ def download_e0_2_example(temp_dir: Union[str, Path], spark_session) -> teehr.Ev
         df = spark.read.parquet(str(old_table_dir))
         # Create the Iceberg table
         df.writeTo(f"local.teehr.{table_name}").using("iceberg").create()
-        print(f"Recreated table: {table_name} with {df.count()} rows")
+        # Removed expensive .count() call for better performance
 
     # Clean up temp extraction directory
     shutil.rmtree(temp_extract_dir)
