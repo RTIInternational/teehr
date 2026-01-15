@@ -16,9 +16,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from data.setup_v0_3_study import setup_v0_3_study  # noqa
 
 
-def test_filter_eq_str(tmpdir):
+def test_filter_eq_str(tmpdir, spark_session):
     """Test the format_filter_to_str function with eq_str."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.variable_name,
@@ -27,12 +27,12 @@ def test_filter_eq_str(tmpdir):
     )
     filter_str = format_filter(filter)
     assert filter_str == "variable_name = 'foo'"
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
-def test_filter_in_str(tmpdir):
+def test_filter_in_str(tmpdir, spark_session):
     """Test the format_filter_to_str function with in_str."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.variable_name,
@@ -41,11 +41,11 @@ def test_filter_in_str(tmpdir):
     )
     filter_str = format_filter(filter)
     assert filter_str == "variable_name in ('foo','bar')"
-    ev.spark.stop()
+    # ev.spark.stop()
 
-def test_filter_in_str_series(tmpdir):
+def test_filter_in_str_series(tmpdir, spark_session):
     """Test the format_filter_to_str function with in_str."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.variable_name,
@@ -54,11 +54,11 @@ def test_filter_in_str_series(tmpdir):
     )
     filter_str = format_filter(filter)
     assert filter_str == "variable_name in ('foo','bar')"
-    ev.spark.stop()
+    # ev.spark.stop()
 
-def test_filter_gt_dt(tmpdir):
+def test_filter_gt_dt(tmpdir, spark_session):
     """Test the format_filter_to_str function with gt_dt."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.reference_time,
@@ -67,12 +67,12 @@ def test_filter_gt_dt(tmpdir):
     )
     filter_str = format_filter(filter)
     assert filter_str == "reference_time > '2021-01-01 00:00:00'"
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
-def test_filter_lt_int(tmpdir):
+def test_filter_lt_int(tmpdir, spark_session):
     """Test the format_filter_to_str function lt_int."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.value,
@@ -81,7 +81,7 @@ def test_filter_lt_int(tmpdir):
     )
     filter_str = format_filter(filter)
     assert filter_str == "value < 50"
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
 if __name__ == "__main__":

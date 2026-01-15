@@ -19,49 +19,49 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from data.setup_v0_3_study import setup_v0_3_study  # noqa
 
 
-def test_chain_filter_single_str(tmpdir):
+def test_chain_filter_single_str(tmpdir, spark_session):
     """Test filter string."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     df = ev.primary_timeseries.filter("location_id = 'gage-A'").to_pandas()
     assert len(df) == 26
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
-def test_chain_filter_single_str2(tmpdir):
+def test_chain_filter_single_str2(tmpdir, spark_session):
     """Test filter string with invalid id."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     with pytest.raises(Exception):
         ev.primary_timeseries.filter("id = 'gage-A'").to_pandas()
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
-def test_chain_filter_single_dict(tmpdir):
+def test_chain_filter_single_dict(tmpdir, spark_session):
     """Test filter dict."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     df = ev.primary_timeseries.filter({
         "column": "location_id",
         "operator": "=",
         "value": "gage-A"
     }).to_pandas()
     assert len(df) == 26
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
-def test_chain_filter_single_dict2(tmpdir):
+def test_chain_filter_single_dict2(tmpdir, spark_session):
     """Test filter dict with invalid id."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     with pytest.raises(Exception):
         ev.primary_timeseries.filter({
             "column": "id",
             "operator": "=",
             "value": "gage-A"
         }).to_pandas()
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
-def test_chain_filter_single_model(tmpdir):
+def test_chain_filter_single_model(tmpdir, spark_session):
     """Test filter model."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     flds = ev.primary_timeseries.field_enum()
     df = ev.primary_timeseries.filter(
         TimeseriesFilter(
@@ -71,12 +71,12 @@ def test_chain_filter_single_model(tmpdir):
         )
     ).to_pandas()
     assert len(df) == 26
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
-def test_chain_filter_single_model2(tmpdir):
+def test_chain_filter_single_model2(tmpdir, spark_session):
     """Test filter model."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     flds = ev.primary_timeseries.field_enum()
     with pytest.raises(Exception):
         ev.primary_timeseries.filter(
@@ -86,23 +86,23 @@ def test_chain_filter_single_model2(tmpdir):
                 value="gage-A"
             )
         ).to_pandas()
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
-def test_chain_filter_list_str(tmpdir):
+def test_chain_filter_list_str(tmpdir, spark_session):
     """Test filter list of strings."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     df = ev.primary_timeseries.filter([
         "location_id = 'gage-A'",
         "value_time > '2022-01-01T12:00:00'"
     ]).to_pandas()
     assert len(df) == 13
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
-def test_chain_filter_list_dict(tmpdir):
+def test_chain_filter_list_dict(tmpdir, spark_session):
     """Test filter list of dicts."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     df = ev.primary_timeseries.filter([
         {
             "column": "location_id",
@@ -116,12 +116,12 @@ def test_chain_filter_list_dict(tmpdir):
         }
     ]).to_pandas()
     assert len(df) == 13
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
-def test_chain_filter_list_model(tmpdir):
+def test_chain_filter_list_model(tmpdir, spark_session):
     """Test filter list of models."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     flds = ev.primary_timeseries.field_enum()
     df = ev.primary_timeseries.filter([
         TimeseriesFilter(
@@ -136,22 +136,22 @@ def test_chain_filter_list_model(tmpdir):
         )
     ]).to_pandas()
     assert len(df) == 13
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
-def test_query_single_str(tmpdir):
+def test_query_single_str(tmpdir, spark_session):
     """Test query string."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     df = ev.primary_timeseries.query(
         filters="location_id = 'gage-A'"
     ).to_pandas()
     assert len(df) == 26
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
-def test_query_single_dict(tmpdir):
+def test_query_single_dict(tmpdir, spark_session):
     """Test query dict."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     df = ev.primary_timeseries.query(
         filters={
             "column": "location_id",
@@ -160,12 +160,12 @@ def test_query_single_dict(tmpdir):
         }
     ).to_pandas()
     assert len(df) == 26
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
-def test_query_single_model(tmpdir):
+def test_query_single_model(tmpdir, spark_session):
     """Test query model."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     flds = ev.primary_timeseries.field_enum()
     df = ev.primary_timeseries.query(
         filters=TimeseriesFilter(
@@ -175,12 +175,12 @@ def test_query_single_model(tmpdir):
         )
     ).to_pandas()
     assert len(df) == 26
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
-def test_query_list_str(tmpdir):
+def test_query_list_str(tmpdir, spark_session):
     """Test query list of strings."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     df = ev.primary_timeseries.query(
         filters=[
             "location_id = 'gage-A'",
@@ -188,12 +188,12 @@ def test_query_list_str(tmpdir):
         ]
     ).to_pandas()
     assert len(df) == 13
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
-def test_query_list_dict(tmpdir):
+def test_query_list_dict(tmpdir, spark_session):
     """Test query list of dicts."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     df = ev.primary_timeseries.query(
         filters=[
             {
@@ -209,12 +209,12 @@ def test_query_list_dict(tmpdir):
         ]
     ).to_pandas()
     assert len(df) == 13
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
-def test_query_list_model(tmpdir):
+def test_query_list_model(tmpdir, spark_session):
     """Test query list of models."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     flds = ev.primary_timeseries.field_enum()
     df = ev.primary_timeseries.query(
         filters=[
@@ -231,12 +231,12 @@ def test_query_list_model(tmpdir):
         ]
     ).to_pandas()
     assert len(df) == 13
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
-def test_filter_by_lead_time(tmpdir):
+def test_filter_by_lead_time(tmpdir, spark_session):
     """Test filter by lead time."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     ev.joined_timeseries.add_calculated_fields([
         rcf.ForecastLeadTime(),
     ]).write()
@@ -275,7 +275,7 @@ def test_filter_by_lead_time(tmpdir):
         "forecast_lead_time < interval 3600 seconds"
     ).to_pandas()
     assert len(df) == 9
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
 if __name__ == "__main__":

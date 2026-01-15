@@ -5,16 +5,19 @@ should apply to all tables.
 """
 import tempfile
 from teehr import Evaluation
+from teehr.evaluation.spark_session_utils import create_spark_session
 
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from data.setup_v0_3_study import setup_v0_3_study  # noqa
 
+SPARK_SESSION = create_spark_session(app_name="test_sql_query")
 
-def test_sql_query(tmpdir):
+
+def test_sql_query(tmpdir, spark_session):
     """Test Evaluation sql query."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = setup_v0_3_study(tmpdir, spark_session)
     sdf = ev.sql("""
         SELECT pt.*, u.*, c.* FROM primary_timeseries pt
         JOIN units u ON pt.unit_name = u.name
@@ -37,12 +40,12 @@ def test_sql_query(tmpdir):
         'variable_name'
     ]
     assert sdf_cols == expected_cols
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
-def test_sql_query_on_empty_tables(tmpdir):
+def test_sql_query_on_empty_tables(tmpdir, spark_session):
     """Test sql query on empty table."""
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
+    ev = Evaluation(dir_path=tmpdir, spark=spark_session, create_dir=True)
     # Enable logging
     ev.enable_logging()
     # Clone the template
@@ -62,7 +65,7 @@ def test_sql_query_on_empty_tables(tmpdir):
         SELECT * FROM secondary_timeseries;
     """, create_temp_views=["secondary_timeseries"])
     assert sdf.isEmpty()
-    ev.spark.stop()
+    # ev.spark.stop()
 
 
 if __name__ == "__main__":
@@ -73,11 +76,13 @@ if __name__ == "__main__":
             tempfile.mkdtemp(
                 prefix="1-",
                 dir=tempdir
-            )
+            ),
+            SPARK_SESSION
         )
         test_sql_query_on_empty_tables(
             tempfile.mkdtemp(
                 prefix="2-",
                 dir=tempdir
-            )
+            ),
+            SPARK_SESSION
         )
