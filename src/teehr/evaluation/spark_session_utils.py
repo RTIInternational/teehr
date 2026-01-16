@@ -30,7 +30,7 @@ def create_spark_session(
     # App name and catalog settings
     app_name: str = "TEEHR Evaluation",
     local_catalog_name: str = const.LOCAL_CATALOG_NAME,
-    local_catalog_type: str = "jdbc",
+    local_catalog_type: str = const.LOCAL_CATALOG_TYPE,
     local_namespace_name: str = const.LOCAL_NAMESPACE_NAME,
     remote_warehouse_dir: str = const.REMOTE_WAREHOUSE_S3_PATH,
     remote_catalog_name: str = const.REMOTE_CATALOG_NAME,
