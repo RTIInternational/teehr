@@ -43,8 +43,6 @@ def setup_v0_3_study(tmpdir):
     (Path(tmpdir) / "local").mkdir(parents=True, exist_ok=True)
 
     spark = create_spark_session()
-    # spark = spark_session.newSession()  # Don't alter the fixture
-    # or spark_session.getActiveSession()?
 
     # Initialize Spark with new tmpdir location and db uri
     spark.conf.set(
