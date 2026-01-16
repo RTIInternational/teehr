@@ -122,11 +122,15 @@ class Evaluation(EvaluationBase):
         # Note. Here 'warehouse_dir' should be 'catalog_dir'?
         local_catalog_name = self.spark.conf.get("local_catalog_name")
         warehouse_dir = dir_path / local_catalog_name
-
-        # Should this be in create_spark_session()?
-        self.spark.conf.set(f"spark.sql.catalog.{local_catalog_name}.warehouse", warehouse_dir.as_posix())
-        self.spark.conf.set(f"spark.sql.catalog.{local_catalog_name}.uri", f"jdbc:sqlite:{warehouse_dir.as_posix()}/local_catalog.db")
-
+        # Set local warehouse path and jdbc uri
+        self.spark.conf.set(
+            f"spark.sql.catalog.{local_catalog_name}.warehouse",
+            warehouse_dir.as_posix()
+        )
+        self.spark.conf.set(
+            f"spark.sql.catalog.{local_catalog_name}.uri",
+            f"jdbc:sqlite:{warehouse_dir.as_posix()}/local_catalog.db"
+        )
 
         # Get the catalog metadata that was set during Spark configuration
         self.local_catalog = LocalCatalog(

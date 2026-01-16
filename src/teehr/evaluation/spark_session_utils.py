@@ -450,9 +450,6 @@ def _configure_iceberg_catalogs(
     # Local catalog configuration
     conf.set(f"spark.sql.catalog.{local_catalog_name}", "org.apache.iceberg.spark.SparkCatalog")
     conf.set(f"spark.sql.catalog.{local_catalog_name}.type", local_catalog_type)
-
-    # Test JDBC
-    conf.set(f"spark.sql.catalog.{local_catalog_name}.type", "jdbc")
     conf.set(f"spark.sql.catalog.{local_catalog_name}.jdbc.driver", "org.sqlite.JDBC")
     conf.set(f"spark.sql.catalog.{local_catalog_name}.jdbc.initialize", "true")
     conf.set(f"spark.sql.catalog.{local_catalog_name}.jdbc.schema-version", "V1")
