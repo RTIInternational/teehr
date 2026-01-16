@@ -3,6 +3,7 @@ from pathlib import Path
 from teehr import Evaluation, Configuration, Attribute
 import shutil
 import teehr
+from teehr.evaluation.spark_session_utils import create_spark_session
 
 import logging
 
@@ -94,9 +95,8 @@ def setup_v0_3_study_rewrite_table_paths(tmpdir, spark_session):
     """This copies in a hadoop-based warehouse and re-writes the tables with jdbc."""
     # Extract pre-created warehouse and recreate Iceberg tables from data files
     test_data_dir = Path.cwd() / "tests" / "data" / "v0_3_test_study"
-    tar_file = test_data_dir / "local_warehouse_jdbc.tar.gz"
-    # Unpack to a temporary location to access data files
-    temp_extract_dir = Path(tmpdir) / "temp_warehouse"
+    tar_file = test_data_dir / "local_warehouse.tar.gz"
+    temp_extract_dir = Path(tmpdir) / "temp_extract"
     shutil.unpack_archive(tar_file, temp_extract_dir)
 
     ev = teehr.Evaluation(

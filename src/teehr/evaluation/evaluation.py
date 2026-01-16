@@ -122,11 +122,15 @@ class Evaluation(EvaluationBase):
         # Note. Here 'warehouse_dir' should be 'catalog_dir'?
         local_catalog_name = self.spark.conf.get("local_catalog_name")
         warehouse_dir = dir_path / local_catalog_name
-
-        # Should this be in create_spark_session()?
-        self.spark.conf.set(f"spark.sql.catalog.{local_catalog_name}.warehouse", warehouse_dir.as_posix())
-        self.spark.conf.set(f"spark.sql.catalog.{local_catalog_name}.uri", f"jdbc:sqlite:{warehouse_dir.as_posix()}/local_catalog.db")
-
+        # Set local warehouse path and jdbc uri
+        self.spark.conf.set(
+            f"spark.sql.catalog.{local_catalog_name}.warehouse",
+            warehouse_dir.as_posix()
+        )
+        self.spark.conf.set(
+            f"spark.sql.catalog.{local_catalog_name}.uri",
+            f"jdbc:sqlite:{warehouse_dir.as_posix()}/local_catalog.db"
+        )
 
         # Get the catalog metadata that was set during Spark configuration
         self.local_catalog = LocalCatalog(
@@ -629,35 +633,6 @@ class Evaluation(EvaluationBase):
     def log_spark_config(self):
         """Log the current Spark session configuration."""
         log_session_config(self.spark)
-
-    def rewrite_table_paths(self):
-        """Register a local warehouse and rewrite the metadata files to current directory."""
-        db_uri = self.spark.conf.get("spark.sql.catalog.local.uri")
-        # Get the existing metadata paths from the local_catalog.db
-        # SQLite database.
-        iceberg_df = self.spark.read.format("jdbc") \
-            .option("url", db_uri) \
-            .option("driver", "org.sqlite.JDBC") \
-            .option("query", "SELECT * FROM iceberg_tables") \
-            .load().toPandas()
-
-        new_warehouse_path = Path(self.active_catalog.warehouse_dir).as_posix()
-
-        old_meta_location = Path(iceberg_df.iloc[0].metadata_location)
-        old_warehouse_path = old_meta_location.parents[3].as_posix()
-
-        for row in iceberg_df.itertuples():
-            table_name = row.table_name
-            table_namespace = row.table_namespace
-            logger.info(f"Rewriting table {table_name} from {old_warehouse_path}")
-            self.spark.sql(f"""
-                CALL local.system.rewrite_table_path(
-                    table => '{table_namespace}.{table_name}',
-                    source_prefix => '{old_warehouse_path}',
-                    target_prefix => '{new_warehouse_path}'
-                )
-            """).show()  # Need to call show() to execute the command (or something similar)
-
 
     # def update_spark_config(
     #     self,

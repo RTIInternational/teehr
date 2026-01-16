@@ -59,6 +59,10 @@ def download_e0_2_example(temp_dir: Union[str, Path], spark_session) -> teehr.Ev
         f"spark.sql.catalog.local.uri",
         f"jdbc:sqlite:{(Path(temp_dir) / 'local').as_posix()}/local_catalog.db"
     )
+    spark.conf.set(
+        f"spark.sql.catalog.local.uri",
+        f"jdbc:sqlite:{(Path(temp_dir) / 'local').as_posix()}/local_catalog.db"
+    )
     # Create the database
     spark.sql("CREATE DATABASE IF NOT EXISTS local.teehr")
 
