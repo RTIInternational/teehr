@@ -92,24 +92,6 @@ def setup_v0_3_study(tmpdir):
     return ev
 
 
-def setup_v0_3_study_rewrite_table_paths(tmpdir):
-    """This copies in a hadoop-based warehouse and re-writes the tables with jdbc."""
-    # Extract pre-created warehouse and recreate Iceberg tables from data files
-    test_data_dir = Path.cwd() / "tests" / "data" / "v0_3_test_study"
-    tar_file = test_data_dir / "local_warehouse_jdbc.tar.gz"
-    # Unpack to a temporary location to access data files
-    temp_extract_dir = Path(tmpdir) / "temp_warehouse"
-    shutil.unpack_archive(tar_file, temp_extract_dir)
-
-    ev = teehr.Evaluation(
-        dir_path=temp_extract_dir,
-    )
-    # Register the local warehouse.
-    ev.rewrite_table_paths()
-
-    return ev
-
-
 def setup_v0_3_study_from_scratch(tmpdir):
     """Set up a v0.3 study."""
     ev = Evaluation(dir_path=tmpdir, create_dir=True)
