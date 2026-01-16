@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 # Note: Scala version: 2.13 in pyspark 4.0
 SCALA_VERSION = "2.13"
 PYSPARK_VERSION = "4.0"
-ICEBERG_VERSION = "1.10.0"
+ICEBERG_VERSION = "1.10.1"
 SEDONA_VERSION = "1.8.0"
 
 

@@ -28,7 +28,7 @@ GEO_FILEPATH = Path(TEST_DATA_DIR, "geo")
 
 def test_create_joined_timeseries(tmpdir, spark_session):
     """Test the validate_locations function."""
-    spark = spark_session.getActiveSession()
+    spark = spark_session.newSession()
     ev = Evaluation(dir_path=tmpdir, spark=spark, create_dir=True)
 
     # Clone the template
@@ -152,7 +152,7 @@ def test_create_joined_timeseries(tmpdir, spark_session):
 
 def test_create_filtered_joined_timeseries(tmpdir, spark_session):
     """Test the validate_locations function."""
-    spark = spark_session.getActiveSession()
+    spark = spark_session.newSession()
     ev = Evaluation(dir_path=tmpdir, spark=spark, create_dir=True)
 
     # Clone the template

@@ -24,7 +24,7 @@ def setup_v0_4_ensemble_study(tmpdir, spark_session):
         "timeseries",
         "usgs_hefs_06711565.parquet"
     )
-    spark = spark_session.getActiveSession()
+    spark = spark_session.newSession()
     ev = Evaluation(
         dir_path=tmpdir,
         check_evaluation_version=False,

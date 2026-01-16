@@ -8,12 +8,11 @@ from teehr.models.pydantic_table_models import (
 import tempfile
 from teehr import Evaluation
 from teehr.evaluation.spark_session_utils import create_spark_session
-SPARK_SESSION = create_spark_session()
 
 
 def test_add_domains(tmpdir, spark_session):
     """Test creating a new study."""
-    spark = spark_session.getActiveSession()
+    spark = spark_session.newSession()
     ev = Evaluation(
         dir_path=tmpdir,
         create_dir=True,
@@ -94,6 +93,7 @@ def test_add_domains(tmpdir, spark_session):
 
 
 if __name__ == "__main__":
+    SPARK_SESSION = create_spark_session()
     with tempfile.TemporaryDirectory(
         prefix="teehr-"
     ) as tempdir:

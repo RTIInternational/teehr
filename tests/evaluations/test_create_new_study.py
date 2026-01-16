@@ -13,7 +13,7 @@ def test_clone_template(tmpdir, spark_session):
 
     from teehr import Evaluation
 
-    spark = spark_session.getActiveSession()
+    spark = spark_session.newSession()
     ev = Evaluation(dir_path=tmpdir, create_dir=True, spark=spark)
     ev.clone_template()
 

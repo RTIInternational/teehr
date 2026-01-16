@@ -45,7 +45,7 @@ def test_sql_query(tmpdir, spark_session):
 
 def test_sql_query_on_empty_tables(tmpdir, spark_session):
     """Test sql query on empty table."""
-    spark = spark_session.getActiveSession()
+    spark = spark_session.newSession()
     ev = Evaluation(
         dir_path=tmpdir,
         spark=spark,
