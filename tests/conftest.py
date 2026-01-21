@@ -1,4 +1,5 @@
 """Defines pytest fixtures for all tests."""
+import logging
 import pytest
 import shutil
 from pathlib import Path
@@ -233,7 +234,7 @@ def read_write_evaluation_template(read_only_evaluation_template, request):
 
     # Create unique namespace per test using test name
     test_name = request.node.name.replace("[", "_").replace("]", "_")
-    namespace = f"teehr_test_{test_name}"
+    namespace = f"teehr_{test_name}"
 
     # Create the namespace in Iceberg. Creates the namespace but not the directory yet.
     ev.spark.sql(f"CREATE NAMESPACE IF NOT EXISTS local.{namespace}")
@@ -253,11 +254,22 @@ def read_write_evaluation_template(read_only_evaluation_template, request):
 
     yield ev
 
-    # Cleanup: Drop the namespace after test
-    try:
-        ev.spark.sql(f"DROP NAMESPACE IF EXISTS local.{namespace} CASCADE")
-    except Exception as e:
-        print(f"Warning: Could not drop namespace {namespace}: {e}")
+
+    # # Cleanup: Drop the namespace after test
+    # try:
+    #     ev.spark.sql(f"DROP NAMESPACE IF EXISTS local.{namespace} CASCADE")
+    # except Exception as e:
+    #     print(f"Warning: Could not drop namespace {namespace}: {e}")
+
+
+# To hide warnings from py4j during pytest shutdown
+def pytest_configure(config):
+    """Configure pytest and py4j logging."""
+    # Suppress py4j logging errors during shutdown
+    py4j_logger = logging.getLogger("py4j")
+    py4j_logger.setLevel(logging.ERROR)  # Only show errors, not info messages
+    # Alternatively, to completely silence py4j:
+    # py4j_logger.disabled = True
 
 
 # ==============================================================================

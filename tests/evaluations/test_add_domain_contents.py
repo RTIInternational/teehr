@@ -6,6 +6,7 @@ from teehr.models.pydantic_table_models import (
     Attribute,
 )
 import pytest
+import time
 
 @pytest.mark.read_write_evaluation_template
 def test_add_domains(read_write_evaluation_template):
@@ -17,6 +18,7 @@ def test_add_domains(read_write_evaluation_template):
     # Check configurations.add doesn't add columns
     cols = ev.configurations.to_pandas().columns
 
+    t0 = time.time()
     ev.configurations.add(
         configuration=[
             Configuration(
@@ -26,6 +28,7 @@ def test_add_domains(read_write_evaluation_template):
             )
         ]
     )
+    print("Time to add configuration:", time.time() - t0)
 
     df = ev.configurations.to_pandas()
 
@@ -37,6 +40,7 @@ def test_add_domains(read_write_evaluation_template):
     # Check units.add doesn't add columns
     cols = ev.units.to_pandas().columns
 
+    t0 = time.time()
     ev.units.add(
         unit=[
             Unit(
@@ -45,6 +49,7 @@ def test_add_domains(read_write_evaluation_template):
             ),
         ]
     )
+    print("Time to add unit:", time.time() - t0)
 
     new_cols = ev.units.to_pandas().columns
 
@@ -53,6 +58,7 @@ def test_add_domains(read_write_evaluation_template):
     # Check variables.add doesn't add columns
     cols = ev.variables.to_pandas().columns
 
+    t0 = time.time()
     ev.variables.add(
         variable=[
             Variable(
@@ -61,6 +67,8 @@ def test_add_domains(read_write_evaluation_template):
             ),
         ]
     )
+    print("Time to add variable:", time.time() - t0)
+
     new_cols = ev.variables.to_pandas().columns
 
     assert list(cols.sort_values()) == list(new_cols.sort_values())
@@ -68,6 +76,7 @@ def test_add_domains(read_write_evaluation_template):
     # Check attributes.add doesn't add columns
     cols = ev.attributes.to_pandas().columns
 
+    t0 = time.time()
     ev.attributes.add(
         attribute=[
             Attribute(
@@ -77,6 +86,8 @@ def test_add_domains(read_write_evaluation_template):
             ),
         ]
     )
+    print("Time to add attribute:", time.time() - t0)
+
     new_cols = ev.attributes.to_pandas().columns
 
     assert list(cols.sort_values()) == list(new_cols.sort_values())

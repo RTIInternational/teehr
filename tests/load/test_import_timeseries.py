@@ -48,6 +48,8 @@ def test_dropping_duplicates(read_write_evaluation_template):
     ev = read_write_evaluation_template
 
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
+
+    t0 = time.time()
     ev.configurations.add(
         Configuration(
             name="test_obs",
@@ -67,6 +69,8 @@ def test_dropping_duplicates(read_write_evaluation_template):
             long_name="Streamflow"
         )
     )
+    print("Domain variables added in %.2f seconds." % (time.time() - t0))
+
     # Load the timeseries data
     ev.primary_timeseries.load_parquet(
         in_path=PRIMARY_TIMESERIES_DUPS_FILEPATH,
@@ -104,7 +108,6 @@ def test_dropping_duplicates(read_write_evaluation_template):
 def test_validate_and_insert_timeseries(read_write_evaluation_template):
     """Test the validate_locations function."""
     ev = read_write_evaluation_template
-    ev.enable_logging()
 
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
 
@@ -190,8 +193,6 @@ def test_validate_and_insert_timeseries_set_const(read_write_evaluation_template
     """Test the validate_locations function."""
     ev = read_write_evaluation_template
 
-    ev.enable_logging()
-
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
 
     ev.configurations.add(
@@ -257,8 +258,6 @@ def test_validate_and_insert_summa_nc_timeseries(read_write_evaluation_template)
     """Test the validate_locations function."""
     ev = read_write_evaluation_template
 
-    ev.enable_logging()
-
     ev.locations.load_spatial(in_path=SUMMA_LOCATIONS)
 
     ev.configurations.add(
@@ -311,8 +310,6 @@ def test_validate_and_insert_summa_nc_timeseries(read_write_evaluation_template)
 def test_validate_and_insert_mizu_nc_timeseries(read_write_evaluation_template):
     """Test the validate_locations function."""
     ev = read_write_evaluation_template
-
-    ev.enable_logging()
 
     ev.locations.load_spatial(in_path=MIZU_LOCATIONS)
 
