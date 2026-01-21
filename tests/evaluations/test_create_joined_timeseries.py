@@ -25,14 +25,14 @@ SECONDARY_TIMESERIES_FILEPATH = Path(
 )
 GEO_FILEPATH = Path(TEST_DATA_DIR, "geo")
 
-
-def test_create_joined_timeseries(tmpdir, spark_session):
+@pytest.mark.evaluation_template
+def test_create_joined_timeseries(isolated_evaluation):
     """Test the validate_locations function."""
-    spark = spark_session.newSession()
-    ev = Evaluation(dir_path=tmpdir, spark=spark, create_dir=True)
+    # spark = isolated_evaluation.spark.newSession()
+    ev = isolated_evaluation
 
     # Clone the template
-    ev.clone_template()
+    # ev.clone_template()
 
     # Enable logging
     ev.enable_logging()

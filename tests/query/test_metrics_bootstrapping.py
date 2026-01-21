@@ -6,6 +6,7 @@ import pandas as pd
 from pathlib import Path
 import numpy as np
 from arch.bootstrap import CircularBlockBootstrap, StationaryBootstrap
+import pytest
 
 from teehr.models.filters import JoinedTimeseriesFilter
 from teehr.models.metrics.bootstrap_models import Bootstrappers
@@ -37,11 +38,11 @@ R_BENCHMARK_RESULTS = Path(
 
 SPARK_SESSION = create_spark_session()
 
-
-def test_bootstrapping_signatures(tmpdir, spark_session):
+@pytest.mark.read_only_warehouse
+def test_bootstrapping_signatures(read_only_test_warehouse):
     """Test get_metrics method."""
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = read_only_test_warehouse
 
     # Get the currently available fields to use in the query.
     flds = ev.joined_timeseries.field_enum()
@@ -64,13 +65,12 @@ def test_bootstrapping_signatures(tmpdir, spark_session):
     assert sig_metrics_df.index.size == 3
     assert sig_metrics_df.columns.size == 4
     assert np.isclose(sig_metrics_df["flow_duration_curve_slope_0.5"].sum(), -172.21364)
-    # ev.spark.stop()
 
-
-def test_unpacking_bootstrap_results(tmpdir, spark_session):
+@pytest.mark.read_only_warehouse
+def test_unpacking_bootstrap_results(read_only_test_warehouse):
     """Test unpacking bootstrapping quantile results."""
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = read_only_test_warehouse
 
     # Define a bootstrapper.
     boot = Bootstrappers.CircularBlock(
@@ -104,13 +104,12 @@ def test_unpacking_bootstrap_results(tmpdir, spark_session):
     ]
 
     assert (cols == benchmark_cols).all()
-    # ev.spark.stop()
 
-
-def test_circularblock_bootstrapping(tmpdir, spark_session):
+@pytest.mark.read_only_warehouse
+def test_circularblock_bootstrapping(read_only_test_warehouse):
     """Test get_metrics method circular block bootstrapping."""
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = read_only_test_warehouse
 
     # Define a bootstrapper.
     boot = Bootstrappers.CircularBlock(
@@ -169,13 +168,12 @@ def test_circularblock_bootstrapping(tmpdir, spark_session):
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 2
-    # ev.spark.stop()
 
-
-def test_stationary_bootstrapping(tmpdir, spark_session):
+@pytest.mark.read_only_warehouse
+def test_stationary_bootstrapping(read_only_test_warehouse):
     """Test get_metrics method stationary bootstrapping."""
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = read_only_test_warehouse
 
     # Define a bootstrapper.
     boot = Bootstrappers.Stationary(
@@ -233,9 +231,8 @@ def test_stationary_bootstrapping(tmpdir, spark_session):
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 2
-    # ev.spark.stop()
 
-
+@pytest.mark.skip("This is a write operation")
 def test_gumboot_bootstrapping(tmpdir, spark_session):
     """Test get_metrics method gumboot bootstrapping."""
     # Manually create an evaluation using timseries from the R
@@ -336,13 +333,12 @@ def test_gumboot_bootstrapping(tmpdir, spark_session):
     r_df = pd.read_csv(R_BENCHMARK_RESULTS)
     r_kge_vals = np.sort(r_df.KGE.values)
     assert np.allclose(teehr_results, r_kge_vals, rtol=1e-06)
-    # ev.spark.stop()
 
-
-def test_bootstrapping_transforms(tmpdir, spark_session):
+@pytest.mark.read_only_warehouse
+def test_bootstrapping_transforms(read_only_test_warehouse):
     """Test applying metric transforms (bootstrap)."""
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = read_only_test_warehouse
 
     # Define a bootstrapper.
     boot = Bootstrappers.CircularBlock(
@@ -401,13 +397,12 @@ def test_bootstrapping_transforms(tmpdir, spark_session):
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 2
-    # ev.spark.stop()
 
-
-def test_bootstrapping_fdc_slope_signature(tmpdir, spark_session):
+@pytest.mark.read_only_warehouse
+def test_bootstrapping_fdc_slope_signature(read_only_test_warehouse):
     """Test bootstrapping FDC slope signature."""
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = read_only_test_warehouse
 
     # Define a bootstrapper.
     boot = Bootstrappers.CircularBlock(
@@ -442,52 +437,3 @@ def test_bootstrapping_fdc_slope_signature(tmpdir, spark_session):
     ]
 
     assert (sorted(cols) == sorted(benchmark_cols))
-    # ev.spark.stop()
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_bootstrapping_signatures(
-            tempfile.mkdtemp(
-                prefix="0-",
-                dir=tempdir
-            )
-        )
-        test_unpacking_bootstrap_results(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_circularblock_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_stationary_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        test_gumboot_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
-        # TODO: High memory usage?
-        test_bootstrapping_transforms(
-            tempfile.mkdtemp(
-                prefix="5-",
-                dir=tempdir)
-        )
-        # TODO: Test bootstrapping FDC slope signature
-        test_bootstrapping_fdc_slope_signature(
-            tempfile.mkdtemp(
-                prefix="6-",
-                dir=tempdir)
-        )

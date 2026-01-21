@@ -8,17 +8,12 @@ from teehr.models.pydantic_table_models import (
 import tempfile
 from teehr import Evaluation
 from teehr.evaluation.spark_session_utils import create_spark_session
+import pytest
 
-
-def test_add_domains(tmpdir, spark_session):
+@pytest.mark.evaluation_template
+def test_add_domains(isolated_evaluation):
     """Test creating a new study."""
-    spark = spark_session.newSession()
-    ev = Evaluation(
-        dir_path=tmpdir,
-        create_dir=True,
-        spark=spark
-    )
-    ev.clone_template()
+    ev = isolated_evaluation
 
     new_tbl = ev.table(table_name="new_table")
 
@@ -88,19 +83,3 @@ def test_add_domains(tmpdir, spark_session):
     new_cols = ev.attributes.to_pandas().columns
 
     assert list(cols.sort_values()) == list(new_cols.sort_values())
-
-    spark.stop()
-
-
-if __name__ == "__main__":
-    SPARK_SESSION = create_spark_session()
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_add_domains(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            ),
-            SPARK_SESSION
-        )

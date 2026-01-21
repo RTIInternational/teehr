@@ -2,45 +2,299 @@
 import pytest
 import shutil
 from pathlib import Path
+import glob
+import json
+import fastavro
+from pyspark.sql.functions import regexp_replace
 
 from teehr.evaluation.spark_session_utils import create_spark_session
 from teehr import Evaluation
 
 
+# ==============================================================================
+# Spark Session Fixtures
+# ==============================================================================
+#
+# APPROACH: Shared session with per-test config updates
+# - One Spark session for entire test run (fast)
+# - Config updates per test (but changes persist - no true isolation)
+# - Session stopped once at the end of all tests
+#
+# TRADEOFFS:
+# + Much faster (session creation is expensive)
+# + Works well when tests don't conflict
+# - Config changes persist across tests
+# - Tests may affect each other if they modify shared state
+#
+# For TRUE isolation (slower), see spark_session_isolated below.
+# ==============================================================================
+
 @pytest.fixture(scope="session")
-def spark_session():
-    """Optimized Spark session for tests."""
-    spark = create_spark_session(
-        app_name="TEEHR Tests",
-        update_configs={
-            "spark.sql.shuffle.partitions": "4",  # Default is 200, way too high for tests
-            "spark.ui.enabled": "false",  # Disable UI for faster startup
-            "spark.ui.showConsoleProgress": "false",  # Less console noise
-            "spark.sql.adaptive.enabled": "false",  # Faster for small test data
-        }
-    )
+def spark_shared_session():
+    """Session-level Spark session shared across all tests.
+
+    This creates one Spark session for the entire test run and stops it
+    at the end. Individual tests should NOT stop this session.
+    """
+    spark = create_spark_session()
     yield spark
     spark.stop()
 
 
+# @pytest.fixture(scope="function")
+# def spark_session(spark_shared_session):
+#     """Function-level fixture providing Spark session with config updates.
+
+#     Returns a factory function that:
+#     1. Updates config on the shared Spark session
+#     2. Returns the shared session
+
+#     Note: Since SparkSession uses singleton pattern (getOrCreate()),
+#     config changes persist across tests. Use spark_session_isolated
+#     if you need true isolation between tests.
+#     """
+#     def _update_spark_session_config(key, value):
+#         spark_shared_session.conf.set(key, value)
+#         return spark_shared_session
+#     return _update_spark_session_config
+
+
 @pytest.fixture(scope="session")
-def cached_test_warehouse_v0_3(tmp_path_factory):
-    """Unpack test warehouse once per test session.
+def read_only_test_warehouse(tmp_path_factory, spark_shared_session):
+    """Unpack test warehouse once per test SESSION (not per test function).
 
-    This significantly speeds up tests by avoiding repeated tar.gz unpacking.
-    The warehouse is unpacked once and reused across all tests.
+    This significantly speeds up tests by:
+    1. Unpacking warehouse once for entire test run
+    2. Sharing the warehouse across all tests
+    3. Reusing the same Spark session
+
+    Note: All tests using this fixture share the same warehouse data.
+    If tests modify data, they may affect each other. Use a function-scoped
+    fixture if you need isolation (but it will be much slower).
     """
+    # Extract pre-created warehouse and recreate Iceberg tables from data files
     test_data_dir = Path.cwd() / "tests" / "data" / "v0_3_test_study"
-    tar_file = test_data_dir / "local_warehouse.tar.gz"
-
-    # Create persistent temp dir for this session
-    session_tmpdir = tmp_path_factory.mktemp("test_warehouse_v0_3")
-    temp_extract_dir = session_tmpdir / "warehouse"
-
-    # Unpack only once per test session
+    tar_file = test_data_dir / "local_warehouse_jdbc.tar.gz"
+    temp_extract_dir = tmp_path_factory.mktemp("warehouse_session") / "temp_extract"
     shutil.unpack_archive(tar_file, temp_extract_dir)
 
-    return temp_extract_dir
+    warehouse_dir = temp_extract_dir / "local"
+    db_uri = f"jdbc:sqlite:{warehouse_dir.as_posix()}/local_catalog.db"
+
+    # Use the shared session directly since catalog config is immutable
+    spark = spark_shared_session
+    spark.conf.set(
+        f"spark.sql.catalog.local.warehouse",
+        warehouse_dir.as_posix()
+    )
+    spark.conf.set(
+        f"spark.sql.catalog.local.uri",
+        f"jdbc:sqlite:{warehouse_dir.as_posix()}/local_catalog.db"
+    )
+
+    # Get the existing metadata paths from the local_catalog.db
+    # SQLite database.
+    iceberg_df = spark.read.format("jdbc") \
+        .option("url", db_uri) \
+        .option("driver", "org.sqlite.JDBC") \
+        .option("query", "SELECT * FROM iceberg_tables") \
+        .load().toPandas()
+
+    # Get metadata filepath prefixes from the existing table
+    latest_metadata = iceberg_df.loc[
+        iceberg_df['table_name'] == 'primary_timeseries', 'metadata_location'
+    ].values[0]
+    old_metadata_prefix = Path(latest_metadata).parents[3].as_posix()
+    new_metadata_prefix = warehouse_dir.as_posix()
+
+    # All json paths
+    all_json_paths = glob.glob(f"{new_metadata_prefix}/**/*.json", recursive=True)
+    all_avro_paths = glob.glob(f"{new_metadata_prefix}/**/*.avro", recursive=True)
+
+    def update_avro_metadata(new_avro_path, old_metadata_prefix, new_metadata_prefix):
+
+        reader = fastavro.reader(open(new_avro_path, 'rb'))
+        parsed_schema = reader.writer_schema
+        records = list(reader)
+
+        # Iterate over records in the Avro file
+        for record in records:
+            for key, value in record.items():
+                # If it is a nested dictionary, check its items
+                if isinstance(value, dict):
+                    for k, v in value.items():
+                        if type(v) is str:
+                            if old_metadata_prefix in v:
+                                value[k] = v.replace(old_metadata_prefix, new_metadata_prefix)
+
+                # If it's a list, check each element
+                elif isinstance(value, list):
+                    for i in range(len(value)):
+                        if isinstance(value[i], dict):
+                            for k, v in value[i].items():
+                                if type(v) is str:
+                                    if old_metadata_prefix in v:
+                                        value[k] = v.replace(old_metadata_prefix, new_metadata_prefix)
+                else:
+                    if type(value) is str:
+                        if old_metadata_prefix in value:
+                            record[key] = value.replace(old_metadata_prefix, new_metadata_prefix)
+
+        # Writing
+        with open(new_avro_path, 'wb') as out:
+            fastavro.writer(out, parsed_schema, records)
+
+    # Loop avro files here
+    for avro_filepath in all_avro_paths:
+        update_avro_metadata(
+            avro_filepath,
+            old_metadata_prefix,
+            new_metadata_prefix
+        )
+
+    # Function to search and replace a value in the JSON structure
+    def replace_json_values(json_data, target_value, replacement_value):
+        if isinstance(json_data, dict):  # If it's a dictionary, iterate over the keys and values
+            for key, value in json_data.items():
+                if type(value) is str:
+                        if old_metadata_prefix in value:
+                            json_data[key] = value.replace(old_metadata_prefix, new_metadata_prefix)
+                else:
+                    replace_json_values(value, target_value, replacement_value) # Recursively call for nested values
+
+        elif isinstance(json_data, list):  # If it's a list, iterate over the items
+            for index, item in enumerate(json_data):
+                if old_metadata_prefix in item:
+                    json_data[index] = item.replace(old_metadata_prefix, new_metadata_prefix)
+                else:
+                    replace_json_values(item, target_value, replacement_value)  # Recursively call for nested items
+
+    for json_filepath in all_json_paths:
+        # Read the JSON file
+        with open(json_filepath, 'r') as f:
+            metadata = json.load(f)
+
+        replace_json_values(
+            metadata,
+            old_metadata_prefix,
+            new_metadata_prefix
+        )
+        # Convert the modified data back to JSON
+        # modified_json_content = json.dumps(metadata, indent = 4)
+        modified_json_content = json.dumps(metadata)
+
+        # Write back the modified JSON to the same file
+        with open(json_filepath, 'w') as f:
+            f.write(modified_json_content)
+
+    # Update the sqlite table
+    iceberg_sdf = spark.read.format("jdbc") \
+        .option("url", db_uri) \
+        .option("driver", "org.sqlite.JDBC") \
+        .option("query", "SELECT * FROM iceberg_tables") \
+        .load()
+
+
+    # Replace "Guard" with "Gd" in the "position" column
+    updated_sdf = iceberg_sdf.withColumn(
+        "metadata_location",
+        regexp_replace("metadata_location", old_metadata_prefix, new_metadata_prefix)
+    )
+    updated_sdf = updated_sdf.withColumn(
+        "previous_metadata_location",
+        regexp_replace("previous_metadata_location", old_metadata_prefix, new_metadata_prefix)
+    )
+    tmp_df = updated_sdf.toPandas()
+
+    # Need to unlock the table before overwriting!
+    # Write back (requires overwriting the entire table)
+    updated_sdf.write.format("jdbc") \
+        .option("url", db_uri) \
+        .option("driver", "org.sqlite.JDBC") \
+        .option("dbtable", "iceberg_tables") \
+        .mode("overwrite") \
+        .save()
+
+    # Test reading the evaluation tables
+    ev = Evaluation(
+        temp_extract_dir,
+        create_dir=False,
+        spark=spark,
+        check_evaluation_version=False
+    )
+
+    # Remove .crc files -- these interfere with register_table
+    crc_files = glob.glob(f"{new_metadata_prefix}/**/.*.crc", recursive=True)
+    [Path(filepath).unlink() for filepath in crc_files]
+
+    # Execute the register_table procedure
+    for row in tmp_df.itertuples():
+        table_name = row.table_name
+        metadata_file = row.metadata_location
+        ev.spark.sql(f"""
+        CALL local.system.register_table(
+            table => 'teehr.{table_name}',
+            metadata_file => '{metadata_file}'
+        )
+        """).show()
+
+    yield ev
+    # Don't stop the shared Spark session - it's managed by spark_shared_session fixture
+    # The session is reused across all tests for performance
+
+
+@pytest.fixture(scope="function")
+def isolated_evaluation(spark_shared_session, tmpdir, request):
+    """Create an Evaluation with isolated namespace per test.
+
+    Each test gets:
+    - Shared Spark session (fast)
+    - Shared warehouse directory (fast)
+    - UNIQUE namespace (isolation)
+
+    Example:
+    - test_foo uses namespace: teehr_test_foo
+    - test_bar uses namespace: teehr_test_bar
+
+    Tests can write to their namespace without affecting other tests.
+    """
+    spark = spark_shared_session
+    warehouse_dir = Path(tmpdir) / "local"
+    warehouse_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create unique namespace per test using test name
+    test_name = request.node.name.replace("[", "_").replace("]", "_")
+    # temp_dir_name = f"teehr_test_{test_name}"
+
+    # TODO: Create the jdbc connection or move the namespace create to below Evaluation?
+
+    # Create the namespace in Iceberg
+    # spark.conf.set("local_namespace_name", namespace)
+    # spark.sql(f"CREATE NAMESPACE IF NOT EXISTS local.{namespace}")
+
+    # Create Evaluation with custom namespace
+    ev = Evaluation(
+        dir_path=tmpdir / f"teehr_test_{test_name}",
+        create_dir=True,
+        spark=spark,
+    )
+    # Create the namespace in Iceberg
+    # ev.spark.sql(f"CREATE NAMESPACE IF NOT EXISTS local.{namespace}")
+
+    # Override the namespace for this evaluation
+    # ev.local_catalog.namespace_name = namespace
+
+    ev.clone_template()
+
+    yield ev
+
+    # # Cleanup: Drop the namespace after test
+    # try:
+    #     spark.sql(f"DROP NAMESPACE IF EXISTS local.{namespace} CASCADE")
+    # except Exception as e:
+    #     print(f"Warning: Could not drop namespace {namespace}: {e}")
+
+# ==============================================================================
 
 
 @pytest.fixture(scope="function")
@@ -53,15 +307,18 @@ def evaluation_v0_3(tmpdir, spark_session, cached_test_warehouse_v0_3):
     """
     (Path(tmpdir) / "local").mkdir(parents=True, exist_ok=True)
 
-    spark = spark_session.newSession()
+    spark = spark_session
+
+    # Initialize Spark with new tmpdir location and db uri
     spark.conf.set(
-        "spark.sql.catalog.local.warehouse",
+        f"spark.sql.catalog.local.warehouse",
         (Path(tmpdir) / "local").as_posix()
     )
     spark.conf.set(
-        "spark.sql.catalog.local.uri",
+        f"spark.sql.catalog.local.uri",
         f"jdbc:sqlite:{(Path(tmpdir) / 'local').as_posix()}/local_catalog.db"
     )
+    # Create the database
     spark.sql("CREATE DATABASE IF NOT EXISTS local.teehr")
 
     tables_to_recreate = [
@@ -91,7 +348,7 @@ def evaluation_v0_3(tmpdir, spark_session, cached_test_warehouse_v0_3):
         check_evaluation_version=False
     )
 
-    return ev
+    yield ev
 
 
 @pytest.fixture(scope="module")
@@ -105,15 +362,17 @@ def evaluation_v0_3_module(tmp_path_factory, spark_session, cached_test_warehous
     module_tmpdir = tmp_path_factory.mktemp("module_eval_v0_3")
     (module_tmpdir / "local").mkdir(parents=True, exist_ok=True)
 
-    spark = spark_session.newSession()
-    spark.conf.set(
-        "spark.sql.catalog.local.warehouse",
-        (module_tmpdir / "local").as_posix()
-    )
-    spark.conf.set(
-        "spark.sql.catalog.local.uri",
-        f"jdbc:sqlite:{(module_tmpdir / 'local').as_posix()}/local_catalog.db"
-    )
+    spark = spark_session
+    # Configure Iceberg catalog for this module's temporary directory
+    spark.conf.set("spark.sql.catalog.local", "org.apache.iceberg.spark.SparkCatalog")
+    spark.conf.set("spark.sql.catalog.local.type", "jdbc")
+    spark.conf.set("spark.sql.catalog.local.warehouse", (module_tmpdir / "local").as_posix())
+    spark.conf.set("spark.sql.catalog.local.uri", f"jdbc:sqlite:{(module_tmpdir / 'local').as_posix()}/local_catalog.db")
+    spark.conf.set("spark.sql.catalog.local.jdbc.driver", "org.sqlite.JDBC")
+    spark.conf.set("spark.sql.catalog.local.jdbc.initialize", "true")
+    spark.conf.set("spark.sql.catalog.local.jdbc.schema-version", "V1")
+
+    # Create database namespace before creating Evaluation
     spark.sql("CREATE DATABASE IF NOT EXISTS local.teehr")
 
     tables_to_recreate = [
@@ -142,7 +401,7 @@ def evaluation_v0_3_module(tmp_path_factory, spark_session, cached_test_warehous
         check_evaluation_version=False
     )
 
-    return ev
+    yield ev
 
 
 @pytest.fixture(scope="module")
@@ -167,3 +426,77 @@ def cached_primary_timeseries_df(evaluation_v0_3_module):
     df.cache()
     yield df
     df.unpersist()
+
+
+# ============== SIMPLE TEMPLATE-BASED FIXTURES ==============
+
+@pytest.fixture(scope="function")
+def evaluation_with_template(tmpdir, spark_session):
+    """Lightweight evaluation with just template (domain tables).
+
+    Use this fixture when you only need:
+    - Domain tables (units, variables, configurations, attributes)
+    - Empty timeseries and location tables
+    - A clean slate to load your own test data
+
+    This is ~10x faster than evaluation_v0_3 since it doesn't load
+    any parquet data from the cached warehouse.
+
+    Example:
+        def test_loading_custom_data(evaluation_with_template):
+            ev = evaluation_with_template
+            # Load only what you need for this specific test
+            ev.locations.load_spatial(...)
+    """
+    spark = spark_session
+
+    # Create the local directory for the warehouse
+    (Path(tmpdir) / "local").mkdir(parents=True, exist_ok=True)
+
+    ev = Evaluation(
+        Path(tmpdir),
+        create_dir=True,
+        spark=spark,
+        check_evaluation_version=False,
+    )
+    ev.clone_template()
+
+    yield ev
+
+
+@pytest.fixture(scope="module")
+def evaluation_with_template_module(tmp_path_factory, spark_session):
+    """Module-scoped evaluation with template for read-only tests.
+
+    Use this when multiple tests in a module only need the domain
+    tables and won't modify them. Tests run much faster by sharing
+    the same evaluation instance.
+
+    Example:
+        @pytest.mark.readonly
+        def test_domain_queries(evaluation_with_template_module):
+            ev = evaluation_with_template_module
+            units = ev.units.to_pandas()
+            assert "m^3/s" in units.name.values
+    """
+    module_tmpdir = tmp_path_factory.mktemp("module_template")
+
+    spark = spark_session
+    # Configure Iceberg catalog for this module's temporary directory
+    spark.conf.set("spark.sql.catalog.local", "org.apache.iceberg.spark.SparkCatalog")
+    spark.conf.set("spark.sql.catalog.local.type", "jdbc")
+    spark.conf.set("spark.sql.catalog.local.warehouse", (module_tmpdir / "local").as_posix())
+    spark.conf.set("spark.sql.catalog.local.uri", f"jdbc:sqlite:{(module_tmpdir / 'local').as_posix()}/local_catalog.db")
+    spark.conf.set("spark.sql.catalog.local.jdbc.driver", "org.sqlite.JDBC")
+    spark.conf.set("spark.sql.catalog.local.jdbc.initialize", "true")
+    spark.conf.set("spark.sql.catalog.local.jdbc.schema-version", "V1")
+
+    ev = Evaluation(
+        module_tmpdir,
+        create_dir=True,
+        spark=spark,
+        check_evaluation_version=False
+    )
+    ev.clone_template()
+
+    yield ev

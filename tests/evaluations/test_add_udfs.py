@@ -36,8 +36,6 @@ def test_add_row_udfs_null_reference(evaluation_v0_3):
         group_by=["primary_location_id"]
     ).write(table_name="metrics", write_mode="create_or_replace")
 
-    # ev.spark.stop()
-
 
 def test_add_row_udfs(evaluation_v0_3):
     """Test adding row level UDFs."""
@@ -133,8 +131,6 @@ def test_add_row_udfs(evaluation_v0_3):
     check_vals = check_sdf.select("day_of_year").distinct().collect()
     for row in check_vals:
         assert row["day_of_year"] in [1, 2]
-
-    # ev.spark.stop()
 
 
 def test_forecast_lead_time_bins(tmpdir, spark_session):
@@ -320,8 +316,7 @@ def test_forecast_lead_time_bins(tmpdir, spark_session):
         "reference_time",
         "value_time"
         )
-    assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 7
-    # ev.spark.stop()
+    assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() ==
 
 
 def test_add_timeseries_udfs(tmpdir, spark_session):
@@ -536,8 +531,6 @@ def test_add_timeseries_udfs(tmpdir, spark_session):
     assert np.isclose(max_ep, 1.0, atol=0.001)
     assert "exceedance_probability" in columns
 
-    # ev.spark.stop()
-
 
 def test_add_udfs_write(evaluation_v0_3):
     """Test adding UDFs and write DataFrame back to table."""
@@ -554,8 +547,6 @@ def test_add_udfs_write(evaluation_v0_3):
     assert "event_above" in cols
     assert "event_above_id" in cols
     assert "forecast_lead_time" in cols
-
-    # ev.spark.stop()
 
 
 def test_location_event_detection(evaluation_v0_3):
@@ -586,55 +577,3 @@ def test_location_event_detection(evaluation_v0_3):
     assert "event_above_id" in sdf.columns
     assert "max_primary_value" in sdf.columns
     assert "max_secondary_value" in sdf.columns
-
-    # ev.spark.stop()
-
-
-if __name__ == "__main__":
-    SPARK_SESSION = teehr.evaluation.spark_session_utils.create_spark_session()
-
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_add_row_udfs_null_reference(
-            tempfile.mkdtemp(
-                prefix="0-",
-                dir=tempdir
-            ),
-            SPARK_SESSION
-        )
-        test_add_row_udfs(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            ),
-            SPARK_SESSION
-        )
-        test_forecast_lead_time_bins(
-            tempfile.mkdtemp(
-                prefix="1b-",
-                dir=tempdir
-            ),
-            SPARK_SESSION
-        )
-        test_add_timeseries_udfs(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            ),
-            SPARK_SESSION
-        )
-        test_add_udfs_write(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            ),
-            SPARK_SESSION
-        )
-        test_location_event_detection(
-            tempfile.mkdtemp(
-                prefix="5-",
-                dir=tempdir
-            ),
-            SPARK_SESSION
-        )

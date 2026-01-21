@@ -33,10 +33,11 @@ R_BENCHMARK_RESULTS = Path(
 )
 
 
-def test_executing_deterministic_metrics(tmpdir, spark_session):
+@pytest.mark.read_only_warehouse
+def test_executing_deterministic_metrics(read_only_test_warehouse):
     """Test get_metrics method."""
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = read_only_test_warehouse
 
     # Test all the non-conditional metrics.
     include_nonconditional_metrics = [
@@ -85,13 +86,12 @@ def test_executing_deterministic_metrics(tmpdir, spark_session):
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
     assert metrics_df.columns.size == 6
-    # ev.spark.stop()
 
-
-def test_executing_signatures(tmpdir, spark_session):
+@pytest.mark.read_only_warehouse
+def test_executing_signatures(read_only_test_warehouse):
     """Test get_metrics method."""
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = read_only_test_warehouse
 
     # Test all the metrics.
     include_all_metrics = [
@@ -110,13 +110,12 @@ def test_executing_signatures(tmpdir, spark_session):
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 3
     assert metrics_df.columns.size == 9
-    # ev.spark.stop()
 
-
-def test_metrics_filter_and_geometry(tmpdir, spark_session):
+@pytest.mark.read_only_warehouse
+def test_metrics_filter_and_geometry(read_only_test_warehouse):
     """Test get_metrics method with filter and geometry."""
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = read_only_test_warehouse
 
     # Define some metrics.
     kge = DeterministicMetrics.KlingGuptaEfficiency()
@@ -149,13 +148,12 @@ def test_metrics_filter_and_geometry(tmpdir, spark_session):
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 6
 
-    # ev.spark.stop()
 
-
-def test_metric_chaining(tmpdir, spark_session):
+@pytest.mark.read_only_warehouse
+def test_metric_chaining(read_only_test_warehouse):
     """Test get_metrics method with chaining."""
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = read_only_test_warehouse
 
     # Test chaining.
     metrics_df = ev.metrics.query(
@@ -182,14 +180,13 @@ def test_metric_chaining(tmpdir, spark_session):
     assert all(
         metrics_df.columns == ["primary_location_id", "primary_average"]
     )
-    # ev.spark.stop()
 
 
 @pytest.mark.skip(reason="Temporarily skipping")
-def test_ensemble_metrics(tmpdir, spark_session):
+def test_ensemble_metrics(read_only_test_warehouse):
     """Test get_metrics method with ensemble metrics."""
     # Define the evaluation object.
-    ev = setup_v0_5_ensemble_study(tmpdir)
+    ev = read_only_test_warehouse
 
     # Now, metrics.
     crps = ProbabilisticMetrics.CRPS()
@@ -232,13 +229,12 @@ def test_ensemble_metrics(tmpdir, spark_session):
     assert np.isnan(
         metrics_df.mean_brier_score_skill_score.values[2]
     )
-    # ev.spark.stop()
 
-
-def test_metrics_transforms(tmpdir, spark_session):
+@pytest.mark.read_only_warehouse
+def test_metrics_transforms(read_only_test_warehouse):
     """Test applying metric transforms (non-bootstrap)."""
     # Define the evaluation object.
-    test_eval = setup_v0_3_study(tmpdir, spark_session)
+    test_eval = read_only_test_warehouse
 
     # define metric requiring p,s
     kge = DeterministicMetrics.KlingGuptaEfficiency()
@@ -371,15 +367,14 @@ def test_metrics_transforms(tmpdir, spark_session):
     ).to_pandas()
     assert np.isfinite(metrics_df_e_test.r_squared.values).all()
     assert np.isfinite(metrics_df_e_test.pearson_correlation.values).all()
-    # test_eval.spark.stop()
 
-
-def test_adding_calculated_fields(tmpdir, spark_session):
+@pytest.mark.read_only_warehouse
+def test_adding_calculated_fields(read_only_test_warehouse):
     """Test adding calculated fields to metrics."""
     from teehr import RowLevelCalculatedFields as rcf
 
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = read_only_test_warehouse
     kge = DeterministicMetrics.KlingGuptaEfficiency()
     metrics_df_calc = (
         ev
@@ -396,12 +391,11 @@ def test_adding_calculated_fields(tmpdir, spark_session):
     assert isinstance(metrics_df_calc, pd.DataFrame)
     assert metrics_df_calc.index.size == 3
     assert "month" in metrics_df_calc.columns
-    # ev.spark.stop()
 
-
-def test_table_based_metrics(tmpdir, spark_session):
+@pytest.mark.read_only_warehouse
+def test_table_based_metrics(read_only_test_warehouse):
     """Test table-based metrics."""
-    ev = setup_v0_3_study(tmpdir, spark_session)
+    ev = read_only_test_warehouse
 
     kge = DeterministicMetrics.KlingGuptaEfficiency()
 
@@ -436,56 +430,3 @@ def test_table_based_metrics(tmpdir, spark_session):
     ).to_pandas()
 
     assert sigs_df.sort_index().equals(sigs_df2.sort_index())
-    # ev.spark.stop()
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_executing_deterministic_metrics(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_executing_signatures(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_metrics_filter_and_geometry(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        test_metric_chaining(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
-        test_ensemble_metrics(
-            tempfile.mkdtemp(
-                prefix="5-",
-                dir=tempdir
-            )
-        )
-        test_metrics_transforms(
-            tempfile.mkdtemp(
-                prefix="6-",
-                dir=tempdir)
-        )
-        test_adding_calculated_fields(
-            tempfile.mkdtemp(
-                 prefix="7-",
-                 dir=tempdir)
-        )
-        test_table_based_metrics(
-            tempfile.mkdtemp(
-                 prefix="8-",
-                 dir=tempdir
-            )
-        )
