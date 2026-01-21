@@ -4,7 +4,7 @@ from teehr import Configuration
 import geopandas as gpd
 import numpy as np
 import pytest
-
+import time
 
 TEST_DATA_DIR = Path("tests", "data", "test_warehouse_data")
 GEO_DIR_PATH = Path(TEST_DATA_DIR, "geo")
@@ -22,14 +22,16 @@ SECONDARY_TIMESERIES_FILEPATH = Path(
 @pytest.mark.read_write_evaluation_template
 def test_create_joined_timeseries(read_write_evaluation_template):
     """Test the validate_locations function."""
+    t0 = time.time()
     ev = read_write_evaluation_template
+    print("Evaluation setup time:", time.time() - t0)
 
-    # Enable logging
-    ev.enable_logging()
-
+    t0 = time.time()
     # Load the location data
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
+    print("Load locations time:", time.time() - t0)
 
+    t0 = time.time()
     ev.configurations.add(
         Configuration(
             name="usgs_observations",
@@ -37,7 +39,9 @@ def test_create_joined_timeseries(read_write_evaluation_template):
             description="test primary configuration"
         )
     )
+    print("Add configuration time:", time.time() - t0)
 
+    t0 = time.time()
     # Load the timeseries data and map over the fields and set constants
     ev.primary_timeseries.load_parquet(
         in_path=PRIMARY_TIMESERIES_FILEPATH,
@@ -56,12 +60,16 @@ def test_create_joined_timeseries(read_write_evaluation_template):
             "configuration_name": "usgs_observations"
         }
     )
+    print("Load primary timeseries time:", time.time() - t0)
 
+    t0 = time.time()
     # Load the crosswalk data
     ev.location_crosswalks.load_csv(
         in_path=CROSSWALK_FILEPATH
     )
+    print("Load location crosswalks time:", time.time() - t0)
 
+    t0 = time.time()
     ev.configurations.add(
         Configuration(
             name="nwm30_retrospective",
@@ -69,7 +77,9 @@ def test_create_joined_timeseries(read_write_evaluation_template):
             description="test secondary configuration"
         )
     )
+    print("Add secondary configuration time:", time.time() - t0)
 
+    t0 = time.time()
     # Load the secondary timeseries data and map over the fields
     #  and set constants
     ev.secondary_timeseries.load_parquet(
@@ -89,7 +99,9 @@ def test_create_joined_timeseries(read_write_evaluation_template):
             "configuration_name": "nwm30_retrospective"
         }
     )
+    print("Load secondary timeseries time:", time.time() - t0)
 
+    t0 = time.time()
     # Load the location attribute data
     ev.location_attributes.load_parquet(
         in_path=GEO_DIR_PATH,
@@ -97,7 +109,9 @@ def test_create_joined_timeseries(read_write_evaluation_template):
         pattern="test_attr_*.parquet",
         update_attrs_table=True
     )
+    print("Load location attributes time:", time.time() - t0)
 
+    t0 = time.time()
     # Create the joined timeseries with only specified attributes
     # include one invalid attribute 'tester' alongside valid attributes
     attr_list = ['drainage_area', 'ecoregion', 'tester']
@@ -106,6 +120,7 @@ def test_create_joined_timeseries(read_write_evaluation_template):
         execute_scripts=True,
         attr_list=attr_list
     )
+    print("Create joined timeseries time:", time.time() - t0)
 
     columns = ev.joined_timeseries.to_sdf().columns
     expected_columns = [
@@ -137,16 +152,12 @@ def test_create_joined_timeseries(read_write_evaluation_template):
     ])
     assert len(columns) == len(expected_columns)
     assert sorted(columns) == sorted(expected_columns)
-    # ev.spark.stop()
 
 
 @pytest.mark.read_write_evaluation_template
 def test_create_filtered_joined_timeseries(read_write_evaluation_template):
     """Test the validate_locations function."""
     ev = read_write_evaluation_template
-
-    # Enable logging
-    ev.enable_logging()
 
     # Load the location data
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
@@ -254,8 +265,6 @@ def test_create_filtered_joined_timeseries(read_write_evaluation_template):
 
     joined_df = ev.joined_timeseries.to_pandas()
     assert all(joined_df['secondary_location_id'].unique() == ['fcst-1'])
-
-    # ev.spark.stop()
 
 
 @pytest.mark.read_only_test_warehouse

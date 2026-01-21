@@ -38,7 +38,7 @@ def read_only_test_warehouse(tmp_path_factory, spark_shared_session):
     fixture if you need isolation (but it will be much slower).
     """
     # Extract pre-created warehouse and recreate Iceberg tables from data files
-    test_data_dir = Path.cwd() / "tests" / "data" / "v0_3_test_study"
+    test_data_dir = Path.cwd() / "tests" / "data"
     tar_file = test_data_dir / "local_warehouse_jdbc.tar.gz"
     temp_extract_dir = tmp_path_factory.mktemp("warehouse_session") / "temp_extract"
     shutil.unpack_archive(tar_file, temp_extract_dir)

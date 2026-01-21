@@ -114,7 +114,7 @@ def test_generate_timeseries_normals(read_write_evaluation_template):
 def test_generate_reference_forecast(read_write_evaluation_template):
     """Test the reference forecast calculation."""
     ev = read_write_evaluation_template
-    ev.clone_template()
+
     ev.locations.load_spatial(
         in_path=Path(
             TEST_STUDY_DATA_DIR,
