@@ -240,7 +240,7 @@ def test_gumboot_bootstrapping(tmpdir, spark_session):
     joined_timeseries_filepath = Path(
         "tests",
         "data",
-        "test_study",
+        "test_warehouse_data",
         "timeseries",
         "flows_1030500.parquet"
     )
@@ -251,7 +251,7 @@ def test_gumboot_bootstrapping(tmpdir, spark_session):
         write_mode="create_or_replace"
     )
     # Write the staged locations data to the warehouse.
-    test_study_data_dir = Path("tests", "data", "v0_3_test_study")
+    test_study_data_dir = Path("tests", "data", "test_warehouse_data")
     sdf = ev.spark.read.parquet(
         Path(test_study_data_dir, "geo", "gages.parquet").as_posix()
     )

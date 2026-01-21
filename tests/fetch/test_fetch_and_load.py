@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 
 
-TEST_STUDY_DATA_DIR = Path("tests", "data", "test_study")
+TEST_STUDY_DATA_DIR = Path("tests", "data", "test_warehouse_data")
 GEO_GAGES_FILEPATH = Path(
     TEST_STUDY_DATA_DIR,
     "geo",

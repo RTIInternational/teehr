@@ -366,15 +366,15 @@ def test_validate_and_insert_mizu_nc_timeseries(read_write_evaluation_template):
 def test_validate_and_insert_fews_xml_timeseries(read_write_evaluation_template):
     """Test the validate_locations function."""
     usgs_location = Path(
-        TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_location.parquet"
+        TEST_STUDY_DATA_DIR, "geo", "USGS_PlatteRiver_location.parquet"
     )
     secondary_filepath = Path(
-        TEST_STUDY_DATA_DIR_v0_4,
+        TEST_STUDY_DATA_DIR,
         "timeseries",
         "MEFP.MBRFC.DNVC2LOCAL.SQIN.xml"
     )
     primary_filepath = Path(
-        TEST_STUDY_DATA_DIR_v0_4,
+        TEST_STUDY_DATA_DIR,
         "timeseries",
         "usgs_hefs_06711565.parquet"
     )
@@ -386,7 +386,7 @@ def test_validate_and_insert_fews_xml_timeseries(read_write_evaluation_template)
     )
     ev.location_crosswalks.load_csv(
         in_path=Path(
-            TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv"
+            TEST_STUDY_DATA_DIR, "geo", "hefs_usgs_crosswalk.csv"
         )
     )
     ev.configurations.add(

@@ -4,23 +4,23 @@ from teehr.evaluation.evaluation import Evaluation
 from teehr import SignatureTimeseriesGenerators as sts
 from teehr import BenchmarkForecastGenerators as bm
 
-TEST_STUDY_DATA_DIR_v0_4 = Path(Path.cwd(), "tests", "data", "test_study")
+TEST_STUDY_DATA_DIR = Path(Path.cwd(), "tests", "data", "test_warehouse_data")
 
 
 def setup_v0_4_ensemble_study(tmpdir, spark_session):
     """Create a test evaluation with ensemble forecasts using teehr."""
     usgs_location = Path(
-            TEST_STUDY_DATA_DIR_v0_4, "geo", "USGS_PlatteRiver_location.parquet"
+            TEST_STUDY_DATA_DIR, "geo", "USGS_PlatteRiver_location.parquet"
         )
 
     secondary_filename = "MEFP.MBRFC.DNVC2LOCAL.SQIN.xml"
     secondary_filepath = Path(
-        TEST_STUDY_DATA_DIR_v0_4,
+        TEST_STUDY_DATA_DIR,
         "timeseries",
         secondary_filename
     )
     primary_filepath = Path(
-        TEST_STUDY_DATA_DIR_v0_4,
+        TEST_STUDY_DATA_DIR,
         "timeseries",
         "usgs_hefs_06711565.parquet"
     )
@@ -38,7 +38,7 @@ def setup_v0_4_ensemble_study(tmpdir, spark_session):
     )
     ev.location_crosswalks.load_csv(
         in_path=Path(
-            TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv"
+            TEST_STUDY_DATA_DIR, "geo", "hefs_usgs_crosswalk.csv"
         )
     )
     ev.configurations.add(
