@@ -1,4 +1,5 @@
 """Tests for the TEEHR UDFs."""
+import pytest
 from teehr.examples.setup_e0_2_example import download_e0_2_example
 
 import tempfile
@@ -16,7 +17,6 @@ from datetime import timedelta
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from data.setup_v0_3_study import setup_v0_3_study  # noqa
 from data.setup_v0_4_ensemble_study import setup_v0_4_ensemble_study  # noqa
 
 
@@ -37,9 +37,10 @@ def test_add_row_udfs_null_reference(evaluation_v0_3):
     ).write(table_name="metrics", write_mode="create_or_replace")
 
 
-def test_add_row_udfs(evaluation_v0_3):
+@pytest.mark.read_only_test_warehouse
+def test_add_row_udfs(read_only_test_warehouse):
     """Test adding row level UDFs."""
-    ev = evaluation_v0_3
+    ev = read_only_test_warehouse
     sdf = ev.joined_timeseries.to_sdf()
 
     sdf = rcf.Month().apply_to(sdf)

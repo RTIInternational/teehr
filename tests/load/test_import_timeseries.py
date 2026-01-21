@@ -16,7 +16,7 @@ import geopandas as gpd
 import time
 
 
-TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
+TEST_STUDY_DATA_DIR = Path("tests", "data", "test_warehouse_data")
 GEOJSON_GAGES_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "gages.geojson")
 PRIMARY_TIMESERIES_FILEPATH = Path(
     TEST_STUDY_DATA_DIR, "timeseries", "test_short_obs.parquet"
@@ -28,18 +28,17 @@ CROSSWALK_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "crosswalk.csv")
 SECONDARY_TIMESERIES_FILEPATH = Path(
     TEST_STUDY_DATA_DIR, "timeseries", "test_short_fcast.parquet"
 )
-TEST_STUDY_DATA_DIR_v0_4 = Path("tests", "data", "test_study")
 SUMMA_TIMESERIES_FILEPATH_NC = Path(
-    TEST_STUDY_DATA_DIR_v0_4, "timeseries", "summa.example.nc"
+    TEST_STUDY_DATA_DIR, "timeseries", "summa.example.nc"
 )
 SUMMA_LOCATIONS = Path(
-    TEST_STUDY_DATA_DIR_v0_4, "geo", "summa_locations.parquet"
+    TEST_STUDY_DATA_DIR, "geo", "summa_locations.parquet"
 )
 MIZU_TIMESERIES_FILEPATH_NC = Path(
-    TEST_STUDY_DATA_DIR_v0_4, "timeseries", "mizuroute.example.nc"
+    TEST_STUDY_DATA_DIR, "timeseries", "mizuroute.example.nc"
 )
 MIZU_LOCATIONS = Path(
-    TEST_STUDY_DATA_DIR_v0_4, "geo", "mizu_locations.parquet"
+    TEST_STUDY_DATA_DIR, "geo", "mizu_locations.parquet"
 )
 
 

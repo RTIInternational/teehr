@@ -10,12 +10,12 @@ from teehr.models.pydantic_table_models import (
 )
 
 
-TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
+TEST_STUDY_DATA_DIR = Path("tests", "data", "test_warehouse_data")
 GEOJSON_GAGES_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "gages.geojson")
 LOCATION_ATTRIBUTES_FILEPATH = Path(
     TEST_STUDY_DATA_DIR, "geo", "test_attr_2yr_discharge.csv"
 )
-GEO_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo")
+GEO_DIR_PATH = Path(TEST_STUDY_DATA_DIR, "geo")
 
 
 def test_convert_location_attributes():
@@ -58,7 +58,7 @@ def test_validate_and_insert_location_attributes(read_write_evaluation_template)
         ]
     )
     ev.location_attributes.load_parquet(
-        in_path=GEO_FILEPATH,
+        in_path=GEO_DIR_PATH,
         field_mapping={"attribute_value": "value"},
         pattern="test_attr_*.parquet",
         location_id_prefix="usgs",

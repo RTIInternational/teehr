@@ -1,5 +1,4 @@
 """Defines pytest fixtures for all tests."""
-import time
 import pytest
 import shutil
 from pathlib import Path
@@ -23,24 +22,6 @@ def spark_shared_session():
     spark = create_spark_session()
     yield spark
     spark.stop()
-
-
-# @pytest.fixture(scope="function")
-# def spark_session(spark_shared_session):
-#     """Function-level fixture providing Spark session with config updates.
-
-#     Returns a factory function that:
-#     1. Updates config on the shared Spark session
-#     2. Returns the shared session
-
-#     Note: Since SparkSession uses singleton pattern (getOrCreate()),
-#     config changes persist across tests. Use spark_session_isolated
-#     if you need true isolation between tests.
-#     """
-#     def _update_spark_session_config(key, value):
-#         spark_shared_session.conf.set(key, value)
-#         return spark_shared_session
-#     return _update_spark_session_config
 
 
 @pytest.fixture(scope="session")

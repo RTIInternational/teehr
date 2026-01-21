@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 
-TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
+TEST_STUDY_DATA_DIR = Path("tests", "data", "test_warehouse_data")
 GEOJSON_GAGES_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "gages.geojson")
 GEOJSON_NP_GAGES_FILEPATH = Path(
     TEST_STUDY_DATA_DIR, "geo", "gages_no_prefix.geojson"

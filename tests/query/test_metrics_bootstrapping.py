@@ -15,25 +15,21 @@ from teehr.evaluation.evaluation import Evaluation
 from teehr.evaluation.spark_session_utils import create_spark_session
 
 
-TEST_STUDY_DATA_DIR_v0_4 = Path("tests", "data", "test_study")
-
-
 BOOT_YEAR_FILE = Path(
     "tests",
     "data",
-    "test_study",
+    "test_warehouse_data",
     "bootstrap",
     "boot_year_file_R.csv"
 )
 R_BENCHMARK_RESULTS = Path(
     "tests",
     "data",
-    "test_study",
+    "test_warehouse_data",
     "bootstrap",
     "r_benchmark_results.csv"
 )
 
-SPARK_SESSION = create_spark_session()
 
 @pytest.mark.read_only_test_warehouse
 def test_bootstrapping_signatures(read_only_test_warehouse):
@@ -62,6 +58,7 @@ def test_bootstrapping_signatures(read_only_test_warehouse):
     assert sig_metrics_df.index.size == 3
     assert sig_metrics_df.columns.size == 4
     assert np.isclose(sig_metrics_df["flow_duration_curve_slope_0.5"].sum(), -172.21364)
+
 
 @pytest.mark.read_only_test_warehouse
 def test_unpacking_bootstrap_results(read_only_test_warehouse):
@@ -101,6 +98,7 @@ def test_unpacking_bootstrap_results(read_only_test_warehouse):
     ]
 
     assert (cols == benchmark_cols).all()
+
 
 @pytest.mark.read_only_test_warehouse
 def test_circularblock_bootstrapping(read_only_test_warehouse):
@@ -166,6 +164,7 @@ def test_circularblock_bootstrapping(read_only_test_warehouse):
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 2
 
+
 @pytest.mark.read_only_test_warehouse
 def test_stationary_bootstrapping(read_only_test_warehouse):
     """Test get_metrics method stationary bootstrapping."""
@@ -228,6 +227,7 @@ def test_stationary_bootstrapping(read_only_test_warehouse):
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 2
+
 
 @pytest.mark.skip("This is a write operation")
 def test_gumboot_bootstrapping(tmpdir, spark_session):
@@ -331,6 +331,7 @@ def test_gumboot_bootstrapping(tmpdir, spark_session):
     r_kge_vals = np.sort(r_df.KGE.values)
     assert np.allclose(teehr_results, r_kge_vals, rtol=1e-06)
 
+
 @pytest.mark.read_only_test_warehouse
 def test_bootstrapping_transforms(read_only_test_warehouse):
     """Test applying metric transforms (bootstrap)."""
@@ -394,6 +395,7 @@ def test_bootstrapping_transforms(read_only_test_warehouse):
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 2
+
 
 @pytest.mark.read_only_test_warehouse
 def test_bootstrapping_fdc_slope_signature(read_only_test_warehouse):

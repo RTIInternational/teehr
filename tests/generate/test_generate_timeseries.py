@@ -8,7 +8,7 @@ from teehr import SignatureTimeseriesGenerators as sts
 from teehr import BenchmarkForecastGenerators as bm
 
 
-TEST_STUDY_DATA_DIR_v0_4 = Path("tests", "data", "test_study")
+TEST_STUDY_DATA_DIR = Path("tests", "data", "test_warehouse_data")
 
 
 @pytest.mark.read_write_evaluation_template
@@ -17,7 +17,7 @@ def test_generate_timeseries_normals(read_write_evaluation_template):
     ev = read_write_evaluation_template
 
     usgs_location = Path(
-        TEST_STUDY_DATA_DIR_v0_4,
+        TEST_STUDY_DATA_DIR,
         "geo",
         "USGS_PlatteRiver_FakeNWM_locations.parquet"
     )
@@ -44,14 +44,14 @@ def test_generate_timeseries_normals(read_write_evaluation_template):
     )
     ev.primary_timeseries.load_parquet(
         in_path=Path(
-            TEST_STUDY_DATA_DIR_v0_4,
+            TEST_STUDY_DATA_DIR,
             "timeseries",
             "usgs_hefs_06711565_2yrs.parquet"
         )
     )
     ev.primary_timeseries.load_parquet(
         in_path=Path(
-            TEST_STUDY_DATA_DIR_v0_4,
+            TEST_STUDY_DATA_DIR,
             "timeseries",
             "synthetic_nwm_forcing_obs_2yrs.parquet"
         )
@@ -117,14 +117,14 @@ def test_generate_reference_forecast(read_write_evaluation_template):
     ev.clone_template()
     ev.locations.load_spatial(
         in_path=Path(
-            TEST_STUDY_DATA_DIR_v0_4,
+            TEST_STUDY_DATA_DIR,
             "geo",
             "USGS_PlatteRiver_location.parquet"
         )
     )
     ev.location_crosswalks.load_csv(
         in_path=Path(
-            TEST_STUDY_DATA_DIR_v0_4, "geo", "hefs_usgs_crosswalk.csv"
+            TEST_STUDY_DATA_DIR, "geo", "hefs_usgs_crosswalk.csv"
         )
     )
     # Add USGS observations from test file.
@@ -145,7 +145,7 @@ def test_generate_reference_forecast(read_write_evaluation_template):
     )
     ev.primary_timeseries.load_parquet(
         in_path=Path(
-            TEST_STUDY_DATA_DIR_v0_4,
+            TEST_STUDY_DATA_DIR,
             "timeseries",
             "usgs_hefs_06711565_2yr_climatology.parquet"
         ),
@@ -165,7 +165,7 @@ def test_generate_reference_forecast(read_write_evaluation_template):
     }
     ev.secondary_timeseries.load_fews_xml(
         in_path=Path(
-            TEST_STUDY_DATA_DIR_v0_4,
+            TEST_STUDY_DATA_DIR,
             "timeseries",
             "MEFP.MBRFC.DNVC2LOCAL.SQIN.xml"
         ),

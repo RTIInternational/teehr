@@ -5,8 +5,6 @@ import pytest
 from teehr.models.pydantic_table_models import (
     Attribute
 )
-from teehr.evaluation.spark_session_utils import create_spark_session
-SPARK_SESSION = create_spark_session()
 
 
 @pytest.mark.read_write_evaluation_template
