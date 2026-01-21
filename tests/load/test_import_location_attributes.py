@@ -3,8 +3,8 @@ from teehr.loading.location_attributes import (
     convert_single_location_attributes
 )
 from pathlib import Path
-from teehr import Evaluation
-import tempfile
+import pytest
+
 from teehr.models.pydantic_table_models import (
     Attribute,
 )
@@ -18,7 +18,7 @@ LOCATION_ATTRIBUTES_FILEPATH = Path(
 GEO_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo")
 
 
-def test_convert_location_attributes(tmpdir):
+def test_convert_location_attributes():
     """Test conversion of single location_attributes file."""
     df = convert_single_location_attributes(
         in_filepath=LOCATION_ATTRIBUTES_FILEPATH,
@@ -27,10 +27,10 @@ def test_convert_location_attributes(tmpdir):
     assert df.index.size == 3
 
 
-def test_validate_and_insert_location_attributes(tmpdir):
+@pytest.mark.read_write_evaluation_template
+def test_validate_and_insert_location_attributes(read_write_evaluation_template):
     """Test the validate location_attributes function."""
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
-    ev.clone_template()
+    ev = read_write_evaluation_template
 
     ev.enable_logging()
 
@@ -63,22 +63,3 @@ def test_validate_and_insert_location_attributes(tmpdir):
         pattern="test_attr_*.parquet",
         location_id_prefix="usgs",
     )
-    # ev.spark.stop()
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_convert_location_attributes(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_validate_and_insert_location_attributes(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )

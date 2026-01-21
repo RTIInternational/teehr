@@ -3,8 +3,7 @@ from teehr.loading.location_crosswalks import (
     convert_single_location_crosswalks
 )
 from pathlib import Path
-from teehr import Evaluation
-import tempfile
+import pytest
 
 
 TEST_STUDY_DATA_DIR = Path("tests", "data", "v0_3_test_study")
@@ -15,7 +14,7 @@ CROSSWALK_FILEPATH_NC = Path(
 )
 
 
-def test_convert_location_crosswalk(tmpdir):
+def test_convert_location_crosswalk():
     """Test the import_locations function on geojson."""
     df = convert_single_location_crosswalks(
         in_filepath=CROSSWALK_FILEPATH,
@@ -24,11 +23,10 @@ def test_convert_location_crosswalk(tmpdir):
     assert df.index.size == 3
 
 
-def test_validate_and_insert_crosswalks(tmpdir):
+@pytest.mark.read_write_evaluation_template
+def test_validate_and_insert_crosswalks(read_write_evaluation_template):
     """Test the validate crosswalks function."""
-    tmpdir = Path(tmpdir)
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
-    ev.clone_template()
+    ev = read_write_evaluation_template
 
     ev.locations.load_spatial(
         in_path=GEOJSON_GAGES_FILEPATH,
@@ -54,10 +52,9 @@ def test_validate_and_insert_crosswalks(tmpdir):
     ]
 
     assert True
-    # ev.spark.stop()
 
 
-def test_convert_location_crosswalk_netcdf(tmpdir):
+def test_convert_location_crosswalk_netcdf():
     """Test the import_locations function on netcdf."""
     field_mapping = {
         "link": "secondary_location_id",
@@ -69,27 +66,3 @@ def test_convert_location_crosswalk_netcdf(tmpdir):
         field_mapping=field_mapping,
     )
     assert df.index.size == 100
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_convert_location_crosswalk(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_validate_and_insert_crosswalks(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_convert_location_crosswalk_netcdf(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )

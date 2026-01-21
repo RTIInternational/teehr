@@ -1,15 +1,13 @@
 """Test the Writer class."""
-import tempfile
 
 from pyspark.sql.types import StructType, StructField, StringType
+import pytest
 
-from teehr import Evaluation
 
-
-def test_table_writes(tmpdir):
+@pytest.mark.read_write_evaluation_template
+def test_table_writes(read_write_evaluation_template):
     """Test creating a new study."""
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
-    ev.clone_template()
+    ev = read_write_evaluation_template
 
     schema = StructType([
         StructField("name", StringType(), True),
@@ -31,17 +29,3 @@ def test_table_writes(tmpdir):
         table_name="units",
         write_mode="append",
     )
-
-    ev.spark.stop()
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_table_writes(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )

@@ -4,7 +4,6 @@ This module tests the filter functions on primary_timeseries. It
 should apply to all tables.
 """
 from datetime import timedelta
-import tempfile
 import pytest
 from teehr import RowLevelCalculatedFields as rcf
 from teehr.models.filters import (
@@ -13,26 +12,24 @@ from teehr.models.filters import (
     FilterOperators,
 )
 
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from data.setup_v0_3_study import setup_v0_3_study  # noqa
 
-@pytest.mark.read_only_warehouse
+@pytest.mark.read_only_test_warehouse
 def test_chain_filter_single_str(read_only_test_warehouse):
     """Test filter string."""
     ev = read_only_test_warehouse
     df = ev.primary_timeseries.filter("location_id = 'gage-A'").to_pandas()
     assert len(df) == 26
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_chain_filter_single_str2(read_only_test_warehouse):
     """Test filter string with invalid id."""
     ev = read_only_test_warehouse
     with pytest.raises(Exception):
         ev.primary_timeseries.filter("id = 'gage-A'").to_pandas()
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_chain_filter_single_dict(read_only_test_warehouse):
     """Test filter dict."""
     ev = read_only_test_warehouse
@@ -43,7 +40,8 @@ def test_chain_filter_single_dict(read_only_test_warehouse):
     }).to_pandas()
     assert len(df) == 26
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_chain_filter_single_dict2(read_only_test_warehouse):
     """Test filter dict with invalid id."""
     ev = read_only_test_warehouse
@@ -54,7 +52,8 @@ def test_chain_filter_single_dict2(read_only_test_warehouse):
             "value": "gage-A"
         }).to_pandas()
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_chain_filter_single_model(read_only_test_warehouse):
     """Test filter model."""
     ev = read_only_test_warehouse
@@ -68,7 +67,8 @@ def test_chain_filter_single_model(read_only_test_warehouse):
     ).to_pandas()
     assert len(df) == 26
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_chain_filter_single_model2(read_only_test_warehouse):
     """Test filter model."""
     ev = read_only_test_warehouse
@@ -82,7 +82,8 @@ def test_chain_filter_single_model2(read_only_test_warehouse):
             )
         ).to_pandas()
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_chain_filter_list_str(read_only_test_warehouse):
     """Test filter list of strings."""
     ev = read_only_test_warehouse
@@ -92,7 +93,8 @@ def test_chain_filter_list_str(read_only_test_warehouse):
     ]).to_pandas()
     assert len(df) == 13
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_chain_filter_list_dict(read_only_test_warehouse):
     """Test filter list of dicts."""
     ev = read_only_test_warehouse
@@ -110,7 +112,8 @@ def test_chain_filter_list_dict(read_only_test_warehouse):
     ]).to_pandas()
     assert len(df) == 13
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_chain_filter_list_model(read_only_test_warehouse):
     """Test filter list of models."""
     ev = read_only_test_warehouse
@@ -129,7 +132,8 @@ def test_chain_filter_list_model(read_only_test_warehouse):
     ]).to_pandas()
     assert len(df) == 13
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_query_single_str(read_only_test_warehouse):
     """Test query string."""
     ev = read_only_test_warehouse
@@ -138,7 +142,8 @@ def test_query_single_str(read_only_test_warehouse):
     ).to_pandas()
     assert len(df) == 26
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_query_single_dict(read_only_test_warehouse):
     """Test query dict."""
     ev = read_only_test_warehouse
@@ -151,7 +156,8 @@ def test_query_single_dict(read_only_test_warehouse):
     ).to_pandas()
     assert len(df) == 26
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_query_single_model(read_only_test_warehouse):
     """Test query model."""
     ev = read_only_test_warehouse
@@ -165,7 +171,8 @@ def test_query_single_model(read_only_test_warehouse):
     ).to_pandas()
     assert len(df) == 26
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_query_list_str(read_only_test_warehouse):
     """Test query list of strings."""
     ev = read_only_test_warehouse
@@ -177,7 +184,8 @@ def test_query_list_str(read_only_test_warehouse):
     ).to_pandas()
     assert len(df) == 13
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_query_list_dict(read_only_test_warehouse):
     """Test query list of dicts."""
     ev = read_only_test_warehouse
@@ -197,7 +205,8 @@ def test_query_list_dict(read_only_test_warehouse):
     ).to_pandas()
     assert len(df) == 13
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_query_list_model(read_only_test_warehouse):
     """Test query list of models."""
     ev = read_only_test_warehouse
@@ -218,7 +227,8 @@ def test_query_list_model(read_only_test_warehouse):
     ).to_pandas()
     assert len(df) == 13
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_filter_by_lead_time(read_only_test_warehouse):
     """Test filter by lead time."""
     ev = read_only_test_warehouse

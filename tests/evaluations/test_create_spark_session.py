@@ -33,7 +33,3 @@ def test_create_spark_session():
     assert "com.example:my-package:1.0.0" in updated_packages
 
     spark.stop()
-
-
-if __name__ == "__main__":
-    test_create_spark_session()

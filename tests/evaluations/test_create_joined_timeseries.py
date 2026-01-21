@@ -1,17 +1,9 @@
 """Test the import_timeseries function in the Evaluation class."""
 from pathlib import Path
-from teehr import Evaluation, Configuration
-import tempfile
+from teehr import Configuration
 import geopandas as gpd
 import numpy as np
 import pytest
-
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from data.setup_v0_3_study import setup_v0_3_study  # noqa
-
-from teehr.evaluation.spark_session_utils import create_spark_session
-SPARK_SESSION = create_spark_session()
 
 
 TEST_DATA_DIR = Path("tests", "data", "v0_3_test_study")
@@ -25,14 +17,11 @@ SECONDARY_TIMESERIES_FILEPATH = Path(
 )
 GEO_FILEPATH = Path(TEST_DATA_DIR, "geo")
 
-@pytest.mark.evaluation_template
-def test_create_joined_timeseries(isolated_evaluation):
-    """Test the validate_locations function."""
-    # spark = isolated_evaluation.spark.newSession()
-    ev = isolated_evaluation
 
-    # Clone the template
-    # ev.clone_template()
+@pytest.mark.read_write_evaluation_template
+def test_create_joined_timeseries(read_write_evaluation_template):
+    """Test the validate_locations function."""
+    ev = read_write_evaluation_template
 
     # Enable logging
     ev.enable_logging()
@@ -150,13 +139,10 @@ def test_create_joined_timeseries(isolated_evaluation):
     # ev.spark.stop()
 
 
-def test_create_filtered_joined_timeseries(tmpdir, spark_session):
+@pytest.mark.read_write_evaluation_template
+def test_create_filtered_joined_timeseries(read_write_evaluation_template):
     """Test the validate_locations function."""
-    spark = spark_session.newSession()
-    ev = Evaluation(dir_path=tmpdir, spark=spark, create_dir=True)
-
-    # Clone the template
-    ev.clone_template()
+    ev = read_write_evaluation_template
 
     # Enable logging
     ev.enable_logging()
@@ -271,9 +257,10 @@ def test_create_filtered_joined_timeseries(tmpdir, spark_session):
     # ev.spark.stop()
 
 
-def test_distinct_values(evaluation_v0_3):
+@pytest.mark.read_only_test_warehouse
+def test_distinct_values(read_only_test_warehouse):
     """Test base_table.distinct_values() using joined_timeseries."""
-    ev = evaluation_v0_3
+    ev = read_only_test_warehouse
 
     # test primary_timeseries with location_prefixes==False (valid)
     distinct_vals = ev.primary_timeseries.distinct_values(column='location_id')
@@ -361,31 +348,3 @@ def test_distinct_values(evaluation_v0_3):
     # test invalid column handling for location_prefixes==False
     with pytest.raises(ValueError):
         prefixes = ev.joined_timeseries.distinct_values(column='test')
-    # ev.spark.stop()
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_create_joined_timeseries(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            ),
-            SPARK_SESSION
-        )
-        test_create_filtered_joined_timeseries(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            ),
-            SPARK_SESSION
-        )
-        test_distinct_values(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            ),
-            SPARK_SESSION
-        )

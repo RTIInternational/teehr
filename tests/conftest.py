@@ -1,4 +1,5 @@
 """Defines pytest fixtures for all tests."""
+import time
 import pytest
 import shutil
 from pathlib import Path
@@ -9,25 +10,8 @@ from pyspark.sql.functions import regexp_replace
 
 from teehr.evaluation.spark_session_utils import create_spark_session
 from teehr import Evaluation
+from teehr.utilities import apply_migrations
 
-
-# ==============================================================================
-# Spark Session Fixtures
-# ==============================================================================
-#
-# APPROACH: Shared session with per-test config updates
-# - One Spark session for entire test run (fast)
-# - Config updates per test (but changes persist - no true isolation)
-# - Session stopped once at the end of all tests
-#
-# TRADEOFFS:
-# + Much faster (session creation is expensive)
-# + Works well when tests don't conflict
-# - Config changes persist across tests
-# - Tests may affect each other if they modify shared state
-#
-# For TRUE isolation (slower), see spark_session_isolated below.
-# ==============================================================================
 
 @pytest.fixture(scope="session")
 def spark_shared_session():
@@ -243,260 +227,265 @@ def read_only_test_warehouse(tmp_path_factory, spark_shared_session):
     # The session is reused across all tests for performance
 
 
-@pytest.fixture(scope="function")
-def isolated_evaluation(spark_shared_session, tmpdir, request):
-    """Create an Evaluation with isolated namespace per test.
-
-    Each test gets:
-    - Shared Spark session (fast)
-    - Shared warehouse directory (fast)
-    - UNIQUE namespace (isolation)
-
-    Example:
-    - test_foo uses namespace: teehr_test_foo
-    - test_bar uses namespace: teehr_test_bar
-
-    Tests can write to their namespace without affecting other tests.
-    """
+@pytest.fixture(scope="session")
+def read_only_evaluation_template(spark_shared_session, tmp_path_factory):
+    """Session-level evaluation fixture with template cloned."""
+    base_dir = tmp_path_factory.getbasetemp()
     spark = spark_shared_session
-    warehouse_dir = Path(tmpdir) / "local"
-    warehouse_dir.mkdir(parents=True, exist_ok=True)
-
-    # Create unique namespace per test using test name
-    test_name = request.node.name.replace("[", "_").replace("]", "_")
-    # temp_dir_name = f"teehr_test_{test_name}"
-
-    # TODO: Create the jdbc connection or move the namespace create to below Evaluation?
-
-    # Create the namespace in Iceberg
-    # spark.conf.set("local_namespace_name", namespace)
-    # spark.sql(f"CREATE NAMESPACE IF NOT EXISTS local.{namespace}")
+    warehouse_dir = Path(base_dir) / "session-scoped-warehouse"
 
     # Create Evaluation with custom namespace
     ev = Evaluation(
-        dir_path=tmpdir / f"teehr_test_{test_name}",
+        dir_path=warehouse_dir,
         create_dir=True,
         spark=spark,
     )
-    # Create the namespace in Iceberg
-    # ev.spark.sql(f"CREATE NAMESPACE IF NOT EXISTS local.{namespace}")
-
-    # Override the namespace for this evaluation
-    # ev.local_catalog.namespace_name = namespace
-
     ev.clone_template()
 
     yield ev
 
-    # # Cleanup: Drop the namespace after test
-    # try:
-    #     spark.sql(f"DROP NAMESPACE IF EXISTS local.{namespace} CASCADE")
-    # except Exception as e:
-    #     print(f"Warning: Could not drop namespace {namespace}: {e}")
 
+@pytest.fixture(scope="function")
+def read_write_evaluation_template(read_only_evaluation_template, request):
+    """Function-level evaluation fixture with template cloned to a new namespace."""
+    ev = read_only_evaluation_template
+
+    # Create unique namespace per test using test name
+    test_name = request.node.name.replace("[", "_").replace("]", "_")
+    namespace = f"teehr_test_{test_name}"
+
+    # Create the namespace in Iceberg. Creates the namespace but not the directory yet.
+    ev.spark.sql(f"CREATE NAMESPACE IF NOT EXISTS local.{namespace}")
+
+    # Override the namespace for this evaluation
+    ev.local_catalog.namespace_name = namespace
+
+    # Set up the tables in the new namespace.
+    apply_migrations.evolve_catalog_schema(
+        spark=ev.spark,
+        migrations_dir_path=ev.dir_path / "local",
+        local_catalog_name="local",
+        local_namespace_name="teehr",
+        target_catalog_name="local",
+        target_namespace_name=namespace
+    )
+
+    yield ev
+
+    # Cleanup: Drop the namespace after test
+    try:
+        ev.spark.sql(f"DROP NAMESPACE IF EXISTS local.{namespace} CASCADE")
+    except Exception as e:
+        print(f"Warning: Could not drop namespace {namespace}: {e}")
+
+
+# ==============================================================================
+# ==============================================================================
+# ============================Below are unused==================================
+# ==============================================================================
 # ==============================================================================
 
 
-@pytest.fixture(scope="function")
-def evaluation_v0_3(tmpdir, spark_session, cached_test_warehouse_v0_3):
-    """Fast evaluation setup using cached warehouse data.
+# @pytest.fixture(scope="function")
+# def evaluation_v0_3(tmpdir, spark_session, cached_test_warehouse_v0_3):
+#     """Fast evaluation setup using cached warehouse data.
 
-    This fixture uses the session-scoped cached warehouse to avoid
-    repeated tar extraction. Each test gets its own isolated Evaluation
-    instance with a fresh database in its own tmpdir.
-    """
-    (Path(tmpdir) / "local").mkdir(parents=True, exist_ok=True)
+#     This fixture uses the session-scoped cached warehouse to avoid
+#     repeated tar extraction. Each test gets its own isolated Evaluation
+#     instance with a fresh database in its own tmpdir.
+#     """
+#     (Path(tmpdir) / "local").mkdir(parents=True, exist_ok=True)
 
-    spark = spark_session
+#     spark = spark_session
 
-    # Initialize Spark with new tmpdir location and db uri
-    spark.conf.set(
-        f"spark.sql.catalog.local.warehouse",
-        (Path(tmpdir) / "local").as_posix()
-    )
-    spark.conf.set(
-        f"spark.sql.catalog.local.uri",
-        f"jdbc:sqlite:{(Path(tmpdir) / 'local').as_posix()}/local_catalog.db"
-    )
-    # Create the database
-    spark.sql("CREATE DATABASE IF NOT EXISTS local.teehr")
+#     # Initialize Spark with new tmpdir location and db uri
+#     spark.conf.set(
+#         f"spark.sql.catalog.local.warehouse",
+#         (Path(tmpdir) / "local").as_posix()
+#     )
+#     spark.conf.set(
+#         f"spark.sql.catalog.local.uri",
+#         f"jdbc:sqlite:{(Path(tmpdir) / 'local').as_posix()}/local_catalog.db"
+#     )
+#     # Create the database
+#     spark.sql("CREATE DATABASE IF NOT EXISTS local.teehr")
 
-    tables_to_recreate = [
-        "primary_timeseries",
-        "secondary_timeseries",
-        "joined_timeseries",
-        "locations",
-        "location_attributes",
-        "location_crosswalks",
-        "units",
-        "variables",
-        "attributes",
-        "configurations"
-    ]
+#     tables_to_recreate = [
+#         "primary_timeseries",
+#         "secondary_timeseries",
+#         "joined_timeseries",
+#         "locations",
+#         "location_attributes",
+#         "location_crosswalks",
+#         "units",
+#         "variables",
+#         "attributes",
+#         "configurations"
+#     ]
 
-    # Recreate tables from cached warehouse (no tar extraction!)
-    for table_name in tables_to_recreate:
-        data_dir = cached_test_warehouse_v0_3 / "local" / "teehr" / table_name / "data"
-        if data_dir.exists():
-            df = spark.read.parquet(str(data_dir))
-            df.writeTo(f"local.teehr.{table_name}").using("iceberg").create()
+#     # Recreate tables from cached warehouse (no tar extraction!)
+#     for table_name in tables_to_recreate:
+#         data_dir = cached_test_warehouse_v0_3 / "local" / "teehr" / table_name / "data"
+#         if data_dir.exists():
+#             df = spark.read.parquet(str(data_dir))
+#             df.writeTo(f"local.teehr.{table_name}").using("iceberg").create()
 
-    ev = Evaluation(
-        Path(tmpdir),
-        create_dir=False,
-        spark=spark,
-        check_evaluation_version=False
-    )
+#     ev = Evaluation(
+#         Path(tmpdir),
+#         create_dir=False,
+#         spark=spark,
+#         check_evaluation_version=False
+#     )
 
-    yield ev
-
-
-@pytest.fixture(scope="module")
-def evaluation_v0_3_module(tmp_path_factory, spark_session, cached_test_warehouse_v0_3):
-    """Module-scoped evaluation for read-only tests.
-
-    Use this fixture when multiple tests in a module can safely share
-    the same evaluation data without modifying it. This provides even
-    better performance for read-only operations.
-    """
-    module_tmpdir = tmp_path_factory.mktemp("module_eval_v0_3")
-    (module_tmpdir / "local").mkdir(parents=True, exist_ok=True)
-
-    spark = spark_session
-    # Configure Iceberg catalog for this module's temporary directory
-    spark.conf.set("spark.sql.catalog.local", "org.apache.iceberg.spark.SparkCatalog")
-    spark.conf.set("spark.sql.catalog.local.type", "jdbc")
-    spark.conf.set("spark.sql.catalog.local.warehouse", (module_tmpdir / "local").as_posix())
-    spark.conf.set("spark.sql.catalog.local.uri", f"jdbc:sqlite:{(module_tmpdir / 'local').as_posix()}/local_catalog.db")
-    spark.conf.set("spark.sql.catalog.local.jdbc.driver", "org.sqlite.JDBC")
-    spark.conf.set("spark.sql.catalog.local.jdbc.initialize", "true")
-    spark.conf.set("spark.sql.catalog.local.jdbc.schema-version", "V1")
-
-    # Create database namespace before creating Evaluation
-    spark.sql("CREATE DATABASE IF NOT EXISTS local.teehr")
-
-    tables_to_recreate = [
-        "primary_timeseries",
-        "secondary_timeseries",
-        "joined_timeseries",
-        "locations",
-        "location_attributes",
-        "location_crosswalks",
-        "units",
-        "variables",
-        "attributes",
-        "configurations"
-    ]
-
-    for table_name in tables_to_recreate:
-        data_dir = cached_test_warehouse_v0_3 / "local" / "teehr" / table_name / "data"
-        if data_dir.exists():
-            df = spark.read.parquet(str(data_dir))
-            df.writeTo(f"local.teehr.{table_name}").using("iceberg").create()
-
-    ev = Evaluation(
-        module_tmpdir,
-        create_dir=False,
-        spark=spark,
-        check_evaluation_version=False
-    )
-
-    yield ev
+#     yield ev
 
 
-@pytest.fixture(scope="module")
-def cached_joined_timeseries_df(evaluation_v0_3_module):
-    """Cached joined timeseries DataFrame for read-only tests.
+# @pytest.fixture(scope="module")
+# def evaluation_v0_3_module(tmp_path_factory, spark_session, cached_test_warehouse_v0_3):
+#     """Module-scoped evaluation for read-only tests.
 
-    This fixture loads the joined_timeseries data once per module and
-    caches it in Spark memory. Use this for tests that only read data
-    and don't modify it. This can significantly speed up metric calculation
-    and query tests.
-    """
-    df = evaluation_v0_3_module.joined_timeseries.to_sdf()
-    df.cache()
-    yield df
-    df.unpersist()
+#     Use this fixture when multiple tests in a module can safely share
+#     the same evaluation data without modifying it. This provides even
+#     better performance for read-only operations.
+#     """
+#     module_tmpdir = tmp_path_factory.mktemp("module_eval_v0_3")
+#     (module_tmpdir / "local").mkdir(parents=True, exist_ok=True)
 
+#     spark = spark_session
+#     # Configure Iceberg catalog for this module's temporary directory
+#     spark.conf.set("spark.sql.catalog.local", "org.apache.iceberg.spark.SparkCatalog")
+#     spark.conf.set("spark.sql.catalog.local.type", "jdbc")
+#     spark.conf.set("spark.sql.catalog.local.warehouse", (module_tmpdir / "local").as_posix())
+#     spark.conf.set("spark.sql.catalog.local.uri", f"jdbc:sqlite:{(module_tmpdir / 'local').as_posix()}/local_catalog.db")
+#     spark.conf.set("spark.sql.catalog.local.jdbc.driver", "org.sqlite.JDBC")
+#     spark.conf.set("spark.sql.catalog.local.jdbc.initialize", "true")
+#     spark.conf.set("spark.sql.catalog.local.jdbc.schema-version", "V1")
 
-@pytest.fixture(scope="module")
-def cached_primary_timeseries_df(evaluation_v0_3_module):
-    """Cached primary timeseries DataFrame for read-only tests."""
-    df = evaluation_v0_3_module.primary_timeseries.to_sdf()
-    df.cache()
-    yield df
-    df.unpersist()
+#     # Create database namespace before creating Evaluation
+#     spark.sql("CREATE DATABASE IF NOT EXISTS local.teehr")
 
+#     tables_to_recreate = [
+#         "primary_timeseries",
+#         "secondary_timeseries",
+#         "joined_timeseries",
+#         "locations",
+#         "location_attributes",
+#         "location_crosswalks",
+#         "units",
+#         "variables",
+#         "attributes",
+#         "configurations"
+#     ]
 
-# ============== SIMPLE TEMPLATE-BASED FIXTURES ==============
+#     for table_name in tables_to_recreate:
+#         data_dir = cached_test_warehouse_v0_3 / "local" / "teehr" / table_name / "data"
+#         if data_dir.exists():
+#             df = spark.read.parquet(str(data_dir))
+#             df.writeTo(f"local.teehr.{table_name}").using("iceberg").create()
 
-@pytest.fixture(scope="function")
-def evaluation_with_template(tmpdir, spark_session):
-    """Lightweight evaluation with just template (domain tables).
+#     ev = Evaluation(
+#         module_tmpdir,
+#         create_dir=False,
+#         spark=spark,
+#         check_evaluation_version=False
+#     )
 
-    Use this fixture when you only need:
-    - Domain tables (units, variables, configurations, attributes)
-    - Empty timeseries and location tables
-    - A clean slate to load your own test data
-
-    This is ~10x faster than evaluation_v0_3 since it doesn't load
-    any parquet data from the cached warehouse.
-
-    Example:
-        def test_loading_custom_data(evaluation_with_template):
-            ev = evaluation_with_template
-            # Load only what you need for this specific test
-            ev.locations.load_spatial(...)
-    """
-    spark = spark_session
-
-    # Create the local directory for the warehouse
-    (Path(tmpdir) / "local").mkdir(parents=True, exist_ok=True)
-
-    ev = Evaluation(
-        Path(tmpdir),
-        create_dir=True,
-        spark=spark,
-        check_evaluation_version=False,
-    )
-    ev.clone_template()
-
-    yield ev
+#     yield ev
 
 
-@pytest.fixture(scope="module")
-def evaluation_with_template_module(tmp_path_factory, spark_session):
-    """Module-scoped evaluation with template for read-only tests.
+# @pytest.fixture(scope="module")
+# def cached_joined_timeseries_df(evaluation_v0_3_module):
+#     """Cached joined timeseries DataFrame for read-only tests.
 
-    Use this when multiple tests in a module only need the domain
-    tables and won't modify them. Tests run much faster by sharing
-    the same evaluation instance.
+#     This fixture loads the joined_timeseries data once per module and
+#     caches it in Spark memory. Use this for tests that only read data
+#     and don't modify it. This can significantly speed up metric calculation
+#     and query tests.
+#     """
+#     df = evaluation_v0_3_module.joined_timeseries.to_sdf()
+#     df.cache()
+#     yield df
+#     df.unpersist()
 
-    Example:
-        @pytest.mark.readonly
-        def test_domain_queries(evaluation_with_template_module):
-            ev = evaluation_with_template_module
-            units = ev.units.to_pandas()
-            assert "m^3/s" in units.name.values
-    """
-    module_tmpdir = tmp_path_factory.mktemp("module_template")
 
-    spark = spark_session
-    # Configure Iceberg catalog for this module's temporary directory
-    spark.conf.set("spark.sql.catalog.local", "org.apache.iceberg.spark.SparkCatalog")
-    spark.conf.set("spark.sql.catalog.local.type", "jdbc")
-    spark.conf.set("spark.sql.catalog.local.warehouse", (module_tmpdir / "local").as_posix())
-    spark.conf.set("spark.sql.catalog.local.uri", f"jdbc:sqlite:{(module_tmpdir / 'local').as_posix()}/local_catalog.db")
-    spark.conf.set("spark.sql.catalog.local.jdbc.driver", "org.sqlite.JDBC")
-    spark.conf.set("spark.sql.catalog.local.jdbc.initialize", "true")
-    spark.conf.set("spark.sql.catalog.local.jdbc.schema-version", "V1")
+# @pytest.fixture(scope="module")
+# def cached_primary_timeseries_df(evaluation_v0_3_module):
+#     """Cached primary timeseries DataFrame for read-only tests."""
+#     df = evaluation_v0_3_module.primary_timeseries.to_sdf()
+#     df.cache()
+#     yield df
+#     df.unpersist()
 
-    ev = Evaluation(
-        module_tmpdir,
-        create_dir=True,
-        spark=spark,
-        check_evaluation_version=False
-    )
-    ev.clone_template()
 
-    yield ev
+# # ============== SIMPLE TEMPLATE-BASED FIXTURES ==============
+
+# @pytest.fixture(scope="function")
+# def evaluation_with_template(tmpdir, spark_session):
+#     """Lightweight evaluation with just template (domain tables).
+
+#     Use this fixture when you only need:
+#     - Domain tables (units, variables, configurations, attributes)
+#     - Empty timeseries and location tables
+#     - A clean slate to load your own test data
+
+#     This is ~10x faster than evaluation_v0_3 since it doesn't load
+#     any parquet data from the cached warehouse.
+
+#     Example:
+#         def test_loading_custom_data(evaluation_with_template):
+#             ev = evaluation_with_template
+#             # Load only what you need for this specific test
+#             ev.locations.load_spatial(...)
+#     """
+#     spark = spark_session
+
+#     # Create the local directory for the warehouse
+#     (Path(tmpdir) / "local").mkdir(parents=True, exist_ok=True)
+
+#     ev = Evaluation(
+#         Path(tmpdir),
+#         create_dir=True,
+#         spark=spark,
+#         check_evaluation_version=False,
+#     )
+#     ev.clone_template()
+
+#     yield ev
+
+
+# @pytest.fixture(scope="module")
+# def evaluation_with_template_module(tmp_path_factory, spark_session):
+#     """Module-scoped evaluation with template for read-only tests.
+
+#     Use this when multiple tests in a module only need the domain
+#     tables and won't modify them. Tests run much faster by sharing
+#     the same evaluation instance.
+
+#     Example:
+#         @pytest.mark.readonly
+#         def test_domain_queries(evaluation_with_template_module):
+#             ev = evaluation_with_template_module
+#             units = ev.units.to_pandas()
+#             assert "m^3/s" in units.name.values
+#     """
+#     module_tmpdir = tmp_path_factory.mktemp("module_template")
+
+#     spark = spark_session
+#     # Configure Iceberg catalog for this module's temporary directory
+#     spark.conf.set("spark.sql.catalog.local", "org.apache.iceberg.spark.SparkCatalog")
+#     spark.conf.set("spark.sql.catalog.local.type", "jdbc")
+#     spark.conf.set("spark.sql.catalog.local.warehouse", (module_tmpdir / "local").as_posix())
+#     spark.conf.set("spark.sql.catalog.local.uri", f"jdbc:sqlite:{(module_tmpdir / 'local').as_posix()}/local_catalog.db")
+#     spark.conf.set("spark.sql.catalog.local.jdbc.driver", "org.sqlite.JDBC")
+#     spark.conf.set("spark.sql.catalog.local.jdbc.initialize", "true")
+#     spark.conf.set("spark.sql.catalog.local.jdbc.schema-version", "V1")
+
+#     ev = Evaluation(
+#         module_tmpdir,
+#         create_dir=True,
+#         spark=spark,
+#         check_evaluation_version=False
+#     )
+#     ev.clone_template()
+
+#     yield ev

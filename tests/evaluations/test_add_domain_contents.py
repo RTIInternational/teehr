@@ -5,15 +5,12 @@ from teehr.models.pydantic_table_models import (
     Variable,
     Attribute,
 )
-import tempfile
-from teehr import Evaluation
-from teehr.evaluation.spark_session_utils import create_spark_session
 import pytest
 
-@pytest.mark.evaluation_template
-def test_add_domains(isolated_evaluation):
+@pytest.mark.read_write_evaluation_template
+def test_add_domains(read_write_evaluation_template):
     """Test creating a new study."""
-    ev = isolated_evaluation
+    ev = read_write_evaluation_template
 
     new_tbl = ev.table(table_name="new_table")
 

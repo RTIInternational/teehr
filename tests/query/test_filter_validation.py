@@ -5,18 +5,11 @@ from teehr.models.filters import (
     FilterOperators
 )
 import pandas as pd
-# from teehr.models.pydantic_table_models import Timeseries
 from teehr.querying.filter_format import validate_filter
-
-import tempfile
 import pytest
 
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from data.setup_v0_3_study import setup_v0_3_study  # noqa
 
-@pytest.mark.read_only_warehouse
+@pytest.mark.read_only_test_warehouse
 def test_filter_string_passes(read_only_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
     ev = read_only_test_warehouse
@@ -30,7 +23,8 @@ def test_filter_string_passes(read_only_test_warehouse):
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == "foo"
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_filter_int_to_string_passes(read_only_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
     ev = read_only_test_warehouse
@@ -44,7 +38,8 @@ def test_filter_int_to_string_passes(read_only_test_warehouse):
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == "10"
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_filter_float_passes(read_only_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
     ev = read_only_test_warehouse
@@ -58,7 +53,8 @@ def test_filter_float_passes(read_only_test_warehouse):
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == 10.1
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_filter_int_to_float_passes(read_only_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
     ev = read_only_test_warehouse
@@ -72,7 +68,8 @@ def test_filter_int_to_float_passes(read_only_test_warehouse):
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == 10.0
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_filter_str_to_float_fails(read_only_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
     with pytest.raises(Exception):
@@ -86,7 +83,8 @@ def test_filter_str_to_float_fails(read_only_test_warehouse):
         dataframe_schema = ev.primary_timeseries._get_schema("pandas")
         filter = validate_filter(filter, dataframe_schema)
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_filter_datetime_passes(read_only_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
     ev = read_only_test_warehouse
@@ -100,7 +98,8 @@ def test_filter_datetime_passes(read_only_test_warehouse):
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == datetime(2021, 1, 1)
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_filter_datetime_passes2(read_only_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
     ev = read_only_test_warehouse
@@ -114,7 +113,8 @@ def test_filter_datetime_passes2(read_only_test_warehouse):
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == datetime(2021, 1, 1)
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_filter_datetime_passes3(read_only_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
     ev = read_only_test_warehouse
@@ -128,7 +128,8 @@ def test_filter_datetime_passes3(read_only_test_warehouse):
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == datetime(2021, 1, 1)
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_filter_datetime_passes4(read_only_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
     ev = read_only_test_warehouse
@@ -142,7 +143,8 @@ def test_filter_datetime_passes4(read_only_test_warehouse):
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == datetime(2021, 1, 1)
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_filter_datetime_passes5(read_only_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
     ev = read_only_test_warehouse
@@ -156,7 +158,8 @@ def test_filter_datetime_passes5(read_only_test_warehouse):
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == datetime(2021, 1, 1)
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_filter_datetime_fails(read_only_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
     with pytest.raises(Exception):
@@ -170,7 +173,8 @@ def test_filter_datetime_fails(read_only_test_warehouse):
         dataframe_schema = ev.primary_timeseries._get_schema("pandas")
         filter = validate_filter(filter, dataframe_schema)
 
-@pytest.mark.read_only_warehouse
+
+@pytest.mark.read_only_test_warehouse
 def test_filter_in_str_fails(read_only_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
     with pytest.raises(Exception):

@@ -1,16 +1,11 @@
 """Tests for Iceberg."""
-import tempfile
-
-from teehr import Evaluation
+import pytest
 
 
-def test_clone_template(tmpdir):
+@pytest.mark.read_only_evaluation_template
+def test_clone_template(read_only_evaluation_template):
     """Test creating a new study."""
-    ev = Evaluation(
-        dir_path=tmpdir,
-        create_dir=True,
-    )
-    ev.clone_template()
+    ev = read_only_evaluation_template
 
     assert ev.spark.sql("SELECT * FROM attributes").count() == 0
     assert ev.spark.sql("SELECT * FROM locations").count() == 0
@@ -21,17 +16,3 @@ def test_clone_template(tmpdir):
     assert ev.spark.sql("SELECT * FROM configurations").count() == 0
     assert ev.spark.sql("SELECT * FROM primary_timeseries").count() == 0
     assert ev.spark.sql("SELECT * FROM secondary_timeseries").count() == 0
-
-    ev.spark.stop()
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tmpdir:
-        test_clone_template(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tmpdir
-            )
-        )

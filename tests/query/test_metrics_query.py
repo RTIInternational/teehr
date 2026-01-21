@@ -1,7 +1,6 @@
 """Test evaluation class."""
 from teehr import DeterministicMetrics, ProbabilisticMetrics, Signatures
 from teehr import Operators as ops
-import tempfile
 import pandas as pd
 import geopandas as gpd
 from pathlib import Path
@@ -13,7 +12,6 @@ from teehr import TimeseriesAwareCalculatedFields as tcf
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from data.setup_v0_3_study import setup_v0_3_study  # noqa
 from data.setup_v0_5_ensemble_study import setup_v0_5_ensemble_study  # noqa
 
 
@@ -33,7 +31,7 @@ R_BENCHMARK_RESULTS = Path(
 )
 
 
-@pytest.mark.read_only_warehouse
+@pytest.mark.read_only_test_warehouse
 def test_executing_deterministic_metrics(read_only_test_warehouse):
     """Test get_metrics method."""
     # Define the evaluation object.
@@ -87,7 +85,7 @@ def test_executing_deterministic_metrics(read_only_test_warehouse):
     assert metrics_df.index.size == 3
     assert metrics_df.columns.size == 6
 
-@pytest.mark.read_only_warehouse
+@pytest.mark.read_only_test_warehouse
 def test_executing_signatures(read_only_test_warehouse):
     """Test get_metrics method."""
     # Define the evaluation object.
@@ -111,7 +109,7 @@ def test_executing_signatures(read_only_test_warehouse):
     assert metrics_df.index.size == 3
     assert metrics_df.columns.size == 9
 
-@pytest.mark.read_only_warehouse
+@pytest.mark.read_only_test_warehouse
 def test_metrics_filter_and_geometry(read_only_test_warehouse):
     """Test get_metrics method with filter and geometry."""
     # Define the evaluation object.
@@ -149,7 +147,7 @@ def test_metrics_filter_and_geometry(read_only_test_warehouse):
     assert metrics_df.columns.size == 6
 
 
-@pytest.mark.read_only_warehouse
+@pytest.mark.read_only_test_warehouse
 def test_metric_chaining(read_only_test_warehouse):
     """Test get_metrics method with chaining."""
     # Define the evaluation object.
@@ -230,7 +228,7 @@ def test_ensemble_metrics(read_only_test_warehouse):
         metrics_df.mean_brier_score_skill_score.values[2]
     )
 
-@pytest.mark.read_only_warehouse
+@pytest.mark.read_only_test_warehouse
 def test_metrics_transforms(read_only_test_warehouse):
     """Test applying metric transforms (non-bootstrap)."""
     # Define the evaluation object.
@@ -368,7 +366,7 @@ def test_metrics_transforms(read_only_test_warehouse):
     assert np.isfinite(metrics_df_e_test.r_squared.values).all()
     assert np.isfinite(metrics_df_e_test.pearson_correlation.values).all()
 
-@pytest.mark.read_only_warehouse
+@pytest.mark.read_only_test_warehouse
 def test_adding_calculated_fields(read_only_test_warehouse):
     """Test adding calculated fields to metrics."""
     from teehr import RowLevelCalculatedFields as rcf
@@ -392,7 +390,7 @@ def test_adding_calculated_fields(read_only_test_warehouse):
     assert metrics_df_calc.index.size == 3
     assert "month" in metrics_df_calc.columns
 
-@pytest.mark.read_only_warehouse
+@pytest.mark.read_only_test_warehouse
 def test_table_based_metrics(read_only_test_warehouse):
     """Test table-based metrics."""
     ev = read_only_test_warehouse

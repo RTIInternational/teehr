@@ -3,19 +3,14 @@
 This module tests the filter functions on primary_timeseries. It
 should apply to all tables.
 """
-import tempfile
 from teehr import Evaluation
 from teehr.evaluation.spark_session_utils import create_spark_session
 import pytest
 
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from data.setup_v0_3_study import setup_v0_3_study  # noqa
 
 SPARK_SESSION = create_spark_session(app_name="test_sql_query")
 
-@pytest.mark.read_only_warehouse_warehouse
+@pytest.mark.read_only_test_warehouse
 def test_sql_query(read_only_test_warehouse):
     """Test Evaluation sql query."""
     ev = read_only_test_warehouse
@@ -42,19 +37,10 @@ def test_sql_query(read_only_test_warehouse):
     ]
     assert sdf_cols == expected_cols
 
-@pytest.mark.skip("This is a write operation")
-def test_sql_query_on_empty_tables(tmpdir, spark_session):
+@pytest.mark.read_only_evaluation_template
+def test_sql_query_on_empty_tables(read_only_evaluation_template):
     """Test sql query on empty table."""
-    spark = spark_session.newSession()
-    ev = Evaluation(
-        dir_path=tmpdir,
-        spark=spark,
-        create_dir=True
-    )
-    # Enable logging
-    ev.enable_logging()
-    # Clone the template
-    ev.clone_template()
+    ev = read_only_evaluation_template
     sdf = ev.sql("""
         SELECT pt.*, u.*, c.* FROM primary_timeseries pt
         JOIN units u ON pt.unit_name = u.name
@@ -70,3 +56,8 @@ def test_sql_query_on_empty_tables(tmpdir, spark_session):
         SELECT * FROM secondary_timeseries;
     """, create_temp_views=["secondary_timeseries"])
     assert sdf.isEmpty()
+    # Drop temp views after test
+    ev.spark.catalog.dropTempView("primary_timeseries")
+    ev.spark.catalog.dropTempView("units")
+    ev.spark.catalog.dropTempView("configurations")
+    ev.spark.catalog.dropTempView("secondary_timeseries")

@@ -1,6 +1,7 @@
 """Testing utilities for generating synthetic time series data."""
 from pathlib import Path
-import tempfile
+
+import pytest
 
 import teehr
 from teehr import SignatureTimeseriesGenerators as sts
@@ -10,10 +11,11 @@ from teehr import BenchmarkForecastGenerators as bm
 TEST_STUDY_DATA_DIR_v0_4 = Path("tests", "data", "test_study")
 
 
-def test_generate_timeseries_normals(tmpdir):
+@pytest.mark.read_write_evaluation_template
+def test_generate_timeseries_normals(read_write_evaluation_template):
     """Generate synthetic time series data."""
-    ev = teehr.Evaluation(dir_path=tmpdir, create_dir=True)
-    ev.clone_template()
+    ev = read_write_evaluation_template
+
     usgs_location = Path(
         TEST_STUDY_DATA_DIR_v0_4,
         "geo",
@@ -106,12 +108,12 @@ def test_generate_timeseries_normals(tmpdir):
     assert clim_df[
         clim_df.day_of_year == 61
     ].value.values[0] == mean_prim_srs.loc[60]
-    ev.spark.stop()
 
 
-def test_generate_reference_forecast(tmpdir):
+@pytest.mark.read_write_evaluation_template
+def test_generate_reference_forecast(read_write_evaluation_template):
     """Test the reference forecast calculation."""
-    ev = teehr.Evaluation(dir_path=tmpdir, create_dir=True)
+    ev = read_write_evaluation_template
     ev.clone_template()
     ev.locations.load_spatial(
         in_path=Path(
@@ -217,23 +219,3 @@ def test_generate_reference_forecast(tmpdir):
             ref_fcst_df.value_time == vt
         ].value.values[0]
         assert usgs_clim_value == ref_fcst_value
-
-    ev.spark.stop()
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_generate_timeseries_normals(
-            tempfile.mkdtemp(
-                prefix="0-",
-                dir=tempdir
-            )
-        )
-        test_generate_reference_forecast(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )

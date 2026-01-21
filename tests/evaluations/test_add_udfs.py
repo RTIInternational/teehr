@@ -316,7 +316,7 @@ def test_forecast_lead_time_bins(tmpdir, spark_session):
         "reference_time",
         "value_time"
         )
-    assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() ==
+    assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 7
 
 
 def test_add_timeseries_udfs(tmpdir, spark_session):
