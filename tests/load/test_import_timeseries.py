@@ -84,6 +84,8 @@ def test_dropping_duplicates(read_write_evaluation_template):
             "location_id": "location_id"
         }
     )
+
+    # sdf = ev.primary_timeseries.to_sdf()
     df = ev.primary_timeseries.to_pandas()
     dups_df = pd.read_parquet(PRIMARY_TIMESERIES_DUPS_FILEPATH)
 
@@ -98,6 +100,7 @@ def test_dropping_duplicates(read_write_evaluation_template):
             "variable_name"
         ]
     ).index.size == 78
+    # assert sdf.count() == 78
     assert df.index.size == 78
     assert df.drop_duplicates(
         subset=ev.primary_timeseries.uniqueness_fields

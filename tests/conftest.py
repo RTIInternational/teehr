@@ -238,6 +238,16 @@ def read_write_evaluation_template(read_only_evaluation_template, request):
     # self.set_active_catalog("local")  # Creates the JDBC .db file
     # But then you'd have to re-register all the tables too...
 
+    # Clear any temp views from previous tests to ensure isolation
+    temp_views = ev.spark.sql("SHOW VIEWS").filter("isTemporary = true").collect()
+    for view in temp_views:
+        try:
+            ev.spark.catalog.dropTempView(view.viewName)
+        except Exception:
+            pass  # View may already be dropped
+    # Clear catalog cache before test
+    ev.spark.catalog.clearCache()
+
     # Create unique namespace per test using test name
     test_name = request.node.name.replace("[", "_").replace("]", "_")
     namespace = f"{int(time.time() / 1e5)}_{test_name}"
@@ -261,6 +271,9 @@ def read_write_evaluation_template(read_only_evaluation_template, request):
     # Clean up the catalog? Go back to original namespace and snapshot?
 
     yield ev
+    ev.spark.catalog.clearCache()  # not sure if necessary
+    # ev.spark.sparkContext.getPersistentRDDs().clear()
+
     # After the test reset the namespace name to teehr
     # ev.local_catalog.namespace_name = "teehr"
     # ev.spark.sql(f"DROP NAMESPACE IF EXISTS local.{namespace} CASCADE")
