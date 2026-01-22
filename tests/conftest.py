@@ -7,6 +7,7 @@ import glob
 import json
 import fastavro
 from pyspark.sql.functions import regexp_replace
+import time
 
 from teehr.evaluation.spark_session_utils import create_spark_session
 from teehr import Evaluation
@@ -232,9 +233,14 @@ def read_write_evaluation_template(read_only_evaluation_template, request):
     """Function-level evaluation fixture with template cloned to a new namespace."""
     ev = read_only_evaluation_template
 
+    # NOTE: Could I re-create the local_catalog.db entirely here instead
+    # or as well?
+    # self.set_active_catalog("local")  # Creates the JDBC .db file
+    # But then you'd have to re-register all the tables too...
+
     # Create unique namespace per test using test name
     test_name = request.node.name.replace("[", "_").replace("]", "_")
-    namespace = f"teehr_{test_name}"
+    namespace = f"{int(time.time() / 1e5)}_{test_name}"
 
     # Create the namespace in Iceberg. Creates the namespace but not the directory yet.
     ev.spark.sql(f"CREATE NAMESPACE IF NOT EXISTS local.{namespace}")
@@ -252,10 +258,15 @@ def read_write_evaluation_template(read_only_evaluation_template, request):
         target_namespace_name=namespace
     )
 
-    yield ev
+    # Clean up the catalog? Go back to original namespace and snapshot?
 
+    yield ev
+    # After the test reset the namespace name to teehr
+    # ev.local_catalog.namespace_name = "teehr"
+    # ev.spark.sql(f"DROP NAMESPACE IF EXISTS local.{namespace} CASCADE")
 
     # # Cleanup: Drop the namespace after test
+
     # try:
     #     ev.spark.sql(f"DROP NAMESPACE IF EXISTS local.{namespace} CASCADE")
     # except Exception as e:
