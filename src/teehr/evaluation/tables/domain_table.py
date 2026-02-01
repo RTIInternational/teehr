@@ -4,9 +4,12 @@ from teehr.models.pydantic_table_models import TableBaseModel
 from teehr.querying.utils import order_df
 from teehr.models.filters import FilterBaseModel
 from teehr.models.str_enum import StrEnum
+from teehr.models.table_enums import TableWriteEnum
 import pandas as pd
 from typing import List, Union
 import logging
+
+import pyspark.sql as ps
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +31,7 @@ class DomainTable(BaseTable):
     def _add(
         self,
         obj: Union[TableBaseModel, List[TableBaseModel]],
-        write_mode: str = "append"
+        write_mode: TableWriteEnum = TableWriteEnum.append
     ):
         # logger.info(f"Adding attribute to {self.dir}")
         self._check_load_table()
@@ -240,3 +243,55 @@ class DomainTable(BaseTable):
             "The to_geopandas() method is not implemented for Domain Tables"
             " because they do not contain location information."
         )
+
+    def load_dataframe(
+        self,
+        df: Union[pd.DataFrame, ps.DataFrame],
+        namespace_name: str = None,
+        catalog_name: str = None,
+        field_mapping: dict = None,
+        constant_field_values: dict = None,
+        write_mode: TableWriteEnum = TableWriteEnum.append,
+        drop_duplicates: bool = True,
+    ):
+        """Load data from an in-memory dataframe.
+
+        Parameters
+        ----------
+        df : Union[pd.DataFrame, ps.DataFrame]
+            DataFrame or GeoDataFrame to load into the table.
+        namespace_name : str, optional
+            The namespace name to write to. If None, uses the
+            active catalog's namespace.
+        catalog_name : str, optional
+            The catalog name to write to. If None, uses the
+            active catalog's catalog name.
+        field_mapping : dict, optional
+            A dictionary mapping input fields to output fields.
+            Format: {input_field: output_field}
+        constant_field_values : dict, optional
+            A dictionary mapping field names to constant values.
+            Format: {field_name: value}.
+        write_mode : TableWriteEnum, optional (default: "append")
+            The write mode for the table.
+            Options are "append", "upsert", and "create_or_replace".
+            If "append", the table will be appended without checking
+            existing data.
+            If "upsert", existing data will be replaced and new data that
+            does not exist will be appended.
+            If "create_or_replace", a new table will be created or an existing
+            table will be replaced.
+        drop_duplicates : bool, optional (default: True)
+            Whether to drop duplicates from the DataFrame during validation.
+        """ # noqa
+        self._load.dataframe(
+            df=df,
+            table_name=self.table_name,
+            namespace_name=namespace_name,
+            catalog_name=catalog_name,
+            field_mapping=field_mapping,
+            constant_field_values=constant_field_values,
+            write_mode=write_mode,
+            drop_duplicates=drop_duplicates,
+        )
+        self._load_table()

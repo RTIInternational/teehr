@@ -39,6 +39,7 @@ from teehr.evaluation.workflows import Workflow
 from teehr.evaluation.tables.generic_table import Table
 from teehr.evaluation.read import Read
 from teehr.evaluation.load import Load
+from teehr.evaluation.warehouse import Warehouse
 from teehr.evaluation.utils import copy_migrations_dir
 from teehr.evaluation.spark_session_utils import (
     create_spark_session,
@@ -190,6 +191,11 @@ class Evaluation(EvaluationBase):
     def fetch(self) -> Fetch:
         """The fetch component class for accessing external data."""
         return Fetch(self)
+
+    @property
+    def warehouse(self) -> Warehouse:
+        """The warehouse component class for managing data warehouse."""
+        return Warehouse(self)
 
     @property
     def metrics(self) -> Metrics:
