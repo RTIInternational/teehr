@@ -53,7 +53,7 @@ def _format_datetime_range(
 class Warehouse:
     """Component class for fetching data from the TEEHR warehouse."""
 
-    def __init__(self, ev, api_base_url: str = None, verify_ssl: bool = False) -> None:
+    def __init__(self, ev) -> None:
         """Initialize the Warehouse class.
 
         Parameters
@@ -61,18 +61,62 @@ class Warehouse:
         ev : Evaluation
             The parent Evaluation instance providing access to tables,
             Spark session, and cache directories.
+        """
+        self._ev = ev
+        self._load = ev.load
+        self.api_base_url = "https://api.teehr.local.app.garden"
+        self.verify_ssl = False
+
+    def configure(
+        self,
+        api_base_url: str = None,
+        api_port: int = None,
+        verify_ssl: bool = False
+    ) -> "Warehouse":
+        """Configure the warehouse API connection settings.
+
+        Parameters
+        ----------
         api_base_url : str, optional
             Base URL for the TEEHR warehouse API.
             Default: "https://api.teehr.local.app.garden"
+        api_port : int, optional
+            Port number for the API. If provided, will be appended to the
+            base URL (e.g., "https://api.teehr.local.app.garden:8443").
         verify_ssl : bool, optional
             Whether to verify SSL certificates when making requests.
-            Default: False (for self-signed certificates)
+            Default: False
+
+        Returns
+        -------
+        Warehouse
+            Returns self for method chaining
+
+        Examples
+        --------
+        >>> ev.warehouse.configure(
+        ...     api_base_url="https://api.teehr.local.app.garden",
+        ...     api_port=8443,
+        ...     verify_ssl=True
+        ... )
+        >>> locations = ev.warehouse.get_locations(prefix="usgs")
         """
-        # Now we have access to the Evaluation object.
-        self._ev = ev
-        self._load = ev.load
-        self.api_base_url = api_base_url or "https://api.teehr.local.app.garden"
+        base_url = api_base_url or "https://api.teehr.local.app.garden"
+        if api_port is not None:
+            if "://" in base_url:
+                scheme, rest = base_url.split("://", 1)
+                if "/" in rest:
+                    host, path = rest.split("/", 1)
+                    base_url = f"{scheme}://{host}:{api_port}/{path}"
+                else:
+                    base_url = f"{scheme}://{rest}:{api_port}"
+            else:
+                base_url = f"{base_url}:{api_port}"
+        self.api_base_url = base_url
         self.verify_ssl = verify_ssl
+
+        logger.info(f"Warehouse API configured: {self.api_base_url}")
+        return self
 
     @staticmethod
     def _make_request(

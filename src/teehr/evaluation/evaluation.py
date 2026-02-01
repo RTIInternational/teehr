@@ -101,6 +101,9 @@ class Evaluation(EvaluationBase):
         self.scripts_dir = None
         self.dir_path = dir_path
 
+        # Cached component instances
+        self._warehouse_instance = None
+
         if not self.dir_path.is_dir():
             if create_dir:
                 logger.info(f"Creating directory {self.dir_path}.")
@@ -195,7 +198,9 @@ class Evaluation(EvaluationBase):
     @property
     def warehouse(self) -> Warehouse:
         """The warehouse component class for managing data warehouse."""
-        return Warehouse(self)
+        if self._warehouse_instance is None:
+            self._warehouse_instance = Warehouse(self)
+        return self._warehouse_instance
 
     @property
     def metrics(self) -> Metrics:
