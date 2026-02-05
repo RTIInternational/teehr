@@ -245,18 +245,20 @@ def read_write_evaluation_template(read_only_evaluation_template, request):
             ev.spark.catalog.dropTempView(view.viewName)
         except Exception:
             pass  # View may already be dropped
-    # Clear catalog cache before test
     ev.spark.catalog.clearCache()
+
+    # Save the original namespace to restore after test
+    original_namespace = ev.local_catalog.namespace_name
 
     # Create unique namespace per test using test name
     test_name = request.node.name.replace("[", "_").replace("]", "_")
-    namespace = f"{int(time.time() / 1e5)}_{test_name}"
+    test_namespace = f"{int(time.time() / 1e5)}_{test_name}"
 
     # Create the namespace in Iceberg. Creates the namespace but not the directory yet.
-    ev.spark.sql(f"CREATE NAMESPACE IF NOT EXISTS local.{namespace}")
+    ev.spark.sql(f"CREATE NAMESPACE IF NOT EXISTS local.{test_namespace}")
 
     # Override the namespace for this evaluation
-    ev.local_catalog.namespace_name = namespace
+    ev.local_catalog.namespace_name = test_namespace
 
     # Set up the tables in the new namespace.
     apply_migrations.evolve_catalog_schema(
@@ -265,25 +267,20 @@ def read_write_evaluation_template(read_only_evaluation_template, request):
         local_catalog_name="local",
         local_namespace_name="teehr",
         target_catalog_name="local",
-        target_namespace_name=namespace
+        target_namespace_name=test_namespace
     )
 
     # Clean up the catalog? Go back to original namespace and snapshot?
 
     yield ev
-    ev.spark.catalog.clearCache()  # not sure if necessary
-    # ev.spark.sparkContext.getPersistentRDDs().clear()
-
-    # After the test reset the namespace name to teehr
-    # ev.local_catalog.namespace_name = "teehr"
-    # ev.spark.sql(f"DROP NAMESPACE IF EXISTS local.{namespace} CASCADE")
-
-    # # Cleanup: Drop the namespace after test
-
+    # ev.spark.catalog.clearCache()  # not sure if necessary
+    # # After the test reset the namespace name to original value to maintain isolation
+    # ev.local_catalog.namespace_name = original_namespace
+    # # Cleanup: Drop the namespace after test to remove all tables and data
     # try:
-    #     ev.spark.sql(f"DROP NAMESPACE IF EXISTS local.{namespace} CASCADE")
+    #     ev.spark.sql(f"DROP NAMESPACE IF EXISTS local.{test_namespace} CASCADE")
     # except Exception as e:
-    #     print(f"Warning: Could not drop namespace {namespace}: {e}")
+    #     print(f"Warning: Could not drop namespace {test_namespace}: {e}")
 
 
 # To hide warnings from py4j during pytest shutdown

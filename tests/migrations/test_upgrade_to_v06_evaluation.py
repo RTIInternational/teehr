@@ -55,9 +55,6 @@ def test_upgrade_evaluation(tmpdir):
         )
     """)
 
-    # ST_GeomFromWKB(l.geometry)  # Can't get sedona to work with pyspark 4.0!
-    # Looks like it's coming in 1.8.0: https://github.com/apache/sedona/pull/1919
-
     df = ev.spark.sql("""
         SELECT *
         FROM locations_view
