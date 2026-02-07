@@ -110,9 +110,7 @@ def test_generate_timeseries_normals(read_write_evaluation_template):
     ].value.values[0] == mean_prim_srs.loc[60]
 
 
-# NOTE: This test causes subsequent tests in test_import_timeseries.py to fail,
-# not sure why yet.
-@pytest.mark.read_write_evaluation_template_SKIP
+@pytest.mark.skip(reason="This one causes subsequent tests in test_import_timeseries.py to fail, not sure why yet.")
 def test_generate_reference_forecast(read_write_evaluation_template):
     """Test the reference forecast calculation."""
     ev = read_write_evaluation_template

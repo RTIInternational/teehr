@@ -12,7 +12,6 @@ from teehr import TimeseriesAwareCalculatedFields as tcf
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from data.setup_v0_5_ensemble_study import setup_v0_5_ensemble_study  # noqa
 
 
 BOOT_YEAR_FILE = Path(

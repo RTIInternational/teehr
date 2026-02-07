@@ -25,7 +25,7 @@ from teehr.fetching.const import (
 TIMEFORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-def test_parsing_remote_json_paths(tmpdir):
+def test_parsing_remote_json_paths():
     """Test parsing z_hour and date from remote json paths."""
     json_paths = [
         "s3://ciroh-nwm-zarr-copy/national-water-model/nwm.20220101/analysis_assim_extend_no_da/nwm.t06z.analysis_assim_extend_no_da.channel_rt.tm00.conus.nc.json", # noqa
