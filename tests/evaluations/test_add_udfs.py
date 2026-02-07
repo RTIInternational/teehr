@@ -2,7 +2,6 @@
 import pytest
 from teehr.examples.setup_e0_2_example import download_e0_2_example
 
-import tempfile
 import teehr
 from teehr import RowLevelCalculatedFields as rcf
 from teehr import TimeseriesAwareCalculatedFields as tcf
@@ -20,10 +19,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from data.setup_v0_4_ensemble_study import setup_v0_4_ensemble_study  # noqa
 
 
-@pytest.mark.read_write_evaluation_template
+# @pytest.mark.skip(reason="temp")
 def test_add_row_udfs_null_reference(read_write_evaluation_template):
     """Test adding row level UDFs with null reference time."""
     ev = read_write_evaluation_template
+    ev.joined_timeseries.create()
     ev.joined_timeseries.add_calculated_fields([
         rcf.Month(),
         rcf.Year(),
@@ -320,7 +320,7 @@ def test_forecast_lead_time_bins(tmpdir, spark_session):
         )
     assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 7
 
-
+@pytest.mark.skip("Uses download_e0_2_example.")
 def test_add_timeseries_udfs(tmpdir, spark_session):
     """Test adding a timeseries aware UDF."""
     # Test data needs at least 20 timesteps.
@@ -533,10 +533,11 @@ def test_add_timeseries_udfs(tmpdir, spark_session):
     assert np.isclose(max_ep, 1.0, atol=0.001)
     assert "exceedance_probability" in columns
 
-
-def test_add_udfs_write(evaluation_v0_3):
+@pytest.mark.read_write_evaluation_template
+def test_add_udfs_write(read_write_evaluation_template):
     """Test adding UDFs and write DataFrame back to table."""
-    ev = evaluation_v0_3
+    ev = read_write_evaluation_template
+    ev.joined_timeseries.create()
 
     ped = tcf.AbovePercentileEventDetection()
     ev.joined_timeseries.add_calculated_fields(ped).write()
@@ -550,10 +551,10 @@ def test_add_udfs_write(evaluation_v0_3):
     assert "event_above_id" in cols
     assert "forecast_lead_time" in cols
 
-
-def test_location_event_detection(evaluation_v0_3):
+@pytest.mark.read_only_test_warehouse
+def test_location_event_detection(read_only_test_warehouse):
     """Test event detection and metrics per event."""
-    ev = evaluation_v0_3
+    ev = read_only_test_warehouse
 
     ped = tcf.AbovePercentileEventDetection()
     sdf = ev.metrics.add_calculated_fields(ped).query(
