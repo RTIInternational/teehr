@@ -402,7 +402,7 @@ def _set_aws_credentials_in_spark(
                         creds_secret_key = config.get(aws_profile, "aws_secret_access_key")
                         creds_session_token = config.get(aws_profile, "aws_session_token", fallback=None)
 
-                        logger.info(f"🔑 Using AWS credentials from ~/.aws/credentials profile '{aws_profile}' (full access)")
+                        logger.info(f"🔑 Using AWS credentials from ~/.aws/credentials profile '{aws_profile}")
                         conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", creds_access_key)
                         conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", creds_secret_key)
                         conf.set("spark.hadoop.fs.s3a.access.key", creds_access_key)
@@ -421,7 +421,6 @@ def _set_aws_credentials_in_spark(
     # Priority 4: Check boto credentials
     if credentials and credentials.access_key and credentials.secret_key:
         logger.info("🔑 Using AWS credentials from boto3")
-        logger.info(f"{str(credentials.access_key)},{str(credentials.secret_key)}")
         conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", credentials.access_key)
         conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", credentials.secret_key)
         conf.set("spark.hadoop.fs.s3a.access.key", credentials.access_key)
