@@ -20,23 +20,39 @@ def update_metadata_paths(
     dir_path: Union[str, Path],
     spark: SparkSession = None,
     catalog_name: str = "local",
+    namespace_name: str = "teehr",
     database_name: str = "local_catalog.db",
 ) -> pd.DataFrame:
-    """Import a shared evaluation from a directory path."""
+    """Import a shared evaluation from a directory path.
+
+    Notes
+    -----
+    Much of this is borrowed from here: https://github.com/ev2900/Iceberg_update_metadata_script/blob/main/update_iceberg_metadata.py
+    """
     if spark is None:
         spark = create_spark_session()
-
-    warehouse_dir = Path(dir_path) / catalog_name
-    db_uri = f"jdbc:sqlite:{warehouse_dir.as_posix()}/{database_name}"
-
-    spark.conf.set(
-        f"spark.sql.catalog.{catalog_name}.warehouse",
-        warehouse_dir.as_posix()
-    )
-    spark.conf.set(
-        f"spark.sql.catalog.{catalog_name}.uri",
-        f"jdbc:sqlite:{warehouse_dir.as_posix()}/{database_name}"
-    )
+    else:
+        # If spark already exists, we need to clear the existing tables in the catalog to avoid conflicts
+        tables = spark.sql(f"SHOW TABLES IN {catalog_name}.{namespace_name}").collect()
+        for table in tables:
+            table_name = table.tableName
+            # Use "DROP TABLE IF EXISTS" to avoid errors if a table is transiently missing
+            # The PURGE option removes the underlying data files as well
+            try:
+                spark.sql(f"DROP TABLE IF EXISTS {catalog_name}.{namespace_name}.{table_name} PURGE")
+                print(f"Dropped table: {table_name}")
+            except Exception as e:
+                print(f"Error dropping table {table_name}: {e}")
+            warehouse_dir = Path(dir_path) / catalog_name
+            db_uri = f"jdbc:sqlite:{warehouse_dir.as_posix()}/{database_name}"
+            spark.conf.set(
+                f"spark.sql.catalog.{catalog_name}.warehouse",
+                warehouse_dir.as_posix()
+            )
+            spark.conf.set(
+                f"spark.sql.catalog.{catalog_name}.uri",
+                f"jdbc:sqlite:{warehouse_dir.as_posix()}/{database_name}"
+            )
 
     # Get the existing metadata paths from the local_catalog.db
     # SQLite database.
@@ -53,7 +69,6 @@ def update_metadata_paths(
     old_metadata_prefix = Path(latest_metadata).parents[3].as_posix()
     new_metadata_prefix = warehouse_dir.as_posix()
 
-    # All json paths
     all_json_paths = glob.glob(f"{new_metadata_prefix}/**/*.json", recursive=True)
     all_avro_paths = glob.glob(f"{new_metadata_prefix}/**/*.avro", recursive=True)
 

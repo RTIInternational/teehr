@@ -119,10 +119,11 @@ def read_write_evaluation_template(read_only_evaluation_template, request):
     # Clean up the catalog? Go back to original namespace and snapshot?
 
     yield ev
-    # ev.spark.catalog.clearCache()  # not sure if necessary
-    # # After the test reset the namespace name to original value to maintain isolation
-    # ev.local_catalog.namespace_name = original_namespace
-    # # Cleanup: Drop the namespace after test to remove all tables and data
+    ev.spark.catalog.clearCache()  # not sure if necessary
+    # After the test reset the namespace name to original value to maintain isolation
+    ev.local_catalog.namespace_name = original_namespace
+    ev.set_active_catalog("local")  # Reset active catalog to original
+    # Cleanup: Drop the namespace after test to remove all tables and data
     # try:
     #     ev.spark.sql(f"DROP NAMESPACE IF EXISTS local.{test_namespace} CASCADE")
     # except Exception as e:

@@ -18,11 +18,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from data.setup_v0_4_ensemble_study import setup_v0_4_ensemble_study  # noqa
 
-
-# @pytest.mark.skip(reason="temp")
+@pytest.mark.read_write_evaluation_template
 def test_add_row_udfs_null_reference(read_write_evaluation_template):
     """Test adding row level UDFs with null reference time."""
     ev = read_write_evaluation_template
+
     ev.joined_timeseries.create()
     ev.joined_timeseries.add_calculated_fields([
         rcf.Month(),
