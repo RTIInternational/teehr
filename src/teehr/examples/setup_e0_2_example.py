@@ -13,7 +13,7 @@ import shutil
 session = botocore.session.Session()
 
 
-def download_e0_2_example(temp_dir: Union[str, Path], spark_session) -> teehr.Evaluation:
+def download_e0_2_example(temp_dir: Union[str, Path]) -> teehr.Evaluation:
     """Download and extract the e0_2_location_example Evaluation dataset from S3."""
     if not Path(temp_dir).is_dir():
         os.makedirs(temp_dir, exist_ok=True)
@@ -50,7 +50,7 @@ def download_e0_2_example(temp_dir: Union[str, Path], spark_session) -> teehr.Ev
     (Path(temp_dir) / "local").mkdir(parents=True, exist_ok=True)
 
     # Create a new session for test isolation
-    spark = spark_session.newSession()
+    spark = create_spark_session()
     spark.conf.set(
         f"spark.sql.catalog.local.warehouse",
         (Path(temp_dir) / "local").as_posix()

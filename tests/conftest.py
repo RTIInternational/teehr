@@ -27,6 +27,20 @@ def spark_shared_session():
     spark.stop()
 
 @pytest.fixture(scope="function")
+def read_write_two_location_warehouse(tmp_path_factory, spark_shared_session):
+    """Unpack test ensemble warehouse for each test function."""
+    # Extract pre-created warehouse and recreate Iceberg tables from data files
+    test_data_dir = Path.cwd() / "tests" / "data"
+    tar_file = test_data_dir / "two_location_test_warehouse.tar.gz"
+    temp_extract_dir = tmp_path_factory.mktemp("warehouse_session") / "temp_extract"
+    shutil.unpack_archive(tar_file, temp_extract_dir)
+    ev = update_metadata_paths(
+        dir_path=temp_extract_dir,
+        spark=spark_shared_session
+    )
+    yield ev
+
+@pytest.fixture(scope="function")
 def read_write_small_ensemble_warehouse(tmp_path_factory, spark_shared_session):
     """Unpack test ensemble warehouse for each test function."""
     # Extract pre-created warehouse and recreate Iceberg tables from data files

@@ -316,11 +316,11 @@ def test_forecast_lead_time_bins(read_write_small_ensemble_warehouse):
         )
     assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 7
 
-@pytest.mark.skip("Uses download_e0_2_example.")
-def test_add_timeseries_udfs(tmpdir, spark_session):
+@pytest.mark.read_write_two_location_warehouse
+def test_add_timeseries_udfs(read_write_two_location_warehouse):
     """Test adding a timeseries aware UDF."""
     # Test data needs at least 20 timesteps.
-    ev = download_e0_2_example(temp_dir=tmpdir, spark_session=spark_session)
+    ev = read_write_two_location_warehouse
 
     sdf = ev.joined_timeseries.filter(
         "primary_location_id = 'usgs-14316700'"
