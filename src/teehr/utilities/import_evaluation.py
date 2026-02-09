@@ -16,6 +16,21 @@ import teehr
 
 logger = logging.getLogger(__name__)
 
+
+def _catalog_uri_is_configured(spark, catalog_name):
+    """
+    Checks if a local catalog URI is configured in the Spark session.
+    Returns True if configured, False otherwise.
+    """
+    conf_key = f"spark.sql.catalog.{catalog_name}.uri"
+    try:
+        value = spark.conf.get(conf_key)
+        logger.info(f"Spark catalog URI for '{catalog_name}': {value}")
+        return True
+    except Exception:
+        return False
+
+
 def update_metadata_paths(
     dir_path: Union[str, Path],
     spark: SparkSession = None,
@@ -31,8 +46,10 @@ def update_metadata_paths(
     """
     if spark is None:
         spark = create_spark_session()
-    else:
-        # If spark already exists, we need to clear the existing tables in the catalog to avoid conflicts
+
+    if _catalog_uri_is_configured(spark, catalog_name):
+        # If spark catalog database already exists, we need to clear
+        # the existing tables in the catalog to avoid conflicts
         tables = spark.sql(f"SHOW TABLES IN {catalog_name}.{namespace_name}").collect()
         for table in tables:
             table_name = table.tableName
@@ -43,16 +60,17 @@ def update_metadata_paths(
                 print(f"Dropped table: {table_name}")
             except Exception as e:
                 print(f"Error dropping table {table_name}: {e}")
-            warehouse_dir = Path(dir_path) / catalog_name
-            db_uri = f"jdbc:sqlite:{warehouse_dir.as_posix()}/{database_name}"
-            spark.conf.set(
-                f"spark.sql.catalog.{catalog_name}.warehouse",
-                warehouse_dir.as_posix()
-            )
-            spark.conf.set(
-                f"spark.sql.catalog.{catalog_name}.uri",
-                f"jdbc:sqlite:{warehouse_dir.as_posix()}/{database_name}"
-            )
+
+    warehouse_dir = Path(dir_path) / catalog_name
+    db_uri = f"jdbc:sqlite:{warehouse_dir.as_posix()}/{database_name}"
+    spark.conf.set(
+        f"spark.sql.catalog.{catalog_name}.warehouse",
+        warehouse_dir.as_posix()
+    )
+    spark.conf.set(
+        f"spark.sql.catalog.{catalog_name}.uri",
+        f"jdbc:sqlite:{warehouse_dir.as_posix()}/{database_name}"
+    )
 
     # Get the existing metadata paths from the local_catalog.db
     # SQLite database.

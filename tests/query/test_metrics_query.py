@@ -10,10 +10,6 @@ import pytest
 from teehr.models.filters import JoinedTimeseriesFilter
 from teehr import TimeseriesAwareCalculatedFields as tcf
 
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-
 BOOT_YEAR_FILE = Path(
     "tests",
     "data",
@@ -178,12 +174,10 @@ def test_metric_chaining(read_only_test_warehouse):
         metrics_df.columns == ["primary_location_id", "primary_average"]
     )
 
-
-@pytest.mark.skip(reason="Temporarily skipping")
-def test_ensemble_metrics(read_only_test_warehouse):
+@pytest.mark.read_write_evaluation_template
+def test_ensemble_metrics(read_write_ensemble_warehouse):
     """Test get_metrics method with ensemble metrics."""
-    # Define the evaluation object.
-    ev = read_only_test_warehouse
+    ev = read_write_ensemble_warehouse
 
     # Now, metrics.
     crps = ProbabilisticMetrics.CRPS()

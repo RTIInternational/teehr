@@ -10,7 +10,7 @@ TEST_STUDY_DATA_DIR = Path("tests", "data", "test_warehouse_data")
 GEOJSON_GAGES_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "gages.geojson")
 CROSSWALK_FILEPATH = Path(TEST_STUDY_DATA_DIR, "geo", "crosswalk.csv")
 CROSSWALK_FILEPATH_NC = Path(
-    "tests", "data", "test_study", "geo", "nwm_v3_route_link_subset.nc"
+    TEST_STUDY_DATA_DIR, "geo", "nwm_v3_route_link_subset.nc"
 )
 
 

@@ -4,10 +4,12 @@ from teehr.evaluation.evaluation import Evaluation
 from teehr import SignatureTimeseriesGenerators as sts
 from teehr import BenchmarkForecastGenerators as bm
 
+from teehr.evaluation.spark_session_utils import create_spark_session
+
 TEST_STUDY_DATA_DIR = Path(Path.cwd(), "tests", "data", "test_warehouse_data")
 
 
-def setup_v0_4_ensemble_study(tmpdir, spark_session):
+def setup_v0_4_ensemble_study(tmpdir):
     """Create a test evaluation with ensemble forecasts using teehr."""
     usgs_location = Path(
             TEST_STUDY_DATA_DIR, "geo", "USGS_PlatteRiver_location.parquet"
@@ -24,7 +26,7 @@ def setup_v0_4_ensemble_study(tmpdir, spark_session):
         "timeseries",
         "usgs_hefs_06711565.parquet"
     )
-    spark = spark_session.newSession()
+    spark = create_spark_session()
     ev = Evaluation(
         dir_path=tmpdir,
         check_evaluation_version=False,

@@ -27,6 +27,22 @@ def spark_shared_session():
     spark.stop()
 
 
+@pytest.fixture(scope="function")
+def read_write_ensemble_warehouse(tmp_path_factory, spark_shared_session):
+    """Unpack test ensemble warehouse for each test function."""
+    # Extract pre-created warehouse and recreate Iceberg tables from data files
+    test_data_dir = Path.cwd() / "tests" / "data"
+    tar_file = test_data_dir / "ensemble_test_warehouse.tar.gz"
+    temp_extract_dir = tmp_path_factory.mktemp("warehouse_session") / "temp_extract"
+    shutil.unpack_archive(tar_file, temp_extract_dir)
+
+    ev = update_metadata_paths(
+        dir_path=temp_extract_dir,
+        spark=spark_shared_session
+    )
+
+    yield ev
+
 @pytest.fixture(scope="session")
 def read_only_test_warehouse(tmp_path_factory, spark_shared_session):
     """Unpack test warehouse once per test SESSION (not per test function).
@@ -52,8 +68,16 @@ def read_only_test_warehouse(tmp_path_factory, spark_shared_session):
     )
 
     yield ev
-    # Don't stop the shared Spark session - it's managed by spark_shared_session fixture
-    # The session is reused across all tests for performance
+    # tables = spark_shared_session.sql(f"SHOW TABLES IN local.teehr").collect()
+    # for table in tables:
+    #     table_name = table.tableName
+    #     # Use "DROP TABLE IF EXISTS" to avoid errors if a table is transiently missing
+    #     # The PURGE option removes the underlying data files as well
+    #     try:
+    #         spark_shared_session.sql(f"DROP TABLE IF EXISTS local.teehr.{table_name} PURGE")
+    #         print(f"Dropped table: {table_name}")
+    #     except Exception as e:
+    #         print(f"Error dropping table {table_name}: {e}")
 
 
 @pytest.fixture(scope="session")
