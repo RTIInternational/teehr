@@ -13,10 +13,6 @@ import baseflow
 import pandas as pd
 from datetime import timedelta
 
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from data.setup_v0_4_ensemble_study import setup_v0_4_ensemble_study  # noqa
 
 @pytest.mark.read_write_evaluation_template
 def test_add_row_udfs_null_reference(read_write_evaluation_template):
@@ -134,10 +130,10 @@ def test_add_row_udfs(read_only_test_warehouse):
     for row in check_vals:
         assert row["day_of_year"] in [1, 2]
 
-@pytest.mark.skip(reason="Need to update the ensemble fixture.")
-def test_forecast_lead_time_bins(tmpdir, spark_session):
+@pytest.mark.read_write_small_ensemble_warehouse
+def test_forecast_lead_time_bins(read_write_small_ensemble_warehouse):
     """Test ForecastLeadTimeBins UDF."""
-    ev = setup_v0_4_ensemble_study(tmpdir, spark_session)
+    ev = read_write_small_ensemble_warehouse
 
     # test with single bin size
     fcst_bins_static = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
