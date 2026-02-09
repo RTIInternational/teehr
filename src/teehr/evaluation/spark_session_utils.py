@@ -418,20 +418,20 @@ def _set_aws_credentials_in_spark(
     session = botocore.session.Session()
     credentials = session.get_credentials()
 
-    # Priority 4: Check boto credentials
+    # Priority 4: Check boto token
+    if credentials and credentials.token:
+        logger.info("🔑 Using AWS session token from boto3")
+        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", credentials.token)
+        conf.set("spark.hadoop.fs.s3a.session.token", credentials.token)
+        return
+
+    # Priority 5: Check boto credentials
     if credentials and credentials.access_key and credentials.secret_key:
         logger.info("🔑 Using AWS credentials from boto3")
         conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", credentials.access_key)
         conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", credentials.secret_key)
         conf.set("spark.hadoop.fs.s3a.access.key", credentials.access_key)
         conf.set("spark.hadoop.fs.s3a.secret.key", credentials.secret_key)
-        return
-
-    # Priority 5: Check boto token
-    if credentials and credentials.token:
-        logger.info("🔑 Using AWS session token from boto3")
-        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", credentials.token)
-        conf.set("spark.hadoop.fs.s3a.session.token", credentials.token)
         return
 
     # Priority 6: Fall back to anonymous or default provider
