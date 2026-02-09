@@ -52,6 +52,7 @@ def create_spark_session(
     aws_secret_access_key: str = None,
     aws_session_token: str = None,
     aws_region: str = const.AWS_REGION,
+    aws_profile: str = None,
     # Simple extensibility parameters
     add_packages: List[str] = None,
     update_configs: Dict[str, str] = None,
@@ -108,6 +109,9 @@ def create_spark_session(
         AWS session token for temporary credentials. Default is None.
     aws_region : str
         AWS region name. Default is "us-east-2".
+    aws_profile : str
+        AWS profile name to use from ~/.aws/credentials. Only reads credentials
+        file if this parameter is explicitly provided. Default is None.
     add_packages : List[str]
         Provided Spark packages will be added if they do not already exist.
         Default is None.
@@ -161,6 +165,7 @@ def create_spark_session(
         aws_secret_access_key=aws_secret_access_key,
         aws_session_token=aws_session_token,
         aws_region=aws_region,
+        aws_profile=aws_profile,
     )
 
     # Set catalog metadata in Spark configuration
@@ -356,6 +361,7 @@ def _set_aws_credentials_in_spark(
     aws_secret_access_key: str,
     aws_session_token: str,
     aws_region: str,
+    aws_profile: str = None,
 ):
     """Set AWS credentials in Spark configuration with multiple options."""
     logger.info("Setting Hadoop's default AWS credentials provider and AWS region")
@@ -381,16 +387,45 @@ def _set_aws_credentials_in_spark(
         conf.set("spark.hadoop.fs.s3a.session.token", aws_session_token)
         return
 
-    # Priority 3: Check boto token
+    # Priority 3: Check ~/.aws/credentials file only if profile explicitly specified (full access)
+    if aws_profile:
+        aws_credentials_file = Path.home() / ".aws" / "credentials"
+        if aws_credentials_file.exists():
+            try:
+                import configparser
+                config = configparser.ConfigParser()
+                config.read(aws_credentials_file)
+
+                if config.has_section(aws_profile):
+                    if config.has_option(aws_profile, "aws_access_key_id") and config.has_option(aws_profile, "aws_secret_access_key"):
+                        creds_access_key = config.get(aws_profile, "aws_access_key_id")
+                        creds_secret_key = config.get(aws_profile, "aws_secret_access_key")
+                        creds_session_token = config.get(aws_profile, "aws_session_token", fallback=None)
+
+                        logger.info(f"🔑 Using AWS credentials from ~/.aws/credentials profile '{aws_profile}")
+                        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", creds_access_key)
+                        conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", creds_secret_key)
+                        conf.set("spark.hadoop.fs.s3a.access.key", creds_access_key)
+                        conf.set("spark.hadoop.fs.s3a.secret.key", creds_secret_key)
+
+                        if creds_session_token:
+                            conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", creds_session_token)
+                            conf.set("spark.hadoop.fs.s3a.session.token", creds_session_token)
+                        return
+            except Exception as e:
+                logger.debug(f"Could not read ~/.aws/credentials: {e}")
+
     session = botocore.session.Session()
     credentials = session.get_credentials()
+
+    # Priority 4: Check boto token
     if credentials and credentials.token:
         logger.info("🔑 Using AWS session token from boto3")
         conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.session-token", credentials.token)
         conf.set("spark.hadoop.fs.s3a.session.token", credentials.token)
         return
 
-    # Priority 4: Check boto credentials
+    # Priority 5: Check boto credentials
     if credentials and credentials.access_key and credentials.secret_key:
         logger.info("🔑 Using AWS credentials from boto3")
         conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", credentials.access_key)
@@ -399,7 +434,7 @@ def _set_aws_credentials_in_spark(
         conf.set("spark.hadoop.fs.s3a.secret.key", credentials.secret_key)
         return
 
-    # Priority 5: Fall back to anonymous or default provider
+    # Priority 6: Fall back to anonymous or default provider
     logger.info("🔑 Using anonymous AWS credentials for S3 access")
     conf.set(
         "spark.hadoop.fs.s3a.aws.credentials.provider",
