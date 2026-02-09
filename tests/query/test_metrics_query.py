@@ -174,10 +174,10 @@ def test_metric_chaining(read_only_test_warehouse):
         metrics_df.columns == ["primary_location_id", "primary_average"]
     )
 
-@pytest.mark.read_write_evaluation_template
-def test_ensemble_metrics(read_write_ensemble_warehouse):
+@pytest.mark.read_write_large_ensemble_warehouse
+def test_ensemble_metrics(read_write_large_ensemble_warehouse):
     """Test get_metrics method with ensemble metrics."""
-    ev = read_write_ensemble_warehouse
+    ev = read_write_large_ensemble_warehouse
 
     # Now, metrics.
     crps = ProbabilisticMetrics.CRPS()

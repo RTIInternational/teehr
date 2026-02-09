@@ -28,11 +28,11 @@ def spark_shared_session():
 
 
 @pytest.fixture(scope="function")
-def read_write_ensemble_warehouse(tmp_path_factory, spark_shared_session):
+def read_write_large_ensemble_warehouse(tmp_path_factory, spark_shared_session):
     """Unpack test ensemble warehouse for each test function."""
     # Extract pre-created warehouse and recreate Iceberg tables from data files
     test_data_dir = Path.cwd() / "tests" / "data"
-    tar_file = test_data_dir / "ensemble_test_warehouse.tar.gz"
+    tar_file = test_data_dir / "ensemble_test_warehouse_large.tar.gz"
     temp_extract_dir = tmp_path_factory.mktemp("warehouse_session") / "temp_extract"
     shutil.unpack_archive(tar_file, temp_extract_dir)
 
