@@ -26,11 +26,11 @@ R_BENCHMARK_RESULTS = Path(
 )
 
 
-@pytest.mark.session_scope_test_warehouse
-def test_executing_deterministic_metrics(session_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_executing_deterministic_metrics(module_scope_test_warehouse):
     """Test get_metrics method."""
     # Define the evaluation object.
-    ev = session_scope_test_warehouse
+    ev = module_scope_test_warehouse
 
     # Test all the non-conditional metrics.
     include_nonconditional_metrics = [
@@ -80,11 +80,11 @@ def test_executing_deterministic_metrics(session_scope_test_warehouse):
     assert metrics_df.index.size == 3
     assert metrics_df.columns.size == 6
 
-@pytest.mark.session_scope_test_warehouse
-def test_executing_signatures(session_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_executing_signatures(module_scope_test_warehouse):
     """Test get_metrics method."""
     # Define the evaluation object.
-    ev = session_scope_test_warehouse
+    ev = module_scope_test_warehouse
 
     # Test all the metrics.
     include_all_metrics = [
@@ -104,11 +104,11 @@ def test_executing_signatures(session_scope_test_warehouse):
     assert metrics_df.index.size == 3
     assert metrics_df.columns.size == 9
 
-@pytest.mark.session_scope_test_warehouse
-def test_metrics_filter_and_geometry(session_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_metrics_filter_and_geometry(module_scope_test_warehouse):
     """Test get_metrics method with filter and geometry."""
     # Define the evaluation object.
-    ev = session_scope_test_warehouse
+    ev = module_scope_test_warehouse
 
     # Define some metrics.
     kge = DeterministicMetrics.KlingGuptaEfficiency()
@@ -142,11 +142,11 @@ def test_metrics_filter_and_geometry(session_scope_test_warehouse):
     assert metrics_df.columns.size == 6
 
 
-@pytest.mark.session_scope_test_warehouse
-def test_metric_chaining(session_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_metric_chaining(module_scope_test_warehouse):
     """Test get_metrics method with chaining."""
     # Define the evaluation object.
-    ev = session_scope_test_warehouse
+    ev = module_scope_test_warehouse
 
     # Test chaining.
     metrics_df = ev.metrics.query(
@@ -221,11 +221,11 @@ def test_ensemble_metrics(function_scope_large_ensemble_warehouse):
         metrics_df.mean_brier_score_skill_score.values[2]
     )
 
-@pytest.mark.session_scope_test_warehouse
-def test_metrics_transforms(session_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_metrics_transforms(module_scope_test_warehouse):
     """Test applying metric transforms (non-bootstrap)."""
     # Define the evaluation object.
-    test_eval = session_scope_test_warehouse
+    test_eval = module_scope_test_warehouse
 
     # define metric requiring p,s
     kge = DeterministicMetrics.KlingGuptaEfficiency()

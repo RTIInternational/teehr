@@ -82,6 +82,72 @@ def function_scope_test_warehouse(tmp_path_factory, spark_shared_session):
     )
     yield ev
 
+
+@pytest.fixture(scope="function")
+def function_scope_evaluation_template(session_scope_evaluation_template, request):
+    """Function-level evaluation fixture with template cloned to a new namespace."""
+    ev = session_scope_evaluation_template
+
+    # NOTE: Could I re-create the local_catalog.db entirely here instead
+    # or as well?
+    # self.set_active_catalog("local")  # Creates the JDBC .db file
+    # But then you'd have to re-register all the tables too...
+
+    # Clear any temp views from previous tests to ensure isolation
+    temp_views = ev.spark.sql("SHOW VIEWS").filter("isTemporary = true").collect()
+    for view in temp_views:
+        try:
+            ev.spark.catalog.dropTempView(view.viewName)
+        except Exception:
+            pass  # View may already be dropped
+    ev.spark.catalog.clearCache()
+
+    # Save the original namespace to restore after test
+    original_namespace = ev.local_catalog.namespace_name
+
+    # Create unique namespace per test using test name
+    test_name = request.node.name.replace("[", "_").replace("]", "_")
+    test_namespace = f"{int(time.time() / 1e5)}_{test_name}"
+
+    # Create the namespace in Iceberg. Creates the namespace but not the directory yet.
+    ev.spark.sql(f"CREATE NAMESPACE IF NOT EXISTS local.{test_namespace}")
+
+    # Override the namespace for this evaluation
+    ev.local_catalog.namespace_name = test_namespace
+
+    # Set up the tables in the new namespace.
+    apply_migrations.evolve_catalog_schema(
+        spark=ev.spark,
+        migrations_dir_path=ev.dir_path / "local",
+        local_catalog_name="local",
+        local_namespace_name="teehr",
+        target_catalog_name="local",
+        target_namespace_name=test_namespace
+    )
+
+    # Clean up the catalog? Go back to original namespace and snapshot?
+
+    yield ev
+    ev.spark.catalog.clearCache()  # not sure if necessary
+    # After the test reset the namespace name to original value to maintain isolation
+    ev.local_catalog.namespace_name = original_namespace
+    ev.set_active_catalog("local")  # Reset active catalog to original
+
+
+@pytest.fixture(scope="module")
+def module_scope_test_warehouse(tmp_path_factory, spark_shared_session):
+    """Unpack test warehouse once per test module."""
+    # Extract pre-created warehouse and recreate Iceberg tables from data files
+    test_data_dir = Path.cwd() / "tests" / "data"
+    tar_file = test_data_dir / "local_warehouse_jdbc.tar.gz"
+    temp_extract_dir = tmp_path_factory.mktemp("warehouse_session") / "temp_extract"
+    shutil.unpack_archive(tar_file, temp_extract_dir)
+    ev = update_metadata_paths(
+        dir_path=temp_extract_dir,
+        spark=spark_shared_session
+    )
+    yield ev
+
 @pytest.fixture(scope="session")
 def session_scope_test_warehouse(tmp_path_factory, spark_shared_session):
     """Unpack test warehouse once per test SESSION (not per test function).
@@ -135,63 +201,6 @@ def session_scope_evaluation_template(spark_shared_session, tmp_path_factory):
     ev.clone_template()
 
     yield ev
-
-
-@pytest.fixture(scope="function")
-def function_scope_evaluation_template(session_scope_evaluation_template, request):
-    """Function-level evaluation fixture with template cloned to a new namespace."""
-    ev = session_scope_evaluation_template
-
-    # NOTE: Could I re-create the local_catalog.db entirely here instead
-    # or as well?
-    # self.set_active_catalog("local")  # Creates the JDBC .db file
-    # But then you'd have to re-register all the tables too...
-
-    # Clear any temp views from previous tests to ensure isolation
-    temp_views = ev.spark.sql("SHOW VIEWS").filter("isTemporary = true").collect()
-    for view in temp_views:
-        try:
-            ev.spark.catalog.dropTempView(view.viewName)
-        except Exception:
-            pass  # View may already be dropped
-    ev.spark.catalog.clearCache()
-
-    # Save the original namespace to restore after test
-    original_namespace = ev.local_catalog.namespace_name
-
-    # Create unique namespace per test using test name
-    test_name = request.node.name.replace("[", "_").replace("]", "_")
-    test_namespace = f"{int(time.time() / 1e5)}_{test_name}"
-
-    # Create the namespace in Iceberg. Creates the namespace but not the directory yet.
-    ev.spark.sql(f"CREATE NAMESPACE IF NOT EXISTS local.{test_namespace}")
-
-    # Override the namespace for this evaluation
-    ev.local_catalog.namespace_name = test_namespace
-
-    # Set up the tables in the new namespace.
-    apply_migrations.evolve_catalog_schema(
-        spark=ev.spark,
-        migrations_dir_path=ev.dir_path / "local",
-        local_catalog_name="local",
-        local_namespace_name="teehr",
-        target_catalog_name="local",
-        target_namespace_name=test_namespace
-    )
-
-    # Clean up the catalog? Go back to original namespace and snapshot?
-
-    yield ev
-    ev.spark.catalog.clearCache()  # not sure if necessary
-    # After the test reset the namespace name to original value to maintain isolation
-    ev.local_catalog.namespace_name = original_namespace
-    ev.set_active_catalog("local")  # Reset active catalog to original
-    # Cleanup: Drop the namespace after test to remove all tables and data
-    # try:
-    #     ev.spark.sql(f"DROP NAMESPACE IF EXISTS local.{test_namespace} CASCADE")
-    # except Exception as e:
-    #     print(f"Warning: Could not drop namespace {test_namespace}: {e}")
-
 
 # To hide warnings from py4j during pytest shutdown
 def pytest_configure(config):
