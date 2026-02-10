@@ -8,7 +8,7 @@ import pytest
 import teehr
 from teehr.utilities.convert_to_iceberg import convert_evaluation
 
-@pytest.mark.skip(reason="This is causing problems when run with other tests.")
+@pytest.mark.skip(reason="This requires an isolated spark session.")
 def test_upgrade_evaluation(tmpdir):
     """Test upgrading a pre-v0.6 evaluation to v0.6."""
     # Copy test pre-v0.6 evaluation into the temp directory.

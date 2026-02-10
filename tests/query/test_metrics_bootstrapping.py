@@ -229,13 +229,12 @@ def test_stationary_bootstrapping(session_scope_test_warehouse):
     assert metrics_df.columns.size == 2
 
 
-@pytest.mark.skip("This is a write operation")
-def test_gumboot_bootstrapping(tmpdir, spark_session):
+@pytest.mark.function_scope_test_warehouse
+def test_gumboot_bootstrapping(function_scope_test_warehouse):
     """Test get_metrics method gumboot bootstrapping."""
     # Manually create an evaluation using timseries from the R
     # Gumboot package vignette.
-    ev = Evaluation(dir_path=tmpdir, spark=spark_session, create_dir=True)
-    ev.clone_template()
+    ev = function_scope_test_warehouse
     # Write the staged joined_timeseries data to the warehouse.
     joined_timeseries_filepath = Path(
         "tests",
