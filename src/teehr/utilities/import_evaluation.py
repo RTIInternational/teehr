@@ -43,6 +43,9 @@ def update_metadata_paths(
     Notes
     -----
     Much of this is borrowed from here: https://github.com/ev2900/Iceberg_update_metadata_script/blob/main/update_iceberg_metadata.py
+
+    The need for this should go away once relative metadata paths are supported, which are currently
+    in the v4 Iceberg spec but not yet supported in Spark.
     """
     if spark is None:
         spark = create_spark_session()
