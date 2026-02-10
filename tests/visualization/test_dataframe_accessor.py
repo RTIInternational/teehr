@@ -14,8 +14,6 @@ import tempfile
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-TEST_STUDY_DATA_DIR = Path("tests", "data", "fetch_nwm_grids")
-
 
 def test_init_with_dataframe():
     """Test validation with pd.DataFrame."""
