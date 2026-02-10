@@ -224,10 +224,10 @@ from pathlib import Path
 def test_my_feature(session_scope_test_warehouse):
     """Test description."""
     ev = session_scope_test_warehouse
-    
+
     # Your test code
     result = ev.metrics.query(...).to_pandas()
-    
+
     assert result.shape[0] > 0
 ```
 
