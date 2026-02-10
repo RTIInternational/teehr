@@ -9,10 +9,10 @@ from teehr.querying.filter_format import validate_filter
 import pytest
 
 
-@pytest.mark.read_only_test_warehouse
-def test_filter_string_passes(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_string_passes(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
-    ev = read_only_test_warehouse
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.variable_name,
@@ -24,10 +24,10 @@ def test_filter_string_passes(read_only_test_warehouse):
     assert filter.value == "foo"
 
 
-@pytest.mark.read_only_test_warehouse
-def test_filter_int_to_string_passes(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_int_to_string_passes(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
-    ev = read_only_test_warehouse
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.variable_name,
@@ -39,10 +39,10 @@ def test_filter_int_to_string_passes(read_only_test_warehouse):
     assert filter.value == "10"
 
 
-@pytest.mark.read_only_test_warehouse
-def test_filter_float_passes(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_float_passes(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
-    ev = read_only_test_warehouse
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.value,
@@ -54,10 +54,10 @@ def test_filter_float_passes(read_only_test_warehouse):
     assert filter.value == 10.1
 
 
-@pytest.mark.read_only_test_warehouse
-def test_filter_int_to_float_passes(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_int_to_float_passes(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
-    ev = read_only_test_warehouse
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.value,
@@ -69,11 +69,11 @@ def test_filter_int_to_float_passes(read_only_test_warehouse):
     assert filter.value == 10.0
 
 
-@pytest.mark.read_only_test_warehouse
-def test_filter_str_to_float_fails(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_str_to_float_fails(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
     with pytest.raises(Exception):
-        ev = read_only_test_warehouse
+        ev = session_scope_test_warehouse
         fields = ev.primary_timeseries.field_enum()
         filter = TimeseriesFilter(
             column=fields.value,
@@ -84,10 +84,10 @@ def test_filter_str_to_float_fails(read_only_test_warehouse):
         filter = validate_filter(filter, dataframe_schema)
 
 
-@pytest.mark.read_only_test_warehouse
-def test_filter_datetime_passes(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_datetime_passes(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
-    ev = read_only_test_warehouse
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.value_time,
@@ -99,10 +99,10 @@ def test_filter_datetime_passes(read_only_test_warehouse):
     assert filter.value == datetime(2021, 1, 1)
 
 
-@pytest.mark.read_only_test_warehouse
-def test_filter_datetime_passes2(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_datetime_passes2(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
-    ev = read_only_test_warehouse
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.value_time,
@@ -114,10 +114,10 @@ def test_filter_datetime_passes2(read_only_test_warehouse):
     assert filter.value == datetime(2021, 1, 1)
 
 
-@pytest.mark.read_only_test_warehouse
-def test_filter_datetime_passes3(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_datetime_passes3(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
-    ev = read_only_test_warehouse
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.value_time,
@@ -129,10 +129,10 @@ def test_filter_datetime_passes3(read_only_test_warehouse):
     assert filter.value == datetime(2021, 1, 1)
 
 
-@pytest.mark.read_only_test_warehouse
-def test_filter_datetime_passes4(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_datetime_passes4(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
-    ev = read_only_test_warehouse
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.value_time,
@@ -144,10 +144,10 @@ def test_filter_datetime_passes4(read_only_test_warehouse):
     assert filter.value == datetime(2021, 1, 1)
 
 
-@pytest.mark.read_only_test_warehouse
-def test_filter_datetime_passes5(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_datetime_passes5(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
-    ev = read_only_test_warehouse
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.value_time,
@@ -159,11 +159,11 @@ def test_filter_datetime_passes5(read_only_test_warehouse):
     assert filter.value == datetime(2021, 1, 1)
 
 
-@pytest.mark.read_only_test_warehouse
-def test_filter_datetime_fails(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_datetime_fails(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
     with pytest.raises(Exception):
-        ev = read_only_test_warehouse
+        ev = session_scope_test_warehouse
         fields = ev.primary_timeseries.field_enum()
         filter = TimeseriesFilter(
             column=fields.value_time,
@@ -174,11 +174,11 @@ def test_filter_datetime_fails(read_only_test_warehouse):
         filter = validate_filter(filter, dataframe_schema)
 
 
-@pytest.mark.read_only_test_warehouse
-def test_filter_in_str_fails(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_in_str_fails(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
     with pytest.raises(Exception):
-        ev = read_only_test_warehouse
+        ev = session_scope_test_warehouse
         fields = ev.primary_timeseries.field_enum()
         filter = TimeseriesFilter(
             column=fields.configuration,

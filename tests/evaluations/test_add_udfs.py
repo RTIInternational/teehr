@@ -14,10 +14,10 @@ import pandas as pd
 from datetime import timedelta
 
 
-@pytest.mark.read_write_evaluation_template
-def test_add_row_udfs_null_reference(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_add_row_udfs_null_reference(function_scope_evaluation_template):
     """Test adding row level UDFs with null reference time."""
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
 
     ev.joined_timeseries.create()
     ev.joined_timeseries.add_calculated_fields([
@@ -34,10 +34,10 @@ def test_add_row_udfs_null_reference(read_write_evaluation_template):
     ).write(table_name="metrics", write_mode="create_or_replace")
 
 
-@pytest.mark.read_only_test_warehouse
-def test_add_row_udfs(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_add_row_udfs(session_scope_test_warehouse):
     """Test adding row level UDFs."""
-    ev = read_only_test_warehouse
+    ev = session_scope_test_warehouse
     sdf = ev.joined_timeseries.to_sdf()
 
     sdf = rcf.Month().apply_to(sdf)
@@ -130,10 +130,10 @@ def test_add_row_udfs(read_only_test_warehouse):
     for row in check_vals:
         assert row["day_of_year"] in [1, 2]
 
-@pytest.mark.read_write_small_ensemble_warehouse
-def test_forecast_lead_time_bins(read_write_small_ensemble_warehouse):
+@pytest.mark.function_scope_small_ensemble_warehouse
+def test_forecast_lead_time_bins(function_scope_small_ensemble_warehouse):
     """Test ForecastLeadTimeBins UDF."""
-    ev = read_write_small_ensemble_warehouse
+    ev = function_scope_small_ensemble_warehouse
 
     # test with single bin size
     fcst_bins_static = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
@@ -316,11 +316,11 @@ def test_forecast_lead_time_bins(read_write_small_ensemble_warehouse):
         )
     assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 7
 
-@pytest.mark.read_write_two_location_warehouse
-def test_add_timeseries_udfs(read_write_two_location_warehouse):
+@pytest.mark.function_scope_two_location_warehouse
+def test_add_timeseries_udfs(function_scope_two_location_warehouse):
     """Test adding a timeseries aware UDF."""
     # Test data needs at least 20 timesteps.
-    ev = read_write_two_location_warehouse
+    ev = function_scope_two_location_warehouse
 
     sdf = ev.joined_timeseries.filter(
         "primary_location_id = 'usgs-14316700'"
@@ -529,10 +529,10 @@ def test_add_timeseries_udfs(read_write_two_location_warehouse):
     assert np.isclose(max_ep, 1.0, atol=0.001)
     assert "exceedance_probability" in columns
 
-@pytest.mark.read_write_evaluation_template
-def test_add_udfs_write(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_add_udfs_write(function_scope_evaluation_template):
     """Test adding UDFs and write DataFrame back to table."""
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
     ev.joined_timeseries.create()
 
     ped = tcf.AbovePercentileEventDetection()
@@ -547,10 +547,10 @@ def test_add_udfs_write(read_write_evaluation_template):
     assert "event_above_id" in cols
     assert "forecast_lead_time" in cols
 
-@pytest.mark.read_only_test_warehouse
-def test_location_event_detection(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_location_event_detection(session_scope_test_warehouse):
     """Test event detection and metrics per event."""
-    ev = read_only_test_warehouse
+    ev = session_scope_test_warehouse
 
     ped = tcf.AbovePercentileEventDetection()
     sdf = ev.metrics.add_calculated_fields(ped).query(

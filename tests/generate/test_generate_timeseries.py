@@ -11,10 +11,10 @@ from teehr import BenchmarkForecastGenerators as bm
 TEST_STUDY_DATA_DIR = Path("tests", "data", "test_warehouse_data")
 
 
-@pytest.mark.read_write_evaluation_template
-def test_generate_timeseries_normals(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_generate_timeseries_normals(function_scope_evaluation_template):
     """Generate synthetic time series data."""
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
 
     usgs_location = Path(
         TEST_STUDY_DATA_DIR,
@@ -111,9 +111,9 @@ def test_generate_timeseries_normals(read_write_evaluation_template):
 
 
 @pytest.mark.skip(reason="This one causes subsequent tests in test_import_timeseries.py to fail, not sure why yet.")
-def test_generate_reference_forecast(read_write_evaluation_template):
+def test_generate_reference_forecast(function_scope_evaluation_template):
     """Test the reference forecast calculation."""
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(
         in_path=Path(

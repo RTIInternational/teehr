@@ -20,10 +20,10 @@ def test_convert_locations_geojson():
     assert df.index.size == 3
 
 
-@pytest.mark.read_write_evaluation_template
-def test_validate_and_insert_locations(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_validate_and_insert_locations(function_scope_evaluation_template):
     """Test the validate_locations function."""
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
 
     # Load and replace the location ID prefix
     ev.locations.load_spatial(
@@ -32,7 +32,7 @@ def test_validate_and_insert_locations(read_write_evaluation_template):
     )
     # Append additional location
     ev.locations.load_spatial(
-        in_path="tests/data/two_locations/two_locations.parquet",
+        in_path=Path(TEST_STUDY_DATA_DIR, "geo", "two_locations.parquet"),
     )
     # Now update existing 'test' locations with new names
     # and add a few more (upsert).
@@ -54,10 +54,10 @@ def test_validate_and_insert_locations(read_write_evaluation_template):
     assert ev.locations.to_sdf().count() == 8
 
 
-@pytest.mark.read_write_evaluation_template
-def test_validate_and_insert_locations_adding_prefix(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_validate_and_insert_locations_adding_prefix(function_scope_evaluation_template):
     """Test the validate_locations function."""
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
 
     # Add a new location ID prefix
     ev.locations.load_spatial(

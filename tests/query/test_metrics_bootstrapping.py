@@ -31,11 +31,11 @@ R_BENCHMARK_RESULTS = Path(
 )
 
 
-@pytest.mark.read_only_test_warehouse
-def test_bootstrapping_signatures(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_bootstrapping_signatures(session_scope_test_warehouse):
     """Test get_metrics method."""
     # Define the evaluation object.
-    ev = read_only_test_warehouse
+    ev = session_scope_test_warehouse
 
     # Get the currently available fields to use in the query.
     flds = ev.joined_timeseries.field_enum()
@@ -60,11 +60,11 @@ def test_bootstrapping_signatures(read_only_test_warehouse):
     assert np.isclose(sig_metrics_df["flow_duration_curve_slope_0.5"].sum(), -172.21364)
 
 
-@pytest.mark.read_only_test_warehouse
-def test_unpacking_bootstrap_results(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_unpacking_bootstrap_results(session_scope_test_warehouse):
     """Test unpacking bootstrapping quantile results."""
     # Define the evaluation object.
-    ev = read_only_test_warehouse
+    ev = session_scope_test_warehouse
 
     # Define a bootstrapper.
     boot = Bootstrappers.CircularBlock(
@@ -100,11 +100,11 @@ def test_unpacking_bootstrap_results(read_only_test_warehouse):
     assert (cols == benchmark_cols).all()
 
 
-@pytest.mark.read_only_test_warehouse
-def test_circularblock_bootstrapping(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_circularblock_bootstrapping(session_scope_test_warehouse):
     """Test get_metrics method circular block bootstrapping."""
     # Define the evaluation object.
-    ev = read_only_test_warehouse
+    ev = session_scope_test_warehouse
 
     # Define a bootstrapper.
     boot = Bootstrappers.CircularBlock(
@@ -165,11 +165,11 @@ def test_circularblock_bootstrapping(read_only_test_warehouse):
     assert metrics_df.columns.size == 2
 
 
-@pytest.mark.read_only_test_warehouse
-def test_stationary_bootstrapping(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_stationary_bootstrapping(session_scope_test_warehouse):
     """Test get_metrics method stationary bootstrapping."""
     # Define the evaluation object.
-    ev = read_only_test_warehouse
+    ev = session_scope_test_warehouse
 
     # Define a bootstrapper.
     boot = Bootstrappers.Stationary(
@@ -332,11 +332,11 @@ def test_gumboot_bootstrapping(tmpdir, spark_session):
     assert np.allclose(teehr_results, r_kge_vals, rtol=1e-06)
 
 
-@pytest.mark.read_only_test_warehouse
-def test_bootstrapping_transforms(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_bootstrapping_transforms(session_scope_test_warehouse):
     """Test applying metric transforms (bootstrap)."""
     # Define the evaluation object.
-    ev = read_only_test_warehouse
+    ev = session_scope_test_warehouse
 
     # Define a bootstrapper.
     boot = Bootstrappers.CircularBlock(
@@ -397,11 +397,11 @@ def test_bootstrapping_transforms(read_only_test_warehouse):
     assert metrics_df.columns.size == 2
 
 
-@pytest.mark.read_only_test_warehouse
-def test_bootstrapping_fdc_slope_signature(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_bootstrapping_fdc_slope_signature(session_scope_test_warehouse):
     """Test bootstrapping FDC slope signature."""
     # Define the evaluation object.
-    ev = read_only_test_warehouse
+    ev = session_scope_test_warehouse
 
     # Define a bootstrapper.
     boot = Bootstrappers.CircularBlock(

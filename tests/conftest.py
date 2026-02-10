@@ -27,7 +27,7 @@ def spark_shared_session():
     spark.stop()
 
 @pytest.fixture(scope="function")
-def read_write_two_location_warehouse(tmp_path_factory, spark_shared_session):
+def function_scope_two_location_warehouse(tmp_path_factory, spark_shared_session):
     """Unpack test ensemble warehouse for each test function."""
     # Extract pre-created warehouse and recreate Iceberg tables from data files
     test_data_dir = Path.cwd() / "tests" / "data"
@@ -41,7 +41,7 @@ def read_write_two_location_warehouse(tmp_path_factory, spark_shared_session):
     yield ev
 
 @pytest.fixture(scope="function")
-def read_write_small_ensemble_warehouse(tmp_path_factory, spark_shared_session):
+def function_scope_small_ensemble_warehouse(tmp_path_factory, spark_shared_session):
     """Unpack test ensemble warehouse for each test function."""
     # Extract pre-created warehouse and recreate Iceberg tables from data files
     test_data_dir = Path.cwd() / "tests" / "data"
@@ -55,7 +55,7 @@ def read_write_small_ensemble_warehouse(tmp_path_factory, spark_shared_session):
     yield ev
 
 @pytest.fixture(scope="function")
-def read_write_large_ensemble_warehouse(tmp_path_factory, spark_shared_session):
+def function_scope_large_ensemble_warehouse(tmp_path_factory, spark_shared_session):
     """Unpack test ensemble warehouse for each test function."""
     # Extract pre-created warehouse and recreate Iceberg tables from data files
     test_data_dir = Path.cwd() / "tests" / "data"
@@ -69,7 +69,7 @@ def read_write_large_ensemble_warehouse(tmp_path_factory, spark_shared_session):
     yield ev
 
 @pytest.fixture(scope="session")
-def read_only_test_warehouse(tmp_path_factory, spark_shared_session):
+def session_scope_test_warehouse(tmp_path_factory, spark_shared_session):
     """Unpack test warehouse once per test SESSION (not per test function).
 
     This significantly speeds up tests by:
@@ -106,7 +106,7 @@ def read_only_test_warehouse(tmp_path_factory, spark_shared_session):
 
 
 @pytest.fixture(scope="session")
-def read_only_evaluation_template(spark_shared_session, tmp_path_factory):
+def session_scope_evaluation_template(spark_shared_session, tmp_path_factory):
     """Session-level evaluation fixture with template cloned."""
     base_dir = tmp_path_factory.getbasetemp()
     spark = spark_shared_session
@@ -124,9 +124,9 @@ def read_only_evaluation_template(spark_shared_session, tmp_path_factory):
 
 
 @pytest.fixture(scope="function")
-def read_write_evaluation_template(read_only_evaluation_template, request):
+def function_scope_evaluation_template(session_scope_evaluation_template, request):
     """Function-level evaluation fixture with template cloned to a new namespace."""
-    ev = read_only_evaluation_template
+    ev = session_scope_evaluation_template
 
     # NOTE: Could I re-create the local_catalog.db entirely here instead
     # or as well?

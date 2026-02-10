@@ -30,10 +30,10 @@ ZONAL_LOCATIONS = Path(
 )
 
 
-@pytest.mark.read_write_evaluation_template
-def test_fetch_and_load_nwm_retro_points(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_fetch_and_load_nwm_retro_points(function_scope_evaluation_template):
     """Test the NWM retro point fetch and load."""
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(in_path=GEO_GAGES_FILEPATH)
 
@@ -92,10 +92,10 @@ def test_fetch_and_load_nwm_retro_points(read_write_evaluation_template):
     # ev.spark.stop()
 
 
-@pytest.mark.read_write_evaluation_template
-def test_fetch_and_load_nwm_retro_grids(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_fetch_and_load_nwm_retro_grids(function_scope_evaluation_template):
     """Test the NWM retro grid fetch and load."""
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(in_path=ZONAL_LOCATIONS)
 
@@ -126,10 +126,10 @@ def test_fetch_and_load_nwm_retro_grids(read_write_evaluation_template):
     # ev.spark.stop()
 
 
-@pytest.mark.read_write_evaluation_template
-def test_fetch_and_load_nwm_operational_points(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_fetch_and_load_nwm_operational_points(function_scope_evaluation_template):
     """Test the NWM operational point fetch and load."""
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(in_path=GEO_GAGES_FILEPATH)
 

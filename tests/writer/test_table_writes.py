@@ -4,10 +4,10 @@ from pyspark.sql.types import StructType, StructField, StringType
 import pytest
 
 
-@pytest.mark.read_write_evaluation_template
-def test_table_writes(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_table_writes(function_scope_evaluation_template):
     """Test creating a new study."""
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
 
     schema = StructType([
         StructField("name", StringType(), True),

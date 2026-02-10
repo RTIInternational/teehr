@@ -10,10 +10,10 @@ import pytest
 
 SPARK_SESSION = create_spark_session(app_name="test_sql_query")
 
-@pytest.mark.read_only_test_warehouse
-def test_sql_query(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_sql_query(session_scope_test_warehouse):
     """Test Evaluation sql query."""
-    ev = read_only_test_warehouse
+    ev = session_scope_test_warehouse
     sdf = ev.sql("""
         SELECT pt.*, u.*, c.* FROM primary_timeseries pt
         JOIN units u ON pt.unit_name = u.name
@@ -39,11 +39,11 @@ def test_sql_query(read_only_test_warehouse):
 
 @pytest.mark.skip(
     reason="This succeeds on it's own but fails"
-    " when run after read_only_test_warehouse."
+    " when run after session_scope_test_warehouse."
 )
-def test_sql_query_on_empty_tables(read_only_evaluation_template):
+def test_sql_query_on_empty_tables(session_scope_evaluation_template):
     """Test sql query on empty table."""
-    ev = read_only_evaluation_template
+    ev = session_scope_evaluation_template
     sdf = ev.sql("""
         SELECT pt.*, u.*, c.* FROM primary_timeseries pt
         JOIN units u ON pt.unit_name = u.name

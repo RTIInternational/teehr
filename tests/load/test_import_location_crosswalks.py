@@ -23,10 +23,10 @@ def test_convert_location_crosswalk():
     assert df.index.size == 3
 
 
-@pytest.mark.read_write_evaluation_template
-def test_validate_and_insert_crosswalks(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_validate_and_insert_crosswalks(function_scope_evaluation_template):
     """Test the validate crosswalks function."""
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(
         in_path=GEOJSON_GAGES_FILEPATH,

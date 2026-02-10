@@ -8,10 +8,10 @@ from teehr.models.pydantic_table_models import (
 import pytest
 import time
 
-@pytest.mark.read_write_evaluation_template
-def test_add_domains(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_add_domains(function_scope_evaluation_template):
     """Test creating a new study."""
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
 
     new_tbl = ev.table(table_name="new_table")
 

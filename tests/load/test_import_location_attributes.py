@@ -27,10 +27,10 @@ def test_convert_location_attributes():
     assert df.index.size == 3
 
 
-@pytest.mark.read_write_evaluation_template
-def test_validate_and_insert_location_attributes(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_validate_and_insert_location_attributes(function_scope_evaluation_template):
     """Test the validate location_attributes function."""
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
 
     ev.enable_logging()
 

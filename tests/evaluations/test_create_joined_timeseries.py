@@ -19,11 +19,11 @@ SECONDARY_TIMESERIES_FILEPATH = Path(
 )
 
 
-@pytest.mark.read_write_evaluation_template
-def test_create_joined_timeseries(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_create_joined_timeseries(function_scope_evaluation_template):
     """Test the validate_locations function."""
     t0 = time.time()
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
     print("Evaluation setup time:", time.time() - t0)
 
     t0 = time.time()
@@ -154,10 +154,10 @@ def test_create_joined_timeseries(read_write_evaluation_template):
     assert sorted(columns) == sorted(expected_columns)
 
 
-@pytest.mark.read_write_evaluation_template
-def test_create_filtered_joined_timeseries(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_create_filtered_joined_timeseries(function_scope_evaluation_template):
     """Test the validate_locations function."""
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
 
     # Load the location data
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
@@ -267,10 +267,10 @@ def test_create_filtered_joined_timeseries(read_write_evaluation_template):
     assert all(joined_df['secondary_location_id'].unique() == ['fcst-1'])
 
 
-@pytest.mark.read_only_test_warehouse
-def test_distinct_values(read_only_test_warehouse):
+@pytest.mark.session_scope_test_warehouse
+def test_distinct_values(session_scope_test_warehouse):
     """Test base_table.distinct_values() using joined_timeseries."""
-    ev = read_only_test_warehouse
+    ev = session_scope_test_warehouse
 
     # test primary_timeseries with location_prefixes==False (valid)
     distinct_vals = ev.primary_timeseries.distinct_values(column='location_id')

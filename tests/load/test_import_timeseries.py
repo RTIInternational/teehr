@@ -42,10 +42,10 @@ MIZU_LOCATIONS = Path(
 )
 
 
-@pytest.mark.read_write_evaluation_template
-def test_dropping_duplicates(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_dropping_duplicates(function_scope_evaluation_template):
     """Test the dropping duplicates function."""
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
 
@@ -107,10 +107,10 @@ def test_dropping_duplicates(read_write_evaluation_template):
     ).index.size == 78
 
 
-@pytest.mark.read_write_evaluation_template
-def test_validate_and_insert_timeseries(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_validate_and_insert_timeseries(function_scope_evaluation_template):
     """Test the validate_locations function."""
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
 
@@ -191,10 +191,10 @@ def test_validate_and_insert_timeseries(read_write_evaluation_template):
     assert prim_df.index.size == 114
 
 
-@pytest.mark.read_write_evaluation_template
-def test_validate_and_insert_timeseries_set_const(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_validate_and_insert_timeseries_set_const(function_scope_evaluation_template):
     """Test the validate_locations function."""
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(in_path=GEOJSON_GAGES_FILEPATH)
 
@@ -256,10 +256,10 @@ def test_validate_and_insert_timeseries_set_const(read_write_evaluation_template
     assert True
 
 
-@pytest.mark.read_write_evaluation_template
-def test_validate_and_insert_summa_nc_timeseries(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_validate_and_insert_summa_nc_timeseries(function_scope_evaluation_template):
     """Test the validate_locations function."""
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(in_path=SUMMA_LOCATIONS)
 
@@ -309,10 +309,10 @@ def test_validate_and_insert_summa_nc_timeseries(read_write_evaluation_template)
     assert (np.sort(teehr_values) == np.sort(nc_values)).all()
 
 
-@pytest.mark.read_write_evaluation_template
-def test_validate_and_insert_mizu_nc_timeseries(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_validate_and_insert_mizu_nc_timeseries(function_scope_evaluation_template):
     """Test the validate_locations function."""
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(in_path=MIZU_LOCATIONS)
 
@@ -362,8 +362,8 @@ def test_validate_and_insert_mizu_nc_timeseries(read_write_evaluation_template):
     assert (np.sort(teehr_values) == np.sort(nc_values)).all()
 
 
-@pytest.mark.read_write_evaluation_template
-def test_validate_and_insert_fews_xml_timeseries(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_validate_and_insert_fews_xml_timeseries(function_scope_evaluation_template):
     """Test the validate_locations function."""
     usgs_location = Path(
         TEST_STUDY_DATA_DIR, "geo", "USGS_PlatteRiver_location.parquet"
@@ -379,7 +379,7 @@ def test_validate_and_insert_fews_xml_timeseries(read_write_evaluation_template)
         "usgs_hefs_06711565.parquet"
     )
 
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
 
     ev.locations.load_spatial(
         in_path=usgs_location
@@ -430,11 +430,11 @@ def test_validate_and_insert_fews_xml_timeseries(read_write_evaluation_template)
     assert metrics_df["primary_location_id"].nunique() == 1
 
 
-@pytest.mark.read_write_evaluation_template
-def test_validate_and_insert_in_memory_timeseries(read_write_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_validate_and_insert_in_memory_timeseries(function_scope_evaluation_template):
     """Test the validate_locations function."""
     t0 = time.time()
-    ev = read_write_evaluation_template
+    ev = function_scope_evaluation_template
     print("Evaluation template loaded in %.2f seconds." % (time.time() - t0))
 
     t0 = time.time()
