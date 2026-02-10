@@ -547,10 +547,10 @@ def test_add_udfs_write(function_scope_evaluation_template):
     assert "event_above_id" in cols
     assert "forecast_lead_time" in cols
 
-@pytest.mark.session_scope_test_warehouse
-def test_location_event_detection(session_scope_test_warehouse):
+@pytest.mark.function_scope_test_warehouse
+def test_location_event_detection(function_scope_test_warehouse):
     """Test event detection and metrics per event."""
-    ev = session_scope_test_warehouse
+    ev = function_scope_test_warehouse
 
     ped = tcf.AbovePercentileEventDetection()
     sdf = ev.metrics.add_calculated_fields(ped).query(

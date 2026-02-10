@@ -267,10 +267,10 @@ def test_create_filtered_joined_timeseries(function_scope_evaluation_template):
     assert all(joined_df['secondary_location_id'].unique() == ['fcst-1'])
 
 
-@pytest.mark.session_scope_test_warehouse
-def test_distinct_values(session_scope_test_warehouse):
+@pytest.mark.function_scope_test_warehouse
+def test_distinct_values(function_scope_test_warehouse):
     """Test base_table.distinct_values() using joined_timeseries."""
-    ev = session_scope_test_warehouse
+    ev = function_scope_test_warehouse
 
     # test primary_timeseries with location_prefixes==False (valid)
     distinct_vals = ev.primary_timeseries.distinct_values(column='location_id')

@@ -37,13 +37,10 @@ def test_sql_query(session_scope_test_warehouse):
     ]
     assert sdf_cols == expected_cols
 
-@pytest.mark.skip(
-    reason="This succeeds on it's own but fails"
-    " when run after session_scope_test_warehouse."
-)
-def test_sql_query_on_empty_tables(session_scope_evaluation_template):
+@pytest.mark.function_scope_evaluation_template
+def test_sql_query_on_empty_tables(function_scope_evaluation_template):
     """Test sql query on empty table."""
-    ev = session_scope_evaluation_template
+    ev = function_scope_evaluation_template
     sdf = ev.sql("""
         SELECT pt.*, u.*, c.* FROM primary_timeseries pt
         JOIN units u ON pt.unit_name = u.name
