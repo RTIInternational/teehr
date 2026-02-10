@@ -68,6 +68,20 @@ def function_scope_large_ensemble_warehouse(tmp_path_factory, spark_shared_sessi
     )
     yield ev
 
+@pytest.fixture(scope="function")
+def function_scope_test_warehouse(tmp_path_factory, spark_shared_session):
+    """Unpack test warehouse once per test function."""
+    # Extract pre-created warehouse and recreate Iceberg tables from data files
+    test_data_dir = Path.cwd() / "tests" / "data"
+    tar_file = test_data_dir / "local_warehouse_jdbc.tar.gz"
+    temp_extract_dir = tmp_path_factory.mktemp("warehouse_session") / "temp_extract"
+    shutil.unpack_archive(tar_file, temp_extract_dir)
+    ev = update_metadata_paths(
+        dir_path=temp_extract_dir,
+        spark=spark_shared_session
+    )
+    yield ev
+
 @pytest.fixture(scope="session")
 def session_scope_test_warehouse(tmp_path_factory, spark_shared_session):
     """Unpack test warehouse once per test SESSION (not per test function).

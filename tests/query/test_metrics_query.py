@@ -359,13 +359,13 @@ def test_metrics_transforms(session_scope_test_warehouse):
     assert np.isfinite(metrics_df_e_test.r_squared.values).all()
     assert np.isfinite(metrics_df_e_test.pearson_correlation.values).all()
 
-@pytest.mark.session_scope_test_warehouse
-def test_adding_calculated_fields(session_scope_test_warehouse):
+@pytest.mark.function_scope_test_warehouse
+def test_adding_calculated_fields(function_scope_test_warehouse):
     """Test adding calculated fields to metrics."""
     from teehr import RowLevelCalculatedFields as rcf
 
     # Define the evaluation object.
-    ev = session_scope_test_warehouse
+    ev = function_scope_test_warehouse
     kge = DeterministicMetrics.KlingGuptaEfficiency()
     metrics_df_calc = (
         ev
@@ -383,10 +383,10 @@ def test_adding_calculated_fields(session_scope_test_warehouse):
     assert metrics_df_calc.index.size == 3
     assert "month" in metrics_df_calc.columns
 
-@pytest.mark.session_scope_test_warehouse
-def test_table_based_metrics(session_scope_test_warehouse):
+@pytest.mark.function_scope_test_warehouse
+def test_table_based_metrics(function_scope_test_warehouse):
     """Test table-based metrics."""
-    ev = session_scope_test_warehouse
+    ev = function_scope_test_warehouse
 
     kge = DeterministicMetrics.KlingGuptaEfficiency()
 
