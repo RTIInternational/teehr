@@ -25,14 +25,21 @@ def test_validate_and_insert_locations(function_scope_evaluation_template):
     """Test the validate_locations function."""
     ev = function_scope_evaluation_template
 
+    # test constant field values
+    constant_field_values = {
+        "name": "test",
+    }
+
     # Load and replace the location ID prefix
     ev.locations.load_spatial(
         in_path=GEOJSON_GAGES_FILEPATH,
-        location_id_prefix="test"
+        location_id_prefix="test",
+        constant_field_values=constant_field_values,
     )
     # Append additional location
     ev.locations.load_spatial(
         in_path=Path(TEST_STUDY_DATA_DIR, "geo", "two_locations.parquet"),
+        constant_field_values=constant_field_values,
     )
     # Now update existing 'test' locations with new names
     # and add a few more (upsert).
@@ -40,6 +47,7 @@ def test_validate_and_insert_locations(function_scope_evaluation_template):
         in_path=Path(TEST_STUDY_DATA_DIR, "geo", "extended_v03_gages.geojson"),
         location_id_prefix="test",
         write_mode="upsert",
+        constant_field_values=constant_field_values,
     )
     assert sorted(ev.locations.to_pandas()["id"].tolist()) == [
         "test-A",
@@ -52,6 +60,8 @@ def test_validate_and_insert_locations(function_scope_evaluation_template):
         "usgs-14316700"
     ]
     assert ev.locations.to_sdf().count() == 8
+    # check that all names are "test"
+    assert set(ev.locations.to_pandas()["name"].tolist()) == {"test"}
 
 
 @pytest.mark.function_scope_evaluation_template
