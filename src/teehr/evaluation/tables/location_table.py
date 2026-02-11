@@ -81,7 +81,6 @@ class LocationTable(BaseTable):
         catalog_name: str = None,
         extraction_function: callable = convert_single_locations,
         field_mapping: dict = None,
-        constant_field_values: dict = None,
         pattern: str = "**/*.parquet",
         location_id_prefix: str = None,
         write_mode: TableWriteEnum = "append",
@@ -107,9 +106,6 @@ class LocationTable(BaseTable):
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
-        constant_field_values : dict, optional
-            A dictionary mapping field names to constant values.
-            Format: {field_name: value}.
         pattern : str, optional (default: "**/*.parquet")
             The pattern to match files.
             Only used when in_path is a directory.
@@ -164,7 +160,6 @@ class LocationTable(BaseTable):
             catalog_name=catalog_name,
             extraction_function=extraction_function,
             field_mapping=field_mapping,
-            constant_field_values=constant_field_values,
             primary_location_id_prefix=location_id_prefix,
             write_mode=write_mode,
             drop_duplicates=drop_duplicates,
