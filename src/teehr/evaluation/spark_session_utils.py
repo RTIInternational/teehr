@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 # Note: Scala version: 2.13 in pyspark 4.0
 SCALA_VERSION = "2.13"
 PYSPARK_VERSION = "4.0"
-ICEBERG_VERSION = "1.10.0"
+ICEBERG_VERSION = "1.10.1"
 SEDONA_VERSION = "1.8.0"
 
 
@@ -227,7 +227,8 @@ def _create_spark_base_session(
         "org.datasyslab:geotools-wrapper:1.8.0-33.1",
         f"org.apache.iceberg:iceberg-spark-extensions-{PYSPARK_VERSION}_{SCALA_VERSION}:{ICEBERG_VERSION}",
         "org.apache.hadoop:hadoop-aws:3.4.1",  # Note. Need 3.4.1 for compatibility
-        "com.amazonaws:aws-java-sdk-bundle:1.12.791"
+        "com.amazonaws:aws-java-sdk-bundle:1.12.791",
+        "org.xerial:sqlite-jdbc:3.42.0.0"
     ]
     conf.set("spark.jars.packages", ",".join(base_packages))
 
@@ -429,7 +430,7 @@ def _set_aws_credentials_in_spark(
     # Priority 4: Check boto credentials
     if credentials and credentials.access_key and credentials.secret_key:
         logger.info("🔑 Using AWS credentials from boto3")
-        logger.info(f"{str(credentials.access_key)},{str(credentials.secret_key)}")
+        # logger.info(f"{str(credentials.access_key)},{str(credentials.secret_key)}")
         conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.access-key-id", credentials.access_key)
         conf.set(f"spark.sql.catalog.{remote_catalog_name}.s3.secret-access-key", credentials.secret_key)
         conf.set("spark.hadoop.fs.s3a.access.key", credentials.access_key)
@@ -493,6 +494,12 @@ def _configure_iceberg_catalogs(
     # Local catalog configuration
     conf.set(f"spark.sql.catalog.{local_catalog_name}", "org.apache.iceberg.spark.SparkCatalog")
     conf.set(f"spark.sql.catalog.{local_catalog_name}.type", local_catalog_type)
+    conf.set(f"spark.sql.catalog.{local_catalog_name}.jdbc.driver", "org.sqlite.JDBC")
+    conf.set(f"spark.sql.catalog.{local_catalog_name}.jdbc.initialize", "true")
+    conf.set(f"spark.sql.catalog.{local_catalog_name}.jdbc.schema-version", "V1")
+    # conf.set("spark.sql.catalog.local.jdbc.user", "user")
+    # conf.set("spark.sql.catalog.local.jdbc.password", "password")
+
     # Remote catalog configuration
     conf.set(f"spark.sql.catalog.{remote_catalog_name}", "org.apache.iceberg.spark.SparkCatalog")
     conf.set(f"spark.sql.catalog.{remote_catalog_name}.type", remote_catalog_type)

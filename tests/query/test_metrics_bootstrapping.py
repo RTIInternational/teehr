@@ -6,40 +6,36 @@ import pandas as pd
 from pathlib import Path
 import numpy as np
 from arch.bootstrap import CircularBlockBootstrap, StationaryBootstrap
+import pytest
 
 from teehr.models.filters import JoinedTimeseriesFilter
 from teehr.models.metrics.bootstrap_models import Bootstrappers
 from teehr.metrics.gumboot_bootstrap import GumbootBootstrap
 from teehr.evaluation.evaluation import Evaluation
-
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from data.setup_v0_3_study import setup_v0_3_study  # noqa
-
-TEST_STUDY_DATA_DIR_v0_4 = Path("tests", "data", "test_study")
+from teehr.evaluation.spark_session_utils import create_spark_session
 
 
 BOOT_YEAR_FILE = Path(
     "tests",
     "data",
-    "test_study",
+    "test_warehouse_data",
     "bootstrap",
     "boot_year_file_R.csv"
 )
 R_BENCHMARK_RESULTS = Path(
     "tests",
     "data",
-    "test_study",
+    "test_warehouse_data",
     "bootstrap",
     "r_benchmark_results.csv"
 )
 
 
-
-def test_bootstrapping_signatures(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_bootstrapping_signatures(session_scope_test_warehouse):
     """Test get_metrics method."""
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
 
     # Get the currently available fields to use in the query.
     flds = ev.joined_timeseries.field_enum()
@@ -62,13 +58,13 @@ def test_bootstrapping_signatures(tmpdir):
     assert sig_metrics_df.index.size == 3
     assert sig_metrics_df.columns.size == 4
     assert np.isclose(sig_metrics_df["flow_duration_curve_slope_0.5"].sum(), -172.21364)
-    ev.spark.stop()
 
 
-def test_unpacking_bootstrap_results(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_unpacking_bootstrap_results(session_scope_test_warehouse):
     """Test unpacking bootstrapping quantile results."""
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
 
     # Define a bootstrapper.
     boot = Bootstrappers.CircularBlock(
@@ -102,13 +98,13 @@ def test_unpacking_bootstrap_results(tmpdir):
     ]
 
     assert (cols == benchmark_cols).all()
-    ev.spark.stop()
 
 
-def test_circularblock_bootstrapping(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_circularblock_bootstrapping(session_scope_test_warehouse):
     """Test get_metrics method circular block bootstrapping."""
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
 
     # Define a bootstrapper.
     boot = Bootstrappers.CircularBlock(
@@ -167,13 +163,13 @@ def test_circularblock_bootstrapping(tmpdir):
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 2
-    ev.spark.stop()
 
 
-def test_stationary_bootstrapping(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_stationary_bootstrapping(session_scope_test_warehouse):
     """Test get_metrics method stationary bootstrapping."""
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
 
     # Define a bootstrapper.
     boot = Bootstrappers.Stationary(
@@ -231,20 +227,19 @@ def test_stationary_bootstrapping(tmpdir):
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 2
-    ev.spark.stop()
 
 
-def test_gumboot_bootstrapping(tmpdir):
+@pytest.mark.function_scope_test_warehouse
+def test_gumboot_bootstrapping(function_scope_test_warehouse):
     """Test get_metrics method gumboot bootstrapping."""
     # Manually create an evaluation using timseries from the R
     # Gumboot package vignette.
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
-    ev.clone_template()
+    ev = function_scope_test_warehouse
     # Write the staged joined_timeseries data to the warehouse.
     joined_timeseries_filepath = Path(
         "tests",
         "data",
-        "test_study",
+        "test_warehouse_data",
         "timeseries",
         "flows_1030500.parquet"
     )
@@ -255,7 +250,7 @@ def test_gumboot_bootstrapping(tmpdir):
         write_mode="create_or_replace"
     )
     # Write the staged locations data to the warehouse.
-    test_study_data_dir = Path("tests", "data", "v0_3_test_study")
+    test_study_data_dir = Path("tests", "data", "test_warehouse_data")
     sdf = ev.spark.read.parquet(
         Path(test_study_data_dir, "geo", "gages.parquet").as_posix()
     )
@@ -334,13 +329,13 @@ def test_gumboot_bootstrapping(tmpdir):
     r_df = pd.read_csv(R_BENCHMARK_RESULTS)
     r_kge_vals = np.sort(r_df.KGE.values)
     assert np.allclose(teehr_results, r_kge_vals, rtol=1e-06)
-    ev.spark.stop()
 
 
-def test_bootstrapping_transforms(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_bootstrapping_transforms(session_scope_test_warehouse):
     """Test applying metric transforms (bootstrap)."""
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
 
     # Define a bootstrapper.
     boot = Bootstrappers.CircularBlock(
@@ -399,13 +394,13 @@ def test_bootstrapping_transforms(tmpdir):
     assert isinstance(metrics_df, pd.DataFrame)
     assert metrics_df.index.size == 1
     assert metrics_df.columns.size == 2
-    ev.spark.stop()
 
 
-def test_bootstrapping_fdc_slope_signature(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_bootstrapping_fdc_slope_signature(session_scope_test_warehouse):
     """Test bootstrapping FDC slope signature."""
     # Define the evaluation object.
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
 
     # Define a bootstrapper.
     boot = Bootstrappers.CircularBlock(
@@ -440,52 +435,3 @@ def test_bootstrapping_fdc_slope_signature(tmpdir):
     ]
 
     assert (sorted(cols) == sorted(benchmark_cols))
-    ev.spark.stop()
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_bootstrapping_signatures(
-            tempfile.mkdtemp(
-                prefix="0-",
-                dir=tempdir
-            )
-        )
-        test_unpacking_bootstrap_results(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_circularblock_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_stationary_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        test_gumboot_bootstrapping(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
-        # TODO: High memory usage?
-        test_bootstrapping_transforms(
-            tempfile.mkdtemp(
-                prefix="5-",
-                dir=tempdir)
-        )
-        # TODO: Test bootstrapping FDC slope signature
-        test_bootstrapping_fdc_slope_signature(
-            tempfile.mkdtemp(
-                prefix="6-",
-                dir=tempdir)
-        )

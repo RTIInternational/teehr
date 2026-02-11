@@ -1,18 +1,16 @@
 """Tests for the TEEHR study creation."""
 from pathlib import Path
-import tempfile
+
+import pytest
 from teehr.models.pydantic_table_models import (
     Attribute
 )
 
 
-def test_clone_template(tmpdir):
+@pytest.mark.function_scope_evaluation_template
+def test_clone_template(function_scope_evaluation_template):
     """Test creating a new study."""
-    tmpdir = Path(tmpdir)
-    from teehr import Evaluation
-
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
-    ev.clone_template()
+    ev = function_scope_evaluation_template
 
     tbls_df = ev.list_tables()
 
@@ -33,19 +31,6 @@ def test_clone_template(tmpdir):
     # Not a complete test, but at least we know the function runs.
     assert len(tbls_df) == 9
     assert len(views_df) == 1
-    assert Path(tmpdir, ev.active_catalog.catalog_name, "cache").is_dir()
-    assert Path(tmpdir, ev.active_catalog.catalog_name, "scripts").is_dir()
-    assert Path(tmpdir, ev.active_catalog.catalog_name, ".gitignore").is_file()
-    ev.spark.stop()
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_clone_template(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
+    assert Path(ev.dir_path, ev.active_catalog.catalog_name, "cache").is_dir()
+    assert Path(ev.dir_path, ev.active_catalog.catalog_name, "scripts").is_dir()
+    assert Path(ev.dir_path, ev.active_catalog.catalog_name, ".gitignore").is_file()

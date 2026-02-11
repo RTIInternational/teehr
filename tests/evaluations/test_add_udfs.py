@@ -1,7 +1,7 @@
 """Tests for the TEEHR UDFs."""
+import pytest
 from teehr.examples.setup_e0_2_example import download_e0_2_example
 
-import tempfile
 import teehr
 from teehr import RowLevelCalculatedFields as rcf
 from teehr import TimeseriesAwareCalculatedFields as tcf
@@ -13,16 +13,13 @@ import baseflow
 import pandas as pd
 from datetime import timedelta
 
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from data.setup_v0_3_study import setup_v0_3_study  # noqa
-from data.setup_v0_4_ensemble_study import setup_v0_4_ensemble_study  # noqa
 
-
-def test_add_row_udfs_null_reference(tmpdir):
+@pytest.mark.function_scope_evaluation_template
+def test_add_row_udfs_null_reference(function_scope_evaluation_template):
     """Test adding row level UDFs with null reference time."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = function_scope_evaluation_template
+
+    ev.joined_timeseries.create()
     ev.joined_timeseries.add_calculated_fields([
         rcf.Month(),
         rcf.Year(),
@@ -36,12 +33,11 @@ def test_add_row_udfs_null_reference(tmpdir):
         group_by=["primary_location_id"]
     ).write(table_name="metrics", write_mode="create_or_replace")
 
-    ev.spark.stop()
 
-
-def test_add_row_udfs(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_add_row_udfs(session_scope_test_warehouse):
     """Test adding row level UDFs."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     sdf = ev.joined_timeseries.to_sdf()
 
     sdf = rcf.Month().apply_to(sdf)
@@ -134,12 +130,10 @@ def test_add_row_udfs(tmpdir):
     for row in check_vals:
         assert row["day_of_year"] in [1, 2]
 
-    ev.spark.stop()
-
-
-def test_forecast_lead_time_bins(tmpdir):
+@pytest.mark.function_scope_small_ensemble_warehouse
+def test_forecast_lead_time_bins(function_scope_small_ensemble_warehouse):
     """Test ForecastLeadTimeBins UDF."""
-    ev = setup_v0_4_ensemble_study(tmpdir)
+    ev = function_scope_small_ensemble_warehouse
 
     # test with single bin size
     fcst_bins_static = teehr.RowLevelCalculatedFields.ForecastLeadTimeBins(
@@ -321,13 +315,12 @@ def test_forecast_lead_time_bins(tmpdir):
         "value_time"
         )
     assert sorted_sdf.select('forecast_lead_time_bin').distinct().count() == 7
-    ev.spark.stop()
 
-
-def test_add_timeseries_udfs(tmpdir):
+@pytest.mark.function_scope_two_location_warehouse
+def test_add_timeseries_udfs(function_scope_two_location_warehouse):
     """Test adding a timeseries aware UDF."""
     # Test data needs at least 20 timesteps.
-    ev = download_e0_2_example(temp_dir=tmpdir)
+    ev = function_scope_two_location_warehouse
 
     sdf = ev.joined_timeseries.filter(
         "primary_location_id = 'usgs-14316700'"
@@ -536,12 +529,11 @@ def test_add_timeseries_udfs(tmpdir):
     assert np.isclose(max_ep, 1.0, atol=0.001)
     assert "exceedance_probability" in columns
 
-    ev.spark.stop()
-
-
-def test_add_udfs_write(tmpdir):
+@pytest.mark.function_scope_evaluation_template
+def test_add_udfs_write(function_scope_evaluation_template):
     """Test adding UDFs and write DataFrame back to table."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = function_scope_evaluation_template
+    ev.joined_timeseries.create()
 
     ped = tcf.AbovePercentileEventDetection()
     ev.joined_timeseries.add_calculated_fields(ped).write()
@@ -555,12 +547,10 @@ def test_add_udfs_write(tmpdir):
     assert "event_above_id" in cols
     assert "forecast_lead_time" in cols
 
-    ev.spark.stop()
-
-
-def test_location_event_detection(tmpdir):
+@pytest.mark.function_scope_test_warehouse
+def test_location_event_detection(function_scope_test_warehouse):
     """Test event detection and metrics per event."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = function_scope_test_warehouse
 
     ped = tcf.AbovePercentileEventDetection()
     sdf = ev.metrics.add_calculated_fields(ped).query(
@@ -586,47 +576,3 @@ def test_location_event_detection(tmpdir):
     assert "event_above_id" in sdf.columns
     assert "max_primary_value" in sdf.columns
     assert "max_secondary_value" in sdf.columns
-
-    ev.spark.stop()
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_add_row_udfs_null_reference(
-            tempfile.mkdtemp(
-                prefix="0-",
-                dir=tempdir
-            )
-        )
-        test_add_row_udfs(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_forecast_lead_time_bins(
-            tempfile.mkdtemp(
-                prefix="1b-",
-                dir=tempdir
-            )
-        )
-        test_add_timeseries_udfs(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_add_udfs_write(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        test_location_event_detection(
-            tempfile.mkdtemp(
-                prefix="5-",
-                dir=tempdir
-            )
-        )

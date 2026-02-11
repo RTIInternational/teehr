@@ -5,21 +5,14 @@ from teehr.models.filters import (
     FilterOperators
 )
 import pandas as pd
-# from teehr.models.pydantic_table_models import Timeseries
 from teehr.querying.filter_format import validate_filter
-
-import tempfile
 import pytest
 
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from data.setup_v0_3_study import setup_v0_3_study  # noqa
 
-
-def test_filter_string_passes(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_string_passes(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.variable_name,
@@ -29,12 +22,12 @@ def test_filter_string_passes(tmpdir):
     dataframe_schema = ev.primary_timeseries._get_schema("pandas")
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == "foo"
-    ev.spark.stop()
 
 
-def test_filter_int_to_string_passes(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_int_to_string_passes(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.variable_name,
@@ -44,12 +37,12 @@ def test_filter_int_to_string_passes(tmpdir):
     dataframe_schema = ev.primary_timeseries._get_schema("pandas")
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == "10"
-    ev.spark.stop()
 
 
-def test_filter_float_passes(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_float_passes(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.value,
@@ -59,12 +52,12 @@ def test_filter_float_passes(tmpdir):
     dataframe_schema = ev.primary_timeseries._get_schema("pandas")
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == 10.1
-    ev.spark.stop()
 
 
-def test_filter_int_to_float_passes(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_int_to_float_passes(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.value,
@@ -74,13 +67,13 @@ def test_filter_int_to_float_passes(tmpdir):
     dataframe_schema = ev.primary_timeseries._get_schema("pandas")
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == 10.0
-    ev.spark.stop()
 
 
-def test_filter_str_to_float_fails(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_str_to_float_fails(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
     with pytest.raises(Exception):
-        ev = setup_v0_3_study(tmpdir)
+        ev = session_scope_test_warehouse
         fields = ev.primary_timeseries.field_enum()
         filter = TimeseriesFilter(
             column=fields.value,
@@ -89,12 +82,12 @@ def test_filter_str_to_float_fails(tmpdir):
         )
         dataframe_schema = ev.primary_timeseries._get_schema("pandas")
         filter = validate_filter(filter, dataframe_schema)
-    ev.spark.stop()
 
 
-def test_filter_datetime_passes(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_datetime_passes(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.value_time,
@@ -104,12 +97,12 @@ def test_filter_datetime_passes(tmpdir):
     dataframe_schema = ev.primary_timeseries._get_schema("pandas")
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == datetime(2021, 1, 1)
-    ev.spark.stop()
 
 
-def test_filter_datetime_passes2(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_datetime_passes2(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.value_time,
@@ -119,12 +112,12 @@ def test_filter_datetime_passes2(tmpdir):
     dataframe_schema = ev.primary_timeseries._get_schema("pandas")
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == datetime(2021, 1, 1)
-    ev.spark.stop()
 
 
-def test_filter_datetime_passes3(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_datetime_passes3(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.value_time,
@@ -134,12 +127,12 @@ def test_filter_datetime_passes3(tmpdir):
     dataframe_schema = ev.primary_timeseries._get_schema("pandas")
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == datetime(2021, 1, 1)
-    ev.spark.stop()
 
 
-def test_filter_datetime_passes4(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_datetime_passes4(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.value_time,
@@ -149,12 +142,12 @@ def test_filter_datetime_passes4(tmpdir):
     dataframe_schema = ev.primary_timeseries._get_schema("pandas")
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == datetime(2021, 1, 1)
-    ev.spark.stop()
 
 
-def test_filter_datetime_passes5(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_datetime_passes5(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.value_time,
@@ -164,13 +157,13 @@ def test_filter_datetime_passes5(tmpdir):
     dataframe_schema = ev.primary_timeseries._get_schema("pandas")
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == datetime(2021, 1, 1)
-    ev.spark.stop()
 
 
-def test_filter_datetime_fails(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_datetime_fails(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
     with pytest.raises(Exception):
-        ev = setup_v0_3_study(tmpdir)
+        ev = session_scope_test_warehouse
         fields = ev.primary_timeseries.field_enum()
         filter = TimeseriesFilter(
             column=fields.value_time,
@@ -179,13 +172,13 @@ def test_filter_datetime_fails(tmpdir):
         )
         dataframe_schema = ev.primary_timeseries._get_schema("pandas")
         filter = validate_filter(filter, dataframe_schema)
-    ev.spark.stop()
 
 
-def test_filter_in_str_fails(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_in_str_fails(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
     with pytest.raises(Exception):
-        ev = setup_v0_3_study(tmpdir)
+        ev = session_scope_test_warehouse
         fields = ev.primary_timeseries.field_enum()
         filter = TimeseriesFilter(
             column=fields.configuration,
@@ -194,82 +187,3 @@ def test_filter_in_str_fails(tmpdir):
         )
         dataframe_schema = ev.primary_timeseries._get_schema("pandas")
         filter = validate_filter(filter, dataframe_schema)
-    ev.spark.stop()
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_filter_string_passes(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_filter_int_to_string_passes(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_filter_float_passes(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        test_filter_str_to_float_fails(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
-        test_filter_datetime_passes(
-            tempfile.mkdtemp(
-                prefix="5-",
-                dir=tempdir
-            )
-        )
-        test_filter_datetime_fails(
-            tempfile.mkdtemp(
-                prefix="6-",
-                dir=tempdir
-            )
-        )
-        test_filter_int_to_float_passes(
-            tempfile.mkdtemp(
-                prefix="9-",
-                dir=tempdir
-            )
-        )
-        test_filter_datetime_passes2(
-            tempfile.mkdtemp(
-                prefix="10-",
-                dir=tempdir
-            )
-        )
-        test_filter_datetime_passes3(
-            tempfile.mkdtemp(
-                prefix="11-",
-                dir=tempdir
-            )
-        )
-        test_filter_datetime_passes4(
-            tempfile.mkdtemp(
-                prefix="12-",
-                dir=tempdir
-            )
-        )
-        test_filter_in_str_fails(
-            tempfile.mkdtemp(
-                prefix="13-",
-                dir=tempdir
-            )
-        )
-        test_filter_datetime_passes5(
-            tempfile.mkdtemp(
-                prefix="14-",
-                dir=tempdir
-            )
-        )

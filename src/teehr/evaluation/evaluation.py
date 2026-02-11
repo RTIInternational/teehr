@@ -122,10 +122,16 @@ class Evaluation(EvaluationBase):
         # Note. Here 'warehouse_dir' should be 'catalog_dir'?
         local_catalog_name = self.spark.conf.get("local_catalog_name")
         warehouse_dir = dir_path / local_catalog_name
+        # Set local warehouse path and jdbc uri
         self.spark.conf.set(
             f"spark.sql.catalog.{local_catalog_name}.warehouse",
             warehouse_dir.as_posix()
         )
+        self.spark.conf.set(
+            f"spark.sql.catalog.{local_catalog_name}.uri",
+            f"jdbc:sqlite:{warehouse_dir.as_posix()}/local_catalog.db"
+        )
+
         # Get the catalog metadata that was set during Spark configuration
         self.local_catalog = LocalCatalog(
             warehouse_dir=warehouse_dir,
@@ -140,7 +146,10 @@ class Evaluation(EvaluationBase):
             catalog_type=self.spark.conf.get("remote_catalog_type"),
             catalog_uri=self.spark.conf.get("remote_catalog_uri"),
         )
-        self.set_active_catalog("local")
+        # Need to create the warehouse dir if it does not exist
+        if Path(warehouse_dir).is_dir() is False:
+            Path(warehouse_dir).mkdir()
+        self.set_active_catalog("local")  # Creates the JDBC .db file
 
         # Check version of Evaluation
         if create_dir is False and check_evaluation_version is True:
