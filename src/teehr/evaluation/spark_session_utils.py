@@ -67,7 +67,7 @@ def create_spark_session(
     local_catalog_name : str
         Name of the local Iceberg catalog. Default is "local".
     local_catalog_type : str
-        Type of the local Iceberg catalog. Default is "hadoop".
+        Type of the local Iceberg catalog. Default is "jdbc".
     local_namespace_name : str
         Namespace for the local Iceberg catalog. Default is "teehr".
     remote_warehouse_dir : str
