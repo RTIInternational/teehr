@@ -2,7 +2,7 @@
 import sys
 from pathlib import Path
 from teehr.evaluation.tables.base_table import BaseTable
-from teehr.models.filters import FilterBaseModel
+from teehr.models.filters import TableFilter
 from teehr.querying.utils import join_geometry
 import pyspark.sql as ps
 import logging
@@ -69,17 +69,17 @@ class JoinedTimeseriesTable(BaseTable):
             "primary_location_id"
         )
         gdf.attrs['table_type'] = self.table_name
-        gdf.attrs['fields'] = self.fields()
+        gdf.attrs['fields'] = self.columns
         return gdf
 
     def _join(self,
             primary_filters: Union[
-                str, dict, FilterBaseModel,
-                List[Union[str, dict, FilterBaseModel]]
+                str, dict, TableFilter,
+                List[Union[str, dict, TableFilter]]
             ] = None,
             secondary_filters: Union[
-                str, dict, FilterBaseModel,
-                List[Union[str, dict, FilterBaseModel]]
+                str, dict, TableFilter,
+                List[Union[str, dict, TableFilter]]
             ] = None,
         ) -> ps.DataFrame:
         """Join primary and secondary timeseries.
@@ -87,13 +87,13 @@ class JoinedTimeseriesTable(BaseTable):
         Parameters
         ----------
         primary_filters : Union[
-            str, dict, FilterBaseModel,
-            List[Union[str, dict, FilterBaseModel]]], optional
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]], optional
             Filters to apply to the primary timeseries before joining,
             by default None
         secondary_filters : Union[
-            str, dict, FilterBaseModel,
-            List[Union[str, dict, FilterBaseModel]]], optional
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]], optional
             Filters to apply to the secondary timeseries before joining,
             by default None"""
 
@@ -216,12 +216,12 @@ class JoinedTimeseriesTable(BaseTable):
         attr_list: List[str] = None,
         write_mode: str = "create_or_replace",
         primary_filters: Union[
-            str, dict, FilterBaseModel,
-            List[Union[str, dict, FilterBaseModel]]
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
         ] = None,
         secondary_filters: Union[
-            str, dict, FilterBaseModel,
-            List[Union[str, dict, FilterBaseModel]]
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
         ] = None,
     ):
         """Create joined timeseries table.
@@ -240,13 +240,13 @@ class JoinedTimeseriesTable(BaseTable):
             Write mode for the joined timeseries table, by default
             "create_or_replace"
         primary_filters : Union[
-            str, dict, FilterBaseModel,
-            List[Union[str, dict, FilterBaseModel]]], optional
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]], optional
             Filters to apply to the primary timeseries before joining,
             by default None
         secondary_filters : Union[
-            str, dict, FilterBaseModel,
-            List[Union[str, dict, FilterBaseModel]]], optional
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]], optional
             Filters to apply to the secondary timeseries before joining,
             by default None
         """

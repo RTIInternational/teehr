@@ -19,17 +19,6 @@ from teehr.models.pydantic_table_models import (  # noqa
     Unit,
     Variable
 )
-from teehr.models.filters import (  # noqa
-    UnitFilter,
-    ConfigurationFilter,
-    VariableFilter,
-    AttributeFilter,
-    LocationFilter,
-    LocationAttributeFilter,
-    LocationCrosswalkFilter,
-    TimeseriesFilter,
-    JoinedTimeseriesFilter
-)
 
 from teehr.models.calculated_fields.row_level import RowLevelCalculatedFields # noqa
 from teehr.models.calculated_fields.timeseries_aware import TimeseriesAwareCalculatedFields # noqa

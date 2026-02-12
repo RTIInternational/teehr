@@ -138,8 +138,6 @@ class Extract:
             constant_field_values=constant_field_values
         )
         # Create cache directory if it doesn't exist
-        if cache_dir.exists():
-            shutil.rmtree(cache_dir)
         cache_dir.mkdir(parents=True, exist_ok=True)
 
         files_converted = 0

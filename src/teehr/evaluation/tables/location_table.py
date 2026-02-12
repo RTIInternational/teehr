@@ -71,7 +71,7 @@ class LocationTable(BaseTable):
         self._check_load_table()
         gdf = df_to_gdf(self.to_pandas())
         gdf.attrs['table_type'] = self.table_name
-        gdf.attrs['fields'] = self.fields()
+        gdf.attrs['fields'] = self.columns
         return gdf
 
     def load_spatial(

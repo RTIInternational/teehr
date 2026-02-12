@@ -8,7 +8,7 @@ from pandera.pandas import DataFrameSchema as PandasDataFrameSchema
 from pyspark.sql.functions import lit
 import pandas as pd
 
-from teehr.models.filters import FilterBaseModel
+from teehr.models.filters import TableFilter
 from teehr.querying.filter_format import (
     format_filter,
     validate_filter
@@ -120,13 +120,13 @@ class Validate:
         self,
         table_name: str,
         filters: Union[
-            str, dict, FilterBaseModel,
-            List[Union[str, dict, FilterBaseModel]]
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
         ],
         validate: bool = True
     ) -> Union[
-            str, dict, FilterBaseModel,
-            List[Union[str, dict, FilterBaseModel]]
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
     ]:
         """Validate table filter(s).
 
@@ -135,8 +135,8 @@ class Validate:
         table_name : str
             The name of the table to validate filters for.
         filters : Union[
-            str, dict, FilterBaseModel,
-            List[Union[str, dict, FilterBaseModel]]
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
         ]
             The filters to validate.
         validate : bool, optional
@@ -146,8 +146,8 @@ class Validate:
         Returns
         -------
         Union[
-            str, dict, FilterBaseModel,
-            List[Union[str, dict, FilterBaseModel]]
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
         ]
             The validated filter(s).
         """
@@ -160,19 +160,27 @@ class Validate:
             filters = [filters]
 
         tbl = self._ev.table(table_name=table_name)
-        filter_model = tbl.filter_model
-        fields_enum = self._ev.table(table_name=table_name).field_enum()
+        table_fields = tbl.columns
+        table_schema = tbl.schema
         validated_filters = []
         for filter in filters:
             logger.debug(f"Validating and applying {filter}")
             if not isinstance(filter, str):
-                filter = filter_model.model_validate(
-                    filter,
-                    context={"fields_enum": fields_enum}
-                )
+                # Convert dict or re-validate TableFilter with context
+                if isinstance(filter, TableFilter):
+                    filter = TableFilter.model_validate(
+                        filter.model_dump(),
+                        context={"field_names": table_fields}
+                    )
+                else:
+                    # Assume it's a dict
+                    filter = TableFilter.model_validate(
+                        filter,
+                        context={"field_names": table_fields}
+                    )
                 logger.debug(f"Filter: {filter.model_dump_json()}")
                 if validate is True:
-                    filter = validate_filter(filter, tbl.schema_func("pandas"))
+                    filter = validate_filter(filter, table_schema)
                 filter = format_filter(filter)
 
             validated_filters.append(filter)

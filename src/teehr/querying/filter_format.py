@@ -6,7 +6,8 @@ from collections.abc import Iterable
 from datetime import datetime, timedelta
 from typing import Union
 import logging
-from teehr.models.filters import FilterBaseModel
+from teehr.models.filters import TableFilter
+from pyspark.sql.types import StructType, StringType, IntegerType, FloatType, TimestampType
 
 logger = logging.getLogger(__name__)
 
@@ -73,22 +74,22 @@ def format_timedelta_value(value: timedelta) -> str:
 
 
 def format_filter(
-    filter: FilterBaseModel,
+    filter: TableFilter,
 ) -> str:
     r"""Return an SQL formatted string for single filter object.
 
     Parameters
     ----------
-    filter : str or FilterBaseModel
-        A single FilterBaseModel object or a subclass
-        of FilterBaseModel.
+    filter : str or TableFilter
+        A single TableFilter object or a subclass
+        of TableFilter.
 
     Returns
     -------
     str
         An SQL formatted string for single filter object.
     """
-    column = filter.column.value
+    column = filter.column
     operator = filter.operator.value
 
     if isinstance(filter.value, str):
@@ -120,16 +121,13 @@ def format_filter(
 
 
 def validate_filter(
-    filter: FilterBaseModel,
-    dataframe_schema: pa.DataFrameSchema
+    filter: TableFilter,
+    dataframe_schema: StructType
 ):
     """Validate a single model."""
-    if filter.column.value not in dataframe_schema.columns:
-        raise ValueError(f"Filter column not in model fields: {filter}")
-
-    model_field_data_type = dataframe_schema.columns[filter.column.value].dtype.type
+    model_field_data_type = dataframe_schema[filter.column].dataType
     logging.debug(
-        f"Model field {filter.column.value} has type: {model_field_data_type}"
+        f"Model field {filter.column} has type: {model_field_data_type}"
     )
 
     # if string or not iterable, make it iterable
@@ -142,18 +140,18 @@ def validate_filter(
     validate_vals = []
     for v in vals:
         logging.debug(f"Validating filter value: {v}")
-        if model_field_data_type == str:
+        if model_field_data_type == StringType():
             validate_vals.append(str(v))
-        elif model_field_data_type == int:
+        elif model_field_data_type == IntegerType():
             validate_vals.append(int(v))
         elif (
-            model_field_data_type == float or
+            model_field_data_type == FloatType() or
             model_field_data_type == "float64" or
             model_field_data_type == "float32"
         ):
             validate_vals.append(float(v))
         elif (
-            model_field_data_type == datetime or
+            model_field_data_type == TimestampType() or
             model_field_data_type == "datetime64[ns]" or
             model_field_data_type == "datetime64[ms]"
         ):

@@ -7,32 +7,51 @@ from datetime import timedelta
 import pytest
 from teehr import RowLevelCalculatedFields as rcf
 from teehr.models.filters import (
-    TimeseriesFilter,
-    JoinedTimeseriesFilter,
+    # TimeseriesFilter,
+    # JoinedTimeseriesFilter,
     FilterOperators,
 )
+from teehr.models.filters import TableFilter
+
+@pytest.mark.function_scope_two_location_warehouse
+def test_filtering_a_new_table(function_scope_two_location_warehouse):
+    """Test no filter returns all rows."""
+    ev = function_scope_two_location_warehouse
+    ev.write.to_warehouse(
+        table_name="new_attributes",
+        source_data=ev.attributes,
+        write_mode="create_or_replace"
+    )
+    attr_filter = TableFilter(
+        column="name",
+        operator=FilterOperators.eq,
+        value="frac_urban"
+    )
+    df = ev.table(table_name="new_attributes").filter("name = 'frac_urban'").toPandas()
+    df = ev.table(table_name="new_attributes").filter(attr_filter).toPandas()
+    assert len(df) == 1
 
 
-@pytest.mark.session_scope_test_warehouse
-def test_chain_filter_single_str(session_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_chain_filter_single_str(module_scope_test_warehouse):
     """Test filter string."""
-    ev = session_scope_test_warehouse
+    ev = module_scope_test_warehouse
     df = ev.primary_timeseries.filter("location_id = 'gage-A'").to_pandas()
     assert len(df) == 26
 
 
-@pytest.mark.session_scope_test_warehouse
-def test_chain_filter_single_str2(session_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_chain_filter_single_str2(module_scope_test_warehouse):
     """Test filter string with invalid id."""
-    ev = session_scope_test_warehouse
+    ev = module_scope_test_warehouse
     with pytest.raises(Exception):
         ev.primary_timeseries.filter("id = 'gage-A'").to_pandas()
 
 
-@pytest.mark.session_scope_test_warehouse
-def test_chain_filter_single_dict(session_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_chain_filter_single_dict(module_scope_test_warehouse):
     """Test filter dict."""
-    ev = session_scope_test_warehouse
+    ev = module_scope_test_warehouse
     df = ev.primary_timeseries.filter({
         "column": "location_id",
         "operator": "=",
@@ -41,10 +60,10 @@ def test_chain_filter_single_dict(session_scope_test_warehouse):
     assert len(df) == 26
 
 
-@pytest.mark.session_scope_test_warehouse
-def test_chain_filter_single_dict2(session_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_chain_filter_single_dict2(module_scope_test_warehouse):
     """Test filter dict with invalid id."""
-    ev = session_scope_test_warehouse
+    ev = module_scope_test_warehouse
     with pytest.raises(Exception):
         ev.primary_timeseries.filter({
             "column": "id",
@@ -53,14 +72,13 @@ def test_chain_filter_single_dict2(session_scope_test_warehouse):
         }).to_pandas()
 
 
-@pytest.mark.session_scope_test_warehouse
-def test_chain_filter_single_model(session_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_chain_filter_single_model(module_scope_test_warehouse):
     """Test filter model."""
-    ev = session_scope_test_warehouse
-    flds = ev.primary_timeseries.field_enum()
+    ev = module_scope_test_warehouse
     df = ev.primary_timeseries.filter(
-        TimeseriesFilter(
-            column=flds.location_id,
+        TableFilter(
+            column="location_id",
             operator=FilterOperators.eq,
             value="gage-A"
         )
@@ -68,25 +86,24 @@ def test_chain_filter_single_model(session_scope_test_warehouse):
     assert len(df) == 26
 
 
-@pytest.mark.session_scope_test_warehouse
-def test_chain_filter_single_model2(session_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_chain_filter_single_model2(module_scope_test_warehouse):
     """Test filter model."""
-    ev = session_scope_test_warehouse
-    flds = ev.primary_timeseries.field_enum()
+    ev = module_scope_test_warehouse
     with pytest.raises(Exception):
         ev.primary_timeseries.filter(
-            TimeseriesFilter(
-                column=flds.id,
+            TableFilter(
+                column="id",
                 operator=FilterOperators.eq,
                 value="gage-A"
             )
         ).to_pandas()
 
 
-@pytest.mark.session_scope_test_warehouse
-def test_chain_filter_list_str(session_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_chain_filter_list_str(module_scope_test_warehouse):
     """Test filter list of strings."""
-    ev = session_scope_test_warehouse
+    ev = module_scope_test_warehouse
     df = ev.primary_timeseries.filter([
         "location_id = 'gage-A'",
         "value_time > '2022-01-01T12:00:00'"
@@ -94,10 +111,10 @@ def test_chain_filter_list_str(session_scope_test_warehouse):
     assert len(df) == 13
 
 
-@pytest.mark.session_scope_test_warehouse
-def test_chain_filter_list_dict(session_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_chain_filter_list_dict(module_scope_test_warehouse):
     """Test filter list of dicts."""
-    ev = session_scope_test_warehouse
+    ev = module_scope_test_warehouse
     df = ev.primary_timeseries.filter([
         {
             "column": "location_id",
@@ -113,19 +130,18 @@ def test_chain_filter_list_dict(session_scope_test_warehouse):
     assert len(df) == 13
 
 
-@pytest.mark.session_scope_test_warehouse
-def test_chain_filter_list_model(session_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_chain_filter_list_model(module_scope_test_warehouse):
     """Test filter list of models."""
-    ev = session_scope_test_warehouse
-    flds = ev.primary_timeseries.field_enum()
+    ev = module_scope_test_warehouse
     df = ev.primary_timeseries.filter([
-        TimeseriesFilter(
-            column=flds.location_id,
+        TableFilter(
+            column="location_id",
             operator=FilterOperators.eq,
             value="gage-A"
         ),
-        TimeseriesFilter(
-            column=flds.value_time,
+        TableFilter(
+            column="value_time",
             operator=FilterOperators.gt,
             value="2022-01-01T12:00:00Z"
         )
@@ -133,20 +149,20 @@ def test_chain_filter_list_model(session_scope_test_warehouse):
     assert len(df) == 13
 
 
-@pytest.mark.session_scope_test_warehouse
-def test_query_single_str(session_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_query_single_str(module_scope_test_warehouse):
     """Test query string."""
-    ev = session_scope_test_warehouse
+    ev = module_scope_test_warehouse
     df = ev.primary_timeseries.query(
         filters="location_id = 'gage-A'"
     ).to_pandas()
     assert len(df) == 26
 
 
-@pytest.mark.session_scope_test_warehouse
-def test_query_single_dict(session_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_query_single_dict(module_scope_test_warehouse):
     """Test query dict."""
-    ev = session_scope_test_warehouse
+    ev = module_scope_test_warehouse
     df = ev.primary_timeseries.query(
         filters={
             "column": "location_id",
@@ -157,14 +173,13 @@ def test_query_single_dict(session_scope_test_warehouse):
     assert len(df) == 26
 
 
-@pytest.mark.session_scope_test_warehouse
-def test_query_single_model(session_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_query_single_model(module_scope_test_warehouse):
     """Test query model."""
-    ev = session_scope_test_warehouse
-    flds = ev.primary_timeseries.field_enum()
+    ev = module_scope_test_warehouse
     df = ev.primary_timeseries.query(
-        filters=TimeseriesFilter(
-            column=flds.location_id,
+        filters=TableFilter(
+            column="location_id",
             operator=FilterOperators.eq,
             value="gage-A"
         )
@@ -172,10 +187,10 @@ def test_query_single_model(session_scope_test_warehouse):
     assert len(df) == 26
 
 
-@pytest.mark.session_scope_test_warehouse
-def test_query_list_str(session_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_query_list_str(module_scope_test_warehouse):
     """Test query list of strings."""
-    ev = session_scope_test_warehouse
+    ev = module_scope_test_warehouse
     df = ev.primary_timeseries.query(
         filters=[
             "location_id = 'gage-A'",
@@ -185,10 +200,10 @@ def test_query_list_str(session_scope_test_warehouse):
     assert len(df) == 13
 
 
-@pytest.mark.session_scope_test_warehouse
-def test_query_list_dict(session_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_query_list_dict(module_scope_test_warehouse):
     """Test query list of dicts."""
-    ev = session_scope_test_warehouse
+    ev = module_scope_test_warehouse
     df = ev.primary_timeseries.query(
         filters=[
             {
@@ -206,20 +221,19 @@ def test_query_list_dict(session_scope_test_warehouse):
     assert len(df) == 13
 
 
-@pytest.mark.session_scope_test_warehouse
-def test_query_list_model(session_scope_test_warehouse):
+@pytest.mark.module_scope_test_warehouse
+def test_query_list_model(module_scope_test_warehouse):
     """Test query list of models."""
-    ev = session_scope_test_warehouse
-    flds = ev.primary_timeseries.field_enum()
+    ev = module_scope_test_warehouse
     df = ev.primary_timeseries.query(
         filters=[
-            TimeseriesFilter(
-                column=flds.location_id,
+            TableFilter(
+                column="location_id",
                 operator=FilterOperators.eq,
                 value="gage-A"
             ),
-            TimeseriesFilter(
-                column=flds.value_time,
+            TableFilter(
+                column="value_time",
                 operator=FilterOperators.gt,
                 value="2022-01-01T12:00:00Z"
             )
@@ -228,18 +242,17 @@ def test_query_list_model(session_scope_test_warehouse):
     assert len(df) == 13
 
 
-@pytest.mark.session_scope_test_warehouse
-def test_filter_by_lead_time(session_scope_test_warehouse):
+@pytest.mark.function_scope_test_warehouse
+def test_filter_by_lead_time(function_scope_test_warehouse):
     """Test filter by lead time."""
-    ev = session_scope_test_warehouse
+    ev = function_scope_test_warehouse
     ev.joined_timeseries.add_calculated_fields([
         rcf.ForecastLeadTime(),
     ]).write()
     filter_value = timedelta(days=0, hours=18)
-    flds = ev.joined_timeseries.field_enum()
     df = ev.joined_timeseries.query(
-            JoinedTimeseriesFilter(
-                column=flds.forecast_lead_time,
+            TableFilter(
+                column="forecast_lead_time",
                 operator=FilterOperators.gt,
                 value=filter_value
             )

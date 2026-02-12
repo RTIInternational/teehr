@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 import pyspark.sql.functions as F
 
-from teehr.models.filters import FilterBaseModel
+from teehr.models.filters import TableFilter
 from teehr.models.generate.base import (
     SignatureGeneratorBaseModel,
     BenchmarkGeneratorBaseModel
@@ -106,8 +106,8 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
         start_datetime: Union[str, datetime],
         end_datetime: Union[str, datetime],
         input_table_filters: Union[
-            str, dict, FilterBaseModel,
-            List[Union[str, dict, FilterBaseModel]]
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
         ] = None,
         timestep: Union[str, timedelta] = "1 hour",
         update_variable_table: bool = True,
@@ -131,7 +131,7 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
             If provided as a str, the format must be supported by PySpark's
             ``to_timestamp`` function, such as "yyyy-MM-dd HH:mm:ss".
         input_table_filters : Union[
-                str, dict, FilterBaseModel, List[Union[str, dict, FilterBaseModel]]
+                str, dict, TableFilter, List[Union[str, dict, TableFilter]]
             ], optional
             The input table filter(s) that define a timeseries
             that will be used as the input_dataframe.
@@ -181,7 +181,6 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
         >>>     end_datetime="2024-11-21 13:00:00",
         >>> ).write()
         """
-        # input_dataframe = self._ev.filter(table_filter=input_table_filter)
         input_dataframe = self._ev.read.from_warehouse(
             table_name=input_table_name,
             filters=input_table_filters
@@ -227,12 +226,12 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
         template_table_name: str,
         output_configuration_name: str,
         reference_table_filters: Union[
-            str, dict, FilterBaseModel,
-            List[Union[str, dict, FilterBaseModel]]
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
         ] = None,
         template_table_filters: Union[
-            str, dict, FilterBaseModel,
-            List[Union[str, dict, FilterBaseModel]]
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
         ] = None,
     ):
         """Generate a benchmark forecast from two timeseries.
@@ -248,12 +247,12 @@ class GeneratedTimeseries(GeneratedTimeSeriesBasemodel):
         output_configuration_name : str
             The configuration name for the generated benchmark forecast.
         reference_table_filters : Union[
-                str, dict, FilterBaseModel, List[Union[str, dict, FilterBaseModel]]
+                str, dict, TableFilter, List[Union[str, dict, TableFilter]]
             ], optional
             The reference table filter(s) defining the timeseries
             containing the values to assign to the template timeseries.
         template_table_filters : Union[
-                str, dict, FilterBaseModel, List[Union[str, dict, FilterBaseModel]]
+                str, dict, TableFilter, List[Union[str, dict, TableFilter]]
             ], optional
             The template table filter(s) that defines the timeseries
             containing the forecast structure

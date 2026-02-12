@@ -7,6 +7,8 @@ import pandas as pd
 from pyarrow import schema as arrow_schema
 import geopandas as gpd
 
+from teehr.evaluation.tables.base_table import BaseTable
+
 DATATYPE_WRITE_TRANSFORMS = {"forecast_lead_time": "BIGINT"}
 
 
@@ -186,7 +188,7 @@ class Write:
         if isinstance(source_data, pd.DataFrame):
             source_data = self._ev.spark.createDataFrame(source_data)
 
-        if isinstance(source_data, DataFrame):
+        if isinstance(source_data, DataFrame) | isinstance(source_data, BaseTable):
             source_data.createOrReplaceTempView("source_data")
             source_data = "source_data"
 

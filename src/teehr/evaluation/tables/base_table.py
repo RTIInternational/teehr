@@ -2,6 +2,8 @@
 from typing import List, Dict, Union
 import logging
 
+from pyspark.sql import DataFrame
+
 from teehr.models.str_enum import StrEnum
 from teehr.querying.utils import (
     order_df,
@@ -12,12 +14,9 @@ from teehr.querying.utils import (
 )
 from teehr.models.calculated_fields.base import CalculatedFieldBaseModel
 from teehr.models.evaluation_base import EvaluationBase
-from teehr.models.filters import FilterBaseModel
+from teehr.models.filters import TableFilter
 from teehr.models.table_properties import TBLPROPERTIES
 from teehr.models.metrics.basemodels import MetricsBasemodel
-from teehr.models.table_enums import (
-    JoinedTimeseriesFields
-)
 from teehr.querying.metric_format import apply_aggregation_metrics
 
 
@@ -42,7 +41,7 @@ class BaseTable:
         self.uniqueness_fields: List[str] = None
         self.foreign_keys: List[Dict[str, str]] = None
         self.schema_func = None
-        self.filter_model: FilterBaseModel = None
+        self.filter_model: TableFilter = None
         self.strict_validation = None
         self.validate_filter_field_types = None
         self.field_enum_model = None
@@ -52,6 +51,32 @@ class BaseTable:
         # self.validate = ev.validate
         # self.extract = ev.extract
         # self.load = ev.load
+
+    def __getattr__(self, name):
+        """Delegate unknown attributes to the underlying DataFrame.
+
+        Notes
+        -----
+        This gets called any time an attr is accessed,
+        that isn't found on the Table class.  If the attribute is a
+        method on the DataFrame, it will be called and if the result
+        is a DataFrame, it will be wrapped in the Table class.
+        This allows for chaining of DataFrame methods while still
+        returning a Table object.
+        """
+        if self.sdf is None:
+            self._check_load_table()
+        attr = getattr(self.sdf, name)
+        if callable(attr):
+            def wrapper(*args, **kwargs):
+                result = attr(*args, **kwargs)
+                if isinstance(result, DataFrame):
+                    new_table = self.__class__(self._ev)
+                    new_table.sdf = result
+                    return new_table
+                return result
+            return wrapper
+        return attr
 
     def __call__(
         self,
@@ -180,13 +205,13 @@ class BaseTable:
     def query(
         self,
         filters: Union[
-            str, dict, FilterBaseModel,
-            List[Union[str, dict, FilterBaseModel]]
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
         ] = None,
         order_by: Union[str, StrEnum, List[Union[str, StrEnum]]] = None,
         group_by: Union[
-            str, JoinedTimeseriesFields,
-            List[Union[str, JoinedTimeseriesFields]]
+            str,
+            List[Union[str]]
         ] = None,
         include_metrics: Union[
             List[MetricsBasemodel],
@@ -202,17 +227,17 @@ class BaseTable:
         Parameters
         ----------
         filters : Union[
-                str, dict, FilterBaseModel,
-                List[Union[str, dict, FilterBaseModel]]
+                str, dict, TableFilter,
+                List[Union[str, dict, TableFilter]]
             ]
             The filters to apply to the query.  The filters can be an SQL string,
-            dictionary, FilterBaseModel or a list of any of these. The filters
+            dictionary, TableFilter or a list of any of these. The filters
             will be applied in the order they are provided.
         order_by : Union[str, List[str], StrEnum, List[StrEnum]]
             The fields to order the query by.  The fields can be a string,
             StrEnum or a list of any of these.  The fields will be ordered in
             the order they are provided.
-        group_by : Union[str, JoinedTimeseriesFields, List[Union[str, JoinedTimeseriesFields]]], optional
+        group_by : Union[str, List[Union[str]]], optional
             The fields to group the query by, by default None
         include_metrics : Union[List[MetricsBasemodel], str], optional
             The metrics to include in the query, by default None
@@ -334,8 +359,8 @@ class BaseTable:
     def filter(
         self,
         filters: Union[
-            str, dict, FilterBaseModel,
-            List[Union[str, dict, FilterBaseModel]]
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
         ]
     ):
         """Apply a filter.
@@ -343,11 +368,11 @@ class BaseTable:
         Parameters
         ----------
         filters : Union[
-                str, dict, FilterBaseModel,
-                List[Union[str, dict, FilterBaseModel]]
+                str, dict, TableFilter,
+                List[Union[str, dict, TableFilter]]
             ]
             The filters to apply to the query.  The filters can be an SQL string,
-            dictionary, FilterBaseModel or a list of any of these.
+            dictionary, TableFilter or a list of any of these.
 
         Returns
         -------
@@ -391,7 +416,7 @@ class BaseTable:
         >>>     ]
         >>> ).to_pandas()
 
-        Filters as FilterBaseModel:
+        Filters as TableFilter:
 
         >>> from teehr.models.filters import TimeseriesFilter
         >>> from teehr.models.filters import FilterOperators
@@ -430,7 +455,7 @@ class BaseTable:
 
     def order_by(
         self,
-        fields: Union[str, StrEnum, List[Union[str, StrEnum]]]
+        fields: Union[str, List[Union[str]]]
     ):
         """Apply an order_by.
 
@@ -450,32 +475,12 @@ class BaseTable:
         Order by string:
 
         >>> ts_df = ev.table(table_name="primary_timeseries").order_by("value_time").to_df()
-
-        Order by StrEnum:
-
-        >>> from teehr.querying.field_enums import TimeseriesFields
-        >>> ts_df = ev.table(table_name="primary_timeseries").order_by(
-        >>>     TimeseriesFields.value_time
-        >>> ).to_pandas()
         """
         logger.info(f"Setting order_by {fields}.")
         self._check_load_table()
         self.sdf = order_df(self.sdf, fields)
         return self
 
-    def fields(self) -> List[str]:
-        """Return table columns as a list."""
-        self._check_load_table()
-        return self.sdf.columns
-
-    def field_enum(self) -> StrEnum:
-        """Get the joined timeseries fields enum."""
-        self._check_load_table()
-        fields_list = self.sdf.columns
-        return self.field_enum_model(
-            self.field_enum_model.__name__,
-            {field: field for field in fields_list}
-        )
 
     def distinct_values(
         self,
@@ -574,7 +579,7 @@ class BaseTable:
         self._check_load_table()
         df = self.sdf.toPandas()
         df.attrs['table_type'] = self.table_name
-        df.attrs['fields'] = self.fields()
+        df.attrs['fields'] = self.columns
         return df
 
     def _join_geometry_using_crosswalk(self):
@@ -598,7 +603,7 @@ class BaseTable:
         self._check_load_table()
         gdf = join_geometry(self.sdf, self._ev.locations.to_sdf())
         gdf.attrs['table_type'] = self.table_name
-        gdf.attrs['fields'] = self.fields()
+        gdf.attrs['fields'] = self.columns
         return gdf
 
     def to_sdf(self):

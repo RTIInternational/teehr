@@ -9,7 +9,7 @@ import pyspark.sql as ps
 from pandera.pyspark import DataFrameSchema as SparkDataFrameSchema
 from pandera import DataFrameSchema as PandasDataFrameSchema
 
-from teehr.models.filters import FilterBaseModel
+from teehr.models.filters import TableFilter
 from teehr.utils.utils import path_to_spark
 
 logger = logging.getLogger(__name__)
@@ -118,8 +118,8 @@ class Read:
         catalog_name: str = None,
         namespace_name: str = None,
         filters: Union[
-            str, dict, FilterBaseModel,
-            List[Union[str, dict, FilterBaseModel]]
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
         ] = None,
         validate_filter_field_types: bool = True
     ) -> None:
@@ -134,8 +134,8 @@ class Read:
         namespace_name : str, optional
             The namespace name. If None, uses the active namespace. The default is None.
         filters : Union[
-            str, dict, FilterBaseModel,
-            List[Union[str, dict, FilterBaseModel]]
+            str, dict, TableFilter,
+            List[Union[str, dict, TableFilter]]
         ], optional
             The filters to apply to the table. The default is None.
         validate_filter_field_types : bool, optional
