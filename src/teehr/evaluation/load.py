@@ -280,7 +280,7 @@ class Load:
         schema_func = tbl.schema_func
         uniqueness_fields = tbl.uniqueness_fields
         foreign_keys = tbl.foreign_keys
-        fields = tbl.fields()
+        fields = tbl.columns
 
         # Begin the ETL process.
         self._extract.to_cache(

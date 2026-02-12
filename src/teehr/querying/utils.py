@@ -19,7 +19,7 @@ def post_process_metric_results(
     include_metrics: List[PydanticBaseModel],
     group_by: Union[
         str,
-        List[str]]
+        List[str]
     ]
 ) -> ps.DataFrame:
     """Post-process the results of the metrics query.
