@@ -197,6 +197,10 @@ class Write:
             self._apply_datatype_transform()
 
         if write_mode == "append":
+            if uniqueness_fields is None:
+                raise ValueError(
+                    "uniqueness_fields must be provided for append write mode."
+                )
             self._append(
                 source_view=source_data,
                 table_name=table_name,
@@ -205,6 +209,10 @@ class Write:
                 namespace_name=namespace_name
             )
         elif write_mode == "upsert":
+            if uniqueness_fields is None:
+                raise ValueError(
+                    "uniqueness_fields must be provided for upsert write mode."
+                )
             self._upsert(
                 source_view=source_data,
                 table_name=table_name,
