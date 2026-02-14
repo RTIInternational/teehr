@@ -241,6 +241,14 @@ class Validate:
                     sdf = sdf.withColumn(col_name, lit(None))
 
         if strict:
+            # First check to make sure schema col keys are in the dataframe
+            # if not raise an error. If they are, select only those columns to enforce the schema.
+            missing_cols = [col for col in schema_cols if col not in sdf.columns]
+            if len(missing_cols) > 0:
+                raise ValueError(
+                    f"The field(s) {missing_cols} are missing from the DataFrame, "
+                    "and are required by the schema."
+                )
             sdf = sdf.select(*schema_cols)
 
         if drop_duplicates:

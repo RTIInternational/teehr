@@ -27,9 +27,10 @@ def test_filtering_a_new_table(function_scope_two_location_warehouse):
         operator=FilterOperators.eq,
         value="frac_urban"
     )
-    df = ev.table(table_name="new_attributes").filter("name = 'frac_urban'").toPandas()
-    df = ev.table(table_name="new_attributes").filter(attr_filter).toPandas()
-    assert len(df) == 1
+    df1 = ev.table(table_name="new_attributes").filter("name = 'frac_urban'").to_pandas()
+    df2 = ev.table(table_name="new_attributes").filter(attr_filter).toPandas()
+    assert len(df1) == 1
+    assert len(df2) == 1
 
 
 @pytest.mark.module_scope_test_warehouse
