@@ -53,8 +53,22 @@ class BaseTable:
         # self.extract = ev.extract
         # self.load = ev.load
 
+    def __dir__(self):
+        """Include DataFrame methods in dir() for discoverability."""
+        table_attrs = set(super().__dir__())
+        try:
+            self._check_load_table()
+            df_attrs = {a for a in dir(self.sdf) if not a.startswith("_")}
+            return sorted(table_attrs | df_attrs)
+        except Exception:
+            return sorted(table_attrs)
+
     def __getattr__(self, name):
         """Delegate unknown attributes to the underlying DataFrame.
+
+        See Also
+        --------
+        pyspark.sql.DataFrame : Full list of available methods.
 
         Notes
         -----

@@ -74,3 +74,29 @@ Tools for calculating metrics and generating synthetic timeseries.
 * :class:`Generated Timeseries <teehr.evaluation.generate.GeneratedTimeseries>`
 * :class:`Streamflow Normals <teehr.models.generate.timeseries_generator_models.Normals>`
 * :class:`Reference Forecast Model <teehr.models.generate.timeseries_generator_models.ReferenceForecast>`
+
+
+Using Spark DataFrame Methods
+-----------------------------
+
+All TEEHR table objects support the full Spark DataFrame API.
+Any method available on ``pyspark.sql.DataFrame`` can be called
+directly on a table object.
+
+.. code-block:: python
+
+   # These are equivalent:
+   table.sdf.filter(...)   # access DataFrame directly
+   table.filter(...)       # delegated, returns a Table
+
+The following commonly used methods are delegated:
+
+- ``filter()`` / ``where()`` — row filtering
+- ``select()`` — column selection
+- ``groupBy()`` — aggregation
+- ``orderBy()`` / ``sort()`` — sorting
+- ``limit()`` — row limiting
+- ``withColumn()`` — add/replace columns
+- ``drop()`` — remove columns
+- ``show()`` — display rows
+- ``count()`` — row count
