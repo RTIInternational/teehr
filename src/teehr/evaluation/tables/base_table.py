@@ -1,5 +1,6 @@
 """Base class for all tables."""
 from typing import List, Dict, Union
+import difflib
 import logging
 
 from pyspark.sql import DataFrame
@@ -65,7 +66,17 @@ class BaseTable:
         returning a Table object.
         """
         self._check_load_table()
-        attr = getattr(self.sdf, name)
+        try:
+            attr = getattr(self.sdf, name)
+        except AttributeError:
+            candidates = [a for a in dir(self.sdf) if not a.startswith("_")]
+            matches = difflib.get_close_matches(
+                name, candidates, n=3, cutoff=0.6
+            )
+            msg = f"'{type(self).__name__}' object has no attribute '{name}'."
+            if matches:
+                msg += f" Did you mean: {', '.join(matches)}?"
+            raise AttributeError(msg) from None
         if callable(attr):
             def wrapper(*args, **kwargs):
                 result = attr(*args, **kwargs)
