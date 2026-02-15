@@ -64,8 +64,7 @@ class BaseTable:
         This allows for chaining of DataFrame methods while still
         returning a Table object.
         """
-        if self.sdf is None: # is this needed?
-            self._check_load_table()
+        self._check_load_table()
         attr = getattr(self.sdf, name)
         if callable(attr):
             def wrapper(*args, **kwargs):
