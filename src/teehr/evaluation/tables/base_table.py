@@ -53,14 +53,14 @@ class BaseTable:
         # self.extract = ev.extract
         # self.load = ev.load
 
-    def __dir__(self):
-        """Include DataFrame methods in dir() for discoverability."""
-        table_attrs = set(super().__dir__())
-        sdf = self.__dict__.get("sdf")
-        if sdf is not None:
-            df_attrs = {a for a in dir(sdf) if not a.startswith("_")}
-            return sorted(table_attrs | df_attrs)
-        return sorted(table_attrs)
+    # def __dir__(self):
+    #     """Include DataFrame methods in dir() for discoverability."""
+    #     table_attrs = set(super().__dir__())
+    #     sdf = self.__dict__.get("sdf")
+    #     if sdf is not None:
+    #         df_attrs = {a for a in dir(sdf) if not a.startswith("_")}
+    #         return sorted(table_attrs | df_attrs)
+    #     return sorted(table_attrs)
 
     def __getattr__(self, name):
         """Delegate unknown attributes to the underlying DataFrame.
