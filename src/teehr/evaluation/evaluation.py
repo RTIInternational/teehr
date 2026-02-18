@@ -54,7 +54,6 @@ from teehr.models.evaluation_base import (
     LocalCatalog,
     RemoteCatalog
 )
-from teehr.visualization.dataframe_accessor import TEEHRDataFrameAccessor # noqa
 import teehr
 from pydantic import BaseModel as PydanticBaseModel
 
