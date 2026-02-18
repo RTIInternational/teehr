@@ -69,7 +69,7 @@ class JoinedTimeseriesTable(BaseTable):
             "primary_location_id"
         )
         gdf.attrs['table_type'] = self.table_name
-        gdf.attrs['fields'] = self.columns
+        gdf.attrs['fields'] = self.to_sdf().columns
         return gdf
 
     def _join(self,

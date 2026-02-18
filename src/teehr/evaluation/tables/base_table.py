@@ -62,44 +62,44 @@ class BaseTable:
     #         return sorted(table_attrs | df_attrs)
     #     return sorted(table_attrs)
 
-    def __getattr__(self, name):
-        """Delegate unknown attributes to the underlying DataFrame.
+    # def __getattr__(self, name):
+    #     """Delegate unknown attributes to the underlying DataFrame.
 
-        See Also
-        --------
-        pyspark.sql.DataFrame : Full list of available methods.
+    #     See Also
+    #     --------
+    #     pyspark.sql.DataFrame : Full list of available methods.
 
-        Notes
-        -----
-        This gets called any time an attr is accessed,
-        that isn't found on the Table class.  If the attribute is a
-        method on the DataFrame, it will be called and if the result
-        is a DataFrame, it will be wrapped in the Table class.
-        This allows for chaining of DataFrame methods while still
-        returning a Table object.
-        """
-        self._check_load_table()
-        try:
-            attr = getattr(self.sdf, name)
-        except AttributeError:
-            candidates = [a for a in dir(self.sdf) if not a.startswith("_")]
-            matches = difflib.get_close_matches(
-                name, candidates, n=3, cutoff=0.6
-            )
-            msg = f"'{type(self).__name__}' object has no attribute '{name}'."
-            if matches:
-                msg += f" Did you mean: {', '.join(matches)}?"
-            raise AttributeError(msg) from None
-        if callable(attr):
-            def wrapper(*args, **kwargs):
-                result = attr(*args, **kwargs)
-                if isinstance(result, DataFrame):
-                    new_table = self.__class__(self._ev)
-                    new_table.sdf = result
-                    return new_table
-                return result
-            return wrapper
-        return attr
+    #     Notes
+    #     -----
+    #     This gets called any time an attr is accessed,
+    #     that isn't found on the Table class.  If the attribute is a
+    #     method on the DataFrame, it will be called and if the result
+    #     is a DataFrame, it will be wrapped in the Table class.
+    #     This allows for chaining of DataFrame methods while still
+    #     returning a Table object.
+    #     """
+    #     self._check_load_table()
+    #     try:
+    #         attr = getattr(self.sdf, name)
+    #     except AttributeError:
+    #         candidates = [a for a in dir(self.sdf) if not a.startswith("_")]
+    #         matches = difflib.get_close_matches(
+    #             name, candidates, n=3, cutoff=0.6
+    #         )
+    #         msg = f"'{type(self).__name__}' object has no attribute '{name}'."
+    #         if matches:
+    #             msg += f" Did you mean: {', '.join(matches)}?"
+    #         raise AttributeError(msg) from None
+    #     if callable(attr):
+    #         def wrapper(*args, **kwargs):
+    #             result = attr(*args, **kwargs)
+    #             if isinstance(result, DataFrame):
+    #                 new_table = self.__class__(self._ev)
+    #                 new_table.sdf = result
+    #                 return new_table
+    #             return result
+    #         return wrapper
+    #     return attr
 
     def __call__(
         self,
@@ -602,7 +602,7 @@ class BaseTable:
         self._check_load_table()
         df = self.sdf.toPandas()
         df.attrs['table_type'] = self.table_name
-        df.attrs['fields'] = self.columns
+        df.attrs['fields'] = self.to_sdf().columns
         return df
 
     def _join_geometry_using_crosswalk(self):
@@ -626,7 +626,7 @@ class BaseTable:
         self._check_load_table()
         gdf = join_geometry(self.sdf, self._ev.locations.to_sdf())
         gdf.attrs['table_type'] = self.table_name
-        gdf.attrs['fields'] = self.columns
+        gdf.attrs['fields'] = self.to_sdf().columns
         return gdf
 
     def to_sdf(self):

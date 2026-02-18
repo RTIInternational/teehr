@@ -160,8 +160,8 @@ class Validate:
             filters = [filters]
 
         tbl = self._ev.table(table_name=table_name)
-        table_fields = tbl.columns
-        table_schema = tbl.schema
+        table_fields = tbl.to_sdf().columns
+        table_schema = tbl.to_sdf().schema
         validated_filters = []
         for filter in filters:
             logger.debug(f"Validating and applying {filter}")

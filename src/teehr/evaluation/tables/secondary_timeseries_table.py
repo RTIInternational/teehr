@@ -61,5 +61,5 @@ class SecondaryTimeseriesTable(TimeseriesTable):
         self._check_load_table()
         gdf = self._join_geometry_using_crosswalk()
         gdf.attrs['table_type'] = self.table_name
-        gdf.attrs['fields'] = self.columns
+        gdf.attrs['fields'] = self.to_sdf().columns
         return gdf
