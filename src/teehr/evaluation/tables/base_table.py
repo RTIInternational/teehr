@@ -1,9 +1,6 @@
 """Base class for all tables."""
 from typing import List, Dict, Union
-import difflib
 import logging
-
-from pyspark.sql import DataFrame
 
 from teehr.models.str_enum import StrEnum
 from teehr.querying.utils import (
