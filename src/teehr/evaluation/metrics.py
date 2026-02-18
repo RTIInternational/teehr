@@ -10,6 +10,18 @@ logger = logging.getLogger(__name__)
 class Metrics(JoinedTimeseriesTable, Table):
     """Component class for calculating metrics.
 
+    .. deprecated::
+        The ``Metrics`` class (accessed via ``ev.metrics``) is deprecated and
+        will be removed in a future version. Use the ``query`` method on the
+        table directly with the ``include_metrics`` argument instead.
+        For example::
+
+            ev.joined_timeseries.query(
+                include_metrics=[...],
+                group_by=[...],
+                order_by=[...],
+            )
+
     Notes
     -----
     This is essentially a wrapper around the Table class but is initialized

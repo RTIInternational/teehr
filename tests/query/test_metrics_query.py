@@ -6,6 +6,7 @@ import geopandas as gpd
 from pathlib import Path
 import numpy as np
 import pytest
+import warnings
 
 from teehr.models.filters import TableFilter
 from teehr import TimeseriesAwareCalculatedFields as tcf
@@ -418,3 +419,12 @@ def test_table_based_metrics(function_scope_test_warehouse):
     ).to_pandas()
 
     assert sigs_df.sort_index().equals(sigs_df2.sort_index())
+
+
+@pytest.mark.module_scope_test_warehouse
+def test_metrics_property_deprecation_warning(module_scope_test_warehouse):
+    """Test that accessing ev.metrics emits a FutureWarning."""
+    ev = module_scope_test_warehouse
+
+    with pytest.warns(FutureWarning, match="metrics.*deprecated"):
+        ev.metrics
