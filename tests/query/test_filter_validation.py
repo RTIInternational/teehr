@@ -18,7 +18,7 @@ def test_filter_string_passes(session_scope_test_warehouse):
         operator=FilterOperators.eq,
         value="foo"
     )
-    dataframe_schema = ev.primary_timeseries.schema
+    dataframe_schema = ev.primary_timeseries.to_sdf().schema
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == "foo"
 
@@ -32,7 +32,7 @@ def test_filter_int_to_string_passes(session_scope_test_warehouse):
         operator=FilterOperators.eq,
         value=10
     )
-    dataframe_schema = ev.primary_timeseries.schema
+    dataframe_schema = ev.primary_timeseries.to_sdf().schema
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == "10"
 
@@ -46,7 +46,7 @@ def test_filter_float_passes(session_scope_test_warehouse):
         operator=FilterOperators.eq,
         value=10.1
     )
-    dataframe_schema = ev.primary_timeseries.schema
+    dataframe_schema = ev.primary_timeseries.to_sdf().schema
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == 10.1
 
@@ -60,7 +60,7 @@ def test_filter_int_to_float_passes(session_scope_test_warehouse):
         operator=FilterOperators.eq,
         value=10
     )
-    dataframe_schema = ev.primary_timeseries.schema
+    dataframe_schema = ev.primary_timeseries.to_sdf().schema
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == 10.0
 
@@ -76,7 +76,7 @@ def test_filter_str_to_float_fails(session_scope_test_warehouse):
             operator=FilterOperators.eq,
             value="foo"
         )
-        dataframe_schema = ev.primary_timeseries.schema
+        dataframe_schema = ev.primary_timeseries.to_sdf().schema
         filter = validate_filter(filter, dataframe_schema)
 
 
@@ -89,7 +89,7 @@ def test_filter_datetime_passes(session_scope_test_warehouse):
         operator=FilterOperators.eq,
         value=datetime(2021, 1, 1)
     )
-    dataframe_schema = ev.primary_timeseries.schema
+    dataframe_schema = ev.primary_timeseries.to_sdf().schema
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == datetime(2021, 1, 1)
 
@@ -103,7 +103,7 @@ def test_filter_datetime_passes2(session_scope_test_warehouse):
         operator=FilterOperators.eq,
         value="2021-01-01"
     )
-    dataframe_schema = ev.primary_timeseries.schema
+    dataframe_schema = ev.primary_timeseries.to_sdf().schema
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == datetime(2021, 1, 1)
 
@@ -117,7 +117,7 @@ def test_filter_datetime_passes3(session_scope_test_warehouse):
         operator=FilterOperators.eq,
         value="2021-01-01T00:00:00"
     )
-    dataframe_schema = ev.primary_timeseries.schema
+    dataframe_schema = ev.primary_timeseries.to_sdf().schema
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == datetime(2021, 1, 1)
 
@@ -131,7 +131,7 @@ def test_filter_datetime_passes4(session_scope_test_warehouse):
         operator=FilterOperators.eq,
         value=pd.Timestamp("2021-01-01T00:00:00")
     )
-    dataframe_schema = ev.primary_timeseries.schema
+    dataframe_schema = ev.primary_timeseries.to_sdf().schema
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == datetime(2021, 1, 1)
 
@@ -145,7 +145,7 @@ def test_filter_datetime_passes5(session_scope_test_warehouse):
         operator=FilterOperators.eq,
         value="2021-01-01 00:00"
     )
-    dataframe_schema = ev.primary_timeseries.schema
+    dataframe_schema = ev.primary_timeseries.to_sdf().schema
     filter = validate_filter(filter, dataframe_schema)
     assert filter.value == datetime(2021, 1, 1)
 
@@ -161,7 +161,7 @@ def test_filter_datetime_fails(session_scope_test_warehouse):
             operator=FilterOperators.eq,
             value="10"
         )
-        dataframe_schema = ev.primary_timeseries.schema
+        dataframe_schema = ev.primary_timeseries.to_sdf().schema
         filter = validate_filter(filter, dataframe_schema)
 
 
@@ -176,5 +176,5 @@ def test_filter_in_str_fails(session_scope_test_warehouse):
             operator=FilterOperators.isin,
             value="10"
         )
-        dataframe_schema = ev.primary_timeseries.schema
+        dataframe_schema = ev.primary_timeseries.to_sdf().schema
         filter = validate_filter(filter, dataframe_schema)

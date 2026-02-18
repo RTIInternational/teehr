@@ -7,8 +7,6 @@ from datetime import timedelta
 import pytest
 from teehr import RowLevelCalculatedFields as rcf
 from teehr.models.filters import (
-    # TimeseriesFilter,
-    # JoinedTimeseriesFilter,
     FilterOperators,
 )
 from teehr.models.filters import TableFilter

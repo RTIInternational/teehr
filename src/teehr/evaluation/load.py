@@ -98,7 +98,7 @@ class Load:
         """
         tbl = self._ev.table(table_name=table_name)
 
-        schema_func = tbl.to_sdf().schema_func
+        schema_func = tbl.schema_func
         uniqueness_fields = tbl.uniqueness_fields
         foreign_keys = tbl.foreign_keys
         schema = schema_func().to_structtype()
@@ -281,7 +281,7 @@ class Load:
                     "No extraction function provided and "
                     "none found in table properties."
                 )
-        schema_func = tbl.to_sdf().schema_func
+        schema_func = tbl.schema_func
         uniqueness_fields = tbl.uniqueness_fields
         foreign_keys = tbl.foreign_keys
         fields = tbl.to_sdf().columns
@@ -402,7 +402,7 @@ class Load:
         in_path = Path(in_path)
 
         tbl = self._ev.table(table_name=table_name)
-        schema_func = tbl.to_sdf().schema_func
+        schema_func = tbl.schema_func
         uniqueness_fields = tbl.uniqueness_fields
         foreign_keys = tbl.foreign_keys
 

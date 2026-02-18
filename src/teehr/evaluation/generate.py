@@ -53,7 +53,7 @@ class GeneratedTimeSeriesBasemodel:
             )
         validated_df = self._ev.validate.schema(
             sdf=self.sdf,
-            table_schema=tbl.to_sdf().schema_func(),
+            table_schema=tbl.schema_func(),
             drop_duplicates=drop_duplicates,
             foreign_keys=tbl.foreign_keys,
             uniqueness_fields=tbl.uniqueness_fields,
