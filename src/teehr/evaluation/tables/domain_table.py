@@ -50,7 +50,7 @@ class DomainTable(BaseTable):
             )
         # if self.foreign_keys is not None:
         new_df_validated = self._ev.validate.data(
-            df=new_df,
+            df=new_df.cache(),
             table_schema=self.schema_func(),
         )
 
@@ -69,7 +69,7 @@ class DomainTable(BaseTable):
                 )
 
             validated_df = self._ev.validate.data(
-                df=combined_df,
+                df=combined_df.cache(),
                 table_schema=self.schema_func(),
             )
             self._ev.write.to_warehouse(
@@ -117,7 +117,7 @@ class DomainTable(BaseTable):
                 f"{new_df_not_matched.count()} new objects"
             )
             validated_df = self._ev.validate.data(
-                df=combined_df,
+                df=combined_df.cache(),
                 table_schema=self.schema_func(),
             )
 

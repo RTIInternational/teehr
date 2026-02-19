@@ -122,20 +122,22 @@ class Load:
 
         # Convert the input DataFrame to Spark DataFrame
         if isinstance(df, gpd.GeoDataFrame):
-            # This is a bit of a workaround due to spark failing when converting
-            # a pd.DataFrame with all null columns. We can pass in a schema, but
-            # first we validate with pandera to ensure all columns are present.
-            # Here we pass in flds to get the correct column order.
+            # This is a bit of a workaround due to spark failing when
+            # converting a pd.DataFrame with all null columns. We can pass in
+            # a schema, but first we validate with pandera to ensure all
+            # columns are present.Here we pass in flds to get the correct
+            # column order.
             df = schema_func("pandas").validate(df)
             df = df.to_wkb()
             df = self._ev.spark.createDataFrame(
                 df[flds], schema=schema
             )
         elif isinstance(df, pd.DataFrame):
-            # This is a bit of a workaround due to spark failing when converting
-            # a pd.DataFrame with all null columns. We can pass in a schema, but
-            # first we validate with pandera to ensure all columns are present.
-            # Here we pass in flds to get the correct column order.
+            # This is a bit of a workaround due to spark failing when
+            # converting a pd.DataFrame with all null columns. We can pass in
+            # a schema, but first we validate with pandera to ensure all
+            # columns are present.Here we pass in flds to get the correct
+            # column order.
             df = schema_func("pandas").validate(df)
             df = self._ev.spark.createDataFrame(
                 df[flds], schema=schema
@@ -192,6 +194,7 @@ class Load:
         extraction_function: callable = None,
         pattern: str = None,
         field_mapping: dict = None,
+        constant_field_values: dict = None,
         primary_location_id_prefix: str = None,
         primary_location_id_field: str = "location_id",
         secondary_location_id_prefix: str = None,
@@ -226,6 +229,9 @@ class Load:
         field_mapping : dict, optional
             A dictionary mapping input fields to output fields.
             Format: {input_field: output_field}
+        constant_field_values : dict, optional
+            A dictionary mapping field names to constant values.
+            Format: {field_name: value}.
         primary_location_id_prefix : str, optional
             The prefix to add to primary location IDs.
             Used to ensure unique location IDs across configurations.
@@ -286,6 +292,7 @@ class Load:
         self._extract.to_cache(
             in_datapath=in_path,
             field_mapping=field_mapping,
+            constant_field_values=constant_field_values,
             pattern=pattern,
             cache_dir=table_cache_dir,
             table_fields=fields,
