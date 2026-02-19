@@ -1,4 +1,5 @@
 """Evaluation module."""
+import tempfile
 from datetime import datetime
 from typing import Union, Literal, List
 from pathlib import Path
@@ -655,3 +656,55 @@ class Evaluation(EvaluationBase):
     #         remove_configs=remove_configs,
     #         update_configs=update_configs
     #     )
+
+
+class RemoteReadOnlyEvaluation(Evaluation):
+    """A read-only Evaluation class for accessing remote catalogs.
+
+    This class provides a convenient way to access a remote TEEHR catalog
+    without needing to manage local directories. It automatically creates
+    a temporary directory and sets the active catalog to remote.
+
+    Note: This is intended for read-only access to remote data. Write
+    operations to the remote catalog are not supported through this class.
+
+    Currently only users in the TEEHR-Hub environment have access to
+    the remote catalog, so this class is intended for use within that environment,
+    until remote access is more broadly available.
+    """
+
+    def __init__(
+        self,
+        spark: SparkSession = None
+    ):
+        """
+        Initialize the RemoteReadOnlyEvaluation class.
+
+        Parameters
+        ----------
+        spark : SparkSession, optional
+            The SparkSession object. If not provided, a new default
+            Spark session will be created.
+        """
+        # Create a temporary directory for the local catalog
+        self._temp_dir = tempfile.TemporaryDirectory()
+        temp_path = Path(self._temp_dir.name)
+
+        # Initialize the parent Evaluation class
+        super().__init__(
+            dir_path=temp_path,
+            create_dir=True,
+            check_evaluation_version=False,
+            spark=spark
+        )
+
+        # Set the active catalog to remote
+        self.set_active_catalog("remote")
+
+    def __del__(self):
+        """Clean up the temporary directory when the object is deleted."""
+        if hasattr(self, '_temp_dir') and self._temp_dir is not None:
+            try:
+                self._temp_dir.cleanup()
+            except Exception:
+                pass  # Ignore cleanup errors during garbage collection
