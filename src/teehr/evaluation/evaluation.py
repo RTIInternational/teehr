@@ -667,6 +667,10 @@ class RemoteReadOnlyEvaluation(Evaluation):
 
     Note: This is intended for read-only access to remote data. Write
     operations to the remote catalog are not supported through this class.
+
+    Currently only users in the TEEHR-Hub environment have access to
+    the remote catalog, so this class is intended for use within that environment,
+    until remote access is more broadly available.
     """
 
     def __init__(
