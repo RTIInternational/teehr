@@ -75,16 +75,6 @@ def s3_utils(session):
 
 
 @nox_poetry.session(reuse_venv=True)
-def visualization(session):
-    """Run tests related to visualization."""
-    session.install("pytest", ".")
-    session.run(
-        "pytest",
-        "tests/visualization"
-    )
-
-
-@nox_poetry.session(reuse_venv=True)
 def iceberg(session):
     """Run tests related to iceberg."""
     session.install("pytest", ".")

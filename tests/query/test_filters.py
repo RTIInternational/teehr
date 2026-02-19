@@ -4,7 +4,6 @@ This module tests the filter functions on primary_timeseries. It
 should apply to all tables.
 """
 from datetime import timedelta
-import tempfile
 import pytest
 from teehr import RowLevelCalculatedFields as rcf
 from teehr.models.filters import (
@@ -13,55 +12,51 @@ from teehr.models.filters import (
     FilterOperators,
 )
 
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from data.setup_v0_3_study import setup_v0_3_study  # noqa
 
-
-def test_chain_filter_single_str(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_chain_filter_single_str(session_scope_test_warehouse):
     """Test filter string."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     df = ev.primary_timeseries.filter("location_id = 'gage-A'").to_pandas()
     assert len(df) == 26
-    ev.spark.stop()
 
 
-def test_chain_filter_single_str2(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_chain_filter_single_str2(session_scope_test_warehouse):
     """Test filter string with invalid id."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     with pytest.raises(Exception):
         ev.primary_timeseries.filter("id = 'gage-A'").to_pandas()
-    ev.spark.stop()
 
 
-def test_chain_filter_single_dict(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_chain_filter_single_dict(session_scope_test_warehouse):
     """Test filter dict."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     df = ev.primary_timeseries.filter({
         "column": "location_id",
         "operator": "=",
         "value": "gage-A"
     }).to_pandas()
     assert len(df) == 26
-    ev.spark.stop()
 
 
-def test_chain_filter_single_dict2(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_chain_filter_single_dict2(session_scope_test_warehouse):
     """Test filter dict with invalid id."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     with pytest.raises(Exception):
         ev.primary_timeseries.filter({
             "column": "id",
             "operator": "=",
             "value": "gage-A"
         }).to_pandas()
-    ev.spark.stop()
 
 
-def test_chain_filter_single_model(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_chain_filter_single_model(session_scope_test_warehouse):
     """Test filter model."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     flds = ev.primary_timeseries.field_enum()
     df = ev.primary_timeseries.filter(
         TimeseriesFilter(
@@ -71,12 +66,12 @@ def test_chain_filter_single_model(tmpdir):
         )
     ).to_pandas()
     assert len(df) == 26
-    ev.spark.stop()
 
 
-def test_chain_filter_single_model2(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_chain_filter_single_model2(session_scope_test_warehouse):
     """Test filter model."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     flds = ev.primary_timeseries.field_enum()
     with pytest.raises(Exception):
         ev.primary_timeseries.filter(
@@ -86,23 +81,23 @@ def test_chain_filter_single_model2(tmpdir):
                 value="gage-A"
             )
         ).to_pandas()
-    ev.spark.stop()
 
 
-def test_chain_filter_list_str(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_chain_filter_list_str(session_scope_test_warehouse):
     """Test filter list of strings."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     df = ev.primary_timeseries.filter([
         "location_id = 'gage-A'",
         "value_time > '2022-01-01T12:00:00'"
     ]).to_pandas()
     assert len(df) == 13
-    ev.spark.stop()
 
 
-def test_chain_filter_list_dict(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_chain_filter_list_dict(session_scope_test_warehouse):
     """Test filter list of dicts."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     df = ev.primary_timeseries.filter([
         {
             "column": "location_id",
@@ -116,12 +111,12 @@ def test_chain_filter_list_dict(tmpdir):
         }
     ]).to_pandas()
     assert len(df) == 13
-    ev.spark.stop()
 
 
-def test_chain_filter_list_model(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_chain_filter_list_model(session_scope_test_warehouse):
     """Test filter list of models."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     flds = ev.primary_timeseries.field_enum()
     df = ev.primary_timeseries.filter([
         TimeseriesFilter(
@@ -136,22 +131,22 @@ def test_chain_filter_list_model(tmpdir):
         )
     ]).to_pandas()
     assert len(df) == 13
-    ev.spark.stop()
 
 
-def test_query_single_str(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_query_single_str(session_scope_test_warehouse):
     """Test query string."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     df = ev.primary_timeseries.query(
         filters="location_id = 'gage-A'"
     ).to_pandas()
     assert len(df) == 26
-    ev.spark.stop()
 
 
-def test_query_single_dict(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_query_single_dict(session_scope_test_warehouse):
     """Test query dict."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     df = ev.primary_timeseries.query(
         filters={
             "column": "location_id",
@@ -160,12 +155,12 @@ def test_query_single_dict(tmpdir):
         }
     ).to_pandas()
     assert len(df) == 26
-    ev.spark.stop()
 
 
-def test_query_single_model(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_query_single_model(session_scope_test_warehouse):
     """Test query model."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     flds = ev.primary_timeseries.field_enum()
     df = ev.primary_timeseries.query(
         filters=TimeseriesFilter(
@@ -175,12 +170,12 @@ def test_query_single_model(tmpdir):
         )
     ).to_pandas()
     assert len(df) == 26
-    ev.spark.stop()
 
 
-def test_query_list_str(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_query_list_str(session_scope_test_warehouse):
     """Test query list of strings."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     df = ev.primary_timeseries.query(
         filters=[
             "location_id = 'gage-A'",
@@ -188,12 +183,12 @@ def test_query_list_str(tmpdir):
         ]
     ).to_pandas()
     assert len(df) == 13
-    ev.spark.stop()
 
 
-def test_query_list_dict(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_query_list_dict(session_scope_test_warehouse):
     """Test query list of dicts."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     df = ev.primary_timeseries.query(
         filters=[
             {
@@ -209,12 +204,12 @@ def test_query_list_dict(tmpdir):
         ]
     ).to_pandas()
     assert len(df) == 13
-    ev.spark.stop()
 
 
-def test_query_list_model(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_query_list_model(session_scope_test_warehouse):
     """Test query list of models."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     flds = ev.primary_timeseries.field_enum()
     df = ev.primary_timeseries.query(
         filters=[
@@ -231,12 +226,12 @@ def test_query_list_model(tmpdir):
         ]
     ).to_pandas()
     assert len(df) == 13
-    ev.spark.stop()
 
 
-def test_filter_by_lead_time(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_by_lead_time(session_scope_test_warehouse):
     """Test filter by lead time."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     ev.joined_timeseries.add_calculated_fields([
         rcf.ForecastLeadTime(),
     ]).write()
@@ -275,107 +270,3 @@ def test_filter_by_lead_time(tmpdir):
         "forecast_lead_time < interval 3600 seconds"
     ).to_pandas()
     assert len(df) == 9
-    ev.spark.stop()
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_chain_filter_single_str(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_single_str2(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_single_dict(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_single_dict2(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_single_model(
-            tempfile.mkdtemp(
-                prefix="5-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_single_model2(
-            tempfile.mkdtemp(
-                prefix="6-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_list_str(
-            tempfile.mkdtemp(
-                prefix="7-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_list_dict(
-            tempfile.mkdtemp(
-                prefix="8-",
-                dir=tempdir
-            )
-        )
-        test_chain_filter_list_model(
-            tempfile.mkdtemp(
-                prefix="9-",
-                dir=tempdir
-            )
-        )
-        test_query_single_str(
-            tempfile.mkdtemp(
-                prefix="10-",
-                dir=tempdir
-            )
-        )
-        test_query_single_dict(
-            tempfile.mkdtemp(
-                prefix="11-",
-                dir=tempdir
-            )
-        )
-        test_query_single_model(
-            tempfile.mkdtemp(
-                prefix="12-",
-                dir=tempdir
-            )
-        )
-        test_query_list_str(
-            tempfile.mkdtemp(
-                prefix="13-",
-                dir=tempdir
-            )
-        )
-        test_query_list_dict(
-            tempfile.mkdtemp(
-                prefix="14-",
-                dir=tempdir
-            )
-        )
-        test_query_list_model(
-            tempfile.mkdtemp(
-                prefix="15-",
-                dir=tempdir
-            )
-        )
-        test_filter_by_lead_time(
-            tempfile.mkdtemp(
-                prefix="16-",
-                dir=tempdir
-            )
-        )
-

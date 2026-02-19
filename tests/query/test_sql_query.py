@@ -3,18 +3,17 @@
 This module tests the filter functions on primary_timeseries. It
 should apply to all tables.
 """
-import tempfile
 from teehr import Evaluation
-
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from data.setup_v0_3_study import setup_v0_3_study  # noqa
+from teehr.evaluation.spark_session_utils import create_spark_session
+import pytest
 
 
-def test_sql_query(tmpdir):
+SPARK_SESSION = create_spark_session(app_name="test_sql_query")
+
+@pytest.mark.session_scope_test_warehouse
+def test_sql_query(session_scope_test_warehouse):
     """Test Evaluation sql query."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     sdf = ev.sql("""
         SELECT pt.*, u.*, c.* FROM primary_timeseries pt
         JOIN units u ON pt.unit_name = u.name
@@ -37,16 +36,11 @@ def test_sql_query(tmpdir):
         'variable_name'
     ]
     assert sdf_cols == expected_cols
-    ev.spark.stop()
 
-
-def test_sql_query_on_empty_tables(tmpdir):
+@pytest.mark.function_scope_evaluation_template
+def test_sql_query_on_empty_tables(function_scope_evaluation_template):
     """Test sql query on empty table."""
-    ev = Evaluation(dir_path=tmpdir, create_dir=True)
-    # Enable logging
-    ev.enable_logging()
-    # Clone the template
-    ev.clone_template()
+    ev = function_scope_evaluation_template
     sdf = ev.sql("""
         SELECT pt.*, u.*, c.* FROM primary_timeseries pt
         JOIN units u ON pt.unit_name = u.name
@@ -62,22 +56,8 @@ def test_sql_query_on_empty_tables(tmpdir):
         SELECT * FROM secondary_timeseries;
     """, create_temp_views=["secondary_timeseries"])
     assert sdf.isEmpty()
-    ev.spark.stop()
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_sql_query(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_sql_query_on_empty_tables(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
+    # Drop temp views after test
+    ev.spark.catalog.dropTempView("primary_timeseries")
+    ev.spark.catalog.dropTempView("units")
+    ev.spark.catalog.dropTempView("configurations")
+    ev.spark.catalog.dropTempView("secondary_timeseries")

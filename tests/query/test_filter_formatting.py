@@ -8,17 +8,13 @@ from teehr.querying.filter_format import (
     format_filter
 )
 import pandas as pd
-import tempfile
-
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from data.setup_v0_3_study import setup_v0_3_study  # noqa
+import pytest
 
 
-def test_filter_eq_str(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_eq_str(session_scope_test_warehouse):
     """Test the format_filter_to_str function with eq_str."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.variable_name,
@@ -27,12 +23,12 @@ def test_filter_eq_str(tmpdir):
     )
     filter_str = format_filter(filter)
     assert filter_str == "variable_name = 'foo'"
-    ev.spark.stop()
 
 
-def test_filter_in_str(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_in_str(session_scope_test_warehouse):
     """Test the format_filter_to_str function with in_str."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.variable_name,
@@ -41,11 +37,12 @@ def test_filter_in_str(tmpdir):
     )
     filter_str = format_filter(filter)
     assert filter_str == "variable_name in ('foo','bar')"
-    ev.spark.stop()
 
-def test_filter_in_str_series(tmpdir):
+
+@pytest.mark.session_scope_test_warehouse
+def test_filter_in_str_series(session_scope_test_warehouse):
     """Test the format_filter_to_str function with in_str."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.variable_name,
@@ -54,11 +51,12 @@ def test_filter_in_str_series(tmpdir):
     )
     filter_str = format_filter(filter)
     assert filter_str == "variable_name in ('foo','bar')"
-    ev.spark.stop()
 
-def test_filter_gt_dt(tmpdir):
+
+@pytest.mark.session_scope_test_warehouse
+def test_filter_gt_dt(session_scope_test_warehouse):
     """Test the format_filter_to_str function with gt_dt."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.reference_time,
@@ -67,12 +65,12 @@ def test_filter_gt_dt(tmpdir):
     )
     filter_str = format_filter(filter)
     assert filter_str == "reference_time > '2021-01-01 00:00:00'"
-    ev.spark.stop()
 
 
-def test_filter_lt_int(tmpdir):
+@pytest.mark.session_scope_test_warehouse
+def test_filter_lt_int(session_scope_test_warehouse):
     """Test the format_filter_to_str function lt_int."""
-    ev = setup_v0_3_study(tmpdir)
+    ev = session_scope_test_warehouse
     fields = ev.primary_timeseries.field_enum()
     filter = TimeseriesFilter(
         column=fields.value,
@@ -81,40 +79,3 @@ def test_filter_lt_int(tmpdir):
     )
     filter_str = format_filter(filter)
     assert filter_str == "value < 50"
-    ev.spark.stop()
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_filter_eq_str(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )
-        test_filter_in_str(
-            tempfile.mkdtemp(
-                prefix="2-",
-                dir=tempdir
-            )
-        )
-        test_filter_gt_dt(
-            tempfile.mkdtemp(
-                prefix="3-",
-                dir=tempdir
-            )
-        )
-        test_filter_lt_int(
-            tempfile.mkdtemp(
-                prefix="4-",
-                dir=tempdir
-            )
-        )
-        test_filter_in_str_series(
-            tempfile.mkdtemp(
-                prefix="5-",
-                dir=tempdir
-            )
-        )

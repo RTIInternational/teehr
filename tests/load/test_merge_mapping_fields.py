@@ -30,7 +30,3 @@ def test_merge_mapping_fields():
         'location_id': 'location_id'
     }
     assert merged == target
-
-
-if __name__ == "__main__":
-    test_merge_mapping_fields()

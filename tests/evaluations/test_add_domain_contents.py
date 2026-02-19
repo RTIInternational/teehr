@@ -5,23 +5,20 @@ from teehr.models.pydantic_table_models import (
     Variable,
     Attribute,
 )
-import tempfile
-from teehr import Evaluation
+import pytest
+import time
 
-
-def test_add_domains(tmpdir):
+@pytest.mark.function_scope_evaluation_template
+def test_add_domains(function_scope_evaluation_template):
     """Test creating a new study."""
-    ev = Evaluation(
-        dir_path=tmpdir,
-        create_dir=True
-    )
-    ev.clone_template()
+    ev = function_scope_evaluation_template
 
     new_tbl = ev.table(table_name="new_table")
 
     # Check configurations.add doesn't add columns
     cols = ev.configurations.to_pandas().columns
 
+    t0 = time.time()
     ev.configurations.add(
         configuration=[
             Configuration(
@@ -31,6 +28,7 @@ def test_add_domains(tmpdir):
             )
         ]
     )
+    print("Time to add configuration:", time.time() - t0)
 
     df = ev.configurations.to_pandas()
 
@@ -42,6 +40,7 @@ def test_add_domains(tmpdir):
     # Check units.add doesn't add columns
     cols = ev.units.to_pandas().columns
 
+    t0 = time.time()
     ev.units.add(
         unit=[
             Unit(
@@ -50,6 +49,7 @@ def test_add_domains(tmpdir):
             ),
         ]
     )
+    print("Time to add unit:", time.time() - t0)
 
     new_cols = ev.units.to_pandas().columns
 
@@ -58,6 +58,7 @@ def test_add_domains(tmpdir):
     # Check variables.add doesn't add columns
     cols = ev.variables.to_pandas().columns
 
+    t0 = time.time()
     ev.variables.add(
         variable=[
             Variable(
@@ -66,6 +67,8 @@ def test_add_domains(tmpdir):
             ),
         ]
     )
+    print("Time to add variable:", time.time() - t0)
+
     new_cols = ev.variables.to_pandas().columns
 
     assert list(cols.sort_values()) == list(new_cols.sort_values())
@@ -73,6 +76,7 @@ def test_add_domains(tmpdir):
     # Check attributes.add doesn't add columns
     cols = ev.attributes.to_pandas().columns
 
+    t0 = time.time()
     ev.attributes.add(
         attribute=[
             Attribute(
@@ -82,20 +86,8 @@ def test_add_domains(tmpdir):
             ),
         ]
     )
+    print("Time to add attribute:", time.time() - t0)
+
     new_cols = ev.attributes.to_pandas().columns
 
     assert list(cols.sort_values()) == list(new_cols.sort_values())
-
-    ev.spark.stop()
-
-
-if __name__ == "__main__":
-    with tempfile.TemporaryDirectory(
-        prefix="teehr-"
-    ) as tempdir:
-        test_add_domains(
-            tempfile.mkdtemp(
-                prefix="1-",
-                dir=tempdir
-            )
-        )

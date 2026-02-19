@@ -13,7 +13,7 @@ import shutil
 session = botocore.session.Session()
 
 
-def download_e0_2_example(temp_dir: Union[str, Path]):
+def download_e0_2_example(temp_dir: Union[str, Path]) -> teehr.Evaluation:
     """Download and extract the e0_2_location_example Evaluation dataset from S3."""
     if not Path(temp_dir).is_dir():
         os.makedirs(temp_dir, exist_ok=True)
@@ -47,10 +47,21 @@ def download_e0_2_example(temp_dir: Union[str, Path]):
     print(f"✅ Removed archive {local_path}")
 
     # Initialize Spark with new tmpdir location
+    (Path(temp_dir) / "local").mkdir(parents=True, exist_ok=True)
+
+    # Create a new session for test isolation
     spark = create_spark_session()
     spark.conf.set(
         f"spark.sql.catalog.local.warehouse",
         (Path(temp_dir) / "local").as_posix()
+    )
+    spark.conf.set(
+        f"spark.sql.catalog.local.uri",
+        f"jdbc:sqlite:{(Path(temp_dir) / 'local').as_posix()}/local_catalog.db"
+    )
+    spark.conf.set(
+        f"spark.sql.catalog.local.uri",
+        f"jdbc:sqlite:{(Path(temp_dir) / 'local').as_posix()}/local_catalog.db"
     )
     # Create the database
     spark.sql("CREATE DATABASE IF NOT EXISTS local.teehr")
@@ -76,7 +87,7 @@ def download_e0_2_example(temp_dir: Union[str, Path]):
         df = spark.read.parquet(str(old_table_dir))
         # Create the Iceberg table
         df.writeTo(f"local.teehr.{table_name}").using("iceberg").create()
-        print(f"Recreated table: {table_name} with {df.count()} rows")
+        # Removed expensive .count() call for better performance
 
     # Clean up temp extraction directory
     shutil.rmtree(temp_extract_dir)
