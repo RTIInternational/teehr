@@ -64,12 +64,6 @@ class TableFilter(BaseModel):
         """Column name must exist in the database table."""
         if info.context is not None:
             # String column names require context with field_names (list of strings)
-            if info.context is None:
-                raise ValueError(
-                    f"String column name '{v}' provided but no context found. "
-                    f"Either pass the field enum directly (e.g., column=Fields.{v}) "
-                    f"or use model_validate() with context={{'field_names': [list of field names]}}"
-                )
             fields = info.context.get("field_names")
             if fields is None:
                 raise ValueError(
