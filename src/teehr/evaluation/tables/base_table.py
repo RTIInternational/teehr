@@ -390,24 +390,23 @@ class BaseTable:
 
         Filters as TableFilter:
 
-        >>> from teehr.models.filters import TimeseriesFilter
+        >>> from teehr.models.filters import TableFilter
         >>> from teehr.models.filters import FilterOperators
         >>>
-        >>> fields = ev.table(table_name="primary_timeseries").field_enum()
         >>> ts_df = ev.table(table_name="primary_timeseries").filter(
         >>>     filters=[
-        >>>         TimeseriesFilter(
-        >>>             column=fields.value_time,
+        >>>         TableFilter(
+        >>>             column="value_time",
         >>>             operator=FilterOperators.gt,
         >>>             value="2022-01-01",
         >>>         ),
-        >>>         TimeseriesFilter(
-        >>>             column=fields.value_time,
+        >>>         TableFilter(
+        >>>             column="value_time",
         >>>             operator=FilterOperators.lt,
         >>>             value="2022-01-02",
         >>>         ),
-        >>>         TimeseriesFilter(
-        >>>             column=fields.location_id,
+        >>>         TableFilter(
+        >>>             column="location_id",
         >>>             operator=FilterOperators.eq,
         >>>             value="gage-C",
         >>>         ),
